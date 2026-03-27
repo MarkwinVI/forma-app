@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'data/services/auth_service.dart';
-import 'features/home/home_view.dart';
 import 'features/login/login_view.dart';
+import 'features/shell/shell_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +41,6 @@ class _AppEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = AuthService().currentUser;
-    return user != null ? const HomeView() : const LoginView();
+    return user != null ? const ShellView() : const LoginView();
   }
 }

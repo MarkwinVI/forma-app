@@ -4,7 +4,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/widgets/loading_indicator.dart';
 import '../../data/services/auth_service.dart';
-import '../home/home_view.dart';
+import '../shell/shell_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -31,7 +31,7 @@ class _LoginViewState extends State<LoginView> {
       await method();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeView()),
+        MaterialPageRoute(builder: (_) => const ShellView()),
       );
     } catch (e) {
       if (!mounted) return;
@@ -72,7 +72,8 @@ class _LoginViewState extends State<LoginView> {
               const SizedBox(height: 48),
               if (_isLoading)
                 const LoadingIndicator()
-              else ..._buildButtons(),
+              else
+                ..._buildButtons(),
             ],
           ),
         ),
@@ -83,7 +84,6 @@ class _LoginViewState extends State<LoginView> {
   List<Widget> _buildButtons() {
     return [
       SignInWithAppleButton(onPressed: _handleAppleSignIn),
-      // Dev-only button — stripped out in release builds automatically
       if (kDebugMode) ...[
         const SizedBox(height: 16),
         OutlinedButton(
