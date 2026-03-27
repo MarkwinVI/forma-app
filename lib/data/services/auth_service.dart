@@ -43,6 +43,27 @@ class AuthService {
     return UserModel.fromMap(data);
   }
 
+  // ---------- Anonymous Sign In (dev/testing only) ----------
+
+  Future<UserModel?> signInAnonymously() async {
+    final response = await _client.auth.signInAnonymously();
+
+    final user = response.user;
+    if (user == null) throw Exception('Anonymous sign in failed: no user returned.');
+
+    await _client.from('users').upsert({
+      'id': user.id,
+      'email': null,
+      'full_name': 'Anonymous User',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    final data = await _client.from('users').select().eq('id', user.id).single();
+    return UserModel.fromMap(data);
+  }
+
+  // ---------- Session ----------
+
   Future<void> signOut() async {
     await _client.auth.signOut();
   }

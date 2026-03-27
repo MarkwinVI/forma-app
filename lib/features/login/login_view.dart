@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -17,9 +18,17 @@ class _LoginViewState extends State<LoginView> {
   bool _isLoading = false;
 
   Future<void> _handleAppleSignIn() async {
+    await _signIn(() => _authService.signInWithApple());
+  }
+
+  Future<void> _handleDevLogin() async {
+    await _signIn(() => _authService.signInAnonymously());
+  }
+
+  Future<void> _signIn(Future<dynamic> Function() method) async {
     setState(() => _isLoading = true);
     try {
-      await _authService.signInWithApple();
+      await method();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeView()),
@@ -63,12 +72,25 @@ class _LoginViewState extends State<LoginView> {
               const SizedBox(height: 48),
               if (_isLoading)
                 const LoadingIndicator()
-              else
-                SignInWithAppleButton(onPressed: _handleAppleSignIn),
+              else ..._buildButtons(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildButtons() {
+    return [
+      SignInWithAppleButton(onPressed: _handleAppleSignIn),
+      // Dev-only button — stripped out in release builds automatically
+      if (kDebugMode) ...[
+        const SizedBox(height: 16),
+        OutlinedButton(
+          onPressed: _handleDevLogin,
+          child: const Text('Dev Login (anonymous)'),
+        ),
+      ],
+    ];
   }
 }
