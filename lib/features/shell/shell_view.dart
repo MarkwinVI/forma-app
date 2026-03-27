@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/widgets/app_nav_bar.dart';
 import '../data/data_view.dart';
-import '../help/help_view.dart';
 import '../home/home_view.dart';
 import '../settings/settings_view.dart';
+import '../skills/skills_view.dart';
 
 class ShellView extends StatefulWidget {
   const ShellView({super.key});
@@ -19,7 +19,7 @@ class _ShellViewState extends State<ShellView> {
   static const _pages = [
     HomeView(),
     DataView(),
-    HelpView(),
+    SkillsView(),
     SettingsView(),
   ];
 
