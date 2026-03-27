@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color _activeColor = Color(0xFFFF8904);
-const Color _inactiveColor = Color(0xFF9F9FA9);
-const Color _bgColor = Color(0xFF282626);
+import '../theme/app_colors.dart';
 
 class AppNavBar extends StatelessWidget {
   final int currentIndex;
@@ -20,46 +18,20 @@ class AppNavBar extends StatelessWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      color: _bgColor,
+      color: AppColors.bgPrimary,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IntrinsicHeight(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _NavItem(
-                    icon: Icons.home,
-                    label: 'Home',
-                    index: 0,
-                    currentIndex: currentIndex,
-                    onTap: onTap,
-                  ),
-                  _NavItem(
-                    icon: Icons.query_stats,
-                    label: 'Data',
-                    index: 1,
-                    currentIndex: currentIndex,
-                    onTap: onTap,
-                  ),
-                  _NavItem(
-                    icon: Icons.menu_book_outlined,
-                    label: 'Help',
-                    index: 2,
-                    currentIndex: currentIndex,
-                    onTap: onTap,
-                  ),
-                  _NavItem(
-                    icon: Icons.settings_outlined,
-                    label: 'Settings',
-                    index: 3,
-                    currentIndex: currentIndex,
-                    onTap: onTap,
-                  ),
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _NavItem(icon: Icons.home,              label: 'Home',     index: 0, currentIndex: currentIndex, onTap: onTap),
+                _NavItem(icon: Icons.query_stats,       label: 'Data',     index: 1, currentIndex: currentIndex, onTap: onTap),
+                _NavItem(icon: Icons.menu_book_outlined, label: 'Help',    index: 2, currentIndex: currentIndex, onTap: onTap),
+                _NavItem(icon: Icons.settings_outlined, label: 'Settings', index: 3, currentIndex: currentIndex, onTap: onTap),
+              ],
             ),
           ),
           SizedBox(height: bottomPadding),
@@ -87,26 +59,36 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = index == currentIndex;
-    final color = isActive ? _activeColor : _inactiveColor;
+    final color = isActive ? AppColors.accentBright : AppColors.textSecondary;
 
     return GestureDetector(
       onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      behavior: HitTestBehavior.opaque, // full 54x54 box is tappable
+      child: Container(
+        width: 54,
+        height: 54,
+        decoration: isActive
+            ? const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColors.accentBright, width: 2),
+                ),
+              )
+            : null,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: color,
                 letterSpacing: 0.16,
+                height: 1.0,
               ),
             ),
           ],
