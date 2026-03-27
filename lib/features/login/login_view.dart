@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -271,7 +270,7 @@ class _AppleButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(CupertinoIcons.apple_logo, size: 20, color: Colors.black),
+            const Icon(Icons.apple, size: 20, color: Colors.black),
             const SizedBox(width: 10),
             Text(
               'Continue with Apple',
