@@ -6,6 +6,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
+import 'exercise_search_view.dart';
 import 'skill_tree_view.dart';
 import 'widgets/category_progress_card.dart';
 
@@ -67,6 +68,49 @@ class _SkillsViewState extends State<SkillsView> {
                 ),
               ),
             ),
+            // ── Search bar ──────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ExerciseSearchView(
+                        progressMap: _progressMap,
+                        onProgressChanged: (id, status) =>
+                            setState(() => _progressMap[id] = status),
+                      ),
+                    ),
+                  ),
+                  child: Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgTertiary,
+                      border: Border.all(color: AppColors.borderPrimary),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Icon(Icons.search,
+                              color: AppColors.textMuted, size: 16),
+                        ),
+                        Text(
+                          'Search exercises...',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.textMuted,
+                            letterSpacing: -0.15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
             if (_loading)
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
