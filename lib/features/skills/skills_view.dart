@@ -74,12 +74,16 @@ class _SkillsViewState extends State<SkillsView> {
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ExerciseSearchView(
+                    PageRouteBuilder(
+                      transitionDuration: const Duration(milliseconds: 150),
+                      reverseTransitionDuration: const Duration(milliseconds: 150),
+                      pageBuilder: (_, __, ___) => ExerciseSearchView(
                         progressMap: _progressMap,
                         onProgressChanged: (id, status) =>
                             setState(() => _progressMap[id] = status),
                       ),
+                      transitionsBuilder: (_, animation, __, child) =>
+                          FadeTransition(opacity: animation, child: child),
                     ),
                   ),
                   child: Container(

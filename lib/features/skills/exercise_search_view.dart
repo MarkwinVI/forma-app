@@ -25,20 +25,17 @@ class ExerciseSearchView extends StatefulWidget {
 
 class _ExerciseSearchViewState extends State<ExerciseSearchView> {
   final _controller = TextEditingController();
-  final _focusNode = FocusNode();
-  List<Exercise> _results = ExerciseCatalog.all();
+  List<Exercise> _results = [];
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_onQueryChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -46,16 +43,11 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
     final q = _controller.text.toLowerCase();
     setState(() {
       _results = q.isEmpty
-          ? ExerciseCatalog.all()
+          ? []
           : ExerciseCatalog.all()
               .where((e) => e.name.toLowerCase().contains(q))
               .toList();
     });
-  }
-
-  void _clear() {
-    _controller.clear();
-    _focusNode.requestFocus();
   }
 
   ExerciseStatus _statusFor(String id) =>
@@ -85,154 +77,131 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Search bar row ──────────────────────────────────────────────
+            // ── Search bar + Cancel ─────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 16, 14, 0),
-              child: Container(
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.bgTertiary,
-                  border: Border.all(color: AppColors.borderPrimary),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Icon(Icons.search, color: AppColors.textMuted, size: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.bgTertiary,
+                        border: Border.all(color: AppColors.borderPrimary),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Icon(Icons.search,
+                                color: AppColors.textMuted, size: 16),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              autofocus: true,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.15,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Search exercises...',
+                                hintStyle: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: AppColors.textMuted,
+                                  letterSpacing: -0.15,
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              cursorColor: AppColors.accentPrimary,
+                              textInputAction: TextInputAction.search,
+                            ),
+                          ),
+                          if (hasQuery)
+                            GestureDetector(
+                              onTap: () => _controller.clear(),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Icon(Icons.close,
+                                    color: AppColors.textMuted, size: 16),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
+                  ),
+                  // Cancel button
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Text(
+                        'Cancel',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: AppColors.textPrimary,
-                          letterSpacing: -0.15,
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'Search exercises...',
-                          hintStyle: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: AppColors.textMuted,
-                            letterSpacing: -0.15,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        cursorColor: AppColors.accentPrimary,
-                        textInputAction: TextInputAction.search,
                       ),
                     ),
-                    if (hasQuery)
-                      GestureDetector(
-                        onTap: _clear,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Icon(Icons.close, color: AppColors.textMuted, size: 16),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Results header ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(19, 20, 19, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    hasQuery
-                        ? '${_results.length} Result${_results.length == 1 ? '' : 's'}'
-                        : 'All Exercises',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.2,
-                    ).copyWith(inherit: true),
                   ),
-                  if (hasQuery)
-                    GestureDetector(
-                      onTap: _clear,
-                      child: Text(
-                        'Clear',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accentPrimary,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
 
-            // ── Results list ────────────────────────────────────────────────
+            // ── Results ─────────────────────────────────────────────────────
             Expanded(
-              child: _results.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No exercises found',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.bgSecondary,
-                          border: Border.all(color: AppColors.borderPrimary),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: ListView.separated(
-                            padding: const EdgeInsets.all(1),
-                            itemCount: _results.length,
-                            separatorBuilder: (_, __) => const Divider(
-                              height: 1,
-                              thickness: 1,
-                              color: AppColors.borderPrimary,
+              child: !hasQuery
+                  ? const SizedBox.shrink()
+                  : _results.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No exercises found',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: AppColors.textMuted,
                             ),
-                            itemBuilder: (context, i) {
-                              final exercise = _results[i];
-                              final status = _statusFor(exercise.id);
-                              final dotColor = _dotColor(status);
-                              final label = _statusLabel(status);
-
-                              return _ExerciseResultRow(
-                                exercise: exercise,
-                                dotColor: dotColor,
-                                statusLabel: label,
-                                statusLabelColor: dotColor,
-                                onTap: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => SkillTreeView(
-                                        category: exercise.category,
-                                        progressMap: widget.progressMap,
-                                        onProgressChanged: widget.onProgressChanged,
-                                      ),
-                                    ),
-                                  );
-                                  setState(() {}); // refresh status after returning
-                                },
-                              );
-                            },
                           ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.only(top: 8),
+                          itemCount: _results.length,
+                          separatorBuilder: (_, __) => const Divider(
+                            height: 1,
+                            thickness: 1,
+                            indent: 16,
+                            endIndent: 16,
+                            color: AppColors.borderPrimary,
+                          ),
+                          itemBuilder: (context, i) {
+                            final exercise = _results[i];
+                            final status = _statusFor(exercise.id);
+                            final dotColor = _dotColor(status);
+
+                            return _ExerciseResultRow(
+                              exercise: exercise,
+                              dotColor: dotColor,
+                              statusLabel: _statusLabel(status),
+                              statusLabelColor: dotColor,
+                              onTap: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => SkillTreeView(
+                                      category: exercise.category,
+                                      progressMap: widget.progressMap,
+                                      onProgressChanged: widget.onProgressChanged,
+                                    ),
+                                  ),
+                                );
+                                setState(() {});
+                              },
+                            );
+                          },
                         ),
-                      ),
-                    ),
             ),
           ],
         ),
@@ -268,7 +237,6 @@ class _ExerciseResultRow extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left: dot + name + category
               Row(
                 children: [
                   Container(
@@ -305,7 +273,6 @@ class _ExerciseResultRow extends StatelessWidget {
                   ),
                 ],
               ),
-              // Right: status badge + chevron
               Row(
                 children: [
                   Text(
