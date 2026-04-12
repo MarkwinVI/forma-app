@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
-import '../../data/models/exercise_progress_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import 'exercise_search_view.dart';
@@ -76,7 +75,8 @@ class _SkillsViewState extends State<SkillsView> {
                   onTap: () => Navigator.of(context).push(
                     PageRouteBuilder(
                       transitionDuration: const Duration(milliseconds: 150),
-                      reverseTransitionDuration: const Duration(milliseconds: 150),
+                      reverseTransitionDuration:
+                          const Duration(milliseconds: 150),
                       pageBuilder: (_, __, ___) => ExerciseSearchView(
                         progressMap: _progressMap,
                         onProgressChanged: (id, status) =>

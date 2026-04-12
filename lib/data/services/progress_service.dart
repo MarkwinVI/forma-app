@@ -1,4 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
 import 'supabase_service.dart';

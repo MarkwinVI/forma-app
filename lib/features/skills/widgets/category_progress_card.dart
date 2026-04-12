@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/exercise_model.dart';
 
-const _iconBg     = Color(0x1AFF6900);
+const _iconBg = Color(0x1AFF6900);
 const _iconBorder = Color(0x4DFF6900);
 
 class CategoryProgressCard extends StatelessWidget {
@@ -22,12 +22,22 @@ class CategoryProgressCard extends StatelessWidget {
 
   IconData get _icon {
     switch (category) {
-      case ExerciseCategory.verticalPull:   return Icons.arrow_upward;
-      case ExerciseCategory.verticalPush:   return Icons.front_hand_outlined;
-      case ExerciseCategory.horizontalPull: return Icons.arrow_back;
-      case ExerciseCategory.horizontalPush: return Icons.arrow_forward;
-      case ExerciseCategory.legs:           return Icons.directions_run;
-      case ExerciseCategory.core:           return Icons.radio_button_checked;
+      case ExerciseCategory.verticalPull:
+        return Icons.arrow_upward;
+      case ExerciseCategory.verticalPush:
+        return Icons.front_hand_outlined;
+      case ExerciseCategory.horizontalPull:
+        return Icons.arrow_back;
+      case ExerciseCategory.horizontalPush:
+        return Icons.arrow_forward;
+      case ExerciseCategory.squat:
+        return Icons.accessibility_new;
+      case ExerciseCategory.hinge:
+        return Icons.keyboard_double_arrow_down;
+      case ExerciseCategory.calves:
+        return Icons.stairs_outlined;
+      case ExerciseCategory.core:
+        return Icons.radio_button_checked;
     }
   }
 

@@ -1,9 +1,18 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/exercise_log_model.dart';
 import 'supabase_service.dart';
 
 class ExerciseLogService {
   final _client = SupabaseService.client;
+
+  Future<bool> hasAtLeastTwoLogs(String userId) async {
+    final data = await _client
+        .from('exercise_logs')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(2);
+
+    return (data as List).length >= 2;
+  }
 
   Future<List<ExerciseLog>> fetchForExercise(
     String userId,

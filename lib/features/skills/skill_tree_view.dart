@@ -13,7 +13,8 @@ const _masteredColor = Color(0xFF4CAF50);
 class SkillTreeView extends StatefulWidget {
   final ExerciseCategory category;
   final Map<String, ExerciseStatus> progressMap;
-  final void Function(String exerciseId, ExerciseStatus status) onProgressChanged;
+  final void Function(String exerciseId, ExerciseStatus status)
+      onProgressChanged;
 
   const SkillTreeView({
     super.key,
@@ -47,14 +48,14 @@ class _SkillTreeViewState extends State<SkillTreeView> {
 
     final sortedKeys = levels.keys.toList()..sort();
     final positions = <String, Offset>{};
-    const nodeSize  = kNodeSize;
-    const vSpacing  = 60.0;
-    const vPadding  = 40.0;
-    const hPadding  = 24.0;
+    const nodeSize = kNodeSize;
+    const vSpacing = 60.0;
+    const vPadding = 40.0;
+    const hPadding = 24.0;
 
     for (int li = 0; li < sortedKeys.length; li++) {
       final exs = levels[sortedKeys[li]]!;
-      final n   = exs.length;
+      final n = exs.length;
       final usable = availableWidth - hPadding * 2 - nodeSize;
 
       for (int i = 0; i < n; i++) {
@@ -70,12 +71,16 @@ class _SkillTreeViewState extends State<SkillTreeView> {
 
   double _totalHeight() {
     final levels = <int>{};
-    for (final e in _exercises) levels.add(e.treeOrder);
+    for (final e in _exercises) {
+      levels.add(e.treeOrder);
+    }
     if (levels.isEmpty) return 300;
     const nodeSize = kNodeSize;
     const vSpacing = 60.0;
     const vPadding = 40.0;
-    return vPadding * 2 + levels.length * nodeSize + (levels.length - 1) * vSpacing;
+    return vPadding * 2 +
+        levels.length * nodeSize +
+        (levels.length - 1) * vSpacing;
   }
 
   Future<void> _updateStatus(Exercise exercise, ExerciseStatus status) async {
@@ -121,9 +126,9 @@ class _SkillTreeViewState extends State<SkillTreeView> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final width     = constraints.maxWidth;
+          final width = constraints.maxWidth;
           final positions = _computePositions(width);
-          final height    = _totalHeight();
+          final height = _totalHeight();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 32),
@@ -144,7 +149,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                     if (positions.containsKey(exercise.id))
                       Positioned(
                         left: positions[exercise.id]!.dx - kNodeSize / 2,
-                        top:  positions[exercise.id]!.dy - kNodeSize / 2,
+                        top: positions[exercise.id]!.dy - kNodeSize / 2,
                         child: ExerciseNode(
                           exercise: exercise,
                           status: _localProgress[exercise.id] ??
@@ -299,17 +304,23 @@ class _StatusChip extends StatelessWidget {
 
   String get _label {
     switch (status) {
-      case ExerciseStatus.inactive: return 'Inactive';
-      case ExerciseStatus.active:   return 'Active';
-      case ExerciseStatus.mastered: return 'Mastered';
+      case ExerciseStatus.inactive:
+        return 'Inactive';
+      case ExerciseStatus.active:
+        return 'Active';
+      case ExerciseStatus.mastered:
+        return 'Mastered';
     }
   }
 
   Color get _color {
     switch (status) {
-      case ExerciseStatus.inactive: return AppColors.textMuted;
-      case ExerciseStatus.active:   return AppColors.accentBright;
-      case ExerciseStatus.mastered: return _masteredColor;
+      case ExerciseStatus.inactive:
+        return AppColors.textMuted;
+      case ExerciseStatus.active:
+        return AppColors.accentBright;
+      case ExerciseStatus.mastered:
+        return _masteredColor;
     }
   }
 
@@ -320,7 +331,8 @@ class _StatusChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? _color.withValues(alpha: 0.15) : Colors.transparent,
+          color:
+              isSelected ? _color.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? _color : AppColors.borderPrimary,
