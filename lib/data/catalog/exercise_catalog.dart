@@ -4,13 +4,13 @@ class ExerciseCatalog {
   ExerciseCatalog._();
 
   static const List<Exercise> _all = [
-
     // ── Vertical Pull ─────────────────────────────────────────────────────
     Exercise(
       id: 'dead_hang',
       category: ExerciseCategory.verticalPull,
       name: 'Dead Hang',
-      description: 'Hang from a bar with straight arms for time. Builds grip strength and shoulder stability.',
+      description:
+          'Hang from a bar with straight arms for time. Builds grip strength and shoulder stability.',
       difficulty: 1,
       treeOrder: 0,
     ),
@@ -18,7 +18,8 @@ class ExerciseCatalog {
       id: 'scapular_pull',
       category: ExerciseCategory.verticalPull,
       name: 'Scapular Pull',
-      description: 'From a dead hang, retract and depress your shoulder blades without bending your elbows.',
+      description:
+          'From a dead hang, retract and depress your shoulder blades without bending your elbows.',
       difficulty: 1,
       treeOrder: 1,
       prerequisiteIds: ['dead_hang'],
@@ -27,7 +28,8 @@ class ExerciseCatalog {
       id: 'negative_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Negative Pull-up',
-      description: 'Jump to the top position and lower yourself slowly with control over 3–5 seconds.',
+      description:
+          'Jump to the top position and lower yourself slowly with control over 3–5 seconds.',
       difficulty: 2,
       treeOrder: 2,
       prerequisiteIds: ['scapular_pull'],
@@ -36,7 +38,8 @@ class ExerciseCatalog {
       id: 'pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Pull-up',
-      description: 'Full pull-up with pronated grip from dead hang to chin over bar.',
+      description:
+          'Full pull-up with pronated grip from dead hang to chin over bar.',
       difficulty: 3,
       treeOrder: 3,
       prerequisiteIds: ['negative_pull_up'],
@@ -45,7 +48,8 @@ class ExerciseCatalog {
       id: 'chin_up',
       category: ExerciseCategory.verticalPull,
       name: 'Chin-up',
-      description: 'Pull-up with supinated (underhand) grip, emphasising the biceps.',
+      description:
+          'Pull-up with supinated (underhand) grip, emphasising the biceps.',
       difficulty: 3,
       treeOrder: 3,
       prerequisiteIds: ['negative_pull_up'],
@@ -54,7 +58,8 @@ class ExerciseCatalog {
       id: 'archer_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Archer Pull-up',
-      description: 'Pull to one side while the opposite arm extends, loading one arm significantly more.',
+      description:
+          'Pull to one side while the opposite arm extends, loading one arm significantly more.',
       difficulty: 4,
       treeOrder: 4,
       prerequisiteIds: ['pull_up'],
@@ -72,7 +77,8 @@ class ExerciseCatalog {
       id: 'one_arm_negative',
       category: ExerciseCategory.verticalPull,
       name: 'One Arm Negative',
-      description: 'Start at the top with one arm and lower yourself as slowly as possible.',
+      description:
+          'Start at the top with one arm and lower yourself as slowly as possible.',
       difficulty: 5,
       treeOrder: 5,
       prerequisiteIds: ['archer_pull_up'],
@@ -81,7 +87,8 @@ class ExerciseCatalog {
       id: 'one_arm_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'One Arm Pull-up',
-      description: 'The ultimate pulling feat — a full pull-up using a single arm.',
+      description:
+          'The ultimate pulling feat — a full pull-up using a single arm.',
       difficulty: 5,
       treeOrder: 6,
       prerequisiteIds: ['one_arm_negative'],
@@ -92,7 +99,8 @@ class ExerciseCatalog {
       id: 'wall_plank',
       category: ExerciseCategory.verticalPush,
       name: 'Wall Plank',
-      description: 'Hold a plank position with feet on a wall to practise a vertical body line.',
+      description:
+          'Hold a plank position with feet on a wall to practise a vertical body line.',
       difficulty: 1,
       treeOrder: 0,
     ),
@@ -100,7 +108,8 @@ class ExerciseCatalog {
       id: 'pike_push_up',
       category: ExerciseCategory.verticalPush,
       name: 'Pike Push-up',
-      description: 'Push-up in an inverted-V position, targeting the shoulders like a vertical press.',
+      description:
+          'Push-up in an inverted-V position, targeting the shoulders like a vertical press.',
       difficulty: 2,
       treeOrder: 1,
       prerequisiteIds: ['wall_plank'],
@@ -109,7 +118,8 @@ class ExerciseCatalog {
       id: 'elevated_pike_push_up',
       category: ExerciseCategory.verticalPush,
       name: 'Elevated Pike Push-up',
-      description: 'Pike push-up with feet elevated to increase shoulder loading.',
+      description:
+          'Pike push-up with feet elevated to increase shoulder loading.',
       difficulty: 3,
       treeOrder: 2,
       prerequisiteIds: ['pike_push_up'],
@@ -173,7 +183,8 @@ class ExerciseCatalog {
       id: 'australian_pull_up',
       category: ExerciseCategory.horizontalPull,
       name: 'Australian Pull-up',
-      description: 'Bodyweight row with body horizontal, also called a supine row.',
+      description:
+          'Bodyweight row with body horizontal, also called a supine row.',
       difficulty: 2,
       treeOrder: 2,
       prerequisiteIds: ['incline_row'],
@@ -209,7 +220,8 @@ class ExerciseCatalog {
       id: 'front_lever',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever',
-      description: 'Full front lever with legs together, body parallel to the ground.',
+      description:
+          'Full front lever with legs together, body parallel to the ground.',
       difficulty: 5,
       treeOrder: 5,
       prerequisiteIds: ['straddle_front_lever'],
@@ -220,7 +232,8 @@ class ExerciseCatalog {
       id: 'wall_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Wall Push-up',
-      description: 'Push-up against a wall — the most accessible starting point.',
+      description:
+          'Push-up against a wall — the most accessible starting point.',
       difficulty: 1,
       treeOrder: 0,
     ),
@@ -255,7 +268,8 @@ class ExerciseCatalog {
       id: 'archer_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Archer Push-up',
-      description: 'Push-up where one arm extends while the other does the work.',
+      description:
+          'Push-up where one arm extends while the other does the work.',
       difficulty: 3,
       treeOrder: 3,
       prerequisiteIds: ['push_up'],
@@ -264,7 +278,8 @@ class ExerciseCatalog {
       id: 'planche_lean',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Lean',
-      description: 'Lean forward in a plank position to shift load onto the wrists and shoulders.',
+      description:
+          'Lean forward in a plank position to shift load onto the wrists and shoulders.',
       difficulty: 3,
       treeOrder: 3,
       prerequisiteIds: ['push_up'],
@@ -291,16 +306,17 @@ class ExerciseCatalog {
       id: 'full_planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Full Planche',
-      description: 'Hold the full planche with body horizontal and legs straight.',
+      description:
+          'Hold the full planche with body horizontal and legs straight.',
       difficulty: 5,
       treeOrder: 5,
       prerequisiteIds: ['tuck_planche'],
     ),
 
-    // ── Legs ──────────────────────────────────────────────────────────────
+    // ── Squat ─────────────────────────────────────────────────────────────
     Exercise(
       id: 'squat',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Squat',
       description: 'Bodyweight squat with full depth and controlled tempo.',
       difficulty: 1,
@@ -308,51 +324,54 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'lunge',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Lunge',
-      description: 'Forward or reverse lunge, building unilateral strength and balance.',
+      description:
+          'Forward or reverse lunge, building unilateral strength and balance.',
       difficulty: 1,
       treeOrder: 0,
     ),
     Exercise(
       id: 'bulgarian_split_squat',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Bulgarian Split Squat',
-      description: 'Rear foot elevated split squat — a demanding unilateral movement.',
+      description:
+          'Rear foot elevated split squat — a demanding unilateral movement.',
       difficulty: 2,
       treeOrder: 1,
       prerequisiteIds: ['squat'],
     ),
     Exercise(
       id: 'single_leg_rdl',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.hinge,
       name: 'Single Leg RDL',
       description: 'Hinge on one leg to train hamstrings and balance.',
       difficulty: 2,
-      treeOrder: 1,
-      prerequisiteIds: ['lunge'],
+      treeOrder: 0,
     ),
     Exercise(
       id: 'pistol_squat_neg',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Pistol Squat Negative',
-      description: 'Lower slowly on one leg, using support if needed for the ascent.',
+      description:
+          'Lower slowly on one leg, using support if needed for the ascent.',
       difficulty: 3,
       treeOrder: 2,
       prerequisiteIds: ['bulgarian_split_squat'],
     ),
     Exercise(
       id: 'nordic_curl',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.hinge,
       name: 'Nordic Curl',
-      description: 'Anchor feet and lower your body to the floor under hamstring control.',
+      description:
+          'Anchor feet and lower your body to the floor under hamstring control.',
       difficulty: 3,
-      treeOrder: 2,
+      treeOrder: 1,
       prerequisiteIds: ['single_leg_rdl'],
     ),
     Exercise(
       id: 'pistol_squat',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Pistol Squat',
       description: 'Full single-leg squat to depth and back up.',
       difficulty: 4,
@@ -361,7 +380,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'shrimp_squat',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Shrimp Squat',
       description: 'Single-leg squat with the back leg bent up behind you.',
       difficulty: 4,
@@ -370,12 +389,34 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'dragon_squat',
-      category: ExerciseCategory.legs,
+      category: ExerciseCategory.squat,
       name: 'Dragon Squat',
-      description: 'Advanced single-leg squat crossing the free leg behind the standing leg.',
+      description:
+          'Advanced single-leg squat crossing the free leg behind the standing leg.',
       difficulty: 5,
       treeOrder: 4,
       prerequisiteIds: ['pistol_squat', 'shrimp_squat'],
+    ),
+
+    // ── Calves ────────────────────────────────────────────────────────────
+    Exercise(
+      id: 'calf_raise',
+      category: ExerciseCategory.calves,
+      name: 'Calf Raise',
+      description:
+          'Controlled standing calf raises to build ankle strength and lower-leg endurance.',
+      difficulty: 1,
+      treeOrder: 0,
+    ),
+    Exercise(
+      id: 'single_leg_calf_raise',
+      category: ExerciseCategory.calves,
+      name: 'Single Leg Calf Raise',
+      description:
+          'Perform calf raises one leg at a time for more load and balance demand.',
+      difficulty: 2,
+      treeOrder: 1,
+      prerequisiteIds: ['calf_raise'],
     ),
 
     // ── Core ──────────────────────────────────────────────────────────────
@@ -383,7 +424,8 @@ class ExerciseCatalog {
       id: 'plank',
       category: ExerciseCategory.core,
       name: 'Plank',
-      description: 'Hold a straight body position on forearms and toes for time.',
+      description:
+          'Hold a straight body position on forearms and toes for time.',
       difficulty: 1,
       treeOrder: 0,
     ),
@@ -391,7 +433,8 @@ class ExerciseCatalog {
       id: 'hollow_body',
       category: ExerciseCategory.core,
       name: 'Hollow Body Hold',
-      description: 'Supine hold with lower back pressed to the floor, arms and legs elevated.',
+      description:
+          'Supine hold with lower back pressed to the floor, arms and legs elevated.',
       difficulty: 1,
       treeOrder: 0,
     ),
@@ -399,7 +442,8 @@ class ExerciseCatalog {
       id: 'ab_wheel_kneeling',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (kneeling)',
-      description: 'Roll the ab wheel out from a kneeling position and return with control.',
+      description:
+          'Roll the ab wheel out from a kneeling position and return with control.',
       difficulty: 2,
       treeOrder: 1,
       prerequisiteIds: ['plank'],
@@ -408,7 +452,8 @@ class ExerciseCatalog {
       id: 'l_sit_tuck',
       category: ExerciseCategory.core,
       name: 'L-sit Tuck',
-      description: 'Support yourself on parallel bars or rings with knees tucked.',
+      description:
+          'Support yourself on parallel bars or rings with knees tucked.',
       difficulty: 2,
       treeOrder: 1,
       prerequisiteIds: ['hollow_body'],
@@ -417,7 +462,8 @@ class ExerciseCatalog {
       id: 'dragon_flag_neg',
       category: ExerciseCategory.core,
       name: 'Dragon Flag Neg.',
-      description: 'Lower your straight body from vertical to horizontal under control.',
+      description:
+          'Lower your straight body from vertical to horizontal under control.',
       difficulty: 3,
       treeOrder: 2,
       prerequisiteIds: ['ab_wheel_kneeling'],
@@ -426,7 +472,8 @@ class ExerciseCatalog {
       id: 'l_sit',
       category: ExerciseCategory.core,
       name: 'L-sit',
-      description: 'Hold legs straight and parallel to the floor on parallel bars or rings.',
+      description:
+          'Hold legs straight and parallel to the floor on parallel bars or rings.',
       difficulty: 3,
       treeOrder: 2,
       prerequisiteIds: ['l_sit_tuck'],
@@ -435,7 +482,8 @@ class ExerciseCatalog {
       id: 'ab_wheel_standing',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (standing)',
-      description: 'Full standing ab wheel rollout — extreme anti-extension demand.',
+      description:
+          'Full standing ab wheel rollout — extreme anti-extension demand.',
       difficulty: 4,
       treeOrder: 3,
       prerequisiteIds: ['dragon_flag_neg'],
@@ -444,7 +492,8 @@ class ExerciseCatalog {
       id: 'dragon_flag',
       category: ExerciseCategory.core,
       name: 'Dragon Flag',
-      description: 'Full dragon flag, lowering and raising the body while keeping it perfectly straight.',
+      description:
+          'Full dragon flag, lowering and raising the body while keeping it perfectly straight.',
       difficulty: 4,
       treeOrder: 3,
       prerequisiteIds: ['dragon_flag_neg'],
@@ -453,7 +502,8 @@ class ExerciseCatalog {
       id: 'v_sit',
       category: ExerciseCategory.core,
       name: 'V-sit',
-      description: 'Hold an L-sit with legs raised above horizontal forming a V shape.',
+      description:
+          'Hold an L-sit with legs raised above horizontal forming a V shape.',
       difficulty: 5,
       treeOrder: 4,
       prerequisiteIds: ['l_sit'],
@@ -468,4 +518,11 @@ class ExerciseCatalog {
 
   static int totalForCategory(ExerciseCategory category) =>
       _all.where((e) => e.category == category).length;
+
+  static Exercise? findById(String id) {
+    for (final exercise in _all) {
+      if (exercise.id == id) return exercise;
+    }
+    return null;
+  }
 }

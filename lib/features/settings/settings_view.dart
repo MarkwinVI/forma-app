@@ -54,7 +54,8 @@ class SettingsView extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy_outlined, size: 18, color: AppColors.textSecondary),
+                    icon: const Icon(Icons.copy_outlined,
+                        size: 18, color: AppColors.textSecondary),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: userId));
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +66,7 @@ class SettingsView extends StatelessWidget {
                   ),
                 ],
               ),
-              Divider(height: 32, color: AppColors.borderPrimary),
+              const Divider(height: 32, color: AppColors.borderPrimary),
               const Spacer(),
               SizedBox(
                 width: double.infinity,

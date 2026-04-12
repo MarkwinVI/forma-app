@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
-import '../../data/models/exercise_progress_model.dart';
 import 'skill_tree_view.dart';
 
 const _masteredColor = Color(0xFF00FF8C);
@@ -55,17 +54,23 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
 
   Color _dotColor(ExerciseStatus s) {
     switch (s) {
-      case ExerciseStatus.mastered: return _masteredColor;
-      case ExerciseStatus.active:   return AppColors.accentPrimary;
-      case ExerciseStatus.inactive: return _inactiveColor;
+      case ExerciseStatus.mastered:
+        return _masteredColor;
+      case ExerciseStatus.active:
+        return AppColors.accentPrimary;
+      case ExerciseStatus.inactive:
+        return _inactiveColor;
     }
   }
 
   String _statusLabel(ExerciseStatus s) {
     switch (s) {
-      case ExerciseStatus.mastered: return 'Mastered';
-      case ExerciseStatus.active:   return 'Active';
-      case ExerciseStatus.inactive: return 'Inactive';
+      case ExerciseStatus.mastered:
+        return 'Mastered';
+      case ExerciseStatus.active:
+        return 'Active';
+      case ExerciseStatus.inactive:
+        return 'Inactive';
     }
   }
 
@@ -193,7 +198,8 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                                     builder: (_) => SkillTreeView(
                                       category: exercise.category,
                                       progressMap: widget.progressMap,
-                                      onProgressChanged: widget.onProgressChanged,
+                                      onProgressChanged:
+                                          widget.onProgressChanged,
                                     ),
                                   ),
                                 );
