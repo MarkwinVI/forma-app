@@ -10,6 +10,7 @@ import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import 'session_overview_view.dart';
 import 'training_program_settings_view.dart';
 
 const _cardShadow = Color(0x40000000);
@@ -175,6 +176,16 @@ class _TrainingProgramCard extends StatelessWidget {
     return recommendation.items.map((item) => item.exercise.name).join(', ');
   }
 
+  void _openSessionOverview(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SessionOverviewView(
+          recommendation: recommendation,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -306,7 +317,7 @@ class _TrainingProgramCard extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: GestureDetector(
-                          onTap: () {},
+                          onTap: () => _openSessionOverview(context),
                           behavior: HitTestBehavior.opaque,
                           child: Container(
                             height: 56,

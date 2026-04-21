@@ -55,6 +55,28 @@ extension ExerciseCategoryX on ExerciseCategory {
 
 enum ExerciseStatus { inactive, active, mastered }
 
+enum ExerciseProgramSection {
+  warmup,
+  skillWork,
+  mainExercises,
+  coolDown,
+}
+
+extension ExerciseProgramSectionX on ExerciseProgramSection {
+  String get label {
+    switch (this) {
+      case ExerciseProgramSection.warmup:
+        return 'Warmup';
+      case ExerciseProgramSection.skillWork:
+        return 'Skill work';
+      case ExerciseProgramSection.mainExercises:
+        return 'Main exercises';
+      case ExerciseProgramSection.coolDown:
+        return 'Cool down';
+    }
+  }
+}
+
 class Exercise {
   final String id;
   final ExerciseCategory category;
@@ -63,6 +85,7 @@ class Exercise {
   final int difficulty; // 1–5
   final int treeOrder; // exercises with the same value appear on the same row
   final List<String> prerequisiteIds;
+  final ExerciseProgramSection programSection;
   final String? imageUrl;
 
   const Exercise({
@@ -73,6 +96,7 @@ class Exercise {
     required this.difficulty,
     required this.treeOrder,
     this.prerequisiteIds = const [],
+    this.programSection = ExerciseProgramSection.mainExercises,
     this.imageUrl,
   });
 }

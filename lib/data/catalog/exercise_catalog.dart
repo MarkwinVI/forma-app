@@ -437,6 +437,7 @@ class ExerciseCatalog {
           'Supine hold with lower back pressed to the floor, arms and legs elevated.',
       difficulty: 1,
       treeOrder: 0,
+      programSection: ExerciseProgramSection.skillWork,
     ),
     Exercise(
       id: 'ab_wheel_kneeling',
@@ -457,6 +458,7 @@ class ExerciseCatalog {
       difficulty: 2,
       treeOrder: 1,
       prerequisiteIds: ['hollow_body'],
+      programSection: ExerciseProgramSection.skillWork,
     ),
     Exercise(
       id: 'dragon_flag_neg',
@@ -477,6 +479,7 @@ class ExerciseCatalog {
       difficulty: 3,
       treeOrder: 2,
       prerequisiteIds: ['l_sit_tuck'],
+      programSection: ExerciseProgramSection.skillWork,
     ),
     Exercise(
       id: 'ab_wheel_standing',
@@ -507,6 +510,7 @@ class ExerciseCatalog {
       difficulty: 5,
       treeOrder: 4,
       prerequisiteIds: ['l_sit'],
+      programSection: ExerciseProgramSection.skillWork,
     ),
   ];
 
