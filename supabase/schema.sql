@@ -43,32 +43,77 @@ create policy "Users manage own progress"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
--- ── Exercise Logs ─────────────────────────────────────────────────────────
--- Each row is one training session for one exercise.
--- sets: [{reps: int, weight_kg: float, notes?: string}]
--- total_reps and total_volume_kg are pre-computed for fast progress queries.
+-- ── Workout Sessions ──────────────────────────────────────────────────────
+-- A workout session is the parent record for one saved workout.
+-- Child rows in workout_exercise_logs store the exercises and performed sets.
 
-create table public.exercise_logs (
-  id              uuid default gen_random_uuid() primary key,
-  user_id         uuid references auth.users(id) on delete cascade not null,
-  exercise_id     text not null,
-  logged_at       timestamptz default now() not null,
-  sets            jsonb not null default '[]',
-  total_reps      int not null default 0,
-  total_volume_kg float not null default 0,
-  notes           text
+create table public.workout_sessions (
+  id           uuid default gen_random_uuid() primary key,
+  user_id      uuid references auth.users(id) on delete cascade not null,
+  title        text not null, -- 'Full Body' | 'Push' | 'Pull' | 'Upper' | 'Lower'
+  session_type text not null, -- 'full_body' | 'push' | 'pull' | 'upper' | 'lower' | 'rest'
+  started_at   timestamptz not null,
+  finished_at  timestamptz not null,
+  created_at   timestamptz default now() not null
 );
 
-alter table public.exercise_logs enable row level security;
+create index workout_sessions_user_finished_idx
+  on public.workout_sessions (user_id, finished_at desc);
 
-create policy "Users manage own logs"
-  on public.exercise_logs for all
+alter table public.workout_sessions enable row level security;
+
+create policy "Users manage own workout sessions"
+  on public.workout_sessions for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
--- Useful index for progress/regression queries per exercise
-create index exercise_logs_user_exercise_idx
-  on public.exercise_logs (user_id, exercise_id, logged_at desc);
+-- ── Workout Exercise Logs ─────────────────────────────────────────────────
+-- Each row is one exercise performed inside one workout session.
+-- sets: [{reps?: int, duration_seconds?: int, weight_kg?: float, notes?: string}]
+-- Totals are pre-computed for fast history and progress queries.
+
+create table public.workout_exercise_logs (
+  id                     uuid default gen_random_uuid() primary key,
+  workout_session_id     uuid references public.workout_sessions(id) on delete cascade not null,
+  user_id                uuid references auth.users(id) on delete cascade not null,
+  exercise_id            text not null,
+  order_index            int not null default 0,
+  sets                   jsonb not null default '[]',
+  total_reps             int not null default 0,
+  total_duration_seconds int not null default 0,
+  total_volume_kg        float not null default 0,
+  created_at             timestamptz default now() not null,
+  check (order_index >= 0)
+);
+
+create index workout_exercise_logs_session_idx
+  on public.workout_exercise_logs (workout_session_id, order_index asc);
+
+create index workout_exercise_logs_user_exercise_idx
+  on public.workout_exercise_logs (user_id, exercise_id, created_at desc);
+
+alter table public.workout_exercise_logs enable row level security;
+
+create policy "Users manage own workout exercise logs"
+  on public.workout_exercise_logs for all
+  using (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.workout_sessions ws
+      where ws.id = workout_session_id
+        and ws.user_id = auth.uid()
+    )
+  )
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1
+      from public.workout_sessions ws
+      where ws.id = workout_session_id
+        and ws.user_id = auth.uid()
+    )
+  );
 
 -- ── Training Programs ─────────────────────────────────────────────────────
 -- Stores the user's selected program template and configuration.

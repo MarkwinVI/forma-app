@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
+import 'completed_workout_model.dart';
+import 'finished_workout_view.dart';
 
 const _workoutCard = Color(0xFF09090B);
 const _workoutBg = _workoutCard;
@@ -35,6 +37,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   ];
 
   late final DateTime _startedAt;
+  late Map<String, List<_WorkoutSetDraft>> _setDrafts;
   Timer? _ticker;
 
   @override
@@ -42,6 +45,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startedAt = DateTime.now();
+    _setDrafts = {
+      for (final item in widget.recommendation.items)
+        item.exercise.id: _initialSetDrafts(item),
+    };
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {});
@@ -86,8 +93,207 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         .toList();
   }
 
+  List<_WorkoutSetDraft> _setsFor(TrainingRecommendationItem item) {
+    return _setDrafts[item.exercise.id] ?? _initialSetDrafts(item);
+  }
+
+  void _replaceSets(
+    TrainingRecommendationItem item,
+    List<_WorkoutSetDraft> sets,
+  ) {
+    setState(() {
+      _setDrafts = {
+        ..._setDrafts,
+        item.exercise.id: sets,
+      };
+    });
+  }
+
+  void _toggleSet(TrainingRecommendationItem item, int number) {
+    final sets = _setsFor(item)
+        .map(
+          (set) => set.number == number
+              ? set.copyWith(
+                  completed: !set.completed,
+                )
+              : set,
+        )
+        .toList();
+
+    _replaceSets(item, sets);
+  }
+
+  void _changeSetTarget(
+    TrainingRecommendationItem item,
+    int number,
+    int? target,
+  ) {
+    final sets = _setsFor(item)
+        .map(
+          (set) => set.number == number
+              ? set.copyWith(
+                  target: target ?? 0,
+                  isEdited: target != null && target > 0,
+                )
+              : set,
+        )
+        .toList();
+
+    _replaceSets(item, sets);
+  }
+
+  void _addSet(TrainingRecommendationItem item) {
+    final sets = _setsFor(item);
+    final target = sets.isEmpty ? _defaultTarget(item) : sets.last.target;
+
+    _replaceSets(
+      item,
+      [
+        ...sets,
+        _WorkoutSetDraft(
+          number: sets.length + 1,
+          target: target,
+          previousLabel: '-',
+        ),
+      ],
+    );
+  }
+
+  void _removeSet(TrainingRecommendationItem item, int number) {
+    final sets = _setsFor(item);
+    if (sets.length <= 1) return;
+
+    final remaining = sets.where((set) => set.number != number).toList();
+    _replaceSets(
+      item,
+      [
+        for (var index = 0; index < remaining.length; index++)
+          remaining[index].copyWith(number: index + 1),
+      ],
+    );
+  }
+
+  void _completeTimedSet(
+    TrainingRecommendationItem item,
+    int number,
+    int seconds,
+  ) {
+    final sets = _setsFor(item)
+        .map(
+          (set) => set.number == number
+              ? set.copyWith(
+                  target: seconds,
+                  completed: true,
+                )
+              : set,
+        )
+        .toList();
+
+    _replaceSets(item, sets);
+  }
+
+  CompletedWorkout _buildCompletedWorkout() {
+    final exercises = <CompletedWorkoutExercise>[];
+
+    for (final item in widget.recommendation.items) {
+      final isTimed = _isTimedExercise(item.exercise);
+      final completedSets = _setsFor(item)
+          .where((set) => set.hasData)
+          .map(
+            (set) => CompletedWorkoutSet(
+              number: set.number,
+              value: set.target,
+              isTimed: isTimed,
+            ),
+          )
+          .toList();
+
+      if (completedSets.isEmpty) continue;
+
+      exercises.add(
+        CompletedWorkoutExercise(
+          item: item,
+          sets: completedSets,
+        ),
+      );
+    }
+
+    return CompletedWorkout(
+      sessionLabel: widget.recommendation.sessionLabel,
+      sessionType: widget.recommendation.sessionType,
+      startedAt: _startedAt,
+      finishedAt: DateTime.now(),
+      exercises: exercises,
+    );
+  }
+
   void _finishWorkout() {
-    Navigator.of(context).pop();
+    final workout = _buildCompletedWorkout();
+
+    if (workout.exercises.isEmpty) {
+      _showNoDataDialog();
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FinishedWorkoutView(workout: workout),
+      ),
+    );
+  }
+
+  Future<void> _showNoDataDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.bgTertiary,
+          surfaceTintColor: AppColors.bgTertiary,
+          title: Text(
+            'No data entered',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: Text(
+            'Add at least one completed set before finishing, or discard this workout.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Return',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final navigator = Navigator.of(context);
+                navigator.pop();
+                navigator.popUntil((route) => route.isFirst);
+              },
+              child: Text(
+                'Discard workout',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.accentPrimary,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _openExerciseDetail(
@@ -143,6 +349,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                       (entry) => _LiveSectionBlock(
                         section: entry.section,
                         items: entry.items,
+                        setsFor: _setsFor,
+                        onToggleSet: _toggleSet,
+                        onTargetChanged: _changeSetTarget,
+                        onAddSet: _addSet,
+                        onRemoveSet: _removeSet,
+                        onTimedSetCompleted: _completeTimedSet,
                         onOpenDetail: _openExerciseDetail,
                       ),
                     ),
@@ -274,12 +486,27 @@ class _TimerPill extends StatelessWidget {
 class _LiveSectionBlock extends StatelessWidget {
   final ExerciseProgramSection section;
   final List<TrainingRecommendationItem> items;
+  final List<_WorkoutSetDraft> Function(TrainingRecommendationItem item)
+      setsFor;
+  final void Function(TrainingRecommendationItem item, int number) onToggleSet;
+  final void Function(TrainingRecommendationItem item, int number, int? target)
+      onTargetChanged;
+  final void Function(TrainingRecommendationItem item) onAddSet;
+  final void Function(TrainingRecommendationItem item, int number) onRemoveSet;
+  final void Function(TrainingRecommendationItem item, int number, int seconds)
+      onTimedSetCompleted;
   final void Function(TrainingRecommendationItem item, Color sectionColor)
       onOpenDetail;
 
   const _LiveSectionBlock({
     required this.section,
     required this.items,
+    required this.setsFor,
+    required this.onToggleSet,
+    required this.onTargetChanged,
+    required this.onAddSet,
+    required this.onRemoveSet,
+    required this.onTimedSetCompleted,
     required this.onOpenDetail,
   });
 
@@ -340,7 +567,28 @@ class _LiveSectionBlock extends StatelessWidget {
                   _LiveExerciseCard(
                     key: ValueKey(items[index].exercise.id),
                     item: items[index],
+                    sets: setsFor(items[index]),
                     sectionColor: sectionColor,
+                    onToggleSet: (number) => onToggleSet(
+                      items[index],
+                      number,
+                    ),
+                    onTargetChanged: (number, target) => onTargetChanged(
+                      items[index],
+                      number,
+                      target,
+                    ),
+                    onAddSet: () => onAddSet(items[index]),
+                    onRemoveSet: (number) => onRemoveSet(
+                      items[index],
+                      number,
+                    ),
+                    onTimedSetCompleted: (number, seconds) =>
+                        onTimedSetCompleted(
+                      items[index],
+                      number,
+                      seconds,
+                    ),
                     onOpenDetail: () => onOpenDetail(
                       items[index],
                       sectionColor,
@@ -358,13 +606,25 @@ class _LiveSectionBlock extends StatelessWidget {
 
 class _LiveExerciseCard extends StatefulWidget {
   final TrainingRecommendationItem item;
+  final List<_WorkoutSetDraft> sets;
   final Color sectionColor;
+  final void Function(int number) onToggleSet;
+  final void Function(int number, int? target) onTargetChanged;
+  final VoidCallback onAddSet;
+  final void Function(int number) onRemoveSet;
+  final void Function(int number, int seconds) onTimedSetCompleted;
   final VoidCallback onOpenDetail;
 
   const _LiveExerciseCard({
     super.key,
     required this.item,
+    required this.sets,
     required this.sectionColor,
+    required this.onToggleSet,
+    required this.onTargetChanged,
+    required this.onAddSet,
+    required this.onRemoveSet,
+    required this.onTimedSetCompleted,
     required this.onOpenDetail,
   });
 
@@ -373,63 +633,10 @@ class _LiveExerciseCard extends StatefulWidget {
 }
 
 class _LiveExerciseCardState extends State<_LiveExerciseCard> {
-  late List<_WorkoutSetDraft> _sets;
-
-  @override
-  void initState() {
-    super.initState();
-    _sets = List.generate(
-      _defaultSetCount(widget.item),
-      (index) => _WorkoutSetDraft(
-        number: index + 1,
-        target: _defaultTarget(widget.item),
-        previousLabel: '-',
-      ),
-    );
-  }
-
   bool get _isTimed => _isTimedExercise(widget.item.exercise);
-  int get _completedCount => _sets.where((set) => set.completed).length;
-  bool get _allDone => _sets.isNotEmpty && _completedCount == _sets.length;
-
-  void _toggleSet(int number) {
-    setState(() {
-      _sets = _sets
-          .map(
-            (set) => set.number == number
-                ? set.copyWith(completed: !set.completed)
-                : set,
-          )
-          .toList();
-    });
-  }
-
-  void _addSet() {
-    setState(() {
-      final target =
-          _sets.isEmpty ? _defaultTarget(widget.item) : _sets.last.target;
-      _sets = [
-        ..._sets,
-        _WorkoutSetDraft(
-          number: _sets.length + 1,
-          target: target,
-          previousLabel: '-',
-        ),
-      ];
-    });
-  }
-
-  void _removeSet(int number) {
-    if (_sets.length <= 1) return;
-
-    setState(() {
-      final remaining = _sets.where((set) => set.number != number).toList();
-      _sets = [
-        for (var index = 0; index < remaining.length; index++)
-          remaining[index].copyWith(number: index + 1),
-      ];
-    });
-  }
+  int get _completedCount => widget.sets.where((set) => set.completed).length;
+  bool get _allDone =>
+      widget.sets.isNotEmpty && _completedCount == widget.sets.length;
 
   Future<void> _openTimedSetTimer(_WorkoutSetDraft set) async {
     final seconds = await showModalBottomSheet<int>(
@@ -447,15 +654,7 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
 
     if (seconds == null || !mounted) return;
 
-    setState(() {
-      _sets = _sets
-          .map(
-            (draft) => draft.number == set.number
-                ? draft.copyWith(target: seconds, completed: true)
-                : draft,
-          )
-          .toList();
-    });
+    widget.onTimedSetCompleted(set.number, seconds);
   }
 
   @override
@@ -548,7 +747,7 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
                   hasTimer: _isTimed,
                 ),
                 const SizedBox(height: 4),
-                ..._sets.map(
+                ...widget.sets.map(
                   (set) => _SetRow(
                     key: ValueKey('${exercise.id}-${set.number}'),
                     set: set,
@@ -556,16 +755,19 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
                     timerColor: widget.sectionColor,
                     onOpenTimer:
                         _isTimed ? () => _openTimedSetTimer(set) : null,
-                    onToggle: () => _toggleSet(set.number),
-                    onRemove:
-                        _sets.length > 1 ? () => _removeSet(set.number) : null,
+                    onTargetChanged: (target) =>
+                        widget.onTargetChanged(set.number, target),
+                    onToggle: () => widget.onToggleSet(set.number),
+                    onRemove: widget.sets.length > 1
+                        ? () => widget.onRemoveSet(set.number)
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
-                      child: _AddSetButton(onPressed: _addSet),
+                      child: _AddSetButton(onPressed: widget.onAddSet),
                     ),
                     const SizedBox(width: 8),
                     const _SwapExerciseButton(),
@@ -698,6 +900,7 @@ class _SetRow extends StatefulWidget {
   final bool hasTimer;
   final Color timerColor;
   final VoidCallback? onOpenTimer;
+  final ValueChanged<int?> onTargetChanged;
   final VoidCallback onToggle;
   final VoidCallback? onRemove;
 
@@ -707,6 +910,7 @@ class _SetRow extends StatefulWidget {
     required this.hasTimer,
     required this.timerColor,
     this.onOpenTimer,
+    required this.onTargetChanged,
     required this.onToggle,
     this.onRemove,
   });
@@ -721,14 +925,16 @@ class _SetRowState extends State<_SetRow> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.set.target.toString());
+    _controller = TextEditingController(
+      text: widget.set.target <= 0 ? '' : widget.set.target.toString(),
+    );
   }
 
   @override
   void didUpdateWidget(covariant _SetRow oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    final nextText = widget.set.target.toString();
+    final nextText = widget.set.target <= 0 ? '' : widget.set.target.toString();
     if (nextText != _controller.text) {
       _controller.text = nextText;
     }
@@ -785,6 +991,10 @@ class _SetRowState extends State<_SetRow> {
                 controller: _controller,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
+                onChanged: (value) {
+                  final parsed = int.tryParse(value);
+                  widget.onTargetChanged(parsed);
+                },
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -1682,27 +1892,44 @@ class _WorkoutSetDraft {
   final int target;
   final String previousLabel;
   final bool completed;
+  final bool isEdited;
 
   const _WorkoutSetDraft({
     required this.number,
     required this.target,
     required this.previousLabel,
     this.completed = false,
+    this.isEdited = false,
   });
+
+  bool get hasData => (completed || isEdited) && target > 0;
 
   _WorkoutSetDraft copyWith({
     int? number,
     int? target,
     String? previousLabel,
     bool? completed,
+    bool? isEdited,
   }) {
     return _WorkoutSetDraft(
       number: number ?? this.number,
       target: target ?? this.target,
       previousLabel: previousLabel ?? this.previousLabel,
       completed: completed ?? this.completed,
+      isEdited: isEdited ?? this.isEdited,
     );
   }
+}
+
+List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
+  return List.generate(
+    _defaultSetCount(item),
+    (index) => _WorkoutSetDraft(
+      number: index + 1,
+      target: _defaultTarget(item),
+      previousLabel: '-',
+    ),
+  );
 }
 
 Color _sectionColor(ExerciseProgramSection section) {

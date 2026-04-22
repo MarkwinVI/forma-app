@@ -16,19 +16,19 @@ class ShellView extends StatefulWidget {
 class _ShellViewState extends State<ShellView> {
   int _currentIndex = 0;
 
-  static const _pages = [
-    HomeView(),
-    DataView(),
-    SkillsView(),
-    SettingsView(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      const HomeView(),
+      DataView(isActive: _currentIndex == 1),
+      const SkillsView(),
+      const SettingsView(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: pages,
       ),
       bottomNavigationBar: AppNavBar(
         currentIndex: _currentIndex,
