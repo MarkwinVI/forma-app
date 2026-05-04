@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
 import 'live_workout_view.dart';
@@ -284,6 +285,9 @@ class _SessionExerciseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skillCategory =
+        SkillCategoryCatalog.findById(item.sourceSkillCategoryId);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -328,7 +332,7 @@ class _SessionExerciseRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${item.track.label} · ${item.exercise.category.label}',
+                  '${item.track.label} · ${skillCategory?.title ?? item.exercise.category.label}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(

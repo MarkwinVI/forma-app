@@ -1,4 +1,5 @@
 import '../catalog/exercise_catalog.dart';
+import '../catalog/skill_category_catalog.dart';
 import '../models/exercise_model.dart';
 import '../models/training_program_model.dart';
 
@@ -87,6 +88,9 @@ class TrainingProgramService {
           exercise: exercise,
           status: progressMap[exercise.id] ?? ExerciseStatus.inactive,
           sourceCategory: branch.sourceCategory,
+          sourceSkillCategoryId: branch.sourceSkillCategoryId.isEmpty
+              ? branch.sourceCategory.id
+              : branch.sourceSkillCategoryId,
         ),
       );
     }
@@ -193,90 +197,60 @@ class TrainingProgramService {
     return score;
   }
 
-  static const _skillWorkBranch = _TrainingBranch(
+  static final _skillWorkBranch = _TrainingBranch(
     track: TrainingTrack.skillWork,
     sourceCategory: ExerciseCategory.core,
-    exerciseIds: ['hollow_body', 'l_sit_tuck', 'l_sit', 'v_sit'],
+    sourceSkillCategoryId: SkillCategoryCatalog.lSitVSitId,
+    exerciseIds: SkillCategoryCatalog.lSitVSit
+        .trainingPaths[SkillCategoryCatalog.lSitVSit.defaultTrainingPathId]!,
   );
 
-  static const _verticalPushBranch = _TrainingBranch(
+  static final _verticalPushBranch = _TrainingBranch(
     track: TrainingTrack.verticalPush,
     sourceCategory: ExerciseCategory.verticalPush,
-    exerciseIds: [
-      'wall_plank',
-      'pike_push_up',
-      'elevated_pike_push_up',
-      'wall_handstand',
-      'freestanding_handstand',
-      'wall_hspu',
-      'freestanding_hspu',
-    ],
+    sourceSkillCategoryId: SkillCategoryCatalog.handstandPushupsId,
+    exerciseIds: SkillCategoryCatalog.handstandPushups.trainingPaths[
+        SkillCategoryCatalog.handstandPushups.defaultTrainingPathId]!,
   );
 
-  static const _horizontalPushBranch = _TrainingBranch(
+  static final _horizontalPushBranch = _TrainingBranch(
     track: TrainingTrack.horizontalPush,
     sourceCategory: ExerciseCategory.horizontalPush,
-    exerciseIds: [
-      'wall_push_up',
-      'incline_push_up',
-      'push_up',
-      'diamond_push_up',
-      'archer_push_up',
-      'one_arm_push_up',
-    ],
+    sourceSkillCategoryId: SkillCategoryCatalog.pushupsId,
+    exerciseIds: SkillCategoryCatalog.pushups
+        .trainingPaths[SkillCategoryCatalog.pushups.defaultTrainingPathId]!,
   );
 
-  static const _verticalPullBranch = _TrainingBranch(
+  static final _verticalPullBranch = _TrainingBranch(
     track: TrainingTrack.verticalPull,
     sourceCategory: ExerciseCategory.verticalPull,
-    exerciseIds: [
-      'dead_hang',
-      'scapular_pull',
-      'negative_pull_up',
-      'pull_up',
-      'weighted_pull_up',
-      'one_arm_negative',
-      'one_arm_pull_up',
-    ],
+    sourceSkillCategoryId: SkillCategoryCatalog.pullupsId,
+    exerciseIds: SkillCategoryCatalog.pullups
+        .trainingPaths[SkillCategoryCatalog.pullups.defaultTrainingPathId]!,
   );
 
-  static const _horizontalPullBranch = _TrainingBranch(
+  static final _horizontalPullBranch = _TrainingBranch(
     track: TrainingTrack.horizontalPull,
     sourceCategory: ExerciseCategory.horizontalPull,
-    exerciseIds: [
-      'table_row',
-      'incline_row',
-      'australian_pull_up',
-      'tuck_front_lever',
-      'adv_tuck_front_lever',
-      'straddle_front_lever',
-      'front_lever',
-    ],
+    sourceSkillCategoryId: SkillCategoryCatalog.rowsId,
+    exerciseIds: SkillCategoryCatalog
+        .rows.trainingPaths[SkillCategoryCatalog.rows.defaultTrainingPathId]!,
   );
 
-  static const _coreBranch = _TrainingBranch(
+  static final _coreBranch = _TrainingBranch(
     track: TrainingTrack.core,
     sourceCategory: ExerciseCategory.core,
-    exerciseIds: [
-      'plank',
-      'ab_wheel_kneeling',
-      'dragon_flag_neg',
-      'dragon_flag',
-      'ab_wheel_standing',
-    ],
+    sourceSkillCategoryId: SkillCategoryCatalog.abWheelId,
+    exerciseIds: SkillCategoryCatalog.abWheel
+        .trainingPaths[SkillCategoryCatalog.abWheel.defaultTrainingPathId]!,
   );
 
-  static const _squatBranch = _TrainingBranch(
+  static final _squatBranch = _TrainingBranch(
     track: TrainingTrack.squat,
     sourceCategory: ExerciseCategory.squat,
-    exerciseIds: [
-      'squat',
-      'lunge',
-      'bulgarian_split_squat',
-      'pistol_squat_neg',
-      'pistol_squat',
-      'dragon_squat',
-    ],
+    sourceSkillCategoryId: SkillCategoryCatalog.squatId,
+    exerciseIds: SkillCategoryCatalog
+        .squat.trainingPaths[SkillCategoryCatalog.squat.defaultTrainingPathId]!,
   );
 
   static const _hingeBranch = _TrainingBranch(
@@ -285,13 +259,7 @@ class TrainingProgramService {
     exerciseIds: ['single_leg_rdl', 'nordic_curl'],
   );
 
-  static const _calvesBranch = _TrainingBranch(
-    track: TrainingTrack.calves,
-    sourceCategory: ExerciseCategory.calves,
-    exerciseIds: ['calf_raise', 'single_leg_calf_raise'],
-  );
-
-  static const List<_TrainingBranch> _fullBodyBranches = [
+  static final List<_TrainingBranch> _fullBodyBranches = [
     _skillWorkBranch,
     _verticalPushBranch,
     _horizontalPushBranch,
@@ -302,7 +270,7 @@ class TrainingProgramService {
     _hingeBranch,
   ];
 
-  static const List<_TrainingBranch> _pushDayBranches = [
+  static final List<_TrainingBranch> _pushDayBranches = [
     _skillWorkBranch,
     _horizontalPushBranch,
     _verticalPushBranch,
@@ -310,7 +278,7 @@ class TrainingProgramService {
     _coreBranch,
   ];
 
-  static const List<_TrainingBranch> _pullDayBranches = [
+  static final List<_TrainingBranch> _pullDayBranches = [
     _skillWorkBranch,
     _horizontalPullBranch,
     _verticalPullBranch,
@@ -318,22 +286,23 @@ class TrainingProgramService {
     _coreBranch,
   ];
 
-  static const List<_TrainingBranch> _lowerDayBranches = [
+  static final List<_TrainingBranch> _lowerDayBranches = [
     _squatBranch,
     _hingeBranch,
     _coreBranch,
-    _calvesBranch,
   ];
 }
 
 class _TrainingBranch {
   final TrainingTrack track;
   final ExerciseCategory sourceCategory;
+  final String sourceSkillCategoryId;
   final List<String> exerciseIds;
 
   const _TrainingBranch({
     required this.track,
     required this.sourceCategory,
+    this.sourceSkillCategoryId = '',
     required this.exerciseIds,
   });
 }

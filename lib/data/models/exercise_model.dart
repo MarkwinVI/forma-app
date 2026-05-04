@@ -5,8 +5,8 @@ enum ExerciseCategory {
   horizontalPush,
   squat,
   hinge,
-  calves,
   core,
+  skill,
 }
 
 extension ExerciseCategoryX on ExerciseCategory {
@@ -24,10 +24,10 @@ extension ExerciseCategoryX on ExerciseCategory {
         return 'squat';
       case ExerciseCategory.hinge:
         return 'hinge';
-      case ExerciseCategory.calves:
-        return 'calves';
       case ExerciseCategory.core:
         return 'core';
+      case ExerciseCategory.skill:
+        return 'skill';
     }
   }
 
@@ -45,10 +45,10 @@ extension ExerciseCategoryX on ExerciseCategory {
         return 'Squat';
       case ExerciseCategory.hinge:
         return 'Hinge';
-      case ExerciseCategory.calves:
-        return 'Calves';
       case ExerciseCategory.core:
         return 'Core';
+      case ExerciseCategory.skill:
+        return 'Skill';
     }
   }
 }
@@ -80,6 +80,8 @@ extension ExerciseProgramSectionX on ExerciseProgramSection {
 class Exercise {
   final String id;
   final ExerciseCategory category;
+  final String skillCategoryId;
+  final String branchId;
   final String name;
   final String description;
   final int difficulty; // 1–5
@@ -91,6 +93,8 @@ class Exercise {
   const Exercise({
     required this.id,
     required this.category,
+    this.skillCategoryId = '',
+    this.branchId = 'main',
     required this.name,
     required this.description,
     required this.difficulty,

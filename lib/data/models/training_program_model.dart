@@ -103,7 +103,6 @@ enum TrainingTrack {
   core,
   squat,
   hinge,
-  calves,
 }
 
 extension TrainingTrackX on TrainingTrack {
@@ -125,8 +124,6 @@ extension TrainingTrackX on TrainingTrack {
         return 'Squat';
       case TrainingTrack.hinge:
         return 'Hinge';
-      case TrainingTrack.calves:
-        return 'Calves';
     }
   }
 }
@@ -136,12 +133,14 @@ class TrainingRecommendationItem {
   final Exercise exercise;
   final ExerciseStatus status;
   final ExerciseCategory sourceCategory;
+  final String sourceSkillCategoryId;
 
   const TrainingRecommendationItem({
     required this.track,
     required this.exercise,
     required this.status,
     required this.sourceCategory,
+    required this.sourceSkillCategoryId,
   });
 }
 

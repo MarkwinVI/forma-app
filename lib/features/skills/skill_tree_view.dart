@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/skill_category_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import 'widgets/exercise_node.dart';
@@ -11,14 +13,14 @@ import 'widgets/skill_tree_painter.dart';
 const _masteredColor = Color(0xFF4CAF50);
 
 class SkillTreeView extends StatefulWidget {
-  final ExerciseCategory category;
+  final String skillCategoryId;
   final Map<String, ExerciseStatus> progressMap;
   final void Function(String exerciseId, ExerciseStatus status)
       onProgressChanged;
 
   const SkillTreeView({
     super.key,
-    required this.category,
+    required this.skillCategoryId,
     required this.progressMap,
     required this.onProgressChanged,
   });
@@ -29,44 +31,87 @@ class SkillTreeView extends StatefulWidget {
 
 class _SkillTreeViewState extends State<SkillTreeView> {
   final _progressService = ProgressService();
+  final _horizontalScrollController = ScrollController();
+  late SkillCategory _skillCategory;
   late Map<String, ExerciseStatus> _localProgress;
   late List<Exercise> _exercises;
+  bool _didAlignInitialScroll = false;
 
   @override
   void initState() {
     super.initState();
-    _exercises = ExerciseCatalog.forCategory(widget.category);
+    _skillCategory = SkillCategoryCatalog.findById(widget.skillCategoryId) ??
+        SkillCategoryCatalog.defaultForTrack(ExerciseCategory.verticalPull);
+    _exercises = ExerciseCatalog.forSkillCategory(_skillCategory.id);
     _localProgress = Map.from(widget.progressMap);
+  }
+
+  @override
+  void dispose() {
+    _horizontalScrollController.dispose();
+    super.dispose();
   }
 
   // Pre-compute grid positions for every exercise node.
   Map<String, Offset> _computePositions(double availableWidth) {
-    final Map<int, List<Exercise>> levels = {};
-    for (final e in _exercises) {
-      levels.putIfAbsent(e.treeOrder, () => []).add(e);
-    }
-
-    final sortedKeys = levels.keys.toList()..sort();
     final positions = <String, Offset>{};
-    const nodeSize = kNodeSize;
-    const vSpacing = 60.0;
-    const vPadding = 40.0;
-    const hPadding = 24.0;
+    const vSpacing = 44.0;
+    const vPadding = 24.0;
+    final laneMap = {
+      for (final branch in _skillCategory.branches) branch.id: branch.lane,
+    };
+    final lanes = laneMap.values.toSet().toList()..sort();
+    const hPadding = kNodeWidth / 2 + 24;
+    final usable = availableWidth - hPadding * 2;
+    final laneToX = <int, double>{};
 
-    for (int li = 0; li < sortedKeys.length; li++) {
-      final exs = levels[sortedKeys[li]]!;
-      final n = exs.length;
-      final usable = availableWidth - hPadding * 2 - nodeSize;
-
-      for (int i = 0; i < n; i++) {
-        final x = n == 1
-            ? availableWidth / 2
-            : hPadding + nodeSize / 2 + (n > 1 ? usable / (n - 1) * i : 0);
-        final y = vPadding + li * (nodeSize + vSpacing) + nodeSize / 2;
-        positions[exs[i].id] = Offset(x, y);
-      }
+    for (int i = 0; i < lanes.length; i++) {
+      final x = lanes.length == 1
+          ? availableWidth / 2
+          : hPadding + (usable / (lanes.length - 1)) * i;
+      laneToX[lanes[i]] = x;
     }
+
+    for (final exercise in _exercises) {
+      final lane = laneMap[exercise.branchId] ?? 0;
+      final x = laneToX[lane] ?? availableWidth / 2;
+      final y = vPadding +
+          exercise.treeOrder * (kNodeHeight + vSpacing) +
+          kNodeHeight / 2;
+      positions[exercise.id] = Offset(x, y);
+    }
+
     return positions;
+  }
+
+  double _treeWidth(double availableWidth) {
+    final laneCount =
+        _skillCategory.branches.map((branch) => branch.lane).toSet().length;
+    final minWidth = laneCount * kNodeWidth + (laneCount - 1) * 56 + 96;
+    return minWidth > availableWidth ? minWidth : availableWidth;
+  }
+
+  void _ensureInitialHorizontalAlignment({
+    required double viewportWidth,
+    required Map<String, Offset> positions,
+  }) {
+    if (_didAlignInitialScroll || !_horizontalScrollController.hasClients) {
+      return;
+    }
+
+    final mainExercise = _exercises.firstWhere(
+      (exercise) => exercise.branchId == 'main',
+      orElse: () => _exercises.first,
+    );
+    final mainPosition = positions[mainExercise.id];
+    if (mainPosition == null) return;
+
+    final targetOffset = (mainPosition.dx - viewportWidth / 2).clamp(
+      0.0,
+      _horizontalScrollController.position.maxScrollExtent,
+    );
+    _horizontalScrollController.jumpTo(targetOffset);
+    _didAlignInitialScroll = true;
   }
 
   double _totalHeight() {
@@ -75,11 +120,10 @@ class _SkillTreeViewState extends State<SkillTreeView> {
       levels.add(e.treeOrder);
     }
     if (levels.isEmpty) return 300;
-    const nodeSize = kNodeSize;
-    const vSpacing = 60.0;
-    const vPadding = 40.0;
+    const vSpacing = 44.0;
+    const vPadding = 24.0;
     return vPadding * 2 +
-        levels.length * nodeSize +
+        levels.length * kNodeHeight +
         (levels.length - 1) * vSpacing;
   }
 
@@ -109,6 +153,12 @@ class _SkillTreeViewState extends State<SkillTreeView> {
 
   @override
   Widget build(BuildContext context) {
+    final unlockRequirement = _skillCategory.unlockRequirement;
+    final isLocked = unlockRequirement != null &&
+        (_localProgress[unlockRequirement.exerciseId] ??
+                ExerciseStatus.inactive) ==
+            ExerciseStatus.inactive;
+
     return Scaffold(
       backgroundColor: AppColors.bgSecondary,
       appBar: AppBar(
@@ -116,7 +166,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         title: Text(
-          widget.category.label,
+          _skillCategory.title,
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -126,42 +176,231 @@ class _SkillTreeViewState extends State<SkillTreeView> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final positions = _computePositions(width);
+          final viewportWidth = constraints.maxWidth;
+          final treeWidth = _treeWidth(viewportWidth);
+          final positions = _computePositions(treeWidth);
           final height = _totalHeight();
 
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _ensureInitialHorizontalAlignment(
+              viewportWidth: viewportWidth,
+              positions: positions,
+            );
+          });
+
           return SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 32),
-            child: SizedBox(
-              width: width,
-              height: height,
-              child: Stack(
-                children: [
-                  CustomPaint(
-                    size: Size(width, height),
-                    painter: SkillTreePainter(
-                      exercises: _exercises,
-                      nodePositions: positions,
-                      progressMap: _localProgress,
-                    ),
-                  ),
-                  for (final exercise in _exercises)
-                    if (positions.containsKey(exercise.id))
-                      Positioned(
-                        left: positions[exercise.id]!.dx - kNodeSize / 2,
-                        top: positions[exercise.id]!.dy - kNodeSize / 2,
-                        child: ExerciseNode(
-                          exercise: exercise,
-                          status: _localProgress[exercise.id] ??
-                              ExerciseStatus.inactive,
-                          onTap: () => _showExerciseSheet(exercise),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _CategoryHero(
+                  category: _skillCategory,
+                  mastered: _exercises
+                      .where(
+                        (exercise) =>
+                            _localProgress[exercise.id] ==
+                            ExerciseStatus.mastered,
+                      )
+                      .length,
+                  total: _exercises.length,
+                  isLocked: isLocked,
+                  lockMessage: unlockRequirement?.message,
+                  onOpenRequiredTree: unlockRequirement == null
+                      ? null
+                      : () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => SkillTreeView(
+                                skillCategoryId:
+                                    unlockRequirement.targetSkillCategoryId,
+                                progressMap: _localProgress,
+                                onProgressChanged: (id, status) {
+                                  setState(() => _localProgress[id] = status);
+                                  widget.onProgressChanged(id, status);
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                  lockCtaLabel: unlockRequirement?.ctaLabel,
+                ),
+                const SizedBox(height: 20),
+                AbsorbPointer(
+                  absorbing: isLocked,
+                  child: Opacity(
+                    opacity: isLocked ? 0.45 : 1,
+                    child: ScrollConfiguration(
+                      behavior: const MaterialScrollBehavior().copyWith(
+                        scrollbars: true,
+                      ),
+                      child: SingleChildScrollView(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: treeWidth,
+                          height: height,
+                          child: Stack(
+                            children: [
+                              CustomPaint(
+                                size: Size(treeWidth, height),
+                                painter: SkillTreePainter(
+                                  exercises: _exercises,
+                                  nodePositions: positions,
+                                  progressMap: _localProgress,
+                                ),
+                              ),
+                              for (final exercise in _exercises)
+                                if (positions.containsKey(exercise.id))
+                                  Positioned(
+                                    left: positions[exercise.id]!.dx -
+                                        kNodeWidth / 2,
+                                    top: positions[exercise.id]!.dy -
+                                        kNodeHeight / 2,
+                                    child: ExerciseNode(
+                                      exercise: exercise,
+                                      status: _localProgress[exercise.id] ??
+                                          ExerciseStatus.inactive,
+                                      onTap: () => _showExerciseSheet(exercise),
+                                    ),
+                                  ),
+                            ],
+                          ),
                         ),
                       ),
-                ],
-              ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _CategoryHero extends StatelessWidget {
+  final SkillCategory category;
+  final int mastered;
+  final int total;
+  final bool isLocked;
+  final String? lockMessage;
+  final String? lockCtaLabel;
+  final VoidCallback? onOpenRequiredTree;
+
+  const _CategoryHero({
+    required this.category,
+    required this.mastered,
+    required this.total,
+    this.isLocked = false,
+    this.lockMessage,
+    this.lockCtaLabel,
+    this.onOpenRequiredTree,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.bgTertiary,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderPrimary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${category.title} · ${category.subtitle}',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            category.description,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 1.45,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          if (isLocked) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0x14FF8904),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.accentPrimary.withValues(alpha: 0.35),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Locked',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.accentBright,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    lockMessage ?? '',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      height: 1.45,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: onOpenRequiredTree,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.accentBright,
+                      side: BorderSide(
+                        color: AppColors.accentPrimary.withValues(alpha: 0.45),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: Text(
+                      lockCtaLabel ?? 'Open Required Tree',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Text(
+            '$mastered / $total mastered',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
       ),
     );
   }

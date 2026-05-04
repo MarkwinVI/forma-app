@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/skill_category_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import 'exercise_search_view.dart';
@@ -41,14 +43,16 @@ class _SkillsViewState extends State<SkillsView> {
     }
   }
 
-  int _masteredCount(ExerciseCategory category) {
-    return ExerciseCatalog.forCategory(category)
+  int _masteredCount(SkillCategory category) {
+    return ExerciseCatalog.forSkillCategory(category.id)
         .where((e) => _progressMap[e.id] == ExerciseStatus.mastered)
         .length;
   }
 
   @override
   Widget build(BuildContext context) {
+    final categories = SkillCategoryCatalog.browsable();
+
     return Scaffold(
       backgroundColor: AppColors.bgSecondary,
       body: SafeArea(
@@ -125,18 +129,20 @@ class _SkillsViewState extends State<SkillsView> {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final category = ExerciseCategory.values[index];
+                      final category = categories[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: CategoryProgressCard(
                           category: category,
                           mastered: _masteredCount(category),
-                          total: ExerciseCatalog.totalForCategory(category),
+                          total: ExerciseCatalog.totalForSkillCategory(
+                            category.id,
+                          ),
                           onTap: () async {
                             await Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => SkillTreeView(
-                                  category: category,
+                                  skillCategoryId: category.id,
                                   progressMap: _progressMap,
                                   onProgressChanged: (id, status) {
                                     setState(() => _progressMap[id] = status);
@@ -148,7 +154,7 @@ class _SkillsViewState extends State<SkillsView> {
                         ),
                       );
                     },
-                    childCount: ExerciseCategory.values.length,
+                    childCount: categories.length,
                   ),
                 ),
               ),

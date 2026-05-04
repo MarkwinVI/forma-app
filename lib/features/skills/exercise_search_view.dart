@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import 'skill_tree_view.dart';
 
@@ -43,7 +44,7 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
     setState(() {
       _results = q.isEmpty
           ? []
-          : ExerciseCatalog.all()
+          : ExerciseCatalog.browsable()
               .where((e) => e.name.toLowerCase().contains(q))
               .toList();
     });
@@ -196,7 +197,10 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                                 await Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => SkillTreeView(
-                                      category: exercise.category,
+                                      skillCategoryId: ExerciseCatalog
+                                          .skillCategoryIdForExercise(
+                                        exercise,
+                                      ),
                                       progressMap: widget.progressMap,
                                       onProgressChanged:
                                           widget.onProgressChanged,
@@ -233,6 +237,10 @@ class _ExerciseResultRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skillCategory = SkillCategoryCatalog.findById(
+      ExerciseCatalog.skillCategoryIdForExercise(exercise),
+    );
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -268,7 +276,9 @@ class _ExerciseResultRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        exercise.category.label,
+                        skillCategory == null
+                            ? exercise.category.label
+                            : '${skillCategory.title} · ${skillCategory.subtitle}',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
 import 'completed_workout_model.dart';
@@ -1356,7 +1357,12 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final exercise = widget.item.exercise;
-    final progressions = ExerciseCatalog.forCategory(exercise.category);
+    final skillCategory = SkillCategoryCatalog.findById(
+      widget.item.sourceSkillCategoryId,
+    );
+    final progressions = ExerciseCatalog.forSkillCategory(
+      ExerciseCatalog.skillCategoryIdForExercise(exercise),
+    );
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -1405,7 +1411,7 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${exercise.category.label} · ${_difficultyLabel(exercise.difficulty)}',
+                            '${skillCategory?.title ?? exercise.category.label} · ${_difficultyLabel(exercise.difficulty)}',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: AppColors.textMuted,
@@ -1803,8 +1809,10 @@ class _MuscleGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skillCategory =
+        SkillCategoryCatalog.findById(item.sourceSkillCategoryId);
     final chips = [
-      item.sourceCategory.label,
+      skillCategory?.title ?? item.sourceCategory.label,
       item.track.label,
       _difficultyLabel(item.exercise.difficulty),
     ];
