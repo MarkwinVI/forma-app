@@ -7,10 +7,11 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
-import 'widgets/exercise_node.dart';
-import 'widgets/skill_tree_painter.dart';
 
 const _masteredColor = Color(0xFF4CAF50);
+const _treeBg = Color(0xFFF7F5F1);
+const _surfaceShadow = Color(0x1A000000);
+const _foundationPathId = '__foundation__';
 
 class SkillTreeView extends StatefulWidget {
   final String skillCategoryId;
@@ -31,11 +32,11 @@ class SkillTreeView extends StatefulWidget {
 
 class _SkillTreeViewState extends State<SkillTreeView> {
   final _progressService = ProgressService();
-  final _horizontalScrollController = ScrollController();
   late SkillCategory _skillCategory;
   late Map<String, ExerciseStatus> _localProgress;
   late List<Exercise> _exercises;
-  bool _didAlignInitialScroll = false;
+  late String _selectedPathId;
+  late bool _showBranchOverview;
 
   @override
   void initState() {
@@ -44,87 +45,121 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         SkillCategoryCatalog.defaultForTrack(ExerciseCategory.verticalPull);
     _exercises = ExerciseCatalog.forSkillCategory(_skillCategory.id);
     _localProgress = Map.from(widget.progressMap);
+    final pathIds = _pathIds;
+    _selectedPathId = _hasFoundationPath
+        ? _foundationPathId
+        : pathIds.contains(_skillCategory.defaultTrainingPathId)
+            ? _skillCategory.defaultTrainingPathId
+            : pathIds.first;
+    _showBranchOverview = pathIds.length > 1;
   }
 
-  @override
-  void dispose() {
-    _horizontalScrollController.dispose();
-    super.dispose();
+  List<String> get _pathIds {
+    if (_skillCategory.trainingPaths.isNotEmpty) {
+      final ids = _skillCategory.trainingPaths.keys.toList();
+      if (_hasFoundationPath) {
+        return [_foundationPathId, ...ids];
+      }
+      return ids;
+    }
+    return const ['main'];
   }
 
-  // Pre-compute grid positions for every exercise node.
-  Map<String, Offset> _computePositions(double availableWidth) {
-    final positions = <String, Offset>{};
-    const vSpacing = 44.0;
-    const vPadding = 24.0;
-    final laneMap = {
-      for (final branch in _skillCategory.branches) branch.id: branch.lane,
-    };
-    final lanes = laneMap.values.toSet().toList()..sort();
-    const hPadding = kNodeWidth / 2 + 24;
-    final usable = availableWidth - hPadding * 2;
-    final laneToX = <int, double>{};
+  List<String> get _realPathIds {
+    if (_skillCategory.trainingPaths.isNotEmpty) {
+      return _skillCategory.trainingPaths.keys.toList();
+    }
+    return const ['main'];
+  }
 
-    for (int i = 0; i < lanes.length; i++) {
-      final x = lanes.length == 1
-          ? availableWidth / 2
-          : hPadding + (usable / (lanes.length - 1)) * i;
-      laneToX[lanes[i]] = x;
+  List<String> get _sharedFoundationExerciseIds {
+    if (_realPathIds.length < 2) return const [];
+    final lists = _realPathIds
+        .map((pathId) =>
+            _skillCategory.trainingPaths[pathId] ?? const <String>[])
+        .toList();
+    if (lists.any((list) => list.isEmpty)) return const [];
+
+    final shared = <String>[];
+    final shortest =
+        lists.map((list) => list.length).reduce((a, b) => a < b ? a : b);
+    for (var i = 0; i < shortest; i++) {
+      final candidate = lists.first[i];
+      if (lists.every((list) => list[i] == candidate)) {
+        shared.add(candidate);
+      } else {
+        break;
+      }
+    }
+    return shared;
+  }
+
+  bool get _hasFoundationPath => _sharedFoundationExerciseIds.isNotEmpty;
+
+  bool _isFoundationPath(String pathId) => pathId == _foundationPathId;
+
+  String _pathLabel(String pathId) {
+    if (_isFoundationPath(pathId)) return 'Foundation';
+    if (_skillCategory.id == SkillCategoryCatalog.pullupsId &&
+        pathId == 'close_grip') {
+      return 'High Pull-up';
     }
 
-    for (final exercise in _exercises) {
-      final lane = laneMap[exercise.branchId] ?? 0;
-      final x = laneToX[lane] ?? availableWidth / 2;
-      final y = vPadding +
-          exercise.treeOrder * (kNodeHeight + vSpacing) +
-          kNodeHeight / 2;
-      positions[exercise.id] = Offset(x, y);
+    for (final branch in _skillCategory.branches) {
+      if (branch.id == pathId) return branch.label;
     }
 
-    return positions;
+    return pathId
+        .split('_')
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
   }
 
-  double _treeWidth(double availableWidth) {
-    final laneCount =
-        _skillCategory.branches.map((branch) => branch.lane).toSet().length;
-    final minWidth = laneCount * kNodeWidth + (laneCount - 1) * 56 + 96;
-    return minWidth > availableWidth ? minWidth : availableWidth;
-  }
+  List<Exercise> _exercisesForPath(String pathId) {
+    if (_skillCategory.trainingPaths.isEmpty) return _exercises;
 
-  void _ensureInitialHorizontalAlignment({
-    required double viewportWidth,
-    required Map<String, Offset> positions,
-  }) {
-    if (_didAlignInitialScroll || !_horizontalScrollController.hasClients) {
-      return;
+    if (_isFoundationPath(pathId)) {
+      return _sharedFoundationExerciseIds
+          .map(ExerciseCatalog.findById)
+          .whereType<Exercise>()
+          .toList();
     }
 
-    final mainExercise = _exercises.firstWhere(
-      (exercise) => exercise.branchId == 'main',
-      orElse: () => _exercises.first,
-    );
-    final mainPosition = positions[mainExercise.id];
-    if (mainPosition == null) return;
+    final raw = _skillCategory.trainingPaths[pathId] ?? const <String>[];
+    final visibleIds = _hasFoundationPath
+        ? raw.skip(_sharedFoundationExerciseIds.length).toList()
+        : raw;
 
-    final targetOffset = (mainPosition.dx - viewportWidth / 2).clamp(
-      0.0,
-      _horizontalScrollController.position.maxScrollExtent,
-    );
-    _horizontalScrollController.jumpTo(targetOffset);
-    _didAlignInitialScroll = true;
+    return visibleIds
+        .map(ExerciseCatalog.findById)
+        .whereType<Exercise>()
+        .toList();
   }
 
-  double _totalHeight() {
-    final levels = <int>{};
-    for (final e in _exercises) {
-      levels.add(e.treeOrder);
-    }
-    if (levels.isEmpty) return 300;
-    const vSpacing = 44.0;
-    const vPadding = 24.0;
-    return vPadding * 2 +
-        levels.length * kNodeHeight +
-        (levels.length - 1) * vSpacing;
+  int _pathUnlockedCount(String pathId) {
+    return _exercisesForPath(pathId)
+        .where(
+          (exercise) =>
+              (_localProgress[exercise.id] ?? ExerciseStatus.inactive) !=
+              ExerciseStatus.inactive,
+        )
+        .length;
+  }
+
+  int _pathMasteredCount(String pathId) {
+    return _exercisesForPath(pathId)
+        .where(
+          (exercise) =>
+              (_localProgress[exercise.id] ?? ExerciseStatus.inactive) ==
+              ExerciseStatus.mastered,
+        )
+        .length;
+  }
+
+  double _pathProgress(String pathId) {
+    final total = _exercisesForPath(pathId).length;
+    if (total == 0) return 0;
+    return _pathUnlockedCount(pathId) / total;
   }
 
   Future<void> _updateStatus(Exercise exercise, ExerciseStatus status) async {
@@ -158,113 +193,1025 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         (_localProgress[unlockRequirement.exerciseId] ??
                 ExerciseStatus.inactive) ==
             ExerciseStatus.inactive;
+    final hasBranchOverview = _pathIds.length > 1;
+    final isOverview = _showBranchOverview && hasBranchOverview;
+    final pathExercises = _exercisesForPath(_selectedPathId);
 
     return Scaffold(
-      backgroundColor: AppColors.bgSecondary,
+      backgroundColor: isOverview ? AppColors.bgSecondary : _treeBg,
       appBar: AppBar(
-        backgroundColor: AppColors.bgSecondary,
-        foregroundColor: AppColors.textPrimary,
+        automaticallyImplyLeading:
+            hasBranchOverview ? _showBranchOverview : true,
+        leading: hasBranchOverview && !_showBranchOverview
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => setState(() => _showBranchOverview = true),
+              )
+            : null,
+        backgroundColor: isOverview ? AppColors.bgSecondary : Colors.white,
+        foregroundColor:
+            isOverview ? AppColors.textPrimary : const Color(0xFF4B4B4B),
         elevation: 0,
+        surfaceTintColor: isOverview ? AppColors.bgSecondary : Colors.white,
         title: Text(
-          _skillCategory.title,
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+          _showBranchOverview || !hasBranchOverview
+              ? '${_skillCategory.title} progression'
+              : _pathLabel(_selectedPathId),
+          style: GoogleFonts.lato(
+            fontSize: _showBranchOverview || !hasBranchOverview ? 24 : 22,
+            fontWeight: FontWeight.w800,
+            color: isOverview ? AppColors.textPrimary : const Color(0xFF4B4B4B),
           ),
         ),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final viewportWidth = constraints.maxWidth;
-          final treeWidth = _treeWidth(viewportWidth);
-          final positions = _computePositions(treeWidth);
-          final height = _totalHeight();
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (isLocked) ...[
+              _LockNotice(
+                message: unlockRequirement.message,
+                ctaLabel: unlockRequirement.ctaLabel,
+                onOpenRequiredTree: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SkillTreeView(
+                        skillCategoryId:
+                            unlockRequirement.targetSkillCategoryId,
+                        progressMap: _localProgress,
+                        onProgressChanged: (id, status) {
+                          setState(() => _localProgress[id] = status);
+                          widget.onProgressChanged(id, status);
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+            AbsorbPointer(
+              absorbing: isLocked,
+              child: Opacity(
+                opacity: isLocked ? 0.45 : 1,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final slide = Tween<Offset>(
+                      begin: const Offset(0.08, 0),
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(position: slide, child: child),
+                    );
+                  },
+                  child: _showBranchOverview && hasBranchOverview
+                      ? _BranchOverviewPanel(
+                          key: ValueKey('overview-${_skillCategory.id}'),
+                          skillCategory: _skillCategory,
+                          foundationPathId:
+                              _hasFoundationPath ? _foundationPathId : null,
+                          pathIds: _hasFoundationPath ? _realPathIds : _pathIds,
+                          selectedPathId: _selectedPathId,
+                          labelBuilder: _pathLabel,
+                          badgeBuilder: _pathBadge,
+                          accentBuilder: _pathAccent,
+                          progressBuilder: _pathProgress,
+                          unlockedCountBuilder: _pathUnlockedCount,
+                          masteredCountBuilder: _pathMasteredCount,
+                          totalCountBuilder: (pathId) =>
+                              _exercisesForPath(pathId).length,
+                          onOpenPath: (pathId) {
+                            setState(() {
+                              _selectedPathId = pathId;
+                              _showBranchOverview = false;
+                            });
+                          },
+                        )
+                      : Column(
+                          key: ValueKey(
+                              'path-${_skillCategory.id}-$_selectedPathId'),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (hasBranchOverview)
+                              _SelectedPathHeader(
+                                label: _pathLabel(_selectedPathId),
+                                badge: _pathBadge(_selectedPathId),
+                                accentColor: _pathAccent(_selectedPathId),
+                                unlocked: _pathUnlockedCount(_selectedPathId),
+                                total:
+                                    _exercisesForPath(_selectedPathId).length,
+                                onViewBranches: () =>
+                                    setState(() => _showBranchOverview = true),
+                              ),
+                            if (hasBranchOverview) const SizedBox(height: 18),
+                            if (hasBranchOverview &&
+                                _hasFoundationPath &&
+                                !_isFoundationPath(_selectedPathId))
+                              _FoundationHintCard(
+                                accentColor: _pathAccent(_foundationPathId),
+                                onOpenFoundation: () {
+                                  setState(() {
+                                    _selectedPathId = _foundationPathId;
+                                  });
+                                },
+                              ),
+                            if (hasBranchOverview &&
+                                _hasFoundationPath &&
+                                !_isFoundationPath(_selectedPathId))
+                              const SizedBox(height: 18),
+                            _PathTimeline(
+                              accentColor: _pathAccent(_selectedPathId),
+                              exercises: pathExercises,
+                              progressMap: _localProgress,
+                              onExerciseTap: _showExerciseSheet,
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _ensureInitialHorizontalAlignment(
-              viewportWidth: viewportWidth,
-              positions: positions,
-            );
-          });
+  String? _pathBadge(String pathId) {
+    if (_isFoundationPath(pathId)) {
+      return 'Start Here';
+    }
+    if (pathId == _skillCategory.defaultTrainingPathId) {
+      return 'Default';
+    }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+    for (final branch in _skillCategory.branches) {
+      if (branch.id == pathId && branch.isRecommended) {
+        return 'Popular';
+      }
+    }
+
+    return null;
+  }
+
+  Color _pathAccent(String pathId) {
+    if (_isFoundationPath(pathId)) {
+      return const Color(0xFF2AE68B);
+    }
+    switch (pathId) {
+      case 'weighted':
+        return const Color(0xFFE0A11C);
+      case 'one_arm':
+        return const Color(0xFF6A5AE0);
+      case 'close_grip':
+        return const Color(0xFF1A9AD6);
+      case 'l_sit':
+        return const Color(0xFF22B8A2);
+      case 'rings':
+        return const Color(0xFF3E82F7);
+      case 'planche':
+        return const Color(0xFFC46D2D);
+      case 'front_lever':
+        return const Color(0xFFB95D2B);
+      case 'pistol':
+        return const Color(0xFF2AE68B);
+      case 'shrimp':
+        return const Color(0xFF82A84E);
+      default:
+        return const Color(0xFF17A4EB);
+    }
+  }
+}
+
+class _SelectedPathHeader extends StatelessWidget {
+  final String label;
+  final String? badge;
+  final Color accentColor;
+  final int unlocked;
+  final int total;
+  final VoidCallback onViewBranches;
+
+  const _SelectedPathHeader({
+    required this.label,
+    required this.badge,
+    required this.accentColor,
+    required this.unlocked,
+    required this.total,
+    required this.onViewBranches,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: _surfaceShadow,
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (isLocked) ...[
-                  _LockNotice(
-                    message: unlockRequirement.message,
-                    ctaLabel: unlockRequirement.ctaLabel,
-                    onOpenRequiredTree: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => SkillTreeView(
-                            skillCategoryId:
-                                unlockRequirement.targetSkillCategoryId,
-                            progressMap: _localProgress,
-                            onProgressChanged: (id, status) {
-                              setState(() => _localProgress[id] = status);
-                              widget.onProgressChanged(id, status);
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                AbsorbPointer(
-                  absorbing: isLocked,
-                  child: Opacity(
-                    opacity: isLocked ? 0.45 : 1,
-                    child: ScrollConfiguration(
-                      behavior: const MaterialScrollBehavior().copyWith(
-                        scrollbars: true,
-                      ),
-                      child: SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: treeWidth,
-                          height: height,
-                          child: Stack(
-                            children: [
-                              CustomPaint(
-                                size: Size(treeWidth, height),
-                                painter: SkillTreePainter(
-                                  exercises: _exercises,
-                                  nodePositions: positions,
-                                  progressMap: _localProgress,
-                                ),
-                              ),
-                              for (final exercise in _exercises)
-                                if (positions.containsKey(exercise.id))
-                                  Positioned(
-                                    left: positions[exercise.id]!.dx -
-                                        kNodeWidth / 2,
-                                    top: positions[exercise.id]!.dy -
-                                        kNodeHeight / 2,
-                                    child: ExerciseNode(
-                                      exercise: exercise,
-                                      status: _localProgress[exercise.id] ??
-                                          ExerciseStatus.inactive,
-                                      onTap: () => _showExerciseSheet(exercise),
-                                    ),
-                                  ),
-                            ],
-                          ),
-                        ),
+                if (badge != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badge!,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: accentColor,
                       ),
                     ),
+                  ),
+                if (badge != null) const SizedBox(height: 10),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF18181B),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$unlocked of $total steps unlocked',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF6A6A72),
                   ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+          const SizedBox(width: 12),
+          TextButton.icon(
+            onPressed: onViewBranches,
+            style: TextButton.styleFrom(
+              foregroundColor: accentColor,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: accentColor.withValues(alpha: 0.24)),
+              ),
+            ),
+            icon: const Icon(Icons.account_tree_outlined, size: 18),
+            label: Text(
+              'All branches',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FoundationHintCard extends StatelessWidget {
+  final Color accentColor;
+  final VoidCallback onOpenFoundation;
+
+  const _FoundationHintCard({
+    required this.accentColor,
+    required this.onOpenFoundation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accentColor.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 54,
+            decoration: BoxDecoration(
+              color: accentColor,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'After foundation',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: accentColor,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'This branch comes after the shared foundation progression.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: const Color(0xFF5B5B63),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          TextButton(
+            onPressed: onOpenFoundation,
+            style: TextButton.styleFrom(
+              foregroundColor: accentColor,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: accentColor.withValues(alpha: 0.24)),
+              ),
+            ),
+            child: Text(
+              'Open foundation',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BranchOverviewPanel extends StatelessWidget {
+  final SkillCategory skillCategory;
+  final String? foundationPathId;
+  final List<String> pathIds;
+  final String selectedPathId;
+  final String Function(String pathId) labelBuilder;
+  final String? Function(String pathId) badgeBuilder;
+  final Color Function(String pathId) accentBuilder;
+  final double Function(String pathId) progressBuilder;
+  final int Function(String pathId) unlockedCountBuilder;
+  final int Function(String pathId) masteredCountBuilder;
+  final int Function(String pathId) totalCountBuilder;
+  final void Function(String pathId) onOpenPath;
+
+  const _BranchOverviewPanel({
+    super.key,
+    required this.skillCategory,
+    required this.foundationPathId,
+    required this.pathIds,
+    required this.selectedPathId,
+    required this.labelBuilder,
+    required this.badgeBuilder,
+    required this.accentBuilder,
+    required this.progressBuilder,
+    required this.unlockedCountBuilder,
+    required this.masteredCountBuilder,
+    required this.totalCountBuilder,
+    required this.onOpenPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFoundation = foundationPathId != null;
+    final cardCenters = _branchCardCenters(pathIds.length);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.bgPrimary,
+            AppColors.bgSecondary,
+            AppColors.bgPrimary,
+          ],
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: _surfaceShadow,
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Choose a branch',
+            style: GoogleFonts.inter(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasFoundation
+                ? 'Start from the shared foundation, then choose a specialization branch.'
+                : 'Pick the branch you want to train and drill into its progression.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 1.45,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 18),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final branchCardWidth = pathIds.length >= 4 ? 72.0 : 104.0;
+              final branchCardHeight = pathIds.length >= 4 ? 96.0 : 110.0;
+              final mapHeight = hasFoundation ? 318.0 : 360.0;
+              final width = constraints.maxWidth;
+              final hubCenter = Offset(width / 2, hasFoundation ? 60 : 54);
+              final positions = cardCenters
+                  .map((center) => Offset(center.dx * width, center.dy))
+                  .toList();
+
+              return SizedBox(
+                height: mapHeight,
+                child: Stack(
+                  children: [
+                    CustomPaint(
+                      size: Size(width, mapHeight),
+                      painter: _BranchOverviewPainter(
+                        hubCenter: hubCenter,
+                        branchCenters: positions,
+                        hasFoundation: hasFoundation,
+                        branchColors: [
+                          for (final pathId in pathIds) accentBuilder(pathId),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: hasFoundation ? width / 2 - 78 : width / 2 - 90,
+                      top: 0,
+                      child: _OverviewHub(
+                        title: hasFoundation
+                            ? labelBuilder(foundationPathId!)
+                            : skillCategory.title,
+                        subtitle: hasFoundation
+                            ? '${unlockedCountBuilder(foundationPathId!)} of ${totalCountBuilder(foundationPathId!)} unlocked'
+                            : skillCategory.description,
+                        accentColor: hasFoundation
+                            ? accentBuilder(foundationPathId!)
+                            : const Color(0xFF8892A6),
+                        badge: hasFoundation
+                            ? badgeBuilder(foundationPathId!)
+                            : null,
+                        onTap: hasFoundation
+                            ? () => onOpenPath(foundationPathId!)
+                            : null,
+                      ),
+                    ),
+                    for (var i = 0; i < pathIds.length; i++)
+                      Positioned(
+                        left: positions[i].dx - branchCardWidth / 2,
+                        top: positions[i].dy - branchCardHeight / 2,
+                        child: _BranchCard(
+                          width: branchCardWidth,
+                          height: branchCardHeight,
+                          label: labelBuilder(pathIds[i]),
+                          badge: badgeBuilder(pathIds[i]),
+                          accentColor: accentBuilder(pathIds[i]),
+                          isSelected: pathIds[i] == selectedPathId,
+                          progress: progressBuilder(pathIds[i]),
+                          unlocked: unlockedCountBuilder(pathIds[i]),
+                          total: totalCountBuilder(pathIds[i]),
+                          mastered: masteredCountBuilder(pathIds[i]),
+                          onTap: () => onOpenPath(pathIds[i]),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+List<Offset> _branchCardCenters(int count) {
+  switch (count) {
+    case 2:
+      return const [Offset(0.3, 226), Offset(0.7, 226)];
+    case 3:
+      return const [Offset(0.18, 228), Offset(0.5, 228), Offset(0.82, 228)];
+    case 4:
+      return const [
+        Offset(0.12, 228),
+        Offset(0.38, 228),
+        Offset(0.62, 228),
+        Offset(0.88, 228),
+      ];
+    default:
+      return const [
+        Offset(0.18, 228),
+        Offset(0.5, 228),
+        Offset(0.82, 228),
+      ];
+  }
+}
+
+class _OverviewHub extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final String? badge;
+  final VoidCallback? onTap;
+
+  const _OverviewHub({
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.badge,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: badge != null ? 156 : 180,
+          height: 108,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(AppColors.bgPrimary, accentColor, 0.18)!,
+                AppColors.bgTertiary,
+              ],
+            ),
+            border: Border.all(color: accentColor.withValues(alpha: 0.28)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (badge != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+              if (badge != null) const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  height: 1.35,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ));
+  }
+}
+
+class _BranchCard extends StatelessWidget {
+  final double width;
+  final double height;
+  final String label;
+  final String? badge;
+  final Color accentColor;
+  final bool isSelected;
+  final double progress;
+  final int unlocked;
+  final int total;
+  final int mastered;
+  final VoidCallback onTap;
+
+  const _BranchCard({
+    required this.width,
+    required this.height,
+    required this.label,
+    required this.badge,
+    required this.accentColor,
+    required this.isSelected,
+    required this.progress,
+    required this.unlocked,
+    required this.total,
+    required this.mastered,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = width < 90;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        width: width,
+        height: height,
+        padding: EdgeInsets.all(compact ? 10 : 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: AppColors.bgTertiary,
+          border: Border.all(
+            color: isSelected
+                ? accentColor.withValues(alpha: 0.85)
+                : AppColors.borderPrimary,
+            width: isSelected ? 1.8 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: isSelected ? 0.24 : 0.1),
+              blurRadius: isSelected ? 18 : 10,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (badge != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  badge!,
+                  style: GoogleFonts.inter(
+                    fontSize: compact ? 8 : 10,
+                    fontWeight: FontWeight.w700,
+                    color: accentColor,
+                  ),
+                ),
+              ),
+            if (badge != null) SizedBox(height: compact ? 8 : 10),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: compact ? 13 : 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$unlocked / $total unlocked',
+              style: GoogleFonts.inter(
+                fontSize: compact ? 10 : 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: compact ? 6 : 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                minHeight: compact ? 5 : 6,
+                value: progress,
+                color: accentColor,
+                backgroundColor: AppColors.borderPrimary,
+              ),
+            ),
+            SizedBox(height: compact ? 6 : 8),
+            Text(
+              '$mastered mastered',
+              style: GoogleFonts.inter(
+                fontSize: compact ? 10 : 11,
+                fontWeight: FontWeight.w700,
+                color: accentColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BranchOverviewPainter extends CustomPainter {
+  final Offset hubCenter;
+  final List<Offset> branchCenters;
+  final List<Color> branchColors;
+  final bool hasFoundation;
+
+  const _BranchOverviewPainter({
+    required this.hubCenter,
+    required this.branchCenters,
+    required this.branchColors,
+    required this.hasFoundation,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final trunkPaint = Paint()
+      ..color = AppColors.borderPrimary
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final splitY = hasFoundation ? hubCenter.dy + 70 : hubCenter.dy + 42;
+
+    canvas.drawLine(hubCenter, Offset(hubCenter.dx, splitY), trunkPaint);
+
+    for (var i = 0; i < branchCenters.length; i++) {
+      final target = branchCenters[i];
+      final accentPaint = Paint()
+        ..color = branchColors[i].withValues(alpha: 0.65)
+        ..strokeWidth = 2.4
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+
+      final path = Path()
+        ..moveTo(hubCenter.dx, splitY)
+        ..lineTo(target.dx, splitY)
+        ..lineTo(target.dx, target.dy - 58);
+      canvas.drawPath(path, accentPaint);
+
+      canvas.drawCircle(
+        Offset(target.dx, target.dy - 58),
+        5,
+        Paint()..color = branchColors[i],
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BranchOverviewPainter oldDelegate) {
+    return oldDelegate.hubCenter != hubCenter ||
+        oldDelegate.branchCenters != branchCenters ||
+        oldDelegate.branchColors != branchColors ||
+        oldDelegate.hasFoundation != hasFoundation;
+  }
+}
+
+class _PathTimeline extends StatelessWidget {
+  final Color accentColor;
+  final List<Exercise> exercises;
+  final Map<String, ExerciseStatus> progressMap;
+  final void Function(Exercise exercise) onExerciseTap;
+
+  const _PathTimeline({
+    required this.accentColor,
+    required this.exercises,
+    required this.progressMap,
+    required this.onExerciseTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < exercises.length; i++) ...[
+          _PathExerciseCard(
+            exercise: exercises[i],
+            accentColor: accentColor,
+            status: progressMap[exercises[i].id] ?? ExerciseStatus.inactive,
+            onTap: () => onExerciseTap(exercises[i]),
+          ),
+          if (i < exercises.length - 1)
+            Container(
+              width: 4,
+              height: 34,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PathExerciseCard extends StatelessWidget {
+  final Exercise exercise;
+  final Color accentColor;
+  final ExerciseStatus status;
+  final VoidCallback onTap;
+
+  const _PathExerciseCard({
+    required this.exercise,
+    required this.accentColor,
+    required this.status,
+    required this.onTap,
+  });
+
+  List<Color> get _previewGradient {
+    switch (exercise.category) {
+      case ExerciseCategory.verticalPull:
+        return const [Color(0xFF27465A), Color(0xFF131C25)];
+      case ExerciseCategory.verticalPush:
+        return const [Color(0xFF67452B), Color(0xFF21150F)];
+      case ExerciseCategory.horizontalPull:
+        return const [Color(0xFF2A5264), Color(0xFF111A23)];
+      case ExerciseCategory.horizontalPush:
+        return const [Color(0xFF6A4029), Color(0xFF20110C)];
+      case ExerciseCategory.squat:
+        return const [Color(0xFF406737), Color(0xFF152018)];
+      case ExerciseCategory.hinge:
+        return const [Color(0xFF6A5A38), Color(0xFF1E1911)];
+      case ExerciseCategory.core:
+        return const [Color(0xFF29576D), Color(0xFF121A21)];
+      case ExerciseCategory.skill:
+        return const [Color(0xFF5A3260), Color(0xFF181119)];
+    }
+  }
+
+  IconData get _previewIcon {
+    switch (exercise.category) {
+      case ExerciseCategory.verticalPull:
+        return Icons.sports_gymnastics_rounded;
+      case ExerciseCategory.verticalPush:
+        return Icons.front_hand_outlined;
+      case ExerciseCategory.horizontalPull:
+        return Icons.swap_horiz_rounded;
+      case ExerciseCategory.horizontalPush:
+        return Icons.push_pin_outlined;
+      case ExerciseCategory.squat:
+        return Icons.accessibility_new_rounded;
+      case ExerciseCategory.hinge:
+        return Icons.keyboard_double_arrow_down_rounded;
+      case ExerciseCategory.core:
+        return Icons.crop_free_rounded;
+      case ExerciseCategory.skill:
+        return Icons.bolt_rounded;
+    }
+  }
+
+  Color get _statusColor {
+    switch (status) {
+      case ExerciseStatus.inactive:
+        return const Color(0xFF8B8B92);
+      case ExerciseStatus.active:
+        return accentColor;
+      case ExerciseStatus.mastered:
+        return _masteredColor;
+    }
+  }
+
+  IconData get _statusIcon {
+    switch (status) {
+      case ExerciseStatus.inactive:
+        return Icons.lock_outline_rounded;
+      case ExerciseStatus.active:
+        return Icons.play_arrow_rounded;
+      case ExerciseStatus.mastered:
+        return Icons.check_rounded;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 182,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _statusColor, width: 1.6),
+          boxShadow: [
+            BoxShadow(
+              color: _statusColor.withValues(alpha: 0.12),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 98,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: _previewGradient,
+                ),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    right: -6,
+                    bottom: -12,
+                    child: Icon(
+                      _previewIcon,
+                      size: 92,
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.2),
+                          Colors.black.withValues(alpha: 0.68),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: _statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(_statusIcon, size: 15, color: Colors.black),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              exercise.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111111),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _DifficultyStars(difficulty: exercise.difficulty),
+            const SizedBox(height: 4),
+          ],
+        ),
       ),
     );
   }
