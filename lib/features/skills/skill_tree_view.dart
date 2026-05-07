@@ -194,38 +194,28 @@ class _SkillTreeViewState extends State<SkillTreeView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _CategoryHero(
-                  category: _skillCategory,
-                  mastered: _exercises
-                      .where(
-                        (exercise) =>
-                            _localProgress[exercise.id] ==
-                            ExerciseStatus.mastered,
-                      )
-                      .length,
-                  total: _exercises.length,
-                  isLocked: isLocked,
-                  lockMessage: unlockRequirement?.message,
-                  onOpenRequiredTree: unlockRequirement == null
-                      ? null
-                      : () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => SkillTreeView(
-                                skillCategoryId:
-                                    unlockRequirement.targetSkillCategoryId,
-                                progressMap: _localProgress,
-                                onProgressChanged: (id, status) {
-                                  setState(() => _localProgress[id] = status);
-                                  widget.onProgressChanged(id, status);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                  lockCtaLabel: unlockRequirement?.ctaLabel,
-                ),
-                const SizedBox(height: 20),
+                if (isLocked) ...[
+                  _LockNotice(
+                    message: unlockRequirement.message,
+                    ctaLabel: unlockRequirement.ctaLabel,
+                    onOpenRequiredTree: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => SkillTreeView(
+                            skillCategoryId:
+                                unlockRequirement.targetSkillCategoryId,
+                            progressMap: _localProgress,
+                            onProgressChanged: (id, status) {
+                              setState(() => _localProgress[id] = status);
+                              widget.onProgressChanged(id, status);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 AbsorbPointer(
                   absorbing: isLocked,
                   child: Opacity(
@@ -280,22 +270,14 @@ class _SkillTreeViewState extends State<SkillTreeView> {
   }
 }
 
-class _CategoryHero extends StatelessWidget {
-  final SkillCategory category;
-  final int mastered;
-  final int total;
-  final bool isLocked;
-  final String? lockMessage;
-  final String? lockCtaLabel;
+class _LockNotice extends StatelessWidget {
+  final String message;
+  final String? ctaLabel;
   final VoidCallback? onOpenRequiredTree;
 
-  const _CategoryHero({
-    required this.category,
-    required this.mastered,
-    required this.total,
-    this.isLocked = false,
-    this.lockMessage,
-    this.lockCtaLabel,
+  const _LockNotice({
+    required this.message,
+    this.ctaLabel,
     this.onOpenRequiredTree,
   });
 
@@ -313,91 +295,45 @@ class _CategoryHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${category.title} · ${category.subtitle}',
+            'Locked',
             style: GoogleFonts.inter(
-              fontSize: 20,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.4,
+              color: AppColors.accentBright,
+              letterSpacing: 0.4,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            category.description,
+            message,
             style: GoogleFonts.inter(
               fontSize: 13,
               height: 1.45,
-              color: AppColors.textSecondary,
+              color: AppColors.textPrimary,
             ),
           ),
-          if (isLocked) ...[
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0x14FF8904),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.accentPrimary.withValues(alpha: 0.35),
-                ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: onOpenRequiredTree,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.accentBright,
+              side: BorderSide(
+                color: AppColors.accentPrimary.withValues(alpha: 0.45),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Locked',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.accentBright,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    lockMessage ?? '',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: onOpenRequiredTree,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accentBright,
-                      side: BorderSide(
-                        color: AppColors.accentPrimary.withValues(alpha: 0.45),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: Text(
-                      lockCtaLabel ?? 'Open Required Tree',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
               ),
             ),
-          ],
-          const SizedBox(height: 14),
-          Text(
-            '$mastered / $total mastered',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMuted,
+            child: Text(
+              ctaLabel ?? 'Open Required Tree',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -419,6 +355,48 @@ class _ExerciseSheet extends StatelessWidget {
     required this.onStatusChanged,
   });
 
+  List<Color> get _previewGradient {
+    switch (exercise.category) {
+      case ExerciseCategory.verticalPull:
+        return const [Color(0xFF264C62), Color(0xFF101A24)];
+      case ExerciseCategory.verticalPush:
+        return const [Color(0xFF5C3B24), Color(0xFF1D120E)];
+      case ExerciseCategory.horizontalPull:
+        return const [Color(0xFF284559), Color(0xFF111A23)];
+      case ExerciseCategory.horizontalPush:
+        return const [Color(0xFF5A311F), Color(0xFF1D110D)];
+      case ExerciseCategory.squat:
+        return const [Color(0xFF35552F), Color(0xFF141C15)];
+      case ExerciseCategory.hinge:
+        return const [Color(0xFF58482B), Color(0xFF1E1811)];
+      case ExerciseCategory.core:
+        return const [Color(0xFF214658), Color(0xFF10171F)];
+      case ExerciseCategory.skill:
+        return const [Color(0xFF4A2C4F), Color(0xFF181018)];
+    }
+  }
+
+  IconData get _previewIcon {
+    switch (exercise.category) {
+      case ExerciseCategory.verticalPull:
+        return Icons.sports_gymnastics_rounded;
+      case ExerciseCategory.verticalPush:
+        return Icons.front_hand_outlined;
+      case ExerciseCategory.horizontalPull:
+        return Icons.swap_horiz_rounded;
+      case ExerciseCategory.horizontalPush:
+        return Icons.push_pin_outlined;
+      case ExerciseCategory.squat:
+        return Icons.accessibility_new_rounded;
+      case ExerciseCategory.hinge:
+        return Icons.keyboard_double_arrow_down_rounded;
+      case ExerciseCategory.core:
+        return Icons.crop_free_rounded;
+      case ExerciseCategory.skill:
+        return Icons.bolt_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -428,85 +406,200 @@ class _ExerciseSheet extends StatelessWidget {
         top: 24,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.borderPrimary,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.borderPrimary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  exercise.name,
+            const SizedBox(height: 20),
+            Text(
+              exercise.name,
+              style: GoogleFonts.inter(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.65,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  'DIFFICULTY:',
                   style: GoogleFonts.inter(
-                    fontSize: 20,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textMuted,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _DifficultyStars(difficulty: exercise.difficulty),
+                const SizedBox(width: 8),
+                Text(
+                  _difficultyLabel(exercise.difficulty),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              exercise.description,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              height: 255,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: _previewGradient,
+                ),
+                border: Border.all(color: AppColors.borderPrimary),
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    right: -10,
+                    bottom: -18,
+                    child: Icon(
+                      _previewIcon,
+                      size: 180,
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.25),
+                          Colors.black.withValues(alpha: 0.72),
+                        ],
+                        stops: const [0.0, 0.45, 1.0],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 18,
+                    right: 18,
+                    bottom: 18,
+                    child: Text(
+                      'Exercise visualization preview',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white.withValues(alpha: 0.92),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Learning content coming soon.'),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Learn more',
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.425,
+                    color: Colors.black,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              _DifficultyDots(difficulty: exercise.difficulty),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            exercise.description,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'STATUS',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
-              letterSpacing: 0.8,
+            const SizedBox(height: 22),
+            Text(
+              'STATUS',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textMuted,
+                letterSpacing: 0.8,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: ExerciseStatus.values
-                .map((s) => Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _StatusChip(
-                          status: s,
-                          isSelected: status == s,
-                          onTap: () {
-                            onStatusChanged(s);
-                            Navigator.pop(context);
-                          },
+            const SizedBox(height: 10),
+            Row(
+              children: ExerciseStatus.values
+                  .map((s) => Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _StatusChip(
+                            status: s,
+                            isSelected: status == s,
+                            onTap: () {
+                              onStatusChanged(s);
+                              Navigator.pop(context);
+                            },
+                          ),
                         ),
-                      ),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 8),
-        ],
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _DifficultyDots extends StatelessWidget {
+String _difficultyLabel(int difficulty) {
+  if (difficulty <= 2) return '(Easy)';
+  if (difficulty == 3) return '(Medium)';
+  if (difficulty == 4) return '(Hard)';
+  return '(Elite)';
+}
+
+class _DifficultyStars extends StatelessWidget {
   final int difficulty;
-  const _DifficultyDots({required this.difficulty});
+  const _DifficultyStars({required this.difficulty});
 
   @override
   Widget build(BuildContext context) {
@@ -514,15 +607,14 @@ class _DifficultyDots extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: List.generate(
         5,
-        (i) => Container(
-          width: 6,
-          height: 6,
-          margin: const EdgeInsets.only(left: 3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
+        (i) => Padding(
+          padding: EdgeInsets.only(right: i == 4 ? 0 : 2),
+          child: Icon(
+            i < difficulty ? Icons.star_rounded : Icons.star_border_rounded,
+            size: 10,
             color: i < difficulty
-                ? AppColors.accentPrimary
-                : AppColors.borderPrimary,
+                ? const Color(0xFFFF6900)
+                : const Color(0xFF3F3F46),
           ),
         ),
       ),
