@@ -9,6 +9,7 @@ class SkillCategoryCatalog {
   static const String pushupsId = 'pushups';
   static const String plancheId = 'planche';
   static const String squatId = 'squat';
+  static const String coreId = 'core';
   static const String lSitVSitId = 'l_sit_v_sit';
   static const String abWheelId = 'ab_wheel';
   static const String legRaisesId = 'leg_raises';
@@ -79,13 +80,6 @@ class SkillCategoryCatalog {
         'pull_up_negative',
         'assisted_pull_up',
         'pull_up',
-        'close_grip_pull_up',
-        'wide_grip_pull_up',
-        'typewriter_pull_up',
-        'archer_pull_up',
-        'weighted_pull_up_115',
-        'weighted_pull_up_135',
-        'weighted_pull_up_150',
         'one_arm_towel_assisted_chin_up',
         'one_arm_pull_up_eccentric',
         'half_one_arm_chin_up',
@@ -283,19 +277,26 @@ class SkillCategoryCatalog {
     },
   );
 
-  static const SkillCategory lSitVSit = SkillCategory(
-    id: lSitVSitId,
-    title: 'L-sit / V-sit',
+  static const SkillCategory core = SkillCategory(
+    id: coreId,
+    title: 'Core',
     subtitle: 'Core',
     description:
-        'Build compression and support strength from a foot-supported L-sit into a full V-sit.',
+        'Train your core through three parallel branches: compression holds, ab wheel strength, and leg raise control.',
     track: ExerciseCategory.core,
-    defaultTrainingPathId: 'main',
+    defaultTrainingPathId: 'ab_wheel',
     branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+      SkillCategoryBranch(id: 'l_sit', label: 'L-Sit / V-Sit', lane: -1),
+      SkillCategoryBranch(
+        id: 'ab_wheel',
+        label: 'Ab Wheel',
+        lane: 0,
+        isRecommended: true,
+      ),
+      SkillCategoryBranch(id: 'leg_raises', label: 'Leg Raises', lane: 1),
     ],
     trainingPaths: {
-      'main': [
+      'l_sit': [
         'foot_supported_l_sit',
         'l_sit_tuck',
         'advanced_tuck_l_sit',
@@ -303,22 +304,7 @@ class SkillCategoryCatalog {
         'straddle_l_sit',
         'v_sit',
       ],
-    },
-  );
-
-  static const SkillCategory abWheel = SkillCategory(
-    id: abWheelId,
-    title: 'Ab Wheel',
-    subtitle: 'Core',
-    description:
-        'Build anti-extension strength from planks into kneeling, eccentric, and full ab wheel rollouts.',
-    track: ExerciseCategory.core,
-    defaultTrainingPathId: 'main',
-    branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
-    ],
-    trainingPaths: {
-      'main': [
+      'ab_wheel': [
         'plank',
         'plank_60s',
         'one_arm_one_leg_plank',
@@ -326,22 +312,7 @@ class SkillCategoryCatalog {
         'ab_wheel_eccentric',
         'ab_wheel_standing',
       ],
-    },
-  );
-
-  static const SkillCategory legRaises = SkillCategory(
-    id: legRaisesId,
-    title: 'Leg Raises',
-    subtitle: 'Core',
-    description:
-        'Progress from lying knee raises into straight-leg hanging raises with strong pelvic control.',
-    track: ExerciseCategory.core,
-    defaultTrainingPathId: 'main',
-    branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
-    ],
-    trainingPaths: {
-      'main': [
+      'leg_raises': [
         'lying_knee_raises',
         'bent_leg_lying_leg_raises',
         'straight_leg_lying_leg_raises',
@@ -445,9 +416,7 @@ class SkillCategoryCatalog {
     pushups,
     planche,
     squat,
-    lSitVSit,
-    abWheel,
-    legRaises,
+    core,
     muscleUp,
     handstandPushups,
     dips,

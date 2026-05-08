@@ -20,13 +20,25 @@ class SkillsView extends StatefulWidget {
 
 class _SkillsViewState extends State<SkillsView> {
   final _progressService = ProgressService();
+  late final PageController _pageController;
   Map<String, ExerciseStatus> _progressMap = {};
   bool _loading = true;
+  double _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.9);
+    _pageController.addListener(() {
+      setState(() => _currentPage = _pageController.page ?? 0);
+    });
     _loadProgress();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProgress() async {
@@ -124,38 +136,91 @@ class _SkillsViewState extends State<SkillsView> {
                 child: Center(child: CircularProgressIndicator()),
               )
             else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final category = categories[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: CategoryProgressCard(
-                          category: category,
-                          mastered: _masteredCount(category),
-                          total: ExerciseCatalog.totalForSkillCategory(
-                            category.id,
-                          ),
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => SkillTreeView(
-                                  skillCategoryId: category.id,
-                                  progressMap: _progressMap,
-                                  onProgressChanged: (id, status) {
-                                    setState(() => _progressMap[id] = status);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Text(
+                        'Swipe between disciplines',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
                         ),
-                      );
-                    },
-                    childCount: categories.length,
-                  ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 360,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          final isActive = (_currentPage - index).abs() < 0.5;
+                          return AnimatedPadding(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                            padding: EdgeInsets.fromLTRB(
+                              10,
+                              isActive ? 4 : 18,
+                              10,
+                              isActive ? 8 : 24,
+                            ),
+                            child: CategoryProgressCard(
+                              category: category,
+                              mastered: _masteredCount(category),
+                              progressMap: _progressMap,
+                              isFocused: isActive,
+                              total: ExerciseCatalog.totalForSkillCategory(
+                                category.id,
+                              ),
+                              onTap: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => SkillTreeView(
+                                      skillCategoryId: category.id,
+                                      progressMap: _progressMap,
+                                      onProgressChanged: (id, status) {
+                                        setState(
+                                          () => _progressMap[id] = status,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < categories.length; i++)
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: (_currentPage - i).abs() < 0.5 ? 18 : 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: (_currentPage - i).abs() < 0.5
+                                    ? AppColors.accentBright
+                                    : AppColors.textMuted.withValues(
+                                        alpha: 0.45,
+                                      ),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
           ],
