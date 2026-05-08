@@ -1649,7 +1649,20 @@ class ExerciseCatalog {
       _resolveSkillCategoryId(exercise);
 
   static String _resolveSkillCategoryId(Exercise exercise) =>
-      exercise.skillCategoryId.isEmpty
-          ? exercise.category.id
-          : exercise.skillCategoryId;
+      _normalizedSkillCategoryId(
+        exercise.skillCategoryId.isEmpty
+            ? exercise.category.id
+            : exercise.skillCategoryId,
+      );
+
+  static String _normalizedSkillCategoryId(String skillCategoryId) {
+    switch (skillCategoryId) {
+      case SkillCategoryCatalog.lSitVSitId:
+      case SkillCategoryCatalog.abWheelId:
+      case SkillCategoryCatalog.legRaisesId:
+        return SkillCategoryCatalog.coreId;
+      default:
+        return skillCategoryId;
+    }
+  }
 }

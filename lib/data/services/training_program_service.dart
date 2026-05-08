@@ -200,9 +200,8 @@ class TrainingProgramService {
   static final _skillWorkBranch = _TrainingBranch(
     track: TrainingTrack.skillWork,
     sourceCategory: ExerciseCategory.core,
-    sourceSkillCategoryId: SkillCategoryCatalog.lSitVSitId,
-    exerciseIds: SkillCategoryCatalog.lSitVSit
-        .trainingPaths[SkillCategoryCatalog.lSitVSit.defaultTrainingPathId]!,
+    sourceSkillCategoryId: SkillCategoryCatalog.coreId,
+    exerciseIds: SkillCategoryCatalog.core.trainingPaths['l_sit']!,
   );
 
   static final _verticalPushBranch = _TrainingBranch(
@@ -240,9 +239,8 @@ class TrainingProgramService {
   static final _coreBranch = _TrainingBranch(
     track: TrainingTrack.core,
     sourceCategory: ExerciseCategory.core,
-    sourceSkillCategoryId: SkillCategoryCatalog.abWheelId,
-    exerciseIds: SkillCategoryCatalog.abWheel
-        .trainingPaths[SkillCategoryCatalog.abWheel.defaultTrainingPathId]!,
+    sourceSkillCategoryId: SkillCategoryCatalog.coreId,
+    exerciseIds: SkillCategoryCatalog.core.trainingPaths['ab_wheel']!,
   );
 
   static final _squatBranch = _TrainingBranch(

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
@@ -9,7 +11,6 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 
 const _masteredColor = Color(0xFF4CAF50);
-const _treeBg = Color(0xFFF7F5F1);
 const _surfaceShadow = Color(0x1A000000);
 const _foundationPathId = '__foundation__';
 
@@ -194,11 +195,10 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                 ExerciseStatus.inactive) ==
             ExerciseStatus.inactive;
     final hasBranchOverview = _pathIds.length > 1;
-    final isOverview = _showBranchOverview && hasBranchOverview;
     final pathExercises = _exercisesForPath(_selectedPathId);
 
     return Scaffold(
-      backgroundColor: isOverview ? AppColors.bgSecondary : _treeBg,
+      backgroundColor: AppColors.bgSecondary,
       appBar: AppBar(
         automaticallyImplyLeading:
             hasBranchOverview ? _showBranchOverview : true,
@@ -208,11 +208,10 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                 onPressed: () => setState(() => _showBranchOverview = true),
               )
             : null,
-        backgroundColor: isOverview ? AppColors.bgSecondary : Colors.white,
-        foregroundColor:
-            isOverview ? AppColors.textPrimary : const Color(0xFF4B4B4B),
+        backgroundColor: AppColors.bgSecondary,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
-        surfaceTintColor: isOverview ? AppColors.bgSecondary : Colors.white,
+        surfaceTintColor: AppColors.bgSecondary,
         title: Text(
           _showBranchOverview || !hasBranchOverview
               ? '${_skillCategory.title} progression'
@@ -220,7 +219,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
           style: GoogleFonts.lato(
             fontSize: _showBranchOverview || !hasBranchOverview ? 24 : 22,
             fontWeight: FontWeight.w800,
-            color: isOverview ? AppColors.textPrimary : const Color(0xFF4B4B4B),
+            color: AppColors.textPrimary,
           ),
         ),
       ),
@@ -285,6 +284,8 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                           masteredCountBuilder: _pathMasteredCount,
                           totalCountBuilder: (pathId) =>
                               _exercisesForPath(pathId).length,
+                          exercisesForPathBuilder: _exercisesForPath,
+                          progressMap: _localProgress,
                           onOpenPath: (pathId) {
                             setState(() {
                               _selectedPathId = pathId;
@@ -409,8 +410,9 @@ class _SelectedPathHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgTertiary,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderPrimary),
         boxShadow: const [
           BoxShadow(
             color: _surfaceShadow,
@@ -450,7 +452,7 @@ class _SelectedPathHeader extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF18181B),
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -459,7 +461,7 @@ class _SelectedPathHeader extends StatelessWidget {
                   '$unlocked of $total steps unlocked',
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: const Color(0xFF6A6A72),
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -505,7 +507,7 @@ class _FoundationHintCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgTertiary,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: accentColor.withValues(alpha: 0.24)),
       ),
@@ -539,7 +541,7 @@ class _FoundationHintCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     height: 1.4,
-                    color: const Color(0xFF5B5B63),
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -582,6 +584,8 @@ class _BranchOverviewPanel extends StatelessWidget {
   final int Function(String pathId) unlockedCountBuilder;
   final int Function(String pathId) masteredCountBuilder;
   final int Function(String pathId) totalCountBuilder;
+  final List<Exercise> Function(String pathId) exercisesForPathBuilder;
+  final Map<String, ExerciseStatus> progressMap;
   final void Function(String pathId) onOpenPath;
 
   const _BranchOverviewPanel({
@@ -597,244 +601,166 @@ class _BranchOverviewPanel extends StatelessWidget {
     required this.unlockedCountBuilder,
     required this.masteredCountBuilder,
     required this.totalCountBuilder,
+    required this.exercisesForPathBuilder,
+    required this.progressMap,
     required this.onOpenPath,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasFoundation = foundationPathId != null;
-    final cardCenters = _branchCardCenters(pathIds.length);
+    final overviewPaths =
+        hasFoundation ? [foundationPathId!, ...pathIds] : pathIds;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.bgPrimary,
-            AppColors.bgSecondary,
-            AppColors.bgPrimary,
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          hasFoundation ? 'Choose a branch' : 'Choose a path',
+          style: GoogleFonts.inter(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.4,
+            color: AppColors.textPrimary,
+          ),
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: _surfaceShadow,
-            blurRadius: 24,
-            offset: Offset(0, 8),
+        const SizedBox(height: 8),
+        Text(
+          hasFoundation
+              ? 'Begin at the shared foundation, then choose one of the linked specialization branches.'
+              : 'Choose the linked path you want to train.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            height: 1.45,
+            color: AppColors.textSecondary,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Choose a branch',
-            style: GoogleFonts.inter(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.4,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasFoundation
-                ? 'Start from the shared foundation, then choose a specialization branch.'
-                : 'Pick the branch you want to train and drill into its progression.',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              height: 1.45,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 18),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final branchCardWidth = pathIds.length >= 4 ? 72.0 : 104.0;
-              final branchCardHeight = pathIds.length >= 4 ? 96.0 : 110.0;
-              final mapHeight = hasFoundation ? 318.0 : 360.0;
-              final width = constraints.maxWidth;
-              final hubCenter = Offset(width / 2, hasFoundation ? 60 : 54);
-              final positions = cardCenters
-                  .map((center) => Offset(center.dx * width, center.dy))
-                  .toList();
+        ),
+        const SizedBox(height: 24),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final viewportWidth = constraints.maxWidth;
+            final layout = _buildBranchOverviewLayout(
+              viewportWidth: viewportWidth,
+              pathCount: overviewPaths.length,
+              hasFoundation: hasFoundation,
+            );
 
-              return SizedBox(
-                height: mapHeight,
-                child: Stack(
-                  children: [
-                    CustomPaint(
-                      size: Size(width, mapHeight),
-                      painter: _BranchOverviewPainter(
-                        hubCenter: hubCenter,
-                        branchCenters: positions,
-                        hasFoundation: hasFoundation,
-                        branchColors: [
-                          for (final pathId in pathIds) accentBuilder(pathId),
-                        ],
-                      ),
+            return SizedBox(
+              width: viewportWidth,
+              height: layout.panelHeight,
+              child: Stack(
+                children: [
+                  CustomPaint(
+                    size: Size(viewportWidth, layout.panelHeight),
+                    painter: _ConstellationPainter(
+                      hasFoundation: hasFoundation,
+                      start: layout.connectorStart,
+                      targets: hasFoundation
+                          ? layout.cardPoints.skip(1).toList()
+                          : layout.cardPoints,
+                      targetColors: [
+                        for (final pathId in hasFoundation
+                            ? overviewPaths.skip(1)
+                            : overviewPaths)
+                          accentBuilder(pathId),
+                      ],
                     ),
+                  ),
+                  for (var i = 0; i < overviewPaths.length; i++)
                     Positioned(
-                      left: hasFoundation ? width / 2 - 78 : width / 2 - 90,
-                      top: 0,
-                      child: _OverviewHub(
-                        title: hasFoundation
-                            ? labelBuilder(foundationPathId!)
-                            : skillCategory.title,
-                        subtitle: hasFoundation
-                            ? '${unlockedCountBuilder(foundationPathId!)} of ${totalCountBuilder(foundationPathId!)} unlocked'
-                            : skillCategory.description,
-                        accentColor: hasFoundation
-                            ? accentBuilder(foundationPathId!)
-                            : const Color(0xFF8892A6),
-                        badge: hasFoundation
-                            ? badgeBuilder(foundationPathId!)
-                            : null,
-                        onTap: hasFoundation
-                            ? () => onOpenPath(foundationPathId!)
-                            : null,
+                      left: layout.cardPoints[i].dx - (_branchNodeWidth / 2),
+                      top: layout.cardPoints[i].dy - (_branchNodeHeight / 2),
+                      child: _BranchConstellationNode(
+                        width: _branchNodeWidth,
+                        label: labelBuilder(overviewPaths[i]),
+                        badge: badgeBuilder(overviewPaths[i]),
+                        accentColor: accentBuilder(overviewPaths[i]),
+                        isSelected: overviewPaths[i] == selectedPathId,
+                        progress: progressBuilder(overviewPaths[i]),
+                        unlocked: unlockedCountBuilder(overviewPaths[i]),
+                        total: totalCountBuilder(overviewPaths[i]),
+                        exercises: exercisesForPathBuilder(overviewPaths[i]),
+                        progressMap: progressMap,
+                        isFoundation: i == 0 && hasFoundation,
+                        onTap: () => onOpenPath(overviewPaths[i]),
                       ),
                     ),
-                    for (var i = 0; i < pathIds.length; i++)
-                      Positioned(
-                        left: positions[i].dx - branchCardWidth / 2,
-                        top: positions[i].dy - branchCardHeight / 2,
-                        child: _BranchCard(
-                          width: branchCardWidth,
-                          height: branchCardHeight,
-                          label: labelBuilder(pathIds[i]),
-                          badge: badgeBuilder(pathIds[i]),
-                          accentColor: accentBuilder(pathIds[i]),
-                          isSelected: pathIds[i] == selectedPathId,
-                          progress: progressBuilder(pathIds[i]),
-                          unlocked: unlockedCountBuilder(pathIds[i]),
-                          total: totalCountBuilder(pathIds[i]),
-                          mastered: masteredCountBuilder(pathIds[i]),
-                          onTap: () => onOpenPath(pathIds[i]),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
-List<Offset> _branchCardCenters(int count) {
-  switch (count) {
-    case 2:
-      return const [Offset(0.3, 226), Offset(0.7, 226)];
-    case 3:
-      return const [Offset(0.18, 228), Offset(0.5, 228), Offset(0.82, 228)];
-    case 4:
-      return const [
-        Offset(0.12, 228),
-        Offset(0.38, 228),
-        Offset(0.62, 228),
-        Offset(0.88, 228),
-      ];
-    default:
-      return const [
-        Offset(0.18, 228),
-        Offset(0.5, 228),
-        Offset(0.82, 228),
-      ];
+const _branchNodeWidth = 128.0;
+const _branchNodeHeight = 216.0;
+
+_BranchOverviewLayout _buildBranchOverviewLayout({
+  required double viewportWidth,
+  required int pathCount,
+  required bool hasFoundation,
+}) {
+  final branchCount = hasFoundation ? pathCount - 1 : pathCount;
+  final cardPoints = <Offset>[];
+  final connectorStart = Offset(viewportWidth / 2, hasFoundation ? 112 : 72);
+  final twoColumnLeft = viewportWidth * 0.27;
+  final twoColumnRight = viewportWidth * 0.73;
+  final oneColumnCenter = viewportWidth * 0.5;
+
+  if (hasFoundation) {
+    cardPoints.add(Offset(viewportWidth / 2, 112));
   }
+
+  if (branchCount == 1) {
+    cardPoints.add(Offset(oneColumnCenter, hasFoundation ? 388 : 160));
+  } else if (branchCount == 2) {
+    cardPoints.addAll([
+      Offset(twoColumnLeft, hasFoundation ? 388 : 160),
+      Offset(twoColumnRight, hasFoundation ? 388 : 160),
+    ]);
+  } else if (branchCount == 3) {
+    cardPoints.addAll([
+      Offset(twoColumnLeft, hasFoundation ? 388 : 160),
+      Offset(twoColumnRight, hasFoundation ? 388 : 160),
+      Offset(oneColumnCenter, hasFoundation ? 636 : 412),
+    ]);
+  } else if (branchCount >= 4) {
+    cardPoints.addAll([
+      Offset(twoColumnLeft, hasFoundation ? 388 : 160),
+      Offset(twoColumnRight, hasFoundation ? 388 : 160),
+      Offset(twoColumnLeft, hasFoundation ? 636 : 412),
+      Offset(twoColumnRight, hasFoundation ? 636 : 412),
+    ]);
+  }
+
+  final panelHeight = hasFoundation
+      ? (branchCount >= 3 ? 752.0 : 520.0)
+      : (branchCount >= 3 ? 548.0 : 296.0);
+
+  return _BranchOverviewLayout(
+    connectorStart: connectorStart,
+    panelHeight: panelHeight,
+    cardPoints: cardPoints,
+  );
 }
 
-class _OverviewHub extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color accentColor;
-  final String? badge;
-  final VoidCallback? onTap;
+class _BranchOverviewLayout {
+  final Offset connectorStart;
+  final double panelHeight;
+  final List<Offset> cardPoints;
 
-  const _OverviewHub({
-    required this.title,
-    required this.subtitle,
-    required this.accentColor,
-    required this.badge,
-    required this.onTap,
+  const _BranchOverviewLayout({
+    required this.connectorStart,
+    required this.panelHeight,
+    required this.cardPoints,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: badge != null ? 156 : 180,
-          height: 108,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(AppColors.bgPrimary, accentColor, 0.18)!,
-                AppColors.bgTertiary,
-              ],
-            ),
-            border: Border.all(color: accentColor.withValues(alpha: 0.28)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (badge != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    badge!,
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: accentColor,
-                    ),
-                  ),
-                ),
-              if (badge != null) const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  height: 1.35,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ));
-  }
 }
 
-class _BranchCard extends StatelessWidget {
+class _BranchConstellationNode extends StatelessWidget {
   final double width;
-  final double height;
   final String label;
   final String? badge;
   final Color accentColor;
@@ -842,12 +768,13 @@ class _BranchCard extends StatelessWidget {
   final double progress;
   final int unlocked;
   final int total;
-  final int mastered;
+  final List<Exercise> exercises;
+  final Map<String, ExerciseStatus> progressMap;
+  final bool isFoundation;
   final VoidCallback onTap;
 
-  const _BranchCard({
+  const _BranchConstellationNode({
     required this.width,
-    required this.height,
     required this.label,
     required this.badge,
     required this.accentColor,
@@ -855,94 +782,129 @@ class _BranchCard extends StatelessWidget {
     required this.progress,
     required this.unlocked,
     required this.total,
-    required this.mastered,
+    required this.exercises,
+    required this.progressMap,
+    required this.isFoundation,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final compact = width < 90;
+    const orbSize = 34.0;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
+      child: Container(
         width: width,
-        height: height,
-        padding: EdgeInsets.all(compact ? 10 : 14),
+        height: _branchNodeHeight,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: isSelected ? 0.09 : 0.04),
           borderRadius: BorderRadius.circular(24),
-          color: AppColors.bgTertiary,
           border: Border.all(
             color: isSelected
-                ? accentColor.withValues(alpha: 0.85)
-                : AppColors.borderPrimary,
-            width: isSelected ? 1.8 : 1,
+                ? accentColor.withValues(alpha: 0.7)
+                : Colors.white.withValues(alpha: 0.08),
           ),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withValues(alpha: isSelected ? 0.24 : 0.1),
-              blurRadius: isSelected ? 18 : 10,
-              offset: const Offset(0, 8),
+              color: accentColor.withValues(alpha: isSelected ? 0.14 : 0.06),
+              blurRadius: isSelected ? 26 : 14,
+              spreadRadius: isSelected ? 2 : 0,
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              width: orbSize,
+              height: orbSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.95),
+                    accentColor,
+                    Color.lerp(accentColor, Colors.black, 0.32)!,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withValues(
+                      alpha: isSelected ? 0.55 : 0.32,
+                    ),
+                    blurRadius: isSelected ? 26 : 16,
+                    spreadRadius: isSelected ? 4 : 1,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
             if (badge != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.16),
+                  color: accentColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   badge!,
                   style: GoogleFonts.inter(
-                    fontSize: compact ? 8 : 10,
+                    fontSize: 8,
                     fontWeight: FontWeight.w700,
                     color: accentColor,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ),
-            if (badge != null) SizedBox(height: compact ? 8 : 10),
+            if (badge != null) const SizedBox(height: 8),
             Text(
               label,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                fontSize: compact ? 13 : 16,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: isSelected
+                    ? Colors.white
+                    : AppColors.textPrimary.withValues(alpha: 0.92),
               ),
             ),
-            const Spacer(),
-            Text(
-              '$unlocked / $total unlocked',
-              style: GoogleFonts.inter(
-                fontSize: compact ? 10 : 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 92,
+              height: 74,
+              child: CustomPaint(
+                painter: _MiniConstellationPainter(
+                  exercises: exercises,
+                  progressMap: progressMap,
+                  accentColor: accentColor,
+                  isFoundation: true,
+                ),
               ),
             ),
-            SizedBox(height: compact ? 6 : 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                minHeight: compact ? 5 : 6,
-                value: progress,
-                color: accentColor,
-                backgroundColor: AppColors.borderPrimary,
-              ),
-            ),
-            SizedBox(height: compact ? 6 : 8),
-            Text(
-              '$mastered mastered',
-              style: GoogleFonts.inter(
-                fontSize: compact ? 10 : 11,
-                fontWeight: FontWeight.w700,
-                color: accentColor,
-              ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accentColor.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '$unlocked / $total',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -951,58 +913,191 @@ class _BranchCard extends StatelessWidget {
   }
 }
 
-class _BranchOverviewPainter extends CustomPainter {
-  final Offset hubCenter;
-  final List<Offset> branchCenters;
-  final List<Color> branchColors;
+class _ConstellationPainter extends CustomPainter {
   final bool hasFoundation;
+  final Offset start;
+  final List<Offset> targets;
+  final List<Color> targetColors;
 
-  const _BranchOverviewPainter({
-    required this.hubCenter,
-    required this.branchCenters,
-    required this.branchColors,
+  const _ConstellationPainter({
     required this.hasFoundation,
+    required this.start,
+    required this.targets,
+    required this.targetColors,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final trunkPaint = Paint()
+    final starPaint = Paint()..color = Colors.white.withValues(alpha: 0.18);
+    final stars = <Offset>[
+      Offset(size.width * 0.08, size.height * 0.12),
+      Offset(size.width * 0.2, size.height * 0.3),
+      Offset(size.width * 0.33, size.height * 0.08),
+      Offset(size.width * 0.48, size.height * 0.18),
+      Offset(size.width * 0.68, size.height * 0.1),
+      Offset(size.width * 0.86, size.height * 0.22),
+      Offset(size.width * 0.14, size.height * 0.72),
+      Offset(size.width * 0.32, size.height * 0.64),
+      Offset(size.width * 0.58, size.height * 0.78),
+      Offset(size.width * 0.82, size.height * 0.68),
+    ];
+    for (final star in stars) {
+      canvas.drawCircle(star, 1.6, starPaint);
+    }
+
+    final basePaint = Paint()
       ..color = AppColors.borderPrimary
-      ..strokeWidth = 3
+      ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    final splitY = hasFoundation ? hubCenter.dy + 70 : hubCenter.dy + 42;
 
-    canvas.drawLine(hubCenter, Offset(hubCenter.dx, splitY), trunkPaint);
+    final splitY =
+        hasFoundation ? start.dy + (_branchNodeHeight / 2) + 20 : start.dy + 48;
+    canvas.drawLine(
+      Offset(start.dx, hasFoundation ? splitY - 18 : start.dy),
+      Offset(start.dx, splitY),
+      basePaint,
+    );
 
-    for (var i = 0; i < branchCenters.length; i++) {
-      final target = branchCenters[i];
-      final accentPaint = Paint()
-        ..color = branchColors[i].withValues(alpha: 0.65)
-        ..strokeWidth = 2.4
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
+    if (targets.isEmpty) return;
 
-      final path = Path()
-        ..moveTo(hubCenter.dx, splitY)
-        ..lineTo(target.dx, splitY)
-        ..lineTo(target.dx, target.dy - 58);
-      canvas.drawPath(path, accentPaint);
+    final rowYs = targets
+        .map((target) => target.dy - (_branchNodeHeight / 2) - 12)
+        .toSet()
+        .toList()
+      ..sort();
 
-      canvas.drawCircle(
-        Offset(target.dx, target.dy - 58),
-        5,
-        Paint()..color = branchColors[i],
+    var previousY = splitY;
+    for (final rowY in rowYs) {
+      canvas.drawLine(
+        Offset(start.dx, previousY),
+        Offset(start.dx, rowY),
+        basePaint,
       );
+
+      final rowTargets = <int>[
+        for (var i = 0; i < targets.length; i++)
+          if ((targets[i].dy - (_branchNodeHeight / 2) + 12 - rowY).abs() < 0.1)
+            i,
+      ];
+
+      final minX = rowTargets
+          .map((index) => targets[index].dx)
+          .reduce((a, b) => a < b ? a : b);
+      final maxX = rowTargets
+          .map((index) => targets[index].dx)
+          .reduce((a, b) => a > b ? a : b);
+      final leftX = math.min(minX, start.dx);
+      final rightX = math.max(maxX, start.dx);
+      canvas.drawLine(Offset(leftX, rowY), Offset(rightX, rowY), basePaint);
+
+      for (final index in rowTargets) {
+        canvas.drawCircle(
+          Offset(targets[index].dx, rowY),
+          4,
+          Paint()..color = targetColors[index].withValues(alpha: 0.9),
+        );
+      }
+
+      previousY = rowY;
     }
   }
 
   @override
-  bool shouldRepaint(covariant _BranchOverviewPainter oldDelegate) {
-    return oldDelegate.hubCenter != hubCenter ||
-        oldDelegate.branchCenters != branchCenters ||
-        oldDelegate.branchColors != branchColors ||
-        oldDelegate.hasFoundation != hasFoundation;
+  bool shouldRepaint(covariant _ConstellationPainter oldDelegate) {
+    return oldDelegate.start != start ||
+        oldDelegate.targets != targets ||
+        oldDelegate.targetColors != targetColors;
+  }
+}
+
+class _MiniConstellationPainter extends CustomPainter {
+  final List<Exercise> exercises;
+  final Map<String, ExerciseStatus> progressMap;
+  final Color accentColor;
+  final bool isFoundation;
+
+  const _MiniConstellationPainter({
+    required this.exercises,
+    required this.progressMap,
+    required this.accentColor,
+    required this.isFoundation,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (exercises.isEmpty) return;
+
+    final points = <Offset>[];
+    const topInset = 6.0;
+    const bottomInset = 6.0;
+    for (var i = 0; i < exercises.length; i++) {
+      final t = exercises.length == 1 ? 0.5 : i / (exercises.length - 1);
+      final x = size.width * 0.5;
+      final y = size.height -
+          bottomInset -
+          t * (size.height - topInset - bottomInset);
+      points.add(Offset(x, y));
+    }
+
+    for (var i = 0; i < points.length - 1; i++) {
+      final current = progressMap[exercises[i].id] ?? ExerciseStatus.inactive;
+      final next = progressMap[exercises[i + 1].id] ?? ExerciseStatus.inactive;
+      final isLit =
+          current != ExerciseStatus.inactive || next != ExerciseStatus.inactive;
+      final linePaint = Paint()
+        ..color = (isLit
+                ? accentColor.withValues(alpha: 0.65)
+                : AppColors.borderPrimary.withValues(alpha: 0.9))
+            .withValues(alpha: isLit ? 0.65 : 0.9)
+        ..strokeWidth = isFoundation ? 2 : 1.6
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(points[i], points[i + 1], linePaint);
+    }
+
+    for (var i = 0; i < points.length; i++) {
+      final status = progressMap[exercises[i].id] ?? ExerciseStatus.inactive;
+      final point = points[i];
+
+      switch (status) {
+        case ExerciseStatus.mastered:
+          canvas.drawCircle(
+            point,
+            isFoundation ? 6 : 5,
+            Paint()..color = accentColor.withValues(alpha: 0.22),
+          );
+          canvas.drawCircle(
+            point,
+            isFoundation ? 3.4 : 2.8,
+            Paint()..color = Colors.white,
+          );
+        case ExerciseStatus.active:
+          canvas.drawCircle(
+            point,
+            isFoundation ? 5 : 4,
+            Paint()..color = accentColor.withValues(alpha: 0.2),
+          );
+          canvas.drawCircle(
+            point,
+            isFoundation ? 2.8 : 2.3,
+            Paint()..color = accentColor,
+          );
+        case ExerciseStatus.inactive:
+          canvas.drawCircle(
+            point,
+            isFoundation ? 2.3 : 2,
+            Paint()..color = AppColors.textMuted.withValues(alpha: 0.65),
+          );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MiniConstellationPainter oldDelegate) {
+    return oldDelegate.exercises != exercises ||
+        oldDelegate.progressMap != progressMap ||
+        oldDelegate.accentColor != accentColor ||
+        oldDelegate.isFoundation != isFoundation;
   }
 }
 
@@ -1130,7 +1225,7 @@ class _PathExerciseCard extends StatelessWidget {
         width: 182,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.bgTertiary,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: _statusColor, width: 1.6),
           boxShadow: [
@@ -1204,7 +1299,7 @@ class _PathExerciseCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF111111),
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
