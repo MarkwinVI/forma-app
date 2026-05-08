@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
@@ -9,6 +11,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
+import '../exercises/exercise_detail_view.dart';
 
 const _masteredColor = Color(0xFF4CAF50);
 const _surfaceShadow = Color(0x1A000000);
@@ -172,17 +175,26 @@ class _SkillTreeViewState extends State<SkillTreeView> {
   }
 
   void _showExerciseSheet(Exercise exercise) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.bgTertiary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       isScrollControlled: true,
-      builder: (_) => _ExerciseSheet(
+      builder: (sheetContext) => _ExercisePreviewSheet(
         exercise: exercise,
-        status: _localProgress[exercise.id] ?? ExerciseStatus.inactive,
-        onStatusChanged: (s) => _updateStatus(exercise, s),
+        skillCategoryId: _skillCategory.id,
+        initialStatus: _localProgress[exercise.id] ?? ExerciseStatus.inactive,
+        onStatusChanged: (status) => _updateStatus(exercise, status),
+        onLearnMore: () {
+          Navigator.of(sheetContext).pop();
+          openExerciseDetailView<void>(
+            context,
+            exercise: exercise,
+            skillCategoryId: _skillCategory.id,
+          );
+        },
       ),
     );
   }
@@ -1384,21 +1396,43 @@ class _LockNotice extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _ExerciseSheet extends StatelessWidget {
+class _ExercisePreviewSheet extends StatefulWidget {
   final Exercise exercise;
-  final ExerciseStatus status;
-  final void Function(ExerciseStatus) onStatusChanged;
+  final String skillCategoryId;
+  final ExerciseStatus initialStatus;
+  final FutureOr<void> Function(ExerciseStatus status) onStatusChanged;
+  final VoidCallback onLearnMore;
 
-  const _ExerciseSheet({
+  const _ExercisePreviewSheet({
     required this.exercise,
-    required this.status,
+    required this.skillCategoryId,
+    required this.initialStatus,
     required this.onStatusChanged,
+    required this.onLearnMore,
   });
 
+  @override
+  State<_ExercisePreviewSheet> createState() => _ExercisePreviewSheetState();
+}
+
+class _ExercisePreviewSheetState extends State<_ExercisePreviewSheet> {
+  late ExerciseStatus _selectedStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStatus = widget.initialStatus;
+  }
+
+  Future<void> _handleStatusChanged(ExerciseStatus status) async {
+    setState(() {
+      _selectedStatus = status;
+    });
+    await widget.onStatusChanged(status);
+  }
+
   List<Color> get _previewGradient {
-    switch (exercise.category) {
+    switch (widget.exercise.category) {
       case ExerciseCategory.verticalPull:
         return const [Color(0xFF264C62), Color(0xFF101A24)];
       case ExerciseCategory.verticalPush:
@@ -1419,7 +1453,7 @@ class _ExerciseSheet extends StatelessWidget {
   }
 
   IconData get _previewIcon {
-    switch (exercise.category) {
+    switch (widget.exercise.category) {
       case ExerciseCategory.verticalPull:
         return Icons.sports_gymnastics_rounded;
       case ExerciseCategory.verticalPush:
@@ -1441,6 +1475,8 @@ class _ExerciseSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skillCategory = SkillCategoryCatalog.findById(widget.skillCategoryId);
+
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -1465,7 +1501,7 @@ class _ExerciseSheet extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              exercise.name,
+              widget.exercise.name,
               style: GoogleFonts.inter(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
@@ -1477,31 +1513,20 @@ class _ExerciseSheet extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'DIFFICULTY:',
+                  skillCategory?.title ?? widget.exercise.category.label,
                   style: GoogleFonts.inter(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
-                    letterSpacing: 1,
                   ),
                 ),
                 const SizedBox(width: 8),
-                _DifficultyStars(difficulty: exercise.difficulty),
-                const SizedBox(width: 8),
-                Text(
-                  _difficultyLabel(exercise.difficulty),
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted,
-                    letterSpacing: 1,
-                  ),
-                ),
+                _DifficultyStars(difficulty: widget.exercise.difficulty),
               ],
             ),
             const SizedBox(height: 10),
             Text(
-              exercise.description,
+              widget.exercise.description,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -1569,13 +1594,7 @@ class _ExerciseSheet extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Learning content coming soon.'),
-                    ),
-                  );
-                },
+                onPressed: widget.onLearnMore,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
@@ -1609,19 +1628,18 @@ class _ExerciseSheet extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: ExerciseStatus.values
-                  .map((s) => Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _StatusChip(
-                            status: s,
-                            isSelected: status == s,
-                            onTap: () {
-                              onStatusChanged(s);
-                              Navigator.pop(context);
-                            },
-                          ),
+                  .map(
+                    (status) => Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: _PreviewStatusChip(
+                          status: status,
+                          isSelected: _selectedStatus == status,
+                          onTap: () => _handleStatusChanged(status),
                         ),
-                      ))
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
             const SizedBox(height: 8),
@@ -1630,13 +1648,6 @@ class _ExerciseSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-String _difficultyLabel(int difficulty) {
-  if (difficulty <= 2) return '(Easy)';
-  if (difficulty == 3) return '(Medium)';
-  if (difficulty == 4) return '(Hard)';
-  return '(Elite)';
 }
 
 class _DifficultyStars extends StatelessWidget {
@@ -1664,12 +1675,12 @@ class _DifficultyStars extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
+class _PreviewStatusChip extends StatelessWidget {
   final ExerciseStatus status;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _StatusChip({
+  const _PreviewStatusChip({
     required this.status,
     required this.isSelected,
     required this.onTap,

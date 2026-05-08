@@ -3,9 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../exercises/exercise_detail_view.dart';
 
 class DataView extends StatefulWidget {
   final bool isActive;
@@ -411,72 +413,82 @@ class _WorkoutExerciseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final accentColor =
         exercise.isTimed ? const Color(0xFFA78BFA) : AppColors.accentPrimary;
+    final exerciseModel = ExerciseCatalog.findById(exercise.exerciseId);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgTertiary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderPrimary),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  shape: BoxShape.circle,
-                ),
+    return GestureDetector(
+      onTap: exerciseModel == null
+          ? null
+          : () => openExerciseDetailView<void>(
+                context,
+                exercise: exerciseModel,
+                accentColor: accentColor,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  exercise.exerciseName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Text(
-                '${exercise.setCount} sets',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(
-            _exerciseTotalLabel(exercise),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: exercise.sets
-                .map(
-                  (set) => _SetChip(
-                    set: set,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.bgTertiary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderPrimary),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
                     color: accentColor,
+                    shape: BoxShape.circle,
                   ),
-                )
-                .toList(),
-          ),
-        ],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    exercise.exerciseName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${exercise.setCount} sets',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              _exerciseTotalLabel(exercise),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: exercise.sets
+                  .map(
+                    (set) => _SetChip(
+                      set: set,
+                      color: accentColor,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
