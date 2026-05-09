@@ -1,14 +1,54 @@
 import '../catalog/exercise_catalog.dart';
 import '../catalog/skill_category_catalog.dart';
 import '../models/exercise_model.dart';
+import '../models/skill_category_model.dart';
 import '../models/training_program_model.dart';
 
+class TrainingBranchOption {
+  final String id;
+  final TrainingTrack track;
+  final ExerciseCategory sourceCategory;
+  final String sourceSkillCategoryId;
+  final String trainingPathId;
+  final String title;
+  final String subtitle;
+  final String rationale;
+  final List<String> exerciseIds;
+
+  const TrainingBranchOption({
+    required this.id,
+    required this.track,
+    required this.sourceCategory,
+    required this.sourceSkillCategoryId,
+    required this.trainingPathId,
+    required this.title,
+    required this.subtitle,
+    required this.rationale,
+    required this.exerciseIds,
+  });
+}
+
 class TrainingProgramService {
+  static final Map<TrainingTrack, String> _defaultBranchIds = {
+    TrainingTrack.skillWork: '${SkillCategoryCatalog.coreId}:l_sit',
+    TrainingTrack.verticalPush:
+        '${SkillCategoryCatalog.handstandPushupsId}:main',
+    TrainingTrack.horizontalPush: '${SkillCategoryCatalog.pushupsId}:one_arm',
+    TrainingTrack.verticalPull: '${SkillCategoryCatalog.pullupsId}:weighted',
+    TrainingTrack.horizontalPull: '${SkillCategoryCatalog.rowsId}:front_lever',
+    TrainingTrack.core: '${SkillCategoryCatalog.coreId}:ab_wheel',
+    TrainingTrack.squat: '${SkillCategoryCatalog.squatId}:pistol',
+    TrainingTrack.hinge: 'hinge:posterior_chain',
+  };
+
   DailyTrainingRecommendation buildToday({
     required Map<String, ExerciseStatus> progressMap,
     TrainingProgramType programType = TrainingProgramType.fullBody,
     TrainingSessionType? sessionType,
+    Map<TrainingTrack, String> branchSelections = const {},
   }) {
+    final selectedBranches = resolveSelectedBranches(branchSelections);
+
     switch (programType) {
       case TrainingProgramType.fullBody:
         final currentSessionType = sessionType ?? TrainingSessionType.fullBody;
@@ -19,7 +59,7 @@ class TrainingProgramService {
           isRestDay: currentSessionType == TrainingSessionType.rest,
           items: currentSessionType == TrainingSessionType.rest
               ? const []
-              : _buildItems(_fullBodyBranches, progressMap),
+              : _buildItems(_fullBodyBranches(selectedBranches), progressMap),
         );
       case TrainingProgramType.pushPull:
         final currentSessionType = sessionType ?? TrainingSessionType.push;
@@ -28,7 +68,11 @@ class TrainingProgramService {
           sessionType: currentSessionType,
           sessionLabel: currentSessionType.label,
           isRestDay: currentSessionType == TrainingSessionType.rest,
-          items: _buildPushPullItems(currentSessionType, progressMap),
+          items: _buildPushPullItems(
+            currentSessionType,
+            progressMap,
+            selectedBranches,
+          ),
         );
       case TrainingProgramType.upperLower:
         final currentSessionType = sessionType ?? TrainingSessionType.upper;
@@ -37,38 +81,399 @@ class TrainingProgramService {
           sessionType: currentSessionType,
           sessionLabel: currentSessionType.label,
           isRestDay: currentSessionType == TrainingSessionType.rest,
-          items: _buildUpperLowerItems(currentSessionType, progressMap),
+          items: _buildUpperLowerItems(
+            currentSessionType,
+            progressMap,
+            selectedBranches,
+          ),
         );
     }
+  }
+
+  List<TrainingSessionType> scheduleCycleFor({
+    required TrainingProgramType programType,
+    String? scheduleVariant,
+  }) {
+    switch (scheduleVariant) {
+      case 'push_rest_pull_rest_push_pull_rest':
+        return const [
+          TrainingSessionType.push,
+          TrainingSessionType.rest,
+          TrainingSessionType.pull,
+          TrainingSessionType.rest,
+          TrainingSessionType.push,
+          TrainingSessionType.pull,
+          TrainingSessionType.rest,
+        ];
+      case 'upper_rest_lower_rest_upper_lower_rest':
+        return const [
+          TrainingSessionType.upper,
+          TrainingSessionType.rest,
+          TrainingSessionType.lower,
+          TrainingSessionType.rest,
+          TrainingSessionType.upper,
+          TrainingSessionType.lower,
+          TrainingSessionType.rest,
+        ];
+      case 'full_body_3x':
+        return const [
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.rest,
+        ];
+    }
+
+    switch (programType) {
+      case TrainingProgramType.pushPull:
+        return const [
+          TrainingSessionType.push,
+          TrainingSessionType.rest,
+          TrainingSessionType.pull,
+          TrainingSessionType.rest,
+          TrainingSessionType.push,
+          TrainingSessionType.pull,
+          TrainingSessionType.rest,
+        ];
+      case TrainingProgramType.upperLower:
+        return const [
+          TrainingSessionType.upper,
+          TrainingSessionType.rest,
+          TrainingSessionType.lower,
+          TrainingSessionType.rest,
+          TrainingSessionType.upper,
+          TrainingSessionType.lower,
+          TrainingSessionType.rest,
+        ];
+      case TrainingProgramType.fullBody:
+        return const [
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.rest,
+        ];
+    }
+  }
+
+  List<TrainingSessionType> trainingDaysForProgramType(
+    TrainingProgramType programType,
+  ) {
+    switch (programType) {
+      case TrainingProgramType.fullBody:
+        return const [TrainingSessionType.fullBody];
+      case TrainingProgramType.pushPull:
+        return const [TrainingSessionType.push, TrainingSessionType.pull];
+      case TrainingProgramType.upperLower:
+        return const [TrainingSessionType.upper, TrainingSessionType.lower];
+    }
+  }
+
+  List<TrainingTrack> editableTracksForProgramType(
+    TrainingProgramType programType,
+  ) {
+    switch (programType) {
+      case TrainingProgramType.fullBody:
+        return const [
+          TrainingTrack.skillWork,
+          TrainingTrack.verticalPush,
+          TrainingTrack.horizontalPush,
+          TrainingTrack.verticalPull,
+          TrainingTrack.horizontalPull,
+          TrainingTrack.core,
+          TrainingTrack.squat,
+          TrainingTrack.hinge,
+        ];
+      case TrainingProgramType.pushPull:
+        return const [
+          TrainingTrack.skillWork,
+          TrainingTrack.horizontalPush,
+          TrainingTrack.verticalPush,
+          TrainingTrack.squat,
+          TrainingTrack.core,
+          TrainingTrack.horizontalPull,
+          TrainingTrack.verticalPull,
+          TrainingTrack.hinge,
+        ];
+      case TrainingProgramType.upperLower:
+        return const [
+          TrainingTrack.skillWork,
+          TrainingTrack.verticalPush,
+          TrainingTrack.horizontalPush,
+          TrainingTrack.verticalPull,
+          TrainingTrack.horizontalPull,
+          TrainingTrack.squat,
+          TrainingTrack.hinge,
+          TrainingTrack.core,
+        ];
+    }
+  }
+
+  Map<TrainingTrack, String> defaultBranchSelections() =>
+      Map<TrainingTrack, String>.from(_defaultBranchIds);
+
+  List<TrainingBranchOption> branchOptionsForTrack(TrainingTrack track) {
+    switch (track) {
+      case TrainingTrack.skillWork:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.core,
+            pathId: 'l_sit',
+            rationale:
+                'Use your opening slot to build compression and straight-arm control before heavier work.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.core,
+            pathId: 'leg_raises',
+            rationale:
+                'Bias hanging control and trunk stiffness if you want a more dynamic skill opener.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.core,
+            pathId: 'ab_wheel',
+            rationale:
+                'Turn the opener into a tension-focused skill slot when rollout strength is the main limiter.',
+          ),
+        ];
+      case TrainingTrack.verticalPush:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.handstandPushups,
+            pathId: 'main',
+            rationale:
+                'Best when your main goal is overhead pressing strength and handstand-specific control.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.dips,
+            pathId: 'weighted',
+            rationale:
+                'Best when you want a loadable vertical press that can chase heavier strength milestones.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.dips,
+            pathId: 'rings',
+            rationale:
+                'Best when shoulder stability and ring support strength matter more than absolute load.',
+          ),
+        ];
+      case TrainingTrack.horizontalPush:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pushups,
+            pathId: 'one_arm',
+            rationale:
+                'Keep the horizontal press lane on unilateral strength and body-tension progressions.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pushups,
+            pathId: 'rings',
+            rationale:
+                'Use this when instability and deeper pressing range are more useful than pure leverage difficulty.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pushups,
+            pathId: 'planche',
+            rationale:
+                'Best when you want your push volume to feed directly into planche-style lean and protraction strength.',
+          ),
+        ];
+      case TrainingTrack.verticalPull:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pullups,
+            pathId: 'weighted',
+            rationale:
+                'Use the vertical pull slot for pure strength when added load is the clearest next milestone.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pullups,
+            pathId: 'close_grip',
+            rationale:
+                'Choose this when top-end range, sternum height, and stronger scapular depression are the priority.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pullups,
+            pathId: 'one_arm',
+            rationale:
+                'Choose this when unilateral pulling strength is the long-term goal driving the whole branch.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.pullups,
+            pathId: 'l_sit',
+            rationale:
+                'Blend pull strength with compression if you want your vertical pull lane to stay skill-heavy.',
+          ),
+        ];
+      case TrainingTrack.horizontalPull:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.rows,
+            pathId: 'front_lever',
+            rationale:
+                'Best when row work should feed front lever body-line strength and harder torso angles.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.rows,
+            pathId: 'weighted',
+            rationale:
+                'Best when you want a clean, loadable horizontal pull progression with obvious strength checkpoints.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.rows,
+            pathId: 'one_arm',
+            rationale:
+                'Use this when unilateral back strength and anti-rotation control are the real target.',
+          ),
+        ];
+      case TrainingTrack.core:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.core,
+            pathId: 'ab_wheel',
+            rationale:
+                'Default core lane for trunk strength that supports almost every other movement pattern.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.core,
+            pathId: 'leg_raises',
+            rationale:
+                'Best when you want your core work to bias hanging control and lower-ab compression.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.core,
+            pathId: 'l_sit',
+            rationale:
+                'Best when you want the core lane to double as a visible skill goal instead of pure accessory work.',
+          ),
+        ];
+      case TrainingTrack.squat:
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.squat,
+            pathId: 'pistol',
+            rationale:
+                'Use the squat lane for deep single-leg strength and balance that carries well to full-body sessions.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.squat,
+            pathId: 'shrimp',
+            rationale:
+                'Best when you want knee-flexion strength and a more closed-chain single-leg pattern.',
+          ),
+        ];
+      case TrainingTrack.hinge:
+        return const [
+          TrainingBranchOption(
+            id: 'hinge:posterior_chain',
+            track: TrainingTrack.hinge,
+            sourceCategory: ExerciseCategory.hinge,
+            sourceSkillCategoryId: 'hinge',
+            trainingPathId: 'posterior_chain',
+            title: 'Posterior Chain',
+            subtitle: 'Hinge',
+            rationale:
+                'This slot stays fixed for now so the program always keeps a simple hamstring and hinge balance.',
+            exerciseIds: ['single_leg_rdl', 'nordic_curl'],
+          ),
+        ];
+    }
+  }
+
+  Map<TrainingTrack, TrainingBranchOption> resolveSelectedBranches(
+    Map<TrainingTrack, String> branchSelections,
+  ) {
+    final resolved = <TrainingTrack, TrainingBranchOption>{};
+
+    for (final track in TrainingTrack.values) {
+      final options = branchOptionsForTrack(track);
+      final savedId = branchSelections[track];
+      final defaultId = _defaultBranchIds[track];
+
+      resolved[track] = options.firstWhere(
+        (option) => option.id == savedId,
+        orElse: () => options.firstWhere(
+          (option) => option.id == defaultId,
+          orElse: () => options.first,
+        ),
+      );
+    }
+
+    return resolved;
+  }
+
+  Exercise? currentExerciseForOption(
+    TrainingBranchOption option,
+    Map<String, ExerciseStatus> progressMap,
+  ) {
+    return _pickCurrentExercise(
+      _TrainingBranch(
+        track: option.track,
+        sourceCategory: option.sourceCategory,
+        sourceSkillCategoryId: option.sourceSkillCategoryId,
+        exerciseIds: option.exerciseIds,
+      ),
+      progressMap,
+    );
   }
 
   List<TrainingRecommendationItem> _buildPushPullItems(
     TrainingSessionType sessionType,
     Map<String, ExerciseStatus> progressMap,
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
   ) {
     switch (sessionType) {
       case TrainingSessionType.pull:
-        return _buildItems(_pullDayBranches, progressMap);
+        return _buildItems(_pullDayBranches(selectedBranches), progressMap);
       case TrainingSessionType.rest:
         return const [];
       case TrainingSessionType.push:
       default:
-        return _buildItems(_pushDayBranches, progressMap);
+        return _buildItems(_pushDayBranches(selectedBranches), progressMap);
     }
   }
 
   List<TrainingRecommendationItem> _buildUpperLowerItems(
     TrainingSessionType sessionType,
     Map<String, ExerciseStatus> progressMap,
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
   ) {
     switch (sessionType) {
       case TrainingSessionType.lower:
-        return _buildItems(_lowerDayBranches, progressMap);
+        return _buildItems(_lowerDayBranches(selectedBranches), progressMap);
       case TrainingSessionType.rest:
         return const [];
       case TrainingSessionType.upper:
       default:
-        return _buildItems(_upperDayBranches(progressMap), progressMap);
+        return _buildItems(
+          _upperDayBranches(progressMap, selectedBranches),
+          progressMap,
+        );
     }
   }
 
@@ -126,6 +531,7 @@ class TrainingProgramService {
 
   List<_TrainingBranch> _upperDayBranches(
     Map<String, ExerciseStatus> progressMap,
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
   ) {
     final primaryPush = _preferCategory(
       primary: ExerciseCategory.verticalPush,
@@ -138,21 +544,30 @@ class TrainingProgramService {
       progressMap: progressMap,
     );
 
+    final verticalPushBranch =
+        _branchFromOption(selectedBranches[TrainingTrack.verticalPush]!);
+    final horizontalPushBranch =
+        _branchFromOption(selectedBranches[TrainingTrack.horizontalPush]!);
+    final verticalPullBranch =
+        _branchFromOption(selectedBranches[TrainingTrack.verticalPull]!);
+    final horizontalPullBranch =
+        _branchFromOption(selectedBranches[TrainingTrack.horizontalPull]!);
+
     final primaryPushBranch = primaryPush == ExerciseCategory.verticalPush
-        ? _verticalPushBranch
-        : _horizontalPushBranch;
+        ? verticalPushBranch
+        : horizontalPushBranch;
     final secondaryPushBranch = primaryPush == ExerciseCategory.verticalPush
-        ? _horizontalPushBranch
-        : _verticalPushBranch;
+        ? horizontalPushBranch
+        : verticalPushBranch;
     final primaryPullBranch = primaryPull == ExerciseCategory.verticalPull
-        ? _verticalPullBranch
-        : _horizontalPullBranch;
+        ? verticalPullBranch
+        : horizontalPullBranch;
     final secondaryPullBranch = primaryPull == ExerciseCategory.verticalPull
-        ? _horizontalPullBranch
-        : _verticalPullBranch;
+        ? horizontalPullBranch
+        : verticalPullBranch;
 
     return [
-      _skillWorkBranch,
+      _branchFromOption(selectedBranches[TrainingTrack.skillWork]!),
       primaryPushBranch,
       primaryPullBranch,
       secondaryPushBranch,
@@ -197,98 +612,103 @@ class TrainingProgramService {
     return score;
   }
 
-  static final _skillWorkBranch = _TrainingBranch(
-    track: TrainingTrack.skillWork,
-    sourceCategory: ExerciseCategory.core,
-    sourceSkillCategoryId: SkillCategoryCatalog.coreId,
-    exerciseIds: SkillCategoryCatalog.core.trainingPaths['l_sit']!,
-  );
+  List<_TrainingBranch> _fullBodyBranches(
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
+  ) {
+    return [
+      _branchFromOption(selectedBranches[TrainingTrack.skillWork]!),
+      _branchFromOption(selectedBranches[TrainingTrack.verticalPush]!),
+      _branchFromOption(selectedBranches[TrainingTrack.horizontalPush]!),
+      _branchFromOption(selectedBranches[TrainingTrack.verticalPull]!),
+      _branchFromOption(selectedBranches[TrainingTrack.horizontalPull]!),
+      _branchFromOption(selectedBranches[TrainingTrack.core]!),
+      _branchFromOption(selectedBranches[TrainingTrack.squat]!),
+      _branchFromOption(selectedBranches[TrainingTrack.hinge]!),
+    ];
+  }
 
-  static final _verticalPushBranch = _TrainingBranch(
-    track: TrainingTrack.verticalPush,
-    sourceCategory: ExerciseCategory.verticalPush,
-    sourceSkillCategoryId: SkillCategoryCatalog.handstandPushupsId,
-    exerciseIds: SkillCategoryCatalog.handstandPushups.trainingPaths[
-        SkillCategoryCatalog.handstandPushups.defaultTrainingPathId]!,
-  );
+  List<_TrainingBranch> _pushDayBranches(
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
+  ) {
+    return [
+      _branchFromOption(selectedBranches[TrainingTrack.skillWork]!),
+      _branchFromOption(selectedBranches[TrainingTrack.horizontalPush]!),
+      _branchFromOption(selectedBranches[TrainingTrack.verticalPush]!),
+      _branchFromOption(selectedBranches[TrainingTrack.squat]!),
+      _branchFromOption(selectedBranches[TrainingTrack.core]!),
+    ];
+  }
 
-  static final _horizontalPushBranch = _TrainingBranch(
-    track: TrainingTrack.horizontalPush,
-    sourceCategory: ExerciseCategory.horizontalPush,
-    sourceSkillCategoryId: SkillCategoryCatalog.pushupsId,
-    exerciseIds: SkillCategoryCatalog.pushups
-        .trainingPaths[SkillCategoryCatalog.pushups.defaultTrainingPathId]!,
-  );
+  List<_TrainingBranch> _pullDayBranches(
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
+  ) {
+    return [
+      _branchFromOption(selectedBranches[TrainingTrack.skillWork]!),
+      _branchFromOption(selectedBranches[TrainingTrack.horizontalPull]!),
+      _branchFromOption(selectedBranches[TrainingTrack.verticalPull]!),
+      _branchFromOption(selectedBranches[TrainingTrack.hinge]!),
+      _branchFromOption(selectedBranches[TrainingTrack.core]!),
+    ];
+  }
 
-  static final _verticalPullBranch = _TrainingBranch(
-    track: TrainingTrack.verticalPull,
-    sourceCategory: ExerciseCategory.verticalPull,
-    sourceSkillCategoryId: SkillCategoryCatalog.pullupsId,
-    exerciseIds: SkillCategoryCatalog.pullups
-        .trainingPaths[SkillCategoryCatalog.pullups.defaultTrainingPathId]!,
-  );
+  List<_TrainingBranch> _lowerDayBranches(
+    Map<TrainingTrack, TrainingBranchOption> selectedBranches,
+  ) {
+    return [
+      _branchFromOption(selectedBranches[TrainingTrack.squat]!),
+      _branchFromOption(selectedBranches[TrainingTrack.hinge]!),
+      _branchFromOption(selectedBranches[TrainingTrack.core]!),
+    ];
+  }
 
-  static final _horizontalPullBranch = _TrainingBranch(
-    track: TrainingTrack.horizontalPull,
-    sourceCategory: ExerciseCategory.horizontalPull,
-    sourceSkillCategoryId: SkillCategoryCatalog.rowsId,
-    exerciseIds: SkillCategoryCatalog
-        .rows.trainingPaths[SkillCategoryCatalog.rows.defaultTrainingPathId]!,
-  );
+  _TrainingBranch _branchFromOption(TrainingBranchOption option) {
+    return _TrainingBranch(
+      track: option.track,
+      sourceCategory: option.sourceCategory,
+      sourceSkillCategoryId: option.sourceSkillCategoryId,
+      exerciseIds: option.exerciseIds,
+    );
+  }
 
-  static final _coreBranch = _TrainingBranch(
-    track: TrainingTrack.core,
-    sourceCategory: ExerciseCategory.core,
-    sourceSkillCategoryId: SkillCategoryCatalog.coreId,
-    exerciseIds: SkillCategoryCatalog.core.trainingPaths['ab_wheel']!,
-  );
+  TrainingBranchOption _branchOptionFromCategory({
+    required TrainingTrack track,
+    required SkillCategory category,
+    required String pathId,
+    required String rationale,
+  }) {
+    final exercises = category.trainingPaths[pathId] ?? const <String>[];
 
-  static final _squatBranch = _TrainingBranch(
-    track: TrainingTrack.squat,
-    sourceCategory: ExerciseCategory.squat,
-    sourceSkillCategoryId: SkillCategoryCatalog.squatId,
-    exerciseIds: SkillCategoryCatalog
-        .squat.trainingPaths[SkillCategoryCatalog.squat.defaultTrainingPathId]!,
-  );
+    return TrainingBranchOption(
+      id: '${category.id}:$pathId',
+      track: track,
+      sourceCategory: category.track,
+      sourceSkillCategoryId: category.id,
+      trainingPathId: pathId,
+      title: _branchTitle(category, pathId),
+      subtitle: category.subtitle,
+      rationale: rationale,
+      exerciseIds: exercises,
+    );
+  }
 
-  static const _hingeBranch = _TrainingBranch(
-    track: TrainingTrack.hinge,
-    sourceCategory: ExerciseCategory.hinge,
-    exerciseIds: ['single_leg_rdl', 'nordic_curl'],
-  );
+  String _branchTitle(SkillCategory category, String pathId) {
+    final label = _pathLabel(category, pathId);
+    if (label.toLowerCase() == 'main') {
+      return category.title;
+    }
+    return '$label ${category.title}';
+  }
 
-  static final List<_TrainingBranch> _fullBodyBranches = [
-    _skillWorkBranch,
-    _verticalPushBranch,
-    _horizontalPushBranch,
-    _verticalPullBranch,
-    _horizontalPullBranch,
-    _coreBranch,
-    _squatBranch,
-    _hingeBranch,
-  ];
+  String _pathLabel(SkillCategory category, String pathId) {
+    for (final branch in category.branches) {
+      if (branch.id == pathId) return branch.label;
+    }
 
-  static final List<_TrainingBranch> _pushDayBranches = [
-    _skillWorkBranch,
-    _horizontalPushBranch,
-    _verticalPushBranch,
-    _squatBranch,
-    _coreBranch,
-  ];
-
-  static final List<_TrainingBranch> _pullDayBranches = [
-    _skillWorkBranch,
-    _horizontalPullBranch,
-    _verticalPullBranch,
-    _hingeBranch,
-    _coreBranch,
-  ];
-
-  static final List<_TrainingBranch> _lowerDayBranches = [
-    _squatBranch,
-    _hingeBranch,
-    _coreBranch,
-  ];
+    return pathId
+        .split('_')
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
 }
 
 class _TrainingBranch {

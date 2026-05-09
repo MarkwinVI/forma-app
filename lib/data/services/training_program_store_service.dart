@@ -24,6 +24,20 @@ class TrainingProgramStoreService {
     return UserTrainingProgramSnapshot(program: program, state: state);
   }
 
+  Future<TrainingProgramLogicSnapshot> getOrCreateProgramLogic(
+    String userId,
+  ) async {
+    final snapshot = await getOrCreateActiveProgram(userId);
+    final branchSelections = await _fetchBranchSelections(userId);
+
+    return TrainingProgramLogicSnapshot(
+      program: snapshot.program,
+      state: snapshot.state,
+      branchSelections: branchSelections,
+      repGoalProfile: _repGoalProfileFor(snapshot.program),
+    );
+  }
+
   Future<UserTrainingProgramSnapshot> updateProgramType({
     required String userId,
     required TrainingProgramType programType,
@@ -41,6 +55,46 @@ class TrainingProgramStoreService {
     );
 
     return UserTrainingProgramSnapshot(program: program, state: state);
+  }
+
+  Future<TrainingProgramLogicSnapshot> updateProgramLogic({
+    required String userId,
+    required TrainingProgramType programType,
+    required Map<TrainingTrack, String> branchSelections,
+    required RepGoalProfile repGoalProfile,
+  }) async {
+    final existingProgram = await _fetchActiveProgram(userId);
+    final variationRules = <String, dynamic>{
+      ...?existingProgram?.variationRules,
+      'rep_goal_profile': repGoalProfile.dbValue,
+    };
+
+    final program = existingProgram == null
+        ? await _createProgram(
+            userId: userId,
+            programType: programType,
+            variationRules: variationRules,
+          )
+        : await _updateProgram(
+            existingProgram,
+            programType,
+            variationRules: variationRules,
+          );
+
+    final state = await _upsertProgramState(
+      userId: userId,
+      programId: program.id,
+      programType: programType,
+    );
+
+    await _upsertBranchSelections(userId, branchSelections);
+
+    return TrainingProgramLogicSnapshot(
+      program: program,
+      state: state,
+      branchSelections: branchSelections,
+      repGoalProfile: repGoalProfile,
+    );
   }
 
   Future<UserTrainingProgram?> _fetchActiveProgram(String userId) async {
@@ -69,6 +123,7 @@ class TrainingProgramStoreService {
   Future<UserTrainingProgram> _createProgram({
     required String userId,
     required TrainingProgramType programType,
+    Map<String, dynamic> variationRules = const {},
   }) async {
     final data = await _client
         .from('user_training_programs')
@@ -77,6 +132,7 @@ class TrainingProgramStoreService {
           'program_type': programType.dbValue,
           'schedule_variant': _defaultScheduleVariant(programType),
           'frequency_per_week': _defaultFrequencyPerWeek,
+          'variation_rules': variationRules,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .select()
@@ -86,15 +142,15 @@ class TrainingProgramStoreService {
   }
 
   Future<UserTrainingProgram> _updateProgram(
-    UserTrainingProgram program,
-    TrainingProgramType programType,
-  ) async {
+      UserTrainingProgram program, TrainingProgramType programType,
+      {Map<String, dynamic>? variationRules}) async {
     final data = await _client
         .from('user_training_programs')
         .update({
           'program_type': programType.dbValue,
           'schedule_variant': _defaultScheduleVariant(programType),
           'frequency_per_week': _defaultFrequencyPerWeek,
+          if (variationRules != null) 'variation_rules': variationRules,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', program.id)
@@ -151,6 +207,47 @@ class TrainingProgramStoreService {
         .single();
 
     return UserTrainingProgramState.fromMap(data);
+  }
+
+  Future<Map<TrainingTrack, String>> _fetchBranchSelections(
+    String userId,
+  ) async {
+    final data = await _client
+        .from('user_progression_branches')
+        .select('track_id, branch_id')
+        .eq('user_id', userId);
+
+    return {
+      for (final row in data)
+        TrainingTrackX.fromDbValue(row['track_id'] as String):
+            row['branch_id'] as String,
+    };
+  }
+
+  Future<void> _upsertBranchSelections(
+    String userId,
+    Map<TrainingTrack, String> branchSelections,
+  ) async {
+    if (branchSelections.isEmpty) return;
+
+    await _client.from('user_progression_branches').upsert(
+      [
+        for (final entry in branchSelections.entries)
+          {
+            'user_id': userId,
+            'track_id': entry.key.dbValue,
+            'branch_id': entry.value,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+      ],
+      onConflict: 'user_id,track_id',
+    );
+  }
+
+  RepGoalProfile _repGoalProfileFor(UserTrainingProgram program) {
+    return RepGoalProfileX.fromDbValue(
+      program.variationRules['rep_goal_profile'] as String?,
+    );
   }
 
   String _defaultScheduleVariant(TrainingProgramType programType) {

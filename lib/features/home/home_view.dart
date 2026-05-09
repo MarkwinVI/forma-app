@@ -9,8 +9,9 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import 'live_workout_view.dart';
 import 'session_overview_view.dart';
-import 'training_program_settings_view.dart';
+import 'training_program_logic_view.dart';
 
 const _cardShadow = Color(0x40000000);
 const _emptyStateBg = Color(0x05FFFFFF);
@@ -32,6 +33,8 @@ class _HomeViewState extends State<HomeView> {
   DailyTrainingRecommendation? _recommendation;
   TrainingProgramType _selectedProgramType = TrainingProgramType.fullBody;
   String? _scheduleVariant;
+  Map<TrainingTrack, String> _branchSelections = {};
+  RepGoalProfile _repGoalProfile = RepGoalProfile.balanced;
   int _nextStepIndex = 0;
   TrainingSessionType _nextSessionType = TrainingSessionType.fullBody;
 
@@ -44,7 +47,7 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _loadRecommendation() async {
     final userId = AuthService().currentUser?.id;
     final progressMap = <String, ExerciseStatus>{};
-    UserTrainingProgramSnapshot? programSnapshot;
+    TrainingProgramLogicSnapshot? logicSnapshot;
 
     if (userId != null) {
       try {
@@ -53,8 +56,8 @@ class _HomeViewState extends State<HomeView> {
           progressMap[item.exerciseId] = item.status;
         }
 
-        programSnapshot =
-            await _trainingProgramStoreService.getOrCreateActiveProgram(
+        logicSnapshot =
+            await _trainingProgramStoreService.getOrCreateProgramLogic(
           userId,
         );
       } catch (_) {
@@ -67,46 +70,29 @@ class _HomeViewState extends State<HomeView> {
     setState(() {
       _progressMap = progressMap;
       _selectedProgramType =
-          programSnapshot?.program.programType ?? TrainingProgramType.fullBody;
-      _scheduleVariant = programSnapshot?.program.scheduleVariant;
-      _nextStepIndex = programSnapshot?.state.nextStepIndex ?? 0;
-      _nextSessionType = programSnapshot?.state.nextSessionType ??
-          TrainingSessionType.fullBody;
+          logicSnapshot?.program.programType ?? TrainingProgramType.fullBody;
+      _scheduleVariant = logicSnapshot?.program.scheduleVariant;
+      _branchSelections = {
+        ..._trainingProgramService.defaultBranchSelections(),
+        ...?logicSnapshot?.branchSelections,
+      };
+      _repGoalProfile =
+          logicSnapshot?.repGoalProfile ?? RepGoalProfile.balanced;
+      _nextStepIndex = logicSnapshot?.state.nextStepIndex ?? 0;
+      _nextSessionType =
+          logicSnapshot?.state.nextSessionType ?? TrainingSessionType.fullBody;
       _recommendation = _trainingProgramService.buildToday(
         progressMap: _progressMap,
         programType: _selectedProgramType,
         sessionType: _nextSessionType,
+        branchSelections: _branchSelections,
       );
       _loading = false;
     });
   }
 
-  Future<void> _saveProgramType(TrainingProgramType type) async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null || type == _selectedProgramType) return;
-
-    final snapshot = await _trainingProgramStoreService.updateProgramType(
-      userId: userId,
-      programType: type,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _selectedProgramType = snapshot.program.programType;
-      _scheduleVariant = snapshot.program.scheduleVariant;
-      _nextStepIndex = snapshot.state.nextStepIndex;
-      _nextSessionType = snapshot.state.nextSessionType;
-      _recommendation = _trainingProgramService.buildToday(
-        progressMap: _progressMap,
-        programType: _selectedProgramType,
-        sessionType: _nextSessionType,
-      );
-    });
-  }
-
   List<_UpcomingScheduleEntry> _buildUpcomingSchedule() {
-    final cycle = _scheduleCycleFor(
+    final cycle = _trainingProgramService.scheduleCycleFor(
       programType: _selectedProgramType,
       scheduleVariant: _scheduleVariant,
     );
@@ -135,83 +121,72 @@ class _HomeViewState extends State<HomeView> {
     return matchedIndex >= 0 ? matchedIndex : 0;
   }
 
-  List<TrainingSessionType> _scheduleCycleFor({
+  Future<void> _saveProgramLogic({
     required TrainingProgramType programType,
-    required String? scheduleVariant,
-  }) {
-    switch (scheduleVariant) {
-      case 'push_rest_pull_rest_push_pull_rest':
-        return const [
-          TrainingSessionType.push,
-          TrainingSessionType.rest,
-          TrainingSessionType.pull,
-          TrainingSessionType.rest,
-          TrainingSessionType.push,
-          TrainingSessionType.pull,
-          TrainingSessionType.rest,
-        ];
-      case 'upper_rest_lower_rest_upper_lower_rest':
-        return const [
-          TrainingSessionType.upper,
-          TrainingSessionType.rest,
-          TrainingSessionType.lower,
-          TrainingSessionType.rest,
-          TrainingSessionType.upper,
-          TrainingSessionType.lower,
-          TrainingSessionType.rest,
-        ];
-      case 'full_body_3x':
-        return const [
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.rest,
-        ];
-    }
+    required Map<TrainingTrack, String> branchSelections,
+    required RepGoalProfile repGoalProfile,
+  }) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
 
-    switch (programType) {
-      case TrainingProgramType.pushPull:
-        return const [
-          TrainingSessionType.push,
-          TrainingSessionType.rest,
-          TrainingSessionType.pull,
-          TrainingSessionType.rest,
-          TrainingSessionType.push,
-          TrainingSessionType.pull,
-          TrainingSessionType.rest,
-        ];
-      case TrainingProgramType.upperLower:
-        return const [
-          TrainingSessionType.upper,
-          TrainingSessionType.rest,
-          TrainingSessionType.lower,
-          TrainingSessionType.rest,
-          TrainingSessionType.upper,
-          TrainingSessionType.lower,
-          TrainingSessionType.rest,
-        ];
-      case TrainingProgramType.fullBody:
-        return const [
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.rest,
-        ];
-    }
+    final snapshot = await _trainingProgramStoreService.updateProgramLogic(
+      userId: userId,
+      programType: programType,
+      branchSelections: branchSelections,
+      repGoalProfile: repGoalProfile,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _selectedProgramType = snapshot.program.programType;
+      _scheduleVariant = snapshot.program.scheduleVariant;
+      _branchSelections = {
+        ..._trainingProgramService.defaultBranchSelections(),
+        ...snapshot.branchSelections,
+      };
+      _repGoalProfile = snapshot.repGoalProfile;
+      _nextStepIndex = snapshot.state.nextStepIndex;
+      _nextSessionType = snapshot.state.nextSessionType;
+      _recommendation = _trainingProgramService.buildToday(
+        progressMap: _progressMap,
+        programType: _selectedProgramType,
+        sessionType: _nextSessionType,
+        branchSelections: _branchSelections,
+      );
+    });
   }
 
-  Future<void> _openProgramSettings() async {
+  Future<void> _openProgramLogic() async {
+    final logicSnapshot = TrainingProgramLogicSnapshot(
+      program: UserTrainingProgram(
+        id: 'local',
+        userId: '',
+        programType: _selectedProgramType,
+        scheduleVariant: _scheduleVariant,
+        frequencyPerWeek: 3,
+        variationRules: {
+          'rep_goal_profile': _repGoalProfile.dbValue,
+        },
+        isActive: true,
+      ),
+      state: UserTrainingProgramState(
+        id: 'local',
+        programId: 'local',
+        userId: '',
+        nextStepIndex: _nextStepIndex,
+        nextSessionType: _nextSessionType,
+      ),
+      branchSelections: _branchSelections,
+      repGoalProfile: _repGoalProfile,
+    );
+
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TrainingProgramSettingsView(
-          initialProgramType: _selectedProgramType,
-          onSave: _saveProgramType,
+        builder: (_) => TrainingProgramLogicView(
+          initialLogic: logicSnapshot,
+          progressMap: _progressMap,
+          onSave: _saveProgramLogic,
         ),
       ),
     );
@@ -235,7 +210,7 @@ class _HomeViewState extends State<HomeView> {
                     if (_recommendation != null)
                       _TrainingProgramCard(
                         recommendation: _recommendation!,
-                        onEditProgram: _openProgramSettings,
+                        onEditProgram: _openProgramLogic,
                       ),
                     const SizedBox(height: 24),
                     _ScheduleSection(
@@ -268,48 +243,44 @@ class _TrainingProgramCard extends StatelessWidget {
     );
   }
 
+  void _openLiveWorkout(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LiveWorkoutView(
+          recommendation: recommendation,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              children: [
-                Text(
-                  'Train',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {},
-                  behavior: HitTestBehavior.opaque,
-                  child: Text(
-                    'VIEW PROGRAM',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.accentPrimary,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-              ],
+    final now = DateTime.now();
+    final sessionTitle =
+        _sessionTypeLabel(recommendation.sessionType).toUpperCase();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'TODAY',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 14),
-          Container(
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          child: Container(
             decoration: BoxDecoration(
               color: AppColors.bgSecondary,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: AppColors.borderPrimary),
               boxShadow: const [
                 BoxShadow(
@@ -320,87 +291,84 @@ class _TrainingProgramCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 81,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.borderPrimary),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0x05FFFFFF),
-                        Color(0x00000000),
-                      ],
-                    ),
-                  ),
-                  child: Row(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: Text(
-                          recommendation.sessionLabel,
-                          style: GoogleFonts.inter(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.65,
-                          ),
+                      Text(
+                        '${_weekdayShortLabel(now)} · ${_monthShortLabel(now)} ${now.day}',
+                        style: GoogleFonts.ibmPlexMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accentPrimary,
+                          letterSpacing: 1.5,
                         ),
                       ),
-                      _TrainingProgramMenuButton(
-                        onEditProgram: onEditProgram,
+                      Text(
+                        recommendation.isRestDay
+                            ? 'RECOVERY'
+                            : '${recommendation.items.length} EXERCISES',
+                        style: recommendation.isRestDay
+                            ? GoogleFonts.ibmPlexMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textMuted,
+                                letterSpacing: 1.4,
+                              )
+                            : GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 0.48,
+                              ),
                       ),
                     ],
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: AppColors.accentPrimary,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'EXERCISES',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        sessionTitle,
+                        maxLines: 1,
+                        style: GoogleFonts.inter(
+                          fontSize: 60,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -2.4,
+                          height: 0.88,
+                        ),
                       ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
                         child: GestureDetector(
-                          onTap: () => _openSessionOverview(context),
+                          onTap: recommendation.isRestDay
+                              ? () => _openSessionOverview(context)
+                              : () => _openLiveWorkout(context),
                           behavior: HitTestBehavior.opaque,
                           child: Container(
-                            height: 56,
+                            height: 58,
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(25),
-                              boxShadow: const [
+                              color: AppColors.accentPrimary,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
                                 BoxShadow(
-                                  color: Color(0x66000000),
+                                  color: AppColors.accentPrimary.withValues(
+                                    alpha: 0.32,
+                                  ),
                                   blurRadius: 30,
-                                  offset: Offset(0, 8),
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
@@ -409,17 +377,19 @@ class _TrainingProgramCard extends StatelessWidget {
                               children: [
                                 const Icon(
                                   Icons.play_arrow_rounded,
-                                  size: 20,
+                                  size: 18,
                                   color: Colors.black,
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 10),
                                 Text(
-                                  'START WORKOUT',
+                                  recommendation.isRestDay
+                                      ? 'VIEW PLAN'
+                                      : 'START WORKOUT',
                                   style: GoogleFonts.inter(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
                                     color: Colors.black,
-                                    letterSpacing: -0.425,
+                                    letterSpacing: 1.4,
                                   ),
                                 ),
                               ],
@@ -427,93 +397,35 @@ class _TrainingProgramCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onEditProgram,
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.10),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrainingProgramMenuButton extends StatefulWidget {
-  final VoidCallback onEditProgram;
-
-  const _TrainingProgramMenuButton({
-    required this.onEditProgram,
-  });
-
-  @override
-  State<_TrainingProgramMenuButton> createState() =>
-      _TrainingProgramMenuButtonState();
-}
-
-class _TrainingProgramMenuButtonState
-    extends State<_TrainingProgramMenuButton> {
-  final MenuController _controller = MenuController();
-
-  @override
-  Widget build(BuildContext context) {
-    return MenuAnchor(
-      controller: _controller,
-      alignmentOffset: const Offset(-132, 8),
-      style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(AppColors.bgTertiary),
-        surfaceTintColor: WidgetStateProperty.all(AppColors.bgTertiary),
-        side: WidgetStateProperty.all(
-          const BorderSide(color: AppColors.borderPrimary),
-        ),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        padding: WidgetStateProperty.all(EdgeInsets.zero),
-      ),
-      menuChildren: [
-        MenuItemButton(
-          onPressed: () {
-            _controller.close();
-            widget.onEditProgram();
-          },
-          child: Text(
-            'Edit program',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+                ],
+              ),
             ),
           ),
         ),
       ],
-      builder: (context, controller, child) {
-        return GestureDetector(
-          onTap: () {
-            if (controller.isOpen) {
-              controller.close();
-            } else {
-              controller.open();
-            }
-            setState(() {});
-          },
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: const Icon(
-              Icons.more_horiz,
-              size: 24,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -528,6 +440,13 @@ class _UpcomingScheduleEntry {
   });
 
   bool get isRestDay => sessionType == TrainingSessionType.rest;
+
+  bool get isToday {
+    final now = DateTime.now();
+    return now.year == date.year &&
+        now.month == date.month &&
+        now.day == date.day;
+  }
 }
 
 class _ScheduleSection extends StatelessWidget {
@@ -550,26 +469,16 @@ class _ScheduleSection extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Schedule',
+                    'UPCOMING',
                     style: GoogleFonts.inter(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
-                      letterSpacing: 0.7,
+                      letterSpacing: 1.2,
                     ),
                   ),
                   const Spacer(),
                 ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'UPCOMING 5 DAYS',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.6,
-                ),
               ),
             ],
           ),
@@ -590,37 +499,34 @@ class _ScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: _emptyStateBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderPrimary),
-      ),
-      child: entries.isEmpty
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: Text(
-                'No upcoming sessions available.',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            )
-          : Column(
-              children: [
-                for (var index = 0; index < entries.length; index++) ...[
-                  _ScheduleRow(entry: entries[index]),
-                  if (index != entries.length - 1)
-                    const Divider(
-                      height: 1,
-                      color: AppColors.borderPrimary,
-                    ),
-                ],
-              ],
-            ),
+    if (entries.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _emptyStateBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderPrimary),
+        ),
+        child: Text(
+          'No upcoming sessions available.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (var index = 0; index < entries.length; index++) ...[
+          _ScheduleRow(
+            entry: entries[index],
+          ),
+          if (index != entries.length - 1) const SizedBox(height: 8),
+        ],
+      ],
     );
   }
 }
@@ -634,52 +540,108 @@ class _ScheduleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor =
-        entry.isRestDay ? AppColors.textMuted : AppColors.accentPrimary;
+    final borderColor = entry.isToday
+        ? AppColors.accentPrimary.withValues(alpha: 0.4)
+        : AppColors.borderPrimary;
+    final surfaceColor = entry.isToday
+        ? AppColors.bgTertiary.withValues(alpha: 0.9)
+        : _emptyStateBg;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
+          SizedBox(
+            width: 56,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _weekdayLabel(entry.date),
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                  _weekdayShortLabel(entry.date),
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                    color: entry.isToday
+                        ? AppColors.accentPrimary
+                        : AppColors.textSecondary,
+                    letterSpacing: 1.8,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
-                  _dateLabel(entry.date),
+                  entry.date.day.toString(),
                   style: GoogleFonts.inter(
-                    fontSize: 13,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.8,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _monthShortLabel(entry.date),
+                  style: GoogleFonts.ibmPlexMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
                     color: AppColors.textMuted,
+                    letterSpacing: 1.8,
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            width: 1,
+            height: 40,
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _sessionTypeLabel(entry.sessionType).toUpperCase(),
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.6,
+                    height: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
+              color: entry.isToday
+                  ? AppColors.accentPrimary.withValues(alpha: 0.12)
+                  : Colors.white.withValues(alpha: 0.03),
+              shape: BoxShape.circle,
               border: Border.all(
-                color: accentColor.withValues(alpha: 0.28),
+                color: entry.isToday
+                    ? AppColors.accentPrimary.withValues(alpha: 0.24)
+                    : AppColors.borderPrimary,
               ),
             ),
-            child: Text(
-              _sessionTypeLabel(entry.sessionType),
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: accentColor,
-              ),
+            child: Icon(
+              entry.isRestDay ? Icons.nightlight_round : Icons.fitness_center,
+              size: 18,
+              color: entry.isToday
+                  ? AppColors.accentPrimary
+                  : AppColors.textSecondary,
             ),
           ),
         ],
@@ -688,37 +650,37 @@ class _ScheduleRow extends StatelessWidget {
   }
 }
 
-String _weekdayLabel(DateTime date) {
+String _weekdayShortLabel(DateTime date) {
   const weekdayNames = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
+    'MON',
+    'TUE',
+    'WED',
+    'THU',
+    'FRI',
+    'SAT',
+    'SUN',
   ];
 
   return weekdayNames[date.weekday - 1];
 }
 
-String _dateLabel(DateTime date) {
+String _monthShortLabel(DateTime date) {
   const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
   ];
 
-  return '${monthNames[date.month - 1]} ${date.day}';
+  return monthNames[date.month - 1];
 }
 
 String _sessionTypeLabel(TrainingSessionType sessionType) {
