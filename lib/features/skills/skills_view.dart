@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
@@ -20,30 +21,22 @@ class SkillsView extends StatefulWidget {
 
 class _SkillsViewState extends State<SkillsView> {
   final _progressService = ProgressService();
-  late final PageController _pageController;
   Map<String, ExerciseStatus> _progressMap = {};
   bool _loading = true;
-  double _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.9);
-    _pageController.addListener(() {
-      setState(() => _currentPage = _pageController.page ?? 0);
-    });
     _loadProgress();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadProgress() async {
     final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) {
+      setState(() => _loading = false);
+      return;
+    }
+
     try {
       final progress = await _progressService.fetchAll(userId);
       setState(() {
@@ -57,8 +50,31 @@ class _SkillsViewState extends State<SkillsView> {
 
   int _masteredCount(SkillCategory category) {
     return ExerciseCatalog.forSkillCategory(category.id)
-        .where((e) => _progressMap[e.id] == ExerciseStatus.mastered)
+        .where(
+            (exercise) => _progressMap[exercise.id] == ExerciseStatus.mastered)
         .length;
+  }
+
+  int _unlockedCount(SkillCategory category) {
+    return ExerciseCatalog.forSkillCategory(category.id)
+        .where(
+          (exercise) =>
+              (_progressMap[exercise.id] ?? ExerciseStatus.inactive) !=
+              ExerciseStatus.inactive,
+        )
+        .length;
+  }
+
+  bool _hasActiveExercise(SkillCategory category) {
+    return ExerciseCatalog.forSkillCategory(category.id)
+        .any((exercise) => _progressMap[exercise.id] == ExerciseStatus.active);
+  }
+
+  int _branchCount(SkillCategory category) {
+    if (category.trainingPaths.isNotEmpty) {
+      return category.trainingPaths.length;
+    }
+    return category.branches.isEmpty ? 1 : category.branches.length;
   }
 
   @override
@@ -72,21 +88,7 @@ class _SkillsViewState extends State<SkillsView> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                child: Text(
-                  'Skills',
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            // ── Search bar ──────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 18),
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).push(
                     PageRouteBuilder(
@@ -103,25 +105,28 @@ class _SkillsViewState extends State<SkillsView> {
                     ),
                   ),
                   child: Container(
-                    height: 42,
+                    height: 46,
                     decoration: BoxDecoration(
                       color: AppColors.bgTertiary,
                       border: Border.all(color: AppColors.borderPrimary),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       children: [
                         const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Icon(Icons.search,
-                              color: AppColors.textMuted, size: 16),
+                          padding: EdgeInsets.symmetric(horizontal: 14),
+                          child: Icon(
+                            Icons.search_rounded,
+                            color: AppColors.textMuted,
+                            size: 18,
+                          ),
                         ),
                         Text(
                           'Search exercises...',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             color: AppColors.textMuted,
-                            letterSpacing: -0.15,
+                            letterSpacing: -0.1,
                           ),
                         ),
                       ],
@@ -130,97 +135,43 @@ class _SkillsViewState extends State<SkillsView> {
                 ),
               ),
             ),
-
             if (_loading)
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               )
             else
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                      child: Text(
-                        'Swipe between disciplines',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 360,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: categories.length,
-                        itemBuilder: (context, index) {
-                          final category = categories[index];
-                          final isActive = (_currentPage - index).abs() < 0.5;
-                          return AnimatedPadding(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOutCubic,
-                            padding: EdgeInsets.fromLTRB(
-                              10,
-                              isActive ? 4 : 18,
-                              10,
-                              isActive ? 8 : 24,
-                            ),
-                            child: CategoryProgressCard(
-                              category: category,
-                              mastered: _masteredCount(category),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+                sliver: SliverList.separated(
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    final total =
+                        ExerciseCatalog.totalForSkillCategory(category.id);
+                    return CategoryProgressCard(
+                      category: category,
+                      mastered: _masteredCount(category),
+                      unlocked: _unlockedCount(category),
+                      total: total,
+                      branchCount: _branchCount(category),
+                      hasActive: _hasActiveExercise(category),
+                      progressMap: _progressMap,
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => SkillTreeView(
+                              skillCategoryId: category.id,
                               progressMap: _progressMap,
-                              isFocused: isActive,
-                              total: ExerciseCatalog.totalForSkillCategory(
-                                category.id,
-                              ),
-                              onTap: () async {
-                                await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => SkillTreeView(
-                                      skillCategoryId: category.id,
-                                      progressMap: _progressMap,
-                                      onProgressChanged: (id, status) {
-                                        setState(
-                                          () => _progressMap[id] = status,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                );
+                              onProgressChanged: (id, status) {
+                                setState(() => _progressMap[id] = status);
                               },
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (var i = 0; i < categories.length; i++)
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: (_currentPage - i).abs() < 0.5 ? 18 : 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                color: (_currentPage - i).abs() < 0.5
-                                    ? AppColors.accentBright
-                                    : AppColors.textMuted.withValues(
-                                        alpha: 0.45,
-                                      ),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                 ),
               ),
           ],

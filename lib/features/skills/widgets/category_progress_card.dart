@@ -1,225 +1,208 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/models/exercise_model.dart';
 import '../../../data/models/skill_category_model.dart';
 
-const _badgeBg = Color(0x14FFFFFF);
-const _badgeBorder = Color(0x1FFFFFFF);
-
 class CategoryProgressCard extends StatelessWidget {
   final SkillCategory category;
   final int mastered;
+  final int unlocked;
   final int total;
+  final int branchCount;
+  final bool hasActive;
   final Map<String, ExerciseStatus> progressMap;
-  final bool isFocused;
   final VoidCallback onTap;
 
   const CategoryProgressCard({
     super.key,
     required this.category,
     required this.mastered,
+    required this.unlocked,
     required this.total,
+    required this.branchCount,
+    required this.hasActive,
     required this.progressMap,
-    required this.isFocused,
     required this.onTap,
   });
 
-  IconData get _icon {
-    switch (category.track) {
-      case ExerciseCategory.verticalPull:
-        return Icons.sports_gymnastics_rounded;
-      case ExerciseCategory.verticalPush:
-        return Icons.front_hand_outlined;
-      case ExerciseCategory.horizontalPull:
-        return Icons.arrow_back;
-      case ExerciseCategory.horizontalPush:
-        return Icons.arrow_forward;
-      case ExerciseCategory.squat:
-        return Icons.accessibility_new;
-      case ExerciseCategory.hinge:
-        return Icons.keyboard_double_arrow_down;
-      case ExerciseCategory.core:
-        return Icons.radio_button_checked;
-      case ExerciseCategory.skill:
-        return Icons.fitness_center_rounded;
-    }
+  double get _progress => total == 0 ? 0 : unlocked / total;
+
+  bool get _isMastered => total > 0 && mastered == total;
+
+  String get _eyebrow {
+    if (hasActive) return 'IN PROGRESS';
+    if (_isMastered) return 'MASTERED';
+    if (unlocked == 0) return 'LOCKED';
+    return '$branchCount BRANCHES';
   }
 
-  List<Color> get _gradient {
-    switch (category.track) {
-      case ExerciseCategory.verticalPull:
-        return const [Color(0xFF16384A), Color(0xFF0F1D2A)];
-      case ExerciseCategory.verticalPush:
-        return const [Color(0xFF3B2C1D), Color(0xFF201611)];
-      case ExerciseCategory.horizontalPull:
-        return const [Color(0xFF1E3446), Color(0xFF131F2E)];
-      case ExerciseCategory.horizontalPush:
-        return const [Color(0xFF3E241B), Color(0xFF211412)];
-      case ExerciseCategory.squat:
-        return const [Color(0xFF263D21), Color(0xFF162317)];
-      case ExerciseCategory.hinge:
-        return const [Color(0xFF3B3320), Color(0xFF201D14)];
-      case ExerciseCategory.core:
-        return const [Color(0xFF203746), Color(0xFF121E2B)];
-      case ExerciseCategory.skill:
-        return const [Color(0xFF3A233C), Color(0xFF1D1220)];
+  String get _supportingText {
+    if (hasActive) {
+      return '$unlocked of $total skills unlocked';
     }
+    if (_isMastered) {
+      return 'All skills in this track are mastered.';
+    }
+    if (unlocked == 0) {
+      return category.description;
+    }
+    return '${total - unlocked} skills remaining in this track.';
   }
 
   @override
   Widget build(BuildContext context) {
-    final progress = total > 0 ? mastered / total : 0.0;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: isFocused ? 1 : 0.96,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: _gradient,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isFocused
-                      ? AppColors.accentBright.withValues(alpha: 0.28)
-                      : AppColors.borderPrimary,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0x22000000),
-                    blurRadius: isFocused ? 30 : 20,
-                    offset: const Offset(0, 14),
-                    spreadRadius: -12,
-                  ),
-                ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: AppColors.bgTertiary,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: hasActive
+                  ? AppColors.accentBright.withValues(alpha: 0.4)
+                  : AppColors.borderPrimary,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 22,
+                offset: const Offset(0, 14),
+                spreadRadius: -12,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.accentPrimary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color:
-                                AppColors.accentPrimary.withValues(alpha: 0.35),
+            ],
+          ),
+          child: SizedBox(
+            height: 156,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _eyebrow,
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
+                            color: hasActive
+                                ? AppColors.accentBright
+                                : AppColors.textMuted,
                           ),
                         ),
-                        child: Icon(
-                          _icon,
-                          color: AppColors.accentBright,
-                          size: 24,
-                        ),
-                      ),
-                      const Spacer(),
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _badgeBg,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: _badgeBorder),
-                          ),
-                          child: Text(
-                            category.subtitle.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.82),
-                              letterSpacing: 0.7,
-                            ),
+                        const SizedBox(height: 8),
+                        Text(
+                          category.title.toUpperCase(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.lato(
+                            fontSize: 28,
+                            height: 0.94,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.8,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    category.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    height: 96,
-                    child: _CategoryConstellationPreview(
-                      category: category,
-                      progressMap: progressMap,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    category.description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.35,
-                      color: Colors.white.withValues(alpha: 0.72),
-                    ),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '$mastered / $total mastered',
-                          maxLines: 1,
+                        const SizedBox(height: 10),
+                        Text(
+                          _supportingText,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.86),
+                            fontSize: 12,
+                            height: 1.35,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
+                          children: [
+                            Text(
+                              '${(_progress * 100).round()}',
+                              style: GoogleFonts.lato(
+                                fontSize: 20,
+                                height: 1,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 2, top: 5),
+                              child: Text(
+                                '%',
+                                style: GoogleFonts.robotoMono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              width: 1,
+                              height: 18,
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '$unlocked/$total',
+                              style: GoogleFonts.robotoMono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 170,
+                  height: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF050505),
+                    borderRadius: const BorderRadius.horizontal(
+                      right: Radius.circular(24),
+                    ),
+                    border: Border(
+                      left: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 0,
+                            vertical: 0,
+                          ),
+                          child: _CategoryConstellationPreview(
+                            category: category,
+                            progressMap: progressMap,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${(progress * 100).round()}%',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accentBright,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: Colors.white70,
-                        size: 20,
-                      ),
                     ],
                   ),
-                ],
-              ),
-            );
-          },
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -231,6 +214,26 @@ class _CategoryConstellationPreview extends StatelessWidget {
   final Map<String, ExerciseStatus> progressMap;
 
   const _CategoryConstellationPreview({
+    required this.category,
+    required this.progressMap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _TrackTreePreviewPainter(
+        category: category,
+        progressMap: progressMap,
+      ),
+    );
+  }
+}
+
+class _TrackTreePreviewPainter extends CustomPainter {
+  final SkillCategory category;
+  final Map<String, ExerciseStatus> progressMap;
+
+  const _TrackTreePreviewPainter({
     required this.category,
     required this.progressMap,
   });
@@ -266,6 +269,10 @@ class _CategoryConstellationPreview extends StatelessWidget {
   bool get _hasFoundation => _sharedFoundationExerciseIds.isNotEmpty;
 
   List<Exercise> _exercisesForPath(String pathId) {
+    if (category.trainingPaths.isEmpty) {
+      return ExerciseCatalog.forSkillCategory(category.id);
+    }
+
     if (pathId == '__foundation__') {
       return _sharedFoundationExerciseIds
           .map(ExerciseCatalog.findById)
@@ -283,165 +290,279 @@ class _CategoryConstellationPreview extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void paint(Canvas canvas, Size size) {
     final overviewPaths =
         _hasFoundation ? ['__foundation__', ..._realPathIds] : _realPathIds;
-
-    return CustomPaint(
-      painter: _CategoryConstellationPainter(
-        overviewPaths: overviewPaths,
-        exercisesForPath: _exercisesForPath,
-        progressMap: progressMap,
-      ),
-      child: const SizedBox.expand(),
+    final branchCount =
+        _hasFoundation ? overviewPaths.length - 1 : overviewPaths.length;
+    final fork = Offset(
+      size.width / 2,
+      _hasFoundation ? size.height * 0.38 : size.height * 0.18,
     );
-  }
-}
+    final tips = _previewTips(
+      size: size,
+      branchCount: branchCount,
+      hasFoundation: _hasFoundation,
+    );
 
-class _CategoryConstellationPainter extends CustomPainter {
-  final List<String> overviewPaths;
-  final List<Exercise> Function(String pathId) exercisesForPath;
-  final Map<String, ExerciseStatus> progressMap;
-
-  const _CategoryConstellationPainter({
-    required this.overviewPaths,
-    required this.exercisesForPath,
-    required this.progressMap,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stars = <Offset>[
-      Offset(size.width * 0.08, size.height * 0.18),
-      Offset(size.width * 0.28, size.height * 0.08),
-      Offset(size.width * 0.52, size.height * 0.16),
-      Offset(size.width * 0.81, size.height * 0.1),
-      Offset(size.width * 0.18, size.height * 0.74),
-      Offset(size.width * 0.7, size.height * 0.7),
-    ];
-    final starPaint = Paint()..color = Colors.white.withValues(alpha: 0.16);
-    for (final star in stars) {
-      canvas.drawCircle(star, 1.8, starPaint);
-    }
-
-    final positions = _previewOverviewPositions(overviewPaths.length)
-        .map(
-            (offset) => Offset(offset.dx * size.width, offset.dy * size.height))
-        .toList();
-
-    if (positions.length > 1) {
-      final basePaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.16)
-        ..strokeWidth = 1.8
-        ..strokeCap = StrokeCap.round;
-      final splitY = positions.first.dy + size.height * 0.18;
-      canvas.drawLine(
-          positions.first, Offset(positions.first.dx, splitY), basePaint);
-      final minX =
-          positions.skip(1).map((e) => e.dx).reduce((a, b) => a < b ? a : b);
-      final maxX =
-          positions.skip(1).map((e) => e.dx).reduce((a, b) => a > b ? a : b);
-      canvas.drawLine(Offset(minX, splitY), Offset(maxX, splitY), basePaint);
-      for (final target in positions.skip(1)) {
-        canvas.drawLine(
-          Offset(target.dx, splitY),
-          Offset(target.dx, target.dy - size.height * 0.08),
-          basePaint,
+    final pathLayouts = <_PreviewPathLayout>[];
+    var branchIndex = 0;
+    for (final pathId in overviewPaths) {
+      final exercises = _exercisesForPath(pathId);
+      if (_hasFoundation && pathId == '__foundation__') {
+        pathLayouts.add(
+          _PreviewPathLayout(
+            id: pathId,
+            exercises: exercises,
+            nodes: _linearOffsets(
+              start: Offset(size.width / 2, size.height * 0.04),
+              end: Offset(size.width / 2, fork.dy - 4),
+              count: exercises.length,
+            ),
+            isFoundation: true,
+          ),
+        );
+      } else {
+        pathLayouts.add(
+          _PreviewPathLayout(
+            id: pathId,
+            exercises: exercises,
+            nodes: _linearOffsets(
+              start: Offset(size.width / 2, fork.dy + 2),
+              end: tips[branchIndex++],
+              count: exercises.length,
+            ),
+            isFoundation: false,
+          ),
         );
       }
     }
 
-    for (var i = 0; i < overviewPaths.length; i++) {
-      final exercises = exercisesForPath(overviewPaths[i]);
-      final pathCenter = positions[i];
-      final pathPoints = <Offset>[];
-      for (var j = 0; j < exercises.length; j++) {
-        final t = exercises.length == 1 ? 0.5 : j / (exercises.length - 1);
-        final x = pathCenter.dx;
-        final y = pathCenter.dy +
-            size.height * 0.07 -
-            t * size.height * (i == 0 ? 0.22 : 0.17);
-        pathPoints.add(Offset(x, y));
-      }
-
-      for (var j = 0; j < pathPoints.length - 1; j++) {
-        final current = progressMap[exercises[j].id] ?? ExerciseStatus.inactive;
-        final next =
-            progressMap[exercises[j + 1].id] ?? ExerciseStatus.inactive;
-        final lit = current != ExerciseStatus.inactive ||
-            next != ExerciseStatus.inactive;
-        final paint = Paint()
-          ..color = lit
-              ? Colors.white.withValues(alpha: 0.75)
-              : Colors.white.withValues(alpha: 0.18)
-          ..strokeWidth = i == 0 ? 2.2 : 1.6
-          ..strokeCap = StrokeCap.round;
-        canvas.drawLine(pathPoints[j], pathPoints[j + 1], paint);
-      }
-
-      for (var j = 0; j < pathPoints.length; j++) {
-        final status = progressMap[exercises[j].id] ?? ExerciseStatus.inactive;
-        final point = pathPoints[j];
-        switch (status) {
-          case ExerciseStatus.mastered:
-            canvas.drawCircle(
-              point,
-              i == 0 ? 5.4 : 4.4,
-              Paint()..color = Colors.white.withValues(alpha: 0.25),
-            );
-            canvas.drawCircle(
-                point, i == 0 ? 2.8 : 2.4, Paint()..color = Colors.white);
-          case ExerciseStatus.active:
-            canvas.drawCircle(
-              point,
-              i == 0 ? 4.8 : 4,
-              Paint()..color = AppColors.accentBright.withValues(alpha: 0.22),
-            );
-            canvas.drawCircle(
-              point,
-              i == 0 ? 2.5 : 2.1,
-              Paint()..color = AppColors.accentBright,
-            );
-          case ExerciseStatus.inactive:
-            canvas.drawCircle(
-              point,
-              i == 0 ? 2.4 : 2,
-              Paint()..color = Colors.white.withValues(alpha: 0.3),
-            );
+    for (final layout in pathLayouts) {
+      if (layout.nodes.isEmpty) continue;
+      if (layout.isFoundation) {
+        for (var i = 0; i < layout.nodes.length - 1; i++) {
+          _drawPreviewSegment(
+            canvas,
+            layout.nodes[i],
+            layout.nodes[i + 1],
+            progressMap[layout.exercises[i].id] ?? ExerciseStatus.inactive,
+            progressMap[layout.exercises[i + 1].id] ?? ExerciseStatus.inactive,
+          );
         }
+        _drawPreviewSegment(
+          canvas,
+          layout.nodes.last,
+          fork,
+          progressMap[layout.exercises.last.id] ?? ExerciseStatus.inactive,
+          progressMap[layout.exercises.last.id] ?? ExerciseStatus.inactive,
+        );
+      } else {
+        _drawPreviewSegment(
+          canvas,
+          fork,
+          layout.nodes.first,
+          progressMap[layout.exercises.first.id] ?? ExerciseStatus.inactive,
+          progressMap[layout.exercises.first.id] ?? ExerciseStatus.inactive,
+        );
+        for (var i = 0; i < layout.nodes.length - 1; i++) {
+          _drawPreviewSegment(
+            canvas,
+            layout.nodes[i],
+            layout.nodes[i + 1],
+            progressMap[layout.exercises[i].id] ?? ExerciseStatus.inactive,
+            progressMap[layout.exercises[i + 1].id] ?? ExerciseStatus.inactive,
+          );
+        }
+      }
+    }
+
+    for (final layout in pathLayouts) {
+      for (var i = 0; i < layout.nodes.length; i++) {
+        _drawPreviewNode(
+          canvas,
+          layout.nodes[i],
+          progressMap[layout.exercises[i].id] ?? ExerciseStatus.inactive,
+          radius: layout.isFoundation ? 2.15 : 1.95,
+        );
+      }
+    }
+
+    if (_hasFoundation) {
+      final foundation = pathLayouts.firstWhere(
+        (layout) => layout.id == '__foundation__',
+      );
+      if (foundation.exercises.isNotEmpty) {
+        _drawPreviewNode(
+          canvas,
+          fork,
+          progressMap[foundation.exercises.last.id] ?? ExerciseStatus.inactive,
+          radius: 2.4,
+          doubleRing: true,
+        );
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _CategoryConstellationPainter oldDelegate) {
-    return oldDelegate.overviewPaths != overviewPaths ||
-        oldDelegate.progressMap != progressMap;
+  bool shouldRepaint(covariant _TrackTreePreviewPainter oldDelegate) {
+    return oldDelegate.progressMap != progressMap ||
+        oldDelegate.category != category;
   }
 }
 
-List<Offset> _previewOverviewPositions(int count) {
-  switch (count) {
-    case 1:
-      return const [Offset(0.5, 0.68)];
-    case 2:
-      return const [Offset(0.5, 0.44), Offset(0.5, 0.8)];
-    case 3:
-      return const [Offset(0.5, 0.34), Offset(0.28, 0.82), Offset(0.72, 0.82)];
-    case 4:
-      return const [
-        Offset(0.5, 0.3),
-        Offset(0.18, 0.82),
-        Offset(0.5, 0.82),
-        Offset(0.82, 0.82),
-      ];
-    default:
-      return const [
-        Offset(0.5, 0.26),
-        Offset(0.1, 0.82),
-        Offset(0.36, 0.82),
-        Offset(0.64, 0.82),
-        Offset(0.9, 0.82),
-      ];
+class _PreviewPathLayout {
+  final String id;
+  final List<Exercise> exercises;
+  final List<Offset> nodes;
+  final bool isFoundation;
+
+  const _PreviewPathLayout({
+    required this.id,
+    required this.exercises,
+    required this.nodes,
+    required this.isFoundation,
+  });
+}
+
+List<Offset> _previewTips({
+  required Size size,
+  required int branchCount,
+  required bool hasFoundation,
+}) {
+  List<Offset> normalized;
+  if (hasFoundation) {
+    switch (branchCount) {
+      case 1:
+        normalized = const [Offset(0.5, 0.88)];
+      case 2:
+        normalized = const [Offset(0.18, 0.86), Offset(0.82, 0.86)];
+      case 3:
+        normalized = const [
+          Offset(0.16, 0.78),
+          Offset(0.84, 0.78),
+          Offset(0.5, 0.96),
+        ];
+      default:
+        normalized = const [
+          Offset(0.14, 0.74),
+          Offset(0.86, 0.74),
+          Offset(0.28, 0.97),
+          Offset(0.72, 0.97),
+        ];
+    }
+  } else {
+    switch (branchCount) {
+      case 1:
+        normalized = const [Offset(0.5, 0.9)];
+      case 2:
+        normalized = const [Offset(0.18, 0.88), Offset(0.82, 0.88)];
+      case 3:
+        normalized = const [
+          Offset(0.16, 0.8),
+          Offset(0.84, 0.8),
+          Offset(0.5, 0.98),
+        ];
+      default:
+        normalized = const [
+          Offset(0.14, 0.76),
+          Offset(0.86, 0.76),
+          Offset(0.28, 0.98),
+          Offset(0.72, 0.98),
+        ];
+    }
   }
+
+  return normalized
+      .map((offset) => Offset(offset.dx * size.width, offset.dy * size.height))
+      .toList();
+}
+
+List<Offset> _linearOffsets({
+  required Offset start,
+  required Offset end,
+  required int count,
+}) {
+  if (count <= 0) return const [];
+  if (count == 1) return [Offset.lerp(start, end, 0.5)!];
+  return [
+    for (var i = 0; i < count; i++) Offset.lerp(start, end, i / (count - 1))!,
+  ];
+}
+
+void _drawPreviewSegment(
+  Canvas canvas,
+  Offset a,
+  Offset b,
+  ExerciseStatus statusA,
+  ExerciseStatus statusB,
+) {
+  final lit =
+      statusA != ExerciseStatus.inactive || statusB != ExerciseStatus.inactive;
+  final color = statusB == ExerciseStatus.active
+      ? AppColors.accentBright
+      : lit
+          ? AppColors.accentBright.withValues(alpha: 0.72)
+          : Colors.white.withValues(alpha: 0.12);
+  final paint = Paint()
+    ..color = color.withValues(
+      alpha: statusB == ExerciseStatus.active
+          ? 0.98
+          : lit
+              ? 0.82
+              : 0.16,
+    )
+    ..strokeWidth = 1.35
+    ..strokeCap = StrokeCap.round
+    ..isAntiAlias = false;
+  canvas.drawLine(_snapOffset(a), _snapOffset(b), paint);
+}
+
+void _drawPreviewNode(
+  Canvas canvas,
+  Offset center,
+  ExerciseStatus status, {
+  required double radius,
+  bool doubleRing = false,
+}) {
+  final color = switch (status) {
+    ExerciseStatus.inactive => const Color(0xFF34343A),
+    ExerciseStatus.active => AppColors.accentBright,
+    ExerciseStatus.mastered => const Color(0xFF4CAF50),
+  };
+  final snappedCenter = _snapOffset(center);
+  canvas.drawCircle(
+    snappedCenter,
+    radius * 1.3,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.65
+      ..isAntiAlias = false
+      ..color = color.withValues(
+        alpha: status == ExerciseStatus.inactive ? 0.32 : 0.58,
+      ),
+  );
+  if (doubleRing) {
+    canvas.drawCircle(
+      snappedCenter,
+      radius * 1.75,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.45
+        ..isAntiAlias = false
+        ..color = color.withValues(alpha: 0.38),
+    );
+  }
+  canvas.drawCircle(
+    snappedCenter,
+    radius,
+    Paint()
+      ..color = color
+      ..isAntiAlias = false,
+  );
+}
+
+Offset _snapOffset(Offset offset) {
+  double snap(double value) => value.roundToDouble() + 0.5;
+  return Offset(snap(offset.dx), snap(offset.dy));
 }
