@@ -27,10 +27,30 @@ class AppNavBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _NavItem(icon: Icons.home,               label: 'Home',     index: 0, currentIndex: currentIndex, onTap: onTap),
-                _NavItem(icon: Icons.query_stats,        label: 'Data',     index: 1, currentIndex: currentIndex, onTap: onTap),
-                _NavItem(icon: Icons.menu_book_outlined, label: 'Skills',   index: 2, currentIndex: currentIndex, onTap: onTap),
-                _NavItem(icon: Icons.settings_outlined,  label: 'Settings', index: 3, currentIndex: currentIndex, onTap: onTap),
+                _NavItem(
+                    icon: Icons.fitness_center,
+                    label: 'Train',
+                    index: 0,
+                    currentIndex: currentIndex,
+                    onTap: onTap),
+                _NavItem(
+                    icon: Icons.query_stats,
+                    label: 'Data',
+                    index: 1,
+                    currentIndex: currentIndex,
+                    onTap: onTap),
+                _NavItem(
+                    icon: Icons.menu_book_outlined,
+                    label: 'Skills',
+                    index: 2,
+                    currentIndex: currentIndex,
+                    onTap: onTap),
+                _NavItem(
+                    icon: Icons.settings_outlined,
+                    label: 'Settings',
+                    index: 3,
+                    currentIndex: currentIndex,
+                    onTap: onTap),
               ],
             ),
           ),
