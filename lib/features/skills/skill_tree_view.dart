@@ -897,7 +897,7 @@ class _TrackConstellationPanel extends StatelessWidget {
                 id: pathId,
                 nodes: _buildLinearNodeOffsets(
                   start: Offset(centerX, 38),
-                  end: Offset(centerX, forkY - 26),
+                  end: Offset(centerX, forkY),
                   count: exercises.length,
                 ),
                 tip: Offset(centerX, 18),
@@ -994,21 +994,6 @@ class _TrackConstellationPanel extends StatelessWidget {
                       color: foundationComplete
                           ? accentBuilder(foundationPathId!)
                           : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              if (hasFoundation)
-                Positioned(
-                  right: 0,
-                  top: forkY + 6,
-                  child: Text(
-                    'BRANCHES',
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.7,
-                      color: AppColors.textMuted,
                     ),
                   ),
                 ),
@@ -1175,6 +1160,7 @@ class _TrackConstellationPainter extends CustomPainter {
       );
 
       if (layout.isFoundation) {
+        // Last foundation node sits at forkOffset; skip the stub to fork.
         for (var i = 0; i < layout.nodes.length - 1; i++) {
           _drawSegment(
             canvas: canvas,
@@ -1184,20 +1170,6 @@ class _TrackConstellationPainter extends CustomPainter {
                 progressMap[layout.exercises[i].id] ?? ExerciseStatus.inactive,
             statusB: progressMap[layout.exercises[i + 1].id] ??
                 ExerciseStatus.inactive,
-            accentColor: layout.accentColor,
-            opacity: pathOpacity,
-            width: 2.2,
-          );
-        }
-        if (layout.nodes.isNotEmpty) {
-          final lastStatus =
-              progressMap[layout.exercises.last.id] ?? ExerciseStatus.inactive;
-          _drawSegment(
-            canvas: canvas,
-            a: layout.nodes.last,
-            b: forkOffset,
-            statusA: lastStatus,
-            statusB: lastStatus,
             accentColor: layout.accentColor,
             opacity: pathOpacity,
             width: 2.2,
@@ -1241,7 +1213,10 @@ class _TrackConstellationPainter extends CustomPainter {
         selectedPathId,
         foundationPathId,
       );
-      for (var i = 0; i < layout.nodes.length; i++) {
+      final nodeCount = layout.isFoundation
+          ? layout.nodes.length - 1 // last node is the fork, drawn separately
+          : layout.nodes.length;
+      for (var i = 0; i < nodeCount; i++) {
         _drawNode(
           canvas: canvas,
           center: layout.nodes[i],
@@ -1411,7 +1386,7 @@ void _drawNode({
 }) {
   final color = switch (status) {
     ExerciseStatus.inactive => AppColors.textMuted.withValues(alpha: 0.75),
-    ExerciseStatus.active => accentColor,
+    ExerciseStatus.active => AppColors.accentBright,
     ExerciseStatus.mastered => _masteredColor,
   };
 

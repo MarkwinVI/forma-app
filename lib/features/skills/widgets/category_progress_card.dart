@@ -490,10 +490,7 @@ List<Offset> _linearOffsets({
   ];
 }
 
-// Constellation preview colours — volt/cyan palette matching the design.
-const _kVolt = Color(0xFFD4FF3A);
-const _kCyan = Color(0xFF00FFD0);
-const _kLocked = Color(0xFF2A2A2A);
+const _kMastered = Color(0xFF4CAF50);
 
 void _drawPreviewSegment(
   Canvas canvas,
@@ -511,11 +508,11 @@ void _drawPreviewSegment(
   final double strokeWidth;
 
   if (isCurrent) {
-    color = _kCyan;
+    color = AppColors.accentBright;
     opacity = 0.5;
     strokeWidth = 1.1;
   } else if (isLit) {
-    color = _kVolt;
+    color = _kMastered;
     opacity = 0.75;
     strokeWidth = 1.35;
   } else {
@@ -527,7 +524,8 @@ void _drawPreviewSegment(
   final paint = Paint()
     ..color = color.withValues(alpha: opacity)
     ..strokeWidth = strokeWidth
-    ..strokeCap = StrokeCap.round;
+    ..strokeCap = StrokeCap.round
+    ..isAntiAlias = false;
 
   if (isCurrent) {
     _drawDashedLine(canvas, _snapOffset(a), _snapOffset(b), paint, 4.0, 5.0);
@@ -564,35 +562,22 @@ void _drawPreviewNode(
   bool doubleRing = false,
 }) {
   final color = switch (status) {
-    ExerciseStatus.inactive => _kLocked,
-    ExerciseStatus.active => _kCyan,
-    ExerciseStatus.mastered => _kVolt,
+    ExerciseStatus.inactive => AppColors.textMuted,
+    ExerciseStatus.active => AppColors.accentBright,
+    ExerciseStatus.mastered => _kMastered,
   };
   final snappedCenter = _snapOffset(center);
-
-  // Glow bloom behind non-locked nodes.
-  if (status != ExerciseStatus.inactive) {
-    canvas.drawCircle(
-      center,
-      radius * 2.6,
-      Paint()
-        ..color = color.withValues(
-          alpha: status == ExerciseStatus.active ? 0.32 : 0.22,
-        )
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0),
-    );
-  }
 
   // Outer ring.
   canvas.drawCircle(
     snappedCenter,
-    radius * 1.8,
+    radius * 1.65,
     Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.65
+      ..strokeWidth = 0.8
       ..isAntiAlias = false
       ..color = color.withValues(
-        alpha: status == ExerciseStatus.inactive ? 0.20 : 0.40,
+        alpha: status == ExerciseStatus.inactive ? 0.18 : 0.35,
       ),
   );
 
@@ -600,14 +585,12 @@ void _drawPreviewNode(
   if (doubleRing) {
     canvas.drawCircle(
       snappedCenter,
-      radius * 2.5,
+      radius * 2.45,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.45
+        ..strokeWidth = 0.8
         ..isAntiAlias = false
-        ..color = color.withValues(
-          alpha: status == ExerciseStatus.inactive ? 0.15 : 0.30,
-        ),
+        ..color = color.withValues(alpha: 0.25),
     );
   }
 
@@ -615,7 +598,9 @@ void _drawPreviewNode(
   canvas.drawCircle(
     snappedCenter,
     radius,
-    Paint()..color = color,
+    Paint()
+      ..color = color
+      ..isAntiAlias = false,
   );
 }
 
