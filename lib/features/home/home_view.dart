@@ -364,45 +364,34 @@ class _TrainingProgramCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: _groupBgHi,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        for (var index = 0;
-                            index < previewItems.length;
-                            index++)
-                          _ExercisePreviewRow(
-                            item: previewItems[index],
-                            index: index,
-                            showDivider: index != 0,
-                          ),
-                        if (recommendation.items.length > previewItems.length)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: _hairline),
-                              ),
-                            ),
-                            child: Text(
-                              '+ ${recommendation.items.length - previewItems.length} more',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
-                                letterSpacing: -0.05,
-                              ),
+                  Column(
+                    children: [
+                      for (var index = 0; index < previewItems.length; index++)
+                        _ExercisePreviewRow(
+                          item: previewItems[index],
+                          index: index,
+                          showDivider: index != 0,
+                        ),
+                      if (recommendation.items.length > previewItems.length)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: _hairline),
                             ),
                           ),
-                      ],
-                    ),
+                          child: Text(
+                            '+ ${recommendation.items.length - previewItems.length} more',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                              letterSpacing: -0.05,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -476,7 +465,7 @@ class _HomeHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
-        'Today',
+        'TODAY',
         style: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -502,7 +491,7 @@ class _ExercisePreviewRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: const EdgeInsets.symmetric(vertical: 11),
       decoration: BoxDecoration(
         border: showDivider
             ? const Border(
