@@ -490,6 +490,11 @@ List<Offset> _linearOffsets({
   ];
 }
 
+// Constellation preview colours — volt/cyan palette matching the design.
+const _kVolt = Color(0xFFD4FF3A);
+const _kCyan = Color(0xFF00FFD0);
+const _kLocked = Color(0xFF2A2A2A);
+
 void _drawPreviewSegment(
   Canvas canvas,
   Offset a,
@@ -497,25 +502,58 @@ void _drawPreviewSegment(
   ExerciseStatus statusA,
   ExerciseStatus statusB,
 ) {
-  final lit =
-      statusA != ExerciseStatus.inactive || statusB != ExerciseStatus.inactive;
-  final color = statusB == ExerciseStatus.active
-      ? AppColors.accentBright
-      : lit
-          ? AppColors.accentBright.withValues(alpha: 0.72)
-          : Colors.white.withValues(alpha: 0.12);
+  final isCurrent = statusB == ExerciseStatus.active;
+  final isLit =
+      statusA == ExerciseStatus.mastered && statusB == ExerciseStatus.mastered;
+
+  final Color color;
+  final double opacity;
+  final double strokeWidth;
+
+  if (isCurrent) {
+    color = _kCyan;
+    opacity = 0.5;
+    strokeWidth = 1.1;
+  } else if (isLit) {
+    color = _kVolt;
+    opacity = 0.75;
+    strokeWidth = 1.35;
+  } else {
+    color = Colors.white;
+    opacity = 0.10;
+    strokeWidth = 0.8;
+  }
+
   final paint = Paint()
-    ..color = color.withValues(
-      alpha: statusB == ExerciseStatus.active
-          ? 0.98
-          : lit
-              ? 0.82
-              : 0.16,
-    )
-    ..strokeWidth = 1.35
-    ..strokeCap = StrokeCap.round
-    ..isAntiAlias = false;
-  canvas.drawLine(_snapOffset(a), _snapOffset(b), paint);
+    ..color = color.withValues(alpha: opacity)
+    ..strokeWidth = strokeWidth
+    ..strokeCap = StrokeCap.round;
+
+  if (isCurrent) {
+    _drawDashedLine(canvas, _snapOffset(a), _snapOffset(b), paint, 4.0, 5.0);
+  } else {
+    canvas.drawLine(_snapOffset(a), _snapOffset(b), paint);
+  }
+}
+
+void _drawDashedLine(
+  Canvas canvas,
+  Offset a,
+  Offset b,
+  Paint paint,
+  double dashLen,
+  double gapLen,
+) {
+  final delta = b - a;
+  final total = delta.distance;
+  if (total == 0) return;
+  final dir = delta / total;
+  var pos = 0.0;
+  while (pos < total) {
+    final end = (pos + dashLen).clamp(0.0, total);
+    canvas.drawLine(a + dir * pos, a + dir * end, paint);
+    pos += dashLen + gapLen;
+  }
 }
 
 void _drawPreviewNode(
@@ -526,39 +564,58 @@ void _drawPreviewNode(
   bool doubleRing = false,
 }) {
   final color = switch (status) {
-    ExerciseStatus.inactive => const Color(0xFF34343A),
-    ExerciseStatus.active => AppColors.accentBright,
-    ExerciseStatus.mastered => const Color(0xFF4CAF50),
+    ExerciseStatus.inactive => _kLocked,
+    ExerciseStatus.active => _kCyan,
+    ExerciseStatus.mastered => _kVolt,
   };
   final snappedCenter = _snapOffset(center);
+
+  // Glow bloom behind non-locked nodes.
+  if (status != ExerciseStatus.inactive) {
+    canvas.drawCircle(
+      center,
+      radius * 2.6,
+      Paint()
+        ..color = color.withValues(
+          alpha: status == ExerciseStatus.active ? 0.32 : 0.22,
+        )
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0),
+    );
+  }
+
+  // Outer ring.
   canvas.drawCircle(
     snappedCenter,
-    radius * 1.3,
+    radius * 1.8,
     Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.65
       ..isAntiAlias = false
       ..color = color.withValues(
-        alpha: status == ExerciseStatus.inactive ? 0.32 : 0.58,
+        alpha: status == ExerciseStatus.inactive ? 0.20 : 0.40,
       ),
   );
+
+  // Second ring on fork checkpoint node.
   if (doubleRing) {
     canvas.drawCircle(
       snappedCenter,
-      radius * 1.75,
+      radius * 2.5,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.45
         ..isAntiAlias = false
-        ..color = color.withValues(alpha: 0.38),
+        ..color = color.withValues(
+          alpha: status == ExerciseStatus.inactive ? 0.15 : 0.30,
+        ),
     );
   }
+
+  // Solid dot.
   canvas.drawCircle(
     snappedCenter,
     radius,
-    Paint()
-      ..color = color
-      ..isAntiAlias = false,
+    Paint()..color = color,
   );
 }
 
