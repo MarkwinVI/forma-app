@@ -14,7 +14,6 @@ import '../../data/services/progress_service.dart';
 import '../exercises/exercise_detail_view.dart';
 
 const _masteredColor = Color(0xFF4CAF50);
-const _surfaceShadow = Color(0x1A000000);
 const _foundationPathId = '__foundation__';
 
 class SkillTreeView extends StatefulWidget {
@@ -163,26 +162,16 @@ class _SkillTreeViewState extends State<SkillTreeView> {
   double _pathProgress(String pathId) {
     final total = _exercisesForPath(pathId).length;
     if (total == 0) return 0;
-    return _pathUnlockedCount(pathId) / total;
+    return _pathMasteredCount(pathId) / total;
   }
 
-  int get _categoryUnlockedCount {
-    return _exercises
-        .where(
-          (exercise) =>
-              (_localProgress[exercise.id] ?? ExerciseStatus.inactive) !=
-              ExerciseStatus.inactive,
-        )
-        .length;
+  bool _pathIsLocked(String pathId) {
+    if (_isFoundationPath(pathId)) return false;
+    if (!_hasFoundationPath) return false;
+    return _sharedFoundationExerciseIds.any(
+      (exerciseId) => _localProgress[exerciseId] != ExerciseStatus.mastered,
+    );
   }
-
-  double get _categoryProgress {
-    if (_exercises.isEmpty) return 0;
-    return _categoryUnlockedCount / _exercises.length;
-  }
-
-  int get _overviewPathCount =>
-      _hasFoundationPath ? _realPathIds.length + 1 : _pathIds.length;
 
   bool _pathHasActive(String pathId) {
     return _exercisesForPath(pathId).any(
@@ -236,64 +225,45 @@ class _SkillTreeViewState extends State<SkillTreeView> {
   Widget build(BuildContext context) {
     final unlockRequirement = _skillCategory.unlockRequirement;
     final isLocked = unlockRequirement != null &&
-        (_localProgress[unlockRequirement.exerciseId] ??
-                ExerciseStatus.inactive) ==
-            ExerciseStatus.inactive;
+        _localProgress[unlockRequirement.exerciseId] != ExerciseStatus.mastered;
     final hasBranchOverview = _pathIds.length > 1;
     final pathExercises = _exercisesForPath(_selectedPathId);
-    final selectedPathCurrent = _currentExerciseForPath(_selectedPathId);
-    final topCount = _showBranchOverview || !hasBranchOverview
-        ? _categoryUnlockedCount
-        : _pathUnlockedCount(_selectedPathId);
-    final topTotal = _showBranchOverview || !hasBranchOverview
-        ? _exercises.length
-        : pathExercises.length;
-    final backLabel = _showBranchOverview || !hasBranchOverview
-        ? 'Skills'
-        : _skillCategory.title;
+    final appBarTitle = _showBranchOverview || !hasBranchOverview
+        ? _skillCategory.title
+        : _pathLabel(_selectedPathId);
 
     return Scaffold(
       backgroundColor: AppColors.bgSecondary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgSecondary,
+        surfaceTintColor: AppColors.bgSecondary,
+        elevation: 0,
+        foregroundColor: AppColors.textPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left_rounded, size: 30),
+          onPressed: () {
+            if (hasBranchOverview && !_showBranchOverview) {
+              setState(() => _showBranchOverview = true);
+              return;
+            }
+            Navigator.of(context).pop();
+          },
+        ),
+        title: Text(
+          appBarTitle,
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  _BackCapsuleButton(
-                    label: backLabel,
-                    onTap: () {
-                      if (hasBranchOverview && !_showBranchOverview) {
-                        setState(() => _showBranchOverview = true);
-                        return;
-                      }
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  const Spacer(),
-                  Text(
-                    '$topCount/$topTotal',
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.8,
-                      color: AppColors.accentBright,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              _TrackHeroHeader(
-                title: _skillCategory.title,
-                metaLabel:
-                    '${_overviewPathCount == 1 ? '1 path' : '$_overviewPathCount branches'} · ${_exercises.length} skills',
-                progress: _categoryProgress,
-                unlocked: _categoryUnlockedCount,
-                total: _exercises.length,
-              ),
-              const SizedBox(height: 18),
               if (isLocked) ...[
                 _LockNotice(
                   message: unlockRequirement.message,
@@ -314,7 +284,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                     );
                   },
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
               ],
               AbsorbPointer(
                 absorbing: isLocked,
@@ -344,11 +314,11 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                                 _hasFoundationPath ? _realPathIds : _pathIds,
                             selectedPathId: _selectedPathId,
                             labelBuilder: _pathLabel,
-                            badgeBuilder: _pathBadge,
                             accentBuilder: _pathAccent,
                             progressBuilder: _pathProgress,
                             unlockedCountBuilder: _pathUnlockedCount,
                             masteredCountBuilder: _pathMasteredCount,
+                            isLockedBuilder: _pathIsLocked,
                             hasActiveBuilder: _pathHasActive,
                             currentExerciseBuilder: _currentExerciseForPath,
                             totalCountBuilder: (pathId) =>
@@ -368,21 +338,6 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                             ),
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              if (hasBranchOverview)
-                                _SelectedPathHeader(
-                                  label: _pathLabel(_selectedPathId),
-                                  badge: _pathBadge(_selectedPathId),
-                                  accentColor: _pathAccent(_selectedPathId),
-                                  unlocked: _pathUnlockedCount(_selectedPathId),
-                                  total: pathExercises.length,
-                                  mastered: _pathMasteredCount(_selectedPathId),
-                                  active: selectedPathCurrent != null ? 1 : 0,
-                                  currentExerciseName:
-                                      selectedPathCurrent?.name,
-                                  onViewBranches: () => setState(
-                                      () => _showBranchOverview = true),
-                                ),
-                              if (hasBranchOverview) const SizedBox(height: 18),
                               if (hasBranchOverview &&
                                   _hasFoundationPath &&
                                   !_isFoundationPath(_selectedPathId))
@@ -399,7 +354,6 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                                   !_isFoundationPath(_selectedPathId))
                                 const SizedBox(height: 18),
                               _PathTimeline(
-                                title: _pathLabel(_selectedPathId),
                                 accentColor: _pathAccent(_selectedPathId),
                                 exercises: pathExercises,
                                 progressMap: _localProgress,
@@ -415,23 +369,6 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         ),
       ),
     );
-  }
-
-  String? _pathBadge(String pathId) {
-    if (_isFoundationPath(pathId)) {
-      return 'Start Here';
-    }
-    if (pathId == _skillCategory.defaultTrainingPathId) {
-      return 'Default';
-    }
-
-    for (final branch in _skillCategory.branches) {
-      if (branch.id == pathId && branch.isRecommended) {
-        return 'Popular';
-      }
-    }
-
-    return null;
   }
 
   Color _pathAccent(String pathId) {
@@ -460,173 +397,6 @@ class _SkillTreeViewState extends State<SkillTreeView> {
       default:
         return const Color(0xFF17A4EB);
     }
-  }
-}
-
-class _SelectedPathHeader extends StatelessWidget {
-  final String label;
-  final String? badge;
-  final Color accentColor;
-  final int unlocked;
-  final int total;
-  final int mastered;
-  final int active;
-  final String? currentExerciseName;
-  final VoidCallback onViewBranches;
-
-  const _SelectedPathHeader({
-    required this.label,
-    required this.badge,
-    required this.accentColor,
-    required this.unlocked,
-    required this.total,
-    required this.mastered,
-    required this.active,
-    required this.currentExerciseName,
-    required this.onViewBranches,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = total == 0 ? 0.0 : unlocked / total;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        color: AppColors.bgTertiary,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.borderPrimary),
-        boxShadow: const [
-          BoxShadow(
-            color: _surfaceShadow,
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (badge != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      badge!.toUpperCase(),
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.4,
-                        color: accentColor,
-                      ),
-                    ),
-                  ),
-                if (badge != null) const SizedBox(height: 12),
-                Text(
-                  label.toUpperCase(),
-                  style: GoogleFonts.lato(
-                    fontSize: 32,
-                    height: 0.95,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.9,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  currentExerciseName != null
-                      ? 'Working now: $currentExerciseName'
-                      : '$unlocked of $total skills unlocked',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    height: 1.4,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${(progress * 100).round()}',
-                      style: GoogleFonts.lato(
-                        fontSize: 36,
-                        height: 0.9,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                        color: accentColor,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4, bottom: 4),
-                      child: Text(
-                        '%',
-                        style: GoogleFonts.robotoMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    minHeight: 3,
-                    value: progress,
-                    backgroundColor: Colors.white.withValues(alpha: 0.08),
-                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _StatChip(label: 'Mastered', value: '$mastered'),
-                    const SizedBox(width: 10),
-                    _StatChip(label: 'Skills', value: '$unlocked/$total'),
-                    const SizedBox(width: 10),
-                    _StatChip(label: 'Active', value: '$active'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          TextButton.icon(
-            onPressed: onViewBranches,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.textPrimary,
-              backgroundColor: Colors.white.withValues(alpha: 0.04),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: accentColor.withValues(alpha: 0.24)),
-              ),
-            ),
-            icon: const Icon(Icons.account_tree_outlined, size: 18),
-            label: Text(
-              'Branches',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -715,11 +485,11 @@ class _BranchOverviewPanel extends StatelessWidget {
   final List<String> pathIds;
   final String selectedPathId;
   final String Function(String pathId) labelBuilder;
-  final String? Function(String pathId) badgeBuilder;
   final Color Function(String pathId) accentBuilder;
   final double Function(String pathId) progressBuilder;
   final int Function(String pathId) unlockedCountBuilder;
   final int Function(String pathId) masteredCountBuilder;
+  final bool Function(String pathId) isLockedBuilder;
   final bool Function(String pathId) hasActiveBuilder;
   final Exercise? Function(String pathId) currentExerciseBuilder;
   final int Function(String pathId) totalCountBuilder;
@@ -734,11 +504,11 @@ class _BranchOverviewPanel extends StatelessWidget {
     required this.pathIds,
     required this.selectedPathId,
     required this.labelBuilder,
-    required this.badgeBuilder,
     required this.accentBuilder,
     required this.progressBuilder,
     required this.unlockedCountBuilder,
     required this.masteredCountBuilder,
+    required this.isLockedBuilder,
     required this.hasActiveBuilder,
     required this.currentExerciseBuilder,
     required this.totalCountBuilder,
@@ -757,27 +527,6 @@ class _BranchOverviewPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          hasFoundation ? 'Branches' : 'Path',
-          style: GoogleFonts.robotoMono(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2,
-            color: AppColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          hasFoundation ? 'Choose your route.' : 'Choose your next route.',
-          style: GoogleFonts.lato(
-            fontSize: 30,
-            height: 0.98,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.8,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
           hasFoundation
               ? 'Begin at the shared foundation, then choose one of the linked specialization branches.'
               : 'Choose the linked path you want to train.',
@@ -795,7 +544,6 @@ class _BranchOverviewPanel extends StatelessWidget {
             foundationPathId: foundationPathId,
             selectedPathId: selectedPathId,
             labelBuilder: labelBuilder,
-            badgeBuilder: badgeBuilder,
             accentBuilder: accentBuilder,
             unlockedCountBuilder: unlockedCountBuilder,
             totalCountBuilder: totalCountBuilder,
@@ -805,23 +553,13 @@ class _BranchOverviewPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        Text(
-          'All branches',
-          style: GoogleFonts.robotoMono(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2,
-            color: AppColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: 10),
         for (final pathId in overviewPaths) ...[
           _BranchOverviewRow(
             label: labelBuilder(pathId),
-            badge: badgeBuilder(pathId),
             accentColor: accentBuilder(pathId),
             isSelected: pathId == selectedPathId,
             isFoundation: hasFoundation && pathId == foundationPathId,
+            isLocked: isLockedBuilder(pathId),
             progress: progressBuilder(pathId),
             unlocked: unlockedCountBuilder(pathId),
             total: totalCountBuilder(pathId),
@@ -844,7 +582,6 @@ class _TrackConstellationPanel extends StatelessWidget {
   final String? foundationPathId;
   final String selectedPathId;
   final String Function(String pathId) labelBuilder;
-  final String? Function(String pathId) badgeBuilder;
   final Color Function(String pathId) accentBuilder;
   final int Function(String pathId) unlockedCountBuilder;
   final int Function(String pathId) totalCountBuilder;
@@ -857,7 +594,6 @@ class _TrackConstellationPanel extends StatelessWidget {
     required this.foundationPathId,
     required this.selectedPathId,
     required this.labelBuilder,
-    required this.badgeBuilder,
     required this.accentBuilder,
     required this.unlockedCountBuilder,
     required this.totalCountBuilder,
@@ -911,8 +647,8 @@ class _TrackConstellationPanel extends StatelessWidget {
             pathLayouts.add(
               _ConstellationPathLayout(
                 id: pathId,
-                nodes: _buildLinearNodeOffsets(
-                  start: Offset(centerX, forkY + 22),
+                nodes: _buildBranchNodeOffsets(
+                  start: Offset(centerX, forkY),
                   end: tip,
                   count: exercises.length,
                 ),
@@ -1003,7 +739,6 @@ class _TrackConstellationPanel extends StatelessWidget {
                     tip: layout.tip,
                     width: width,
                     label: labelBuilder(layout.id),
-                    badge: badgeBuilder(layout.id),
                     accentColor: layout.accentColor,
                     selected: layout.id == selectedPathId,
                     opacity: _constellationPathOpacity(
@@ -1045,7 +780,6 @@ class _ConstellationTipLabel extends StatelessWidget {
   final Offset tip;
   final double width;
   final String label;
-  final String? badge;
   final Color accentColor;
   final bool selected;
   final double opacity;
@@ -1057,7 +791,6 @@ class _ConstellationTipLabel extends StatelessWidget {
     required this.tip,
     required this.width,
     required this.label,
-    required this.badge,
     required this.accentColor,
     required this.selected,
     required this.opacity,
@@ -1105,8 +838,7 @@ class _ConstellationTipLabel extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                '${unlocked.toString().padLeft(2, '0')}/${total.toString().padLeft(2, '0')}'
-                '${badge != null ? ' · ${badge!.toUpperCase()}' : ''}',
+                '${unlocked.toString().padLeft(2, '0')}/${total.toString().padLeft(2, '0')}',
                 textAlign: align,
                 style: GoogleFonts.robotoMono(
                   fontSize: 9,
@@ -1330,6 +1062,17 @@ List<Offset> _buildLinearNodeOffsets({
   ];
 }
 
+List<Offset> _buildBranchNodeOffsets({
+  required Offset start,
+  required Offset end,
+  required int count,
+}) {
+  if (count <= 0) return const [];
+  return [
+    for (var i = 0; i < count; i++) Offset.lerp(start, end, (i + 1) / count)!,
+  ];
+}
+
 double _constellationPathOpacity(
   String pathId,
   String selectedPathId,
@@ -1441,10 +1184,10 @@ void _drawDashedLine(Canvas canvas, Offset a, Offset b, Paint paint) {
 
 class _BranchOverviewRow extends StatelessWidget {
   final String label;
-  final String? badge;
   final Color accentColor;
   final bool isSelected;
   final bool isFoundation;
+  final bool isLocked;
   final double progress;
   final int unlocked;
   final int total;
@@ -1455,10 +1198,10 @@ class _BranchOverviewRow extends StatelessWidget {
 
   const _BranchOverviewRow({
     required this.label,
-    required this.badge,
     required this.accentColor,
     required this.isSelected,
     required this.isFoundation,
+    required this.isLocked,
     required this.progress,
     required this.unlocked,
     required this.total,
@@ -1476,7 +1219,7 @@ class _BranchOverviewRow extends StatelessWidget {
             ? 'ACTIVE'
             : isMastered
                 ? 'MASTERED'
-                : unlocked == 0
+                : isLocked
                     ? 'LOCKED'
                     : 'BRANCH';
 
@@ -1502,32 +1245,16 @@ class _BranchOverviewRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          eyebrow,
-                          style: GoogleFonts.robotoMono(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.7,
-                            color: hasActive || isFoundation
-                                ? accentColor
-                                : AppColors.textMuted,
-                          ),
-                        ),
-                        if (badge != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            badge!.toUpperCase(),
-                            style: GoogleFonts.robotoMono(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.2,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      eyebrow,
+                      style: GoogleFonts.robotoMono(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.7,
+                        color: hasActive || isFoundation
+                            ? accentColor
+                            : AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -1543,9 +1270,11 @@ class _BranchOverviewRow extends StatelessWidget {
                     Text(
                       currentExerciseName != null
                           ? 'Working: $currentExerciseName'
-                          : unlocked == 0
-                              ? 'Unlock this route through the previous steps.'
-                              : '$unlocked of $total skills unlocked',
+                          : isMastered
+                              ? 'Mastered'
+                              : isLocked
+                                  ? 'Unlock this route through the previous steps.'
+                                  : '$unlocked of $total skills unlocked',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
@@ -1595,16 +1324,6 @@ class _BranchOverviewRow extends StatelessWidget {
                         valueColor: AlwaysStoppedAnimation<Color>(accentColor),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$unlocked/$total',
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -1616,62 +1335,13 @@ class _BranchOverviewRow extends StatelessWidget {
   }
 }
 
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatChip({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.robotoMono(
-                fontSize: 8,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-                color: AppColors.textMuted,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _PathTimeline extends StatelessWidget {
-  final String title;
   final Color accentColor;
   final List<Exercise> exercises;
   final Map<String, ExerciseStatus> progressMap;
   final void Function(Exercise exercise) onExerciseTap;
 
   const _PathTimeline({
-    required this.title,
     required this.accentColor,
     required this.exercises,
     required this.progressMap,
@@ -1693,17 +1363,6 @@ class _PathTimeline extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          title.toUpperCase(),
-          style: GoogleFonts.lato(
-            fontSize: 30,
-            height: 0.98,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.8,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 6),
         Text(
           '${exercises.length} skill${exercises.length == 1 ? '' : 's'} in this route',
           style: GoogleFonts.inter(
@@ -1766,325 +1425,166 @@ class _PathExerciseRow extends StatelessWidget {
     }
   }
 
+  String get _difficultyLabel {
+    switch (exercise.difficulty) {
+      case 1:
+        return 'Beginner';
+      case 2:
+        return 'Intermediate';
+      case 3:
+      case 4:
+        return 'Advanced';
+      default:
+        return 'Expert';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lineColor = status == ExerciseStatus.inactive
         ? Colors.white.withValues(alpha: 0.12)
         : _statusColor.withValues(alpha: 0.45);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 28,
-          child: Column(
-            children: [
-              const SizedBox(height: 18),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (status != ExerciseStatus.inactive)
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Column(
+              children: [
+                const SizedBox(height: 18),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (status != ExerciseStatus.inactive)
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _statusColor.withValues(alpha: 0.18),
+                        ),
+                      ),
                     Container(
-                      width: 20,
-                      height: 20,
+                      width: status == ExerciseStatus.inactive ? 6 : 10,
+                      height: status == ExerciseStatus.inactive ? 6 : 10,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _statusColor.withValues(alpha: 0.18),
-                      ),
-                    ),
-                  Container(
-                    width: status == ExerciseStatus.inactive ? 6 : 10,
-                    height: status == ExerciseStatus.inactive ? 6 : 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _statusColor,
-                    ),
-                  ),
-                ],
-              ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 86,
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: status == ExerciseStatus.inactive
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : lineColor,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(18),
-                child: Ink(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                  decoration: BoxDecoration(
-                    color: status == ExerciseStatus.inactive
-                        ? Colors.transparent
-                        : AppColors.bgTertiary,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: status == ExerciseStatus.inactive
-                          ? Colors.transparent
-                          : Colors.white.withValues(alpha: 0.06),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${(index + 1).toString().padLeft(2, '0')} · $_statusLabel',
-                              style: GoogleFonts.robotoMono(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.6,
-                                color: status == ExerciseStatus.active
-                                    ? accentColor
-                                    : status == ExerciseStatus.mastered
-                                        ? _masteredColor
-                                        : AppColors.textMuted,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              exercise.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.25,
-                                color: status == ExerciseStatus.inactive
-                                    ? AppColors.textSecondary
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              exercise.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 12.5,
-                                height: 1.4,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          _DifficultyBars(
-                            difficulty: exercise.difficulty,
-                            color: status == ExerciseStatus.active
-                                ? accentColor
-                                : status == ExerciseStatus.mastered
-                                    ? _masteredColor
-                                    : Colors.white.withValues(alpha: 0.18),
-                          ),
-                          const SizedBox(height: 14),
-                          const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: AppColors.textMuted,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BackCapsuleButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _BackCapsuleButton({
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: onTap,
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.textPrimary,
-        backgroundColor: Colors.white.withValues(alpha: 0.04),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-      ),
-      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
-      label: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.robotoMono(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
-        ),
-      ),
-    );
-  }
-}
-
-class _TrackHeroHeader extends StatelessWidget {
-  final String title;
-  final String metaLabel;
-  final double progress;
-  final int unlocked;
-  final int total;
-
-  const _TrackHeroHeader({
-    required this.title,
-    required this.metaLabel,
-    required this.progress,
-    required this.unlocked,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          metaLabel.toUpperCase(),
-          style: GoogleFonts.robotoMono(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.8,
-            color: AppColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          title.toUpperCase(),
-          style: GoogleFonts.lato(
-            fontSize: 44,
-            height: 0.9,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.2,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${(progress * 100).round()}',
-              style: GoogleFonts.lato(
-                fontSize: 40,
-                height: 0.9,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1.2,
-                color: AppColors.accentBright,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 4),
-              child: Text(
-                '%',
-                style: GoogleFonts.robotoMono(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        minHeight: 3,
-                        value: progress,
-                        backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppColors.accentBright,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      '$unlocked/$total unlocked',
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        color: AppColors.textMuted,
+                        color: _statusColor,
                       ),
                     ),
                   ],
                 ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color: status == ExerciseStatus.inactive
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : lineColor,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(18),
+                  child: Ink(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                    decoration: BoxDecoration(
+                      color: status == ExerciseStatus.inactive
+                          ? Colors.transparent
+                          : AppColors.bgTertiary,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: status == ExerciseStatus.inactive
+                            ? Colors.transparent
+                            : Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${(index + 1).toString().padLeft(2, '0')} · $_statusLabel',
+                                style: GoogleFonts.robotoMono(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.6,
+                                  color: status == ExerciseStatus.active
+                                      ? accentColor
+                                      : status == ExerciseStatus.mastered
+                                          ? _masteredColor
+                                          : AppColors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                exercise.name,
+                                style: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.25,
+                                  color: status == ExerciseStatus.inactive
+                                      ? AppColors.textSecondary
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                exercise.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.5,
+                                  height: 1.4,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            _difficultyLabel.toUpperCase(),
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.robotoMono(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.4,
+                              color: status == ExerciseStatus.active
+                                  ? accentColor
+                                  : status == ExerciseStatus.mastered
+                                      ? _masteredColor
+                                      : AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _DifficultyBars extends StatelessWidget {
-  final int difficulty;
-  final Color color;
-
-  const _DifficultyBars({
-    required this.difficulty,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 14,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          for (var i = 0; i < 5; i++)
-            Container(
-              width: 3,
-              height: 5 + (i * 2.0),
-              margin: EdgeInsets.only(right: i == 4 ? 0 : 2),
-              decoration: BoxDecoration(
-                color: i < difficulty
-                    ? color
-                    : Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+          ),
         ],
       ),
     );

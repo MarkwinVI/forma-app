@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
@@ -48,33 +47,11 @@ class _SkillsViewState extends State<SkillsView> {
     }
   }
 
-  int _masteredCount(SkillCategory category) {
-    return ExerciseCatalog.forSkillCategory(category.id)
-        .where(
-            (exercise) => _progressMap[exercise.id] == ExerciseStatus.mastered)
-        .length;
-  }
-
-  int _unlockedCount(SkillCategory category) {
-    return ExerciseCatalog.forSkillCategory(category.id)
-        .where(
-          (exercise) =>
-              (_progressMap[exercise.id] ?? ExerciseStatus.inactive) !=
-              ExerciseStatus.inactive,
-        )
-        .length;
-  }
-
-  bool _hasActiveExercise(SkillCategory category) {
-    return ExerciseCatalog.forSkillCategory(category.id)
-        .any((exercise) => _progressMap[exercise.id] == ExerciseStatus.active);
-  }
-
-  int _branchCount(SkillCategory category) {
-    if (category.trainingPaths.isNotEmpty) {
-      return category.trainingPaths.length;
-    }
-    return category.branches.isEmpty ? 1 : category.branches.length;
+  bool _isCategoryLocked(SkillCategory category) {
+    final unlockRequirement = category.unlockRequirement;
+    if (unlockRequirement == null) return false;
+    return _progressMap[unlockRequirement.exerciseId] !=
+        ExerciseStatus.mastered;
   }
 
   @override
@@ -146,15 +123,9 @@ class _SkillsViewState extends State<SkillsView> {
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
                     final category = categories[index];
-                    final total =
-                        ExerciseCatalog.totalForSkillCategory(category.id);
                     return CategoryProgressCard(
                       category: category,
-                      mastered: _masteredCount(category),
-                      unlocked: _unlockedCount(category),
-                      total: total,
-                      branchCount: _branchCount(category),
-                      hasActive: _hasActiveExercise(category),
+                      isLocked: _isCategoryLocked(category),
                       progressMap: _progressMap,
                       onTap: () async {
                         await Navigator.of(context).push(

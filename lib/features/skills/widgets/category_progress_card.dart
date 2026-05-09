@@ -8,52 +8,24 @@ import '../../../data/models/skill_category_model.dart';
 
 class CategoryProgressCard extends StatelessWidget {
   final SkillCategory category;
-  final int mastered;
-  final int unlocked;
-  final int total;
-  final int branchCount;
-  final bool hasActive;
+  final bool isLocked;
   final Map<String, ExerciseStatus> progressMap;
   final VoidCallback onTap;
 
   const CategoryProgressCard({
     super.key,
     required this.category,
-    required this.mastered,
-    required this.unlocked,
-    required this.total,
-    required this.branchCount,
-    required this.hasActive,
+    required this.isLocked,
     required this.progressMap,
     required this.onTap,
   });
 
-  double get _progress => total == 0 ? 0 : unlocked / total;
-
-  bool get _isMastered => total > 0 && mastered == total;
-
-  String get _eyebrow {
-    if (hasActive) return 'IN PROGRESS';
-    if (_isMastered) return 'MASTERED';
-    if (unlocked == 0) return 'LOCKED';
-    return '$branchCount BRANCHES';
-  }
-
-  String get _supportingText {
-    if (hasActive) {
-      return '$unlocked of $total skills unlocked';
-    }
-    if (_isMastered) {
-      return 'All skills in this track are mastered.';
-    }
-    if (unlocked == 0) {
-      return category.description;
-    }
-    return '${total - unlocked} skills remaining in this track.';
-  }
+  String? get _eyebrow => isLocked ? 'LOCKED' : null;
 
   @override
   Widget build(BuildContext context) {
+    final isLongTitle = category.title.length >= 16;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -63,11 +35,7 @@ class CategoryProgressCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.bgTertiary,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: hasActive
-                  ? AppColors.accentBright.withValues(alpha: 0.4)
-                  : AppColors.borderPrimary,
-            ),
+            border: Border.all(color: AppColors.borderPrimary),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.22),
@@ -87,25 +55,24 @@ class CategoryProgressCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _eyebrow,
-                          style: GoogleFonts.robotoMono(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2,
-                            color: hasActive
-                                ? AppColors.accentBright
-                                : AppColors.textMuted,
+                        if (_eyebrow != null)
+                          Text(
+                            _eyebrow!,
+                            style: GoogleFonts.robotoMono(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 2,
+                              color: AppColors.textMuted,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
+                        if (_eyebrow != null) const SizedBox(height: 8),
                         Text(
                           category.title.toUpperCase(),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.lato(
-                            fontSize: 28,
-                            height: 0.94,
+                            fontSize: isLongTitle ? 24 : 28,
+                            height: isLongTitle ? 0.98 : 0.94,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.8,
                             color: AppColors.textPrimary,
@@ -113,8 +80,8 @@ class CategoryProgressCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          _supportingText,
-                          maxLines: 2,
+                          category.description,
+                          maxLines: 4,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
                             fontSize: 12,
@@ -123,52 +90,12 @@ class CategoryProgressCard extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        Row(
-                          children: [
-                            Text(
-                              '${(_progress * 100).round()}',
-                              style: GoogleFonts.lato(
-                                fontSize: 20,
-                                height: 1,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 2, top: 5),
-                              child: Text(
-                                '%',
-                                style: GoogleFonts.robotoMono(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              width: 1,
-                              height: 18,
-                              color: Colors.white.withValues(alpha: 0.08),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '$unlocked/$total',
-                              style: GoogleFonts.robotoMono(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
                 ),
                 Container(
-                  width: 170,
+                  width: 162,
                   height: double.infinity,
                   padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
                   decoration: BoxDecoration(
@@ -316,7 +243,7 @@ class _TrackTreePreviewPainter extends CustomPainter {
             exercises: exercises,
             nodes: _linearOffsets(
               start: Offset(size.width / 2, size.height * 0.04),
-              end: Offset(size.width / 2, fork.dy - 4),
+              end: fork,
               count: exercises.length,
             ),
             isFoundation: true,
@@ -327,8 +254,8 @@ class _TrackTreePreviewPainter extends CustomPainter {
           _PreviewPathLayout(
             id: pathId,
             exercises: exercises,
-            nodes: _linearOffsets(
-              start: Offset(size.width / 2, fork.dy + 2),
+            nodes: _branchLinearOffsets(
+              start: fork,
               end: tips[branchIndex++],
               count: exercises.length,
             ),
@@ -350,13 +277,6 @@ class _TrackTreePreviewPainter extends CustomPainter {
             progressMap[layout.exercises[i + 1].id] ?? ExerciseStatus.inactive,
           );
         }
-        _drawPreviewSegment(
-          canvas,
-          layout.nodes.last,
-          fork,
-          progressMap[layout.exercises.last.id] ?? ExerciseStatus.inactive,
-          progressMap[layout.exercises.last.id] ?? ExerciseStatus.inactive,
-        );
       } else {
         _drawPreviewSegment(
           canvas,
@@ -378,7 +298,9 @@ class _TrackTreePreviewPainter extends CustomPainter {
     }
 
     for (final layout in pathLayouts) {
-      for (var i = 0; i < layout.nodes.length; i++) {
+      final nodeCount =
+          layout.isFoundation ? layout.nodes.length - 1 : layout.nodes.length;
+      for (var i = 0; i < nodeCount; i++) {
         _drawPreviewNode(
           canvas,
           layout.nodes[i],
@@ -487,6 +409,17 @@ List<Offset> _linearOffsets({
   if (count == 1) return [Offset.lerp(start, end, 0.5)!];
   return [
     for (var i = 0; i < count; i++) Offset.lerp(start, end, i / (count - 1))!,
+  ];
+}
+
+List<Offset> _branchLinearOffsets({
+  required Offset start,
+  required Offset end,
+  required int count,
+}) {
+  if (count <= 0) return const [];
+  return [
+    for (var i = 0; i < count; i++) Offset.lerp(start, end, (i + 1) / count)!,
   ];
 }
 
