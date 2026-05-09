@@ -13,7 +13,11 @@ import 'live_workout_view.dart';
 import 'session_overview_view.dart';
 import 'training_program_logic_view.dart';
 
-const _cardShadow = Color(0x40000000);
+const _homeBg = Color(0xFF000000);
+const _groupBg = Color(0xFF1C1C1E);
+const _groupBgHi = Color(0xFF2C2C2E);
+const _hairline = Color(0x14FFFFFF);
+const _textTertiary = Color(0xFF636366);
 const _emptyStateBg = Color(0x05FFFFFF);
 
 class HomeView extends StatefulWidget {
@@ -103,9 +107,10 @@ class _HomeViewState extends State<HomeView> {
     final startDate = DateTime(today.year, today.month, today.day);
 
     return List.generate(5, (index) {
+      final offset = index + 1;
       return _UpcomingScheduleEntry(
-        date: startDate.add(Duration(days: index)),
-        sessionType: cycle[(startIndex + index) % cycle.length],
+        date: startDate.add(Duration(days: offset)),
+        sessionType: cycle[(startIndex + offset) % cycle.length],
       );
     });
   }
@@ -198,15 +203,17 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgSecondary,
+      backgroundColor: _homeBg,
       body: SafeArea(
         child: _loading
             ? const Center(child: LoadingIndicator())
             : SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const _HomeHeader(),
+                    const SizedBox(height: 16),
                     if (_recommendation != null)
                       _TrainingProgramCard(
                         recommendation: _recommendation!,
@@ -255,177 +262,189 @@ class _TrainingProgramCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final sessionTitle =
-        _sessionTypeLabel(recommendation.sessionType).toUpperCase();
+    final sessionTitle = recommendation.isRestDay
+        ? 'Recovery'
+        : _sessionTypeLabel(recommendation.sessionType);
+    final previewItems = recommendation.items.take(4).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            'TODAY',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          width: double.infinity,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.bgSecondary,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.borderPrimary),
-              boxShadow: const [
-                BoxShadow(
-                  color: _cardShadow,
-                  blurRadius: 50,
-                  offset: Offset(0, 25),
-                  spreadRadius: -12,
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${_weekdayShortLabel(now)} · ${_monthShortLabel(now)} ${now.day}',
-                        style: GoogleFonts.ibmPlexMono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.accentPrimary,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      Text(
-                        recommendation.isRestDay
-                            ? 'RECOVERY'
-                            : '${recommendation.items.length} EXERCISES',
-                        style: recommendation.isRestDay
-                            ? GoogleFonts.ibmPlexMono(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
-                                letterSpacing: 1.4,
-                              )
-                            : GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                                letterSpacing: 0.48,
-                              ),
-                      ),
-                    ],
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: _groupBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    sessionTitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -1.0,
+                      height: 1.05,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        sessionTitle,
-                        maxLines: 1,
-                        style: GoogleFonts.inter(
-                          fontSize: 60,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -2.4,
-                          height: 0.88,
-                        ),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: onEditProgram,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPrimary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: AppColors.accentPrimary.withValues(alpha: 0.24),
+                      ),
+                    ),
+                    child: Text(
+                      'Edit program',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentPrimary,
+                        letterSpacing: -0.1,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: recommendation.isRestDay
-                              ? () => _openSessionOverview(context)
-                              : () => _openLiveWorkout(context),
-                          behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            height: 58,
-                            decoration: BoxDecoration(
-                              color: AppColors.accentPrimary,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.accentPrimary.withValues(
-                                    alpha: 0.32,
-                                  ),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.play_arrow_rounded,
-                                  size: 18,
-                                  color: Colors.black,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  recommendation.isRestDay
-                                      ? 'VIEW PLAN'
-                                      : 'START WORKOUT',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.black,
-                                    letterSpacing: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                ),
+              ],
+            ),
+          ),
+          if (recommendation.isRestDay)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 2, 18, 0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: _groupBgHi,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Take the day to recover, then review the next session and keep the split moving.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 2, bottom: 8),
+                    child: Text(
+                      'EXERCISES',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 1.0,
                       ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: onEditProgram,
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          width: 54,
-                          height: 54,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.04),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.10),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _groupBgHi,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        for (var index = 0;
+                            index < previewItems.length;
+                            index++)
+                          _ExercisePreviewRow(
+                            item: previewItems[index],
+                            index: index,
+                            showDivider: index != 0,
+                          ),
+                        if (recommendation.items.length > previewItems.length)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: _hairline),
+                              ),
+                            ),
+                            child: Text(
+                              '+ ${recommendation.items.length - previewItems.length} more',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                                letterSpacing: -0.05,
+                              ),
                             ),
                           ),
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: GestureDetector(
+              onTap: recommendation.isRestDay
+                  ? () => _openSessionOverview(context)
+                  : () => _openLiveWorkout(context),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.accentPrimary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 18,
+                      color: Colors.black,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      recommendation.isRestDay ? 'View plan' : 'Start workout',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -446,6 +465,91 @@ class _UpcomingScheduleEntry {
     return now.year == date.year &&
         now.month == date.month &&
         now.day == date.day;
+  }
+}
+
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        'Today',
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _ExercisePreviewRow extends StatelessWidget {
+  final TrainingRecommendationItem item;
+  final int index;
+  final bool showDivider;
+
+  const _ExercisePreviewRow({
+    required this.item,
+    required this.index,
+    required this.showDivider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        border: showDivider
+            ? const Border(
+                top: BorderSide(color: _hairline),
+              )
+            : null,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24,
+            child: Text(
+              '${index + 1}'.padLeft(2, '0'),
+              style: GoogleFonts.ibmPlexMono(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: _textTertiary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              item.exercise.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            _trackShortLabel(item.track),
+            style: GoogleFonts.ibmPlexMono(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -681,6 +785,27 @@ String _monthShortLabel(DateTime date) {
   ];
 
   return monthNames[date.month - 1];
+}
+
+String _trackShortLabel(TrainingTrack track) {
+  switch (track) {
+    case TrainingTrack.skillWork:
+      return 'SKILL';
+    case TrainingTrack.verticalPush:
+      return 'V PUSH';
+    case TrainingTrack.horizontalPush:
+      return 'H PUSH';
+    case TrainingTrack.verticalPull:
+      return 'V PULL';
+    case TrainingTrack.horizontalPull:
+      return 'H PULL';
+    case TrainingTrack.core:
+      return 'CORE';
+    case TrainingTrack.squat:
+      return 'SQUAT';
+    case TrainingTrack.hinge:
+      return 'HINGE';
+  }
 }
 
 String _sessionTypeLabel(TrainingSessionType sessionType) {
