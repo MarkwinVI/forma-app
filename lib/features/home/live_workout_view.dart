@@ -1,19 +1,28 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import 'completed_workout_model.dart';
 import 'finished_workout_view.dart';
 
-const _workoutCard = Color(0xFF09090B);
-const _workoutBg = _workoutCard;
-const _workoutSurface = Color(0x08FFFFFF);
-const _workoutSurfaceBorder = Color(0x0DFFFFFF);
+const _workoutBg = Color(0xFF000000);
+const _workoutCard = Color(0xFF1C1C1E);
+const _workoutSurface = Color(0x3D767680);
+const _workoutSurfaceBorder = Color(0x80545458);
+const _workoutPrimaryText = Color(0xFFFFFFFF);
+const _workoutSecondaryText = Color(0x99EBEBF5);
+const _workoutTertiaryText = Color(0x4DEBEBF5);
+const _workoutAccent = Color(0xFFFF9F0A);
+const _workoutAccentSoft = Color(0x29FF9F0A);
+const _workoutDone = Color(0xFF30D158);
+const _workoutDanger = Color(0xFFFF453A);
 
 class LiveWorkoutView extends StatefulWidget {
   final DailyTrainingRecommendation recommendation;
@@ -35,10 +44,21 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     ExerciseProgramSection.mainExercises,
     ExerciseProgramSection.coolDown,
   ];
+  static final _restOptions = <int>[
+    0,
+    for (var seconds = 5; seconds <= 300; seconds += 5) seconds,
+  ];
+  final _restPreferencesService = WorkoutRestPreferencesService();
 
   late final DateTime _startedAt;
   late Map<String, List<_WorkoutSetDraft>> _setDrafts;
+  late Map<String, int> _restSecondsByExercise;
+  _ActiveRestTimer? _activeRestTimer;
   Timer? _ticker;
+  Duration _pausedDuration = Duration.zero;
+  Duration? _pausedRestRemaining;
+  DateTime? _pausedAt;
+  bool _isRunning = true;
 
   @override
   void initState() {
@@ -49,9 +69,25 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       for (final item in widget.recommendation.items)
         item.exercise.id: _initialSetDrafts(item),
     };
+    _restSecondsByExercise = {
+      for (final item in widget.recommendation.items) item.exercise.id: 0,
+    };
+    _loadRestPreferences();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() {});
+      final shouldClearRest = _isRunning &&
+          _activeRestTimer != null &&
+          _activeRestRemainingSeconds() <= 0;
+      if (!_isRunning && !shouldClearRest) return;
+      if (shouldClearRest) {
+        SystemSound.play(SystemSoundType.alert);
+      }
+      setState(() {
+        if (shouldClearRest) {
+          _activeRestTimer = null;
+          _pausedRestRemaining = null;
+        }
+      });
     });
   }
 
@@ -69,8 +105,20 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     }
   }
 
+  Future<void> _loadRestPreferences() async {
+    final stored = await _restPreferencesService.loadRestIntervals();
+    if (!mounted) return;
+
+    setState(() {
+      _restSecondsByExercise = {
+        for (final item in widget.recommendation.items)
+          item.exercise.id: stored[item.exercise.id] ?? 0,
+      };
+    });
+  }
+
   String _formatElapsed() {
-    final elapsed = DateTime.now().difference(_startedAt);
+    final elapsed = _elapsedDuration();
     final hours = elapsed.inHours;
     final minutes = elapsed.inMinutes.remainder(60);
     final seconds = elapsed.inSeconds.remainder(60);
@@ -83,6 +131,79 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     final totalMinutes = elapsed.inMinutes;
     return '${twoDigits(totalMinutes)}:${twoDigits(seconds)}';
+  }
+
+  Duration _elapsedDuration() {
+    final end = _isRunning ? DateTime.now() : (_pausedAt ?? DateTime.now());
+    return end.difference(_startedAt) - _pausedDuration;
+  }
+
+  int _activeRestRemainingSeconds() {
+    final activeRestTimer = _activeRestTimer;
+    if (activeRestTimer == null) return 0;
+    if (!_isRunning && _pausedRestRemaining != null) {
+      return _pausedRestRemaining!.inSeconds;
+    }
+
+    final remainingMs =
+        activeRestTimer.endsAt.difference(DateTime.now()).inMilliseconds;
+    if (remainingMs <= 0) return 0;
+    return (remainingMs + 999) ~/ 1000;
+  }
+
+  bool get _hasActiveRestTimer =>
+      _activeRestTimer != null && _activeRestRemainingSeconds() > 0;
+
+  double get _activeRestProgress {
+    final activeRestTimer = _activeRestTimer;
+    if (activeRestTimer == null || activeRestTimer.totalSeconds <= 0) {
+      return 0;
+    }
+
+    return (_activeRestRemainingSeconds() / activeRestTimer.totalSeconds).clamp(
+      0.0,
+      1.0,
+    );
+  }
+
+  int get _totalSetCount => _setDrafts.values.fold(
+        0,
+        (sum, sets) => sum + sets.length,
+      );
+
+  int get _completedSetCount => _setDrafts.values.fold(
+        0,
+        (sum, sets) => sum + sets.where((set) => set.completed).length,
+      );
+
+  String _formatSessionSubtitle() {
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    final startedAt = _startedAt;
+    final dayLabel = weekdays[startedAt.weekday - 1];
+    final monthLabel = months[startedAt.month - 1];
+    return '$dayLabel, $monthLabel ${startedAt.day}';
   }
 
   List<TrainingRecommendationItem> _itemsForSection(
@@ -109,18 +230,51 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     });
   }
 
+  void _toggleSessionRunning() {
+    setState(() {
+      if (_isRunning) {
+        _pausedAt = DateTime.now();
+        if (_activeRestTimer != null) {
+          _pausedRestRemaining =
+              Duration(seconds: _activeRestRemainingSeconds());
+        }
+        _isRunning = false;
+        return;
+      }
+
+      if (_pausedAt != null) {
+        _pausedDuration += DateTime.now().difference(_pausedAt!);
+      }
+      if (_activeRestTimer != null && _pausedRestRemaining != null) {
+        _activeRestTimer = _activeRestTimer!.copyWith(
+          endsAt: DateTime.now().add(_pausedRestRemaining!),
+        );
+        _pausedRestRemaining = null;
+      }
+      _pausedAt = null;
+      _isRunning = true;
+    });
+  }
+
   void _toggleSet(TrainingRecommendationItem item, int number) {
+    final currentSet = _setsFor(item).firstWhere((set) => set.number == number);
+    final shouldComplete = !currentSet.completed;
     final sets = _setsFor(item)
         .map(
           (set) => set.number == number
               ? set.copyWith(
-                  completed: !set.completed,
+                  completed: shouldComplete,
                 )
               : set,
         )
         .toList();
 
     _replaceSets(item, sets);
+    if (shouldComplete) {
+      _startRestTimer(item);
+    } else if (_activeRestTimer?.exerciseId == item.exercise.id) {
+      _clearActiveRestTimer();
+    }
   }
 
   void _changeSetTarget(
@@ -190,6 +344,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         .toList();
 
     _replaceSets(item, sets);
+    _startRestTimer(item);
   }
 
   CompletedWorkout _buildCompletedWorkout() {
@@ -242,26 +397,103 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
+  void _startRestTimer(TrainingRecommendationItem item) {
+    final restSeconds = _restSecondsByExercise[item.exercise.id] ?? 0;
+    if (restSeconds <= 0) return;
+
+    setState(() {
+      _activeRestTimer = _ActiveRestTimer(
+        exerciseId: item.exercise.id,
+        endsAt: DateTime.now().add(Duration(seconds: restSeconds)),
+        totalSeconds: restSeconds,
+      );
+      _pausedRestRemaining = null;
+    });
+  }
+
+  void _clearActiveRestTimer() {
+    setState(() {
+      _activeRestTimer = null;
+      _pausedRestRemaining = null;
+    });
+  }
+
+  void _adjustActiveRestTimer(int deltaSeconds) {
+    final activeRestTimer = _activeRestTimer;
+    if (activeRestTimer == null) return;
+
+    final nextSeconds = (_activeRestRemainingSeconds() + deltaSeconds).clamp(
+      0,
+      15 * 60,
+    );
+    if (nextSeconds <= 0) {
+      _clearActiveRestTimer();
+      return;
+    }
+
+    setState(() {
+      final nextTotalSeconds =
+          (activeRestTimer.totalSeconds + deltaSeconds).clamp(
+        nextSeconds,
+        15 * 60,
+      );
+      _activeRestTimer = activeRestTimer.copyWith(
+        endsAt: DateTime.now().add(Duration(seconds: nextSeconds)),
+        totalSeconds: nextTotalSeconds,
+      );
+      _pausedRestRemaining = _isRunning ? null : Duration(seconds: nextSeconds);
+    });
+  }
+
+  Future<void> _pickRestInterval(TrainingRecommendationItem item) async {
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final current = _restSecondsByExercise[item.exercise.id] ?? 0;
+        return _RestPickerSheet(
+          currentValue: current,
+          options: _restOptions,
+        );
+      },
+    );
+
+    if (selected == null) return;
+
+    setState(() {
+      _restSecondsByExercise = {
+        ..._restSecondsByExercise,
+        item.exercise.id: selected,
+      };
+      if (selected <= 0 && _activeRestTimer?.exerciseId == item.exercise.id) {
+        _activeRestTimer = null;
+        _pausedRestRemaining = null;
+      }
+    });
+    await _restPreferencesService.saveRestInterval(item.exercise.id, selected);
+  }
+
   Future<void> _showNoDataDialog() async {
     await showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: AppColors.bgTertiary,
-          surfaceTintColor: AppColors.bgTertiary,
+          backgroundColor: _workoutCard,
+          surfaceTintColor: _workoutCard,
           title: Text(
             'No data entered',
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: _workoutPrimaryText,
             ),
           ),
           content: Text(
             'Add at least one completed set before finishing, or discard this workout.',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: _workoutSecondaryText,
               height: 1.4,
             ),
           ),
@@ -272,7 +504,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                 'Return',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: _workoutPrimaryText,
                 ),
               ),
             ),
@@ -286,7 +518,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                 'Discard workout',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.accentPrimary,
+                  color: _workoutDanger,
                 ),
               ),
             ),
@@ -316,6 +548,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   @override
   Widget build(BuildContext context) {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom;
     final visibleSections = _sectionOrder
         .map((section) => (section: section, items: _itemsForSection(section)))
         .where((entry) => entry.items.isNotEmpty)
@@ -332,36 +565,66 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       ),
       body: SafeArea(
         bottom: false,
-        child: Column(
+        child: Stack(
           children: [
-            _LiveWorkoutTopBar(
-              title: widget.recommendation.sessionLabel,
-              elapsed: _formatElapsed(),
-              onFinish: _finishWorkout,
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                children: [
-                  if (visibleSections.isEmpty)
-                    const _EmptyWorkoutState()
-                  else
-                    ...visibleSections.map(
-                      (entry) => _LiveSectionBlock(
-                        section: entry.section,
-                        items: entry.items,
-                        setsFor: _setsFor,
-                        onToggleSet: _toggleSet,
-                        onTargetChanged: _changeSetTarget,
-                        onAddSet: _addSet,
-                        onRemoveSet: _removeSet,
-                        onTimedSetCompleted: _completeTimedSet,
-                        onOpenDetail: _openExerciseDetail,
-                      ),
+            Column(
+              children: [
+                _LiveWorkoutTopBar(
+                  title: widget.recommendation.sessionLabel,
+                  subtitle: _formatSessionSubtitle(),
+                  elapsed: _formatElapsed(),
+                  isRunning: _isRunning,
+                  completedSets: _completedSetCount,
+                  totalSets: _totalSetCount,
+                  onToggleRunning: _toggleSessionRunning,
+                  onFinish: _finishWorkout,
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      0,
+                      8,
+                      0,
+                      _hasActiveRestTimer ? 120 + bottomSafePadding : 28,
                     ),
-                ],
-              ),
+                    children: [
+                      if (visibleSections.isEmpty)
+                        const _EmptyWorkoutState()
+                      else
+                        ...visibleSections.map(
+                          (entry) => _LiveSectionBlock(
+                            section: entry.section,
+                            items: entry.items,
+                            setsFor: _setsFor,
+                            onToggleSet: _toggleSet,
+                            onTargetChanged: _changeSetTarget,
+                            onAddSet: _addSet,
+                            onRemoveSet: _removeSet,
+                            onTimedSetCompleted: _completeTimedSet,
+                            restSecondsFor: (item) =>
+                                _restSecondsByExercise[item.exercise.id] ?? 0,
+                            onRestTap: _pickRestInterval,
+                            onOpenDetail: _openExerciseDetail,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            if (_hasActiveRestTimer)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _StickyRestIndicator(
+                  remainingSeconds: _activeRestRemainingSeconds(),
+                  progress: _activeRestProgress,
+                  onSkip: _clearActiveRestTimer,
+                  onAdd: () => _adjustActiveRestTimer(15),
+                  onSubtract: () => _adjustActiveRestTimer(-15),
+                ),
+              ),
           ],
         ),
       ),
@@ -377,7 +640,7 @@ class _HideKeyboardButton extends StatelessWidget {
     return FloatingActionButton.extended(
       heroTag: 'hide-workout-keyboard',
       onPressed: () => FocusManager.instance.primaryFocus?.unfocus(),
-      backgroundColor: AppColors.accentPrimary,
+      backgroundColor: _workoutAccent,
       foregroundColor: Colors.white,
       elevation: 8,
       icon: const Icon(Icons.keyboard_hide_rounded, size: 18),
@@ -395,54 +658,89 @@ class _HideKeyboardButton extends StatelessWidget {
 
 class _LiveWorkoutTopBar extends StatelessWidget {
   final String title;
+  final String subtitle;
   final String elapsed;
+  final bool isRunning;
+  final int completedSets;
+  final int totalSets;
+  final VoidCallback onToggleRunning;
   final VoidCallback onFinish;
 
   const _LiveWorkoutTopBar({
     required this.title,
+    required this.subtitle,
     required this.elapsed,
+    required this.isRunning,
+    required this.completedSets,
+    required this.totalSets,
+    required this.onToggleRunning,
     required this.onFinish,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _ProgressRing(
+            completed: completedSets,
+            total: totalSets,
+          ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: _workoutPrimaryText,
+                      letterSpacing: -0.45,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$subtitle · $completedSets/$totalSets sets',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: _workoutSecondaryText,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           const SizedBox(width: 12),
-          _TimerPill(elapsed: elapsed),
+          _TimerPill(
+            elapsed: elapsed,
+            isRunning: isRunning,
+            onPressed: onToggleRunning,
+          ),
           const SizedBox(width: 8),
           TextButton(
             onPressed: onFinish,
             style: TextButton.styleFrom(
-              backgroundColor: _workoutSurface,
-              foregroundColor: AppColors.textPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999),
-                side: const BorderSide(color: AppColors.borderPrimary),
-              ),
+              foregroundColor: _workoutAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             ),
             child: Text(
               'Finish',
               style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: _workoutAccent,
+                letterSpacing: -0.2,
               ),
             ),
           ),
@@ -454,31 +752,97 @@ class _LiveWorkoutTopBar extends StatelessWidget {
 
 class _TimerPill extends StatelessWidget {
   final String elapsed;
+  final bool isRunning;
+  final VoidCallback onPressed;
 
   const _TimerPill({
     required this.elapsed,
+    required this.isRunning,
+    required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: AppColors.accentPrimary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: AppColors.accentPrimary.withValues(alpha: 0.28),
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        backgroundColor: _workoutSurface,
+        foregroundColor: _workoutPrimaryText,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
         ),
       ),
-      child: Text(
-        elapsed,
-        style: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
-          color: AppColors.accentPrimary,
-          fontFeatures: const [FontFeature.tabularFigures()],
-          letterSpacing: -0.2,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: isRunning ? _workoutAccent : _workoutTertiaryText,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            elapsed,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: _workoutPrimaryText,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressRing extends StatelessWidget {
+  final int completed;
+  final int total;
+
+  const _ProgressRing({
+    required this.completed,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = total == 0 ? 0.0 : completed / total;
+    final ringColor = progress >= 1 ? _workoutDone : _workoutAccent;
+
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          const CircularProgressIndicator(
+            value: 1,
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation(_workoutSurface),
+          ),
+          CircularProgressIndicator(
+            value: progress.clamp(0, 1),
+            strokeWidth: 3,
+            strokeCap: StrokeCap.round,
+            valueColor: AlwaysStoppedAnimation(ringColor),
+            backgroundColor: Colors.transparent,
+          ),
+          Text(
+            progress >= 1 ? '✓' : completed.toString(),
+            style: GoogleFonts.inter(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: progress >= 1 ? _workoutDone : _workoutPrimaryText,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -489,6 +853,7 @@ class _LiveSectionBlock extends StatelessWidget {
   final List<TrainingRecommendationItem> items;
   final List<_WorkoutSetDraft> Function(TrainingRecommendationItem item)
       setsFor;
+  final int Function(TrainingRecommendationItem item) restSecondsFor;
   final void Function(TrainingRecommendationItem item, int number) onToggleSet;
   final void Function(TrainingRecommendationItem item, int number, int? target)
       onTargetChanged;
@@ -496,6 +861,7 @@ class _LiveSectionBlock extends StatelessWidget {
   final void Function(TrainingRecommendationItem item, int number) onRemoveSet;
   final void Function(TrainingRecommendationItem item, int number, int seconds)
       onTimedSetCompleted;
+  final Future<void> Function(TrainingRecommendationItem item) onRestTap;
   final void Function(TrainingRecommendationItem item, Color sectionColor)
       onOpenDetail;
 
@@ -503,11 +869,13 @@ class _LiveSectionBlock extends StatelessWidget {
     required this.section,
     required this.items,
     required this.setsFor,
+    required this.restSecondsFor,
     required this.onToggleSet,
     required this.onTargetChanged,
     required this.onAddSet,
     required this.onRemoveSet,
     required this.onTimedSetCompleted,
+    required this.onRestTap,
     required this.onOpenDetail,
   });
 
@@ -516,16 +884,17 @@ class _LiveSectionBlock extends StatelessWidget {
     final sectionColor = _sectionColor(section);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(2, 0, 2, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(
               children: [
                 Container(
                   width: 3,
-                  height: 14,
+                  height: 12,
                   decoration: BoxDecoration(
                     color: sectionColor,
                     borderRadius: BorderRadius.circular(999),
@@ -535,69 +904,60 @@ class _LiveSectionBlock extends StatelessWidget {
                 Text(
                   section.label.toUpperCase(),
                   style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: 1.2,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _workoutPrimaryText,
+                    letterSpacing: 1.1,
                   ),
                 ),
                 const SizedBox(width: 7),
                 Text(
-                  '${items.length} exercises',
+                  '${items.length} ${items.length == 1 ? 'exercise' : 'exercises'}',
                   style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
+                    fontSize: 12,
+                    color: _workoutSecondaryText,
                   ),
                 ),
               ],
             ),
           ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Column(
-              children: [
-                for (var index = 0; index < items.length; index++) ...[
-                  if (index > 0)
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      indent: 16,
-                      endIndent: 16,
-                      color: AppColors.borderPrimary,
-                    ),
-                  _LiveExerciseCard(
-                    key: ValueKey(items[index].exercise.id),
-                    item: items[index],
-                    sets: setsFor(items[index]),
-                    sectionColor: sectionColor,
-                    onToggleSet: (number) => onToggleSet(
-                      items[index],
-                      number,
-                    ),
-                    onTargetChanged: (number, target) => onTargetChanged(
-                      items[index],
-                      number,
-                      target,
-                    ),
-                    onAddSet: () => onAddSet(items[index]),
-                    onRemoveSet: (number) => onRemoveSet(
-                      items[index],
-                      number,
-                    ),
-                    onTimedSetCompleted: (number, seconds) =>
-                        onTimedSetCompleted(
-                      items[index],
-                      number,
-                      seconds,
-                    ),
-                    onOpenDetail: () => onOpenDetail(
-                      items[index],
-                      sectionColor,
-                    ),
+          Column(
+            children: [
+              for (var index = 0; index < items.length; index++) ...[
+                if (index > 0) const SizedBox(height: 14),
+                _LiveExerciseCard(
+                  key: ValueKey(items[index].exercise.id),
+                  item: items[index],
+                  sets: setsFor(items[index]),
+                  restSeconds: restSecondsFor(items[index]),
+                  sectionColor: sectionColor,
+                  onToggleSet: (number) => onToggleSet(
+                    items[index],
+                    number,
                   ),
-                ],
+                  onTargetChanged: (number, target) => onTargetChanged(
+                    items[index],
+                    number,
+                    target,
+                  ),
+                  onAddSet: () => onAddSet(items[index]),
+                  onRemoveSet: (number) => onRemoveSet(
+                    items[index],
+                    number,
+                  ),
+                  onTimedSetCompleted: (number, seconds) => onTimedSetCompleted(
+                    items[index],
+                    number,
+                    seconds,
+                  ),
+                  onRestTap: () => onRestTap(items[index]),
+                  onOpenDetail: () => onOpenDetail(
+                    items[index],
+                    sectionColor,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -608,24 +968,28 @@ class _LiveSectionBlock extends StatelessWidget {
 class _LiveExerciseCard extends StatefulWidget {
   final TrainingRecommendationItem item;
   final List<_WorkoutSetDraft> sets;
+  final int restSeconds;
   final Color sectionColor;
   final void Function(int number) onToggleSet;
   final void Function(int number, int? target) onTargetChanged;
   final VoidCallback onAddSet;
   final void Function(int number) onRemoveSet;
   final void Function(int number, int seconds) onTimedSetCompleted;
+  final VoidCallback onRestTap;
   final VoidCallback onOpenDetail;
 
   const _LiveExerciseCard({
     super.key,
     required this.item,
     required this.sets,
+    required this.restSeconds,
     required this.sectionColor,
     required this.onToggleSet,
     required this.onTargetChanged,
     required this.onAddSet,
     required this.onRemoveSet,
     required this.onTimedSetCompleted,
+    required this.onRestTap,
     required this.onOpenDetail,
   });
 
@@ -658,121 +1022,184 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
     widget.onTimedSetCompleted(set.number, seconds);
   }
 
+  String _targetSummary() {
+    if (widget.sets.isEmpty) {
+      return widget.item.track.label;
+    }
+
+    final setTarget = widget.sets.first.target;
+    final valueLabel = _isTimed ? '${setTarget}s' : '$setTarget reps';
+    return '${widget.item.track.label} · ${widget.sets.length} × $valueLabel';
+  }
+
   @override
   Widget build(BuildContext context) {
     final exercise = widget.item.exercise;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: _allDone
-            ? AppColors.accentPrimary.withValues(alpha: 0.05)
-            : Colors.transparent,
+        color: _workoutCard,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _allDone
+              ? _workoutDone.withValues(alpha: 0.2)
+              : Colors.transparent,
+        ),
       ),
       child: Column(
         children: [
-          GestureDetector(
+          InkWell(
             onTap: widget.onOpenDetail,
-            behavior: HitTestBehavior.opaque,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(10),
+            ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 10),
               child: Row(
                 children: [
                   _ExerciseTypeBadge(
                     color: widget.sectionColor,
                     isTimed: _isTimed,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                exercise.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            if (_allDone) ...[
-                              const SizedBox(width: 7),
-                              _DoneChip(),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 3),
                         Text(
-                          widget.item.track.label,
+                          exercise.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: _workoutPrimaryText,
+                            letterSpacing: -0.35,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _targetSummary(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: _workoutSecondaryText,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  if (_completedCount > 0) ...[
+                    _ExerciseCompletionPill(
+                      completed: _completedCount,
+                      total: widget.sets.length,
+                      allDone: _allDone,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Container(
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: _workoutSurface,
+                      color: Colors.transparent,
                       shape: BoxShape.circle,
-                      border: Border.all(color: _workoutSurfaceBorder),
+                      border: Border.all(
+                        color: _workoutTertiaryText.withValues(alpha: 0.35),
+                      ),
                     ),
                     child: const Icon(
                       Icons.info_outline_rounded,
-                      size: 22,
-                      color: AppColors.textSecondary,
+                      size: 18,
+                      color: _workoutSecondaryText,
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          const _WorkoutHairline(inset: 16),
+          _RestIntervalRow(
+            restSeconds: widget.restSeconds,
+            onTap: widget.onRestTap,
+          ),
+          const _WorkoutHairline(inset: 12),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
             child: Column(
               children: [
                 _SetHeader(
-                  label: _isTimed ? 'Sec' : 'Reps',
-                  hasTimer: _isTimed,
+                  label: _isTimed ? 'Seconds' : 'Reps',
                 ),
-                const SizedBox(height: 4),
-                ...widget.sets.map(
-                  (set) => _SetRow(
-                    key: ValueKey('${exercise.id}-${set.number}'),
-                    set: set,
-                    hasTimer: _isTimed,
-                    timerColor: widget.sectionColor,
-                    onOpenTimer:
-                        _isTimed ? () => _openTimedSetTimer(set) : null,
-                    onTargetChanged: (target) =>
-                        widget.onTargetChanged(set.number, target),
-                    onToggle: () => widget.onToggleSet(set.number),
-                    onRemove: widget.sets.length > 1
-                        ? () => widget.onRemoveSet(set.number)
-                        : null,
+                const _WorkoutHairline(inset: 0),
+                for (var i = 0; i < widget.sets.length; i++) ...[
+                  Builder(
+                    builder: (context) {
+                      final set = widget.sets[i];
+                      final row = _SetRow(
+                        key: ValueKey('${exercise.id}-${set.number}'),
+                        set: set,
+                        hasTimer: _isTimed,
+                        timerColor: widget.sectionColor,
+                        onOpenTimer:
+                            _isTimed ? () => _openTimedSetTimer(set) : null,
+                        onTargetChanged: (target) =>
+                            widget.onTargetChanged(set.number, target),
+                        onToggle: () => widget.onToggleSet(set.number),
+                      );
+
+                      if (widget.sets.length <= 1) {
+                        return row;
+                      }
+
+                      return Dismissible(
+                        key: ValueKey('dismiss-${exercise.id}-${set.number}'),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: _workoutDanger.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onDismissed: (_) => widget.onRemoveSet(set.number),
+                        child: row,
+                      );
+                    },
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _AddSetButton(onPressed: widget.onAddSet),
+                  if (i < widget.sets.length - 1)
+                    const _WorkoutHairline(inset: 18),
+                ],
+                const _WorkoutHairline(inset: 0),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: widget.onAddSet,
+                    style: TextButton.styleFrom(
+                      foregroundColor: _workoutAccent,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 10,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    const _SwapExerciseButton(),
-                  ],
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: Text(
+                      'Add Set',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -795,38 +1222,395 @@ class _ExerciseTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 32,
-      height: 32,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
+        color: color.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
       ),
       child: Icon(
         isTimed ? Icons.timer_outlined : Icons.bar_chart_rounded,
-        size: 16,
+        size: 15,
         color: color,
       ),
     );
   }
 }
 
-class _DoneChip extends StatelessWidget {
+class _ExerciseCompletionPill extends StatelessWidget {
+  final int completed;
+  final int total;
+  final bool allDone;
+
+  const _ExerciseCompletionPill({
+    required this.completed,
+    required this.total,
+    required this.allDone,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.accentPrimary,
+        color: allDone ? _workoutDone.withValues(alpha: 0.14) : _workoutSurface,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        'DONE',
+        '$completed/$total',
         style: GoogleFonts.inter(
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-          letterSpacing: 0.5,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: allDone ? _workoutDone : _workoutSecondaryText,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkoutHairline extends StatelessWidget {
+  final double inset;
+
+  const _WorkoutHairline({
+    required this.inset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: inset,
+      endIndent: 0,
+      color: _workoutSurfaceBorder,
+    );
+  }
+}
+
+class _RestIntervalRow extends StatelessWidget {
+  final int restSeconds;
+  final VoidCallback onTap;
+
+  const _RestIntervalRow({
+    required this.restSeconds,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        foregroundColor: _workoutPrimaryText,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.timer_outlined,
+            size: 15,
+            color: _workoutSecondaryText,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Rest timer',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: _workoutSecondaryText,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            _formatRestLabel(restSeconds),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color:
+                  restSeconds > 0 ? _workoutPrimaryText : _workoutTertiaryText,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RestPickerSheet extends StatefulWidget {
+  final int currentValue;
+  final List<int> options;
+
+  const _RestPickerSheet({
+    required this.currentValue,
+    required this.options,
+  });
+
+  @override
+  State<_RestPickerSheet> createState() => _RestPickerSheetState();
+}
+
+class _RestPickerSheetState extends State<_RestPickerSheet> {
+  late final FixedExtentScrollController _controller;
+  late int _selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialIndex = widget.options.indexOf(widget.currentValue);
+    _selectedValue =
+        initialIndex >= 0 ? widget.options[initialIndex] : widget.options.first;
+    _controller = FixedExtentScrollController(
+      initialItem: initialIndex >= 0 ? initialIndex : 0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _workoutCard,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: _workoutSurfaceBorder,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: _workoutSecondaryText,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Rest Interval',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: _workoutPrimaryText,
+                      ),
+                    ),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => Navigator.of(context).pop(_selectedValue),
+                    child: Text(
+                      'Done',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _workoutAccent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 216,
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(brightness: Brightness.dark),
+                  child: CupertinoPicker(
+                    scrollController: _controller,
+                    itemExtent: 40,
+                    useMagnifier: true,
+                    magnification: 1.08,
+                    squeeze: 1.15,
+                    selectionOverlay:
+                        const CupertinoPickerDefaultSelectionOverlay(
+                      background: _workoutSurface,
+                    ),
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        _selectedValue = widget.options[index];
+                      });
+                    },
+                    children: [
+                      for (final option in widget.options)
+                        Center(
+                          child: Text(
+                            _formatRestLabel(option),
+                            style: GoogleFonts.inter(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                              color: _workoutPrimaryText,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures()
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StickyRestIndicator extends StatelessWidget {
+  final int remainingSeconds;
+  final double progress;
+  final VoidCallback onSkip;
+  final VoidCallback onAdd;
+  final VoidCallback onSubtract;
+
+  const _StickyRestIndicator({
+    required this.remainingSeconds,
+    required this.progress,
+    required this.onSkip,
+    required this.onAdd,
+    required this.onSubtract,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(16, 14, 16, 14 + bottomPadding),
+        decoration: BoxDecoration(
+          color: _workoutCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          border: Border.all(color: _workoutSurfaceBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x40000000),
+              blurRadius: 24,
+              offset: Offset(0, -6),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rest',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _workoutSecondaryText,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatCountdownLabel(remainingSeconds),
+                        style: GoogleFonts.inter(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: _workoutPrimaryText,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          letterSpacing: -0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _RestActionChip(
+                      label: 'Skip',
+                      onTap: onSkip,
+                    ),
+                    _RestActionChip(
+                      label: '+15s',
+                      onTap: onAdd,
+                    ),
+                    _RestActionChip(
+                      label: '-15s',
+                      onTap: onSubtract,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor: _workoutSurface,
+                valueColor: const AlwaysStoppedAnimation(_workoutAccent),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RestActionChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _RestActionChip({
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        backgroundColor: _workoutSurface,
+        foregroundColor: _workoutPrimaryText,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+        ),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: _workoutPrimaryText,
+          letterSpacing: -0.1,
         ),
       ),
     );
@@ -835,52 +1619,40 @@ class _DoneChip extends StatelessWidget {
 
 class _SetHeader extends StatelessWidget {
   final String label;
-  final bool hasTimer;
 
   const _SetHeader({
     required this.label,
-    required this.hasTimer,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 6),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.borderPrimary),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 6, 0, 6),
       child: Row(
         children: [
           SizedBox(
-            width: 28,
+            width: 24,
             child: Text(
-              'SET',
+              '#',
               textAlign: TextAlign.center,
               style: _setHeaderStyle(),
             ),
           ),
           const SizedBox(width: 8),
-          SizedBox(
-            width: 52,
-            child: Text(
-              'PREV',
-              textAlign: TextAlign.center,
-              style: _setHeaderStyle(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                'Last',
+                style: _setHeaderStyle(),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 70,
-            child: Text(
-              label.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: _setHeaderStyle(),
-            ),
+          Text(
+            label.toUpperCase(),
+            style: _setHeaderStyle(),
           ),
-          const Spacer(),
-          SizedBox(width: hasTimer ? 124 : 80),
+          const SizedBox(width: 72),
         ],
       ),
     );
@@ -888,10 +1660,10 @@ class _SetHeader extends StatelessWidget {
 
   static TextStyle _setHeaderStyle() {
     return GoogleFonts.inter(
-      fontSize: 10,
-      fontWeight: FontWeight.w800,
-      color: AppColors.textMuted,
-      letterSpacing: 0.8,
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      color: _workoutTertiaryText,
+      letterSpacing: 0.6,
     );
   }
 }
@@ -903,7 +1675,6 @@ class _SetRow extends StatefulWidget {
   final VoidCallback? onOpenTimer;
   final ValueChanged<int?> onTargetChanged;
   final VoidCallback onToggle;
-  final VoidCallback? onRemove;
 
   const _SetRow({
     super.key,
@@ -913,7 +1684,6 @@ class _SetRow extends StatefulWidget {
     this.onOpenTimer,
     required this.onTargetChanged,
     required this.onToggle,
-    this.onRemove,
   });
 
   @override
@@ -952,42 +1722,43 @@ class _SetRowState extends State<_SetRow> {
     final completed = widget.set.completed;
 
     return Opacity(
-      opacity: completed ? 0.55 : 1,
+      opacity: completed ? 0.72 : 1,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
             SizedBox(
-              width: 28,
+              width: 24,
               child: Text(
                 widget.set.number.toString(),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color:
-                      completed ? AppColors.accentPrimary : AppColors.textMuted,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: completed ? _workoutDone : _workoutSecondaryText,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  widget.set.previousLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: _workoutTertiaryText,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
             SizedBox(
-              width: 52,
-              child: Text(
-                widget.set.previousLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 70,
+              width: 68,
               child: TextField(
                 controller: _controller,
                 keyboardType: TextInputType.number,
@@ -997,41 +1768,35 @@ class _SetRowState extends State<_SetRow> {
                   widget.onTargetChanged(parsed);
                 },
                 style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: _workoutPrimaryText,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
                 decoration: InputDecoration(
                   isDense: true,
                   filled: true,
-                  fillColor: completed
-                      ? AppColors.accentPrimary.withValues(alpha: 0.08)
-                      : _workoutSurface,
+                  fillColor: completed ? _workoutAccentSoft : _workoutSurface,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: 10,
                     vertical: 8,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
-                      color: completed
-                          ? AppColors.accentPrimary.withValues(alpha: 0.24)
-                          : AppColors.borderPrimary,
+                      color: completed ? _workoutAccent : Colors.transparent,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: AppColors.accentPrimary,
-                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: _workoutAccent),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            const Spacer(),
+            const SizedBox(width: 12),
             SizedBox(
-              width: widget.hasTimer ? 124 : 80,
+              width: widget.hasTimer ? 84 : 40,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -1043,12 +1808,12 @@ class _SetRowState extends State<_SetRow> {
                       style: IconButton.styleFrom(
                         backgroundColor:
                             widget.timerColor.withValues(alpha: 0.12),
-                        fixedSize: const Size(32, 32),
+                        fixedSize: const Size(28, 28),
                         padding: EdgeInsets.zero,
                       ),
                       icon: Icon(
                         Icons.timer_outlined,
-                        size: 16,
+                        size: 15,
                         color: widget.timerColor,
                       ),
                     ),
@@ -1058,32 +1823,20 @@ class _SetRowState extends State<_SetRow> {
                     onPressed: widget.onToggle,
                     visualDensity: VisualDensity.compact,
                     style: IconButton.styleFrom(
-                      backgroundColor: completed
-                          ? AppColors.accentPrimary
-                          : Colors.white.withValues(alpha: 0.07),
-                      fixedSize: const Size(32, 32),
+                      backgroundColor:
+                          completed ? _workoutDone : Colors.transparent,
+                      side: completed
+                          ? null
+                          : const BorderSide(color: _workoutTertiaryText),
+                      fixedSize: const Size(28, 28),
                       padding: EdgeInsets.zero,
                     ),
                     icon: Icon(
                       Icons.check_rounded,
-                      size: 16,
-                      color: completed ? Colors.white : AppColors.textSecondary,
+                      size: 15,
+                      color: completed ? Colors.white : Colors.transparent,
                     ),
                   ),
-                  if (widget.onRemove != null)
-                    IconButton(
-                      onPressed: widget.onRemove,
-                      visualDensity: VisualDensity.compact,
-                      style: IconButton.styleFrom(
-                        fixedSize: const Size(32, 32),
-                        padding: EdgeInsets.zero,
-                      ),
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        size: 16,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
                 ],
               ),
             )
@@ -1166,7 +1919,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderPrimary,
+                  color: _workoutSurfaceBorder,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -1184,7 +1937,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                           style: GoogleFonts.inter(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: _workoutPrimaryText,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -1193,7 +1946,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                           'Target ${widget.initialTarget} sec',
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: AppColors.textMuted,
+                            color: _workoutSecondaryText,
                           ),
                         ),
                       ],
@@ -1208,7 +1961,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                     icon: const Icon(
                       Icons.close_rounded,
                       size: 18,
-                      color: AppColors.textPrimary,
+                      color: _workoutPrimaryText,
                     ),
                   ),
                 ],
@@ -1233,7 +1986,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                         style: GoogleFonts.inter(
                           fontSize: 64,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
+                          color: _workoutPrimaryText,
                           fontFeatures: const [FontFeature.tabularFigures()],
                           letterSpacing: -2,
                           height: 1,
@@ -1279,65 +2032,6 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
   }
 }
 
-class _AddSetButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _AddSetButton({
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textMuted,
-        minimumSize: const Size.fromHeight(38),
-        side: const BorderSide(color: AppColors.borderPrimary),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      icon: const Icon(Icons.add_rounded, size: 16),
-      label: Text(
-        'ADD SET',
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.7,
-        ),
-      ),
-    );
-  }
-}
-
-class _SwapExerciseButton extends StatelessWidget {
-  const _SwapExerciseButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () {},
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.textMuted,
-        minimumSize: const Size(84, 38),
-        side: const BorderSide(color: AppColors.borderPrimary),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      child: Text(
-        'SWAP',
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.7,
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyWorkoutState extends StatelessWidget {
   const _EmptyWorkoutState();
 
@@ -1348,15 +2042,14 @@ class _EmptyWorkoutState extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: _workoutCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.borderPrimary),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Text(
         'No exercises queued for this session.',
         textAlign: TextAlign.center,
         style: GoogleFonts.inter(
           fontSize: 14,
-          color: AppColors.textSecondary,
+          color: _workoutSecondaryText,
         ),
       ),
     );
@@ -1415,10 +2108,25 @@ Color _sectionColor(ExerciseProgramSection section) {
     case ExerciseProgramSection.skillWork:
       return const Color(0xFFA78BFA);
     case ExerciseProgramSection.mainExercises:
-      return AppColors.accentPrimary;
+      return _workoutAccent;
     case ExerciseProgramSection.coolDown:
       return const Color(0xFF34D399);
   }
+}
+
+String _formatRestLabel(int seconds) {
+  if (seconds <= 0) return 'Off';
+  if (seconds < 60) return '${seconds}s';
+  final minutes = seconds ~/ 60;
+  final remainder = seconds % 60;
+  return '${minutes}m ${remainder}s';
+}
+
+String _formatCountdownLabel(int seconds) {
+  final safeSeconds = seconds.clamp(0, 59 * 60 + 59);
+  final minutes = safeSeconds ~/ 60;
+  final remainder = safeSeconds % 60;
+  return '$minutes:${remainder.toString().padLeft(2, '0')}';
 }
 
 bool _isTimedExercise(Exercise exercise) {
@@ -1462,4 +2170,28 @@ String _difficultyLabel(int difficulty) {
   if (difficulty <= 1) return 'Beginner';
   if (difficulty <= 3) return 'Intermediate';
   return 'Advanced';
+}
+
+class _ActiveRestTimer {
+  final String exerciseId;
+  final DateTime endsAt;
+  final int totalSeconds;
+
+  const _ActiveRestTimer({
+    required this.exerciseId,
+    required this.endsAt,
+    required this.totalSeconds,
+  });
+
+  _ActiveRestTimer copyWith({
+    String? exerciseId,
+    DateTime? endsAt,
+    int? totalSeconds,
+  }) {
+    return _ActiveRestTimer(
+      exerciseId: exerciseId ?? this.exerciseId,
+      endsAt: endsAt ?? this.endsAt,
+      totalSeconds: totalSeconds ?? this.totalSeconds,
+    );
+  }
 }
