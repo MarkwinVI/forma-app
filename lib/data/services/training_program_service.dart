@@ -46,48 +46,279 @@ class TrainingProgramService {
     TrainingProgramType programType = TrainingProgramType.fullBody,
     TrainingSessionType? sessionType,
     Map<TrainingTrack, String> branchSelections = const {},
+    Map<String, dynamic> sessionItemsConfig = const {},
   }) {
     final selectedBranches = resolveSelectedBranches(branchSelections);
 
     switch (programType) {
       case TrainingProgramType.fullBody:
         final currentSessionType = sessionType ?? TrainingSessionType.fullBody;
+        final configuredItems = currentSessionType == TrainingSessionType.rest
+            ? const <TrainingRecommendationItem>[]
+            : _buildConfiguredItems(
+                sessionType: currentSessionType,
+                progressMap: progressMap,
+                sessionItemsConfig: sessionItemsConfig,
+              );
         return DailyTrainingRecommendation(
           programType: programType,
           sessionType: currentSessionType,
           sessionLabel: currentSessionType.label,
           isRestDay: currentSessionType == TrainingSessionType.rest,
-          items: currentSessionType == TrainingSessionType.rest
-              ? const []
-              : _buildItems(_fullBodyBranches(selectedBranches), progressMap),
+          items: configuredItems ??
+              (currentSessionType == TrainingSessionType.rest
+                  ? const []
+                  : _buildItems(
+                      _fullBodyBranches(selectedBranches),
+                      progressMap,
+                    )),
         );
       case TrainingProgramType.pushPull:
         final currentSessionType = sessionType ?? TrainingSessionType.push;
+        final configuredItems = currentSessionType == TrainingSessionType.rest
+            ? const <TrainingRecommendationItem>[]
+            : _buildConfiguredItems(
+                sessionType: currentSessionType,
+                progressMap: progressMap,
+                sessionItemsConfig: sessionItemsConfig,
+              );
         return DailyTrainingRecommendation(
           programType: programType,
           sessionType: currentSessionType,
           sessionLabel: currentSessionType.label,
           isRestDay: currentSessionType == TrainingSessionType.rest,
-          items: _buildPushPullItems(
-            currentSessionType,
-            progressMap,
-            selectedBranches,
-          ),
+          items: configuredItems ??
+              _buildPushPullItems(
+                currentSessionType,
+                progressMap,
+                selectedBranches,
+              ),
         );
       case TrainingProgramType.upperLower:
         final currentSessionType = sessionType ?? TrainingSessionType.upper;
+        final configuredItems = currentSessionType == TrainingSessionType.rest
+            ? const <TrainingRecommendationItem>[]
+            : _buildConfiguredItems(
+                sessionType: currentSessionType,
+                progressMap: progressMap,
+                sessionItemsConfig: sessionItemsConfig,
+              );
         return DailyTrainingRecommendation(
           programType: programType,
           sessionType: currentSessionType,
           sessionLabel: currentSessionType.label,
           isRestDay: currentSessionType == TrainingSessionType.rest,
-          items: _buildUpperLowerItems(
-            currentSessionType,
-            progressMap,
-            selectedBranches,
-          ),
+          items: configuredItems ??
+              _buildUpperLowerItems(
+                currentSessionType,
+                progressMap,
+                selectedBranches,
+              ),
         );
     }
+  }
+
+  List<TrainingRecommendationItem>? _buildConfiguredItems({
+    required TrainingSessionType sessionType,
+    required Map<String, ExerciseStatus> progressMap,
+    required Map<String, dynamic> sessionItemsConfig,
+  }) {
+    final rawSession = sessionItemsConfig[sessionType.dbValue];
+    if (rawSession is! Map) return null;
+
+    final sessionMap = Map<String, dynamic>.from(rawSession);
+    final items = <TrainingRecommendationItem>[];
+
+    for (final component in const ['warmup', 'skill', 'strength', 'cooldown']) {
+      final rawItems = sessionMap[component];
+      if (rawItems is! List) continue;
+
+      for (final rawItem in rawItems.whereType<Map>()) {
+        final configuredItem = _configuredRecommendationItem(
+          component: component,
+          rawItem: Map<String, dynamic>.from(rawItem),
+          progressMap: progressMap,
+        );
+        if (configuredItem != null) {
+          items.add(configuredItem);
+        }
+      }
+    }
+
+    return items;
+  }
+
+  TrainingRecommendationItem? _configuredRecommendationItem({
+    required String component,
+    required Map<String, dynamic> rawItem,
+    required Map<String, ExerciseStatus> progressMap,
+  }) {
+    final kind = rawItem['kind'] as String? ?? 'exercise';
+    final exercise = kind == 'progression'
+        ? _exerciseForConfiguredProgression(rawItem, progressMap, component)
+        : _exerciseForConfiguredSingle(rawItem, component);
+    if (exercise == null) return null;
+
+    final sourceCategory = _sourceCategoryForConfiguredItem(
+      component: component,
+      rawItem: rawItem,
+      exercise: exercise,
+    );
+
+    return TrainingRecommendationItem(
+      track: _trackForConfiguredItem(
+        component: component,
+        sourceCategory: sourceCategory,
+      ),
+      exercise: exercise,
+      status: progressMap[exercise.id] ?? ExerciseStatus.inactive,
+      sourceCategory: sourceCategory,
+      sourceSkillCategoryId: (rawItem['skill_category_id'] as String?) ??
+          ExerciseCatalog.skillCategoryIdForExercise(exercise),
+    );
+  }
+
+  Exercise? _exerciseForConfiguredProgression(
+    Map<String, dynamic> rawItem,
+    Map<String, ExerciseStatus> progressMap,
+    String component,
+  ) {
+    final skillCategoryId = rawItem['skill_category_id'] as String?;
+    final branchId = rawItem['branch_id'] as String?;
+    if (skillCategoryId == null || branchId == null) return null;
+
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    final path = category?.trainingPaths[branchId] ?? const <String>[];
+    final current = _pickCurrentExercise(
+      _TrainingBranch(
+        track: _trackForConfiguredItem(
+          component: component,
+          sourceCategory: category?.track ?? ExerciseCategory.skill,
+        ),
+        sourceCategory: category?.track ?? ExerciseCategory.skill,
+        sourceSkillCategoryId: skillCategoryId,
+        exerciseIds: path,
+      ),
+      progressMap,
+    );
+    if (current == null) return null;
+
+    return _copyExercise(
+      current,
+      programSection: _programSectionForComponent(component),
+    );
+  }
+
+  Exercise? _exerciseForConfiguredSingle(
+    Map<String, dynamic> rawItem,
+    String component,
+  ) {
+    final exerciseId = rawItem['exercise_id'] as String?;
+    final name = rawItem['name'] as String? ?? 'Exercise';
+    final existing =
+        exerciseId == null ? null : ExerciseCatalog.findById(exerciseId);
+
+    if (existing != null) {
+      return _copyExercise(
+        existing,
+        programSection: _programSectionForComponent(component),
+      );
+    }
+
+    return Exercise(
+      id: exerciseId ??
+          "custom_${component}_${name.toLowerCase().replaceAll(' ', '_')}",
+      category: ExerciseCategory.skill,
+      skillCategoryId: '',
+      branchId: 'main',
+      name: name,
+      description:
+          'Custom ${component.replaceAll('cooldown', 'cool-down')} item.',
+      difficulty: 1,
+      treeOrder: 0,
+      programSection: _programSectionForComponent(component),
+    );
+  }
+
+  ExerciseCategory _sourceCategoryForConfiguredItem({
+    required String component,
+    required Map<String, dynamic> rawItem,
+    required Exercise exercise,
+  }) {
+    final skillCategoryId = rawItem['skill_category_id'] as String?;
+    final category = skillCategoryId == null
+        ? null
+        : SkillCategoryCatalog.findById(skillCategoryId);
+    if (category != null) {
+      return category.track;
+    }
+    if (component == 'warmup' || component == 'cooldown') {
+      return ExerciseCategory.skill;
+    }
+    return exercise.category;
+  }
+
+  TrainingTrack _trackForConfiguredItem({
+    required String component,
+    required ExerciseCategory sourceCategory,
+  }) {
+    if (component == 'skill' ||
+        component == 'warmup' ||
+        component == 'cooldown') {
+      return TrainingTrack.skillWork;
+    }
+
+    switch (sourceCategory) {
+      case ExerciseCategory.verticalPush:
+        return TrainingTrack.verticalPush;
+      case ExerciseCategory.horizontalPush:
+        return TrainingTrack.horizontalPush;
+      case ExerciseCategory.verticalPull:
+        return TrainingTrack.verticalPull;
+      case ExerciseCategory.horizontalPull:
+        return TrainingTrack.horizontalPull;
+      case ExerciseCategory.core:
+        return TrainingTrack.core;
+      case ExerciseCategory.squat:
+        return TrainingTrack.squat;
+      case ExerciseCategory.hinge:
+        return TrainingTrack.hinge;
+      case ExerciseCategory.skill:
+        return TrainingTrack.skillWork;
+    }
+  }
+
+  ExerciseProgramSection _programSectionForComponent(String component) {
+    switch (component) {
+      case 'warmup':
+        return ExerciseProgramSection.warmup;
+      case 'skill':
+        return ExerciseProgramSection.skillWork;
+      case 'cooldown':
+        return ExerciseProgramSection.coolDown;
+      case 'strength':
+      default:
+        return ExerciseProgramSection.mainExercises;
+    }
+  }
+
+  Exercise _copyExercise(
+    Exercise exercise, {
+    required ExerciseProgramSection programSection,
+  }) {
+    return Exercise(
+      id: exercise.id,
+      category: exercise.category,
+      skillCategoryId: exercise.skillCategoryId,
+      branchId: exercise.branchId,
+      name: exercise.name,
+      description: exercise.description,
+      difficulty: exercise.difficulty,
+      treeOrder: exercise.treeOrder,
+      prerequisiteIds: exercise.prerequisiteIds,
+      programSection: programSection,
+      imageUrl: exercise.imageUrl,
+    );
   }
 
   List<TrainingSessionType> scheduleCycleFor({

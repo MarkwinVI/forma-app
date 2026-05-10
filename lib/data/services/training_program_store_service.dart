@@ -62,11 +62,13 @@ class TrainingProgramStoreService {
     required TrainingProgramType programType,
     required Map<TrainingTrack, String> branchSelections,
     required RepGoalProfile repGoalProfile,
+    required Map<String, dynamic> sessionItemsConfig,
   }) async {
     final existingProgram = await _fetchActiveProgram(userId);
     final variationRules = <String, dynamic>{
       ...?existingProgram?.variationRules,
       'rep_goal_profile': repGoalProfile.dbValue,
+      'session_items_v1': sessionItemsConfig,
     };
 
     final program = existingProgram == null
@@ -85,6 +87,7 @@ class TrainingProgramStoreService {
       userId: userId,
       programId: program.id,
       programType: programType,
+      previousProgramType: existingProgram?.programType,
     );
 
     await _upsertBranchSelections(userId, branchSelections);
@@ -184,6 +187,7 @@ class TrainingProgramStoreService {
     required String userId,
     required String programId,
     required TrainingProgramType programType,
+    TrainingProgramType? previousProgramType,
   }) async {
     final existingState = await _fetchProgramState(programId);
 
@@ -195,11 +199,26 @@ class TrainingProgramStoreService {
       );
     }
 
+    final sameProgramType =
+        previousProgramType == null || previousProgramType == programType;
+    final nextSessionType = sameProgramType
+        ? existingState.nextSessionType
+        : _remapSessionType(
+            current: existingState.nextSessionType,
+            programType: programType,
+          );
+    final nextStepIndex = sameProgramType
+        ? existingState.nextStepIndex
+        : _stepIndexForSessionType(
+            programType: programType,
+            sessionType: nextSessionType,
+          );
+
     final data = await _client
         .from('user_training_program_state')
         .update({
-          'next_step_index': 0,
-          'next_session_type': _defaultSessionType(programType).dbValue,
+          'next_step_index': nextStepIndex,
+          'next_session_type': nextSessionType.dbValue,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', existingState.id)
@@ -269,6 +288,66 @@ class TrainingProgramStoreService {
         return TrainingSessionType.push;
       case TrainingProgramType.upperLower:
         return TrainingSessionType.upper;
+    }
+  }
+
+  TrainingSessionType _remapSessionType({
+    required TrainingSessionType current,
+    required TrainingProgramType programType,
+  }) {
+    final cycle = scheduleCycleFor(programType: programType);
+    if (cycle.contains(current)) {
+      return current;
+    }
+    if (current == TrainingSessionType.rest) {
+      return TrainingSessionType.rest;
+    }
+    return _defaultSessionType(programType);
+  }
+
+  int _stepIndexForSessionType({
+    required TrainingProgramType programType,
+    required TrainingSessionType sessionType,
+  }) {
+    final cycle = scheduleCycleFor(programType: programType);
+    final index = cycle.indexOf(sessionType);
+    return index >= 0 ? index : 0;
+  }
+
+  List<TrainingSessionType> scheduleCycleFor({
+    required TrainingProgramType programType,
+  }) {
+    switch (programType) {
+      case TrainingProgramType.fullBody:
+        return const [
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.fullBody,
+          TrainingSessionType.rest,
+          TrainingSessionType.rest,
+        ];
+      case TrainingProgramType.pushPull:
+        return const [
+          TrainingSessionType.push,
+          TrainingSessionType.rest,
+          TrainingSessionType.pull,
+          TrainingSessionType.rest,
+          TrainingSessionType.push,
+          TrainingSessionType.pull,
+          TrainingSessionType.rest,
+        ];
+      case TrainingProgramType.upperLower:
+        return const [
+          TrainingSessionType.upper,
+          TrainingSessionType.rest,
+          TrainingSessionType.lower,
+          TrainingSessionType.rest,
+          TrainingSessionType.upper,
+          TrainingSessionType.lower,
+          TrainingSessionType.rest,
+        ];
     }
   }
 }

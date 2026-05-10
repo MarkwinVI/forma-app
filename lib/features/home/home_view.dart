@@ -39,6 +39,7 @@ class _HomeViewState extends State<HomeView> {
   String? _scheduleVariant;
   Map<TrainingTrack, String> _branchSelections = {};
   RepGoalProfile _repGoalProfile = RepGoalProfile.balanced;
+  Map<String, dynamic> _sessionItemsConfig = const {};
   int _nextStepIndex = 0;
   TrainingSessionType _nextSessionType = TrainingSessionType.fullBody;
 
@@ -82,6 +83,7 @@ class _HomeViewState extends State<HomeView> {
       };
       _repGoalProfile =
           logicSnapshot?.repGoalProfile ?? RepGoalProfile.balanced;
+      _sessionItemsConfig = _sessionItemsConfigFor(logicSnapshot?.program);
       _nextStepIndex = logicSnapshot?.state.nextStepIndex ?? 0;
       _nextSessionType =
           logicSnapshot?.state.nextSessionType ?? TrainingSessionType.fullBody;
@@ -90,6 +92,7 @@ class _HomeViewState extends State<HomeView> {
         programType: _selectedProgramType,
         sessionType: _nextSessionType,
         branchSelections: _branchSelections,
+        sessionItemsConfig: _sessionItemsConfig,
       );
       _loading = false;
     });
@@ -130,6 +133,7 @@ class _HomeViewState extends State<HomeView> {
     required TrainingProgramType programType,
     required Map<TrainingTrack, String> branchSelections,
     required RepGoalProfile repGoalProfile,
+    required Map<String, dynamic> sessionItemsConfig,
   }) async {
     final userId = AuthService().currentUser?.id;
     if (userId == null) return;
@@ -139,6 +143,7 @@ class _HomeViewState extends State<HomeView> {
       programType: programType,
       branchSelections: branchSelections,
       repGoalProfile: repGoalProfile,
+      sessionItemsConfig: sessionItemsConfig,
     );
 
     if (!mounted) return;
@@ -151,6 +156,7 @@ class _HomeViewState extends State<HomeView> {
         ...snapshot.branchSelections,
       };
       _repGoalProfile = snapshot.repGoalProfile;
+      _sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
       _nextStepIndex = snapshot.state.nextStepIndex;
       _nextSessionType = snapshot.state.nextSessionType;
       _recommendation = _trainingProgramService.buildToday(
@@ -158,6 +164,7 @@ class _HomeViewState extends State<HomeView> {
         programType: _selectedProgramType,
         sessionType: _nextSessionType,
         branchSelections: _branchSelections,
+        sessionItemsConfig: _sessionItemsConfig,
       );
     });
   }
@@ -172,6 +179,7 @@ class _HomeViewState extends State<HomeView> {
         frequencyPerWeek: 3,
         variationRules: {
           'rep_goal_profile': _repGoalProfile.dbValue,
+          'session_items_v1': _sessionItemsConfig,
         },
         isActive: true,
       ),
@@ -228,6 +236,14 @@ class _HomeViewState extends State<HomeView> {
               ),
       ),
     );
+  }
+
+  Map<String, dynamic> _sessionItemsConfigFor(UserTrainingProgram? program) {
+    final raw = program?.variationRules['session_items_v1'];
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return const {};
   }
 }
 

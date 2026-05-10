@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/widgets/loading_indicator.dart';
+import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
+import '../exercises/exercise_detail_view.dart';
 
 const _bg = Color(0xFF000000);
 const _group = Color(0xFF1C1C1E);
@@ -26,6 +30,7 @@ class TrainingProgramLogicView extends StatefulWidget {
     required TrainingProgramType programType,
     required Map<TrainingTrack, String> branchSelections,
     required RepGoalProfile repGoalProfile,
+    required Map<String, dynamic> sessionItemsConfig,
   }) onSave;
 
   const TrainingProgramLogicView({
@@ -46,6 +51,9 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
   late TrainingProgramType _selectedProgramType;
   late Map<TrainingTrack, String> _selectedBranches;
   late RepGoalProfile _repGoalProfile;
+  late Map<TrainingSessionType, _SessionComponent?> _expandedSessionComponents;
+  late Map<TrainingSessionType,
+      Map<_SessionComponent, List<_EditableSessionItem>>> _sessionItems;
   bool _saving = false;
 
   @override
@@ -57,6 +65,10 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
       ...widget.initialLogic.branchSelections,
     };
     _repGoalProfile = widget.initialLogic.repGoalProfile;
+    _expandedSessionComponents = _defaultExpandedSessionComponents(
+      _selectedProgramType,
+    );
+    _sessionItems = _buildInitialSessionItems(_selectedProgramType);
   }
 
   Map<TrainingTrack, TrainingBranchOption> get _resolvedBranches =>
@@ -76,6 +88,7 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
         programType: _selectedProgramType,
         branchSelections: _selectedBranches,
         repGoalProfile: _repGoalProfile,
+        sessionItemsConfig: _serializeSessionItems(),
       );
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -92,12 +105,7 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
   Widget build(BuildContext context) {
     final split = _selectedProgramType;
     final repGoal = _repGoalProfile;
-    final skillOption = _resolvedBranches[TrainingTrack.skillWork]!;
-    final skillExercise = _programService.currentExerciseForOption(
-      skillOption,
-      widget.progressMap,
-    );
-    final totalTracks = _strengthTracks.length + 1;
+    final sessionBlocks = _buildSessionBlocks();
 
     return Scaffold(
       backgroundColor: _bg,
@@ -176,164 +184,162 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
                           onTap: () => _openSplitScreen(context),
                         ),
                         _SettingsRow(
+                          last: true,
                           icon: Icons.adjust_outlined,
                           iconColor: _accent,
                           title: 'Rep Target',
                           value: repGoal.label,
                           onTap: () => _openRepGoalScreen(context),
                         ),
-                        _SettingsRow(
-                          last: true,
-                          icon: Icons.view_timeline_outlined,
-                          iconColor: _text2,
-                          title: 'Block',
-                          value: 'Program logic',
-                          onTap: () => _openInfoScreen(
-                            context,
-                            title: 'Block',
-                            footer:
-                                'This screen explains how the current split, rep target, and branch choices combine into one active training plan.',
-                            rows: const [
-                              _StaticRowData(
-                                title: 'Current focus',
-                                value: 'Editable',
-                              ),
-                              _StaticRowData(
-                                title: 'Scope',
-                                value: 'Split · Rep target · Tracks',
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 22),
-                    const _SectionLabel(text: 'Session'),
-                    _SettingsGroup(
-                      footer:
-                          'Every session runs warm-up, skill work, strength, then cool-down.',
-                      children: [
-                        _SettingsRow(
-                          first: true,
-                          icon: Icons.wb_sunny_outlined,
-                          iconColor: _warm,
-                          title: 'Warm-up',
-                          value: 'System',
-                          onTap: () => _openInfoScreen(
-                            context,
+                    for (var i = 0; i < sessionBlocks.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 22),
+                      _SectionLabel(text: sessionBlocks[i].title),
+                      _SettingsGroup(
+                        footer: sessionBlocks[i].footer,
+                        children: [
+                          _ComponentAccordionRow(
                             title: 'Warm-up',
-                            footer:
-                                'Joint-by-joint prep so the work surfaces are ready. Keep it short and specific.',
-                            rows: const [
-                              _StaticRowData(
-                                title: 'Type',
-                                value: 'Built in',
-                              ),
-                              _StaticRowData(
-                                title: 'Purpose',
-                                value: 'Prepare shoulders, wrists, hips',
-                              ),
-                            ],
-                          ),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.auto_awesome_motion_outlined,
-                          iconColor: _skill,
-                          title: 'Skill Work',
-                          sub: _trackSubline(
-                            skillOption,
-                            skillExercise,
-                            _repGoalProfile,
-                          ),
-                          value: skillOption.title,
-                          onTap: () => _openTrackScreen(
-                            context,
-                            track: TrainingTrack.skillWork,
-                          ),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.fitness_center_outlined,
-                          iconColor: _accent,
-                          title: 'Strength',
-                          value: '$totalTracks tracks',
-                          onTap: () => _openStrengthScreen(context),
-                        ),
-                        _SettingsRow(
-                          last: true,
-                          icon: Icons.airline_seat_flat_outlined,
-                          iconColor: _warm,
-                          title: 'Cool-down',
-                          value: 'System',
-                          onTap: () => _openInfoScreen(
-                            context,
-                            title: 'Cool-down',
-                            footer:
-                                'Down-regulate and lock in whatever mobility the session earned while the tissue is warm.',
-                            rows: const [
-                              _StaticRowData(
-                                title: 'Type',
-                                value: 'Built in',
-                              ),
-                              _StaticRowData(
-                                title: 'Purpose',
-                                value: 'Breathing · Mobility',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 22),
-                    const _SectionLabel(text: 'Schedule'),
-                    _SettingsGroup(
-                      footer:
-                          '${_programService.scheduleCycleFor(programType: split).where((day) => day != TrainingSessionType.rest).length} training days per week.',
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              for (final day
-                                  in _programService.scheduleCycleFor(
-                                programType: split,
-                              ))
-                                Expanded(
-                                  child: Container(
-                                    height: 48,
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 3),
-                                    decoration: BoxDecoration(
-                                      color: day == TrainingSessionType.rest
-                                          ? Colors.white.withValues(alpha: 0.04)
-                                          : _accentDim,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: day == TrainingSessionType.rest
-                                            ? Colors.transparent
-                                            : _accent.withValues(alpha: 0.30),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        day == TrainingSessionType.rest
-                                            ? 'Rest'
-                                            : _shortDay(day),
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: day == TrainingSessionType.rest
-                                              ? _text3
-                                              : _accent,
+                            count: '${sessionBlocks[i].warmupItems.length}',
+                            expanded: _expandedSessionComponents[
+                                    sessionBlocks[i].sessionType] ==
+                                _SessionComponent.warmup,
+                            accentColor: _warm,
+                            onToggle: () => _toggleSessionComponent(
+                              sessionBlocks[i].sessionType,
+                              _SessionComponent.warmup,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: _buildSessionItemsSection(
+                                context: context,
+                                items: sessionBlocks[i].warmupItems,
+                                sessionType: sessionBlocks[i].sessionType,
+                                component: _SessionComponent.warmup,
+                                defaultTone: _warm,
+                                onItemTap: (item) =>
+                                    _exerciseDetailTapHandler(item) ??
+                                    () => _openInfoScreen(
+                                          context,
+                                          title: 'Warm-up',
+                                          footer:
+                                              'Joint-by-joint prep so the work surfaces are ready. Keep it short and specific.',
+                                          rows: [
+                                            _StaticRowData(
+                                              title: 'Block',
+                                              value: sessionBlocks[i].title,
+                                            ),
+                                            const _StaticRowData(
+                                              title: 'Type',
+                                              value: 'Built in',
+                                            ),
+                                            const _StaticRowData(
+                                              title: 'Purpose',
+                                              value:
+                                                  'Prepare shoulders, wrists, hips',
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          _ComponentAccordionRow(
+                            title: 'Skill Work',
+                            count: '${sessionBlocks[i].skillItems.length}',
+                            expanded: _expandedSessionComponents[
+                                    sessionBlocks[i].sessionType] ==
+                                _SessionComponent.skill,
+                            accentColor: _skill,
+                            onToggle: () => _toggleSessionComponent(
+                              sessionBlocks[i].sessionType,
+                              _SessionComponent.skill,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: _buildSessionItemsSection(
+                                context: context,
+                                items: sessionBlocks[i].skillItems,
+                                sessionType: sessionBlocks[i].sessionType,
+                                component: _SessionComponent.skill,
+                                defaultTone: _skill,
+                                onItemTap: _exerciseDetailTapHandler,
+                              ),
+                            ),
+                          ),
+                          _ComponentAccordionRow(
+                            title: 'Strength',
+                            count: '${sessionBlocks[i].strengthItems.length}',
+                            expanded: _expandedSessionComponents[
+                                    sessionBlocks[i].sessionType] ==
+                                _SessionComponent.strength,
+                            accentColor: _accent,
+                            onToggle: () => _toggleSessionComponent(
+                              sessionBlocks[i].sessionType,
+                              _SessionComponent.strength,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: _buildSessionItemsSection(
+                                context: context,
+                                items: sessionBlocks[i].strengthItems,
+                                sessionType: sessionBlocks[i].sessionType,
+                                component: _SessionComponent.strength,
+                                defaultTone: _accent,
+                                onItemTap: (item) =>
+                                    _exerciseDetailTapHandler(item) ??
+                                    () => _openStrengthScreen(context),
+                              ),
+                            ),
+                          ),
+                          _ComponentAccordionRow(
+                            title: 'Cool-down',
+                            count: '${sessionBlocks[i].cooldownItems.length}',
+                            expanded: _expandedSessionComponents[
+                                    sessionBlocks[i].sessionType] ==
+                                _SessionComponent.cooldown,
+                            accentColor: _warm,
+                            onToggle: () => _toggleSessionComponent(
+                              sessionBlocks[i].sessionType,
+                              _SessionComponent.cooldown,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: _buildSessionItemsSection(
+                                context: context,
+                                items: sessionBlocks[i].cooldownItems,
+                                sessionType: sessionBlocks[i].sessionType,
+                                component: _SessionComponent.cooldown,
+                                defaultTone: _warm,
+                                onItemTap: (item) =>
+                                    _exerciseDetailTapHandler(item) ??
+                                    () => _openInfoScreen(
+                                          context,
+                                          title: 'Cool-down',
+                                          footer:
+                                              'Down-regulate and lock in whatever mobility the session earned while the tissue is warm.',
+                                          rows: [
+                                            _StaticRowData(
+                                              title: 'Block',
+                                              value: sessionBlocks[i].title,
+                                            ),
+                                            const _StaticRowData(
+                                              title: 'Type',
+                                              value: 'Built in',
+                                            ),
+                                            const _StaticRowData(
+                                              title: 'Purpose',
+                                              value: 'Breathing · Mobility',
+                                            ),
+                                          ],
+                                        ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 22),
                     _SettingsGroup(
                       children: [
@@ -389,23 +395,248 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
     }
   }
 
-  String _trackSubline(
-    TrainingBranchOption option,
-    Exercise? currentExercise,
-    RepGoalProfile profile,
+  Map<TrainingSessionType, _SessionComponent?>
+      _defaultExpandedSessionComponents(
+    TrainingProgramType programType,
   ) {
-    final rep = switch (profile) {
-      RepGoalProfile.strength => '3–8 reps',
-      RepGoalProfile.balanced => '3x8 reps',
-      RepGoalProfile.volume => '3x12 reps',
+    return {
+      for (final sessionType
+          in _programService.trainingDaysForProgramType(programType))
+        sessionType: null,
     };
-    return '${option.trainingPathId} · ${currentExercise?.name ?? option.title} · $rep';
   }
 
-  String _shortDay(TrainingSessionType type) {
-    switch (type) {
+  void _toggleSessionComponent(
+    TrainingSessionType sessionType,
+    _SessionComponent component,
+  ) {
+    setState(() {
+      final current = _expandedSessionComponents[sessionType];
+      _expandedSessionComponents[sessionType] =
+          current == component ? null : component;
+    });
+  }
+
+  List<_ProgramSessionBlock> _buildSessionBlocks() {
+    final blocks = <_ProgramSessionBlock>[];
+
+    for (final sessionType
+        in _programService.trainingDaysForProgramType(_selectedProgramType)) {
+      final itemsForSession = _sessionItems[sessionType] ??
+          const <_SessionComponent, List<_EditableSessionItem>>{};
+
+      blocks.add(
+        _ProgramSessionBlock(
+          sessionType: sessionType,
+          title: _sessionBlockTitle(sessionType),
+          warmupItems: List<_EditableSessionItem>.from(
+            itemsForSession[_SessionComponent.warmup] ?? const [],
+          ),
+          skillItems: List<_EditableSessionItem>.from(
+            itemsForSession[_SessionComponent.skill] ?? const [],
+          ),
+          strengthItems: List<_EditableSessionItem>.from(
+            itemsForSession[_SessionComponent.strength] ?? const [],
+          ),
+          cooldownItems: List<_EditableSessionItem>.from(
+            itemsForSession[_SessionComponent.cooldown] ?? const [],
+          ),
+          footer: _sessionBlockFooter(sessionType),
+        ),
+      );
+    }
+
+    return blocks;
+  }
+
+  Map<TrainingSessionType, Map<_SessionComponent, List<_EditableSessionItem>>>
+      _buildInitialSessionItems(TrainingProgramType programType) {
+    final savedConfig = _savedSessionItemsConfig();
+    if (savedConfig.isEmpty) {
+      return _buildDefaultSessionItems(programType);
+    }
+
+    final sessionItems = <TrainingSessionType,
+        Map<_SessionComponent, List<_EditableSessionItem>>>{};
+    final defaultItems = _buildDefaultSessionItems(programType);
+
+    for (final sessionType
+        in _programService.trainingDaysForProgramType(programType)) {
+      final rawSession = savedConfig[sessionType.dbValue];
+      if (rawSession is! Map) {
+        sessionItems[sessionType] = defaultItems[sessionType]!;
+        continue;
+      }
+
+      final sessionMap = Map<String, dynamic>.from(rawSession);
+      sessionItems[sessionType] = {
+        for (final component in _SessionComponent.values)
+          component: _deserializeSessionItemsForComponent(
+            sessionMap[_sessionComponentKey(component)],
+          ),
+      };
+    }
+
+    return sessionItems;
+  }
+
+  Map<TrainingSessionType, Map<_SessionComponent, List<_EditableSessionItem>>>
+      _buildDefaultSessionItems(TrainingProgramType programType) {
+    final items = <TrainingSessionType,
+        Map<_SessionComponent, List<_EditableSessionItem>>>{};
+    final skillOption = _resolvedBranches[TrainingTrack.skillWork]!;
+    final skillExercise = _programService.currentExerciseForOption(
+      skillOption,
+      widget.progressMap,
+    );
+
+    for (final sessionType
+        in _programService.trainingDaysForProgramType(programType)) {
+      final recommendation = _programService.buildToday(
+        progressMap: widget.progressMap,
+        programType: programType,
+        sessionType: sessionType,
+        branchSelections: _selectedBranches,
+      );
+
+      final strengthItems = <_EditableSessionItem>[];
+      for (final item in recommendation.items) {
+        if (item.track == TrainingTrack.skillWork) continue;
+        strengthItems.add(_editableItemFromRecommendation(item));
+      }
+
+      items[sessionType] = {
+        _SessionComponent.warmup: [],
+        _SessionComponent.skill: [
+          _EditableSessionItem.progression(
+            id: 'skill-${sessionType.dbValue}',
+            name: skillExercise?.name ?? skillOption.title,
+            skillCategoryId: skillOption.sourceSkillCategoryId,
+            branchId: skillOption.trainingPathId,
+            exerciseId: skillExercise?.id,
+          ),
+        ],
+        _SessionComponent.strength: strengthItems,
+        _SessionComponent.cooldown: [],
+      };
+    }
+
+    return items;
+  }
+
+  Map<String, dynamic> _savedSessionItemsConfig() {
+    final raw = widget.initialLogic.program.variationRules['session_items_v1'];
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return const {};
+  }
+
+  Map<String, dynamic> _serializeSessionItems() {
+    final serialized = <String, dynamic>{};
+
+    for (final sessionEntry in _sessionItems.entries) {
+      final sessionMap = <String, dynamic>{};
+
+      for (final componentEntry in sessionEntry.value.entries) {
+        sessionMap[_sessionComponentKey(componentEntry.key)] = [
+          for (final item in componentEntry.value) _serializeSessionItem(item),
+        ];
+      }
+
+      serialized[sessionEntry.key.dbValue] = sessionMap;
+    }
+
+    return serialized;
+  }
+
+  Map<String, dynamic> _serializeSessionItem(_EditableSessionItem item) {
+    return {
+      'id': item.id,
+      'kind': item.kind.name,
+      'name': item.name,
+      if (item.skillCategoryId != null)
+        'skill_category_id': item.skillCategoryId,
+      if (item.branchId != null) 'branch_id': item.branchId,
+      if (item.exerciseId != null) 'exercise_id': item.exerciseId,
+      if (item.subtitle != null) 'subtitle': item.subtitle,
+      if (item.isSystem) 'is_system': true,
+    };
+  }
+
+  List<_EditableSessionItem> _deserializeSessionItemsForComponent(dynamic raw) {
+    if (raw is! List) return const [];
+
+    return raw
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map(_deserializeSessionItem)
+        .toList();
+  }
+
+  _EditableSessionItem _deserializeSessionItem(Map<String, dynamic> item) {
+    final kind = item['kind'] as String? ?? 'exercise';
+    final name = item['name'] as String? ??
+        (item['exercise_id'] as String? ?? 'Exercise');
+
+    if (kind == _EditableSessionItemKind.progression.name) {
+      return _EditableSessionItem.progression(
+        id: item['id'] as String? ?? _newSessionItemId(),
+        name: name,
+        skillCategoryId: item['skill_category_id'] as String? ?? '',
+        branchId: item['branch_id'] as String? ?? 'main',
+        exerciseId: item['exercise_id'] as String?,
+      );
+    }
+
+    return _EditableSessionItem.exercise(
+      id: item['id'] as String? ?? _newSessionItemId(),
+      name: name,
+      exerciseId: item['exercise_id'] as String?,
+      subtitle: item['subtitle'] as String?,
+      isSystem: item['is_system'] as bool? ?? false,
+    );
+  }
+
+  String _sessionComponentKey(_SessionComponent component) => component.name;
+
+  _EditableSessionItem _editableItemFromRecommendation(
+    TrainingRecommendationItem item,
+  ) {
+    final category = SkillCategoryCatalog.findById(item.sourceSkillCategoryId);
+    final selectedOption = _resolvedBranches[item.track];
+    final selectedBranchId =
+        selectedOption?.sourceSkillCategoryId == item.sourceSkillCategoryId
+            ? selectedOption?.trainingPathId
+            : null;
+    if (category != null) {
+      return _EditableSessionItem.progression(
+        id: 'strength-${item.track.dbValue}-${item.exercise.id}',
+        name: item.exercise.name,
+        skillCategoryId: item.sourceSkillCategoryId,
+        branchId: selectedBranchId ?? item.exercise.branchId,
+        exerciseId: item.exercise.id,
+      );
+    }
+
+    return _EditableSessionItem.exercise(
+      id: 'strength-${item.track.dbValue}-${item.exercise.id}',
+      name: item.exercise.name,
+      exerciseId: item.exercise.id,
+    );
+  }
+
+  String _titleCase(String value) {
+    return value
+        .split('_')
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _sessionBlockTitle(TrainingSessionType sessionType) {
+    switch (sessionType) {
       case TrainingSessionType.fullBody:
-        return 'Full';
+        return 'Full Body';
       case TrainingSessionType.push:
         return 'Push';
       case TrainingSessionType.pull:
@@ -419,6 +650,646 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
     }
   }
 
+  String _sessionBlockFooter(TrainingSessionType sessionType) {
+    switch (sessionType) {
+      case TrainingSessionType.fullBody:
+        return 'This block trains every main pattern in a single session.';
+      case TrainingSessionType.push:
+        return 'Push days bias pressing strength while keeping squat and trunk work in the session.';
+      case TrainingSessionType.pull:
+        return 'Pull days bias back and pulling strength while keeping hinge and trunk work in the session.';
+      case TrainingSessionType.upper:
+        return 'Upper days keep the skill opener and all main pressing and pulling patterns together.';
+      case TrainingSessionType.lower:
+        return 'Lower days focus on squat, hinge, and trunk strength with the same warm-up and cool-down structure.';
+      case TrainingSessionType.rest:
+        return 'Rest day';
+    }
+  }
+
+  Future<void> _openItemChoiceSheet(
+    BuildContext context, {
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    _EditableSessionItem? existingItem,
+  }) async {
+    final selection = await showModalBottomSheet<_ItemChoiceAction>(
+      context: context,
+      backgroundColor: _group,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  existingItem == null ? 'Add Item' : 'Switch Item',
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                    color: _text,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  existingItem == null
+                      ? 'Choose how you want to add to ${_sessionComponentLabel(component).toLowerCase()} for ${_sessionBlockTitle(sessionType).toLowerCase()}.'
+                      : 'Replace this item with a progression path or a standalone exercise.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    height: 1.45,
+                    color: _text2,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _AddItemChoiceTile(
+                  title: 'SKILL TREE',
+                  subtitle: 'Follow a skill-tree path that advances over time.',
+                  tone: _accent,
+                  icon: Icons.timeline_rounded,
+                  onTap: () => Navigator.of(sheetContext).pop(
+                    _ItemChoiceAction.progression,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _AddItemChoiceTile(
+                  title: 'SINGLE LIFT',
+                  subtitle: 'Drop in one standalone movement without a tree.',
+                  tone: _red,
+                  icon: Icons.fitness_center_rounded,
+                  onTap: () => Navigator.of(sheetContext).pop(
+                    _ItemChoiceAction.exercise,
+                  ),
+                ),
+                if (existingItem != null) ...[
+                  const SizedBox(height: 14),
+                  TextButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(
+                      _ItemChoiceAction.remove,
+                    ),
+                    child: Text(
+                      'Remove item',
+                      style: GoogleFonts.robotoMono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.8,
+                        color: _red,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selection == null || !mounted) return;
+
+    if (selection == _ItemChoiceAction.remove && existingItem != null) {
+      _removeSessionItem(
+        sessionType: sessionType,
+        component: component,
+        itemId: existingItem.id,
+      );
+      return;
+    }
+
+    if (selection == _ItemChoiceAction.progression) {
+      final result = await _openProgressionPickerSheet(
+        this.context,
+        sessionType: sessionType,
+        component: component,
+        currentItem: existingItem?.kind == _EditableSessionItemKind.progression
+            ? existingItem
+            : null,
+      );
+      if (result == null || !mounted) return;
+      _upsertSessionItem(
+        sessionType: sessionType,
+        component: component,
+        item: _EditableSessionItem.progression(
+          id: existingItem?.id ?? _newSessionItemId(),
+          name: result.exerciseName,
+          skillCategoryId: result.skillCategoryId,
+          branchId: result.branchId,
+          exerciseId: result.exerciseId,
+        ),
+        replaceId: existingItem?.id,
+      );
+      return;
+    }
+
+    if (selection == _ItemChoiceAction.exercise) {
+      final result = await _openExercisePickerSheet(
+        this.context,
+        sessionType: sessionType,
+        component: component,
+        currentItem: existingItem?.kind == _EditableSessionItemKind.exercise
+            ? existingItem
+            : null,
+      );
+      if (result == null || !mounted) return;
+      _upsertSessionItem(
+        sessionType: sessionType,
+        component: component,
+        item: _EditableSessionItem.exercise(
+          id: existingItem?.id ?? _newSessionItemId(),
+          name: result.name,
+          exerciseId: result.exerciseId,
+          isSystem: false,
+        ),
+        replaceId: existingItem?.id,
+      );
+    }
+  }
+
+  Future<_ProgressionPickerResult?> _openProgressionPickerSheet(
+    BuildContext context, {
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    _EditableSessionItem? currentItem,
+  }) async {
+    final categories = _progressionCategoriesFor(sessionType, component);
+    if (categories.isEmpty) return null;
+
+    return showModalBottomSheet<_ProgressionPickerResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (sheetContext) => _ProgressionPickerSheet(
+        categories: categories,
+        currentItem: currentItem,
+        branchLabelBuilder: _displayBranchLabel,
+        currentExerciseBuilder: _currentExerciseForProgression,
+      ),
+    );
+  }
+
+  Future<_ExercisePickerResult?> _openExercisePickerSheet(
+    BuildContext context, {
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    _EditableSessionItem? currentItem,
+  }) async {
+    return showModalBottomSheet<_ExercisePickerResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (sheetContext) => _ExercisePickerSheet(
+        title: currentItem == null ? 'Add Exercise' : 'Switch Exercise',
+        eyebrow: _sessionComponentLabel(component).toUpperCase(),
+        suggestions: _exerciseSuggestionsFor(sessionType, component),
+        exerciseIdResolver: _exerciseIdForName,
+        currentName: currentItem?.name,
+      ),
+    );
+  }
+
+  void _upsertSessionItem({
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    required _EditableSessionItem item,
+    String? replaceId,
+  }) {
+    setState(() {
+      final sessionMap = _sessionItems[sessionType]!;
+      final currentList = List<_EditableSessionItem>.from(
+        sessionMap[component] ?? const [],
+      );
+
+      if (replaceId != null) {
+        final index = currentList.indexWhere((entry) => entry.id == replaceId);
+        if (index != -1) {
+          currentList[index] = item;
+        } else {
+          currentList.add(item);
+        }
+      } else {
+        currentList.add(item);
+      }
+
+      sessionMap[component] = currentList;
+    });
+  }
+
+  void _removeSessionItem({
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    required String itemId,
+  }) {
+    setState(() {
+      final sessionMap = _sessionItems[sessionType]!;
+      sessionMap[component] = List<_EditableSessionItem>.from(
+        sessionMap[component] ?? const [],
+      )..removeWhere((item) => item.id == itemId);
+    });
+  }
+
+  void _reorderSessionItems({
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    required int oldIndex,
+    required int newIndex,
+  }) {
+    setState(() {
+      final sessionMap = _sessionItems[sessionType]!;
+      final items = List<_EditableSessionItem>.from(
+        sessionMap[component] ?? const [],
+      );
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = items.removeAt(oldIndex);
+      items.insert(newIndex, item);
+      sessionMap[component] = items;
+    });
+  }
+
+  String _newSessionItemId() {
+    return DateTime.now().microsecondsSinceEpoch.toString();
+  }
+
+  Widget _buildSessionItemsSection({
+    required BuildContext context,
+    required List<_EditableSessionItem> items,
+    required TrainingSessionType sessionType,
+    required _SessionComponent component,
+    required Color defaultTone,
+    required VoidCallback? Function(_EditableSessionItem item) onItemTap,
+  }) {
+    return Column(
+      children: [
+        if (items.isNotEmpty)
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            itemCount: items.length,
+            onReorder: (oldIndex, newIndex) => _reorderSessionItems(
+              sessionType: sessionType,
+              component: component,
+              oldIndex: oldIndex,
+              newIndex: newIndex,
+            ),
+            proxyDecorator: (child, _, __) => Material(
+              color: Colors.transparent,
+              child: child,
+            ),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return _SessionDetailTile(
+                key: ValueKey('${component.name}-${item.id}'),
+                title: item.name,
+                eyebrow: _sessionItemEyebrowText(item)?.toUpperCase(),
+                subtitle: _sessionItemSubtitle(item),
+                tone: _sessionItemTone(item, defaultTone),
+                emphasized: item.kind == _EditableSessionItemKind.progression,
+                onTap: onItemTap(item),
+                onSwitch: () => _openItemChoiceSheet(
+                  this.context,
+                  sessionType: sessionType,
+                  component: component,
+                  existingItem: item,
+                ),
+                leading: ReorderableDragStartListener(
+                  index: index,
+                  child: _TileDragHandle(
+                    tone: _sessionItemTone(item, defaultTone),
+                  ),
+                ),
+              );
+            },
+          ),
+        _SessionAddItemButton(
+          onTap: () => _openItemChoiceSheet(
+            context,
+            sessionType: sessionType,
+            component: component,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<SkillCategory> _progressionCategoriesFor(
+    TrainingSessionType sessionType,
+    _SessionComponent component,
+  ) {
+    if (component != _SessionComponent.strength) {
+      return SkillCategoryCatalog.browsable();
+    }
+
+    final allowedTracks = switch (sessionType) {
+      TrainingSessionType.fullBody => {
+          ExerciseCategory.verticalPush,
+          ExerciseCategory.horizontalPush,
+          ExerciseCategory.verticalPull,
+          ExerciseCategory.horizontalPull,
+          ExerciseCategory.core,
+          ExerciseCategory.squat,
+        },
+      TrainingSessionType.push => {
+          ExerciseCategory.verticalPush,
+          ExerciseCategory.horizontalPush,
+          ExerciseCategory.core,
+          ExerciseCategory.squat,
+        },
+      TrainingSessionType.pull => {
+          ExerciseCategory.verticalPull,
+          ExerciseCategory.horizontalPull,
+          ExerciseCategory.core,
+        },
+      TrainingSessionType.upper => {
+          ExerciseCategory.verticalPush,
+          ExerciseCategory.horizontalPush,
+          ExerciseCategory.verticalPull,
+          ExerciseCategory.horizontalPull,
+        },
+      TrainingSessionType.lower => {
+          ExerciseCategory.squat,
+          ExerciseCategory.core,
+        },
+      TrainingSessionType.rest => <ExerciseCategory>{},
+    };
+
+    return SkillCategoryCatalog.browsable()
+        .where(
+          (category) =>
+              allowedTracks.contains(category.track) &&
+              _selectableBranchesForCategory(category).isNotEmpty,
+        )
+        .toList();
+  }
+
+  List<String> _exerciseSuggestionsFor(
+    TrainingSessionType sessionType,
+    _SessionComponent component,
+  ) {
+    if (component == _SessionComponent.warmup) {
+      return const [
+        'Cat-Cow',
+        'Wrist Circles',
+        'Hip Openers',
+        'Shoulder Pass-throughs',
+        'World\'s Greatest Stretch',
+        'Spinal Twist',
+      ];
+    }
+    if (component == _SessionComponent.cooldown) {
+      return const [
+        'Couch Stretch',
+        'Pigeon Stretch',
+        'Foam Roll Quads',
+        'Foam Roll Lats',
+        'Diaphragmatic Breathing',
+      ];
+    }
+
+    final Set<ExerciseCategory> allowedCategories;
+    if (component == _SessionComponent.skill) {
+      allowedCategories = ExerciseCategory.values.toSet();
+    } else if (component == _SessionComponent.strength) {
+      allowedCategories = switch (sessionType) {
+        TrainingSessionType.fullBody => {
+            ExerciseCategory.verticalPush,
+            ExerciseCategory.horizontalPush,
+            ExerciseCategory.verticalPull,
+            ExerciseCategory.horizontalPull,
+            ExerciseCategory.core,
+            ExerciseCategory.squat,
+            ExerciseCategory.hinge,
+          },
+        TrainingSessionType.push => {
+            ExerciseCategory.verticalPush,
+            ExerciseCategory.horizontalPush,
+            ExerciseCategory.core,
+            ExerciseCategory.squat,
+          },
+        TrainingSessionType.pull => {
+            ExerciseCategory.verticalPull,
+            ExerciseCategory.horizontalPull,
+            ExerciseCategory.core,
+            ExerciseCategory.hinge,
+          },
+        TrainingSessionType.upper => {
+            ExerciseCategory.verticalPush,
+            ExerciseCategory.horizontalPush,
+            ExerciseCategory.verticalPull,
+            ExerciseCategory.horizontalPull,
+          },
+        TrainingSessionType.lower => {
+            ExerciseCategory.squat,
+            ExerciseCategory.core,
+            ExerciseCategory.hinge,
+          },
+        TrainingSessionType.rest => <ExerciseCategory>{},
+      };
+    } else {
+      allowedCategories = <ExerciseCategory>{};
+    }
+
+    final names = ExerciseCatalog.all()
+        .where((exercise) => allowedCategories.contains(exercise.category))
+        .map((exercise) => exercise.name)
+        .toSet()
+        .toList()
+      ..sort();
+    return names;
+  }
+
+  String? _sessionItemEyebrowText(_EditableSessionItem item) {
+    if (item.isSystem) return null;
+    if (item.kind == _EditableSessionItemKind.exercise) {
+      return 'Standalone exercise';
+    }
+    final category = item.skillCategoryId == null
+        ? null
+        : SkillCategoryCatalog.findById(item.skillCategoryId!);
+    if (category == null) {
+      return 'Standalone exercise';
+    }
+    return '${_singularize(category.title)} progression';
+  }
+
+  String? _sessionItemSubtitle(_EditableSessionItem item) {
+    if (item.kind == _EditableSessionItemKind.progression &&
+        item.skillCategoryId != null &&
+        item.branchId != null) {
+      return _branchLabel(item.skillCategoryId!, item.branchId!);
+    }
+    return item.subtitle;
+  }
+
+  Color _sessionItemTone(_EditableSessionItem item, Color defaultTone) {
+    if (item.kind == _EditableSessionItemKind.exercise && !item.isSystem) {
+      return _red;
+    }
+    return defaultTone;
+  }
+
+  String _branchLabel(String skillCategoryId, String branchId) {
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    if (category == null) return _titleCase(branchId);
+    for (final branch in category.branches) {
+      if (branch.id == branchId) {
+        return _displayBranchLabel(category, branch);
+      }
+    }
+    return _titleCase(branchId);
+  }
+
+  List<SkillCategoryBranch> _selectableBranchesForCategory(
+    SkillCategory category,
+  ) {
+    return category.branches
+        .where(
+          (branch) => (category.trainingPaths[branch.id] ?? const <String>[])
+              .isNotEmpty,
+        )
+        .toList();
+  }
+
+  String _displayBranchLabel(
+    SkillCategory category,
+    SkillCategoryBranch branch,
+  ) {
+    switch (branch.id) {
+      case 'main':
+        return 'Foundation';
+      case 'one_arm':
+        return 'One-arm';
+      case 'rings':
+        return 'Ring';
+      case 'close_grip':
+        if (category.id == SkillCategoryCatalog.pullupsId) {
+          return 'High Pull';
+        }
+        return 'Close Grip';
+      default:
+        return branch.label;
+    }
+  }
+
+  Exercise? _exerciseForSessionItem(_EditableSessionItem item) {
+    final exerciseId = item.exerciseId;
+    if (exerciseId != null) {
+      return ExerciseCatalog.findById(exerciseId);
+    }
+
+    if (item.kind == _EditableSessionItemKind.progression &&
+        item.skillCategoryId != null &&
+        item.branchId != null) {
+      return _currentExerciseForProgression(
+        skillCategoryId: item.skillCategoryId!,
+        branchId: item.branchId!,
+      );
+    }
+
+    for (final exercise in ExerciseCatalog.all()) {
+      if (exercise.name == item.name) return exercise;
+    }
+
+    return null;
+  }
+
+  String? _exerciseIdForName(String name) {
+    for (final exercise in ExerciseCatalog.all()) {
+      if (exercise.name == name) return exercise.id;
+    }
+    return null;
+  }
+
+  VoidCallback? _exerciseDetailTapHandler(_EditableSessionItem item) {
+    final exercise = _exerciseForSessionItem(item);
+    if (exercise == null) return null;
+
+    return () => openExerciseDetailView<void>(
+          context,
+          exercise: exercise,
+          skillCategoryId: item.skillCategoryId,
+        );
+  }
+
+  Exercise? _currentExerciseForProgression({
+    required String skillCategoryId,
+    required String branchId,
+  }) {
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    final exerciseIds = category?.trainingPaths[branchId] ?? const <String>[];
+    final exercises = exerciseIds
+        .map(ExerciseCatalog.findById)
+        .whereType<Exercise>()
+        .toList();
+
+    if (exercises.isEmpty) return null;
+
+    for (final exercise in exercises) {
+      if (widget.progressMap[exercise.id] == ExerciseStatus.active) {
+        return exercise;
+      }
+    }
+
+    for (final exercise in exercises) {
+      if (widget.progressMap[exercise.id] != ExerciseStatus.mastered) {
+        return exercise;
+      }
+    }
+
+    return exercises.last;
+  }
+
+  String _singularize(String value) {
+    if (value.endsWith('Pushups')) {
+      return value.replaceFirst(RegExp(r'Pushups$'), 'Pushup');
+    }
+    if (value.endsWith('Pullups')) {
+      return value.replaceFirst(RegExp(r'Pullups$'), 'Pullup');
+    }
+    if (value.endsWith('Rows')) {
+      return value.replaceFirst(RegExp(r'Rows$'), 'Row');
+    }
+    if (value.endsWith('Dips')) {
+      return value.replaceFirst(RegExp(r'Dips$'), 'Dip');
+    }
+    return value;
+  }
+
+  String _sessionComponentLabel(_SessionComponent component) {
+    switch (component) {
+      case _SessionComponent.warmup:
+        return 'Warm-up';
+      case _SessionComponent.skill:
+        return 'Skill Work';
+      case _SessionComponent.strength:
+        return 'Strength';
+      case _SessionComponent.cooldown:
+        return 'Cool-down';
+    }
+  }
+
   Future<void> _openSplitScreen(BuildContext context) async {
     final result = await Navigator.of(context).push<TrainingProgramType>(
       MaterialPageRoute(
@@ -429,7 +1300,11 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
     );
 
     if (result == null) return;
-    setState(() => _selectedProgramType = result);
+    setState(() {
+      _selectedProgramType = result;
+      _expandedSessionComponents = _defaultExpandedSessionComponents(result);
+      _sessionItems = _buildDefaultSessionItems(result);
+    });
   }
 
   Future<void> _openRepGoalScreen(BuildContext context) async {
@@ -481,7 +1356,10 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
     );
 
     if (result == null) return;
-    setState(() => _selectedBranches[track] = result);
+    setState(() {
+      _selectedBranches[track] = result;
+      _sessionItems = _buildDefaultSessionItems(_selectedProgramType);
+    });
   }
 
   Future<void> _openInfoScreen(
@@ -509,6 +1387,10 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
         ...widget.initialLogic.branchSelections,
       };
       _repGoalProfile = widget.initialLogic.repGoalProfile;
+      _expandedSessionComponents = _defaultExpandedSessionComponents(
+        _selectedProgramType,
+      );
+      _sessionItems = _buildInitialSessionItems(_selectedProgramType);
     });
   }
 }
@@ -1158,6 +2040,1016 @@ class _SettingsGroup extends StatelessWidget {
   }
 }
 
+enum _SessionComponent { warmup, skill, strength, cooldown }
+
+class _ComponentAccordionRow extends StatelessWidget {
+  final String title;
+  final String count;
+  final bool expanded;
+  final Color accentColor;
+  final VoidCallback onToggle;
+  final Widget child;
+
+  const _ComponentAccordionRow({
+    required this.title,
+    required this.count,
+    required this.expanded,
+    required this.accentColor,
+    required this.onToggle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: _sep, width: 0.5)),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.35,
+                        color: _text,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    count,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.4,
+                      color: accentColor,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  AnimatedRotation(
+                    turns: expanded ? 0.25 : 0,
+                    duration: const Duration(milliseconds: 220),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: _text,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (expanded) child,
+        ],
+      ),
+    );
+  }
+}
+
+class _SessionDetailTile extends StatelessWidget {
+  final String title;
+  final String? eyebrow;
+  final String? subtitle;
+  final Color tone;
+  final bool emphasized;
+  final VoidCallback? onTap;
+  final VoidCallback? onSwitch;
+  final Widget? leading;
+
+  const _SessionDetailTile({
+    super.key,
+    required this.title,
+    this.eyebrow,
+    this.subtitle,
+    required this.tone,
+    this.emphasized = false,
+    this.onTap,
+    this.onSwitch,
+    this.leading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tile = Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: emphasized ? tone.withValues(alpha: 0.18) : _sep,
+        ),
+      ),
+      child: Row(
+        children: [
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (eyebrow != null)
+                  Text(
+                    eyebrow!,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: emphasized ? tone : _text3,
+                    ),
+                  ),
+                if (eyebrow != null) const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: emphasized ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: -0.15,
+                    color: _text,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle!,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      letterSpacing: -0.05,
+                      color: _text2,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          if (onSwitch != null)
+            _TileSwitchButton(
+              tone: emphasized ? tone : _text3,
+              onTap: onSwitch!,
+            ),
+          if (onSwitch == null)
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: emphasized ? tone : _text3,
+            ),
+        ],
+      ),
+    );
+
+    final tappableTile = InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: tile,
+    );
+
+    if (onTap == null) {
+      return tile;
+    }
+    return tappableTile;
+  }
+}
+
+class _TileSwitchButton extends StatelessWidget {
+  final Color tone;
+  final VoidCallback onTap;
+
+  const _TileSwitchButton({
+    required this.tone,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          border: Border.all(color: tone.withValues(alpha: 0.35)),
+          borderRadius: BorderRadius.circular(999),
+          color: tone.withValues(alpha: 0.08),
+        ),
+        alignment: Alignment.center,
+        child: CustomPaint(
+          size: const Size(13, 13),
+          painter: _SwitchGlyphPainter(tone),
+        ),
+      ),
+    );
+  }
+}
+
+class _TileDragHandle extends StatelessWidget {
+  final Color tone;
+
+  const _TileDragHandle({
+    required this.tone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Icon(
+        Icons.drag_indicator_rounded,
+        size: 18,
+        color: tone.withValues(alpha: 0.75),
+      ),
+    );
+  }
+}
+
+class _SwitchGlyphPainter extends CustomPainter {
+  final Color color;
+
+  const _SwitchGlyphPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final topPath = Path()
+      ..moveTo(1, 4.2)
+      ..lineTo(9.2, 4.2)
+      ..moveTo(7.1, 2)
+      ..lineTo(9.6, 4.2)
+      ..lineTo(7.1, 6.4);
+    final bottomPath = Path()
+      ..moveTo(12, 8.8)
+      ..lineTo(3.8, 8.8)
+      ..moveTo(5.9, 6.6)
+      ..lineTo(3.4, 8.8)
+      ..lineTo(5.9, 11);
+
+    canvas.drawPath(topPath, paint);
+    canvas.drawPath(bottomPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SwitchGlyphPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+enum _ItemChoiceAction { progression, exercise, remove }
+
+enum _EditableSessionItemKind { progression, exercise }
+
+class _EditableSessionItem {
+  final String id;
+  final _EditableSessionItemKind kind;
+  final String name;
+  final String? skillCategoryId;
+  final String? branchId;
+  final String? exerciseId;
+  final String? subtitle;
+  final bool isSystem;
+
+  const _EditableSessionItem._({
+    required this.id,
+    required this.kind,
+    required this.name,
+    this.skillCategoryId,
+    this.branchId,
+    this.exerciseId,
+    this.subtitle,
+    this.isSystem = false,
+  });
+
+  factory _EditableSessionItem.progression({
+    required String id,
+    required String name,
+    required String skillCategoryId,
+    required String branchId,
+    String? exerciseId,
+  }) {
+    return _EditableSessionItem._(
+      id: id,
+      kind: _EditableSessionItemKind.progression,
+      name: name,
+      skillCategoryId: skillCategoryId,
+      branchId: branchId,
+      exerciseId: exerciseId,
+    );
+  }
+
+  factory _EditableSessionItem.exercise({
+    required String id,
+    required String name,
+    String? exerciseId,
+    String? subtitle,
+    bool isSystem = false,
+  }) {
+    return _EditableSessionItem._(
+      id: id,
+      kind: _EditableSessionItemKind.exercise,
+      name: name,
+      exerciseId: exerciseId,
+      subtitle: subtitle,
+      isSystem: isSystem,
+    );
+  }
+}
+
+class _ProgressionPickerResult {
+  final String skillCategoryId;
+  final String branchId;
+  final String? exerciseId;
+  final String exerciseName;
+
+  const _ProgressionPickerResult({
+    required this.skillCategoryId,
+    required this.branchId,
+    required this.exerciseId,
+    required this.exerciseName,
+  });
+}
+
+class _ExercisePickerResult {
+  final String name;
+  final String? exerciseId;
+
+  const _ExercisePickerResult({
+    required this.name,
+    this.exerciseId,
+  });
+}
+
+class _SessionAddItemButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SessionAddItemButton({
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          decoration: BoxDecoration(
+            border: Border.all(color: _accent.withValues(alpha: 0.32)),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.add_rounded,
+                size: 16,
+                color: _accent,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Add item',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.7,
+                  color: _accent,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddItemChoiceTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Color tone;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _AddItemChoiceTile({
+    required this.title,
+    required this.subtitle,
+    required this.tone,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          border: Border.all(color: tone.withValues(alpha: 0.28)),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: tone.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                size: 17,
+                color: tone,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.15,
+                      color: _text,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      height: 1.35,
+                      color: _text2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: _text3,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PrototypeSheet extends StatelessWidget {
+  final String eyebrow;
+  final String title;
+  final Widget child;
+
+  const _PrototypeSheet({
+    required this.eyebrow,
+    required this.title,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: _group,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    eyebrow,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: _text2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.6,
+                      color: _text,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
+              ),
+            ),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.72,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                child: child,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressionPickerSheet extends StatefulWidget {
+  final List<SkillCategory> categories;
+  final _EditableSessionItem? currentItem;
+  final String Function(SkillCategory, SkillCategoryBranch) branchLabelBuilder;
+  final Exercise? Function({
+    required String skillCategoryId,
+    required String branchId,
+  }) currentExerciseBuilder;
+
+  const _ProgressionPickerSheet({
+    required this.categories,
+    this.currentItem,
+    required this.branchLabelBuilder,
+    required this.currentExerciseBuilder,
+  });
+
+  @override
+  State<_ProgressionPickerSheet> createState() =>
+      _ProgressionPickerSheetState();
+}
+
+class _ProgressionPickerSheetState extends State<_ProgressionPickerSheet> {
+  late String _selectedCategoryId;
+  String? _selectedBranchId;
+  late bool _showBranches;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategoryId =
+        widget.currentItem?.skillCategoryId ?? widget.categories.first.id;
+    _selectedBranchId = widget.currentItem?.branchId;
+    _showBranches = widget.currentItem?.skillCategoryId != null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final category = widget.categories.firstWhere(
+      (item) => item.id == _selectedCategoryId,
+      orElse: () => widget.categories.first,
+    );
+
+    if (!_showBranches) {
+      return _PrototypeSheet(
+        eyebrow: 'STEP 1 OF 2',
+        title: 'Pick Progression',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose the skill tree you want this item to follow.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                height: 1.45,
+                color: _text2,
+              ),
+            ),
+            const SizedBox(height: 18),
+            for (final item in widget.categories) ...[
+              _PickerOptionTile(
+                title: item.title,
+                subtitle:
+                    '${_selectableBranches(item).length} branches · ${item.track.label}',
+                tone: _accent,
+                onTap: () {
+                  setState(() {
+                    _selectedCategoryId = item.id;
+                    _selectedBranchId = null;
+                    _showBranches = true;
+                  });
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ],
+        ),
+      );
+    }
+
+    final branches = _selectableBranches(category);
+
+    return _PrototypeSheet(
+      eyebrow: '${category.title.toUpperCase()} · STEP 2 OF 2',
+      title: 'Pick Branch',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Each branch is a different path through the ${category.title.toLowerCase()} tree.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 1.45,
+              color: _text2,
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (final branch in branches) ...[
+            _BranchOptionTile(
+              title: widget.branchLabelBuilder(category, branch),
+              subtitle: _branchRange(category, branch.id),
+              selected: _selectedBranchId == branch.id,
+              onTap: () => setState(() => _selectedBranchId = branch.id),
+            ),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _showBranches = false),
+                  style: OutlinedButton.styleFrom(
+                    side:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Back',
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: _text,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _selectedBranchId == null
+                      ? null
+                      : () {
+                          final branchId = _selectedBranchId!;
+                          final exercise = widget.currentExerciseBuilder(
+                            skillCategoryId: category.id,
+                            branchId: branchId,
+                          );
+                          Navigator.of(context).pop(
+                            _ProgressionPickerResult(
+                              skillCategoryId: category.id,
+                              branchId: branchId,
+                              exerciseId: exercise?.id,
+                              exerciseName: exercise?.name ?? category.title,
+                            ),
+                          );
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _accent,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Set Progression',
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<SkillCategoryBranch> _selectableBranches(SkillCategory category) {
+    return category.branches
+        .where(
+          (branch) => (category.trainingPaths[branch.id] ?? const <String>[])
+              .isNotEmpty,
+        )
+        .toList();
+  }
+
+  String _branchRange(SkillCategory category, String branchId) {
+    final steps = category.trainingPaths[branchId] ?? const <String>[];
+    if (steps.isEmpty) return 'No steps';
+    final first = ExerciseCatalog.findById(steps.first)?.name ?? steps.first;
+    final last = ExerciseCatalog.findById(steps.last)?.name ?? steps.last;
+    return '$first -> $last';
+  }
+}
+
+class _ExercisePickerSheet extends StatefulWidget {
+  final String title;
+  final String eyebrow;
+  final List<String> suggestions;
+  final String? currentName;
+  final String? Function(String name) exerciseIdResolver;
+
+  const _ExercisePickerSheet({
+    required this.title,
+    required this.eyebrow,
+    required this.suggestions,
+    required this.exerciseIdResolver,
+    this.currentName,
+  });
+
+  @override
+  State<_ExercisePickerSheet> createState() => _ExercisePickerSheetState();
+}
+
+class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentName ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _controller.text.trim().toLowerCase();
+    final filtered = widget.suggestions
+        .where((item) => item.toLowerCase().contains(query))
+        .toList();
+
+    return _PrototypeSheet(
+      eyebrow: widget.eyebrow,
+      title: widget.title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.search_rounded,
+                  size: 16,
+                  color: _text2,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    onChanged: (_) => setState(() {}),
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 12,
+                      letterSpacing: 1.3,
+                      color: _text,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      hintText: 'SEARCH EXERCISES…',
+                      hintStyle: GoogleFonts.robotoMono(
+                        fontSize: 12,
+                        letterSpacing: 1.3,
+                        color: _text3,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (final item in filtered.take(16)) ...[
+            _PickerOptionTile(
+              title: item,
+              subtitle: 'Single exercise',
+              tone: _red,
+              trailingPlus: true,
+              onTap: () => Navigator.of(context).pop(
+                _ExercisePickerResult(
+                  name: item,
+                  exerciseId: widget.exerciseIdResolver(item),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (_controller.text.trim().isNotEmpty &&
+              !widget.suggestions.contains(_controller.text.trim())) ...[
+            _PickerOptionTile(
+              title: _controller.text.trim(),
+              subtitle: 'Create custom exercise',
+              tone: _accent,
+              onTap: () => Navigator.of(context).pop(
+                _ExercisePickerResult(name: _controller.text.trim()),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PickerOptionTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Color tone;
+  final bool trailingPlus;
+  final VoidCallback onTap;
+
+  const _PickerOptionTile({
+    required this.title,
+    required this.subtitle,
+    required this.tone,
+    this.trailingPlus = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          border: Border.all(color: tone.withValues(alpha: 0.22)),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.18,
+                      color: _text,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: _text2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              trailingPlus ? Icons.add_rounded : Icons.chevron_right_rounded,
+              size: 18,
+              color: tone,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BranchOptionTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _BranchOptionTile({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selected
+                ? _accent.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.08),
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.18,
+                      color: _text,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: _text2,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? _accent : Colors.transparent,
+                border: Border.all(
+                  color: selected ? _accent : Colors.white24,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: selected
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 15,
+                      color: Colors.black,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 enum _RowAccessory { chevron, check, none }
 
 class _SettingsRow extends StatelessWidget {
@@ -1235,37 +3127,43 @@ class _SettingsRow extends StatelessWidget {
               ],
             ),
           ),
-          if (value != null) ...[
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                value!,
-                textAlign: TextAlign.right,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  letterSpacing: -0.05,
-                  color: _text2,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (value != null)
+                  Flexible(
+                    child: Text(
+                      value!,
+                      textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        letterSpacing: -0.05,
+                        color: _text2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                if (accessory == _RowAccessory.chevron && onTap != null) ...[
+                  if (value != null) const SizedBox(width: 8),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: _text3,
+                  ),
+                ],
+                if (accessory == _RowAccessory.check) ...[
+                  if (value != null) const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_rounded,
+                    size: 18,
+                    color: _accent,
+                  ),
+                ],
+              ],
             ),
-          ],
-          if (accessory == _RowAccessory.chevron && onTap != null) ...[
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: _text3,
-            ),
-          ],
-          if (accessory == _RowAccessory.check) ...[
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.check_rounded,
-              size: 18,
-              color: _accent,
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -1295,5 +3193,25 @@ class _StaticRowData {
   const _StaticRowData({
     required this.title,
     required this.value,
+  });
+}
+
+class _ProgramSessionBlock {
+  final TrainingSessionType sessionType;
+  final String title;
+  final List<_EditableSessionItem> warmupItems;
+  final List<_EditableSessionItem> skillItems;
+  final List<_EditableSessionItem> strengthItems;
+  final List<_EditableSessionItem> cooldownItems;
+  final String footer;
+
+  const _ProgramSessionBlock({
+    required this.sessionType,
+    required this.title,
+    required this.warmupItems,
+    required this.skillItems,
+    required this.strengthItems,
+    required this.cooldownItems,
+    required this.footer,
   });
 }
