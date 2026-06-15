@@ -24,6 +24,7 @@ Future<T?> openExerciseDetailView<T>(
   Color accentColor = AppColors.accentPrimary,
   String? skillCategoryId,
   List<String>? focusChips,
+  bool autoScrollToProgress = false,
 }) {
   return Navigator.of(context).push<T>(
     MaterialPageRoute(
@@ -32,6 +33,7 @@ Future<T?> openExerciseDetailView<T>(
         accentColor: accentColor,
         skillCategoryId: skillCategoryId,
         focusChips: focusChips,
+        autoScrollToProgress: autoScrollToProgress,
       ),
     ),
   );
@@ -42,6 +44,7 @@ class ExerciseDetailView extends StatefulWidget {
   final Color accentColor;
   final String? skillCategoryId;
   final List<String>? focusChips;
+  final bool autoScrollToProgress;
 
   const ExerciseDetailView({
     super.key,
@@ -49,6 +52,7 @@ class ExerciseDetailView extends StatefulWidget {
     this.accentColor = AppColors.accentPrimary,
     this.skillCategoryId,
     this.focusChips,
+    this.autoScrollToProgress = false,
   });
 
   @override
@@ -67,6 +71,15 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   void initState() {
     super.initState();
     _logsFuture = _loadLogs();
+    if (widget.autoScrollToProgress) {
+      _logsFuture.whenComplete(() {
+        if (!mounted) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _scrollToProgress();
+        });
+      });
+    }
   }
 
   Future<List<ExerciseLog>> _loadLogs() async {

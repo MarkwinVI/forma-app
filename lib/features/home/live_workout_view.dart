@@ -5,11 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/progress_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import 'completed_workout_model.dart';
+import 'exercise_switch_selector.dart';
 import 'finished_workout_view.dart';
 
 const _workoutBg = Color(0xFF000000);
@@ -48,11 +54,14 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     0,
     for (var seconds = 5; seconds <= 300; seconds += 5) seconds,
   ];
+  final _progressService = ProgressService();
   final _restPreferencesService = WorkoutRestPreferencesService();
 
   late final DateTime _startedAt;
+  late List<TrainingRecommendationItem> _sessionItems;
   late Map<String, List<_WorkoutSetDraft>> _setDrafts;
   late Map<String, int> _restSecondsByExercise;
+  Map<String, ExerciseStatus> _progressMap = {};
   _ActiveRestTimer? _activeRestTimer;
   Timer? _ticker;
   Duration _pausedDuration = Duration.zero;
@@ -65,13 +74,15 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startedAt = DateTime.now();
+    _sessionItems = List.of(widget.recommendation.items);
     _setDrafts = {
-      for (final item in widget.recommendation.items)
+      for (final item in _sessionItems)
         item.exercise.id: _initialSetDrafts(item),
     };
     _restSecondsByExercise = {
-      for (final item in widget.recommendation.items) item.exercise.id: 0,
+      for (final item in _sessionItems) item.exercise.id: 0,
     };
+    _loadProgressMap();
     _loadRestPreferences();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -111,10 +122,28 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     setState(() {
       _restSecondsByExercise = {
-        for (final item in widget.recommendation.items)
+        for (final item in _sessionItems)
           item.exercise.id: stored[item.exercise.id] ?? 0,
       };
     });
+  }
+
+  Future<void> _loadProgressMap() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final progress = await _progressService.fetchAll(userId);
+      if (!mounted) return;
+
+      setState(() {
+        _progressMap = {
+          for (final item in progress) item.exerciseId: item.status,
+        };
+      });
+    } catch (_) {
+      // Keep replacement usable with local fallbacks if progress can't load.
+    }
   }
 
   String _formatElapsed() {
@@ -166,14 +195,15 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
-  int get _totalSetCount => _setDrafts.values.fold(
+  int get _totalSetCount => _sessionItems.fold(
         0,
-        (sum, sets) => sum + sets.length,
+        (sum, item) => sum + _setsFor(item).length,
       );
 
-  int get _completedSetCount => _setDrafts.values.fold(
+  int get _completedSetCount => _sessionItems.fold(
         0,
-        (sum, sets) => sum + sets.where((set) => set.completed).length,
+        (sum, item) =>
+            sum + _setsFor(item).where((set) => set.completed).length,
       );
 
   String _formatSessionSubtitle() {
@@ -209,7 +239,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   List<TrainingRecommendationItem> _itemsForSection(
     ExerciseProgramSection section,
   ) {
-    return widget.recommendation.items
+    return _sessionItems
         .where((item) => item.exercise.programSection == section)
         .toList();
   }
@@ -327,6 +357,83 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
+  void _replaceSessionItems(List<TrainingRecommendationItem> items) {
+    setState(() {
+      _sessionItems = items;
+    });
+  }
+
+  void _removeExerciseFromSession(TrainingRecommendationItem item) {
+    _replaceSessionItems(
+      _sessionItems
+          .where((candidate) => candidate.exercise.id != item.exercise.id)
+          .toList(),
+    );
+    if (_activeRestTimer?.exerciseId == item.exercise.id) {
+      _clearActiveRestTimer();
+    }
+  }
+
+  void _replaceItemInSession(
+    TrainingRecommendationItem currentItem,
+    TrainingRecommendationItem nextItem,
+  ) {
+    final replacementId = nextItem.exercise.id;
+
+    setState(() {
+      _sessionItems = [
+        for (final item in _sessionItems)
+          if (item.exercise.id == currentItem.exercise.id) nextItem else item,
+      ];
+      _setDrafts = {
+        ..._setDrafts,
+        replacementId: _setDrafts[replacementId] ?? _initialSetDrafts(nextItem),
+      };
+      _restSecondsByExercise = {
+        ..._restSecondsByExercise,
+        replacementId: _restSecondsByExercise[replacementId] ?? 0,
+      };
+      if (_activeRestTimer?.exerciseId == currentItem.exercise.id) {
+        _activeRestTimer = null;
+        _pausedRestRemaining = null;
+      }
+    });
+  }
+
+  void _replaceExerciseInSession(
+    TrainingRecommendationItem currentItem,
+    Exercise replacement,
+  ) {
+    final nextItem = TrainingRecommendationItem(
+      track: _trackForExercise(replacement),
+      exercise: replacement,
+      status: currentItem.status,
+      sourceCategory: replacement.category,
+      sourceSkillCategoryId: replacement.skillCategoryId,
+    );
+
+    _replaceItemInSession(currentItem, nextItem);
+  }
+
+  void _reorderSectionItems(
+    ExerciseProgramSection section,
+    List<TrainingRecommendationItem> reorderedSectionItems,
+  ) {
+    final reordered = <TrainingRecommendationItem>[];
+    var sectionCursor = 0;
+
+    for (final item in _sessionItems) {
+      if (item.exercise.programSection == section) {
+        reordered.add(reorderedSectionItems[sectionCursor]);
+        sectionCursor += 1;
+      } else {
+        reordered.add(item);
+      }
+    }
+
+    _replaceSessionItems(reordered);
+  }
+
   void _completeTimedSet(
     TrainingRecommendationItem item,
     int number,
@@ -350,7 +457,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   CompletedWorkout _buildCompletedWorkout() {
     final exercises = <CompletedWorkoutExercise>[];
 
-    for (final item in widget.recommendation.items) {
+    for (final item in _sessionItems) {
       final isTimed = _isTimedExercise(item.exercise);
       final completedSets = _setsFor(item)
           .where((set) => set.hasData)
@@ -545,6 +652,116 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
+  Future<void> _openExerciseHistory(TrainingRecommendationItem item) async {
+    await openExerciseDetailView<void>(
+      context,
+      exercise: item.exercise,
+      accentColor: _sectionColor(item.exercise.programSection),
+      skillCategoryId: item.sourceSkillCategoryId,
+      focusChips: [
+        item.sourceCategory.label,
+        item.track.label,
+        _difficultyLabel(item.exercise.difficulty),
+      ],
+      autoScrollToProgress: true,
+    );
+  }
+
+  Future<void> _openReorderExercises(ExerciseProgramSection section) async {
+    final sectionItems = _itemsForSection(section);
+    if (sectionItems.length < 2) return;
+
+    final reordered =
+        await showModalBottomSheet<List<TrainingRecommendationItem>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ReorderExercisesSheet(items: sectionItems),
+    );
+    if (reordered == null || reordered.length != sectionItems.length) return;
+    _reorderSectionItems(section, reordered);
+  }
+
+  Future<void> _openReplaceExercise(TrainingRecommendationItem item) async {
+    final selection = await Navigator.of(context).push<ExerciseSwitchChoice>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const ExerciseSwitchChooserPage(
+          title: 'Switch Item',
+          description:
+              'Replace this item with a progression path or a standalone exercise.',
+        ),
+      ),
+    );
+    if (!mounted || selection == null) return;
+
+    if (selection == ExerciseSwitchChoice.progression) {
+      final replacement =
+          await Navigator.of(context).push<TrainingRecommendationItem>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => _ReplaceProgressionView(
+            currentItem: item,
+            progressMap: _progressMap,
+          ),
+        ),
+      );
+      if (replacement == null || !mounted) return;
+      _replaceItemInSession(item, replacement);
+      return;
+    }
+
+    if (selection != ExerciseSwitchChoice.exercise) return;
+
+    final replacement = await Navigator.of(context).push<Exercise>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _ReplaceSingleExerciseView(
+          currentExerciseId: item.exercise.id,
+          section: item.exercise.programSection,
+        ),
+      ),
+    );
+    if (replacement == null) return;
+    _replaceExerciseInSession(item, replacement);
+  }
+
+  Future<void> _openExerciseActions(
+    TrainingRecommendationItem item,
+    ExerciseProgramSection section,
+    Color sectionColor,
+  ) async {
+    final action = await showModalBottomSheet<_ExerciseAction>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ExerciseActionSheet(
+        exerciseName: item.exercise.name,
+        canReorder: _itemsForSection(section).length > 1,
+      ),
+    );
+
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case _ExerciseAction.howToPerform:
+        _openExerciseDetail(item, sectionColor);
+        break;
+      case _ExerciseAction.history:
+        await _openExerciseHistory(item);
+        break;
+      case _ExerciseAction.reorderExercises:
+        await _openReorderExercises(section);
+        break;
+      case _ExerciseAction.replaceExercise:
+        await _openReplaceExercise(item);
+        break;
+      case _ExerciseAction.removeExercise:
+        _removeExerciseFromSession(item);
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
@@ -604,6 +821,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                             restSecondsFor: (item) =>
                                 _restSecondsByExercise[item.exercise.id] ?? 0,
                             onRestTap: _pickRestInterval,
+                            onOpenActions: _openExerciseActions,
                             onOpenDetail: _openExerciseDetail,
                           ),
                         ),
@@ -864,6 +1082,11 @@ class _LiveSectionBlock extends StatelessWidget {
   final Future<void> Function(TrainingRecommendationItem item) onRestTap;
   final void Function(TrainingRecommendationItem item, Color sectionColor)
       onOpenDetail;
+  final Future<void> Function(
+    TrainingRecommendationItem item,
+    ExerciseProgramSection section,
+    Color sectionColor,
+  ) onOpenActions;
 
   const _LiveSectionBlock({
     required this.section,
@@ -877,6 +1100,7 @@ class _LiveSectionBlock extends StatelessWidget {
     required this.onTimedSetCompleted,
     required this.onRestTap,
     required this.onOpenDetail,
+    required this.onOpenActions,
   });
 
   @override
@@ -951,6 +1175,11 @@ class _LiveSectionBlock extends StatelessWidget {
                     seconds,
                   ),
                   onRestTap: () => onRestTap(items[index]),
+                  onOpenActions: () => onOpenActions(
+                    items[index],
+                    section,
+                    sectionColor,
+                  ),
                   onOpenDetail: () => onOpenDetail(
                     items[index],
                     sectionColor,
@@ -976,6 +1205,7 @@ class _LiveExerciseCard extends StatefulWidget {
   final void Function(int number) onRemoveSet;
   final void Function(int number, int seconds) onTimedSetCompleted;
   final VoidCallback onRestTap;
+  final VoidCallback onOpenActions;
   final VoidCallback onOpenDetail;
 
   const _LiveExerciseCard({
@@ -990,6 +1220,7 @@ class _LiveExerciseCard extends StatefulWidget {
     required this.onRemoveSet,
     required this.onTimedSetCompleted,
     required this.onRestTap,
+    required this.onOpenActions,
     required this.onOpenDetail,
   });
 
@@ -1100,18 +1331,18 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
+                  IconButton(
+                    onPressed: widget.onOpenActions,
+                    style: IconButton.styleFrom(
+                      fixedSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                      shape: const CircleBorder(),
+                      side: BorderSide(
                         color: _workoutTertiaryText.withValues(alpha: 0.35),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.info_outline_rounded,
+                    icon: const Icon(
+                      Icons.more_horiz_rounded,
                       size: 18,
                       color: _workoutSecondaryText,
                     ),
@@ -1612,6 +1843,905 @@ class _RestActionChip extends StatelessWidget {
           color: _workoutPrimaryText,
           letterSpacing: -0.1,
         ),
+      ),
+    );
+  }
+}
+
+class _ExerciseActionSheet extends StatelessWidget {
+  final String exerciseName;
+  final bool canReorder;
+
+  const _ExerciseActionSheet({
+    required this.exerciseName,
+    required this.canReorder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ActionSheetScaffold(
+      title: exerciseName,
+      children: [
+        _ActionSheetGroup(
+          children: [
+            _ActionSheetRow(
+              label: 'How to perform',
+              onTap: () =>
+                  Navigator.of(context).pop(_ExerciseAction.howToPerform),
+            ),
+            const _ActionSheetDivider(),
+            _ActionSheetRow(
+              label: 'History',
+              onTap: () => Navigator.of(context).pop(_ExerciseAction.history),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _ActionSheetGroup(
+          children: [
+            _ActionSheetRow(
+              label: 'Reorder exercises',
+              enabled: canReorder,
+              onTap: () =>
+                  Navigator.of(context).pop(_ExerciseAction.reorderExercises),
+            ),
+            const _ActionSheetDivider(),
+            _ActionSheetRow(
+              label: 'Replace exercise',
+              onTap: () =>
+                  Navigator.of(context).pop(_ExerciseAction.replaceExercise),
+            ),
+            const _ActionSheetDivider(),
+            _ActionSheetRow(
+              label: 'Remove exercise',
+              destructive: true,
+              onTap: () =>
+                  Navigator.of(context).pop(_ExerciseAction.removeExercise),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ReorderExercisesSheet extends StatefulWidget {
+  final List<TrainingRecommendationItem> items;
+
+  const _ReorderExercisesSheet({
+    required this.items,
+  });
+
+  @override
+  State<_ReorderExercisesSheet> createState() => _ReorderExercisesSheetState();
+}
+
+class _ReorderExercisesSheetState extends State<_ReorderExercisesSheet> {
+  late List<TrainingRecommendationItem> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = List.of(widget.items);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _ActionSheetScaffold(
+      title: 'Reorder exercises',
+      trailing: TextButton(
+        onPressed: () => Navigator.of(context).pop(_items),
+        child: Text(
+          'Done',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: _workoutAccent,
+          ),
+        ),
+      ),
+      children: [
+        SizedBox(
+          height: 360,
+          child: ReorderableListView.builder(
+            itemCount: _items.length,
+            buildDefaultDragHandles: false,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex -= 1;
+                final item = _items.removeAt(oldIndex);
+                _items.insert(newIndex, item);
+              });
+            },
+            itemBuilder: (context, index) {
+              final item = _items[index];
+              return Container(
+                key: ValueKey(item.exercise.id),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: _workoutSurfaceBorder),
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: Text(
+                    item.exercise.name,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: _workoutPrimaryText,
+                    ),
+                  ),
+                  subtitle: Text(
+                    item.track.label,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: _workoutSecondaryText,
+                    ),
+                  ),
+                  trailing: ReorderableDragStartListener(
+                    index: index,
+                    child: const Icon(
+                      Icons.drag_handle_rounded,
+                      color: _workoutTertiaryText,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReplaceSingleExerciseView extends StatefulWidget {
+  final String currentExerciseId;
+  final ExerciseProgramSection section;
+
+  const _ReplaceSingleExerciseView({
+    required this.currentExerciseId,
+    required this.section,
+  });
+
+  @override
+  State<_ReplaceSingleExerciseView> createState() =>
+      _ReplaceSingleExerciseViewState();
+}
+
+class _ReplaceSingleExerciseViewState
+    extends State<_ReplaceSingleExerciseView> {
+  final _controller = TextEditingController();
+  late final List<Exercise> _candidates;
+
+  @override
+  void initState() {
+    super.initState();
+    _candidates = ExerciseCatalog.browsable()
+        .where(
+          (exercise) =>
+              exercise.programSection == widget.section &&
+              exercise.id != widget.currentExerciseId,
+        )
+        .toList();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _controller.text.trim().toLowerCase();
+    final results = query.isEmpty
+        ? _candidates
+        : _candidates
+            .where((exercise) => exercise.name.toLowerCase().contains(query))
+            .toList();
+
+    return Scaffold(
+      backgroundColor: _workoutBg,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.section.label.toUpperCase(),
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 11,
+                            letterSpacing: 1.8,
+                            color: _workoutSecondaryText,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Switch Exercise',
+                          style: GoogleFonts.inter(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.4,
+                            color: _workoutPrimaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _workoutSecondaryText,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.search_rounded,
+                      size: 16,
+                      color: _workoutSecondaryText,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        autofocus: true,
+                        onChanged: (_) => setState(() {}),
+                        style: GoogleFonts.robotoMono(
+                          fontSize: 12,
+                          letterSpacing: 1.3,
+                          color: _workoutPrimaryText,
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: 'SEARCH EXERCISES…',
+                          hintStyle: GoogleFonts.robotoMono(
+                            fontSize: 12,
+                            letterSpacing: 1.3,
+                            color: _workoutTertiaryText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Expanded(
+              child: results.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24),
+                        child: _ActionSheetMessage(
+                          title: 'No exercises found.',
+                          body: 'Try another search term.',
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      itemCount: results.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final exercise = results[index];
+                        return _ReplaceSingleExerciseOptionTile(
+                          title: exercise.name,
+                          subtitle: 'Single exercise',
+                          onTap: () => Navigator.of(context).pop(exercise),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReplaceSingleExerciseOptionTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ReplaceSingleExerciseOptionTile({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          border: Border.all(color: _workoutDanger.withValues(alpha: 0.22)),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.18,
+                      color: _workoutPrimaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: _workoutSecondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.add_rounded,
+              size: 18,
+              color: _workoutDanger,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReplaceProgressionView extends StatefulWidget {
+  final TrainingRecommendationItem currentItem;
+  final Map<String, ExerciseStatus> progressMap;
+
+  const _ReplaceProgressionView({
+    required this.currentItem,
+    required this.progressMap,
+  });
+
+  @override
+  State<_ReplaceProgressionView> createState() =>
+      _ReplaceProgressionViewState();
+}
+
+class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
+  late final List<SkillCategory> _categories;
+  late String _selectedCategoryId;
+  String? _selectedBranchId;
+  bool _showBranches = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final currentCategory = SkillCategoryCatalog.findById(
+      widget.currentItem.sourceSkillCategoryId,
+    );
+    final trackCategories = SkillCategoryCatalog.forTrack(
+      widget.currentItem.sourceCategory,
+    );
+    _categories = _orderedCategories(trackCategories, currentCategory);
+    _selectedCategoryId = _categories.first.id;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final category = _categories.firstWhere(
+      (item) => item.id == _selectedCategoryId,
+      orElse: () => _categories.first,
+    );
+
+    return Scaffold(
+      backgroundColor: _workoutBg,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _showBranches
+                              ? '${category.title.toUpperCase()} · STEP 2 OF 2'
+                              : 'STEP 1 OF 2',
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 11,
+                            letterSpacing: 1.8,
+                            color: _workoutSecondaryText,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _showBranches ? 'Pick Branch' : 'Pick Progression',
+                          style: GoogleFonts.inter(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.4,
+                            color: _workoutPrimaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _workoutSecondaryText,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _showBranches
+                    ? 'Each branch is a different path through the ${category.title.toLowerCase()} tree.'
+                    : 'Choose the skill tree you want this item to follow.',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  height: 1.45,
+                  color: _workoutSecondaryText,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Expanded(
+                child: _showBranches
+                    ? _ProgressionBranchList(
+                        category: category,
+                        selectedBranchId: _selectedBranchId,
+                        onSelect: (branchId) =>
+                            setState(() => _selectedBranchId = branchId),
+                      )
+                    : ListView.separated(
+                        itemCount: _categories.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final item = _categories[index];
+                          return _ReplaceSingleExerciseOptionTile(
+                            title: item.title,
+                            subtitle:
+                                '${_selectableBranches(item).length} branches · ${item.track.label}',
+                            onTap: () {
+                              setState(() {
+                                _selectedCategoryId = item.id;
+                                _selectedBranchId = null;
+                                _showBranches = true;
+                              });
+                            },
+                          );
+                        },
+                      ),
+              ),
+              if (_showBranches) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => setState(() {
+                          _showBranches = false;
+                          _selectedBranchId = null;
+                        }),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.14),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Back',
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.8,
+                            color: _workoutPrimaryText,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _selectedBranchId == null
+                            ? null
+                            : () => Navigator.of(context).pop(
+                                  _progressionReplacement(
+                                    widget.currentItem,
+                                    category,
+                                    _selectedBranchId!,
+                                    widget.progressMap,
+                                  ),
+                                ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _workoutAccent,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          'Set Progression',
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.8,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<SkillCategory> _orderedCategories(
+    List<SkillCategory> trackCategories,
+    SkillCategory? currentCategory,
+  ) {
+    final categories = <SkillCategory>[
+      if (currentCategory != null) currentCategory,
+      ...trackCategories.where((item) => item.id != currentCategory?.id),
+    ];
+
+    if (categories.isNotEmpty) return categories;
+
+    return [
+      currentCategory ??
+          SkillCategoryCatalog.defaultForTrack(
+              widget.currentItem.sourceCategory),
+    ];
+  }
+
+  List<SkillCategoryBranch> _selectableBranches(SkillCategory category) {
+    return category.branches
+        .where(
+          (branch) => (category.trainingPaths[branch.id] ?? const <String>[])
+              .isNotEmpty,
+        )
+        .toList();
+  }
+}
+
+class _ProgressionBranchList extends StatelessWidget {
+  final SkillCategory category;
+  final String? selectedBranchId;
+  final ValueChanged<String> onSelect;
+
+  const _ProgressionBranchList({
+    required this.category,
+    required this.selectedBranchId,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final branches = category.branches
+        .where(
+          (branch) => (category.trainingPaths[branch.id] ?? const <String>[])
+              .isNotEmpty,
+        )
+        .toList();
+
+    return ListView.separated(
+      itemCount: branches.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final branch = branches[index];
+        return InkWell(
+          onTap: () => onSelect(branch.id),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: selectedBranchId == branch.id
+                    ? _workoutAccent.withValues(alpha: 0.35)
+                    : Colors.white.withValues(alpha: 0.08),
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _branchTitle(category, branch.id),
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.18,
+                          color: _workoutPrimaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _branchRange(category, branch.id),
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: _workoutSecondaryText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  selectedBranchId == branch.id
+                      ? Icons.check_circle_rounded
+                      : Icons.circle_outlined,
+                  size: 18,
+                  color: selectedBranchId == branch.id
+                      ? _workoutAccent
+                      : _workoutTertiaryText,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ActionSheetScaffold extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+  final List<Widget> children;
+
+  const _ActionSheetScaffold({
+    required this.title,
+    this.trailing,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _workoutBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: _workoutSurfaceBorder,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const SizedBox(width: 52),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: _workoutPrimaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 52, child: trailing),
+                ],
+              ),
+              const SizedBox(height: 18),
+              ...children,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionSheetGroup extends StatelessWidget {
+  final List<Widget> children;
+
+  const _ActionSheetGroup({
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _workoutCard,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _ActionSheetDivider extends StatelessWidget {
+  const _ActionSheetDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: _workoutSurfaceBorder,
+      indent: 16,
+      endIndent: 16,
+    );
+  }
+}
+
+class _ActionSheetRow extends StatelessWidget {
+  final String label;
+  final bool destructive;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _ActionSheetRow({
+    required this.label,
+    this.destructive = false,
+    this.enabled = true,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = destructive
+        ? _workoutDanger
+        : enabled
+            ? _workoutPrimaryText
+            : _workoutTertiaryText;
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (enabled)
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: _workoutTertiaryText,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionSheetMessage extends StatelessWidget {
+  final String title;
+  final String body;
+
+  const _ActionSheetMessage({
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _workoutCard,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: _workoutPrimaryText,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            body,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: _workoutSecondaryText,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2170,6 +3300,153 @@ String _difficultyLabel(int difficulty) {
   if (difficulty <= 1) return 'Beginner';
   if (difficulty <= 3) return 'Intermediate';
   return 'Advanced';
+}
+
+TrainingTrack _trackForExercise(Exercise exercise) {
+  switch (exercise.category) {
+    case ExerciseCategory.skill:
+      return TrainingTrack.skillWork;
+    case ExerciseCategory.verticalPush:
+      return TrainingTrack.verticalPush;
+    case ExerciseCategory.horizontalPush:
+      return TrainingTrack.horizontalPush;
+    case ExerciseCategory.verticalPull:
+      return TrainingTrack.verticalPull;
+    case ExerciseCategory.horizontalPull:
+      return TrainingTrack.horizontalPull;
+    case ExerciseCategory.core:
+      return TrainingTrack.core;
+    case ExerciseCategory.squat:
+      return TrainingTrack.squat;
+    case ExerciseCategory.hinge:
+      return TrainingTrack.hinge;
+  }
+}
+
+TrainingRecommendationItem _progressionReplacement(
+  TrainingRecommendationItem currentItem,
+  SkillCategory category,
+  String branchId,
+  Map<String, ExerciseStatus> progressMap,
+) {
+  final exercise = _currentExerciseForProgression(
+        skillCategoryId: category.id,
+        branchId: branchId,
+        progressMap: progressMap,
+        programSection: currentItem.exercise.programSection,
+      ) ??
+      _copyExerciseForSection(
+        _firstExerciseForBranch(category, branchId) ?? currentItem.exercise,
+        programSection: currentItem.exercise.programSection,
+      );
+
+  return TrainingRecommendationItem(
+    track: _trackForExercise(exercise),
+    exercise: exercise,
+    status: progressMap[exercise.id] ?? ExerciseStatus.inactive,
+    sourceCategory: category.track,
+    sourceSkillCategoryId: category.id,
+  );
+}
+
+Exercise? _currentExerciseForProgression({
+  required String skillCategoryId,
+  required String branchId,
+  required Map<String, ExerciseStatus> progressMap,
+  required ExerciseProgramSection programSection,
+}) {
+  final category = SkillCategoryCatalog.findById(skillCategoryId);
+  final exerciseIds = category?.trainingPaths[branchId] ?? const <String>[];
+  final exercises =
+      exerciseIds.map(ExerciseCatalog.findById).whereType<Exercise>().toList();
+
+  if (exercises.isEmpty) return null;
+
+  for (final exercise in exercises) {
+    if (progressMap[exercise.id] == ExerciseStatus.active) {
+      return _copyExerciseForSection(
+        exercise,
+        programSection: programSection,
+      );
+    }
+  }
+
+  for (final exercise in exercises) {
+    if (progressMap[exercise.id] != ExerciseStatus.mastered) {
+      return _copyExerciseForSection(
+        exercise,
+        programSection: programSection,
+      );
+    }
+  }
+
+  return _copyExerciseForSection(
+    exercises.last,
+    programSection: programSection,
+  );
+}
+
+Exercise? _firstExerciseForBranch(SkillCategory category, String branchId) {
+  final exerciseIds = category.trainingPaths[branchId] ?? const <String>[];
+  for (final exerciseId in exerciseIds) {
+    final exercise = ExerciseCatalog.findById(exerciseId);
+    if (exercise != null) return exercise;
+  }
+  return null;
+}
+
+Exercise _copyExerciseForSection(
+  Exercise exercise, {
+  required ExerciseProgramSection programSection,
+}) {
+  return Exercise(
+    id: exercise.id,
+    category: exercise.category,
+    skillCategoryId: exercise.skillCategoryId,
+    branchId: exercise.branchId,
+    name: exercise.name,
+    description: exercise.description,
+    difficulty: exercise.difficulty,
+    treeOrder: exercise.treeOrder,
+    prerequisiteIds: exercise.prerequisiteIds,
+    programSection: programSection,
+    imageUrl: exercise.imageUrl,
+  );
+}
+
+String _branchTitle(SkillCategory category, String pathId) {
+  final label = _pathLabel(category, pathId);
+  if (label.toLowerCase() == 'main') {
+    return category.title;
+  }
+  return '$label ${category.title}';
+}
+
+String _pathLabel(SkillCategory category, String pathId) {
+  for (final branch in category.branches) {
+    if (branch.id == pathId) return branch.label;
+  }
+
+  return pathId
+      .split('_')
+      .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+      .join(' ');
+}
+
+String _branchRange(SkillCategory category, String branchId) {
+  final steps = category.trainingPaths[branchId] ?? const <String>[];
+  if (steps.isEmpty) return 'No steps';
+  final first = ExerciseCatalog.findById(steps.first)?.name ?? steps.first;
+  final last = ExerciseCatalog.findById(steps.last)?.name ?? steps.last;
+  return '$first -> $last';
+}
+
+enum _ExerciseAction {
+  howToPerform,
+  history,
+  reorderExercises,
+  replaceExercise,
+  removeExercise,
 }
 
 class _ActiveRestTimer {

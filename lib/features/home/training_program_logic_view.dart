@@ -9,6 +9,7 @@ import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
 import '../exercises/exercise_detail_view.dart';
+import 'exercise_switch_selector.dart';
 
 const _bg = Color(0xFF000000);
 const _group = Color(0xFF1C1C1E);
@@ -673,100 +674,25 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
     required _SessionComponent component,
     _EditableSessionItem? existingItem,
   }) async {
-    final selection = await showModalBottomSheet<_ItemChoiceAction>(
+    final selection = await showModalBottomSheet<ExerciseSwitchChoice>(
       context: context,
       backgroundColor: _group,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetContext) {
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  existingItem == null ? 'Add Item' : 'Switch Item',
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.4,
-                    color: _text,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  existingItem == null
-                      ? 'Choose how you want to add to ${_sessionComponentLabel(component).toLowerCase()} for ${_sessionBlockTitle(sessionType).toLowerCase()}.'
-                      : 'Replace this item with a progression path or a standalone exercise.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    height: 1.45,
-                    color: _text2,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                _AddItemChoiceTile(
-                  title: 'SKILL TREE',
-                  subtitle: 'Follow a skill-tree path that advances over time.',
-                  tone: _accent,
-                  icon: Icons.timeline_rounded,
-                  onTap: () => Navigator.of(sheetContext).pop(
-                    _ItemChoiceAction.progression,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _AddItemChoiceTile(
-                  title: 'SINGLE LIFT',
-                  subtitle: 'Drop in one standalone movement without a tree.',
-                  tone: _red,
-                  icon: Icons.fitness_center_rounded,
-                  onTap: () => Navigator.of(sheetContext).pop(
-                    _ItemChoiceAction.exercise,
-                  ),
-                ),
-                if (existingItem != null) ...[
-                  const SizedBox(height: 14),
-                  TextButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(
-                      _ItemChoiceAction.remove,
-                    ),
-                    child: Text(
-                      'Remove item',
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.8,
-                        color: _red,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (_) => ExerciseSwitchChooserSheet(
+        title: existingItem == null ? 'Add Item' : 'Switch Item',
+        description: existingItem == null
+            ? 'Choose how you want to add to ${_sessionComponentLabel(component).toLowerCase()} for ${_sessionBlockTitle(sessionType).toLowerCase()}.'
+            : 'Replace this item with a progression path or a standalone exercise.',
+        showRemoveAction: existingItem != null,
+      ),
     );
 
     if (selection == null || !mounted) return;
 
-    if (selection == _ItemChoiceAction.remove && existingItem != null) {
+    if (selection == ExerciseSwitchChoice.remove && existingItem != null) {
       _removeSessionItem(
         sessionType: sessionType,
         component: component,
@@ -775,7 +701,7 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
       return;
     }
 
-    if (selection == _ItemChoiceAction.progression) {
+    if (selection == ExerciseSwitchChoice.progression) {
       final result = await _openProgressionPickerSheet(
         this.context,
         sessionType: sessionType,
@@ -800,7 +726,7 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
       return;
     }
 
-    if (selection == _ItemChoiceAction.exercise) {
+    if (selection == ExerciseSwitchChoice.exercise) {
       final result = await _openExercisePickerSheet(
         this.context,
         sessionType: sessionType,
@@ -2310,8 +2236,6 @@ class _SwitchGlyphPainter extends CustomPainter {
       oldDelegate.color != color;
 }
 
-enum _ItemChoiceAction { progression, exercise, remove }
-
 enum _EditableSessionItemKind { progression, exercise }
 
 class _EditableSessionItem {
@@ -2435,88 +2359,6 @@ class _SessionAddItemButton extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AddItemChoiceTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color tone;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _AddItemChoiceTile({
-    required this.title,
-    required this.subtitle,
-    required this.tone,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-        decoration: BoxDecoration(
-          border: Border.all(color: tone.withValues(alpha: 0.28)),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: tone.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                icon,
-                size: 17,
-                color: tone,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.15,
-                      color: _text,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.35,
-                      color: _text2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: _text3,
-            ),
-          ],
         ),
       ),
     );
