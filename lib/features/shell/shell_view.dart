@@ -19,7 +19,9 @@ class _ShellViewState extends State<ShellView> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const HomeView(),
+      HomeView(
+        onOpenSettings: () => setState(() => _currentIndex = 3),
+      ),
       DataView(isActive: _currentIndex == 1),
       const SkillsView(),
       const SettingsView(),
@@ -31,7 +33,7 @@ class _ShellViewState extends State<ShellView> {
         children: pages,
       ),
       bottomNavigationBar: AppNavBar(
-        currentIndex: _currentIndex,
+        currentIndex: _currentIndex >= 3 ? -1 : _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
     );

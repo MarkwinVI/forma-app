@@ -45,12 +45,6 @@ class AppNavBar extends StatelessWidget {
                     index: 2,
                     currentIndex: currentIndex,
                     onTap: onTap),
-                _NavItem(
-                    icon: Icons.settings_outlined,
-                    label: 'Settings',
-                    index: 3,
-                    currentIndex: currentIndex,
-                    onTap: onTap),
               ],
             ),
           ),
