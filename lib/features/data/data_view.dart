@@ -4,10 +4,19 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_progress_model.dart';
+import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/progress_service.dart';
+import '../../data/services/training_program_service.dart';
+import '../../data/services/training_program_store_service.dart';
 import '../exercises/exercise_detail_view.dart';
+import '../home/home_dashboard_content.dart';
+import '../home/home_dashboard_metrics.dart';
+import '../skills/skill_tree_view.dart';
 
 class DataView extends StatefulWidget {
   final bool isActive;
@@ -23,15 +32,24 @@ class DataView extends StatefulWidget {
 
 class _DataViewState extends State<DataView> {
   final _exerciseLogService = ExerciseLogService();
+  final _progressService = ProgressService();
+  final _trainingProgramService = TrainingProgramService();
+  final _trainingProgramStoreService = TrainingProgramStoreService();
 
   bool _loading = true;
   String? _error;
   List<PastWorkout> _workouts = const [];
+  Map<String, ExerciseStatus> _progressMap = {};
+  Map<String, ExerciseProgress> _progressEntries = {};
+  TrainingProgramType _selectedProgramType = TrainingProgramType.fullBody;
+  Map<TrainingTrack, String> _branchSelections = {};
+  Map<String, dynamic> _sessionItemsConfig = const {};
+  List<ActiveSkillPathData> _activeSkillPaths = const [];
 
   @override
   void initState() {
     super.initState();
-    _loadWorkouts();
+    _loadData();
   }
 
   @override
@@ -39,11 +57,11 @@ class _DataViewState extends State<DataView> {
     super.didUpdateWidget(oldWidget);
 
     if (!oldWidget.isActive && widget.isActive) {
-      _loadWorkouts();
+      _loadData();
     }
   }
 
-  Future<void> _loadWorkouts() async {
+  Future<void> _loadData() async {
     final userId = AuthService().currentUser?.id;
     if (userId == null) {
       if (!mounted) return;
@@ -51,6 +69,7 @@ class _DataViewState extends State<DataView> {
         _loading = false;
         _error = 'Sign in to see workout history.';
         _workouts = const [];
+        _activeSkillPaths = const [];
       });
       return;
     }
@@ -61,10 +80,45 @@ class _DataViewState extends State<DataView> {
     });
 
     try {
-      final workouts = await _exerciseLogService.fetchPastWorkouts(userId);
+      final results = await Future.wait([
+        _exerciseLogService.fetchPastWorkouts(userId),
+        _progressService.fetchAll(userId),
+        _trainingProgramStoreService.getOrCreateProgramLogic(userId),
+      ]);
+      final workouts = results[0] as List<PastWorkout>;
+      final progress = results[1] as List<ExerciseProgress>;
+      final logicSnapshot = results[2] as TrainingProgramLogicSnapshot;
+      final progressEntries = {
+        for (final item in progress) item.exerciseId: item,
+      };
+      final progressMap = {
+        for (final item in progress) item.exerciseId: item.status,
+      };
+      final branchSelections = {
+        ..._trainingProgramService.defaultBranchSelections(),
+        ...logicSnapshot.branchSelections,
+      };
+      final sessionItemsConfig = _sessionItemsConfigFor(logicSnapshot.program);
+      final activeSkillPaths =
+          HomeDashboardMetricsCalculator.buildActiveSkillPathData(
+        trainingProgramService: _trainingProgramService,
+        programType: logicSnapshot.program.programType,
+        branchSelections: branchSelections,
+        sessionItemsConfig: sessionItemsConfig,
+        progressMap: progressMap,
+        progressEntries: progressEntries,
+        workouts: workouts,
+      );
+
       if (!mounted) return;
       setState(() {
         _workouts = workouts;
+        _progressMap = progressMap;
+        _progressEntries = progressEntries;
+        _selectedProgramType = logicSnapshot.program.programType;
+        _branchSelections = branchSelections;
+        _sessionItemsConfig = sessionItemsConfig;
+        _activeSkillPaths = activeSkillPaths;
         _loading = false;
       });
     } catch (error) {
@@ -74,6 +128,46 @@ class _DataViewState extends State<DataView> {
         _loading = false;
       });
     }
+  }
+
+  Map<String, dynamic> _sessionItemsConfigFor(UserTrainingProgram? program) {
+    final raw = program?.variationRules['session_items_v1'];
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return const {};
+  }
+
+  Future<void> _openSkillPath(ActiveSkillPathData data) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SkillTreeView(
+          skillCategoryId: data.skillCategoryId,
+          progressMap: _progressMap,
+          onProgressChanged: (exerciseId, status) {
+            setState(() {
+              final updated = ExerciseProgress(
+                exerciseId: exerciseId,
+                status: status,
+                updatedAt: DateTime.now(),
+              );
+              _progressMap[exerciseId] = status;
+              _progressEntries[exerciseId] = updated;
+              _activeSkillPaths =
+                  HomeDashboardMetricsCalculator.buildActiveSkillPathData(
+                trainingProgramService: _trainingProgramService,
+                programType: _selectedProgramType,
+                branchSelections: _branchSelections,
+                sessionItemsConfig: _sessionItemsConfig,
+                progressMap: _progressMap,
+                progressEntries: _progressEntries,
+                workouts: _workouts,
+              );
+            });
+          },
+        ),
+      ),
+    );
   }
 
   void _openWorkout(PastWorkout workout) {
@@ -92,7 +186,7 @@ class _DataViewState extends State<DataView> {
         child: RefreshIndicator(
           color: AppColors.accentPrimary,
           backgroundColor: AppColors.bgTertiary,
-          onRefresh: _loadWorkouts,
+          onRefresh: _loadData,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -101,7 +195,7 @@ class _DataViewState extends State<DataView> {
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                   child: Text(
                     'Data',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -111,10 +205,33 @@ class _DataViewState extends State<DataView> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+                  child: Text(
+                    'Skill paths',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textMuted,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  child: HomeSkillPathsSection(
+                    paths: _activeSkillPaths,
+                    onOpenSkillPath: _openSkillPath,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
                   child: Text(
                     'Past workouts',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textMuted,
@@ -206,7 +323,7 @@ class _PastWorkoutCard extends StatelessWidget {
                         workout.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -215,7 +332,7 @@ class _PastWorkoutCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         _formatWorkoutDate(workout.loggedAt),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMuted,
@@ -282,7 +399,7 @@ class PastWorkoutDetailView extends StatelessWidget {
         elevation: 0,
         title: Text(
           workout.title,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
@@ -300,7 +417,7 @@ class PastWorkoutDetailView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
                 'EXERCISES',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textMuted,
@@ -351,7 +468,7 @@ class _WorkoutDetailHeader extends StatelessWidget {
                   children: [
                     Text(
                       _formatWorkoutDate(workout.loggedAt),
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -361,7 +478,7 @@ class _WorkoutDetailHeader extends StatelessWidget {
                     Text(
                       _formatDuration(
                           workout.loggedAt.difference(workout.startedAt)),
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 12,
                         color: AppColors.textMuted,
                       ),
@@ -449,7 +566,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
                     exercise.exerciseName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -458,7 +575,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 ),
                 Text(
                   '${exercise.setCount} sets',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textMuted,
@@ -469,7 +586,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               _exerciseTotalLabel(exercise),
-              style: GoogleFonts.inter(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 13,
                 color: AppColors.textMuted,
               ),
@@ -547,7 +664,7 @@ class _SummaryChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: AppColors.textSecondary,
@@ -581,7 +698,7 @@ class _SetChip extends StatelessWidget {
       ),
       child: Text(
         'Set ${set.number}: $value',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 12,
           fontWeight: FontWeight.w800,
           color: color,
@@ -622,7 +739,7 @@ class _DataStateMessage extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 17,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -632,7 +749,7 @@ class _DataStateMessage extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               color: AppColors.textMuted,
               height: 1.5,

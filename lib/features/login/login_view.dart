@@ -84,7 +84,7 @@ class _LoginViewState extends State<LoginView> {
                 child: Text(
                   'By continuing, you agree to our Terms of Service and Privacy Policy.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: AppColors.textMuted,
                     height: 16 / 12,
@@ -130,7 +130,7 @@ class _BrandLogo extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           'FORMA',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -152,7 +152,7 @@ class _HeroText extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 44,
               fontWeight: FontWeight.w700,
               letterSpacing: -1,
@@ -167,7 +167,7 @@ class _HeroText extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           'Calisthenics decoded. A clear path from foundation to mastery.',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 14,
             color: _subtitleDim,
             letterSpacing: -0.15,
@@ -212,7 +212,7 @@ class _FeatureItem extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -223,7 +223,7 @@ class _FeatureItem extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                   letterSpacing: -0.15,
@@ -274,7 +274,7 @@ class _AppleButton extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               'Continue with Apple',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: Colors.black,
@@ -306,7 +306,7 @@ class _DevButton extends StatelessWidget {
         child: Center(
           child: Text(
             'Dev Login (anonymous)',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColors.textSecondary,

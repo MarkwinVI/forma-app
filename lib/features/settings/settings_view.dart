@@ -23,7 +23,7 @@ class SettingsView extends StatelessWidget {
             children: [
               Text(
                 'Profile',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -32,7 +32,7 @@ class SettingsView extends StatelessWidget {
               const SizedBox(height: 32),
               Text(
                 'USER ID',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textMuted,
@@ -45,7 +45,7 @@ class SettingsView extends StatelessWidget {
                   Expanded(
                     child: Text(
                       userId,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textPrimary,

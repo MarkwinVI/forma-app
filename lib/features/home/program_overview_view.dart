@@ -94,7 +94,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         elevation: 0,
         title: Text(
           'Program Overview',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: _overviewText,
@@ -106,7 +106,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
             onPressed: _openEditor,
             child: Text(
               'Edit',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: _overviewOrange,
@@ -288,7 +288,7 @@ class _OverviewSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: GoogleFonts.inter(
+      style: GoogleFonts.ibmPlexSans(
         fontSize: 13,
         fontWeight: FontWeight.w700,
         color: _overviewTextSecondary,
@@ -328,7 +328,7 @@ class _SplitCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   splitName,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
                     color: _overviewText,
@@ -338,7 +338,7 @@ class _SplitCard extends StatelessWidget {
               ),
               Text(
                 cadenceLabel.toUpperCase(),
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: _overviewTextSecondary,
@@ -370,7 +370,7 @@ class _SplitCard extends StatelessWidget {
                     child: Center(
                       child: Text(
                         _shortCycleLabel(cycle[index]),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: cycle[index] == TrainingSessionType.rest
@@ -387,7 +387,7 @@ class _SplitCard extends StatelessWidget {
           const SizedBox(height: 13),
           Text(
             'Sessions repeat in order — miss one and it slots into your next training day.',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               color: _overviewTextSecondary,
               height: 1.45,
@@ -470,7 +470,7 @@ class _TrainingBalanceCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.label,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w600,
                           color: _overviewText,
@@ -479,7 +479,7 @@ class _TrainingBalanceCard extends StatelessWidget {
                     ),
                     Text(
                       '${item.percent}%',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: _overviewText,

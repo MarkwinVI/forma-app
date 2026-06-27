@@ -251,7 +251,7 @@ class _BackPill extends StatelessWidget {
       icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
       label: Text(
         'BACK',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 10,
           fontWeight: FontWeight.w800,
           letterSpacing: 1.2,
@@ -391,7 +391,7 @@ class _PeekStrip extends StatelessWidget {
                 children: [
                   Text(
                     totalLabel,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: accentColor,
@@ -403,7 +403,7 @@ class _PeekStrip extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       summary?.isTimed == true ? 'HOLD' : 'REPS',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textMuted,
@@ -417,7 +417,7 @@ class _PeekStrip extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
                         deltaLabel,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: summary!.primaryDelta >= 0
@@ -445,7 +445,7 @@ class _PeekStrip extends StatelessWidget {
                 children: [
                   Text(
                     'PROGRESS',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textMuted,
@@ -458,7 +458,7 @@ class _PeekStrip extends StatelessWidget {
                     children: [
                       Text(
                         'Scroll for history',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12,
                           color: AppColors.textPrimary,
                         ),
@@ -535,7 +535,7 @@ class _HeaderBlock extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             exercise.name.toUpperCase(),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 30,
               fontWeight: FontWeight.w800,
               height: 0.94,
@@ -568,7 +568,7 @@ class _HeaderBlock extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         _levelLabel(exercise.difficulty).toUpperCase(),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -605,7 +605,7 @@ class _HeaderMetric extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           value,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -688,7 +688,7 @@ class _HowToSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       steps[index],
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         color: AppColors.textPrimary,
                         height: 1.5,
@@ -750,7 +750,7 @@ class _FormCheckSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       cue,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         color: AppColors.textPrimary,
                         height: 1.45,
@@ -831,7 +831,7 @@ class _ProgressBlock extends StatelessWidget {
           children: [
             Text(
               summary!.latestPrimaryLabel,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 46,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
@@ -870,7 +870,7 @@ class _ProgressBlock extends StatelessWidget {
           isTimed
               ? 'Top hold this cycle: ${summary!.topSetLabel}'
               : 'Top set this cycle: ${summary!.topSetLabel}',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
@@ -950,7 +950,7 @@ class _TinyMetricCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: color,
@@ -986,7 +986,7 @@ class _SimpleMessageCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -995,7 +995,7 @@ class _SimpleMessageCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             body,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 14,
               color: AppColors.textSecondary,
               height: 1.45,
@@ -1095,7 +1095,7 @@ class _HistorySection extends StatelessWidget {
                             ),
                             Text(
                               '${log.sets.length}×${isTimed ? _formatSecondsCompact(topSet) : topSet}',
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.textPrimary,

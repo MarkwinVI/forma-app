@@ -131,7 +131,7 @@ class _ExerciseSwitchChooserContent extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.4,
@@ -141,7 +141,7 @@ class _ExerciseSwitchChooserContent extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       description,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 14,
                         height: 1.45,
                         color: _switchText2,
@@ -163,7 +163,7 @@ class _ExerciseSwitchChooserContent extends StatelessWidget {
                   ),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
@@ -261,7 +261,7 @@ class _ExerciseSwitchChoiceTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.15,
@@ -271,7 +271,7 @@ class _ExerciseSwitchChoiceTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 13,
                       height: 1.35,
                       color: _switchText2,

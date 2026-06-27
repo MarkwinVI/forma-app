@@ -59,7 +59,7 @@ class _TrainingProgramSettingsViewState
         elevation: 0,
         title: Text(
           'Edit Program',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -75,7 +75,7 @@ class _TrainingProgramSettingsViewState
                 children: [
                   Text(
                     'Training Program Type',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textMuted,
@@ -149,7 +149,7 @@ class _TrainingProgramSettingsViewState
                         )
                       : Text(
                           'Save',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: Colors.black,
@@ -203,7 +203,7 @@ class _ProgramTypeOptionCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -212,7 +212,7 @@ class _ProgramTypeOptionCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     description,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                       height: 1.5,

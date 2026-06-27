@@ -97,7 +97,7 @@ class _NavItem extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.clip,
-              style: GoogleFonts.ibmPlexSans(
+              style: GoogleFonts.ibmPlexSansCondensed(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: color,

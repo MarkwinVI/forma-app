@@ -23,8 +23,10 @@ class HomeDashboardContent extends StatelessWidget {
   final JourneySnapshotData journeySnapshot;
   final List<ActiveSkillPathData> activeSkillPaths;
   final VoidCallback onPrimaryAction;
+  final VoidCallback onSecondaryAction;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenProgramSettings;
+  final ValueChanged<JourneySkillProgressData> onOpenJourneySkill;
   final ValueChanged<ActiveSkillPathData> onOpenSkillPath;
 
   const HomeDashboardContent({
@@ -34,8 +36,10 @@ class HomeDashboardContent extends StatelessWidget {
     required this.journeySnapshot,
     required this.activeSkillPaths,
     required this.onPrimaryAction,
+    required this.onSecondaryAction,
     required this.onOpenSettings,
     required this.onOpenProgramSettings,
+    required this.onOpenJourneySkill,
     required this.onOpenSkillPath,
   });
 
@@ -58,6 +62,7 @@ class HomeDashboardContent extends StatelessWidget {
                 _TodayCard(
                   summary: todaySummary,
                   onPrimaryAction: onPrimaryAction,
+                  onSecondaryAction: onSecondaryAction,
                 ),
                 const SizedBox(height: 12),
                 _WeekStripCard(data: weekStrip),
@@ -65,27 +70,40 @@ class HomeDashboardContent extends StatelessWidget {
                 _ProgramSettingsCard(onTap: onOpenProgramSettings),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(4, 26, 4, 12),
-                  child: _SectionLabel(label: 'Your progress'),
+                  child: _SectionLabel(label: 'Closest to levelling up'),
                 ),
-                _JourneySnapshotCard(data: journeySnapshot),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 26, 4, 12),
-                  child: _SectionHeader(
-                    title: '${activeSkillPaths.length} active skill paths',
-                  ),
+                _JourneySnapshotCard(
+                  data: journeySnapshot,
+                  onOpenSkillPath: onOpenJourneySkill,
                 ),
-                if (activeSkillPaths.isEmpty)
-                  const _EmptySkillPathsCard()
-                else
-                  _ActiveSkillPathList(
-                    paths: activeSkillPaths,
-                    onOpenSkillPath: onOpenSkillPath,
-                  ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class HomeSkillPathsSection extends StatelessWidget {
+  final List<ActiveSkillPathData> paths;
+  final ValueChanged<ActiveSkillPathData> onOpenSkillPath;
+
+  const HomeSkillPathsSection({
+    super.key,
+    required this.paths,
+    required this.onOpenSkillPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (paths.isEmpty) {
+      return const _EmptySkillPathsCard();
+    }
+
+    return _ActiveSkillPathList(
+      paths: paths,
+      onOpenSkillPath: onOpenSkillPath,
     );
   }
 }
@@ -111,7 +129,7 @@ class _TopBar extends StatelessWidget {
         children: [
           Text(
             'FORMA',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSansCondensed(
               fontSize: 21,
               fontWeight: FontWeight.w800,
               color: _homeOrange,
@@ -155,7 +173,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label.toUpperCase(),
-      style: GoogleFonts.inter(
+      style: GoogleFonts.ibmPlexSansCondensed(
         fontSize: 13,
         fontWeight: FontWeight.w700,
         color: _homeTextSecondary,
@@ -165,40 +183,32 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title.toUpperCase(),
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: _homeTextSecondary,
-        letterSpacing: 1.0,
-      ),
-    );
-  }
-}
-
-class _TodayCard extends StatelessWidget {
+class _TodayCard extends StatefulWidget {
   final HomeTodaySummary summary;
   final VoidCallback onPrimaryAction;
+  final VoidCallback onSecondaryAction;
 
   const _TodayCard({
     required this.summary,
     required this.onPrimaryAction,
+    required this.onSecondaryAction,
   });
 
   @override
+  State<_TodayCard> createState() => _TodayCardState();
+}
+
+class _TodayCardState extends State<_TodayCard> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final summary = widget.summary;
     final badgeLabel = summary.isRestDay ? 'RECOVERY' : 'TODAY';
-    final visibleTags = summary.focusTags.take(5).toList();
+    final plannedExercises = summary.plannedExercises;
+    final visibleExercises =
+        _isExpanded ? plannedExercises : plannedExercises.take(4).toList();
+    final canToggleExercises = plannedExercises.length > 4;
 
     return Container(
       width: double.infinity,
@@ -213,7 +223,7 @@ class _TodayCard extends StatelessWidget {
         children: [
           Text(
             badgeLabel,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: _homeOrange,
@@ -223,7 +233,7 @@ class _TodayCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             summary.sessionTitle,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 30,
               fontWeight: FontWeight.w800,
               color: _homeText,
@@ -231,21 +241,66 @@ class _TodayCard extends StatelessWidget {
               height: 1,
             ),
           ),
-          if (visibleTags.isNotEmpty) ...[
+          if (visibleExercises.isNotEmpty) ...[
             const SizedBox(height: 14),
-            Wrap(
-              spacing: 7,
-              runSpacing: 7,
+            Column(
               children: [
-                for (final tag in visibleTags) _TagChip(label: tag),
+                for (var index = 0;
+                    index < visibleExercises.length;
+                    index++) ...[
+                  _PlannedExerciseRow(
+                    index: index + 1,
+                    exercise: visibleExercises[index],
+                    showDivider: index > 0,
+                  ),
+                ],
               ],
+            ),
+          ],
+          if (canToggleExercises) ...[
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => setState(() => _isExpanded = !_isExpanded),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                alignment: Alignment.centerLeft,
+                foregroundColor: _homeOrange,
+                backgroundColor: Colors.transparent,
+                overlayColor: Colors.transparent,
+                splashFactory: NoSplash.splashFactory,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _isExpanded ? 'Show less' : 'Show all',
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: _homeOrange,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Transform.rotate(
+                    angle: _isExpanded ? 3.141592653589793 : 0,
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 16,
+                      color: _homeOrange,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: onPrimaryAction,
+              onPressed: widget.onPrimaryAction,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: _homeOrange,
@@ -266,7 +321,7 @@ class _TodayCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     summary.ctaLabel,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -277,35 +332,101 @@ class _TodayCard extends StatelessWidget {
               ),
             ),
           ),
+          if (!summary.isRestDay) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: widget.onSecondaryAction,
+                style: TextButton.styleFrom(
+                  foregroundColor: _homeText,
+                  minimumSize: const Size.fromHeight(44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: _homeBorder),
+                  ),
+                  backgroundColor: Colors.transparent,
+                ),
+                child: Text(
+                  'Train something else',
+                  style: GoogleFonts.ibmPlexSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _homeText,
+                    letterSpacing: 0.05,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _TagChip extends StatelessWidget {
-  final String label;
+class _PlannedExerciseRow extends StatelessWidget {
+  final int index;
+  final HomePlannedExerciseSummary exercise;
+  final bool showDivider;
 
-  const _TagChip({
-    required this.label,
+  const _PlannedExerciseRow({
+    required this.index,
+    required this.exercise,
+    required this.showDivider,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 9),
       decoration: BoxDecoration(
-        color: _homeCardAlt,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 13.5,
-          fontWeight: FontWeight.w500,
-          color: _homeText,
-          letterSpacing: -0.15,
+        border: Border(
+          top: showDivider
+              ? const BorderSide(color: _homeBorder)
+              : BorderSide.none,
         ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 16,
+            child: Text(
+              '$index',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: _homeTextTertiary,
+                letterSpacing: -0.05,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              exercise.name,
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: _homeText,
+                letterSpacing: -0.12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            exercise.targetLabel,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              color: _homeTextSecondary,
+              letterSpacing: -0.05,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -395,7 +516,7 @@ class _WeekStripDayCell extends StatelessWidget {
         children: [
           Text(
             _weekdayLetter(day.date),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: tertiaryColor,
@@ -405,7 +526,7 @@ class _WeekStripDayCell extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             day.date.day.toString(),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: labelColor,
@@ -419,7 +540,7 @@ class _WeekStripDayCell extends StatelessWidget {
                 : isDone
                     ? '✓'
                     : _shortLabel(day.sessionType),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 9,
               fontWeight: FontWeight.w700,
               color: isDone && !isToday ? _homeOrange : tertiaryColor,
@@ -454,185 +575,352 @@ class _WeekStripDayCell extends StatelessWidget {
   }
 }
 
-class _JourneySnapshotCard extends StatelessWidget {
+class _JourneySnapshotCard extends StatefulWidget {
   final JourneySnapshotData data;
+  final ValueChanged<JourneySkillProgressData> onOpenSkillPath;
 
   const _JourneySnapshotCard({
     required this.data,
+    required this.onOpenSkillPath,
   });
 
   @override
+  State<_JourneySnapshotCard> createState() => _JourneySnapshotCardState();
+}
+
+class _JourneySnapshotCardState extends State<_JourneySnapshotCard> {
+  bool _showAll = false;
+
+  @override
   Widget build(BuildContext context) {
-    final percent = data.maxLevel == 0 ? 0.0 : data.totalLevel / data.maxLevel;
+    final data = widget.data;
+    final visibleSkills =
+        _showAll ? data.closestSkills : data.closestSkills.take(1);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 17, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
       decoration: BoxDecoration(
         color: _homeCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _homeBorder),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'FITNESS LEVEL',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _homeTextSecondary,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      data.totalLevel.toString(),
-                      style: GoogleFonts.inter(
-                        fontSize: 46,
-                        fontWeight: FontWeight.w800,
-                        color: _homeText,
-                        letterSpacing: -1.4,
-                        height: 0.95,
-                      ),
-                    ),
-                  ],
+          if (data.closestSkills.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 12, 0, 10),
+              child: Text(
+                'No active skill progress yet.',
+                style: GoogleFonts.ibmPlexSans(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                  color: _homeTextSecondary,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      data.tierLabel.toUpperCase(),
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _homeOrange,
-                        letterSpacing: 0.4,
-                      ),
+            )
+          else ...[
+            for (var index = 0; index < visibleSkills.length; index++)
+              _JourneySkillRow(
+                data: visibleSkills.elementAt(index),
+                showDivider: index > 0,
+                onTap: () =>
+                    widget.onOpenSkillPath(visibleSkills.elementAt(index)),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: InkWell(
+                onTap: () => setState(() => _showAll = !_showAll),
+                borderRadius: BorderRadius.circular(10),
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: _homeDivider),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'of ${data.maxLevel} max',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _homeTextSecondary,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _showAll
+                            ? 'SHOW FEWER'
+                            : 'SHOW ALL ${data.closestSkills.length} SKILLS',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _homeOrange,
+                          letterSpacing: 0.4,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Transform.rotate(
+                        angle: _showAll ? 3.141592653589793 : 0,
+                        child: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: _homeOrange,
+                          size: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: percent.clamp(0.0, 1.0),
-              minHeight: 8,
-              backgroundColor: _homeCardAlt,
-              color: _homeOrange,
             ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.only(top: 15),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: _homeBorder),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _DenseStat(
-                    value: '${data.totalLevel}',
-                    label: 'TOTAL LEVEL',
-                  ),
-                ),
-                const _VerticalDivider(),
-                Expanded(
-                  child: _DenseStat(
-                    value: '${data.unlockedSkillTrees}/${data.totalSkillTrees}',
-                    label: 'SKILLS',
-                  ),
-                ),
-                const _VerticalDivider(),
-                Expanded(
-                  child: _DenseStat(
-                    value: data.averageSkillLevel.toStringAsFixed(1),
-                    label: 'AVG / SKILL',
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _DenseStat extends StatelessWidget {
-  final String value;
-  final String label;
+class _JourneySkillRow extends StatelessWidget {
+  final JourneySkillProgressData data;
+  final bool showDivider;
+  final VoidCallback onTap;
 
-  const _DenseStat({
-    required this.value,
-    required this.label,
+  const _JourneySkillRow({
+    required this.data,
+    required this.showDivider,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: _homeText,
-              letterSpacing: -0.4,
-              height: 1,
-            ),
+    final deltaColor = switch (data.lastSessionTrend) {
+      JourneySkillTrend.up => _homeGreen,
+      JourneySkillTrend.down => _homeOrange,
+      JourneySkillTrend.flat => _homeTextSecondary,
+    };
+
+    return InkWell(
+      onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(
+            top: showDivider
+                ? const BorderSide(color: _homeDivider)
+                : BorderSide.none,
           ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: _homeTextSecondary,
-              letterSpacing: 0.7,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: _homeCardAlt,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    _trackIcon(data.track),
+                    size: 21,
+                    color: _homeText,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${data.motionLabel.toUpperCase()} TREE',
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: _homeTextTertiary,
+                          letterSpacing: 0.9,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        data.skillTitle,
+                        style: GoogleFonts.ibmPlexSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: _homeText,
+                          letterSpacing: -0.15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 13),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _homeCardAlt,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          data.currentExerciseName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _homeText,
+                            letterSpacing: -0.08,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: _homeOrange,
+                    ),
+                    const SizedBox(width: 9),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _homeOrangeSoft,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          data.nextExerciseName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.ibmPlexSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: _homeOrange,
+                            letterSpacing: -0.08,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 13),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Last ',
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 12.5,
+                                      color: _homeTextSecondary,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: data.lastLabel,
+                                    style: GoogleFonts.ibmPlexSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: _homeText,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 7),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: switch (data.lastSessionTrend) {
+                                JourneySkillTrend.up =>
+                                  _homeGreen.withValues(alpha: 0.13),
+                                JourneySkillTrend.down => _homeOrangeSoft,
+                                JourneySkillTrend.flat => _homeCardAlt,
+                              },
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              data.lastSessionDeltaLabel,
+                              style: GoogleFonts.ibmPlexSans(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: deltaColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Goal ',
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 12.5,
+                              color: _homeTextSecondary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: data.targetLabel,
+                            style: GoogleFonts.ibmPlexSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _homeOrange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: LinearProgressIndicator(
+                    value: data.progressPercent.clamp(0.0, 1.0),
+                    minHeight: 10,
+                    backgroundColor: _homeCardAlt,
+                    color: _homeOrange,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 34,
-      color: _homeBorder,
     );
   }
 }
@@ -648,6 +936,13 @@ class _ActiveSkillPathList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rising = paths
+        .where((path) => path.momentum == HomeSkillMomentum.improving)
+        .toList();
+    final attention = paths
+        .where((path) => path.momentum != HomeSkillMomentum.improving)
+        .toList();
+
     return Container(
       decoration: BoxDecoration(
         color: _homeCard,
@@ -655,21 +950,46 @@ class _ActiveSkillPathList extends StatelessWidget {
         border: Border.all(color: _homeBorder),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var index = 0; index < paths.length; index++) ...[
-            _ActiveSkillPathRow(
-              data: paths[index],
-              isFirst: index == 0,
-              isLast: index == paths.length - 1,
-              onTap: () => onOpenSkillPath(paths[index]),
-            ),
-            if (index != paths.length - 1)
-              const Divider(
-                height: 1,
-                thickness: 1,
-                color: _homeDivider,
-                indent: 66,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 11, 15, 11),
+            child: Text(
+              'BEST-SET VOLUME · LAST 14 DAYS vs PREV. 14',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: _homeTextTertiary,
+                letterSpacing: 0.55,
               ),
+            ),
+          ),
+          if (rising.isNotEmpty) ...[
+            _SkillPathGroupHeader(
+              color: _homeGreen,
+              label: 'On the rise',
+              count: rising.length,
+            ),
+            _SkillPathGroupRows(
+              paths: rising,
+              onOpenSkillPath: onOpenSkillPath,
+            ),
+          ],
+          if (rising.isNotEmpty && attention.isNotEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Divider(height: 1, thickness: 1, color: _homeBorder),
+            ),
+          if (attention.isNotEmpty) ...[
+            _SkillPathGroupHeader(
+              color: _homeGold,
+              label: 'Needs attention',
+              count: attention.length,
+            ),
+            _SkillPathGroupRows(
+              paths: attention,
+              onOpenSkillPath: onOpenSkillPath,
+            ),
           ],
         ],
       ),
@@ -677,38 +997,112 @@ class _ActiveSkillPathList extends StatelessWidget {
   }
 }
 
+class _SkillPathGroupHeader extends StatelessWidget {
+  final Color color;
+  final String label;
+  final int count;
+
+  const _SkillPathGroupHeader({
+    required this.color,
+    required this.label,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 13, 15, 9),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 1.1,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$count',
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _homeTextTertiary,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkillPathGroupRows extends StatelessWidget {
+  final List<ActiveSkillPathData> paths;
+  final ValueChanged<ActiveSkillPathData> onOpenSkillPath;
+
+  const _SkillPathGroupRows({
+    required this.paths,
+    required this.onOpenSkillPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var index = 0; index < paths.length; index++)
+          _ActiveSkillPathRow(
+            data: paths[index],
+            first: index == 0,
+            onTap: () => onOpenSkillPath(paths[index]),
+          ),
+      ],
+    );
+  }
+}
+
 class _ActiveSkillPathRow extends StatelessWidget {
   final ActiveSkillPathData data;
-  final bool isFirst;
-  final bool isLast;
+  final bool first;
   final VoidCallback onTap;
 
   const _ActiveSkillPathRow({
     required this.data,
-    required this.isFirst,
-    required this.isLast,
+    required this.first,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final trendColor = _momentumColor(data.momentum);
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.vertical(
-          top: isFirst ? const Radius.circular(14) : Radius.zero,
-          bottom: isLast ? const Radius.circular(14) : Radius.zero,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(15, 11, 15, 11),
+          decoration: BoxDecoration(
+            border: Border(
+              top: first
+                  ? BorderSide.none
+                  : const BorderSide(color: _homeDivider),
+            ),
+          ),
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: _homeCardAlt,
                   borderRadius: BorderRadius.circular(8),
@@ -726,98 +1120,45 @@ class _ActiveSkillPathRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data.trackLabel.toUpperCase(),
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _homeTextTertiary,
-                        letterSpacing: 0.65,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      data.skillTitle,
+                      data.currentExerciseName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w700,
                         color: _homeText,
                         letterSpacing: -0.15,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Text(
-                          _momentumLabel(data.momentum),
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: trendColor,
-                            letterSpacing: 0.45,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            ' · ${data.note}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _homeTextSecondary,
-                              letterSpacing: -0.05,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 2),
+                    Text(
+                      data.skillTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.ibmPlexSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: _homeTextSecondary,
+                        letterSpacing: -0.05,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.inter(),
-                      children: [
-                        TextSpan(
-                          text: '${data.level}',
-                          style: GoogleFonts.inter(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: _homeText,
-                            letterSpacing: -0.3,
-                            height: 1,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '/10',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _homeTextTertiary,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    data.personalBestLabel,
+                    style: GoogleFonts.ibmPlexSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _homeText,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: 52,
-                    height: 5,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: (data.progressPercent / 100).clamp(0.0, 1.0),
-                        backgroundColor: _homeCardAlt,
-                        color: _homeOrange,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 5),
+                  _SkillDeltaBadge(data: data),
                 ],
               ),
             ],
@@ -826,48 +1167,94 @@ class _ActiveSkillPathRow extends StatelessWidget {
       ),
     );
   }
+}
 
-  Color _momentumColor(HomeSkillMomentum momentum) {
-    switch (momentum) {
-      case HomeSkillMomentum.stalled:
-        return _homeGold;
-      case HomeSkillMomentum.steady:
-        return _homeTextSecondary;
-      case HomeSkillMomentum.improving:
-        return _homeGreen;
-    }
+class _SkillDeltaBadge extends StatelessWidget {
+  final ActiveSkillPathData data;
+
+  const _SkillDeltaBadge({
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _momentumColor(data.momentum);
+    final background = switch (data.momentum) {
+      HomeSkillMomentum.improving => _homeGreen.withValues(alpha: 0.13),
+      HomeSkillMomentum.stalled => _homeGold.withValues(alpha: 0.13),
+      HomeSkillMomentum.steady => _homeCardAlt,
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _momentumIcon(data.momentum),
+            size: 11,
+            color: color,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            data.deltaLabel,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  String _momentumLabel(HomeSkillMomentum momentum) {
-    switch (momentum) {
-      case HomeSkillMomentum.stalled:
-        return 'STALLED';
-      case HomeSkillMomentum.steady:
-        return 'STEADY';
-      case HomeSkillMomentum.improving:
-        return 'IMPROVING';
-    }
+IconData _momentumIcon(HomeSkillMomentum momentum) {
+  switch (momentum) {
+    case HomeSkillMomentum.improving:
+      return Icons.arrow_drop_up_rounded;
+    case HomeSkillMomentum.stalled:
+      return Icons.arrow_drop_down_rounded;
+    case HomeSkillMomentum.steady:
+      return Icons.remove_rounded;
   }
+}
 
-  IconData _trackIcon(TrainingTrack track) {
-    switch (track) {
-      case TrainingTrack.skillWork:
-        return Icons.self_improvement_rounded;
-      case TrainingTrack.verticalPush:
-        return Icons.north_rounded;
-      case TrainingTrack.horizontalPush:
-        return Icons.trending_flat_rounded;
-      case TrainingTrack.verticalPull:
-        return Icons.arrow_upward_rounded;
-      case TrainingTrack.horizontalPull:
-        return Icons.sync_alt_rounded;
-      case TrainingTrack.core:
-        return Icons.radio_button_checked_rounded;
-      case TrainingTrack.squat:
-        return Icons.accessibility_new_rounded;
-      case TrainingTrack.hinge:
-        return Icons.fit_screen_rounded;
-    }
+Color _momentumColor(HomeSkillMomentum momentum) {
+  switch (momentum) {
+    case HomeSkillMomentum.stalled:
+      return _homeGold;
+    case HomeSkillMomentum.steady:
+      return _homeTextSecondary;
+    case HomeSkillMomentum.improving:
+      return _homeGreen;
+  }
+}
+
+IconData _trackIcon(TrainingTrack track) {
+  switch (track) {
+    case TrainingTrack.skillWork:
+      return Icons.self_improvement_rounded;
+    case TrainingTrack.verticalPush:
+      return Icons.north_rounded;
+    case TrainingTrack.horizontalPush:
+      return Icons.trending_flat_rounded;
+    case TrainingTrack.verticalPull:
+      return Icons.arrow_upward_rounded;
+    case TrainingTrack.horizontalPull:
+      return Icons.sync_alt_rounded;
+    case TrainingTrack.core:
+      return Icons.radio_button_checked_rounded;
+    case TrainingTrack.squat:
+      return Icons.accessibility_new_rounded;
+    case TrainingTrack.hinge:
+      return Icons.fit_screen_rounded;
   }
 }
 
@@ -886,7 +1273,7 @@ class _EmptySkillPathsCard extends StatelessWidget {
       ),
       child: Text(
         'No active skill paths are configured yet.',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: _homeTextSecondary,
@@ -929,7 +1316,7 @@ class _ProgramSettingsCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Program overview',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: _homeText,

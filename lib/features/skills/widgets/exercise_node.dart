@@ -193,7 +193,7 @@ class ExerciseNode extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.ibmPlexSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   height: 1.25,

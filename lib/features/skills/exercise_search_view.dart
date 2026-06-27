@@ -108,14 +108,14 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                             child: TextField(
                               controller: _controller,
                               autofocus: true,
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.ibmPlexSans(
                                 fontSize: 14,
                                 color: AppColors.textPrimary,
                                 letterSpacing: -0.15,
                               ),
                               decoration: InputDecoration(
                                 hintText: 'Search exercises...',
-                                hintStyle: GoogleFonts.inter(
+                                hintStyle: GoogleFonts.ibmPlexSans(
                                   fontSize: 14,
                                   color: AppColors.textMuted,
                                   letterSpacing: -0.15,
@@ -148,7 +148,7 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                       padding: const EdgeInsets.only(left: 12),
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 14,
                           color: AppColors.textPrimary,
                         ),
@@ -167,7 +167,7 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                       ? Center(
                           child: Text(
                             'No exercises found',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 14,
                               color: AppColors.textMuted,
                             ),
@@ -268,7 +268,7 @@ class _ExerciseResultRow extends StatelessWidget {
                     children: [
                       Text(
                         exercise.name,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -279,7 +279,7 @@ class _ExerciseResultRow extends StatelessWidget {
                         skillCategory == null
                             ? exercise.category.label
                             : '${skillCategory.title} · ${skillCategory.subtitle}',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           color: AppColors.textMuted,
@@ -293,7 +293,7 @@ class _ExerciseResultRow extends StatelessWidget {
                 children: [
                   Text(
                     statusLabel.toUpperCase(),
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: statusLabelColor,

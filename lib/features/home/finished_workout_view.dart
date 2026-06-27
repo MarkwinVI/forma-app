@@ -152,7 +152,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                   : const Icon(Icons.save_alt_rounded, size: 20),
               label: Text(
                 _saving ? 'Saving' : 'Save workout',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
@@ -213,7 +213,7 @@ class _CelebrationHeader extends StatelessWidget {
           Text(
             workout.historyTitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 29,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF25272B),
@@ -222,7 +222,7 @@ class _CelebrationHeader extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             _formatFinishedAt(workout.finishedAt),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF9A9CA1),
@@ -271,7 +271,7 @@ class _HeroStat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 28,
             fontWeight: FontWeight.w900,
             color: const Color(0xFF25272B),
@@ -281,7 +281,7 @@ class _HeroStat extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           label,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF9A9CA1),
@@ -378,7 +378,7 @@ class _MetricTile extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
@@ -389,7 +389,7 @@ class _MetricTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
@@ -420,7 +420,7 @@ class _ExerciseOverviewList extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             'WORKOUT OVERVIEW',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 12,
               fontWeight: FontWeight.w900,
               color: AppColors.textMuted,
@@ -480,7 +480,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
                   exercise.exercise.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -489,7 +489,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
               ),
               Text(
                 '${exercise.sets.length} sets',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textMuted,
@@ -500,7 +500,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${exercise.track.label} · $totalLabel',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               color: AppColors.textMuted,
             ),
@@ -546,7 +546,7 @@ class _SetSummaryChip extends StatelessWidget {
       ),
       child: Text(
         'Set ${set.number}: $value',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 12,
           fontWeight: FontWeight.w800,
           color: color,

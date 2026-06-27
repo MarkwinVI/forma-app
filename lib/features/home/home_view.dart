@@ -12,8 +12,10 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../skills/skill_tree_view.dart';
+import 'alternate_workout_options_view.dart';
 import 'home_dashboard_content.dart';
 import 'home_dashboard_metrics.dart';
+import 'journey_skill_detail_view.dart';
 import 'live_workout_view.dart';
 import 'program_overview_view.dart';
 import 'session_overview_view.dart';
@@ -234,6 +236,34 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  Future<void> _openAlternateWorkoutOptions() async {
+    final sessionType = _nextSessionType == TrainingSessionType.rest
+        ? TrainingSessionType.fullBody
+        : _nextSessionType;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AlternateWorkoutOptionsView(
+          onOpenBlankWorkout: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => LiveWorkoutView(
+                  recommendation: DailyTrainingRecommendation(
+                    programType: _selectedProgramType,
+                    sessionType: sessionType,
+                    sessionLabel: 'Blank Workout',
+                    isRestDay: false,
+                    items: const [],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   void _openPrimaryAction(DailyTrainingRecommendation recommendation) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -261,6 +291,16 @@ class _HomeViewState extends State<HomeView> {
               _progressEntries[exerciseId] = updated;
             });
           },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openJourneySkill(JourneySkillProgressData data) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => JourneySkillDetailView(
+          skill: data,
         ),
       ),
     );
@@ -300,8 +340,10 @@ class _HomeViewState extends State<HomeView> {
                   journeySnapshot: metrics.journeySnapshot,
                   activeSkillPaths: metrics.activeSkillPaths,
                   onPrimaryAction: () => _openPrimaryAction(recommendation),
+                  onSecondaryAction: _openAlternateWorkoutOptions,
                   onOpenSettings: widget.onOpenSettings ?? () {},
                   onOpenProgramSettings: _openProgramOverview,
+                  onOpenJourneySkill: _openJourneySkill,
                   onOpenSkillPath: _openSkillPath,
                 ),
               ),

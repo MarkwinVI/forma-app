@@ -363,6 +363,29 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     });
   }
 
+  void _addExerciseToSession(Exercise exercise) {
+    final nextItem = TrainingRecommendationItem(
+      track: _trackForExercise(exercise),
+      exercise: exercise,
+      status: _progressMap[exercise.id] ?? ExerciseStatus.inactive,
+      sourceCategory: exercise.category,
+      sourceSkillCategoryId: exercise.skillCategoryId,
+    );
+
+    setState(() {
+      _sessionItems = [..._sessionItems, nextItem];
+      _setDrafts = {
+        ..._setDrafts,
+        nextItem.exercise.id:
+            _setDrafts[nextItem.exercise.id] ?? _initialSetDrafts(nextItem),
+      };
+      _restSecondsByExercise = {
+        ..._restSecondsByExercise,
+        nextItem.exercise.id: _restSecondsByExercise[nextItem.exercise.id] ?? 0,
+      };
+    });
+  }
+
   void _removeExerciseFromSession(TrainingRecommendationItem item) {
     _replaceSessionItems(
       _sessionItems
@@ -590,7 +613,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           surfaceTintColor: _workoutCard,
           title: Text(
             'No data entered',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: _workoutPrimaryText,
@@ -598,7 +621,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           ),
           content: Text(
             'Add at least one completed set before finishing, or discard this workout.',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 14,
               color: _workoutSecondaryText,
               height: 1.4,
@@ -609,7 +632,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Return',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w800,
                   color: _workoutPrimaryText,
                 ),
@@ -623,7 +646,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
               },
               child: Text(
                 'Discard workout',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w800,
                   color: _workoutDanger,
                 ),
@@ -726,6 +749,20 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _replaceExerciseInSession(item, replacement);
   }
 
+  Future<void> _openAddExercise() async {
+    final addition = await Navigator.of(context).push<Exercise>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const _ReplaceSingleExerciseView(
+          currentExerciseId: '',
+          section: ExerciseProgramSection.mainExercises,
+        ),
+      ),
+    );
+    if (addition == null) return;
+    _addExerciseToSession(addition);
+  }
+
   Future<void> _openExerciseActions(
     TrainingRecommendationItem item,
     ExerciseProgramSection section,
@@ -806,7 +843,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                     ),
                     children: [
                       if (visibleSections.isEmpty)
-                        const _EmptyWorkoutState()
+                        _EmptyWorkoutState(onAddExercise: _openAddExercise)
                       else
                         ...visibleSections.map(
                           (entry) => _LiveSectionBlock(
@@ -864,7 +901,7 @@ class _HideKeyboardButton extends StatelessWidget {
       icon: const Icon(Icons.keyboard_hide_rounded, size: 18),
       label: Text(
         'Hide keyboard',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 13,
           fontWeight: FontWeight.w800,
           color: Colors.white,
@@ -917,7 +954,7 @@ class _LiveWorkoutTopBar extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: _workoutPrimaryText,
@@ -929,7 +966,7 @@ class _LiveWorkoutTopBar extends StatelessWidget {
                     '$subtitle · $completedSets/$totalSets sets',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
                       color: _workoutSecondaryText,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -954,7 +991,7 @@ class _LiveWorkoutTopBar extends StatelessWidget {
             ),
             child: Text(
               'Finish',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.ibmPlexSans(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: _workoutAccent,
@@ -1005,7 +1042,7 @@ class _TimerPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             elapsed,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: _workoutPrimaryText,
@@ -1053,7 +1090,7 @@ class _ProgressRing extends StatelessWidget {
           ),
           Text(
             progress >= 1 ? '✓' : completed.toString(),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 9,
               fontWeight: FontWeight.w700,
               color: progress >= 1 ? _workoutDone : _workoutPrimaryText,
@@ -1127,7 +1164,7 @@ class _LiveSectionBlock extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   section.label.toUpperCase(),
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: _workoutPrimaryText,
@@ -1137,7 +1174,7 @@ class _LiveSectionBlock extends StatelessWidget {
                 const SizedBox(width: 7),
                 Text(
                   '${items.length} ${items.length == 1 ? 'exercise' : 'exercises'}',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 12,
                     color: _workoutSecondaryText,
                   ),
@@ -1303,7 +1340,7 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
                           exercise.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: _workoutPrimaryText,
@@ -1315,7 +1352,7 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
                           _targetSummary(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             color: _workoutSecondaryText,
                           ),
@@ -1424,7 +1461,7 @@ class _LiveExerciseCardState extends State<_LiveExerciseCard> {
                     icon: const Icon(Icons.add_rounded, size: 16),
                     label: Text(
                       'Add Set',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.2,
@@ -1489,7 +1526,7 @@ class _ExerciseCompletionPill extends StatelessWidget {
       ),
       child: Text(
         '$completed/$total',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 13,
           fontWeight: FontWeight.w500,
           color: allDone ? _workoutDone : _workoutSecondaryText,
@@ -1547,7 +1584,7 @@ class _RestIntervalRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             'Rest timer',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: _workoutSecondaryText,
@@ -1556,7 +1593,7 @@ class _RestIntervalRow extends StatelessWidget {
           const Spacer(),
           Text(
             _formatRestLabel(restSeconds),
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color:
@@ -1634,7 +1671,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
                       'Cancel',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         color: _workoutSecondaryText,
@@ -1645,7 +1682,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                     child: Text(
                       'Rest Interval',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                         color: _workoutPrimaryText,
@@ -1657,7 +1694,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                     onPressed: () => Navigator.of(context).pop(_selectedValue),
                     child: Text(
                       'Done',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: _workoutAccent,
@@ -1690,7 +1727,7 @@ class _RestPickerSheetState extends State<_RestPickerSheet> {
                         Center(
                           child: Text(
                             _formatRestLabel(option),
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.ibmPlexSans(
                               fontSize: 24,
                               fontWeight: FontWeight.w500,
                               color: _workoutPrimaryText,
@@ -1757,7 +1794,7 @@ class _StickyRestIndicator extends StatelessWidget {
                     children: [
                       Text(
                         'Rest',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: _workoutSecondaryText,
@@ -1767,7 +1804,7 @@ class _StickyRestIndicator extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         _formatCountdownLabel(remainingSeconds),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                           color: _workoutPrimaryText,
@@ -1837,7 +1874,7 @@ class _RestActionChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
+        style: GoogleFonts.ibmPlexSans(
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: _workoutPrimaryText,
@@ -1933,7 +1970,7 @@ class _ReorderExercisesSheetState extends State<_ReorderExercisesSheet> {
         onPressed: () => Navigator.of(context).pop(_items),
         child: Text(
           'Done',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.ibmPlexSans(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: _workoutAccent,
@@ -1966,7 +2003,7 @@ class _ReorderExercisesSheetState extends State<_ReorderExercisesSheet> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                   title: Text(
                     item.exercise.name,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: _workoutPrimaryText,
@@ -1974,7 +2011,7 @@ class _ReorderExercisesSheetState extends State<_ReorderExercisesSheet> {
                   ),
                   subtitle: Text(
                     item.track.label,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 12,
                       color: _workoutSecondaryText,
                     ),
@@ -2068,7 +2105,7 @@ class _ReplaceSingleExerciseViewState
                         const SizedBox(height: 8),
                         Text(
                           'Switch Exercise',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.4,
@@ -2089,7 +2126,7 @@ class _ReplaceSingleExerciseViewState
                     ),
                     child: Text(
                       'Cancel',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2209,7 +2246,7 @@ class _ReplaceSingleExerciseOptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.18,
@@ -2219,7 +2256,7 @@ class _ReplaceSingleExerciseOptionTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 12.5,
                       color: _workoutSecondaryText,
                     ),
@@ -2307,7 +2344,7 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
                         const SizedBox(height: 8),
                         Text(
                           _showBranches ? 'Pick Branch' : 'Pick Progression',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.4,
@@ -2328,7 +2365,7 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
                     ),
                     child: Text(
                       'Cancel',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.ibmPlexSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2341,7 +2378,7 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
                 _showBranches
                     ? 'Each branch is a different path through the ${category.title.toLowerCase()} tree.'
                     : 'Choose the skill tree you want this item to follow.',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 14,
                   height: 1.45,
                   color: _workoutSecondaryText,
@@ -2515,7 +2552,7 @@ class _ProgressionBranchList extends StatelessWidget {
                     children: [
                       Text(
                         _branchTitle(category, branch.id),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.18,
@@ -2525,7 +2562,7 @@ class _ProgressionBranchList extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         _branchRange(category, branch.id),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 12.5,
                           color: _workoutSecondaryText,
                         ),
@@ -2594,7 +2631,7 @@ class _ActionSheetScaffold extends StatelessWidget {
                         Text(
                           title,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             color: _workoutPrimaryText,
@@ -2682,7 +2719,7 @@ class _ActionSheetRow extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: color,
@@ -2726,7 +2763,7 @@ class _ActionSheetMessage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: _workoutPrimaryText,
@@ -2735,7 +2772,7 @@ class _ActionSheetMessage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             body,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.ibmPlexSans(
               fontSize: 13,
               color: _workoutSecondaryText,
               height: 1.4,
@@ -2789,7 +2826,7 @@ class _SetHeader extends StatelessWidget {
   }
 
   static TextStyle _setHeaderStyle() {
-    return GoogleFonts.inter(
+    return GoogleFonts.ibmPlexSans(
       fontSize: 11,
       fontWeight: FontWeight.w500,
       color: _workoutTertiaryText,
@@ -2862,7 +2899,7 @@ class _SetRowState extends State<_SetRow> {
               child: Text(
                 widget.set.number.toString(),
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: completed ? _workoutDone : _workoutSecondaryText,
@@ -2878,7 +2915,7 @@ class _SetRowState extends State<_SetRow> {
                   widget.set.previousLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.ibmPlexSans(
                     fontSize: 13,
                     color: _workoutTertiaryText,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -2897,7 +2934,7 @@ class _SetRowState extends State<_SetRow> {
                   final parsed = int.tryParse(value);
                   widget.onTargetChanged(parsed);
                 },
-                style: GoogleFonts.inter(
+                style: GoogleFonts.ibmPlexSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
                   color: _workoutPrimaryText,
@@ -3064,7 +3101,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                           widget.exerciseName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             color: _workoutPrimaryText,
@@ -3074,7 +3111,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                         const SizedBox(height: 4),
                         Text(
                           'Target ${widget.initialTarget} sec',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 13,
                             color: _workoutSecondaryText,
                           ),
@@ -3103,7 +3140,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                     ? Text(
                         _countdown.toString(),
                         key: ValueKey(_countdown),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 86,
                           fontWeight: FontWeight.w900,
                           color: widget.accentColor,
@@ -3113,7 +3150,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                     : Text(
                         _formatElapsed(),
                         key: const ValueKey('elapsed'),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.ibmPlexSans(
                           fontSize: 64,
                           fontWeight: FontWeight.w900,
                           color: _workoutPrimaryText,
@@ -3146,7 +3183,7 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
                   icon: const Icon(Icons.check_rounded, size: 18),
                   label: Text(
                     'Save',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.ibmPlexSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.2,
@@ -3163,7 +3200,11 @@ class _TimedSetTimerSheetState extends State<_TimedSetTimerSheet> {
 }
 
 class _EmptyWorkoutState extends StatelessWidget {
-  const _EmptyWorkoutState();
+  final VoidCallback onAddExercise;
+
+  const _EmptyWorkoutState({
+    required this.onAddExercise,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -3174,13 +3215,35 @@ class _EmptyWorkoutState extends StatelessWidget {
         color: _workoutCard,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Text(
-        'No exercises queued for this session.',
-        textAlign: TextAlign.center,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          color: _workoutSecondaryText,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'No exercises queued for this session.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.ibmPlexSans(
+              fontSize: 14,
+              color: _workoutSecondaryText,
+            ),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: onAddExercise,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _workoutAccent,
+              side: const BorderSide(color: _workoutSurfaceBorder),
+              minimumSize: const Size(0, 44),
+            ),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(
+              'Add exercise',
+              style: GoogleFonts.ibmPlexSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

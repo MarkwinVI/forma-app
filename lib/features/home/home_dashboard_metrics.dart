@@ -30,6 +30,7 @@ class HomeTodaySummary {
   final int exerciseCount;
   final int estimatedDurationMinutes;
   final List<String> focusTags;
+  final List<HomePlannedExerciseSummary> plannedExercises;
   final List<HomeTodayMixSegment> mixSegments;
   final String supportingText;
 
@@ -40,8 +41,19 @@ class HomeTodaySummary {
     required this.exerciseCount,
     required this.estimatedDurationMinutes,
     required this.focusTags,
+    required this.plannedExercises,
     required this.mixSegments,
     required this.supportingText,
+  });
+}
+
+class HomePlannedExerciseSummary {
+  final String name;
+  final String targetLabel;
+
+  const HomePlannedExerciseSummary({
+    required this.name,
+    required this.targetLabel,
   });
 }
 
@@ -92,6 +104,9 @@ class JourneySnapshotData {
   final String tierLabel;
   final int unlockedSkillTrees;
   final int totalSkillTrees;
+  final String nextTierLabel;
+  final int levelsToNextTier;
+  final List<JourneySkillProgressData> closestSkills;
 
   const JourneySnapshotData({
     required this.totalLevel,
@@ -100,6 +115,79 @@ class JourneySnapshotData {
     required this.tierLabel,
     required this.unlockedSkillTrees,
     required this.totalSkillTrees,
+    required this.nextTierLabel,
+    required this.levelsToNextTier,
+    required this.closestSkills,
+  });
+}
+
+enum JourneySkillTrend { up, down, flat }
+
+enum JourneySkillStageStatus { cleared, inProgress, locked }
+
+class JourneySkillStageHistoryPoint {
+  final int value;
+  final DateTime loggedAt;
+
+  const JourneySkillStageHistoryPoint({
+    required this.value,
+    required this.loggedAt,
+  });
+}
+
+class JourneySkillStageData {
+  final String exerciseId;
+  final String exerciseName;
+  final JourneySkillStageStatus status;
+  final int targetVolume;
+  final String targetLabel;
+  final List<JourneySkillStageHistoryPoint> history;
+  final String? unlockRequirementName;
+
+  const JourneySkillStageData({
+    required this.exerciseId,
+    required this.exerciseName,
+    required this.status,
+    required this.targetVolume,
+    required this.targetLabel,
+    required this.history,
+    required this.unlockRequirementName,
+  });
+}
+
+class JourneySkillProgressData {
+  final TrainingTrack track;
+  final String skillCategoryId;
+  final String branchId;
+  final String motionLabel;
+  final String skillTitle;
+  final String currentExerciseName;
+  final String nextExerciseName;
+  final int targetVolume;
+  final int lastSessionVolume;
+  final String targetLabel;
+  final String lastLabel;
+  final String lastSessionDeltaLabel;
+  final JourneySkillTrend lastSessionTrend;
+  final double progressPercent;
+  final List<JourneySkillStageData> stages;
+
+  const JourneySkillProgressData({
+    required this.track,
+    required this.skillCategoryId,
+    required this.branchId,
+    required this.motionLabel,
+    required this.skillTitle,
+    required this.currentExerciseName,
+    required this.nextExerciseName,
+    required this.targetVolume,
+    required this.lastSessionVolume,
+    required this.targetLabel,
+    required this.lastLabel,
+    required this.lastSessionDeltaLabel,
+    required this.lastSessionTrend,
+    required this.progressPercent,
+    required this.stages,
   });
 }
 
@@ -114,6 +202,9 @@ class ActiveSkillPathData {
   final int progressPercent;
   final HomeSkillMomentum momentum;
   final String note;
+  final String personalBestLabel;
+  final String deltaLabel;
+  final bool isTimed;
 
   const ActiveSkillPathData({
     required this.track,
@@ -126,12 +217,16 @@ class ActiveSkillPathData {
     required this.progressPercent,
     required this.momentum,
     required this.note,
+    required this.personalBestLabel,
+    required this.deltaLabel,
+    required this.isTimed,
   });
 }
 
 class HomeDashboardMetricsCalculator {
   static const double _activeStepCredit = 0.6;
   static const Duration _recentStatusPromotionWindow = Duration(days: 28);
+  static final DateTime _dummyComparisonNow = DateTime(2026, 6, 19);
 
   static HomeDashboardMetrics build({
     required DailyTrainingRecommendation recommendation,
@@ -160,7 +255,15 @@ class HomeDashboardMetricsCalculator {
         nextSessionType: nextSessionType,
         now: now,
       ),
-      journeySnapshot: buildJourneySnapshotData(progressMap),
+      journeySnapshot: buildJourneySnapshotData(
+        trainingProgramService: trainingProgramService,
+        programType: programType,
+        branchSelections: branchSelections,
+        sessionItemsConfig: sessionItemsConfig,
+        progressMap: progressMap,
+        workouts: workouts,
+        now: now,
+      ),
       activeSkillPaths: buildActiveSkillPathData(
         trainingProgramService: trainingProgramService,
         programType: programType,
@@ -180,7 +283,9 @@ class HomeDashboardMetricsCalculator {
     final sessionTitle = recommendation.isRestDay
         ? 'Recovery'
         : _homeSessionTitle(recommendation.sessionType);
-    final tags = recommendation.items.map((item) => item.exercise.name).take(4);
+    final plannedExercises =
+        recommendation.items.map(_buildPlannedExerciseSummary).toList();
+    final tags = plannedExercises.map((exercise) => exercise.name);
 
     return HomeTodaySummary(
       sessionTitle: sessionTitle,
@@ -189,6 +294,7 @@ class HomeDashboardMetricsCalculator {
       exerciseCount: recommendation.items.length,
       estimatedDurationMinutes: _estimateWorkoutMinutes(recommendation),
       focusTags: tags.toList(),
+      plannedExercises: plannedExercises,
       mixSegments: _buildTodayMixSegments(recommendation),
       supportingText: recommendation.isRestDay
           ? 'Take the day to recover, then review the next session and keep the split moving.'
@@ -243,9 +349,15 @@ class HomeDashboardMetricsCalculator {
     );
   }
 
-  static JourneySnapshotData buildJourneySnapshotData(
-    Map<String, ExerciseStatus> progressMap,
-  ) {
+  static JourneySnapshotData buildJourneySnapshotData({
+    required TrainingProgramService trainingProgramService,
+    required TrainingProgramType programType,
+    required Map<TrainingTrack, String> branchSelections,
+    required Map<String, dynamic> sessionItemsConfig,
+    required Map<String, ExerciseStatus> progressMap,
+    required List<PastWorkout> workouts,
+    DateTime? now,
+  }) {
     final categories = SkillCategoryCatalog.browsable();
     final treeLevels = [
       for (final category in categories)
@@ -254,14 +366,34 @@ class HomeDashboardMetricsCalculator {
     final total = treeLevels.fold<double>(0, (sum, level) => sum + level);
     final max = categories.length * 10;
     final average = categories.isEmpty ? 0.0 : total / categories.length;
+    final totalLevel = total.round();
+    final tier = _tierForAverage(average);
+    final nextTier = _nextTierForAverage(average);
+    final nextTierAt = _nextTierThresholdTotal(
+      average: average,
+      treeCount: categories.length,
+      maxLevel: max,
+    );
+    final closestSkills = buildJourneySkillProgressData(
+      trainingProgramService: trainingProgramService,
+      programType: programType,
+      branchSelections: branchSelections,
+      sessionItemsConfig: sessionItemsConfig,
+      progressMap: progressMap,
+      workouts: workouts,
+      now: now,
+    );
 
     return JourneySnapshotData(
-      totalLevel: total.round(),
+      totalLevel: totalLevel,
       maxLevel: max,
       averageSkillLevel: double.parse(average.toStringAsFixed(1)),
-      tierLabel: _tierForAverage(average),
+      tierLabel: tier,
       unlockedSkillTrees: treeLevels.where((level) => level > 0).length,
       totalSkillTrees: categories.length,
+      nextTierLabel: nextTier,
+      levelsToNextTier: nextTierAt > totalLevel ? nextTierAt - totalLevel : 0,
+      closestSkills: closestSkills,
     );
   }
 
@@ -346,6 +478,7 @@ class HomeDashboardMetricsCalculator {
             .toList();
 
     final rows = <ActiveSkillPathData>[];
+    final comparisonNow = now ?? _dummyComparisonNow;
     for (final option in options) {
       final category = categoriesById[option.sourceSkillCategoryId];
       if (category == null) continue;
@@ -355,14 +488,20 @@ class HomeDashboardMetricsCalculator {
       final progressScore =
           branchScoreForExerciseIds(option.exerciseIds, progressMap);
       final progressPercent = (progressScore * 100).round();
+      final performance = currentExercise == null
+          ? const _ExercisePerformanceSnapshot.empty()
+          : _performanceSnapshotForExercise(
+              exerciseId: currentExercise.id,
+              workouts: workouts,
+              now: comparisonNow,
+            );
       final momentum = _momentumForExercise(
-        exercise: currentExercise,
-        workouts: workouts,
+        performance: performance,
         currentStatus: progressMap[currentExercise?.id],
         progressEntry: currentExercise == null
             ? null
             : progressEntries[currentExercise.id],
-        now: now,
+        now: comparisonNow,
       );
 
       rows.add(
@@ -378,9 +517,11 @@ class HomeDashboardMetricsCalculator {
           momentum: momentum,
           note: _momentumNote(
             momentum: momentum,
-            exercise: currentExercise,
-            workouts: workouts,
+            performance: performance,
           ),
+          personalBestLabel: _personalBestLabel(performance),
+          deltaLabel: _deltaLabel(performance),
+          isTimed: performance.isTimed,
         ),
       );
     }
@@ -390,6 +531,110 @@ class HomeDashboardMetricsCalculator {
           _momentumSeverity(a.momentum) - _momentumSeverity(b.momentum);
       if (severity != 0) return severity;
       return a.trackLabel.compareTo(b.trackLabel);
+    });
+
+    return rows;
+  }
+
+  static List<JourneySkillProgressData> buildJourneySkillProgressData({
+    required TrainingProgramService trainingProgramService,
+    required TrainingProgramType programType,
+    required Map<TrainingTrack, String> branchSelections,
+    required Map<String, dynamic> sessionItemsConfig,
+    required Map<String, ExerciseStatus> progressMap,
+    required List<PastWorkout> workouts,
+    DateTime? now,
+  }) {
+    final categoriesById = {
+      for (final category in SkillCategoryCatalog.browsable())
+        category.id: category,
+    };
+    final configuredOptions = _activePathOptionsFromSessionConfig(
+      trainingProgramService: trainingProgramService,
+      programType: programType,
+      sessionItemsConfig: sessionItemsConfig,
+      categoriesById: categoriesById,
+    );
+    if (configuredOptions.isEmpty) {
+      return const [];
+    }
+    final options = configuredOptions;
+    final comparisonNow = now ?? _dummyComparisonNow;
+    final rows = <JourneySkillProgressData>[];
+
+    for (final option in options) {
+      final category = categoriesById[option.sourceSkillCategoryId];
+      if (category == null) continue;
+
+      final currentExercise =
+          trainingProgramService.currentExerciseForOption(option, progressMap);
+      if (currentExercise == null) continue;
+
+      final performance = _performanceSnapshotForExercise(
+        exerciseId: currentExercise.id,
+        workouts: workouts,
+        now: comparisonNow,
+      );
+      final latestVolumes = _latestSessionVolumesForExercise(
+        currentExercise.id,
+        workouts,
+        limit: 2,
+      );
+      final targetVolume = _targetVolumeForExercise(currentExercise);
+      final lastSessionVolume =
+          _latestSessionVolumeForExercise(currentExercise.id, workouts);
+      final previousSessionVolume =
+          latestVolumes.length > 1 ? latestVolumes[1] : lastSessionVolume;
+      final progressPercent = targetVolume <= 0
+          ? 0.0
+          : (lastSessionVolume / targetVolume).clamp(0.0, 1.0);
+      final nextExercise = _nextExerciseInPath(
+        option.exerciseIds,
+        currentExercise.id,
+      );
+
+      rows.add(
+        JourneySkillProgressData(
+          track: option.track,
+          skillCategoryId: category.id,
+          branchId: option.trainingPathId,
+          motionLabel: category.title,
+          skillTitle: _skillTitleForOption(category, option.trainingPathId),
+          currentExerciseName: currentExercise.name,
+          nextExerciseName: nextExercise?.name ?? currentExercise.name,
+          targetVolume: targetVolume,
+          lastSessionVolume: lastSessionVolume,
+          targetLabel: _volumeLabel(
+            value: targetVolume,
+            isTimed: performance.isTimed,
+          ),
+          lastLabel: _volumeLabel(
+            value: lastSessionVolume,
+            isTimed: performance.isTimed,
+          ),
+          lastSessionDeltaLabel: _sessionDeltaLabel(
+            current: lastSessionVolume,
+            previous: previousSessionVolume,
+            isTimed: performance.isTimed,
+          ),
+          lastSessionTrend: _sessionTrend(
+            current: lastSessionVolume,
+            previous: previousSessionVolume,
+          ),
+          progressPercent: progressPercent,
+          stages: _buildJourneySkillStages(
+            exerciseIds: option.exerciseIds,
+            progressMap: progressMap,
+            workouts: workouts,
+          ),
+        ),
+      );
+    }
+
+    rows.sort((a, b) {
+      final progressCompare = b.progressPercent.compareTo(a.progressPercent);
+      if (progressCompare != 0) return progressCompare;
+      return a.skillTitle.compareTo(b.skillTitle);
     });
 
     return rows;
@@ -530,6 +775,264 @@ class HomeDashboardMetricsCalculator {
       ..sort((a, b) => b.percentage.compareTo(a.percentage));
   }
 
+  static HomePlannedExerciseSummary _buildPlannedExerciseSummary(
+    TrainingRecommendationItem item,
+  ) {
+    final setCount = _defaultSetCount(item);
+    final target = _defaultTarget(item);
+    final targetLabel = _isTimedExercise(item.exercise)
+        ? '$setCount × ${target}s'
+        : '$setCount × $target';
+
+    return HomePlannedExerciseSummary(
+      name: item.exercise.name,
+      targetLabel: targetLabel,
+    );
+  }
+
+  static bool _isTimedExercise(Exercise exercise) {
+    final name = exercise.name.toLowerCase();
+    final description = exercise.description.toLowerCase();
+
+    return name.contains('hold') ||
+        name.contains('hang') ||
+        name.contains('plank') ||
+        name.contains('lever') ||
+        name.contains('handstand') ||
+        description.contains('for time');
+  }
+
+  static int _defaultSetCount(TrainingRecommendationItem item) {
+    switch (item.exercise.programSection) {
+      case ExerciseProgramSection.warmup:
+        return 2;
+      case ExerciseProgramSection.skillWork:
+        return 3;
+      case ExerciseProgramSection.mainExercises:
+        return item.exercise.difficulty >= 4 ? 4 : 3;
+      case ExerciseProgramSection.coolDown:
+        return 2;
+    }
+  }
+
+  static int _defaultTarget(TrainingRecommendationItem item) {
+    if (_isTimedExercise(item.exercise)) {
+      if (item.exercise.difficulty <= 1) return 30;
+      if (item.exercise.difficulty <= 3) return 20;
+      return 12;
+    }
+
+    if (item.exercise.difficulty <= 1) return 12;
+    if (item.exercise.difficulty <= 3) return 8;
+    return 5;
+  }
+
+  static int _targetVolumeForExercise(Exercise exercise) {
+    final setCount = switch (exercise.programSection) {
+      ExerciseProgramSection.warmup => 2,
+      ExerciseProgramSection.skillWork => 3,
+      ExerciseProgramSection.mainExercises => exercise.difficulty >= 4 ? 4 : 3,
+      ExerciseProgramSection.coolDown => 2,
+    };
+    final targetPerSet = _targetValueForExercise(exercise);
+    return setCount * targetPerSet;
+  }
+
+  static int _targetValueForExercise(Exercise exercise) {
+    if (_isTimedExercise(exercise)) {
+      if (exercise.difficulty <= 1) return 30;
+      if (exercise.difficulty <= 3) return 20;
+      return 12;
+    }
+
+    if (exercise.difficulty <= 1) return 12;
+    if (exercise.difficulty <= 3) return 8;
+    return 5;
+  }
+
+  static int _latestSessionVolumeForExercise(
+    String exerciseId,
+    List<PastWorkout> workouts,
+  ) {
+    final sorted = [...workouts]
+      ..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
+    for (final workout in sorted) {
+      final match = workout.exercises
+          .where((item) => item.exerciseId == exerciseId)
+          .firstOrNull;
+      if (match == null || match.sets.isEmpty) continue;
+      return match.sets.fold<int>(0, (sum, set) => sum + set.value);
+    }
+    return 0;
+  }
+
+  static List<int> _latestSessionVolumesForExercise(
+    String exerciseId,
+    List<PastWorkout> workouts, {
+    required int limit,
+  }) {
+    final sorted = [...workouts]
+      ..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
+    final values = <int>[];
+    for (final workout in sorted) {
+      final match = workout.exercises
+          .where((item) => item.exerciseId == exerciseId)
+          .firstOrNull;
+      if (match == null || match.sets.isEmpty) continue;
+      values.add(match.sets.fold<int>(0, (sum, set) => sum + set.value));
+      if (values.length >= limit) break;
+    }
+    return values;
+  }
+
+  static JourneySkillTrend _sessionTrend({
+    required int current,
+    required int previous,
+  }) {
+    if (current > previous) return JourneySkillTrend.up;
+    if (current < previous) return JourneySkillTrend.down;
+    return JourneySkillTrend.flat;
+  }
+
+  static String _sessionDeltaLabel({
+    required int current,
+    required int previous,
+    required bool isTimed,
+  }) {
+    final delta = current - previous;
+    if (delta == 0) return 'no change';
+    final absDelta = delta.abs();
+    final suffix = isTimed ? 's' : ' reps';
+    final sign = delta > 0 ? '+' : '-';
+    return '$sign$absDelta$suffix';
+  }
+
+  static Exercise? _nextExerciseInPath(
+    List<String> exerciseIds,
+    String currentExerciseId,
+  ) {
+    final currentIndex = exerciseIds.indexOf(currentExerciseId);
+    if (currentIndex < 0 || currentIndex + 1 >= exerciseIds.length) {
+      return null;
+    }
+    return ExerciseCatalog.findById(exerciseIds[currentIndex + 1]);
+  }
+
+  static List<JourneySkillStageData> _buildJourneySkillStages({
+    required List<String> exerciseIds,
+    required Map<String, ExerciseStatus> progressMap,
+    required List<PastWorkout> workouts,
+  }) {
+    if (exerciseIds.isEmpty) return const [];
+
+    final explicitCurrentIndex = exerciseIds.indexWhere(
+      (id) => progressMap[id] == ExerciseStatus.active,
+    );
+    final firstPendingIndex = exerciseIds.indexWhere(
+      (id) => progressMap[id] != ExerciseStatus.mastered,
+    );
+    final currentIndex = explicitCurrentIndex >= 0
+        ? explicitCurrentIndex
+        : firstPendingIndex >= 0
+            ? firstPendingIndex
+            : exerciseIds.length - 1;
+
+    return [
+      for (var index = 0; index < exerciseIds.length; index++)
+        _buildJourneySkillStage(
+          stageIndex: index,
+          exerciseId: exerciseIds[index],
+          previousExerciseId: index > 0 ? exerciseIds[index - 1] : null,
+          currentIndex: currentIndex,
+          progressMap: progressMap,
+          workouts: workouts,
+        ),
+    ];
+  }
+
+  static JourneySkillStageData _buildJourneySkillStage({
+    required int stageIndex,
+    required String exerciseId,
+    required String? previousExerciseId,
+    required int currentIndex,
+    required Map<String, ExerciseStatus> progressMap,
+    required List<PastWorkout> workouts,
+  }) {
+    final exercise = ExerciseCatalog.findById(exerciseId);
+    if (exercise == null) {
+      return const JourneySkillStageData(
+        exerciseId: '',
+        exerciseName: 'Unknown exercise',
+        status: JourneySkillStageStatus.locked,
+        targetVolume: 0,
+        targetLabel: '--',
+        history: [],
+        unlockRequirementName: null,
+      );
+    }
+
+    final targetVolume = _targetVolumeForExercise(exercise);
+    final orderedHistory = _historyForExercise(
+      exerciseId: exerciseId,
+      workouts: workouts,
+    );
+    final status = switch (progressMap[exerciseId] ?? ExerciseStatus.inactive) {
+      ExerciseStatus.mastered => JourneySkillStageStatus.cleared,
+      ExerciseStatus.active => JourneySkillStageStatus.inProgress,
+      ExerciseStatus.inactive => stageIndex == currentIndex
+          ? JourneySkillStageStatus.inProgress
+          : JourneySkillStageStatus.locked,
+    };
+
+    return JourneySkillStageData(
+      exerciseId: exercise.id,
+      exerciseName: exercise.name,
+      status: status,
+      targetVolume: targetVolume,
+      targetLabel: _volumeLabel(
+        value: targetVolume,
+        isTimed: _isTimedExercise(exercise),
+      ),
+      history: orderedHistory,
+      unlockRequirementName: previousExerciseId == null
+          ? null
+          : ExerciseCatalog.findById(previousExerciseId)?.name,
+    );
+  }
+
+  static List<JourneySkillStageHistoryPoint> _historyForExercise({
+    required String exerciseId,
+    required List<PastWorkout> workouts,
+    int limit = 4,
+  }) {
+    final matches = <JourneySkillStageHistoryPoint>[];
+    final sorted = [...workouts]
+      ..sort((a, b) => a.loggedAt.compareTo(b.loggedAt));
+    for (final workout in sorted) {
+      final match = workout.exercises
+          .where((item) => item.exerciseId == exerciseId)
+          .firstOrNull;
+      if (match == null || match.sets.isEmpty) continue;
+      matches.add(
+        JourneySkillStageHistoryPoint(
+          value: match.sets.fold<int>(0, (sum, set) => sum + set.value),
+          loggedAt: workout.loggedAt,
+        ),
+      );
+    }
+
+    if (matches.length <= limit) return matches;
+    return matches.sublist(matches.length - limit);
+  }
+
+  static String _volumeLabel({
+    required int value,
+    required bool isTimed,
+  }) {
+    final suffix = isTimed ? 's' : ' reps';
+    return '$value$suffix';
+  }
+
   static String _mixLabelForTrack(TrainingTrack track) {
     switch (track) {
       case TrainingTrack.verticalPull:
@@ -587,77 +1090,72 @@ class HomeDashboardMetricsCalculator {
     return 'Elite';
   }
 
+  static String _nextTierForAverage(double average) {
+    if (average < 3.5) return 'Intermediate';
+    if (average < 6.5) return 'Advanced';
+    if (average < 8.5) return 'Elite';
+    return 'Elite';
+  }
+
+  static int _nextTierThresholdTotal({
+    required double average,
+    required int treeCount,
+    required int maxLevel,
+  }) {
+    if (treeCount == 0) return 0;
+    if (average < 3.5) return (3.5 * treeCount).ceil();
+    if (average < 6.5) return (6.5 * treeCount).ceil();
+    if (average < 8.5) return (8.5 * treeCount).ceil();
+    return maxLevel;
+  }
+
   static String _skillTitleForOption(SkillCategory category, String branchId) {
     final branch =
         category.branches.where((item) => item.id == branchId).firstOrNull;
     if (branch == null || branch.label.toLowerCase() == 'main') {
       return category.title;
     }
+    if (category.id == SkillCategoryCatalog.coreId) {
+      return branch.label;
+    }
     return '${branch.label} ${category.title}';
   }
 
   static HomeSkillMomentum _momentumForExercise({
-    required Exercise? exercise,
-    required List<PastWorkout> workouts,
+    required _ExercisePerformanceSnapshot performance,
     required ExerciseStatus? currentStatus,
     required ExerciseProgress? progressEntry,
     DateTime? now,
   }) {
-    if (exercise == null) return HomeSkillMomentum.steady;
-
-    final values = _performanceValuesForExercise(exercise.id, workouts);
     final recentPromotion = progressEntry != null &&
         currentStatus != ExerciseStatus.inactive &&
-        (now ?? DateTime.now()).difference(progressEntry.updatedAt) <=
+        (now ?? _dummyComparisonNow).difference(progressEntry.updatedAt) <=
             _recentStatusPromotionWindow;
+    final delta =
+        performance.currentWindowBest - performance.previousWindowBest;
 
-    if (values.isNotEmpty) {
-      final latest = values.first;
-      final previousBest = values.skip(1).fold<int>(
-            0,
-            (best, value) => value > best ? value : best,
-          );
-
-      if (latest > previousBest) {
-        return HomeSkillMomentum.improving;
-      }
-    }
+    if (delta > 0) return HomeSkillMomentum.improving;
 
     if (recentPromotion) return HomeSkillMomentum.improving;
 
-    if (values.length >= 4) {
-      final latest = values.first;
-      final previousBest = values.skip(1).fold<int>(
-            0,
-            (best, value) => value > best ? value : best,
-          );
-      if (latest <= previousBest) {
-        return HomeSkillMomentum.stalled;
-      }
-    }
+    if (delta < 0) return HomeSkillMomentum.stalled;
 
     return HomeSkillMomentum.steady;
   }
 
   static String _momentumNote({
     required HomeSkillMomentum momentum,
-    required Exercise? exercise,
-    required List<PastWorkout> workouts,
+    required _ExercisePerformanceSnapshot performance,
   }) {
-    final name = exercise?.name ?? 'this path';
-    final sessionCount = exercise == null
-        ? 0
-        : _performanceValuesForExercise(exercise.id, workouts).length;
-
     switch (momentum) {
       case HomeSkillMomentum.improving:
-        return 'New momentum on $name';
+        return 'Best set is up from the previous 14 days';
       case HomeSkillMomentum.stalled:
-        return 'No new best in the last $sessionCount sessions';
+        return 'Best set is down from the previous 14 days';
       case HomeSkillMomentum.steady:
-        return sessionCount == 0
+        return performance.personalBest == 0
             ? 'No sessions logged yet'
-            : 'Holding steady on $name';
+            : 'Best set is flat across both 14-day windows';
     }
   }
 
@@ -672,31 +1170,106 @@ class HomeDashboardMetricsCalculator {
     }
   }
 
-  static List<int> _performanceValuesForExercise(
-    String exerciseId,
-    List<PastWorkout> workouts,
-  ) {
-    final values = <int>[];
+  static _ExercisePerformanceSnapshot _performanceSnapshotForExercise({
+    required String exerciseId,
+    required List<PastWorkout> workouts,
+    required DateTime now,
+  }) {
+    final currentWindowStart =
+        _dateOnly(now).subtract(const Duration(days: 13));
+    final previousWindowEnd =
+        currentWindowStart.subtract(const Duration(days: 1));
+    final previousWindowStart =
+        previousWindowEnd.subtract(const Duration(days: 13));
+    var personalBest = 0;
+    var currentWindowBest = 0;
+    var previousWindowBest = 0;
+    var isTimed = false;
+
     for (final workout in workouts) {
       final match = workout.exercises
           .where((item) => item.exerciseId == exerciseId)
           .firstOrNull;
-      if (match == null) continue;
-      if (match.sets.isEmpty) continue;
+      if (match == null || match.sets.isEmpty) continue;
 
-      values.add(
-        match.sets.fold<int>(
-          0,
-          (best, set) => set.value > best ? set.value : best,
-        ),
+      isTimed =
+          isTimed || match.isTimed || match.sets.any((set) => set.isTimed);
+      final bestSet = match.sets.fold<int>(
+        0,
+        (best, set) => set.value > best ? set.value : best,
       );
-      if (values.length == 4) break;
+      if (bestSet > personalBest) {
+        personalBest = bestSet;
+      }
+
+      final loggedAt = _dateOnly(workout.loggedAt);
+      if (!_isOnOrAfter(loggedAt, previousWindowStart) ||
+          !_isOnOrBefore(loggedAt, _dateOnly(now))) {
+        continue;
+      }
+
+      if (_isOnOrAfter(loggedAt, currentWindowStart)) {
+        if (bestSet > currentWindowBest) {
+          currentWindowBest = bestSet;
+        }
+      } else if (_isOnOrBefore(loggedAt, previousWindowEnd)) {
+        if (bestSet > previousWindowBest) {
+          previousWindowBest = bestSet;
+        }
+      }
     }
-    return values;
+
+    return _ExercisePerformanceSnapshot(
+      personalBest: personalBest,
+      currentWindowBest: currentWindowBest,
+      previousWindowBest: previousWindowBest,
+      isTimed: isTimed,
+    );
   }
+
+  static String _personalBestLabel(_ExercisePerformanceSnapshot performance) {
+    if (performance.personalBest <= 0) return 'Best --';
+    final suffix = performance.isTimed ? 's' : ' reps';
+    return 'Best ${performance.personalBest}$suffix';
+  }
+
+  static String _deltaLabel(_ExercisePerformanceSnapshot performance) {
+    final delta =
+        performance.currentWindowBest - performance.previousWindowBest;
+    if (delta == 0) return '0';
+    final sign = delta > 0 ? '+' : '';
+    final suffix = performance.isTimed ? 's' : '';
+    return '$sign$delta$suffix';
+  }
+
+  static bool _isOnOrAfter(DateTime value, DateTime threshold) =>
+      !value.isBefore(threshold);
+
+  static bool _isOnOrBefore(DateTime value, DateTime threshold) =>
+      !value.isAfter(threshold);
 
   static DateTime _dateOnly(DateTime dateTime) =>
       DateTime(dateTime.year, dateTime.month, dateTime.day);
+}
+
+class _ExercisePerformanceSnapshot {
+  final int personalBest;
+  final int currentWindowBest;
+  final int previousWindowBest;
+  final bool isTimed;
+
+  const _ExercisePerformanceSnapshot({
+    required this.personalBest,
+    required this.currentWindowBest,
+    required this.previousWindowBest,
+    required this.isTimed,
+  });
+
+  const _ExercisePerformanceSnapshot.empty()
+      : personalBest = 0,
+        currentWindowBest = 0,
+        previousWindowBest = 0,
+        isTimed = false;
 }
 
 extension<T> on Iterable<T> {

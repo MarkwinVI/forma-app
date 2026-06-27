@@ -83,7 +83,7 @@ class CategoryProgressCard extends StatelessWidget {
                           category.description,
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 12,
                             height: 1.35,
                             color: AppColors.textSecondary,

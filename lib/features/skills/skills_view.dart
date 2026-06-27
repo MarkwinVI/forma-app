@@ -100,7 +100,7 @@ class _SkillsViewState extends State<SkillsView> {
                         ),
                         Text(
                           'Search exercises...',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.ibmPlexSans(
                             fontSize: 14,
                             color: AppColors.textMuted,
                             letterSpacing: -0.1,
