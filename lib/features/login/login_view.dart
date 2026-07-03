@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../data/services/auth_service.dart';
-import '../shell/shell_view.dart';
 
 // Local opacity variants not in the global palette (specific to this screen)
 const _heroTextDim = Color(0x99FFFFFF);    // white 60%
@@ -27,11 +26,8 @@ class _LoginViewState extends State<LoginView> {
   Future<void> _signIn(Future<dynamic> Function() method) async {
     setState(() => _isLoading = true);
     try {
+      // _AppEntry listens to auth state and swaps to the shell on success.
       await method();
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ShellView()),
-      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
