@@ -16,6 +16,7 @@ import 'alternate_workout_options_view.dart';
 import 'home_dashboard_content.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
+import 'program_setup_view.dart';
 import 'journey_skill_detail_view.dart';
 import 'live_workout_view.dart';
 import 'program_overview_view.dart';
@@ -243,6 +244,13 @@ class _HomeViewState extends State<HomeView> {
     return snapshot;
   }
 
+  /// Placeholder until the real program creation flow exists.
+  Future<void> _openProgramSetup() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProgramSetupView()),
+    );
+  }
+
   Future<void> _openProgramOverview() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -368,7 +376,7 @@ class _HomeViewState extends State<HomeView> {
                     backgroundColor: AppColors.surface,
                     onRefresh: _loadHomeData,
                     child: HomeEmptyState(
-                      onBuildProgram: _openProgramOverview,
+                      onBuildProgram: _openProgramSetup,
                       onOpenSettings: widget.onOpenSettings ?? () {},
                     ),
                   )
