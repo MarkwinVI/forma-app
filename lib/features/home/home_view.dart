@@ -23,10 +23,12 @@ import 'session_overview_view.dart';
 
 class HomeView extends StatefulWidget {
   final VoidCallback? onOpenSettings;
+  final bool isActive;
 
   const HomeView({
     super.key,
     this.onOpenSettings,
+    this.isActive = false,
   });
 
   @override
@@ -57,6 +59,18 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _loadHomeData();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
+    // this tab becomes active — e.g. after a dev reset from Settings the
+    // dashboard would otherwise keep showing the deleted program.
+    if (!oldWidget.isActive && widget.isActive) {
+      _loadHomeData();
+    }
   }
 
   Future<void> _loadHomeData() async {

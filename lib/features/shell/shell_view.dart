@@ -21,9 +21,10 @@ class _ShellViewState extends State<ShellView> {
     final pages = [
       HomeView(
         onOpenSettings: () => setState(() => _currentIndex = 3),
+        isActive: _currentIndex == 0,
       ),
       DataView(isActive: _currentIndex == 1),
-      const SkillsView(),
+      SkillsView(isActive: _currentIndex == 2),
       const SettingsView(),
     ];
 

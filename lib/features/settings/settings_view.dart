@@ -167,14 +167,14 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
     if (confirmed != true) return;
     await _run(
       _devToolsService.resetToNewUser,
-      'Account reset — pull down on Home to see the new-user state.',
+      'Account reset — Home now shows the new-user state.',
     );
   }
 
   Future<void> _generateWorkouts() {
     return _run(
       _devToolsService.generateSampleWorkouts,
-      'Added 5 workouts across the last 30 days — pull down to refresh.',
+      'Added 5 workouts across the last 30 days.',
     );
   }
 
