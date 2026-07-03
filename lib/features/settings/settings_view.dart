@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/services/auth_service.dart';
-import '../login/login_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -75,14 +74,9 @@ class SettingsView extends StatelessWidget {
                     foregroundColor: AppColors.accentBright,
                     side: const BorderSide(color: AppColors.borderPrimary),
                   ),
-                  onPressed: () async {
-                    await AuthService().signOut();
-                    if (!context.mounted) return;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const LoginView()),
-                      (_) => false,
-                    );
-                  },
+                  // _AppEntry listens to auth state and swaps to the login
+                  // screen once the session ends.
+                  onPressed: () => AuthService().signOut(),
                   child: const Text('Sign out'),
                 ),
               ),

@@ -37,13 +37,19 @@ class FormaApp extends StatelessWidget {
   }
 }
 
-/// Checks for an existing session on app launch.
+/// Switches between the login and main app based on the auth session,
+/// reacting to sign-in, sign-out, and session expiry.
 class _AppEntry extends StatelessWidget {
   const _AppEntry();
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthService().currentUser;
-    return user != null ? const ShellView() : const LoginView();
+    return StreamBuilder<AuthState>(
+      stream: AuthService().onAuthStateChange,
+      builder: (context, snapshot) {
+        final user = AuthService().currentUser;
+        return user != null ? const ShellView() : const LoginView();
+      },
+    );
   }
 }

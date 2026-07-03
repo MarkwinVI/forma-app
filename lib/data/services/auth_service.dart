@@ -70,6 +70,8 @@ class AuthService {
 
   User? get currentUser => _client.auth.currentUser;
 
+  Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
+
   // ---------- Helpers ----------
 
   Future<void> _upsertUser(
