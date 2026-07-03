@@ -18,40 +18,18 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# Flutter/Dart
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-.metadata
-analysis_options.yaml
-build/
-pubspec.lock
-test/
-
-# Flutter platform scaffolding
-android/
-ios/
-linux/
-macos/
-web/
-windows/
-
-# iOS
-ios/Pods/
-ios/.symlinks/
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-
-# Android
-android/.gradle/
-android/local.properties
-android/key.properties
+/build/
 
 # Web
 lib/generated_plugin_registrant.dart
 
 # Secrets — never commit real keys
-# lib/core/config/app_config.dart is safe (contains only placeholders)
 lib/core/config/app_config.local.dart
