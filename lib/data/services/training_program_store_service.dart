@@ -24,6 +24,32 @@ class TrainingProgramStoreService {
     return UserTrainingProgramSnapshot(program: program, state: state);
   }
 
+  /// Fetch-only variant of [getOrCreateProgramLogic]: returns null when the
+  /// user has not created a training program yet, so callers can show a
+  /// first-run state instead of silently creating a default program.
+  Future<TrainingProgramLogicSnapshot?> fetchProgramLogic(
+    String userId,
+  ) async {
+    final program = await _fetchActiveProgram(userId);
+    if (program == null) return null;
+
+    var state = await _fetchProgramState(program.id);
+    state ??= await _createProgramState(
+      userId: userId,
+      programId: program.id,
+      programType: program.programType,
+    );
+
+    final branchSelections = await _fetchBranchSelections(userId);
+
+    return TrainingProgramLogicSnapshot(
+      program: program,
+      state: state,
+      branchSelections: branchSelections,
+      repGoalProfile: _repGoalProfileFor(program),
+    );
+  }
+
   Future<TrainingProgramLogicSnapshot> getOrCreateProgramLogic(
     String userId,
   ) async {

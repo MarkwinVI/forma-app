@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/catalog/skill_category_catalog.dart';
@@ -116,7 +115,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
             const SizedBox(height: 20),
             Text(
               widget.exercise.name,
-              style: GoogleFonts.ibmPlexSans(
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.65,
@@ -128,7 +127,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
               children: [
                 Text(
                   skillCategory?.title ?? widget.exercise.category.label,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
@@ -141,7 +140,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
             const SizedBox(height: 10),
             Text(
               widget.exercise.description,
-              style: GoogleFonts.ibmPlexSans(
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
                 height: 1.5,
@@ -194,7 +193,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
                     child: Text(
                       'Exercise visualization preview',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: Colors.white.withValues(alpha: 0.92),
@@ -218,9 +217,9 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
                   ),
                   elevation: 0,
                 ),
-                child: Text(
+                child: const Text(
                   'Learn more',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.425,
@@ -230,9 +229,9 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
               ),
             ),
             const SizedBox(height: 22),
-            Text(
+            const Text(
               'STATUS',
-              style: GoogleFonts.ibmPlexSans(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textMuted,
@@ -284,7 +283,7 @@ class DifficultyStars extends StatelessWidget {
             i < difficulty ? Icons.star_rounded : Icons.star_border_rounded,
             size: 10,
             color: i < difficulty
-                ? const Color(0xFFFF6900)
+                ? const Color(0xFFFC5200)
                 : const Color(0xFF3F3F46),
           ),
         ),
@@ -343,7 +342,7 @@ class _PreviewStatusChip extends StatelessWidget {
         child: Center(
           child: Text(
             _label,
-            style: GoogleFonts.ibmPlexSans(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: isSelected ? _color : AppColors.textMuted,

@@ -131,9 +131,9 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
                     height: 16,
                     child: LoadingIndicator(),
                   )
-                : Text(
+                : const Text(
                     'Save',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: _accent,
@@ -152,9 +152,9 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Edit Program',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -1.1,
@@ -164,7 +164,7 @@ class _TrainingProgramLogicViewState extends State<TrainingProgramLogicView> {
                     const SizedBox(height: 6),
                     Text(
                       _programTitle(split),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 15,
                         color: _text2,
                         letterSpacing: -0.1,
@@ -1398,7 +1398,7 @@ class _SplitSettingsViewState extends State<_SplitSettingsView> {
                               day == TrainingSessionType.rest
                                   ? '·'
                                   : _shortSplitPreview(day),
-                              style: GoogleFonts.ibmPlexSans(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: day == TrainingSessionType.rest
@@ -1863,7 +1863,7 @@ class _SettingsScreenScaffold extends StatelessWidget {
               onPressed: onTrailingTap,
               child: Text(
                 trailingText!,
-                style: GoogleFonts.ibmPlexSans(
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
                   color: _accent,
@@ -1884,7 +1884,7 @@ class _SettingsScreenScaffold extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: TextStyle(
                         fontSize: large ? 34 : 28,
                         fontWeight: FontWeight.w700,
                         letterSpacing: large ? -1.1 : -0.7,
@@ -1917,7 +1917,7 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
       child: Text(
         text.toUpperCase(),
-        style: GoogleFonts.ibmPlexSans(
+        style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.7,
@@ -1954,7 +1954,7 @@ class _SettingsGroup extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Text(
               footer!,
-              style: GoogleFonts.ibmPlexSans(
+              style: const TextStyle(
                 fontSize: 12,
                 height: 1.45,
                 color: _text2,
@@ -2003,7 +2003,7 @@ class _ComponentAccordionRow extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.35,
@@ -2098,7 +2098,7 @@ class _SessionDetailTile extends StatelessWidget {
                 if (eyebrow != null) const SizedBox(height: 4),
                 Text(
                   title,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: emphasized ? FontWeight.w600 : FontWeight.w500,
                     letterSpacing: -0.15,
@@ -2109,7 +2109,7 @@ class _SessionDetailTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle!,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 12.5,
                       letterSpacing: -0.05,
                       color: _text2,
@@ -2414,7 +2414,7 @@ class _PrototypeSheet extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     title,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.6,
@@ -2490,9 +2490,9 @@ class _ProgressionPickerSheetState extends State<_ProgressionPickerSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Choose the skill tree you want this item to follow.',
-              style: GoogleFonts.ibmPlexSans(
+              style: TextStyle(
                 fontSize: 14,
                 height: 1.45,
                 color: _text2,
@@ -2530,7 +2530,7 @@ class _ProgressionPickerSheetState extends State<_ProgressionPickerSheet> {
         children: [
           Text(
             'Each branch is a different path through the ${category.title.toLowerCase()} tree.',
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 14,
               height: 1.45,
               color: _text2,
@@ -2780,7 +2780,7 @@ class _PickerOptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.18,
@@ -2790,7 +2790,7 @@ class _PickerOptionTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 12.5,
                       color: _text2,
                     ),
@@ -2846,7 +2846,7 @@ class _BranchOptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.18,
@@ -2856,7 +2856,7 @@ class _BranchOptionTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 12.5,
                       color: _text2,
                     ),
@@ -2948,7 +2948,7 @@ class _SettingsRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 16,
                     letterSpacing: -0.1,
                     color: titleColor ?? _text,
@@ -2958,7 +2958,7 @@ class _SettingsRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     sub!,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 13,
                       letterSpacing: -0.05,
                       color: _text2,
@@ -2979,7 +2979,7 @@ class _SettingsRow extends StatelessWidget {
                     child: Text(
                       value!,
                       textAlign: TextAlign.right,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 15,
                         letterSpacing: -0.05,
                         color: _text2,

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-const _optionsBg = Color(0xFF161618);
-const _optionsCard = Color(0xFF202023);
+const _optionsBg = Color(0xFF111114);
+const _optionsCard = Color(0xFF1C1C20);
 const _optionsBorder = Color(0xFF323237);
 const _optionsText = Color(0xFFF5F5F7);
 const _optionsTextSecondary = Color(0xFF9C9CA3);
@@ -24,9 +23,9 @@ class AlternateWorkoutOptionsView extends StatelessWidget {
         backgroundColor: _optionsBg,
         surfaceTintColor: _optionsBg,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Train Something Else',
-          style: GoogleFonts.ibmPlexSans(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: _optionsText,
@@ -41,9 +40,9 @@ class AlternateWorkoutOptionsView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Not feeling the recommended workout, try something else to keep things fresh',
-                style: GoogleFonts.ibmPlexSans(
+                style: TextStyle(
                   fontSize: 15,
                   height: 1.45,
                   color: _optionsTextSecondary,
@@ -80,23 +79,23 @@ class AlternateWorkoutOptionsView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 14),
-                          Expanded(
+                          const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Blank workout',
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
                                     color: _optionsText,
                                     letterSpacing: -0.15,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: 4),
                                 Text(
                                   'Add exercises as you go',
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: TextStyle(
                                     fontSize: 13.5,
                                     color: _optionsTextSecondary,
                                   ),

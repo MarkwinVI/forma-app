@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/exercise_model.dart';
@@ -10,7 +9,7 @@ const double kNodeHeight = 165.0;
 const _masteredColor = Color(0xFF00FF8C);
 const _activeColor = AppColors.accentBright;
 const _inactiveStarColor = Color(0xFF3F3F46);
-const _starColor = Color(0xFFFF6900);
+const _starColor = Color(0xFFFC5200);
 
 class ExerciseNode extends StatelessWidget {
   final Exercise exercise;
@@ -193,7 +192,7 @@ class ExerciseNode extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   height: 1.25,

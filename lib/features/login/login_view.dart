@@ -1,16 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../data/services/auth_service.dart';
 
 // Local opacity variants not in the global palette (specific to this screen)
-const _heroTextDim = Color(0x99FFFFFF);    // white 60%
-const _subtitleDim = Color(0x66FFFFFF);    // white 40%
-const _iconBg      = Color(0x1AFF6900);    // accent 10%
-const _iconBorder  = Color(0x4DFF6900);    // accent 30%
+const _heroTextDim = Color(0x99FFFFFF); // white 60%
+const _subtitleDim = Color(0x66FFFFFF); // white 40%
+const _iconBg = Color(0x1AFF6900); // accent 10%
+const _iconBorder = Color(0x4DFF6900); // accent 30%
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -56,19 +55,22 @@ class _LoginViewState extends State<LoginView> {
               const _FeatureItem(
                 icon: Icons.sports_gymnastics,
                 title: 'Learn cool calisthenics skills',
-                description: 'Custom programs based on your current abilities and goals.',
+                description:
+                    'Custom programs based on your current abilities and goals.',
               ),
               const SizedBox(height: 16),
               const _FeatureItem(
                 icon: Icons.show_chart,
                 title: 'Track progress',
-                description: 'See real improvements as you work towards elite skills.',
+                description:
+                    'See real improvements as you work towards elite skills.',
               ),
               const SizedBox(height: 16),
               const _FeatureItem(
                 icon: Icons.workspace_premium_outlined,
                 title: 'Get world class advice',
-                description: 'Master advanced skills through proven progressions.',
+                description:
+                    'Master advanced skills through proven progressions.',
               ),
               const SizedBox(height: 40),
               if (_isLoading)
@@ -76,11 +78,11 @@ class _LoginViewState extends State<LoginView> {
               else
                 ..._buildButtons(),
               const SizedBox(height: 16),
-              Center(
+              const Center(
                 child: Text(
                   'By continuing, you agree to our Terms of Service and Privacy Policy.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textMuted,
                     height: 16 / 12,
@@ -97,10 +99,12 @@ class _LoginViewState extends State<LoginView> {
 
   List<Widget> _buildButtons() {
     return [
-      _AppleButton(onPressed: () => _signIn(() => _authService.signInWithApple())),
+      _AppleButton(
+          onPressed: () => _signIn(() => _authService.signInWithApple())),
       if (kDebugMode) ...[
         const SizedBox(height: 12),
-        _DevButton(onPressed: () => _signIn(() => _authService.signInAnonymously())),
+        _DevButton(
+            onPressed: () => _signIn(() => _authService.signInAnonymously())),
       ],
     ];
   }
@@ -124,9 +128,9 @@ class _BrandLogo extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(
+        const Text(
           'FORMA',
-          style: GoogleFonts.ibmPlexSans(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -147,23 +151,26 @@ class _HeroText extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: TextSpan(
-            style: GoogleFonts.ibmPlexSans(
+          text: const TextSpan(
+            style: TextStyle(
               fontSize: 44,
               fontWeight: FontWeight.w700,
               letterSpacing: -1,
               height: 46 / 44,
             ),
-            children: const [
-              TextSpan(text: 'Level up\n', style: TextStyle(color: AppColors.textPrimary)),
-              TextSpan(text: 'your body.', style: TextStyle(color: _heroTextDim)),
+            children: [
+              TextSpan(
+                  text: 'Level up\n',
+                  style: TextStyle(color: AppColors.textPrimary)),
+              TextSpan(
+                  text: 'your body.', style: TextStyle(color: _heroTextDim)),
             ],
           ),
         ),
         const SizedBox(height: 20),
-        Text(
+        const Text(
           'Calisthenics decoded. A clear path from foundation to mastery.',
-          style: GoogleFonts.ibmPlexSans(
+          style: TextStyle(
             fontSize: 14,
             color: _subtitleDim,
             letterSpacing: -0.15,
@@ -208,7 +215,7 @@ class _FeatureItem extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: GoogleFonts.ibmPlexSans(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -219,7 +226,7 @@ class _FeatureItem extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: GoogleFonts.ibmPlexSans(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                   letterSpacing: -0.15,
@@ -263,14 +270,14 @@ class _AppleButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.apple, size: 20, color: Colors.black),
-            const SizedBox(width: 10),
+            Icon(Icons.apple, size: 20, color: Colors.black),
+            SizedBox(width: 10),
             Text(
               'Continue with Apple',
-              style: GoogleFonts.ibmPlexSans(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: Colors.black,
@@ -299,10 +306,10 @@ class _DevButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.borderPrimary),
         ),
-        child: Center(
+        child: const Center(
           child: Text(
             'Dev Login (anonymous)',
-            style: GoogleFonts.ibmPlexSans(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColors.textSecondary,

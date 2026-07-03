@@ -70,7 +70,7 @@ class CategoryProgressCard extends StatelessWidget {
                           category.title.toUpperCase(),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.lato(
+                          style: TextStyle(
                             fontSize: isLongTitle ? 24 : 28,
                             height: isLongTitle ? 0.98 : 0.94,
                             fontWeight: FontWeight.w900,
@@ -83,7 +83,7 @@ class CategoryProgressCard extends StatelessWidget {
                           category.description,
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: const TextStyle(
                             fontSize: 12,
                             height: 1.35,
                             color: AppColors.textSecondary,

@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
 import 'training_program_logic_view.dart';
 
-const _overviewBg = Color(0xFF161618);
-const _overviewCard = Color(0xFF202023);
+const _overviewBg = Color(0xFF111114);
+const _overviewCard = Color(0xFF1C1C20);
 const _overviewCardAlt = Color(0xFF2A2A2E);
 const _overviewBorder = Color(0xFF323237);
 const _overviewText = Color(0xFFF5F5F7);
 const _overviewTextSecondary = Color(0xFF9C9CA3);
 const _overviewTextTertiary = Color(0xFF6C6C73);
 const _overviewOrange = Color(0xFFFC5200);
-const _overviewOrangeSoft = Color(0x26FC5200);
+const _overviewOrangeSoft = Color(0x22FC5200);
 const _overviewOrangeBright = Color(0xFFFF7E45);
 const _overviewBurnt = Color(0xFFC9521E);
 const _overviewGold = Color(0xFFE0A526);
@@ -92,9 +91,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         backgroundColor: _overviewBg,
         surfaceTintColor: _overviewBg,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Program Overview',
-          style: GoogleFonts.ibmPlexSans(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: _overviewText,
@@ -104,9 +103,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         actions: [
           TextButton(
             onPressed: _openEditor,
-            child: Text(
+            child: const Text(
               'Edit',
-              style: GoogleFonts.ibmPlexSans(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: _overviewOrange,
@@ -288,7 +287,7 @@ class _OverviewSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: GoogleFonts.ibmPlexSans(
+      style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w700,
         color: _overviewTextSecondary,
@@ -328,7 +327,7 @@ class _SplitCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   splitName,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
                     color: _overviewText,
@@ -338,7 +337,7 @@ class _SplitCard extends StatelessWidget {
               ),
               Text(
                 cadenceLabel.toUpperCase(),
-                style: GoogleFonts.ibmPlexSans(
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: _overviewTextSecondary,
@@ -370,7 +369,7 @@ class _SplitCard extends StatelessWidget {
                     child: Center(
                       child: Text(
                         _shortCycleLabel(cycle[index]),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: cycle[index] == TrainingSessionType.rest
@@ -385,9 +384,9 @@ class _SplitCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 13),
-          Text(
+          const Text(
             'Sessions repeat in order — miss one and it slots into your next training day.',
-            style: GoogleFonts.ibmPlexSans(
+            style: TextStyle(
               fontSize: 13,
               color: _overviewTextSecondary,
               height: 1.45,
@@ -470,7 +469,7 @@ class _TrainingBalanceCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.label,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w600,
                           color: _overviewText,
@@ -479,7 +478,7 @@ class _TrainingBalanceCard extends StatelessWidget {
                     ),
                     Text(
                       '${item.percent}%',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: _overviewText,

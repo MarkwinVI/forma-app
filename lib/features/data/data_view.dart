@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
@@ -83,11 +83,11 @@ class _DataViewState extends State<DataView> {
       final results = await Future.wait([
         _exerciseLogService.fetchPastWorkouts(userId),
         _progressService.fetchAll(userId),
-        _trainingProgramStoreService.getOrCreateProgramLogic(userId),
+        _trainingProgramStoreService.fetchProgramLogic(userId),
       ]);
       final workouts = results[0] as List<PastWorkout>;
       final progress = results[1] as List<ExerciseProgress>;
-      final logicSnapshot = results[2] as TrainingProgramLogicSnapshot;
+      final logicSnapshot = results[2] as TrainingProgramLogicSnapshot?;
       final progressEntries = {
         for (final item in progress) item.exerciseId: item,
       };
@@ -96,26 +96,31 @@ class _DataViewState extends State<DataView> {
       };
       final branchSelections = {
         ..._trainingProgramService.defaultBranchSelections(),
-        ...logicSnapshot.branchSelections,
+        ...?logicSnapshot?.branchSelections,
       };
-      final sessionItemsConfig = _sessionItemsConfigFor(logicSnapshot.program);
-      final activeSkillPaths =
-          HomeDashboardMetricsCalculator.buildActiveSkillPathData(
-        trainingProgramService: _trainingProgramService,
-        programType: logicSnapshot.program.programType,
-        branchSelections: branchSelections,
-        sessionItemsConfig: sessionItemsConfig,
-        progressMap: progressMap,
-        progressEntries: progressEntries,
-        workouts: workouts,
-      );
+      final programType =
+          logicSnapshot?.program.programType ?? TrainingProgramType.fullBody;
+      final sessionItemsConfig = _sessionItemsConfigFor(logicSnapshot?.program);
+      // No training program yet — show empty skill paths instead of
+      // creating a default program behind the user's back.
+      final activeSkillPaths = logicSnapshot == null
+          ? const <ActiveSkillPathData>[]
+          : HomeDashboardMetricsCalculator.buildActiveSkillPathData(
+              trainingProgramService: _trainingProgramService,
+              programType: programType,
+              branchSelections: branchSelections,
+              sessionItemsConfig: sessionItemsConfig,
+              progressMap: progressMap,
+              progressEntries: progressEntries,
+              workouts: workouts,
+            );
 
       if (!mounted) return;
       setState(() {
         _workouts = workouts;
         _progressMap = progressMap;
         _progressEntries = progressEntries;
-        _selectedProgramType = logicSnapshot.program.programType;
+        _selectedProgramType = programType;
         _branchSelections = branchSelections;
         _sessionItemsConfig = sessionItemsConfig;
         _activeSkillPaths = activeSkillPaths;
@@ -181,63 +186,41 @@ class _DataViewState extends State<DataView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgSecondary,
+      backgroundColor: AppColors.bg,
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           color: AppColors.accentPrimary,
-          backgroundColor: AppColors.bgTertiary,
+          backgroundColor: AppColors.surface,
           onRefresh: _loadData,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
+                child: ScreenHeader(title: 'Data'),
+              ),
+              const SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                  child: Text(
-                    'Data',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: SectionHeader(
+                    title: 'Skill paths',
+                    sub: 'Best-set volume · last 14 days vs previous',
                   ),
                 ),
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
-                  child: Text(
-                    'Skill paths',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMuted,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: HomeSkillPathsSection(
                     paths: _activeSkillPaths,
                     onOpenSkillPath: _openSkillPath,
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
-                  child: Text(
-                    'Past workouts',
-                    style: GoogleFonts.ibmPlexSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMuted,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  child: SectionHeader(title: 'Past workouts'),
                 ),
               ),
               if (_loading)
@@ -266,7 +249,7 @@ class _DataViewState extends State<DataView> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                   sliver: SliverList.separated(
                     itemBuilder: (context, index) {
                       final workout = _workouts[index];
@@ -323,7 +306,7 @@ class _PastWorkoutCard extends StatelessWidget {
                         workout.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -332,7 +315,7 @@ class _PastWorkoutCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         _formatWorkoutDate(workout.loggedAt),
-                        style: GoogleFonts.ibmPlexSans(
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textMuted,
@@ -399,7 +382,7 @@ class PastWorkoutDetailView extends StatelessWidget {
         elevation: 0,
         title: Text(
           workout.title,
-          style: GoogleFonts.ibmPlexSans(
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
@@ -413,11 +396,11 @@ class PastWorkoutDetailView extends StatelessWidget {
           children: [
             _WorkoutDetailHeader(workout: workout),
             const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
               child: Text(
                 'EXERCISES',
-                style: GoogleFonts.ibmPlexSans(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textMuted,
@@ -468,7 +451,7 @@ class _WorkoutDetailHeader extends StatelessWidget {
                   children: [
                     Text(
                       _formatWorkoutDate(workout.loggedAt),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -478,7 +461,7 @@ class _WorkoutDetailHeader extends StatelessWidget {
                     Text(
                       _formatDuration(
                           workout.loggedAt.difference(workout.startedAt)),
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textMuted,
                       ),
@@ -566,7 +549,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
                     exercise.exerciseName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -575,7 +558,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 ),
                 Text(
                   '${exercise.setCount} sets',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textMuted,
@@ -586,7 +569,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               _exerciseTotalLabel(exercise),
-              style: GoogleFonts.ibmPlexSans(
+              style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textMuted,
               ),
@@ -664,7 +647,7 @@ class _SummaryChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: AppColors.textSecondary,
@@ -698,7 +681,7 @@ class _SetChip extends StatelessWidget {
       ),
       child: Text(
         'Set ${set.number}: $value',
-        style: GoogleFonts.ibmPlexSans(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w800,
           color: color,
@@ -739,7 +722,7 @@ class _DataStateMessage extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -749,7 +732,7 @@ class _DataStateMessage extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 13,
               color: AppColors.textMuted,
               height: 1.5,

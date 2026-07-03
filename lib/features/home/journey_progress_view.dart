@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/models/training_program_model.dart';
 import 'home_dashboard_metrics.dart';
 
-const _progressShell = Color(0xFF161618);
-const _progressCard = Color(0xFF202023);
+const _progressShell = Color(0xFF111114);
+const _progressCard = Color(0xFF1C1C20);
 const _progressCardAlt = Color(0xFF2A2A2E);
 const _progressBorder = Color(0xFF323237);
 const _progressDivider = Color(0xFF2A2A2E);
@@ -31,9 +30,9 @@ class JourneyProgressView extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: _progressShell,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Your Progress',
-          style: GoogleFonts.ibmPlexSans(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
             color: _progressText,
@@ -56,10 +55,10 @@ class JourneyProgressView extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'CLOSEST TO LEVELLING UP',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: _progressTextTertiary,
@@ -69,7 +68,7 @@ class JourneyProgressView extends StatelessWidget {
                       ),
                       Text(
                         '${snapshot.levelsToNextTier} TO ${snapshot.nextTierLabel.toUpperCase()}',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: const TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: _progressTextTertiary,
@@ -146,7 +145,7 @@ class _JourneyProgressRow extends StatelessWidget {
                 children: [
                   Text(
                     data.skillTitle,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: _progressText,
@@ -155,7 +154,7 @@ class _JourneyProgressRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     data.currentExerciseName,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                       color: _progressTextSecondary,
@@ -175,38 +174,38 @@ class _JourneyProgressRow extends StatelessWidget {
                   Text.rich(
                     TextSpan(
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text: 'To level up ',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: TextStyle(
                             fontSize: 12.5,
                             color: _progressTextSecondary,
                           ),
                         ),
                         TextSpan(
                           text: data.targetLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                             color: _progressText,
                           ),
                         ),
-                        TextSpan(
+                        const TextSpan(
                           text: ' · ',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: TextStyle(
                             fontSize: 12.5,
                             color: _progressTextTertiary,
                           ),
                         ),
-                        TextSpan(
+                        const TextSpan(
                           text: 'Last ',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: TextStyle(
                             fontSize: 12.5,
                             color: _progressTextSecondary,
                           ),
                         ),
                         TextSpan(
                           text: data.lastLabel,
-                          style: GoogleFonts.ibmPlexSans(
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                             color: _progressText,

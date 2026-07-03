@@ -28,6 +28,7 @@ class _ShellViewState extends State<ShellView> {
     ];
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: pages,

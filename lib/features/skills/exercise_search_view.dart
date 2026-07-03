@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
@@ -108,14 +107,14 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                             child: TextField(
                               controller: _controller,
                               autofocus: true,
-                              style: GoogleFonts.ibmPlexSans(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textPrimary,
                                 letterSpacing: -0.15,
                               ),
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Search exercises...',
-                                hintStyle: GoogleFonts.ibmPlexSans(
+                                hintStyle: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.textMuted,
                                   letterSpacing: -0.15,
@@ -144,11 +143,11 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                   // Cancel button
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
+                    child: const Padding(
+                      padding: EdgeInsets.only(left: 12),
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textPrimary,
                         ),
@@ -164,10 +163,10 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
               child: !hasQuery
                   ? const SizedBox.shrink()
                   : _results.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Text(
                             'No exercises found',
-                            style: GoogleFonts.ibmPlexSans(
+                            style: TextStyle(
                               fontSize: 14,
                               color: AppColors.textMuted,
                             ),
@@ -268,7 +267,7 @@ class _ExerciseResultRow extends StatelessWidget {
                     children: [
                       Text(
                         exercise.name,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -279,7 +278,7 @@ class _ExerciseResultRow extends StatelessWidget {
                         skillCategory == null
                             ? exercise.category.label
                             : '${skillCategory.title} · ${skillCategory.subtitle}',
-                        style: GoogleFonts.ibmPlexSans(
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           color: AppColors.textMuted,
@@ -293,7 +292,7 @@ class _ExerciseResultRow extends StatelessWidget {
                 children: [
                   Text(
                     statusLabel.toUpperCase(),
-                    style: GoogleFonts.ibmPlexSans(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: statusLabelColor,

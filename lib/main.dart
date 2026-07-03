@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
+import 'core/theme/app_colors.dart';
 import 'data/services/auth_service.dart';
 import 'features/login/login_view.dart';
 import 'features/shell/shell_view.dart';
@@ -27,10 +27,14 @@ class FormaApp extends StatelessWidget {
       title: 'Forma',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.accentPrimary,
+          brightness: Brightness.dark,
+          surface: AppColors.bg,
+        ),
         useMaterial3: true,
-        textTheme: GoogleFonts.ibmPlexSansTextTheme(),
-        primaryTextTheme: GoogleFonts.ibmPlexSansTextTheme(),
+        scaffoldBackgroundColor: AppColors.bg,
+        splashFactory: NoSplash.splashFactory,
       ),
       home: const _AppEntry(),
     );

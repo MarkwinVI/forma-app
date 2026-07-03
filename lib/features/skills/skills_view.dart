@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/skill_category_catalog.dart';
@@ -88,9 +87,9 @@ class _SkillsViewState extends State<SkillsView> {
                       border: Border.all(color: AppColors.borderPrimary),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Row(
+                    child: const Row(
                       children: [
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: 14),
                           child: Icon(
                             Icons.search_rounded,
@@ -100,7 +99,7 @@ class _SkillsViewState extends State<SkillsView> {
                         ),
                         Text(
                           'Search exercises...',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textMuted,
                             letterSpacing: -0.1,

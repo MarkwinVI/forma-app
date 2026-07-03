@@ -52,13 +52,17 @@ void main() {
       ),
     );
 
-    final program = tester.getTopLeft(find.text('PROGRAM'));
+    final hero = tester.getTopLeft(find.text('Pull Day'));
+    final calendar = tester.getTopLeft(
+      find.textContaining('sessions done'),
+    );
     final programOverview = tester.getTopLeft(find.text('Program overview'));
-    final progress = tester.getTopLeft(find.text('CLOSEST TO LEVELLING UP'));
+    final progress = tester.getTopLeft(find.text('Closest to levelling up'));
     expect(find.text('THIS WEEK'), findsNothing);
     expect(find.text('JOURNEY SNAPSHOT'), findsNothing);
     expect(find.text('SKILL PATHS'), findsNothing);
-    expect(program.dy, lessThan(programOverview.dy));
+    expect(hero.dy, lessThan(calendar.dy));
+    expect(calendar.dy, lessThan(programOverview.dy));
     expect(programOverview.dy, lessThan(progress.dy));
   });
 
@@ -170,20 +174,20 @@ void main() {
     expect(find.text('4 × 8'), findsOneWidget);
     expect(find.text('3 × 12'), findsNWidgets(2));
     expect(find.text('Hammer Curls'), findsNothing);
-    expect(find.text('Show all'), findsOneWidget);
+    expect(find.text('Show all 5'), findsOneWidget);
 
-    await tester.tap(find.text('Show all'));
+    await tester.tap(find.text('Show all 5'));
     await tester.pump();
 
     expect(find.text('Hammer Curls'), findsOneWidget);
     expect(find.text('3 × 15'), findsOneWidget);
-    expect(find.text('Show less'), findsOneWidget);
+    expect(find.text('Show fewer'), findsOneWidget);
 
-    await tester.tap(find.text('Show less'));
+    await tester.tap(find.text('Show fewer'));
     await tester.pump();
 
     expect(find.text('Hammer Curls'), findsNothing);
-    expect(find.text('Show all'), findsOneWidget);
+    expect(find.text('Show all 5'), findsOneWidget);
   });
 
   testWidgets('active skill paths render grouped comparison stats',
@@ -199,11 +203,7 @@ void main() {
       ),
     );
 
-    expect(
-      find.text('BEST-SET VOLUME · LAST 14 DAYS vs PREV. 14'),
-      findsOneWidget,
-    );
-    expect(find.text('NEEDS ATTENTION'), findsOneWidget);
+    expect(find.text('Needs attention'), findsOneWidget);
     expect(find.text('Scapular Pulls'), findsOneWidget);
     expect(find.text('Weighted Pullups'), findsWidgets);
     expect(find.text('Best 12 reps'), findsOneWidget);
@@ -231,21 +231,24 @@ void main() {
       ),
     );
 
-    await tester.ensureVisible(find.text('SHOW ALL 3 SKILLS'));
-    await tester.tap(find.text('SHOW ALL 3 SKILLS'));
+    // Collapsed card shows the two closest skills; the third is hidden.
+    expect(find.text('L-Sit / V-Sit'), findsOneWidget);
+    expect(find.text('Diamond Pushups'), findsNothing);
+
+    await tester.ensureVisible(find.text('Show all 3 skills'));
+    await tester.tap(find.text('Show all 3 skills'));
     await tester.pump();
 
     expect(find.text('L-Sit / V-Sit'), findsOneWidget);
     expect(find.text('Diamond Pushups'), findsOneWidget);
-    expect(find.text('SHOW FEWER'), findsOneWidget);
+    expect(find.text('Show fewer'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('SHOW FEWER'));
-    await tester.tap(find.text('SHOW FEWER'));
+    await tester.ensureVisible(find.text('Show fewer'));
+    await tester.tap(find.text('Show fewer'));
     await tester.pump();
 
-    expect(find.text('L-Sit / V-Sit'), findsNothing);
     expect(find.text('Diamond Pushups'), findsNothing);
-    expect(find.text('SHOW ALL 3 SKILLS'), findsOneWidget);
+    expect(find.text('Show all 3 skills'), findsOneWidget);
   });
 
   testWidgets('tapping a progress skill can open JourneySkillDetailView',

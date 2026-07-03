@@ -15,12 +15,11 @@ import '../skills/skill_tree_view.dart';
 import 'alternate_workout_options_view.dart';
 import 'home_dashboard_content.dart';
 import 'home_dashboard_metrics.dart';
+import 'home_empty_state.dart';
 import 'journey_skill_detail_view.dart';
 import 'live_workout_view.dart';
 import 'program_overview_view.dart';
 import 'session_overview_view.dart';
-
-const _homeBg = Color(0xFF161618);
 
 class HomeView extends StatefulWidget {
   final VoidCallback? onOpenSettings;
@@ -41,6 +40,7 @@ class _HomeViewState extends State<HomeView> {
   final _trainingProgramStoreService = TrainingProgramStoreService();
 
   bool _loading = true;
+  bool _hasProgram = true;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
@@ -66,18 +66,20 @@ class _HomeViewState extends State<HomeView> {
     var workouts = const <PastWorkout>[];
     TrainingProgramLogicSnapshot? logicSnapshot;
     var loadFailed = false;
+    var hasProgram = true;
 
     if (userId != null) {
       try {
         final results = await Future.wait([
           _progressService.fetchAll(userId),
-          _trainingProgramStoreService.getOrCreateProgramLogic(userId),
+          _trainingProgramStoreService.fetchProgramLogic(userId),
           _exerciseLogService.fetchPastWorkouts(userId),
         ]);
 
         final progress = results[0] as List<ExerciseProgress>;
-        logicSnapshot = results[1] as TrainingProgramLogicSnapshot;
+        logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
         workouts = results[2] as List<PastWorkout>;
+        hasProgram = logicSnapshot != null;
 
         progressEntries = {
           for (final item in progress) item.exerciseId: item,
@@ -126,6 +128,7 @@ class _HomeViewState extends State<HomeView> {
     );
 
     setState(() {
+      _hasProgram = hasProgram;
       _progressMap = progressMap;
       _progressEntries = progressEntries;
       _pastWorkouts = workouts;
@@ -203,6 +206,7 @@ class _HomeViewState extends State<HomeView> {
     if (!mounted) return snapshot;
 
     setState(() {
+      _hasProgram = true;
       _selectedProgramType = snapshot.program.programType;
       _scheduleVariant = snapshot.program.scheduleVariant;
       _branchSelections = {
@@ -339,27 +343,38 @@ class _HomeViewState extends State<HomeView> {
           );
 
     return Scaffold(
-      backgroundColor: _homeBg,
+      backgroundColor: AppColors.bg,
       body: SafeArea(
+        bottom: false,
         child: _loading || recommendation == null || metrics == null
             ? const Center(child: LoadingIndicator())
-            : RefreshIndicator(
-                color: AppColors.accentPrimary,
-                backgroundColor: AppColors.bgTertiary,
-                onRefresh: _loadHomeData,
-                child: HomeDashboardContent(
-                  todaySummary: metrics.today,
-                  weekStrip: metrics.weekStrip,
-                  journeySnapshot: metrics.journeySnapshot,
-                  activeSkillPaths: metrics.activeSkillPaths,
-                  onPrimaryAction: () => _openPrimaryAction(recommendation),
-                  onSecondaryAction: _openAlternateWorkoutOptions,
-                  onOpenSettings: widget.onOpenSettings ?? () {},
-                  onOpenProgramSettings: _openProgramOverview,
-                  onOpenJourneySkill: _openJourneySkill,
-                  onOpenSkillPath: _openSkillPath,
-                ),
-              ),
+            : !_hasProgram
+                ? RefreshIndicator(
+                    color: AppColors.accentPrimary,
+                    backgroundColor: AppColors.surface,
+                    onRefresh: _loadHomeData,
+                    child: HomeEmptyState(
+                      onBuildProgram: _openProgramOverview,
+                      onOpenSettings: widget.onOpenSettings ?? () {},
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: AppColors.accentPrimary,
+                    backgroundColor: AppColors.bgTertiary,
+                    onRefresh: _loadHomeData,
+                    child: HomeDashboardContent(
+                      todaySummary: metrics.today,
+                      weekStrip: metrics.weekStrip,
+                      journeySnapshot: metrics.journeySnapshot,
+                      activeSkillPaths: metrics.activeSkillPaths,
+                      onPrimaryAction: () => _openPrimaryAction(recommendation),
+                      onSecondaryAction: _openAlternateWorkoutOptions,
+                      onOpenSettings: widget.onOpenSettings ?? () {},
+                      onOpenProgramSettings: _openProgramOverview,
+                      onOpenJourneySkill: _openJourneySkill,
+                      onOpenSkillPath: _openSkillPath,
+                    ),
+                  ),
       ),
     );
   }

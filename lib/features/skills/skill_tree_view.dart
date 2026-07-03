@@ -252,7 +252,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         ),
         title: Text(
           appBarTitle,
-          style: GoogleFonts.ibmPlexSans(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -444,9 +444,9 @@ class _FoundationHintCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   'This branch comes after the shared foundation progression.',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 13,
                     height: 1.4,
                     color: AppColors.textSecondary,
@@ -466,9 +466,9 @@ class _FoundationHintCard extends StatelessWidget {
                 side: BorderSide(color: accentColor.withValues(alpha: 0.24)),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Open foundation',
-              style: GoogleFonts.ibmPlexSans(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -531,7 +531,7 @@ class _BranchOverviewPanel extends StatelessWidget {
           hasFoundation
               ? 'Begin at the shared foundation, then choose one of the linked specialization branches.'
               : 'Choose the linked path you want to train.',
-          style: GoogleFonts.ibmPlexSans(
+          style: const TextStyle(
             fontSize: 14,
             height: 1.45,
             color: AppColors.textSecondary,
@@ -829,7 +829,7 @@ class _ConstellationTipLabel extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 textAlign: align,
-                style: GoogleFonts.lato(
+                style: TextStyle(
                   fontSize: 18,
                   height: 0.98,
                   fontWeight: selected ? FontWeight.w900 : FontWeight.w800,
@@ -1260,7 +1260,7 @@ class _BranchOverviewRow extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       label,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.3,
@@ -1278,7 +1278,7 @@ class _BranchOverviewRow extends StatelessWidget {
                                   : '$unlocked of $total skills unlocked',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 12,
                         height: 1.35,
                         color: AppColors.textSecondary,
@@ -1296,7 +1296,7 @@ class _BranchOverviewRow extends StatelessWidget {
                     RichText(
                       text: TextSpan(
                         text: '${(progress * 100).round()}',
-                        style: GoogleFonts.lato(
+                        style: const TextStyle(
                           fontSize: 24,
                           height: 1,
                           fontWeight: FontWeight.w900,
@@ -1366,7 +1366,7 @@ class _PathTimeline extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           '${exercises.length} skill${exercises.length == 1 ? '' : 's'} in this route',
-          style: GoogleFonts.ibmPlexSans(
+          style: const TextStyle(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
@@ -1538,7 +1538,7 @@ class _PathExerciseRow extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 exercise.name,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: -0.25,
@@ -1552,7 +1552,7 @@ class _PathExerciseRow extends StatelessWidget {
                                 exercise.description,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.ibmPlexSans(
+                                style: const TextStyle(
                                   fontSize: 12.5,
                                   height: 1.4,
                                   color: AppColors.textSecondary,
@@ -1616,9 +1616,9 @@ class _LockNotice extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Locked',
-            style: GoogleFonts.ibmPlexSans(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: AppColors.accentBright,
@@ -1628,7 +1628,7 @@ class _LockNotice extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             message,
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 13,
               height: 1.45,
               color: AppColors.textPrimary,
@@ -1652,7 +1652,7 @@ class _LockNotice extends StatelessWidget {
             ),
             child: Text(
               ctaLabel ?? 'Open Required Tree',
-              style: GoogleFonts.ibmPlexSans(
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),

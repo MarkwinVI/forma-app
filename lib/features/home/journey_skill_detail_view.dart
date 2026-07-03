@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
@@ -9,15 +8,15 @@ import '../exercises/exercise_detail_view.dart';
 import '../skills/widgets/exercise_preview_sheet.dart';
 import 'home_dashboard_metrics.dart';
 
-const _detailShell = Color(0xFF161618);
-const _detailCard = Color(0xFF202023);
+const _detailShell = Color(0xFF111114);
+const _detailCard = Color(0xFF1C1C20);
 const _detailCardAlt = Color(0xFF2A2A2E);
 const _detailBorder = Color(0xFF323237);
 const _detailText = Color(0xFFF5F5F7);
 const _detailTextSecondary = Color(0xFF9C9CA3);
 const _detailTextTertiary = Color(0xFF6C6C73);
 const _detailOrange = Color(0xFFFC5200);
-const _detailOrangeSoft = Color(0x26FC5200);
+const _detailOrangeSoft = Color(0x22FC5200);
 const _detailGreen = Color(0xFF4CC97E);
 
 class JourneySkillDetailView extends StatelessWidget {
@@ -72,7 +71,7 @@ class JourneySkillDetailView extends StatelessWidget {
                 children: [
                   Text(
                     '${skill.motionLabel.toUpperCase()} TREE',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       color: _detailTextTertiary,
@@ -84,7 +83,7 @@ class JourneySkillDetailView extends StatelessWidget {
                     skill.skillTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: _detailText,
@@ -100,9 +99,9 @@ class JourneySkillDetailView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
-          Text(
+          const Text(
             'PROGRESSION',
-            style: GoogleFonts.ibmPlexSans(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: _detailTextSecondary,
@@ -115,37 +114,37 @@ class JourneySkillDetailView extends StatelessWidget {
               children: [
                 TextSpan(
                   text: '$clearedCount cleared',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                     color: _detailGreen,
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: ' · ',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 12.5,
                     color: _detailTextSecondary,
                   ),
                 ),
                 TextSpan(
                   text: '$inProgressCount in progress',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                     color: _detailOrange,
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: ' · ',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: TextStyle(
                     fontSize: 12.5,
                     color: _detailTextSecondary,
                   ),
                 ),
                 TextSpan(
                   text: '$lockedCount locked',
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                     color: _detailTextTertiary,
@@ -241,7 +240,7 @@ class _JourneyStageRow extends StatelessWidget {
                         children: [
                           Text(
                             stage.exerciseName,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: const TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.w800,
                               color: _detailText,
@@ -258,7 +257,7 @@ class _JourneyStageRow extends StatelessWidget {
                           const SizedBox(height: 1),
                           Text(
                             difficultyLabel,
-                            style: GoogleFonts.ibmPlexSans(
+                            style: const TextStyle(
                               fontSize: 11.5,
                               color: _detailTextTertiary,
                             ),
@@ -278,7 +277,7 @@ class _JourneyStageRow extends StatelessWidget {
                       ),
                       child: Text(
                         meta.label,
-                        style: GoogleFonts.ibmPlexSans(
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           color: meta.color,
@@ -292,11 +291,11 @@ class _JourneyStageRow extends StatelessWidget {
                     stage.history.isEmpty)
                   _LockedStageNotice(stage: stage)
                 else if (stage.history.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12),
                     child: Text(
                       'No session history yet.',
-                      style: GoogleFonts.ibmPlexSans(
+                      style: TextStyle(
                         fontSize: 12.5,
                         color: _detailTextSecondary,
                       ),
@@ -389,7 +388,7 @@ class _LockedStageNotice extends StatelessWidget {
                   const TextSpan(text: 'Unlocks once you clear '),
                   TextSpan(
                     text: stage.unlockRequirementName ?? 'the previous step',
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       color: _detailText,
                     ),
@@ -397,7 +396,7 @@ class _LockedStageNotice extends StatelessWidget {
                   const TextSpan(text: '.'),
                 ],
               ),
-              style: GoogleFonts.ibmPlexSans(
+              style: const TextStyle(
                 fontSize: 12.5,
                 color: _detailTextSecondary,
                 height: 1.35,
@@ -456,7 +455,7 @@ class _JourneyStageChart extends StatelessWidget {
                       children: [
                         Text(
                           'GOAL ${stage.targetLabel}',
-                          style: GoogleFonts.ibmPlexSans(
+                          style: const TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w800,
                             color: _detailOrange,
@@ -485,7 +484,7 @@ class _JourneyStageChart extends StatelessWidget {
                               children: [
                                 Text(
                                   _volumeLabel(stage.history[index].value),
-                                  style: GoogleFonts.ibmPlexSans(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     color: index == stage.history.length - 1
@@ -532,7 +531,7 @@ class _JourneyStageChart extends StatelessWidget {
                   child: Text(
                     _dateLabel(stage.history[index].loggedAt),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.ibmPlexSans(
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: _detailTextTertiary,

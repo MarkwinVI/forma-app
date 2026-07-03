@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -152,7 +151,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                   : const Icon(Icons.save_alt_rounded, size: 20),
               label: Text(
                 _saving ? 'Saving' : 'Save workout',
-                style: GoogleFonts.ibmPlexSans(
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
@@ -213,19 +212,19 @@ class _CelebrationHeader extends StatelessWidget {
           Text(
             workout.historyTitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 29,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF25272B),
+              color: Color(0xFF25272B),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             _formatFinishedAt(workout.finishedAt),
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF9A9CA1),
+              color: Color(0xFF9A9CA1),
             ),
           ),
           const SizedBox(height: 26),
@@ -271,20 +270,20 @@ class _HeroStat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.ibmPlexSans(
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
-            color: const Color(0xFF25272B),
-            fontFeatures: const [FontFeature.tabularFigures()],
+            color: Color(0xFF25272B),
+            fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 6),
         Text(
           label,
-          style: GoogleFonts.ibmPlexSans(
+          style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF9A9CA1),
+            color: Color(0xFF9A9CA1),
           ),
         ),
       ],
@@ -378,7 +377,7 @@ class _MetricTile extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
@@ -389,7 +388,7 @@ class _MetricTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
@@ -416,11 +415,11 @@ class _ExerciseOverviewList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             'WORKOUT OVERVIEW',
-            style: GoogleFonts.ibmPlexSans(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,
               color: AppColors.textMuted,
@@ -480,7 +479,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
                   exercise.exercise.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.ibmPlexSans(
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -489,7 +488,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
               ),
               Text(
                 '${exercise.sets.length} sets',
-                style: GoogleFonts.ibmPlexSans(
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textMuted,
@@ -500,7 +499,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${exercise.track.label} · $totalLabel',
-            style: GoogleFonts.ibmPlexSans(
+            style: const TextStyle(
               fontSize: 13,
               color: AppColors.textMuted,
             ),
@@ -546,7 +545,7 @@ class _SetSummaryChip extends StatelessWidget {
       ),
       child: Text(
         'Set ${set.number}: $value',
-        style: GoogleFonts.ibmPlexSans(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w800,
           color: color,
@@ -567,7 +566,7 @@ class _ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final random = math.Random(18);
     const colors = [
-      Color(0xFFFF6900),
+      Color(0xFFFC5200),
       Color(0xFFA78BFA),
       Color(0xFF4ECDC4),
       Color(0xFF34D399),

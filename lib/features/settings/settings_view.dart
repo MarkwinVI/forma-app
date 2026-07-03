@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/services/auth_service.dart';
@@ -20,18 +19,18 @@ class SettingsView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Profile',
-                style: GoogleFonts.ibmPlexSans(
+                style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 32),
-              Text(
+              const Text(
                 'USER ID',
-                style: GoogleFonts.ibmPlexSans(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textMuted,
@@ -44,7 +43,7 @@ class SettingsView extends StatelessWidget {
                   Expanded(
                     child: Text(
                       userId,
-                      style: GoogleFonts.ibmPlexSans(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textPrimary,
