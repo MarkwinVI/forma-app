@@ -65,6 +65,7 @@ class _HomeViewState extends State<HomeView> {
     var progressEntries = <String, ExerciseProgress>{};
     var workouts = const <PastWorkout>[];
     TrainingProgramLogicSnapshot? logicSnapshot;
+    var loadFailed = false;
 
     if (userId != null) {
       try {
@@ -84,12 +85,24 @@ class _HomeViewState extends State<HomeView> {
         progressMap = {
           for (final item in progress) item.exerciseId: item.status,
         };
-      } catch (_) {
-        // Keep the widget usable with default local fallback state.
+      } catch (error, stackTrace) {
+        // Fall back to default local state so the screen stays usable.
+        debugPrint('Failed to load home data: $error\n$stackTrace');
+        loadFailed = true;
       }
     }
 
     if (!mounted) return;
+
+    if (loadFailed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Couldn't load your training data. Pull down to retry.",
+          ),
+        ),
+      );
+    }
 
     final selectedProgramType =
         logicSnapshot?.program.programType ?? TrainingProgramType.fullBody;

@@ -141,8 +141,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           for (final item in progress) item.exerciseId: item.status,
         };
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
       // Keep replacement usable with local fallbacks if progress can't load.
+      debugPrint('Failed to load exercise progress: $error\n$stackTrace');
     }
   }
 
