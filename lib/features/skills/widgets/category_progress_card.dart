@@ -79,17 +79,21 @@ class CategoryProgressCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Text(
-                          category.description,
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            height: 1.35,
-                            color: AppColors.textSecondary,
+                        // Expanded so the description shrinks to whatever
+                        // height is left in the fixed-height card instead of
+                        // overflowing when font metrics change.
+                        Expanded(
+                          child: Text(
+                            category.description,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              height: 1.35,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
-                        const Spacer(),
                       ],
                     ),
                   ),
