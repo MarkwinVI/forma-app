@@ -2498,8 +2498,7 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
   List<SkillCategoryBranch> _selectableBranches(SkillCategory category) {
     return category.branches
         .where(
-          (branch) => (category.trainingPaths[branch.id] ?? const <String>[])
-              .isNotEmpty,
+          (branch) => category.pathFor(branch.id).isNotEmpty,
         )
         .toList();
   }
@@ -2520,8 +2519,7 @@ class _ProgressionBranchList extends StatelessWidget {
   Widget build(BuildContext context) {
     final branches = category.branches
         .where(
-          (branch) => (category.trainingPaths[branch.id] ?? const <String>[])
-              .isNotEmpty,
+          (branch) => category.pathFor(branch.id).isNotEmpty,
         )
         .toList();
 
@@ -3418,7 +3416,7 @@ Exercise? _currentExerciseForProgression({
   required ExerciseProgramSection programSection,
 }) {
   final category = SkillCategoryCatalog.findById(skillCategoryId);
-  final exerciseIds = category?.trainingPaths[branchId] ?? const <String>[];
+  final exerciseIds = category?.pathFor(branchId) ?? const <String>[];
   final exercises =
       exerciseIds.map(ExerciseCatalog.findById).whereType<Exercise>().toList();
 
@@ -3449,7 +3447,7 @@ Exercise? _currentExerciseForProgression({
 }
 
 Exercise? _firstExerciseForBranch(SkillCategory category, String branchId) {
-  final exerciseIds = category.trainingPaths[branchId] ?? const <String>[];
+  final exerciseIds = category.pathFor(branchId);
   for (final exerciseId in exerciseIds) {
     final exercise = ExerciseCatalog.findById(exerciseId);
     if (exercise != null) return exercise;
@@ -3496,7 +3494,7 @@ String _pathLabel(SkillCategory category, String pathId) {
 }
 
 String _branchRange(SkillCategory category, String branchId) {
-  final steps = category.trainingPaths[branchId] ?? const <String>[];
+  final steps = category.pathFor(branchId);
   if (steps.isEmpty) return 'No steps';
   final first = ExerciseCatalog.findById(steps.first)?.name ?? steps.first;
   final last = ExerciseCatalog.findById(steps.last)?.name ?? steps.last;

@@ -188,7 +188,7 @@ class TrainingProgramService {
     if (skillCategoryId == null || branchId == null) return null;
 
     final category = SkillCategoryCatalog.findById(skillCategoryId);
-    final path = category?.trainingPaths[branchId] ?? const <String>[];
+    final path = category?.pathFor(branchId) ?? const <String>[];
     final current = _pickCurrentExercise(
       _TrainingBranch(
         track: _trackForConfiguredItem(

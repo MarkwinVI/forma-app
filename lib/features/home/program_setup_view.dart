@@ -130,30 +130,30 @@ const _strengthExercises = [
 
 const _difficultyLabels = ['Approachable', 'Intermediate', 'Advanced'];
 
-class _SkillGroup {
+class GoalSkillGroup {
   final String id;
   final String label;
 
-  const _SkillGroup(this.id, this.label);
+  const GoalSkillGroup(this.id, this.label);
 }
 
-const _skillGroups = [
-  _SkillGroup('pullups', 'Pull-ups'),
-  _SkillGroup('rows', 'Rows'),
-  _SkillGroup('pushups', 'Push-ups'),
-  _SkillGroup('dips', 'Dips'),
-  _SkillGroup('squat', 'Squat'),
-  _SkillGroup('other', 'Other skills'),
+const kGoalSkillGroups = [
+  GoalSkillGroup('pullups', 'Pull-ups'),
+  GoalSkillGroup('rows', 'Rows'),
+  GoalSkillGroup('pushups', 'Push-ups'),
+  GoalSkillGroup('dips', 'Dips'),
+  GoalSkillGroup('squat', 'Squat'),
+  GoalSkillGroup('other', 'Other skills'),
 ];
 
-class _SkillOption {
+class GoalSkillOption {
   final String id;
   final String label;
   final IconData icon;
   final String group;
   final int difficulty;
 
-  const _SkillOption({
+  const GoalSkillOption({
     required this.id,
     required this.label,
     required this.icon,
@@ -162,25 +162,25 @@ class _SkillOption {
   });
 }
 
-const _skills = [
-  _SkillOption(id: 'weighted', label: 'Weighted pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
-  _SkillOption(id: 'highpull', label: 'High pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
-  _SkillOption(id: 'lsitpull', label: 'L-sit pull-up', icon: Icons.self_improvement_rounded, group: 'pullups', difficulty: 1),
-  _SkillOption(id: 'oap', label: 'One-arm pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 2),
-  _SkillOption(id: 'wrow', label: 'Weighted row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
-  _SkillOption(id: 'oarow', label: 'One-arm row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
-  _SkillOption(id: 'frontlever', label: 'Front lever', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 2),
-  _SkillOption(id: 'ringpu', label: 'Rings push-up', icon: Icons.north_rounded, group: 'pushups', difficulty: 1),
-  _SkillOption(id: 'oapu', label: 'One-arm push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 1),
-  _SkillOption(id: 'planchepu', label: 'Planche push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 2),
-  _SkillOption(id: 'wdip', label: 'Weighted dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
-  _SkillOption(id: 'ringdip', label: 'Ring dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
-  _SkillOption(id: 'pistol', label: 'Pistol squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
-  _SkillOption(id: 'shrimp', label: 'Shrimp squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
-  _SkillOption(id: 'lsit', label: 'L-sit / V-sit', icon: Icons.self_improvement_rounded, group: 'other', difficulty: 1),
-  _SkillOption(id: 'muscleup', label: 'Muscle-up', icon: Icons.fitness_center_rounded, group: 'other', difficulty: 2),
-  _SkillOption(id: 'hspu', label: 'Handstand push-up', icon: Icons.sports_gymnastics_rounded, group: 'other', difficulty: 2),
-  _SkillOption(id: 'planche', label: 'Planche', icon: Icons.trending_flat_rounded, group: 'other', difficulty: 2),
+const kGoalSkillOptions = [
+  GoalSkillOption(id: 'weighted', label: 'Weighted pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
+  GoalSkillOption(id: 'highpull', label: 'High pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
+  GoalSkillOption(id: 'lsitpull', label: 'L-sit pull-up', icon: Icons.self_improvement_rounded, group: 'pullups', difficulty: 1),
+  GoalSkillOption(id: 'oap', label: 'One-arm pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 2),
+  GoalSkillOption(id: 'wrow', label: 'Weighted row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
+  GoalSkillOption(id: 'oarow', label: 'One-arm row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
+  GoalSkillOption(id: 'frontlever', label: 'Front lever', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 2),
+  GoalSkillOption(id: 'ringpu', label: 'Rings push-up', icon: Icons.north_rounded, group: 'pushups', difficulty: 1),
+  GoalSkillOption(id: 'oapu', label: 'One-arm push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 1),
+  GoalSkillOption(id: 'planchepu', label: 'Planche push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 2),
+  GoalSkillOption(id: 'wdip', label: 'Weighted dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
+  GoalSkillOption(id: 'ringdip', label: 'Ring dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
+  GoalSkillOption(id: 'pistol', label: 'Pistol squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
+  GoalSkillOption(id: 'shrimp', label: 'Shrimp squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
+  GoalSkillOption(id: 'lsit', label: 'L-sit / V-sit', icon: Icons.self_improvement_rounded, group: 'other', difficulty: 1),
+  GoalSkillOption(id: 'muscleup', label: 'Muscle-up', icon: Icons.fitness_center_rounded, group: 'other', difficulty: 2),
+  GoalSkillOption(id: 'hspu', label: 'Handstand push-up', icon: Icons.sports_gymnastics_rounded, group: 'other', difficulty: 2),
+  GoalSkillOption(id: 'planche', label: 'Planche', icon: Icons.trending_flat_rounded, group: 'other', difficulty: 2),
 ];
 
 // ── Wizard ──────────────────────────────────────────────────
@@ -277,7 +277,13 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   @override
   Widget build(BuildContext context) {
     if (_ready) {
-      return _ProgramReadyView(
+      return _ProgramSummaryView(
+        days: _days,
+        split: _effectiveSplit,
+        skills: [
+          for (final skill in kGoalSkillOptions)
+            if (_pickedSkills.contains(skill.id)) skill,
+        ],
         onDone: () => Navigator.of(context).pop(),
       );
     }
@@ -1208,10 +1214,10 @@ class _SkillsStep extends StatelessWidget {
               'to do any of them yet. Forma builds the path from where you '
               'are today.',
         ),
-        for (final group in _skillGroups)
+        for (final group in kGoalSkillGroups)
           ..._buildGroup(
             group,
-            _skills.where((skill) => skill.group == group.id).toList(),
+            kGoalSkillOptions.where((skill) => skill.group == group.id).toList(),
           ),
         const SizedBox(height: 16),
         const _InfoNote(
@@ -1222,7 +1228,7 @@ class _SkillsStep extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildGroup(_SkillGroup group, List<_SkillOption> skills) {
+  List<Widget> _buildGroup(GoalSkillGroup group, List<GoalSkillOption> skills) {
     if (skills.isEmpty) return const [];
 
     return [
@@ -1247,7 +1253,7 @@ class _SkillsStep extends StatelessWidget {
 }
 
 class _SkillGrid extends StatelessWidget {
-  final List<_SkillOption> skills;
+  final List<GoalSkillOption> skills;
   final List<String> picked;
   final ValueChanged<String> onToggleSkill;
 
@@ -1296,7 +1302,7 @@ class _SkillGrid extends StatelessWidget {
 }
 
 class _SkillCard extends StatelessWidget {
-  final _SkillOption skill;
+  final GoalSkillOption skill;
   final bool selected;
   final VoidCallback onTap;
 
@@ -1395,94 +1401,539 @@ class _SkillCard extends StatelessWidget {
   }
 }
 
-// ── Program ready ───────────────────────────────────────────
+// ── Program summary ─────────────────────────────────────────
 
-class _ProgramReadyView extends StatelessWidget {
+class _WeekDay {
+  final String label;
+  final String sub;
+  final IconData icon;
+
+  const _WeekDay(this.label, this.sub, this.icon);
+}
+
+/// Week layout preview built from the chosen schedule and split.
+List<_WeekDay> _weekLayout(int days, TrainingProgramType split) {
+  const letters = 'ABCDE';
+  switch (split) {
+    case TrainingProgramType.fullBody:
+      const icons = [
+        Icons.trending_flat_rounded,
+        Icons.arrow_upward_rounded,
+        Icons.accessibility_new_rounded,
+        Icons.sync_alt_rounded,
+        Icons.fitness_center_rounded,
+      ];
+      return [
+        for (var index = 0; index < days; index++)
+          _WeekDay(
+            'Full body ${letters[index]}',
+            'Push · pull · squat · core',
+            icons[index % icons.length],
+          ),
+      ];
+    case TrainingProgramType.upperLower:
+      return [
+        for (var index = 0; index < days; index++)
+          index.isEven
+              ? _WeekDay(
+                  'Upper ${letters[index ~/ 2]}',
+                  'Push · pull · core',
+                  Icons.arrow_upward_rounded,
+                )
+              : _WeekDay(
+                  'Lower ${letters[index ~/ 2]}',
+                  'Squat · hinge · core',
+                  Icons.accessibility_new_rounded,
+                ),
+      ];
+    case TrainingProgramType.pushPull:
+      return [
+        for (var index = 0; index < days; index++)
+          index.isEven
+              ? _WeekDay(
+                  days > 2 ? 'Push ${letters[index ~/ 2]}' : 'Push',
+                  'Push-ups · dips',
+                  Icons.trending_flat_rounded,
+                )
+              : _WeekDay(
+                  days > 2 ? 'Pull ${letters[index ~/ 2]}' : 'Pull',
+                  'Pull-ups · rows',
+                  Icons.arrow_upward_rounded,
+                ),
+      ];
+  }
+}
+
+/// Post-wizard reveal: presents the built program (week layout, skills) as a
+/// motivating overview before landing back on Home.
+class _ProgramSummaryView extends StatefulWidget {
+  final int days;
+  final TrainingProgramType split;
+  final List<GoalSkillOption> skills;
   final VoidCallback onDone;
 
-  const _ProgramReadyView({required this.onDone});
+  const _ProgramSummaryView({
+    required this.days,
+    required this.split,
+    required this.skills,
+    required this.onDone,
+  });
+
+  @override
+  State<_ProgramSummaryView> createState() => _ProgramSummaryViewState();
+}
+
+class _ProgramSummaryViewState extends State<_ProgramSummaryView>
+    with SingleTickerProviderStateMixin {
+  static const _duration = Duration(milliseconds: 1500);
+
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: _duration)
+      ..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Staggered ease-out segment matching the mockup's 90ms cascade.
+  Animation<double> _segment(int index) {
+    final start = (150 + index * 90) / _duration.inMilliseconds;
+    final end = start + 550 / _duration.inMilliseconds;
+    return CurvedAnimation(
+      parent: _controller,
+      curve: Interval(
+        start.clamp(0.0, 1.0),
+        end.clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final week = _weekLayout(widget.days, widget.split);
+    final skills = widget.skills;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    var step = 0;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.accentSoft,
-                    border: Border.all(
-                      color: AppColors.accentGlow,
-                      width: 1.5,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.check_rounded,
-                    size: 36,
-                    color: AppColors.accentPrimary,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Your program is ready',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.52,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const SizedBox(
-                  width: 290,
-                  child: Text(
-                    'Forma built a balanced split across every movement '
-                    'pattern. Your first session is waiting on the home '
-                    'screen.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Pressable(
-                  onTap: onDone,
-                  child: Container(
-                    height: 52,
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentPrimary,
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'Go to my program',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: -0.2,
+        bottom: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 64),
+                    ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: _controller,
+                        curve: const Interval(0, 0.4, curve: Curves.easeOutBack),
+                      ),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.accentSoft,
+                          border: Border.all(
+                            color: AppColors.accentGlow,
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 33,
+                          color: AppColors.accentPrimary,
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 18),
+                    _Reveal(
+                      animation: _segment(step++),
+                      child: const Text(
+                        'Your program is ready',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.52,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _Reveal(
+                      animation: _segment(step++),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 300,
+                          child: Text(
+                            'Built from your answers — here’s the plan that '
+                            'takes you from today to your goals.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _SummaryStat(
+                              animation: _segment(step++),
+                              value: '${widget.days}×',
+                              label: 'per week',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _SummaryStat(
+                              animation: _segment(step++),
+                              value: '8',
+                              label: 'movement patterns',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _SummaryStat(
+                              animation: _segment(step++),
+                              value: skills.isEmpty ? '—' : '${skills.length}',
+                              label: skills.length == 1
+                                  ? 'skill path'
+                                  : 'skill paths',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _SummaryLabel(
+                      animation: _segment(step++),
+                      text: 'Your week — ${widget.split.label}',
+                    ),
+                    _Reveal(
+                      animation: _segment(step++),
+                      child: _WeekCard(week: week),
+                    ),
+                    _SummaryLabel(
+                      animation: _segment(step++),
+                      text: skills.isEmpty ? 'Skills' : 'Target skills',
+                    ),
+                    _Reveal(
+                      animation: _segment(step++),
+                      child: skills.isEmpty
+                          ? const _InfoNote(
+                              text: 'You skipped skill goals, so Forma built '
+                                  'a balanced foundation. Pick skills anytime '
+                                  'and they’ll weave into your week.',
+                            )
+                          : _SummarySkillGrid(skills: skills),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            _Reveal(
+              animation: _segment(step + 1),
+              child: Container(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomInset),
+                decoration: const BoxDecoration(
+                  color: AppColors.bg,
+                  border: Border(
+                    top: BorderSide(color: AppColors.divider),
                   ),
+                ),
+                child: PillButton(
+                  label: 'Let’s go',
+                  icon: Icons.chevron_right_rounded,
+                  trailingIcon: true,
+                  onTap: widget.onDone,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fade + 16px upward slide, matching the mockup's entrance animation.
+class _Reveal extends AnimatedWidget {
+  final Widget child;
+
+  const _Reveal({
+    required Animation<double> animation,
+    required this.child,
+  }) : super(listenable: animation);
+
+  @override
+  Widget build(BuildContext context) {
+    final t = (listenable as Animation<double>).value;
+    return Opacity(
+      opacity: t.clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(0, 16 * (1 - t)),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SummaryStat extends StatelessWidget {
+  final Animation<double> animation;
+  final String value;
+  final String label;
+
+  const _SummaryStat({
+    required this.animation,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _Reveal(
+      animation: animation,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 14, 4, 13),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.44,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryLabel extends StatelessWidget {
+  final Animation<double> animation;
+  final String text;
+
+  const _SummaryLabel({
+    required this.animation,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _Reveal(
+      animation: animation,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 22, 2, 10),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeekCard extends StatelessWidget {
+  final List<_WeekDay> week;
+
+  const _WeekCard({required this.week});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(kCardRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < week.length; index++)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: index == 0
+                  ? null
+                  : const BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: AppColors.divider),
+                      ),
+                    ),
+              child: Row(
+                children: [
+                  IconTile(icon: week[index].icon, tint: index == 0),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          week[index].label,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.15,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          week[index].sub,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (index == 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'UP FIRST',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accentPrimary,
+                          letterSpacing: 0.33,
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      'Session ${index + 1}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummarySkillGrid extends StatelessWidget {
+  final List<GoalSkillOption> skills;
+
+  const _SummarySkillGrid({required this.skills});
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var index = 0; index < skills.length; index += 2) {
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(top: index > 0 ? 8 : 0),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _SummarySkillChip(skill: skills[index])),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: index + 1 < skills.length
+                      ? _SummarySkillChip(skill: skills[index + 1])
+                      : const SizedBox(),
                 ),
               ],
             ),
           ),
         ),
+      );
+    }
+    return Column(children: rows);
+  }
+}
+
+class _SummarySkillChip extends StatelessWidget {
+  final GoalSkillOption skill;
+
+  const _SummarySkillChip({required this.skill});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(skill.icon, size: 20, color: AppColors.accentPrimary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              skill.label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.14,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

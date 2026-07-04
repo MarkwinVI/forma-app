@@ -50,4 +50,24 @@ class SkillCategory {
     this.trainingPaths = const {},
     this.unlockRequirement,
   });
+
+  /// Exercise ids for a branch. The `main` (Foundation) branch of some
+  /// categories has no explicit path — every specialised branch shares the
+  /// same opening steps instead — so it falls back to the longest common
+  /// prefix of all branch paths.
+  List<String> pathFor(String branchId) {
+    final direct = trainingPaths[branchId];
+    if (direct != null) return direct;
+    if (branchId != 'main' || trainingPaths.isEmpty) return const [];
+
+    final paths = trainingPaths.values.toList();
+    final prefix = <String>[];
+    for (var index = 0;; index++) {
+      if (paths.any((path) => path.length <= index)) break;
+      final exerciseId = paths.first[index];
+      if (paths.any((path) => path[index] != exerciseId)) break;
+      prefix.add(exerciseId);
+    }
+    return prefix;
+  }
 }

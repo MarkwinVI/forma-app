@@ -105,9 +105,15 @@ void main() {
     expect(result!.startingStrength['pullups'], 3);
     expect(result!.skillIds, ['weighted']);
 
-    // Confirmation screen returns to the caller.
+    // Summary screen reflects the answers, then returns to the caller.
     expect(find.text('Your program is ready'), findsOneWidget);
-    await tester.tap(find.text('Go to my program'));
+    expect(find.text('Your week — Upper / Lower'), findsOneWidget);
+    expect(find.text('Upper A'), findsOneWidget);
+    expect(find.text('Lower A'), findsOneWidget);
+    expect(find.text('UP FIRST'), findsOneWidget);
+    expect(find.text('Target skills'), findsOneWidget);
+    expect(find.text('Weighted pull-up'), findsOneWidget);
+    await tester.tap(find.text('Let’s go'));
     await tester.pumpAndSettle();
     expect(find.text('Open wizard'), findsOneWidget);
   });

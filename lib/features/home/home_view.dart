@@ -53,6 +53,8 @@ class _HomeViewState extends State<HomeView> {
   Map<TrainingTrack, String> _branchSelections = {};
   RepGoalProfile _repGoalProfile = RepGoalProfile.balanced;
   Map<String, dynamic> _sessionItemsConfig = const {};
+  int _frequencyPerWeek = 3;
+  Map<String, dynamic>? _setupAnswers;
   int _nextStepIndex = 0;
   TrainingSessionType _nextSessionType = TrainingSessionType.fullBody;
 
@@ -131,6 +133,8 @@ class _HomeViewState extends State<HomeView> {
     final repGoalProfile =
         logicSnapshot?.repGoalProfile ?? RepGoalProfile.balanced;
     final sessionItemsConfig = _sessionItemsConfigFor(logicSnapshot?.program);
+    final frequencyPerWeek = logicSnapshot?.program.frequencyPerWeek ?? 3;
+    final setupAnswers = _setupAnswersFor(logicSnapshot?.program);
     final nextStepIndex = logicSnapshot?.state.nextStepIndex ?? 0;
     final nextSessionType =
         logicSnapshot?.state.nextSessionType ?? TrainingSessionType.fullBody;
@@ -152,11 +156,19 @@ class _HomeViewState extends State<HomeView> {
       _branchSelections = branchSelections;
       _repGoalProfile = repGoalProfile;
       _sessionItemsConfig = sessionItemsConfig;
+      _frequencyPerWeek = frequencyPerWeek;
+      _setupAnswers = setupAnswers;
       _nextStepIndex = nextStepIndex;
       _nextSessionType = nextSessionType;
       _recommendation = recommendation;
       _loading = false;
     });
+  }
+
+  Map<String, dynamic>? _setupAnswersFor(UserTrainingProgram? program) {
+    final raw = program?.variationRules['program_setup_v1'];
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return null;
   }
 
   Future<TrainingProgramLogicSnapshot> _updateProgramLogic({
@@ -168,6 +180,7 @@ class _HomeViewState extends State<HomeView> {
     Map<String, dynamic>? setupAnswers,
   }) async {
     final userId = AuthService().currentUser?.id;
+    final effectiveSetupAnswers = setupAnswers ?? _setupAnswers;
     if (userId == null) {
       final snapshot = TrainingProgramLogicSnapshot(
         program: UserTrainingProgram(
@@ -175,11 +188,12 @@ class _HomeViewState extends State<HomeView> {
           userId: '',
           programType: programType,
           scheduleVariant: _scheduleVariant,
-          frequencyPerWeek: frequencyPerWeek ?? 3,
+          frequencyPerWeek: frequencyPerWeek ?? _frequencyPerWeek,
           variationRules: {
             'rep_goal_profile': repGoalProfile.dbValue,
             'session_items_v1': sessionItemsConfig,
-            if (setupAnswers != null) 'program_setup_v1': setupAnswers,
+            if (effectiveSetupAnswers != null)
+              'program_setup_v1': effectiveSetupAnswers,
           },
           isActive: true,
         ),
@@ -200,6 +214,8 @@ class _HomeViewState extends State<HomeView> {
           _branchSelections = branchSelections;
           _repGoalProfile = repGoalProfile;
           _sessionItemsConfig = sessionItemsConfig;
+          _frequencyPerWeek = frequencyPerWeek ?? _frequencyPerWeek;
+          _setupAnswers = effectiveSetupAnswers;
           _recommendation = _trainingProgramService.buildToday(
             progressMap: _progressMap,
             programType: _selectedProgramType,
@@ -235,6 +251,8 @@ class _HomeViewState extends State<HomeView> {
       };
       _repGoalProfile = snapshot.repGoalProfile;
       _sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
+      _frequencyPerWeek = snapshot.program.frequencyPerWeek;
+      _setupAnswers = _setupAnswersFor(snapshot.program);
       _nextStepIndex = snapshot.state.nextStepIndex;
       _nextSessionType = snapshot.state.nextSessionType;
       _recommendation = _trainingProgramService.buildToday(
@@ -286,12 +304,16 @@ class _HomeViewState extends State<HomeView> {
             required branchSelections,
             required repGoalProfile,
             required sessionItemsConfig,
+            frequencyPerWeek,
+            setupAnswers,
           }) {
             return _updateProgramLogic(
               programType: programType,
               branchSelections: branchSelections,
               repGoalProfile: repGoalProfile,
               sessionItemsConfig: sessionItemsConfig,
+              frequencyPerWeek: frequencyPerWeek,
+              setupAnswers: setupAnswers,
             );
           },
         ),
@@ -441,10 +463,11 @@ class _HomeViewState extends State<HomeView> {
         userId: '',
         programType: _selectedProgramType,
         scheduleVariant: _scheduleVariant,
-        frequencyPerWeek: 3,
+        frequencyPerWeek: _frequencyPerWeek,
         variationRules: {
           'rep_goal_profile': _repGoalProfile.dbValue,
           'session_items_v1': _sessionItemsConfig,
+          if (_setupAnswers != null) 'program_setup_v1': _setupAnswers,
         },
         isActive: true,
       ),

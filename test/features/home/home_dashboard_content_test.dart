@@ -9,7 +9,7 @@ import 'package:forma_app/features/home/alternate_workout_options_view.dart';
 import 'package:forma_app/features/home/journey_skill_detail_view.dart';
 import 'package:forma_app/features/home/live_workout_view.dart';
 import 'package:forma_app/features/home/program_overview_view.dart';
-import 'package:forma_app/features/home/training_program_logic_view.dart';
+import 'package:forma_app/features/home/program_day_editor_view.dart';
 import 'package:forma_app/features/settings/settings_view.dart';
 import 'package:forma_app/features/skills/skill_tree_view.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
@@ -364,6 +364,8 @@ void main() {
                             required branchSelections,
                             required repGoalProfile,
                             required sessionItemsConfig,
+                            frequencyPerWeek,
+                            setupAnswers,
                           }) async {
                             return TrainingProgramLogicSnapshot(
                               program: const UserTrainingProgram(
@@ -440,7 +442,7 @@ void main() {
     expect(find.byType(SettingsView), findsOneWidget);
   });
 
-  testWidgets('program overview edit can open TrainingProgramLogicView',
+  testWidgets('tapping a session day opens ProgramDayEditorView',
       (tester) async {
     final service = TrainingProgramService();
 
@@ -473,6 +475,8 @@ void main() {
             required branchSelections,
             required repGoalProfile,
             required sessionItemsConfig,
+            frequencyPerWeek,
+            setupAnswers,
           }) async {
             return TrainingProgramLogicSnapshot(
               program: const UserTrainingProgram(
@@ -499,10 +503,13 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Edit'));
+    expect(find.text('Push'), findsOneWidget);
+    expect(find.text('Pull'), findsOneWidget);
+
+    await tester.tap(find.text('Push'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(TrainingProgramLogicView), findsOneWidget);
+    expect(find.byType(ProgramDayEditorView), findsOneWidget);
   });
 
   testWidgets('tapping an active skill path can open SkillTreeView',
