@@ -283,7 +283,7 @@ class DifficultyStars extends StatelessWidget {
             i < difficulty ? Icons.star_rounded : Icons.star_border_rounded,
             size: 10,
             color: i < difficulty
-                ? const Color(0xFFFC5200)
+                ? AppColors.accentPrimary
                 : const Color(0xFF3F3F46),
           ),
         ),

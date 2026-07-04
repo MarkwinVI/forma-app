@@ -9,7 +9,7 @@ const double kNodeHeight = 165.0;
 const _masteredColor = Color(0xFF00FF8C);
 const _activeColor = AppColors.accentBright;
 const _inactiveStarColor = Color(0xFF3F3F46);
-const _starColor = Color(0xFFFC5200);
+const _starColor = AppColors.accentPrimary;
 
 class ExerciseNode extends StatelessWidget {
   final Exercise exercise;

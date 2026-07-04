@@ -566,7 +566,7 @@ class _ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final random = math.Random(18);
     const colors = [
-      Color(0xFFFC5200),
+      AppColors.accentPrimary,
       Color(0xFFA78BFA),
       Color(0xFF4ECDC4),
       Color(0xFF34D399),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/models/training_program_model.dart';
+import 'getting_started_checklist.dart';
 import 'home_dashboard_metrics.dart';
 
 class HomeDashboardContent extends StatelessWidget {
@@ -10,6 +11,7 @@ class HomeDashboardContent extends StatelessWidget {
   final HomeWeekStripData weekStrip;
   final JourneySnapshotData journeySnapshot;
   final List<ActiveSkillPathData> activeSkillPaths;
+  final bool showGettingStarted;
   final VoidCallback onPrimaryAction;
   final VoidCallback onSecondaryAction;
   final VoidCallback onOpenSettings;
@@ -23,6 +25,7 @@ class HomeDashboardContent extends StatelessWidget {
     required this.weekStrip,
     required this.journeySnapshot,
     required this.activeSkillPaths,
+    this.showGettingStarted = false,
     required this.onPrimaryAction,
     required this.onSecondaryAction,
     required this.onOpenSettings,
@@ -62,6 +65,13 @@ class HomeDashboardContent extends StatelessWidget {
                 _WeekCalendarCard(data: weekStrip),
                 const SizedBox(height: 12),
                 _ProgramOverviewRow(onTap: onOpenProgramSettings),
+                if (showGettingStarted) ...[
+                  const SectionHeader(title: 'Getting started'),
+                  GettingStartedChecklist(
+                    programDone: true,
+                    onStartWorkout: onPrimaryAction,
+                  ),
+                ],
                 SectionHeader(
                   title: 'Closest to levelling up',
                   sub:

@@ -89,12 +89,15 @@ class TrainingProgramStoreService {
     required Map<TrainingTrack, String> branchSelections,
     required RepGoalProfile repGoalProfile,
     required Map<String, dynamic> sessionItemsConfig,
+    int? frequencyPerWeek,
+    Map<String, dynamic>? setupAnswers,
   }) async {
     final existingProgram = await _fetchActiveProgram(userId);
     final variationRules = <String, dynamic>{
       ...?existingProgram?.variationRules,
       'rep_goal_profile': repGoalProfile.dbValue,
       'session_items_v1': sessionItemsConfig,
+      if (setupAnswers != null) 'program_setup_v1': setupAnswers,
     };
 
     final program = existingProgram == null
@@ -102,11 +105,13 @@ class TrainingProgramStoreService {
             userId: userId,
             programType: programType,
             variationRules: variationRules,
+            frequencyPerWeek: frequencyPerWeek,
           )
         : await _updateProgram(
             existingProgram,
             programType,
             variationRules: variationRules,
+            frequencyPerWeek: frequencyPerWeek,
           );
 
     final state = await _upsertProgramState(
@@ -153,6 +158,7 @@ class TrainingProgramStoreService {
     required String userId,
     required TrainingProgramType programType,
     Map<String, dynamic> variationRules = const {},
+    int? frequencyPerWeek,
   }) async {
     final data = await _client
         .from('user_training_programs')
@@ -160,7 +166,7 @@ class TrainingProgramStoreService {
           'user_id': userId,
           'program_type': programType.dbValue,
           'schedule_variant': _defaultScheduleVariant(programType),
-          'frequency_per_week': _defaultFrequencyPerWeek,
+          'frequency_per_week': frequencyPerWeek ?? _defaultFrequencyPerWeek,
           'variation_rules': variationRules,
           'updated_at': DateTime.now().toIso8601String(),
         })
@@ -172,13 +178,15 @@ class TrainingProgramStoreService {
 
   Future<UserTrainingProgram> _updateProgram(
       UserTrainingProgram program, TrainingProgramType programType,
-      {Map<String, dynamic>? variationRules}) async {
+      {Map<String, dynamic>? variationRules, int? frequencyPerWeek}) async {
     final data = await _client
         .from('user_training_programs')
         .update({
           'program_type': programType.dbValue,
           'schedule_variant': _defaultScheduleVariant(programType),
-          'frequency_per_week': _defaultFrequencyPerWeek,
+          // Keep the frequency chosen during program setup unless the caller
+          // is explicitly changing it.
+          'frequency_per_week': frequencyPerWeek ?? program.frequencyPerWeek,
           if (variationRules != null) 'variation_rules': variationRules,
           'updated_at': DateTime.now().toIso8601String(),
         })

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import 'getting_started_checklist.dart';
 
 /// First-run home screen shown while the user has no training program yet.
 class HomeEmptyState extends StatelessWidget {
@@ -59,7 +60,10 @@ class HomeEmptyState extends StatelessWidget {
                 const SizedBox(height: 12),
                 _HowItWorksRow(onTap: () => _openHowItWorks(context)),
                 const SectionHeader(title: 'Getting started'),
-                _GettingStartedChecklist(onBuildProgram: onBuildProgram),
+                GettingStartedChecklist(
+                  programDone: false,
+                  onSetupProgram: onBuildProgram,
+                ),
                 const SectionHeader(title: 'Your progress'),
                 const _LockedProgressCard(),
               ],
@@ -159,26 +163,13 @@ class _HowItWorksRow extends StatelessWidget {
           IconTile(icon: Icons.help_outline_rounded, tint: true),
           SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'How Forma works',
-                  style: TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'A 60-second tour of the training program',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            child: Text(
+              'How Forma works',
+              style: TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           Icon(
@@ -189,175 +180,6 @@ class _HowItWorksRow extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// ── Getting-started checklist ───────────────────────────────
-
-class _GettingStartedChecklist extends StatelessWidget {
-  final VoidCallback onBuildProgram;
-
-  const _GettingStartedChecklist({
-    required this.onBuildProgram,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      (
-        label: 'Set up your training program',
-        sub: 'Pick goals and a schedule',
-        active: true,
-      ),
-      (
-        label: 'Complete your first workout',
-        sub: 'Log your opening session',
-        active: false,
-      ),
-      (
-        label: 'Reach your first skill level-up',
-        sub: 'Hit a target to rank a skill',
-        active: false,
-      ),
-    ];
-
-    return SurfaceCard(
-      clip: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(18, 14, 18, 11),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Your first 3 steps',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                Text(
-                  '0 / 3',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.accentPrimary,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          for (final item in items)
-            _ChecklistRow(
-              label: item.label,
-              sub: item.sub,
-              active: item.active,
-              onTap: item.active ? onBuildProgram : null,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChecklistRow extends StatelessWidget {
-  final String label;
-  final String sub;
-  final bool active;
-  final VoidCallback? onTap;
-
-  const _ChecklistRow({
-    required this.label,
-    required this.sub,
-    required this.active,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final row = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.divider),
-        ),
-      ),
-      child: Opacity(
-        opacity: active ? 1 : 0.5,
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: active ? AppColors.accentSoft : Colors.transparent,
-                border: Border.all(
-                  width: 2,
-                  color: active
-                      ? AppColors.accentPrimary
-                      : Colors.white.withValues(alpha: 0.14),
-                ),
-              ),
-              alignment: Alignment.center,
-              child: active
-                  ? Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accentPrimary,
-                        shape: BoxShape.circle,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.lock_outline_rounded,
-                      size: 12,
-                      color: AppColors.textMuted,
-                    ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.15,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    sub,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (active)
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: AppColors.accentPrimary,
-              ),
-          ],
-        ),
-      ),
-    );
-
-    if (onTap == null) return row;
-    return Pressable(onTap: onTap, child: row);
   }
 }
 
@@ -461,9 +283,7 @@ class _LockedProgressCard extends StatelessWidget {
                 SizedBox(width: 11),
                 Expanded(
                   child: Text(
-                    'Complete your first workout and Forma starts tracking '
-                    'each skill — building the character sheet that maps '
-                    'your whole body.',
+                    'Complete your first workout to start tracking progress',
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -536,27 +356,14 @@ class HowFormaWorksView extends StatelessWidget {
         surfaceTintColor: AppColors.bg,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'How Forma works',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              'A 60-second tour',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
+        title: const Text(
+          'How Forma works',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
       body: SafeArea(

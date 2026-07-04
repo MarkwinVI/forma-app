@@ -23,10 +23,10 @@ class AppColors {
   static const Color textMuted = Color(0xFF66676E);
 
   // Accent
-  static const Color accentPrimary = Color(0xFFFC5200);
-  static const Color accentBright = Color(0xFFFC5200);
-  static const Color accentSoft = Color(0x22FC5200);
-  static const Color accentGlow = Color(0x3AFC5200);
+  static const Color accentPrimary = Color(0xFF3D7BFF);
+  static const Color accentBright = Color(0xFF3D7BFF);
+  static const Color accentSoft = Color(0x223D7BFF);
+  static const Color accentGlow = Color(0x3A3D7BFF);
 
   // Status
   static const Color green = Color(0xFF3FD07E);

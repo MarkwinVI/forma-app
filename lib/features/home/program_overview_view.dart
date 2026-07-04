@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
@@ -12,10 +13,10 @@ const _overviewBorder = Color(0xFF323237);
 const _overviewText = Color(0xFFF5F5F7);
 const _overviewTextSecondary = Color(0xFF9C9CA3);
 const _overviewTextTertiary = Color(0xFF6C6C73);
-const _overviewOrange = Color(0xFFFC5200);
-const _overviewOrangeSoft = Color(0x22FC5200);
-const _overviewOrangeBright = Color(0xFFFF7E45);
-const _overviewBurnt = Color(0xFFC9521E);
+const _overviewAccent = AppColors.accentPrimary;
+const _overviewAccentSoft = AppColors.accentSoft;
+const _overviewAccentBright = Color(0xFF6E9BFF);
+const _overviewDeep = Color(0xFF2E5FCC);
 const _overviewGold = Color(0xFFE0A526);
 const _overviewGray = Color(0xFF55555C);
 
@@ -108,7 +109,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: _overviewOrange,
+                color: _overviewAccent,
               ),
             ),
           ),
@@ -168,17 +169,17 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         _BalanceItem(
           label: 'Pull strength',
           percent: 0,
-          color: _overviewOrange,
+          color: _overviewAccent,
         ),
         _BalanceItem(
           label: 'Push strength',
           percent: 0,
-          color: _overviewOrangeBright,
+          color: _overviewAccentBright,
         ),
         _BalanceItem(
           label: 'Lower body',
           percent: 0,
-          color: _overviewBurnt,
+          color: _overviewDeep,
         ),
         _BalanceItem(
           label: 'Core',
@@ -212,17 +213,17 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       _BalanceItem(
         label: 'Pull strength',
         percent: percents[_BalanceBucket.pull] ?? 0,
-        color: _overviewOrange,
+        color: _overviewAccent,
       ),
       _BalanceItem(
         label: 'Push strength',
         percent: percents[_BalanceBucket.push] ?? 0,
-        color: _overviewOrangeBright,
+        color: _overviewAccentBright,
       ),
       _BalanceItem(
         label: 'Lower body',
         percent: percents[_BalanceBucket.lower] ?? 0,
-        color: _overviewBurnt,
+        color: _overviewDeep,
       ),
       _BalanceItem(
         label: 'Core',
@@ -358,12 +359,12 @@ class _SplitCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: cycle[index] == TrainingSessionType.rest
                           ? _overviewCardAlt
-                          : _overviewOrangeSoft,
+                          : _overviewAccentSoft,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: cycle[index] == TrainingSessionType.rest
                             ? _overviewBorder
-                            : _overviewOrange.withValues(alpha: 0.4),
+                            : _overviewAccent.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Center(
@@ -374,7 +375,7 @@ class _SplitCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           color: cycle[index] == TrainingSessionType.rest
                               ? _overviewTextTertiary
-                              : _overviewOrange,
+                              : _overviewAccent,
                           letterSpacing: 0.15,
                         ),
                       ),

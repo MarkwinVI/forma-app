@@ -164,6 +164,8 @@ class _HomeViewState extends State<HomeView> {
     required Map<TrainingTrack, String> branchSelections,
     required RepGoalProfile repGoalProfile,
     required Map<String, dynamic> sessionItemsConfig,
+    int? frequencyPerWeek,
+    Map<String, dynamic>? setupAnswers,
   }) async {
     final userId = AuthService().currentUser?.id;
     if (userId == null) {
@@ -173,10 +175,11 @@ class _HomeViewState extends State<HomeView> {
           userId: '',
           programType: programType,
           scheduleVariant: _scheduleVariant,
-          frequencyPerWeek: 3,
+          frequencyPerWeek: frequencyPerWeek ?? 3,
           variationRules: {
             'rep_goal_profile': repGoalProfile.dbValue,
             'session_items_v1': sessionItemsConfig,
+            if (setupAnswers != null) 'program_setup_v1': setupAnswers,
           },
           isActive: true,
         ),
@@ -216,6 +219,8 @@ class _HomeViewState extends State<HomeView> {
       branchSelections: branchSelections,
       repGoalProfile: repGoalProfile,
       sessionItemsConfig: sessionItemsConfig,
+      frequencyPerWeek: frequencyPerWeek,
+      setupAnswers: setupAnswers,
     );
 
     if (!mounted) return snapshot;
@@ -244,10 +249,29 @@ class _HomeViewState extends State<HomeView> {
     return snapshot;
   }
 
-  /// Placeholder until the real program creation flow exists.
   Future<void> _openProgramSetup() async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProgramSetupView()),
+      MaterialPageRoute(
+        builder: (_) => ProgramSetupView(
+          onComplete: _completeProgramSetup,
+        ),
+      ),
+    );
+    // Re-fetch so the dashboard reflects the freshly created program even if
+    // the user abandoned the wizard midway on a stale state.
+    await _loadHomeData();
+  }
+
+  Future<void> _completeProgramSetup(ProgramSetupResult result) async {
+    await _updateProgramLogic(
+      programType: result.split,
+      branchSelections: _branchSelections.isEmpty
+          ? _trainingProgramService.defaultBranchSelections()
+          : _branchSelections,
+      repGoalProfile: _repGoalProfile,
+      sessionItemsConfig: _sessionItemsConfig,
+      frequencyPerWeek: result.daysPerWeek,
+      setupAnswers: result.toMap(),
     );
   }
 
@@ -389,6 +413,7 @@ class _HomeViewState extends State<HomeView> {
                       weekStrip: metrics.weekStrip,
                       journeySnapshot: metrics.journeySnapshot,
                       activeSkillPaths: metrics.activeSkillPaths,
+                      showGettingStarted: _pastWorkouts.isEmpty,
                       onPrimaryAction: () => _openPrimaryAction(recommendation),
                       onSecondaryAction: _openAlternateWorkoutOptions,
                       onOpenSettings: widget.onOpenSettings ?? () {},

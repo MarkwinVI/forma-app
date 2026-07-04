@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../data/models/training_program_model.dart';
 import 'home_dashboard_metrics.dart';
 
@@ -11,7 +12,7 @@ const _progressDivider = Color(0xFF2A2A2E);
 const _progressText = Color(0xFFF5F5F7);
 const _progressTextSecondary = Color(0xFF9C9CA3);
 const _progressTextTertiary = Color(0xFF6C6C73);
-const _progressOrange = Color(0xFFFC5200);
+const _progressAccent = AppColors.accentPrimary;
 
 class JourneyProgressView extends StatelessWidget {
   final JourneySnapshotData snapshot;
@@ -167,7 +168,7 @@ class _JourneyProgressRow extends StatelessWidget {
                       value: data.progressPercent.clamp(0.0, 1.0),
                       minHeight: 5,
                       backgroundColor: _progressCardAlt,
-                      color: _progressOrange,
+                      color: _progressAccent,
                     ),
                   ),
                   const SizedBox(height: 8),

@@ -15,8 +15,8 @@ const _detailBorder = Color(0xFF323237);
 const _detailText = Color(0xFFF5F5F7);
 const _detailTextSecondary = Color(0xFF9C9CA3);
 const _detailTextTertiary = Color(0xFF6C6C73);
-const _detailOrange = Color(0xFFFC5200);
-const _detailOrangeSoft = Color(0x22FC5200);
+const _detailAccent = AppColors.accentPrimary;
+const _detailAccentSoft = AppColors.accentSoft;
 const _detailGreen = Color(0xFF4CC97E);
 
 class JourneySkillDetailView extends StatelessWidget {
@@ -132,7 +132,7 @@ class JourneySkillDetailView extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
-                    color: _detailOrange,
+                    color: _detailAccent,
                   ),
                 ),
                 const TextSpan(
@@ -224,7 +224,7 @@ class _JourneyStageRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: stage.status == JourneySkillStageStatus.inProgress
-                    ? _detailOrange
+                    ? _detailAccent
                     : _detailBorder,
               ),
             ),
@@ -458,14 +458,14 @@ class _JourneyStageChart extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w800,
-                            color: _detailOrange,
+                            color: _detailAccent,
                             letterSpacing: 0.35,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Container(
                           height: 1.5,
-                          color: _detailOrange.withValues(alpha: 0.45),
+                          color: _detailAccent.withValues(alpha: 0.45),
                         ),
                       ],
                     ),
@@ -595,9 +595,9 @@ _StageMeta _metaForStage(JourneySkillStageStatus status) {
     case JourneySkillStageStatus.inProgress:
       return const _StageMeta(
         label: 'IN PROGRESS',
-        color: _detailOrange,
-        background: _detailOrangeSoft,
-        dimBarColor: Color(0x52FC5200),
+        color: _detailAccent,
+        background: _detailAccentSoft,
+        dimBarColor: Color(0x523D7BFF),
       );
     case JourneySkillStageStatus.locked:
       return const _StageMeta(

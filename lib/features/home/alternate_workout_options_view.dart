@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 const _optionsBg = Color(0xFF111114);
 const _optionsCard = Color(0xFF1C1C20);
 const _optionsBorder = Color(0xFF323237);
 const _optionsText = Color(0xFFF5F5F7);
 const _optionsTextSecondary = Color(0xFF9C9CA3);
-const _optionsOrange = Color(0xFFFC5200);
+const _optionsAccent = AppColors.accentPrimary;
 
 class AlternateWorkoutOptionsView extends StatelessWidget {
   final VoidCallback onOpenBlankWorkout;
@@ -68,13 +70,13 @@ class AlternateWorkoutOptionsView extends StatelessWidget {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: _optionsOrange.withValues(alpha: 0.14),
+                              color: _optionsAccent.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             alignment: Alignment.center,
                             child: const Icon(
                               Icons.add_rounded,
-                              color: _optionsOrange,
+                              color: _optionsAccent,
                               size: 22,
                             ),
                           ),
