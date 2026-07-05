@@ -8,6 +8,8 @@ import '../../data/models/exercise_log_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
 
@@ -97,6 +99,30 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         // The workout itself is saved — a failed advance only delays the
         // dashboard by one session and self-heals on the next save.
         debugPrint('Failed to advance program state: $error\n$stackTrace');
+      }
+
+      // Auto-progression: exercises whose logged volume met their target are
+      // mastered, unlocking the next move in their skill path.
+      try {
+        final progress = await ProgressService().fetchAll(userId);
+        await ExerciseProgressionService().applySessionResults(
+          userId: userId,
+          progressMap: {
+            for (final entry in progress) entry.exerciseId: entry.status,
+          },
+          results: [
+            for (final exerciseEntry in widget.workout.exercises)
+              SessionExerciseResult(
+                exercise: exerciseEntry.exercise,
+                volume: exerciseEntry.sets
+                    .fold<int>(0, (sum, set) => sum + set.value),
+              ),
+          ],
+        );
+      } catch (error, stackTrace) {
+        // Non-fatal: the user can still master the exercise manually from
+        // the skill tree, and the next met target re-runs this.
+        debugPrint('Failed to apply exercise progression: $error\n$stackTrace');
       }
 
       if (!mounted) return;

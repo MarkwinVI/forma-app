@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -68,10 +67,8 @@ class SettingsView extends StatelessWidget {
                 ],
               ),
               const Divider(height: 32, color: AppColors.borderPrimary),
-              if (kDebugMode) ...[
-                const SizedBox(height: 8),
-                const _DevToolsSection(),
-              ],
+              const SizedBox(height: 8),
+              const _DevToolsSection(),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -86,6 +83,8 @@ class SettingsView extends StatelessWidget {
                   child: const Text('Sign out'),
                 ),
               ),
+              const SizedBox(height: 12),
+              const _DeleteAccountButton(),
             ],
           ),
         ),
@@ -94,7 +93,7 @@ class SettingsView extends StatelessWidget {
   }
 }
 
-/// Debug-build only: data reset and seeding shortcuts.
+/// Data reset and seeding shortcuts, visible in all builds for now.
 class _DevToolsSection extends StatefulWidget {
   const _DevToolsSection();
 
@@ -223,6 +222,95 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
           onTap: _busy ? null : _generateWorkouts,
         ),
       ],
+    );
+  }
+}
+
+/// Permanently deletes the account and all server data, then lands on the
+/// login screen. A brand-new account created afterwards goes through
+/// onboarding again since nothing about it survives on the server.
+class _DeleteAccountButton extends StatefulWidget {
+  const _DeleteAccountButton();
+
+  @override
+  State<_DeleteAccountButton> createState() => _DeleteAccountButtonState();
+}
+
+class _DeleteAccountButtonState extends State<_DeleteAccountButton> {
+  static const _danger = Color(0xFFFF6B5E);
+
+  bool _busy = false;
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Delete account?',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          'Permanently deletes your account and all of your data — training '
+          'program, exercise progress and workout history. This cannot be '
+          'undone.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: _danger),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || _busy) return;
+
+    setState(() => _busy = true);
+    try {
+      // _AppEntry reacts to the session ending and shows the login screen.
+      await AuthService().deleteAccount();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete account: $error')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _danger,
+          side: const BorderSide(color: AppColors.borderPrimary),
+        ),
+        onPressed: _busy ? null : _confirmDelete,
+        child: _busy
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: _danger,
+                ),
+              )
+            : const Text('Delete account'),
+      ),
     );
   }
 }

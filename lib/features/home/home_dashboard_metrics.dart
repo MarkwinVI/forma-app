@@ -5,6 +5,7 @@ import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/training_program_service.dart';
 
 enum HomeSkillMomentum { stalled, steady, improving }
@@ -681,10 +682,15 @@ class HomeDashboardMetricsCalculator {
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
     );
-    if (configuredOptions.isEmpty) {
-      return const [];
-    }
-    final options = configuredOptions;
+    // A freshly set-up program has an empty session-items config until the
+    // user customises a day, so fall back to the selected branches — same as
+    // buildActiveSkillPathData — instead of leaving the card empty.
+    final options = configuredOptions.isNotEmpty
+        ? configuredOptions
+        : trainingProgramService
+            .resolveSelectedBranches(branchSelections)
+            .values
+            .toList();
     final comparisonNow = now ?? _dummyComparisonNow;
     final rows = <JourneySkillProgressData>[];
 
@@ -916,17 +922,10 @@ class HomeDashboardMetricsCalculator {
     );
   }
 
-  static bool _isTimedExercise(Exercise exercise) {
-    final name = exercise.name.toLowerCase();
-    final description = exercise.description.toLowerCase();
-
-    return name.contains('hold') ||
-        name.contains('hang') ||
-        name.contains('plank') ||
-        name.contains('lever') ||
-        name.contains('handstand') ||
-        description.contains('for time');
-  }
+  // Timed detection and target math live in ExerciseProgressionService so
+  // the goal shown here is exactly the goal that advances the progression.
+  static bool _isTimedExercise(Exercise exercise) =>
+      ExerciseProgressionService.isTimedExercise(exercise);
 
   static int _defaultSetCount(TrainingRecommendationItem item) {
     switch (item.exercise.programSection) {
@@ -953,28 +952,8 @@ class HomeDashboardMetricsCalculator {
     return 5;
   }
 
-  static int _targetVolumeForExercise(Exercise exercise) {
-    final setCount = switch (exercise.programSection) {
-      ExerciseProgramSection.warmup => 2,
-      ExerciseProgramSection.skillWork => 3,
-      ExerciseProgramSection.mainExercises => exercise.difficulty >= 4 ? 4 : 3,
-      ExerciseProgramSection.coolDown => 2,
-    };
-    final targetPerSet = _targetValueForExercise(exercise);
-    return setCount * targetPerSet;
-  }
-
-  static int _targetValueForExercise(Exercise exercise) {
-    if (_isTimedExercise(exercise)) {
-      if (exercise.difficulty <= 1) return 30;
-      if (exercise.difficulty <= 3) return 20;
-      return 12;
-    }
-
-    if (exercise.difficulty <= 1) return 12;
-    if (exercise.difficulty <= 3) return 8;
-    return 5;
-  }
+  static int _targetVolumeForExercise(Exercise exercise) =>
+      ExerciseProgressionService.targetVolumeForExercise(exercise);
 
   static int _latestSessionVolumeForExercise(
     String exerciseId,

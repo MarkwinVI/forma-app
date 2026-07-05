@@ -442,14 +442,17 @@ class _JourneyStageChart extends StatelessWidget {
           height: 112,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final goalOffset =
-                  constraints.maxHeight * (1 - (targetValue / scaleMax));
+              // Bars scale against the height minus the value label that sits
+              // on top of each bar, so a 100%-of-goal bar still fits.
+              const labelSpace = 20.0;
+              final barSpace = constraints.maxHeight - labelSpace;
+              final goalBottom = barSpace * (targetValue / scaleMax);
               return Stack(
                 children: [
                   Positioned(
                     left: 0,
                     right: 0,
-                    top: goalOffset.clamp(0, constraints.maxHeight - 1),
+                    bottom: goalBottom.clamp(0, barSpace),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -497,7 +500,7 @@ class _JourneyStageChart extends StatelessWidget {
                                   width: double.infinity,
                                   constraints:
                                       const BoxConstraints(maxWidth: 38),
-                                  height: constraints.maxHeight *
+                                  height: barSpace *
                                       (stage.history[index].value / scaleMax),
                                   decoration: BoxDecoration(
                                     color: index == stage.history.length - 1

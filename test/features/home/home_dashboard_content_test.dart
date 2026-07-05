@@ -316,6 +316,54 @@ void main() {
     expect(find.text('STATUS'), findsOneWidget);
   });
 
+  testWidgets('progress detail chart fits when history reaches the goal',
+      (tester) async {
+    // A bar at 100%+ of goal must still leave room for its value label
+    // (regression: the chart overflowed by ~8px).
+    final skill = JourneySkillProgressData(
+      track: TrainingTrack.verticalPull,
+      skillCategoryId: 'pullups',
+      branchId: 'weighted',
+      motionLabel: 'Pullups',
+      skillTitle: 'Weighted Pullups',
+      currentExerciseName: 'Scapular Pulls',
+      nextExerciseName: 'Arch Hangs',
+      targetVolume: 24,
+      lastSessionVolume: 26,
+      targetLabel: '24 reps',
+      lastLabel: '26 reps',
+      lastSessionDeltaLabel: '+2 reps',
+      lastSessionTrend: JourneySkillTrend.up,
+      progressPercent: 1,
+      stages: [
+        JourneySkillStageData(
+          exerciseId: 'scapular_pull',
+          exerciseName: 'Scapular Pulls',
+          status: JourneySkillStageStatus.inProgress,
+          targetVolume: 24,
+          targetLabel: '24 reps',
+          history: [
+            JourneySkillStageHistoryPoint(
+              value: 24,
+              loggedAt: DateTime(2026, 6, 10),
+            ),
+            JourneySkillStageHistoryPoint(
+              value: 26,
+              loggedAt: DateTime(2026, 6, 17),
+            ),
+          ],
+          unlockRequirementName: null,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: JourneySkillDetailView(skill: skill)),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('program overview button can open ProgramOverviewView',
       (tester) async {
     final service = TrainingProgramService();

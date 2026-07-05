@@ -150,8 +150,8 @@ void main() {
     });
 
     test(
-        'journey progress only includes skills assigned in the training program',
-        () {
+        'journey progress falls back to selected branches when the '
+        'session-items config is empty (freshly set-up program)', () {
       final service = TrainingProgramService();
 
       final snapshot = HomeDashboardMetricsCalculator.buildJourneySnapshotData(
@@ -163,7 +163,7 @@ void main() {
         workouts: const [],
       );
 
-      expect(snapshot.closestSkills, isEmpty);
+      expect(snapshot.closestSkills, isNotEmpty);
     });
 
     test('active skill paths exclude non-browsable tracks like hinge', () {

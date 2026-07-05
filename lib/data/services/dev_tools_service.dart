@@ -1,17 +1,21 @@
 import '../models/exercise_log_model.dart';
 import '../models/training_program_model.dart';
 import 'exercise_log_service.dart';
+import 'exercise_progression_service.dart';
+import 'progress_service.dart';
 import 'supabase_service.dart';
 import 'training_program_service.dart';
 import 'training_program_store_service.dart';
 
-/// Debug-build helpers for resetting and seeding account data.
-/// Only reachable from the Developer section in Settings (kDebugMode).
+/// Helpers for resetting and seeding account data.
+/// Reachable from the Developer section in Settings (all builds, for now).
 class DevToolsService {
   final _client = SupabaseService.client;
   final _exerciseLogService = ExerciseLogService();
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
+  final _progressService = ProgressService();
+  final _progressionService = ExerciseProgressionService();
 
   /// Wipes everything that makes this account look like an existing user:
   /// workout history, exercise progress, branch choices, and the training
@@ -33,9 +37,16 @@ class DevToolsService {
     await _client.from('user_training_programs').delete().eq('user_id', userId);
   }
 
+  /// Volume ramp for the five seeded sessions, as a share of each exercise's
+  /// target. The last two hit 100%, so early path exercises get mastered and
+  /// the progression (skill tree, "closest to levelling up") visibly moves.
+  static const _sessionRamp = [0.6, 0.75, 0.9, 1.0, 1.0];
+
   /// Seeds five completed workouts spread across the last 30 days
-  /// (oldest ~29 days ago, newest yesterday), with rep counts ramping up
-  /// so trend and momentum UIs have something to show.
+  /// (oldest ~29 days ago, newest yesterday). Volumes ramp toward each
+  /// exercise's target and the same auto-progression as a real workout runs
+  /// after every session, so exercises master and paths advance just like
+  /// they would from real training.
   Future<void> generateSampleWorkouts(String userId) async {
     final logic = await _trainingProgramStoreService.fetchProgramLogic(userId);
     final programType =
@@ -44,6 +55,16 @@ class DevToolsService {
       ..._trainingProgramService.defaultBranchSelections(),
       ...?logic?.branchSelections,
     };
+    final rawSessionItems =
+        logic?.program.variationRules['session_items_v1'];
+    final sessionItemsConfig = rawSessionItems is Map
+        ? Map<String, dynamic>.from(rawSessionItems)
+        : const <String, dynamic>{};
+
+    final progressEntries = await _progressService.fetchAll(userId);
+    final progressMap = {
+      for (final entry in progressEntries) entry.exerciseId: entry.status,
+    };
 
     final trainingDays = _trainingProgramStoreService
         .scheduleCycleFor(programType: programType)
@@ -51,14 +72,15 @@ class DevToolsService {
         .toList();
 
     final today = DateTime.now();
-    for (var index = 0; index < 5; index++) {
+    for (var index = 0; index < _sessionRamp.length; index++) {
       final daysAgo = 29 - index * 7;
       final sessionType = trainingDays[index % trainingDays.length];
       final recommendation = _trainingProgramService.buildToday(
-        progressMap: const {},
+        progressMap: progressMap,
         programType: programType,
         sessionType: sessionType,
         branchSelections: branchSelections,
+        sessionItemsConfig: sessionItemsConfig,
       );
       if (recommendation.items.isEmpty) continue;
 
@@ -66,20 +88,58 @@ class DevToolsService {
           .subtract(Duration(days: daysAgo));
       final finishedAt = startedAt.add(const Duration(minutes: 42));
 
+      final results = <SessionExerciseResult>[];
+      final exercises = <WorkoutExerciseLogInput>[];
+      for (final item in recommendation.items) {
+        final target = ExerciseProgressionService.targetVolumeForExercise(
+          item.exercise,
+        );
+        final volume = (target * _sessionRamp[index]).round();
+        results.add(
+          SessionExerciseResult(exercise: item.exercise, volume: volume),
+        );
+        exercises.add(
+          WorkoutExerciseLogInput(
+            exerciseId: item.exercise.id,
+            sets: _splitIntoSets(
+              volume,
+              isTimed:
+                  ExerciseProgressionService.isTimedExercise(item.exercise),
+            ),
+          ),
+        );
+      }
+
       await _exerciseLogService.saveWorkoutSession(
         userId: userId,
         title: recommendation.sessionLabel,
         sessionType: sessionType.dbValue,
         startedAt: startedAt,
         finishedAt: finishedAt,
-        exercises: [
-          for (final item in recommendation.items)
-            WorkoutExerciseLogInput(
-              exerciseId: item.exercise.id,
-              sets: List.filled(3, ExerciseSet(reps: 6 + index)),
-            ),
-        ],
+        exercises: exercises,
       );
+
+      // Same rule as a real workout: met targets master the exercise, so
+      // the next seeded session trains the next move in the path.
+      final changes = await _progressionService.applySessionResults(
+        userId: userId,
+        results: results,
+        progressMap: progressMap,
+      );
+      progressMap.addAll(changes);
     }
+  }
+
+  /// Splits a session volume into three sets whose values sum to [volume].
+  List<ExerciseSet> _splitIntoSets(int volume, {required bool isTimed}) {
+    const setCount = 3;
+    final base = volume ~/ setCount;
+    final remainder = volume - base * setCount;
+    return [
+      for (var i = 0; i < setCount; i++)
+        isTimed
+            ? ExerciseSet(durationSeconds: base + (i < remainder ? 1 : 0))
+            : ExerciseSet(reps: base + (i < remainder ? 1 : 0)),
+    ];
   }
 }

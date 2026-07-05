@@ -76,6 +76,17 @@ class AuthService {
     await _client.auth.signOut();
   }
 
+  /// Permanently deletes the account via the `delete_account` Postgres
+  /// function (security definer). Deleting the auth user cascades through
+  /// every user-owned table, so all server data is removed. The local
+  /// session is cleared afterwards, which sends the app to the login view.
+  Future<void> deleteAccount() async {
+    await _client.rpc('delete_account');
+    // The server-side sign-out may 4xx because the user no longer exists;
+    // gotrue clears the local session regardless of those responses.
+    await _client.auth.signOut();
+  }
+
   User? get currentUser => _client.auth.currentUser;
 
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
