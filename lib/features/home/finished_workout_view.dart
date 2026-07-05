@@ -8,6 +8,7 @@ import '../../data/models/exercise_log_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
 
 class FinishedWorkoutView extends StatefulWidget {
@@ -79,6 +80,24 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           );
         }).toList(),
       );
+
+      // First workout of the (local) day consumes today's slot in the split:
+      // advance the program pointer so the dashboard can show a completed
+      // state today and the next session from tomorrow.
+      try {
+        final sessionsToday = await _exerciseLogService.countSessionsOnLocalDate(
+          userId,
+          widget.workout.finishedAt,
+        );
+        if (sessionsToday <= 1) {
+          await TrainingProgramStoreService()
+              .advanceProgramStateAfterWorkout(userId);
+        }
+      } catch (error, stackTrace) {
+        // The workout itself is saved — a failed advance only delays the
+        // dashboard by one session and self-heals on the next save.
+        debugPrint('Failed to advance program state: $error\n$stackTrace');
+      }
 
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);

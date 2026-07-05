@@ -131,6 +131,39 @@ class TrainingProgramStoreService {
     );
   }
 
+  /// Moves the program pointer one step along the schedule cycle. Called when
+  /// a workout is saved (once per local day), so the stored state always
+  /// means "the session after the last completed workout". Rest days are not
+  /// advanced here — the dashboard rolls past them by date at display time.
+  Future<void> advanceProgramStateAfterWorkout(String userId) async {
+    final program = await _fetchActiveProgram(userId);
+    if (program == null) return;
+
+    final state = await _fetchProgramState(program.id);
+    if (state == null) return;
+
+    final cycle = scheduleCycleFor(programType: program.programType);
+    if (cycle.isEmpty) return;
+
+    var index = state.nextStepIndex;
+    if (index < 0 ||
+        index >= cycle.length ||
+        cycle[index] != state.nextSessionType) {
+      final matched = cycle.indexOf(state.nextSessionType);
+      index = matched >= 0 ? matched : 0;
+    }
+    final nextIndex = (index + 1) % cycle.length;
+
+    await _client
+        .from('user_training_program_state')
+        .update({
+          'next_step_index': nextIndex,
+          'next_session_type': cycle[nextIndex].dbValue,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', state.id);
+  }
+
   Future<UserTrainingProgram?> _fetchActiveProgram(String userId) async {
     final data = await _client
         .from('user_training_programs')

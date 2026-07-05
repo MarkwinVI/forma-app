@@ -57,6 +57,7 @@ class _HomeViewState extends State<HomeView> {
   Map<String, dynamic>? _setupAnswers;
   int _nextStepIndex = 0;
   TrainingSessionType _nextSessionType = TrainingSessionType.fullBody;
+  HomeScheduleResolution? _schedule;
 
   @override
   void initState() {
@@ -138,10 +139,17 @@ class _HomeViewState extends State<HomeView> {
     final nextStepIndex = logicSnapshot?.state.nextStepIndex ?? 0;
     final nextSessionType =
         logicSnapshot?.state.nextSessionType ?? TrainingSessionType.fullBody;
+    final schedule = _resolveSchedule(
+      programType: selectedProgramType,
+      scheduleVariant: scheduleVariant,
+      nextStepIndex: nextStepIndex,
+      nextSessionType: nextSessionType,
+      workouts: workouts,
+    );
     final recommendation = _trainingProgramService.buildToday(
       progressMap: progressMap,
       programType: selectedProgramType,
-      sessionType: nextSessionType,
+      sessionType: schedule.effectiveSessionType,
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
     );
@@ -160,9 +168,31 @@ class _HomeViewState extends State<HomeView> {
       _setupAnswers = setupAnswers;
       _nextStepIndex = nextStepIndex;
       _nextSessionType = nextSessionType;
+      _schedule = schedule;
       _recommendation = recommendation;
       _loading = false;
     });
+  }
+
+  /// Where the rolling split stands today (local time): whether today's
+  /// session is already done and which step the dashboard should show, with
+  /// past rest days rolled forward.
+  HomeScheduleResolution _resolveSchedule({
+    required TrainingProgramType programType,
+    required String? scheduleVariant,
+    required int nextStepIndex,
+    required TrainingSessionType nextSessionType,
+    required List<PastWorkout> workouts,
+  }) {
+    return HomeDashboardMetricsCalculator.resolveSchedule(
+      cycle: _trainingProgramService.scheduleCycleFor(
+        programType: programType,
+        scheduleVariant: scheduleVariant,
+      ),
+      nextStepIndex: nextStepIndex,
+      nextSessionType: nextSessionType,
+      lastWorkoutAt: workouts.isEmpty ? null : workouts.first.loggedAt,
+    );
   }
 
   Map<String, dynamic>? _setupAnswersFor(UserTrainingProgram? program) {
@@ -216,10 +246,17 @@ class _HomeViewState extends State<HomeView> {
           _sessionItemsConfig = sessionItemsConfig;
           _frequencyPerWeek = frequencyPerWeek ?? _frequencyPerWeek;
           _setupAnswers = effectiveSetupAnswers;
+          _schedule = _resolveSchedule(
+            programType: _selectedProgramType,
+            scheduleVariant: _scheduleVariant,
+            nextStepIndex: _nextStepIndex,
+            nextSessionType: _nextSessionType,
+            workouts: _pastWorkouts,
+          );
           _recommendation = _trainingProgramService.buildToday(
             progressMap: _progressMap,
             programType: _selectedProgramType,
-            sessionType: _nextSessionType,
+            sessionType: _schedule!.effectiveSessionType,
             branchSelections: _branchSelections,
             sessionItemsConfig: _sessionItemsConfig,
           );
@@ -255,10 +292,17 @@ class _HomeViewState extends State<HomeView> {
       _setupAnswers = _setupAnswersFor(snapshot.program);
       _nextStepIndex = snapshot.state.nextStepIndex;
       _nextSessionType = snapshot.state.nextSessionType;
+      _schedule = _resolveSchedule(
+        programType: _selectedProgramType,
+        scheduleVariant: _scheduleVariant,
+        nextStepIndex: _nextStepIndex,
+        nextSessionType: _nextSessionType,
+        workouts: _pastWorkouts,
+      );
       _recommendation = _trainingProgramService.buildToday(
         progressMap: _progressMap,
         programType: _selectedProgramType,
-        sessionType: _nextSessionType,
+        sessionType: _schedule!.effectiveSessionType,
         branchSelections: _branchSelections,
         sessionItemsConfig: _sessionItemsConfig,
       );
@@ -322,9 +366,11 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _openAlternateWorkoutOptions() async {
-    final sessionType = _nextSessionType == TrainingSessionType.rest
+    final effectiveSessionType =
+        _schedule?.effectiveSessionType ?? _nextSessionType;
+    final sessionType = effectiveSessionType == TrainingSessionType.rest
         ? TrainingSessionType.fullBody
-        : _nextSessionType;
+        : effectiveSessionType;
 
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -394,15 +440,15 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     final recommendation = _recommendation;
-    final metrics = recommendation == null
+    final schedule = _schedule;
+    final metrics = recommendation == null || schedule == null
         ? null
         : HomeDashboardMetricsCalculator.build(
             recommendation: recommendation,
             trainingProgramService: _trainingProgramService,
             programType: _selectedProgramType,
             scheduleVariant: _scheduleVariant,
-            nextStepIndex: _nextStepIndex,
-            nextSessionType: _nextSessionType,
+            schedule: schedule,
             branchSelections: _branchSelections,
             sessionItemsConfig: _sessionItemsConfig,
             progressMap: _progressMap,

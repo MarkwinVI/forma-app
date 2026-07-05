@@ -362,8 +362,8 @@ void main() {
           programType: TrainingProgramType.fullBody,
           scheduleVariant: null,
         ),
-        nextStepIndex: 2,
-        nextSessionType: TrainingSessionType.fullBody,
+        todayPosition: 2,
+        completedToday: false,
         now: DateTime(2026, 6, 16),
       );
       final pushPull = HomeDashboardMetricsCalculator.buildWeekStripData(
@@ -371,8 +371,8 @@ void main() {
           programType: TrainingProgramType.pushPull,
           scheduleVariant: null,
         ),
-        nextStepIndex: 2,
-        nextSessionType: TrainingSessionType.pull,
+        todayPosition: 2,
+        completedToday: false,
         now: DateTime(2026, 6, 16),
       );
       final upperLower = HomeDashboardMetricsCalculator.buildWeekStripData(
@@ -380,8 +380,8 @@ void main() {
           programType: TrainingProgramType.upperLower,
           scheduleVariant: null,
         ),
-        nextStepIndex: 2,
-        nextSessionType: TrainingSessionType.lower,
+        todayPosition: 2,
+        completedToday: false,
         now: DateTime(2026, 6, 16),
       );
 
@@ -389,6 +389,122 @@ void main() {
       expect(pushPull.days[2].isCurrent, isTrue);
       expect(pushPull.days[2].sessionType, TrainingSessionType.pull);
       expect(upperLower.days[2].sessionType, TrainingSessionType.lower);
+    });
+
+    test('week strip marks today completed after a finished workout', () {
+      final strip = HomeDashboardMetricsCalculator.buildWeekStripData(
+        cycle: TrainingProgramService().scheduleCycleFor(
+          programType: TrainingProgramType.pushPull,
+          scheduleVariant: null,
+        ),
+        todayPosition: 0,
+        completedToday: true,
+        now: DateTime(2026, 6, 16),
+      );
+
+      expect(strip.days[0].isCurrent, isTrue);
+      expect(strip.days[0].isCompleted, isTrue);
+      expect(strip.completedSessions, 1);
+    });
+  });
+
+  group('resolveSchedule', () {
+    // Push/Pull cycle: [push, rest, pull, rest, push, pull, rest]
+    final cycle = TrainingProgramService().scheduleCycleFor(
+      programType: TrainingProgramType.pushPull,
+      scheduleVariant: null,
+    );
+
+    test('marks today complete when the last workout finished today', () {
+      // Workout done today; stored state already advanced to the rest step.
+      final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
+        cycle: cycle,
+        nextStepIndex: 1,
+        nextSessionType: TrainingSessionType.rest,
+        lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
+        now: DateTime(2026, 6, 15, 21),
+      );
+
+      expect(resolution.completedToday, isTrue);
+      expect(resolution.todayPosition, 0);
+      expect(resolution.effectiveStepIndex, 1);
+      expect(resolution.effectiveSessionType, TrainingSessionType.rest);
+    });
+
+    test('shows the rest day on the day after a completed workout', () {
+      final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
+        cycle: cycle,
+        nextStepIndex: 1,
+        nextSessionType: TrainingSessionType.rest,
+        lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
+        now: DateTime(2026, 6, 16, 9),
+      );
+
+      expect(resolution.completedToday, isFalse);
+      expect(resolution.todayPosition, 1);
+      expect(resolution.effectiveSessionType, TrainingSessionType.rest);
+    });
+
+    test('rolls past an elapsed rest day to the next training day', () {
+      final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
+        cycle: cycle,
+        nextStepIndex: 1,
+        nextSessionType: TrainingSessionType.rest,
+        lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
+        now: DateTime(2026, 6, 17, 9),
+      );
+
+      expect(resolution.completedToday, isFalse);
+      expect(resolution.effectiveStepIndex, 2);
+      expect(resolution.effectiveSessionType, TrainingSessionType.pull);
+    });
+
+    test('a missed training day stays current instead of rolling', () {
+      // Pull was due two days ago but never done — it remains today's session.
+      final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
+        cycle: cycle,
+        nextStepIndex: 2,
+        nextSessionType: TrainingSessionType.pull,
+        lastWorkoutAt: DateTime(2026, 6, 13, 18, 30),
+        now: DateTime(2026, 6, 17, 9),
+      );
+
+      expect(resolution.completedToday, isFalse);
+      expect(resolution.effectiveSessionType, TrainingSessionType.pull);
+      expect(resolution.todayPosition, 2);
+    });
+
+    test('rolls through consecutive rest days', () {
+      // Full-body cycle ends with two rest days: [fb, r, fb, r, fb, r, r].
+      final fullBodyCycle = TrainingProgramService().scheduleCycleFor(
+        programType: TrainingProgramType.fullBody,
+        scheduleVariant: null,
+      );
+
+      final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
+        cycle: fullBodyCycle,
+        nextStepIndex: 5,
+        nextSessionType: TrainingSessionType.rest,
+        lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
+        now: DateTime(2026, 6, 18, 9),
+      );
+
+      expect(resolution.effectiveStepIndex, 0);
+      expect(resolution.effectiveSessionType, TrainingSessionType.fullBody);
+    });
+
+    test('without any workouts the stored step is shown as-is', () {
+      final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
+        cycle: cycle,
+        nextStepIndex: 0,
+        nextSessionType: TrainingSessionType.push,
+        lastWorkoutAt: null,
+        now: DateTime(2026, 6, 17, 9),
+      );
+
+      expect(resolution.completedToday, isFalse);
+      expect(resolution.effectiveSessionType, TrainingSessionType.push);
+      expect(resolution.todayPosition, 0);
     });
   });
 }

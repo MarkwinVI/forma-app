@@ -34,6 +34,10 @@ class HomeTodaySummary {
   final List<HomeTodayMixSegment> mixSegments;
   final String supportingText;
 
+  /// Set when a workout was already finished today — the hero card renders a
+  /// "Workout complete" state instead of the start CTA.
+  final HomeCompletedWorkoutSummary? completed;
+
   const HomeTodaySummary({
     required this.sessionTitle,
     required this.ctaLabel,
@@ -44,6 +48,50 @@ class HomeTodaySummary {
     required this.plannedExercises,
     required this.mixSegments,
     required this.supportingText,
+    this.completed,
+  });
+}
+
+class HomeCompletedWorkoutSummary {
+  final String title;
+  final int durationMinutes;
+  final int setCount;
+  final int exerciseCount;
+  final String nextSessionLabel;
+
+  const HomeCompletedWorkoutSummary({
+    required this.title,
+    required this.durationMinutes,
+    required this.setCount,
+    required this.exerciseCount,
+    required this.nextSessionLabel,
+  });
+}
+
+/// Where the rolling schedule stands on a given (local) day, derived from the
+/// stored program pointer and the date of the last saved workout.
+///
+/// The stored state always points at the session AFTER the last completed
+/// workout (advanced at save time). That step is due the day after that
+/// workout; rest steps whose day has already passed roll forward here, while
+/// training steps wait indefinitely ("a missed day becomes your next
+/// training day").
+class HomeScheduleResolution {
+  /// Cycle index whose session the dashboard should recommend.
+  final int effectiveStepIndex;
+  final TrainingSessionType effectiveSessionType;
+
+  /// Cycle index that represents *today* in the week calendar. Equal to
+  /// [effectiveStepIndex] unless today's workout is already done — then it is
+  /// the step just completed.
+  final int todayPosition;
+  final bool completedToday;
+
+  const HomeScheduleResolution({
+    required this.effectiveStepIndex,
+    required this.effectiveSessionType,
+    required this.todayPosition,
+    required this.completedToday,
   });
 }
 
@@ -233,8 +281,7 @@ class HomeDashboardMetricsCalculator {
     required TrainingProgramService trainingProgramService,
     required TrainingProgramType programType,
     required String? scheduleVariant,
-    required int nextStepIndex,
-    required TrainingSessionType nextSessionType,
+    required HomeScheduleResolution schedule,
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, dynamic> sessionItemsConfig,
     required Map<String, ExerciseStatus> progressMap,
@@ -246,13 +293,19 @@ class HomeDashboardMetricsCalculator {
       programType: programType,
       scheduleVariant: scheduleVariant,
     );
+    final completedWorkout = schedule.completedToday && workouts.isNotEmpty
+        ? workouts.first
+        : null;
 
     return HomeDashboardMetrics(
-      today: buildTodaySummary(recommendation),
+      today: buildTodaySummary(
+        recommendation,
+        completedWorkout: completedWorkout,
+      ),
       weekStrip: buildWeekStripData(
         cycle: cycle,
-        nextStepIndex: nextStepIndex,
-        nextSessionType: nextSessionType,
+        todayPosition: schedule.todayPosition,
+        completedToday: schedule.completedToday,
         now: now,
       ),
       journeySnapshot: buildJourneySnapshotData(
@@ -277,15 +330,68 @@ class HomeDashboardMetricsCalculator {
     );
   }
 
+  /// Resolves what the dashboard should show for [now]'s local date. See
+  /// [HomeScheduleResolution] for the schedule semantics.
+  static HomeScheduleResolution resolveSchedule({
+    required List<TrainingSessionType> cycle,
+    required int nextStepIndex,
+    required TrainingSessionType nextSessionType,
+    DateTime? lastWorkoutAt,
+    DateTime? now,
+  }) {
+    if (cycle.isEmpty) {
+      return HomeScheduleResolution(
+        effectiveStepIndex: 0,
+        effectiveSessionType: nextSessionType,
+        todayPosition: 0,
+        completedToday: false,
+      );
+    }
+
+    var index = _resolveCurrentIndex(
+      cycle: cycle,
+      nextStepIndex: nextStepIndex,
+      nextSessionType: nextSessionType,
+    );
+    final today = _dateOnly(now ?? DateTime.now());
+    var completedToday = false;
+
+    if (lastWorkoutAt != null) {
+      final lastWorkoutDate = _dateOnly(lastWorkoutAt.toLocal());
+      completedToday = lastWorkoutDate.isAtSameMomentAs(today);
+
+      // The stored step is due the day after the last workout. Rest steps
+      // whose day has passed roll forward; training steps wait to be done.
+      var due = lastWorkoutDate.add(const Duration(days: 1));
+      while (cycle[index] == TrainingSessionType.rest && due.isBefore(today)) {
+        index = (index + 1) % cycle.length;
+        due = due.add(const Duration(days: 1));
+      }
+    }
+
+    return HomeScheduleResolution(
+      effectiveStepIndex: index,
+      effectiveSessionType: cycle[index],
+      todayPosition: completedToday
+          ? (index - 1 + cycle.length) % cycle.length
+          : index,
+      completedToday: completedToday,
+    );
+  }
+
   static HomeTodaySummary buildTodaySummary(
-    DailyTrainingRecommendation recommendation,
-  ) {
+    DailyTrainingRecommendation recommendation, {
+    PastWorkout? completedWorkout,
+  }) {
     final sessionTitle = recommendation.isRestDay
         ? 'Recovery'
         : _homeSessionTitle(recommendation.sessionType);
     final plannedExercises =
         recommendation.items.map(_buildPlannedExerciseSummary).toList();
     final tags = plannedExercises.map((exercise) => exercise.name);
+    final nextSessionLabel = recommendation.isRestDay
+        ? 'Rest day'
+        : _homeSessionTitle(recommendation.sessionType);
 
     return HomeTodaySummary(
       sessionTitle: sessionTitle,
@@ -299,13 +405,33 @@ class HomeDashboardMetricsCalculator {
       supportingText: recommendation.isRestDay
           ? 'Take the day to recover, then review the next session and keep the split moving.'
           : 'Built from your current program state and ready to start immediately.',
+      completed: completedWorkout == null
+          ? null
+          : _buildCompletedSummary(completedWorkout, nextSessionLabel),
+    );
+  }
+
+  static HomeCompletedWorkoutSummary _buildCompletedSummary(
+    PastWorkout workout,
+    String nextSessionLabel,
+  ) {
+    final minutes = workout.loggedAt.difference(workout.startedAt).inMinutes;
+    final setCount = workout.exercises
+        .fold<int>(0, (sum, exercise) => sum + exercise.setCount);
+
+    return HomeCompletedWorkoutSummary(
+      title: workout.title,
+      durationMinutes: minutes < 1 ? 1 : minutes,
+      setCount: setCount,
+      exerciseCount: workout.exercises.length,
+      nextSessionLabel: nextSessionLabel,
     );
   }
 
   static HomeWeekStripData buildWeekStripData({
     required List<TrainingSessionType> cycle,
-    required int nextStepIndex,
-    required TrainingSessionType nextSessionType,
+    required int todayPosition,
+    required bool completedToday,
     DateTime? now,
   }) {
     if (cycle.isEmpty) {
@@ -317,19 +443,18 @@ class HomeDashboardMetricsCalculator {
       );
     }
 
-    final currentIndex = _resolveCurrentIndex(
-      cycle: cycle,
-      nextStepIndex: nextStepIndex,
-      nextSessionType: nextSessionType,
-    );
+    final currentIndex = todayPosition.clamp(0, cycle.length - 1);
     final today = _dateOnly(now ?? DateTime.now());
     final startDate = today.subtract(Duration(days: currentIndex));
     final totalSessions =
         cycle.where((session) => session != TrainingSessionType.rest).length;
     final completedSessions = cycle
-        .take(currentIndex)
-        .where((session) => session != TrainingSessionType.rest)
-        .length;
+            .take(currentIndex)
+            .where((session) => session != TrainingSessionType.rest)
+            .length +
+        (completedToday && cycle[currentIndex] != TrainingSessionType.rest
+            ? 1
+            : 0);
 
     return HomeWeekStripData(
       days: List.generate(
@@ -338,8 +463,9 @@ class HomeDashboardMetricsCalculator {
           date: startDate.add(Duration(days: index)),
           sessionType: cycle[index],
           isCurrent: index == currentIndex,
-          isCompleted:
-              index < currentIndex && cycle[index] != TrainingSessionType.rest,
+          isCompleted: cycle[index] != TrainingSessionType.rest &&
+              (index < currentIndex ||
+                  (index == currentIndex && completedToday)),
         ),
       ),
       completedSessions: completedSessions,

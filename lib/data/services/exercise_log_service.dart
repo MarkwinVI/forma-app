@@ -26,6 +26,22 @@ class ExerciseLogService {
     return (data as List).length >= 2;
   }
 
+  /// Number of workout sessions finished on the given local calendar date.
+  /// Used to advance the program pointer only once per day.
+  Future<int> countSessionsOnLocalDate(String userId, DateTime date) async {
+    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+
+    final data = await _client
+        .from('workout_sessions')
+        .select('id')
+        .eq('user_id', userId)
+        .gte('finished_at', dayStart.toUtc().toIso8601String())
+        .lt('finished_at', dayEnd.toUtc().toIso8601String());
+
+    return (data as List).length;
+  }
+
   Future<List<ExerciseLog>> fetchForExercise(
     String userId,
     String exerciseId,
@@ -88,8 +104,10 @@ class ExerciseLogService {
           'user_id': userId,
           'title': title,
           'session_type': sessionType,
-          'started_at': startedAt.toIso8601String(),
-          'finished_at': finishedAt.toIso8601String(),
+          // Store UTC so local-date logic (workout-complete state, schedule
+          // rollover) can convert back with .toLocal() reliably.
+          'started_at': startedAt.toUtc().toIso8601String(),
+          'finished_at': finishedAt.toUtc().toIso8601String(),
         })
         .select('id')
         .single();
@@ -122,7 +140,7 @@ class ExerciseLogService {
     return ExerciseLog(
       id: map['id'] as String,
       exerciseId: map['exercise_id'] as String,
-      loggedAt: DateTime.parse(session['finished_at'] as String),
+      loggedAt: DateTime.parse(session['finished_at'] as String).toLocal(),
       sets: sets,
       totalReps: map['total_reps'] as int? ?? 0,
       totalVolumeKg: (map['total_volume_kg'] as num?)?.toDouble() ?? 0,
@@ -144,8 +162,8 @@ class ExerciseLogService {
       id: map['id'] as String,
       title: map['title'] as String,
       sessionType: map['session_type'] as String,
-      startedAt: DateTime.parse(map['started_at'] as String),
-      loggedAt: DateTime.parse(map['finished_at'] as String),
+      startedAt: DateTime.parse(map['started_at'] as String).toLocal(),
+      loggedAt: DateTime.parse(map['finished_at'] as String).toLocal(),
       exercises: exercises
           .map(
             (exercise) => PastWorkoutExercise(

@@ -113,6 +113,10 @@ class _TodayCardState extends State<_TodayCard> {
   @override
   Widget build(BuildContext context) {
     final summary = widget.summary;
+    final completed = summary.completed;
+    if (completed != null) {
+      return _buildCompletedState(completed);
+    }
     final plannedExercises = summary.plannedExercises;
     final visibleExercises =
         _isExpanded ? plannedExercises : plannedExercises.take(4).toList();
@@ -198,6 +202,83 @@ class _TodayCardState extends State<_TodayCard> {
               onTap: widget.onSecondaryAction,
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletedState(HomeCompletedWorkoutSummary completed) {
+    return SurfaceCard(
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: AppColors.greenSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 22,
+                  color: AppColors.green,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Workout complete',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.48,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${completed.title} · ${completed.durationMinutes} min'
+                      ' · ${completed.setCount}'
+                      ' set${completed.setCount == 1 ? '' : 's'} logged',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'That’s today done — next up: ${completed.nextSessionLabel} '
+            'tomorrow.',
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: AppColors.textMuted,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          PillButton(
+            label: 'Train something else',
+            tonal: true,
+            onTap: widget.onSecondaryAction,
+          ),
         ],
       ),
     );
@@ -359,11 +440,12 @@ class _WeekDayCell extends StatelessWidget {
           SizedBox(
             height: 13,
             child: Center(
-              child: isDone && !isToday
-                  ? const Icon(
+              child: isDone
+                  ? Icon(
                       Icons.check_rounded,
                       size: 12,
-                      color: AppColors.accentPrimary,
+                      color:
+                          isToday ? Colors.white : AppColors.accentPrimary,
                     )
                   : isToday
                       ? Container(
