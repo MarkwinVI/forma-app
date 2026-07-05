@@ -349,32 +349,16 @@ class _WeekCalendarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              for (var index = 0; index < data.days.length; index++)
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: index > 0 ? 6 : 0),
-                    child: _WeekDayCell(day: data.days[index]),
-                  ),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
-            child: Text(
-              '${data.completedSessions} of ${data.totalSessions} sessions done · missed sessions roll forward',
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-                height: 1.4,
+          for (var index = 0; index < data.days.length; index++)
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: index > 0 ? 6 : 0),
+                child: _WeekDayCell(day: data.days[index]),
               ),
             ),
-          ),
         ],
       ),
     );
