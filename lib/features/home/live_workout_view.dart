@@ -764,7 +764,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       context,
       exercise: item.exercise,
       skillCategoryId: item.sourceSkillCategoryId,
-      autoScrollToProgress: true,
+      initialTab: ExerciseDetailTab.history,
     );
   }
 

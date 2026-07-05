@@ -42,6 +42,16 @@ class ExerciseLogService {
     return (data as List).length;
   }
 
+  /// Deletes a saved workout session; its exercise logs cascade in the
+  /// database (`workout_exercise_logs.workout_session_id on delete cascade`).
+  Future<void> deleteWorkoutSession(String userId, String sessionId) async {
+    await _client
+        .from('workout_sessions')
+        .delete()
+        .eq('id', sessionId)
+        .eq('user_id', userId);
+  }
+
   Future<List<ExerciseLog>> fetchForExercise(
     String userId,
     String exerciseId,

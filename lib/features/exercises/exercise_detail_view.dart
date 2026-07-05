@@ -11,13 +11,16 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 
+/// Which tab the exercise detail view opens on. Live workout and the skill
+/// tree open on "How to", the Data tab opens on "Summary".
+enum ExerciseDetailTab { howTo, summary, history }
+
 Future<T?> openExerciseDetailView<T>(
   BuildContext context, {
   required Exercise exercise,
   Color accentColor = AppColors.accentPrimary,
   String? skillCategoryId,
-  List<String>? focusChips,
-  bool autoScrollToProgress = false,
+  ExerciseDetailTab initialTab = ExerciseDetailTab.howTo,
 }) {
   return Navigator.of(context).push<T>(
     MaterialPageRoute(
@@ -25,29 +28,27 @@ Future<T?> openExerciseDetailView<T>(
         exercise: exercise,
         accentColor: accentColor,
         skillCategoryId: skillCategoryId,
-        focusChips: focusChips,
-        autoScrollToProgress: autoScrollToProgress,
+        initialTab: initialTab,
       ),
     ),
   );
 }
 
-/// Exercise detail page in the polished design language: demo media,
-/// target/level/rest stats, how-to steps, form checks, and session history.
+/// Exercise detail page in the polished design language, split into
+/// "How to" (demo, steps, form checks), "Summary" (progress chart and
+/// personal records), and "History" (logged sessions) tabs.
 class ExerciseDetailView extends StatefulWidget {
   final Exercise exercise;
   final Color accentColor;
   final String? skillCategoryId;
-  final List<String>? focusChips;
-  final bool autoScrollToProgress;
+  final ExerciseDetailTab initialTab;
 
   const ExerciseDetailView({
     super.key,
     required this.exercise,
     this.accentColor = AppColors.accentPrimary,
     this.skillCategoryId,
-    this.focusChips,
-    this.autoScrollToProgress = false,
+    this.initialTab = ExerciseDetailTab.howTo,
   });
 
   @override
@@ -55,34 +56,25 @@ class ExerciseDetailView extends StatefulWidget {
 }
 
 class _ExerciseDetailViewState extends State<ExerciseDetailView> {
+  static const _tabs = [
+    ExerciseDetailTab.howTo,
+    ExerciseDetailTab.summary,
+    ExerciseDetailTab.history,
+  ];
+
   final _exerciseLogService = ExerciseLogService();
   final _restPreferencesService = WorkoutRestPreferencesService();
-  final _scrollController = ScrollController();
-  final _historyKey = GlobalKey();
 
   late Future<List<ExerciseLog>> _logsFuture;
+  late ExerciseDetailTab _tab;
   int _restSeconds = 0;
 
   @override
   void initState() {
     super.initState();
+    _tab = widget.initialTab;
     _logsFuture = _loadLogs();
     _loadRestPreference();
-    if (widget.autoScrollToProgress) {
-      _logsFuture.whenComplete(() {
-        if (!mounted) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _scrollToHistory();
-        });
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   Future<List<ExerciseLog>> _loadLogs() async {
@@ -105,26 +97,11 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     return ExerciseCatalog.skillCategoryIdForExercise(widget.exercise);
   }
 
-  Future<void> _scrollToHistory() async {
-    final context = _historyKey.currentContext;
-    if (context == null) return;
-    final renderObject = context.findRenderObject();
-    if (renderObject == null) return;
-    await _scrollController.position.ensureVisible(
-      renderObject,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOutCubic,
-      alignment: 0.08,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final exercise = widget.exercise;
     final skillCategory =
         SkillCategoryCatalog.findById(_resolvedSkillCategoryId);
-    final coachData = _coachDataFor(exercise);
-    final targetPlan = _targetPlanFor(exercise);
     final isTimed = _isTimedExercise(exercise);
 
     return Scaffold(
@@ -135,202 +112,702 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           children: [
             _DetailNavBar(
               title: exercise.name,
-              subtitle:
-                  '${skillCategory?.title ?? exercise.category.label} · '
+              subtitle: '${skillCategory?.title ?? exercise.category.label} · '
                   '${_branchLabel(exercise.branchId)}',
               onBack: () => Navigator.of(context).pop(),
             ),
-            Expanded(
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 44),
-                children: [
-                  _DemoMedia(exercise: exercise),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
-                    child: Text(
-                      'Demo · ${exercise.name} shown at working tempo',
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  SurfaceCard(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 16,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _StatBlock(
-                            label: 'TARGET',
-                            value: targetPlan.targetLabel,
-                          ),
-                        ),
-                        Expanded(
-                          child: _StatBlock(
-                            label: 'LEVEL',
-                            value: _levelLabel(exercise.difficulty),
-                          ),
-                        ),
-                        Expanded(
-                          child: _StatBlock(
-                            label: 'REST',
-                            value: _formatRestLabel(_restSeconds),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SectionHeader(title: 'How to'),
-                  SurfaceCard(
-                    clip: true,
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < coachData.steps.length; i++)
-                          Container(
-                            decoration: BoxDecoration(
-                              border: i > 0
-                                  ? const Border(
-                                      top: BorderSide(
-                                        color: AppColors.divider,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            padding:
-                                const EdgeInsets.fromLTRB(18, 13, 16, 13),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 18,
-                                  child: Text(
-                                    '${i + 1}',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.accentPrimary,
-                                      height: 1.45,
-                                      fontFeatures: [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 11),
-                                Expanded(
-                                  child: Text(
-                                    coachData.steps[i],
-                                    style: const TextStyle(
-                                      fontSize: 14.5,
-                                      color: AppColors.textPrimary,
-                                      height: 1.45,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SectionHeader(
-                    title: 'Form check',
-                    sub: 'Every rep should pass these',
-                  ),
-                  SurfaceCard(
-                    clip: true,
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < coachData.formChecks.length; i++)
-                          Container(
-                            decoration: BoxDecoration(
-                              border: i > 0
-                                  ? const Border(
-                                      top: BorderSide(
-                                        color: AppColors.divider,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            padding:
-                                const EdgeInsets.fromLTRB(18, 12, 16, 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 21,
-                                  height: 21,
-                                  margin: const EdgeInsets.only(top: 0.5),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.greenSoft,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons.check_rounded,
-                                    size: 12,
-                                    color: AppColors.green,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    coachData.formChecks[i],
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textPrimary,
-                                      height: 1.45,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  KeyedSubtree(
-                    key: _historyKey,
-                    child: const SectionHeader(title: 'History'),
-                  ),
-                  FutureBuilder<List<ExerciseLog>>(
-                    future: _logsFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done) {
-                        return const SurfaceCard(
-                          padding: EdgeInsets.symmetric(vertical: 28),
-                          child: Center(child: LoadingIndicator()),
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return const _MessageCard(
-                          message:
-                              'Couldn’t load your history. Pull back and try '
-                              'again in a moment.',
-                        );
-                      }
-                      final logs = snapshot.data ?? const <ExerciseLog>[];
-                      if (logs.isEmpty) {
-                        return const _MessageCard(
-                          message:
-                              'Log this exercise in a finished workout and '
-                              'your sessions will show up here.',
-                        );
-                      }
-                      return _HistoryCard(logs: logs, isTimed: isTimed);
-                    },
-                  ),
-                ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: SegmentedTabs(
+                labels: const ['How to', 'Summary', 'History'],
+                selectedIndex: _tabs.indexOf(_tab),
+                onChanged: (index) => setState(() => _tab = _tabs[index]),
               ),
+            ),
+            Expanded(
+              child: switch (_tab) {
+                ExerciseDetailTab.howTo => _HowToTab(
+                    exercise: exercise,
+                    restSeconds: _restSeconds,
+                  ),
+                ExerciseDetailTab.summary => _SummaryTab(
+                    logsFuture: _logsFuture,
+                    isTimed: isTimed,
+                  ),
+                ExerciseDetailTab.history => _HistoryTab(
+                    logsFuture: _logsFuture,
+                    isTimed: isTimed,
+                  ),
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── How to tab ────────────────────────────────────────────────────────
+
+class _HowToTab extends StatelessWidget {
+  final Exercise exercise;
+  final int restSeconds;
+
+  const _HowToTab({
+    required this.exercise,
+    required this.restSeconds,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final coachData = _coachDataFor(exercise);
+    final targetPlan = _targetPlanFor(exercise);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 44),
+      children: [
+        _DemoMedia(exercise: exercise),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+          child: Text(
+            'Demo · ${exercise.name} shown at working tempo',
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        SurfaceCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 16,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _StatBlock(
+                  label: 'TARGET',
+                  value: targetPlan.targetLabel,
+                ),
+              ),
+              Expanded(
+                child: _StatBlock(
+                  label: 'LEVEL',
+                  value: _levelLabel(exercise.difficulty),
+                ),
+              ),
+              Expanded(
+                child: _StatBlock(
+                  label: 'REST',
+                  value: _formatRestLabel(restSeconds),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SectionHeader(title: 'How to'),
+        SurfaceCard(
+          clip: true,
+          child: Column(
+            children: [
+              for (var i = 0; i < coachData.steps.length; i++)
+                Container(
+                  decoration: BoxDecoration(
+                    border: i > 0
+                        ? const Border(
+                            top: BorderSide(
+                              color: AppColors.divider,
+                            ),
+                          )
+                        : null,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(18, 13, 16, 13),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        child: Text(
+                          '${i + 1}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.accentPrimary,
+                            height: 1.45,
+                            fontFeatures: [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Text(
+                          coachData.steps[i],
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            color: AppColors.textPrimary,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SectionHeader(
+          title: 'Form check',
+          sub: 'Every rep should pass these',
+        ),
+        SurfaceCard(
+          clip: true,
+          child: Column(
+            children: [
+              for (var i = 0; i < coachData.formChecks.length; i++)
+                Container(
+                  decoration: BoxDecoration(
+                    border: i > 0
+                        ? const Border(
+                            top: BorderSide(
+                              color: AppColors.divider,
+                            ),
+                          )
+                        : null,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(18, 12, 16, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 21,
+                        height: 21,
+                        margin: const EdgeInsets.only(top: 0.5),
+                        decoration: const BoxDecoration(
+                          color: AppColors.greenSoft,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 12,
+                          color: AppColors.green,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          coachData.formChecks[i],
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Summary tab ───────────────────────────────────────────────────────
+
+enum _SummaryMetric { sessionTotal, bestSet }
+
+class _SummaryTab extends StatefulWidget {
+  final Future<List<ExerciseLog>> logsFuture;
+  final bool isTimed;
+
+  const _SummaryTab({
+    required this.logsFuture,
+    required this.isTimed,
+  });
+
+  @override
+  State<_SummaryTab> createState() => _SummaryTabState();
+}
+
+class _SummaryTabState extends State<_SummaryTab> {
+  _SummaryMetric _metric = _SummaryMetric.sessionTotal;
+
+  int _sessionTotal(ExerciseLog log) {
+    if (widget.isTimed) {
+      return log.sets.fold(0, (sum, set) => sum + set.durationSeconds);
+    }
+    return log.sets.fold(0, (sum, set) => sum + set.reps);
+  }
+
+  int _bestSet(ExerciseLog log) {
+    var best = 0;
+    for (final set in log.sets) {
+      final value = widget.isTimed ? set.durationSeconds : set.reps;
+      if (value > best) best = value;
+    }
+    return best;
+  }
+
+  String _formatValue(int value) =>
+      widget.isTimed ? _formatSeconds(value) : '$value';
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ExerciseLog>>(
+      future: widget.logsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: LoadingIndicator());
+        }
+        if (snapshot.hasError) {
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+            children: const [
+              _MessageCard(
+                message: 'Couldn’t load your history. Pull back and try '
+                    'again in a moment.',
+              ),
+            ],
+          );
+        }
+        return _buildSummary(snapshot.data ?? const <ExerciseLog>[]);
+      },
+    );
+  }
+
+  Widget _buildSummary(List<ExerciseLog> logs) {
+    // Logs arrive newest-first — the chart wants oldest-first.
+    final ordered = logs.reversed.toList();
+    final cutoff = DateTime.now().subtract(const Duration(days: 90));
+    var window = ordered.where((log) => log.loggedAt.isAfter(cutoff)).toList();
+    var windowLabel = 'Last 3 months';
+    if (window.length < 2 && ordered.isNotEmpty) {
+      window =
+          ordered.length > 12 ? ordered.sublist(ordered.length - 12) : ordered;
+      windowLabel = 'All sessions';
+    }
+
+    final metricLabel = _metric == _SummaryMetric.sessionTotal
+        ? 'Session total'
+        : 'Most reps (set)';
+    final metricDef = _metric == _SummaryMetric.sessionTotal
+        ? (widget.isTimed
+            ? 'Total hold time per training session'
+            : 'Total reps per training session')
+        : (widget.isTimed
+            ? 'Longest single hold per session'
+            : 'Highest rep count in a single set');
+    final series = window
+        .map(
+          (log) => _metric == _SummaryMetric.sessionTotal
+              ? _sessionTotal(log)
+              : _bestSet(log),
+        )
+        .toList();
+
+    final bestSetAllTime = logs.fold<int>(
+        0, (best, log) => _bestSet(log) > best ? _bestSet(log) : best);
+    final bestSessionAllTime = logs.fold<int>(0,
+        (best, log) => _sessionTotal(log) > best ? _sessionTotal(log) : best);
+    final records = logs.isEmpty
+        ? const <(String, String)>[]
+        : <(String, String)>[
+            (
+              widget.isTimed ? 'Longest hold' : 'Most reps in a set',
+              _formatValue(bestSetAllTime),
+            ),
+            (
+              widget.isTimed ? 'Best session time' : 'Best session total',
+              _formatValue(bestSessionAllTime),
+            ),
+            ('Sessions logged', '${logs.length}'),
+            ('Last session', _formatShortDate(logs.first.loggedAt)),
+          ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+      children: [
+        SurfaceCard(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${metricLabel.toUpperCase()} · '
+                '${windowLabel.toUpperCase()}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textMuted,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                metricDef,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (series.length < 2)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    logs.isEmpty
+                        ? 'No sessions logged yet — your trend appears '
+                            'after your first workout.'
+                        : 'Log one more session to see your trend here.',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                )
+              else
+                _TrendChart(
+                  values: series,
+                  dates: window.map((log) => log.loggedAt).toList(),
+                  formatValue: _formatValue,
+                ),
+              const SizedBox(height: 14),
+              SegmentedTabs(
+                labels: const ['Session total', 'Most reps (set)'],
+                selectedIndex: _metric == _SummaryMetric.sessionTotal ? 0 : 1,
+                onChanged: (index) => setState(() {
+                  _metric = index == 0
+                      ? _SummaryMetric.sessionTotal
+                      : _SummaryMetric.bestSet;
+                }),
+              ),
+            ],
+          ),
+        ),
+        const SectionHeader(title: 'Personal records'),
+        if (records.isEmpty)
+          const SurfaceCard(
+            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Text(
+              'Personal records appear after your first logged session.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+          )
+        else
+          SurfaceCard(
+            clip: true,
+            child: Column(
+              children: [
+                for (var i = 0; i < records.length; i++)
+                  Container(
+                    decoration: BoxDecoration(
+                      border: i > 0
+                          ? const Border(
+                              top: BorderSide(color: AppColors.divider),
+                            )
+                          : null,
+                    ),
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            records[i].$1,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          records[i].$2,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+          child: Text(
+            widget.isTimed
+                ? 'Holds are tracked as time, not volume.'
+                : 'Only completed working sets count toward these numbers.',
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: AppColors.textMuted,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Line chart in the polished language: soft gridlines with min/mid/max
+/// labels, accent polyline with dots, and a value chip on the last point.
+class _TrendChart extends StatelessWidget {
+  final List<int> values;
+  final List<DateTime> dates;
+  final String Function(int) formatValue;
+
+  const _TrendChart({
+    required this.values,
+    required this.dates,
+    required this.formatValue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 150,
+      width: double.infinity,
+      child: CustomPaint(
+        painter: _TrendChartPainter(
+          values: values,
+          dates: dates,
+          formatValue: formatValue,
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendChartPainter extends CustomPainter {
+  final List<int> values;
+  final List<DateTime> dates;
+  final String Function(int) formatValue;
+
+  _TrendChartPainter({
+    required this.values,
+    required this.dates,
+    required this.formatValue,
+  });
+
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  TextPainter _text(
+    String value, {
+    required Color color,
+    double fontSize = 9.5,
+    FontWeight fontWeight = FontWeight.w600,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: value,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return painter;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const padTop = 16.0;
+    const padBottom = 22.0;
+    const padRight = 14.0;
+
+    final max = values.reduce((a, b) => a > b ? a : b);
+    final min = values.reduce((a, b) => a < b ? a : b);
+    final span = (max - min) == 0 ? 1 : max - min;
+    final gridValues = [max, ((max + min) / 2).round(), min];
+
+    final labelPainters = [
+      for (final value in gridValues)
+        _text(formatValue(value), color: AppColors.textMuted),
+    ];
+    final padLeft = labelPainters.fold<double>(
+          0,
+          (widest, painter) => painter.width > widest ? painter.width : widest,
+        ) +
+        10;
+
+    final chartWidth = size.width - padLeft - padRight;
+    final chartHeight = size.height - padTop - padBottom;
+    double xAt(int i) =>
+        padLeft +
+        (values.length == 1 ? 0 : i * chartWidth / (values.length - 1));
+    double yAt(num value) => padTop + (1 - (value - min) / span) * chartHeight;
+
+    final gridPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.07)
+      ..strokeWidth = 1;
+    for (var i = 0; i < gridValues.length; i++) {
+      final y = yAt(gridValues[i]);
+      canvas.drawLine(
+        Offset(padLeft, y),
+        Offset(size.width - padRight, y),
+        gridPaint,
+      );
+      labelPainters[i].paint(
+        canvas,
+        Offset(padLeft - 6 - labelPainters[i].width,
+            y - labelPainters[i].height / 2),
+      );
+    }
+
+    final linePaint = Paint()
+      ..color = AppColors.accentPrimary
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final path = Path();
+    for (var i = 0; i < values.length; i++) {
+      final point = Offset(xAt(i), yAt(values[i]));
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    canvas.drawPath(path, linePaint);
+
+    final dotFill = Paint()..color = AppColors.surface;
+    final dotStroke = Paint()
+      ..color = AppColors.accentPrimary
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    for (var i = 0; i < values.length; i++) {
+      final point = Offset(xAt(i), yAt(values[i]));
+      if (i == values.length - 1) {
+        canvas.drawCircle(
+          point,
+          4.5,
+          Paint()..color = AppColors.accentPrimary,
+        );
+      } else {
+        canvas.drawCircle(point, 3, dotFill);
+        canvas.drawCircle(point, 3, dotStroke);
+      }
+    }
+
+    // Value chip above the last point.
+    final chipText = _text(
+      formatValue(values.last),
+      color: AppColors.bg,
+      fontSize: 10,
+      fontWeight: FontWeight.w800,
+    );
+    final chipWidth = chipText.width + 14;
+    final lastPoint = Offset(xAt(values.length - 1), yAt(values.last));
+    var chipLeft = lastPoint.dx - chipWidth / 2;
+    if (chipLeft + chipWidth > size.width) chipLeft = size.width - chipWidth;
+    final chipTop =
+        (lastPoint.dy - 27).clamp(0.0, size.height - padBottom - 17);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(chipLeft, chipTop, chipWidth, 17),
+        const Radius.circular(6),
+      ),
+      Paint()..color = AppColors.accentPrimary,
+    );
+    chipText.paint(
+      canvas,
+      Offset(chipLeft + (chipWidth - chipText.width) / 2,
+          chipTop + (17 - chipText.height) / 2),
+    );
+
+    // First / last date labels along the bottom.
+    String dateLabel(DateTime date) => '${_months[date.month - 1]} ${date.day}';
+    final firstLabel = _text(
+      dateLabel(dates.first),
+      color: AppColors.textMuted,
+    );
+    firstLabel.paint(canvas, Offset(padLeft, size.height - firstLabel.height));
+    final lastLabel = _text(
+      dateLabel(dates.last),
+      color: AppColors.textMuted,
+    );
+    lastLabel.paint(
+      canvas,
+      Offset(size.width - padRight - lastLabel.width,
+          size.height - lastLabel.height),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendChartPainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.dates != dates;
+}
+
+// ── History tab ───────────────────────────────────────────────────────
+
+class _HistoryTab extends StatelessWidget {
+  final Future<List<ExerciseLog>> logsFuture;
+  final bool isTimed;
+
+  const _HistoryTab({
+    required this.logsFuture,
+    required this.isTimed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ExerciseLog>>(
+      future: logsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: LoadingIndicator());
+        }
+        Widget child;
+        if (snapshot.hasError) {
+          child = const _MessageCard(
+            message: 'Couldn’t load your history. Pull back and try '
+                'again in a moment.',
+          );
+        } else {
+          final logs = snapshot.data ?? const <ExerciseLog>[];
+          child = logs.isEmpty
+              ? const _MessageCard(
+                  message: 'Log this exercise in a finished workout and '
+                      'your sessions will show up here.',
+                )
+              : _HistoryCard(logs: logs, isTimed: isTimed);
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+          children: [child],
+        );
+      },
     );
   }
 }
@@ -813,6 +1290,14 @@ String _formatRestLabel(int seconds) {
   final remainder = seconds % 60;
   if (remainder == 0) return '$minutes min';
   return '$minutes:${remainder.toString().padLeft(2, '0')}';
+}
+
+String _formatSeconds(int seconds) {
+  if (seconds < 60) return '${seconds}s';
+  final minutes = seconds ~/ 60;
+  final remainder = seconds % 60;
+  if (remainder == 0) return '${minutes}m';
+  return '${minutes}m ${remainder}s';
 }
 
 String _formatShortDate(DateTime date) {

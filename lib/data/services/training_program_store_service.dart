@@ -154,14 +154,40 @@ class TrainingProgramStoreService {
     }
     final nextIndex = (index + 1) % cycle.length;
 
-    await _client
-        .from('user_training_program_state')
-        .update({
-          'next_step_index': nextIndex,
-          'next_session_type': cycle[nextIndex].dbValue,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', state.id);
+    await _client.from('user_training_program_state').update({
+      'next_step_index': nextIndex,
+      'next_session_type': cycle[nextIndex].dbValue,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', state.id);
+  }
+
+  /// Undoes one [advanceProgramStateAfterWorkout] step. Called when the only
+  /// workout of a local day is deleted, so the slot it consumed in the split
+  /// becomes due again.
+  Future<void> rewindProgramStateAfterWorkoutDeletion(String userId) async {
+    final program = await _fetchActiveProgram(userId);
+    if (program == null) return;
+
+    final state = await _fetchProgramState(program.id);
+    if (state == null) return;
+
+    final cycle = scheduleCycleFor(programType: program.programType);
+    if (cycle.isEmpty) return;
+
+    var index = state.nextStepIndex;
+    if (index < 0 ||
+        index >= cycle.length ||
+        cycle[index] != state.nextSessionType) {
+      final matched = cycle.indexOf(state.nextSessionType);
+      index = matched >= 0 ? matched : 0;
+    }
+    final previousIndex = (index - 1 + cycle.length) % cycle.length;
+
+    await _client.from('user_training_program_state').update({
+      'next_step_index': previousIndex,
+      'next_session_type': cycle[previousIndex].dbValue,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', state.id);
   }
 
   Future<UserTrainingProgram?> _fetchActiveProgram(String userId) async {

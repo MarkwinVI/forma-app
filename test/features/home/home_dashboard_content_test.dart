@@ -53,14 +53,15 @@ void main() {
     );
 
     final hero = tester.getTopLeft(find.text('Pull Day'));
-    final calendar = tester.getTopLeft(
-      find.textContaining('sessions done'),
-    );
+    // The week calendar no longer has a supporting caption — anchor on the
+    // fixture's single rest-day cell instead.
+    final calendar = tester.getTopLeft(find.text('Rest'));
     final programOverview = tester.getTopLeft(find.text('Program overview'));
     final progress = tester.getTopLeft(find.text('Closest to levelling up'));
     expect(find.text('THIS WEEK'), findsNothing);
     expect(find.text('JOURNEY SNAPSHOT'), findsNothing);
     expect(find.text('SKILL PATHS'), findsNothing);
+    expect(find.textContaining('sessions done'), findsNothing);
     expect(hero.dy, lessThan(calendar.dy));
     expect(calendar.dy, lessThan(programOverview.dy));
     expect(programOverview.dy, lessThan(progress.dy));
