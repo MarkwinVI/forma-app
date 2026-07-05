@@ -66,8 +66,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   /// Inline reps/duration stepper open for one set at a time.
   _OpenStep? _openStep;
 
-  /// Set when the session no longer matches the planned day — used to offer
-  /// updating the program plan on finish.
+  /// Set when the session's exercises or sets no longer match the planned day
+  /// — used to offer updating the program plan on finish. Rest-timer changes
+  /// deliberately do NOT set this: rest is a standalone per-exercise
+  /// preference, saved immediately, and never part of the plan-update prompt.
   bool _planEdited = false;
 
   /// Exercises added or swapped in as standalone lifts this session; they are
@@ -514,6 +516,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         _pausedRestRemaining = null;
       }
     });
+    // Persist the rest duration for this exercise right away — it sticks
+    // regardless of whether the workout is ever saved, and it never marks the
+    // session as plan-edited, so it won't trigger the "update your plan" prompt.
     await _restPreferencesService.saveRestInterval(item.exercise.id, selected);
   }
 
