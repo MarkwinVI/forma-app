@@ -34,6 +34,10 @@ class AppColors {
   static const Color amber = Color(0xFFE9B43D);
   static const Color amberSoft = Color(0x21E9B43D); // rgba(233,180,61,0.13)
 
+  // Highlights
+  static const Color surface3 = Color(0xFF3A3A40); // muted dots / tracks
+  static const Color startOrange = Color(0xFFFC5200); // start-workout CTA
+
   // Legacy aliases — older screens reference these names.
   static const Color bgPrimary = bg;
   static const Color bgSecondary = bg;

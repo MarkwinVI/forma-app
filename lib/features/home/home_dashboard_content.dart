@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -72,15 +74,24 @@ class HomeDashboardContent extends StatelessWidget {
                     onStartWorkout: onPrimaryAction,
                   ),
                 ],
-                SectionHeader(
-                  title: 'Closest to levelling up',
-                  sub:
-                      '${journeySnapshot.levelsToNextTier} levels to ${journeySnapshot.nextTierLabel}',
+                const SectionHeader(
+                  title: 'In reach',
+                  sub: "Last result vs the next node's target",
                 ),
                 _ClosestSkillsCard(
                   data: journeySnapshot,
                   onOpenSkillPath: onOpenJourneySkill,
                 ),
+                if (activeSkillPaths.isNotEmpty) ...[
+                  const SectionHeader(
+                    title: 'Your goals',
+                    sub: 'The goals you picked — swipe through your paths',
+                  ),
+                  _GoalsPager(
+                    paths: activeSkillPaths,
+                    onOpenSkillPath: onOpenSkillPath,
+                  ),
+                ],
               ],
             ),
           ),
@@ -192,6 +203,7 @@ class _TodayCardState extends State<_TodayCard> {
           PillButton(
             label: summary.ctaLabel,
             icon: Icons.play_arrow_rounded,
+            color: summary.isRestDay ? null : AppColors.startOrange,
             onTap: widget.onPrimaryAction,
           ),
           if (!summary.isRestDay) ...[
@@ -296,6 +308,8 @@ class _PlannedExerciseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasPath = exercise.nodeStates.isNotEmpty;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 10.5),
@@ -306,34 +320,117 @@ class _PlannedExerciseRow extends StatelessWidget {
               : BorderSide.none,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              exercise.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.15,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  exercise.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.15,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Text(
+                exercise.targetLabel,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Text(
-            exercise.targetLabel,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
-              fontFeatures: [FontFeature.tabularFigures()],
+          if (hasPath) ...[
+            const SizedBox(height: 7),
+            Row(
+              children: [
+                _PathDots(nodeStates: exercise.nodeStates),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    exercise.treeLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
+  }
+}
+
+/// Compact node-progress dots: green mastered, blue working, muted upcoming.
+class _PathDots extends StatelessWidget {
+  final List<PathNodeState> nodeStates;
+
+  const _PathDots({required this.nodeStates});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var index = 0; index < nodeStates.length; index++) ...[
+          if (index > 0) const SizedBox(width: 4),
+          _dot(nodeStates[index]),
+        ],
+      ],
+    );
+  }
+
+  Widget _dot(PathNodeState state) {
+    switch (state) {
+      case PathNodeState.mastered:
+        return Container(
+          width: 5,
+          height: 5,
+          decoration: const BoxDecoration(
+            color: AppColors.green,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: AppColors.greenSoft, spreadRadius: 3),
+            ],
+          ),
+        );
+      case PathNodeState.working:
+        return Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: AppColors.accentPrimary,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: AppColors.accentSoft, spreadRadius: 5),
+            ],
+          ),
+        );
+      case PathNodeState.upcoming:
+        return Container(
+          width: 5,
+          height: 5,
+          decoration: const BoxDecoration(
+            color: AppColors.surface3,
+            shape: BoxShape.circle,
+          ),
+        );
+    }
   }
 }
 
@@ -526,7 +623,7 @@ class _ClosestSkillsCard extends StatefulWidget {
 }
 
 class _ClosestSkillsCardState extends State<_ClosestSkillsCard> {
-  static const _collapsedCount = 2;
+  static const _collapsedCount = 3;
 
   bool _showAll = false;
 
@@ -618,18 +715,19 @@ class _JourneySkillRow extends StatelessWidget {
     required this.onTap,
   });
 
+  String get _remainingLabel {
+    final remaining = data.targetVolume - data.lastSessionVolume;
+    if (remaining <= 0) return 'Ready to attempt';
+    if (data.isTimed) return '${remaining}s longer hold to reach';
+    return remaining == 1
+        ? '1 more clean rep to reach'
+        : '$remaining more clean reps to reach';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final trendColor = switch (data.lastSessionTrend) {
-      JourneySkillTrend.up => AppColors.green,
-      JourneySkillTrend.down => AppColors.amber,
-      JourneySkillTrend.flat => AppColors.textSecondary,
-    };
-    final trendBackground = switch (data.lastSessionTrend) {
-      JourneySkillTrend.up => AppColors.greenSoft,
-      JourneySkillTrend.down => AppColors.amberSoft,
-      JourneySkillTrend.flat => AppColors.divider,
-    };
+    final percent =
+        (data.progressPercent.clamp(0.0, 1.0) * 100).round().clamp(1, 100);
 
     return Pressable(
       onTap: onTap,
@@ -654,151 +752,84 @@ class _JourneySkillRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        data.motionLabel == 'Skill'
-                            ? 'Skill tree'
-                            : '${data.motionLabel} tree',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
                         data.skillTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 16.5,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                           letterSpacing: -0.16,
                         ),
                       ),
+                      const SizedBox(height: 1),
+                      Text(
+                        'Working: ${data.currentExerciseName}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                Text(
+                  '$percent%',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.green,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3.5),
+              child: LinearProgressIndicator(
+                value: data.progressPercent.clamp(0.02, 1.0),
+                minHeight: 7,
+                backgroundColor: AppColors.surface2,
+                color: AppColors.green,
+              ),
+            ),
+            const SizedBox(height: 9),
+            Row(
+              children: [
                 const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
+                  Icons.lock_outline_rounded,
+                  size: 13,
                   color: AppColors.textMuted,
                 ),
-              ],
-            ),
-            const SizedBox(height: 13),
-            Row(
-              children: [
-                Flexible(
-                  child: _ExerciseChip(
-                    label: data.currentExerciseName,
-                    highlighted: false,
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 14,
-                    color: AppColors.accentPrimary,
-                  ),
-                ),
-                Flexible(
-                  child: _ExerciseChip(
-                    label: data.nextExerciseName,
-                    highlighted: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
+                const SizedBox(width: 6),
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              const TextSpan(
-                                text: 'Last ',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              TextSpan(
-                                text: data.lastLabel,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  fontFeatures: [FontFeature.tabularFigures()],
-                                ),
-                              ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  child: Text.rich(
+                    TextSpan(
+                      text: '$_remainingLabel ',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 7),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: trendBackground,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          data.lastSessionDeltaLabel,
-                          style: TextStyle(
-                            fontSize: 11.5,
+                      children: [
+                        TextSpan(
+                          text: data.nextExerciseName,
+                          style: const TextStyle(
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
-                            color: trendColor,
+                            color: AppColors.accentPrimary,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(
-                        text: 'Goal ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      TextSpan(
-                        text: data.targetLabel,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accentPrimary,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 7),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: data.progressPercent.clamp(0.0, 1.0),
-                minHeight: 8,
-                backgroundColor: AppColors.surface2,
-                color: AppColors.accentPrimary,
-              ),
             ),
           ],
         ),
@@ -807,35 +838,255 @@ class _JourneySkillRow extends StatelessWidget {
   }
 }
 
-class _ExerciseChip extends StatelessWidget {
-  final String label;
-  final bool highlighted;
+// ── Your goals — swipeable goal cards ───────────────────────
 
-  const _ExerciseChip({
-    required this.label,
-    required this.highlighted,
+class _GoalsPager extends StatefulWidget {
+  final List<ActiveSkillPathData> paths;
+  final ValueChanged<ActiveSkillPathData> onOpenSkillPath;
+
+  const _GoalsPager({
+    required this.paths,
+    required this.onOpenSkillPath,
+  });
+
+  @override
+  State<_GoalsPager> createState() => _GoalsPagerState();
+}
+
+class _GoalsPagerState extends State<_GoalsPager> {
+  final _controller = PageController(viewportFraction: 0.92);
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 148,
+          child: PageView.builder(
+            controller: _controller,
+            padEnds: false,
+            clipBehavior: Clip.none,
+            onPageChanged: (page) => setState(() => _page = page),
+            itemCount: widget.paths.length,
+            itemBuilder: (context, index) {
+              final path = widget.paths[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: _GoalCard(
+                  path: path,
+                  onTap: () => widget.onOpenSkillPath(path),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var index = 0; index < widget.paths.length; index++) ...[
+              if (index > 0) const SizedBox(width: 6),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: index == _page ? 16 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: index == _page
+                      ? AppColors.textSecondary
+                      : AppColors.surface2,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalCard extends StatelessWidget {
+  final ActiveSkillPathData path;
+  final VoidCallback onTap;
+
+  const _GoalCard({
+    required this.path,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-      decoration: BoxDecoration(
-        color: highlighted ? AppColors.accentSoft : AppColors.surface2,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: highlighted ? AppColors.accentPrimary : AppColors.textPrimary,
-        ),
+    final total = path.totalNodes;
+    final position = path.workingPosition.clamp(0, total);
+
+    return SurfaceCard(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(18, 18, 14, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${path.skillTitle} tree'.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textMuted,
+                    letterSpacing: 0.69,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  path.goalExerciseName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.36,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text.rich(
+                  TextSpan(
+                    text: 'Working: ',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: path.currentExerciseName,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accentPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: total <= 0
+                              ? 0
+                              : (position / total).clamp(0.02, 1.0),
+                          minHeight: 6,
+                          backgroundColor: AppColors.surface2,
+                          color: AppColors.green,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${position.toString().padLeft(2, '0')}'
+                      '/${total.toString().padLeft(2, '0')}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textMuted,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 104,
+            child: CustomPaint(
+              painter: _MiniConstellationPainter(
+                nodeStates: path.nodeStates,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+/// A small constellation-style preview of a training path: mastered nodes in
+/// green, the working node in accent blue, upcoming nodes muted.
+class _MiniConstellationPainter extends CustomPainter {
+  final List<PathNodeState> nodeStates;
+
+  const _MiniConstellationPainter({required this.nodeStates});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final count = nodeStates.length;
+    if (count == 0) return;
+
+    final positions = <Offset>[];
+    for (var index = 0; index < count; index++) {
+      final t = count == 1 ? 0.5 : index / (count - 1);
+      final y = size.height - 10 - t * (size.height - 20);
+      final x = size.width / 2 + math.sin(index * 2.1) * size.width * 0.28;
+      positions.add(Offset(x, y));
+    }
+
+    final linePaint = Paint()
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+
+    for (var index = 0; index < count - 1; index++) {
+      final a = nodeStates[index];
+      final b = nodeStates[index + 1];
+      if (a == PathNodeState.mastered &&
+          (b == PathNodeState.mastered || b == PathNodeState.working)) {
+        linePaint.color = AppColors.green.withValues(alpha: 0.45);
+      } else {
+        linePaint.color = Colors.white.withValues(alpha: 0.09);
+      }
+      canvas.drawLine(positions[index], positions[index + 1], linePaint);
+    }
+
+    final nodePaint = Paint();
+    for (var index = 0; index < count; index++) {
+      final position = positions[index];
+      switch (nodeStates[index]) {
+        case PathNodeState.mastered:
+          nodePaint.color = AppColors.green.withValues(alpha: 0.16);
+          canvas.drawCircle(position, 6.5, nodePaint);
+          nodePaint.color = AppColors.green;
+          canvas.drawCircle(position, 3, nodePaint);
+        case PathNodeState.working:
+          nodePaint.color = AppColors.accentPrimary.withValues(alpha: 0.18);
+          canvas.drawCircle(position, 8, nodePaint);
+          nodePaint.color = AppColors.accentPrimary;
+          canvas.drawCircle(position, 4, nodePaint);
+        case PathNodeState.upcoming:
+          nodePaint.color = AppColors.surface3;
+          canvas.drawCircle(position, 2.75, nodePaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MiniConstellationPainter oldDelegate) =>
+      oldDelegate.nodeStates != nodeStates;
 }
 
 // ── Skill paths (rendered in the Data tab) ──────────────────

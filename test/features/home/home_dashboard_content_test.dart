@@ -57,7 +57,7 @@ void main() {
     // fixture's single rest-day cell instead.
     final calendar = tester.getTopLeft(find.text('Rest'));
     final programOverview = tester.getTopLeft(find.text('Program overview'));
-    final progress = tester.getTopLeft(find.text('Closest to levelling up'));
+    final progress = tester.getTopLeft(find.text('In reach'));
     expect(find.text('THIS WEEK'), findsNothing);
     expect(find.text('JOURNEY SNAPSHOT'), findsNothing);
     expect(find.text('SKILL PATHS'), findsNothing);
@@ -213,13 +213,47 @@ void main() {
 
   testWidgets('your progress card expands inline and can collapse',
       (tester) async {
+    // The collapsed card shows three skills, so a fourth is needed to make
+    // the show-all toggle appear.
+    final base = _journeySnapshot();
+    final snapshot = JourneySnapshotData(
+      totalLevel: base.totalLevel,
+      maxLevel: base.maxLevel,
+      averageSkillLevel: base.averageSkillLevel,
+      tierLabel: base.tierLabel,
+      unlockedSkillTrees: base.unlockedSkillTrees,
+      totalSkillTrees: base.totalSkillTrees,
+      nextTierLabel: base.nextTierLabel,
+      levelsToNextTier: base.levelsToNextTier,
+      closestSkills: [
+        ...base.closestSkills,
+        const JourneySkillProgressData(
+          track: TrainingTrack.horizontalPull,
+          skillCategoryId: 'rows',
+          branchId: 'front_lever',
+          motionLabel: 'Rows',
+          skillTitle: 'Front Lever Rows',
+          currentExerciseName: 'Ring Rows',
+          nextExerciseName: 'Tuck Front Lever',
+          targetVolume: 30,
+          lastSessionVolume: 10,
+          targetLabel: '30 reps',
+          lastLabel: '10 reps',
+          lastSessionDeltaLabel: 'no change',
+          lastSessionTrend: JourneySkillTrend.flat,
+          progressPercent: 0.33,
+          stages: [],
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: HomeDashboardContent(
             todaySummary: _todaySummary(),
             weekStrip: _weekStripData(),
-            journeySnapshot: _journeySnapshot(),
+            journeySnapshot: snapshot,
             activeSkillPaths: [_activeSkillPath()],
             onPrimaryAction: () {},
             onSecondaryAction: () {},
@@ -232,24 +266,24 @@ void main() {
       ),
     );
 
-    // Collapsed card shows the two closest skills; the third is hidden.
-    expect(find.text('L-Sit / V-Sit'), findsOneWidget);
-    expect(find.text('Diamond Pushups'), findsNothing);
+    // Collapsed card shows the three closest skills; the fourth is hidden.
+    expect(find.text('Diamond Pushups'), findsOneWidget);
+    expect(find.text('Front Lever Rows'), findsNothing);
 
-    await tester.ensureVisible(find.text('Show all 3 skills'));
-    await tester.tap(find.text('Show all 3 skills'));
+    await tester.ensureVisible(find.text('Show all 4 skills'));
+    await tester.tap(find.text('Show all 4 skills'));
     await tester.pump();
 
-    expect(find.text('L-Sit / V-Sit'), findsOneWidget);
     expect(find.text('Diamond Pushups'), findsOneWidget);
+    expect(find.text('Front Lever Rows'), findsOneWidget);
     expect(find.text('Show fewer'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Show fewer'));
     await tester.tap(find.text('Show fewer'));
     await tester.pump();
 
-    expect(find.text('Diamond Pushups'), findsNothing);
-    expect(find.text('Show all 3 skills'), findsOneWidget);
+    expect(find.text('Front Lever Rows'), findsNothing);
+    expect(find.text('Show all 4 skills'), findsOneWidget);
   });
 
   testWidgets('tapping a progress skill can open JourneySkillDetailView',

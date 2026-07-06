@@ -10,6 +10,10 @@ import '../../data/services/training_program_service.dart';
 
 enum HomeSkillMomentum { stalled, steady, improving }
 
+/// State of a single node inside a training path, for the small dot/
+/// constellation previews on the home dashboard.
+enum PathNodeState { mastered, working, upcoming }
+
 class HomeDashboardMetrics {
   final HomeTodaySummary today;
   final HomeWeekStripData weekStrip;
@@ -100,9 +104,15 @@ class HomePlannedExerciseSummary {
   final String name;
   final String targetLabel;
 
+  /// e.g. 'Handstand tree' — empty when the exercise has no known path.
+  final String treeLabel;
+  final List<PathNodeState> nodeStates;
+
   const HomePlannedExerciseSummary({
     required this.name,
     required this.targetLabel,
+    this.treeLabel = '',
+    this.nodeStates = const [],
   });
 }
 
@@ -219,6 +229,7 @@ class JourneySkillProgressData {
   final String lastSessionDeltaLabel;
   final JourneySkillTrend lastSessionTrend;
   final double progressPercent;
+  final bool isTimed;
   final List<JourneySkillStageData> stages;
 
   const JourneySkillProgressData({
@@ -236,6 +247,7 @@ class JourneySkillProgressData {
     required this.lastSessionDeltaLabel,
     required this.lastSessionTrend,
     required this.progressPercent,
+    this.isTimed = false,
     required this.stages,
   });
 }
@@ -247,6 +259,14 @@ class ActiveSkillPathData {
   final String trackLabel;
   final String skillTitle;
   final String currentExerciseName;
+
+  /// Name of the final exercise of the path — the goal the user picked.
+  final String goalExerciseName;
+  final List<PathNodeState> nodeStates;
+
+  /// 1-based index of the working node within the path.
+  final int workingPosition;
+  final int totalNodes;
   final int level;
   final int progressPercent;
   final HomeSkillMomentum momentum;
@@ -262,6 +282,10 @@ class ActiveSkillPathData {
     required this.trackLabel,
     required this.skillTitle,
     required this.currentExerciseName,
+    this.goalExerciseName = '',
+    this.nodeStates = const [],
+    this.workingPosition = 0,
+    this.totalNodes = 0,
     required this.level,
     required this.progressPercent,
     required this.momentum,
@@ -298,10 +322,23 @@ class HomeDashboardMetricsCalculator {
         ? workouts.first
         : null;
 
+    final categoriesById = {
+      for (final category in SkillCategoryCatalog.browsable())
+        category.id: category,
+    };
+
     return HomeDashboardMetrics(
       today: buildTodaySummary(
         recommendation,
         completedWorkout: completedWorkout,
+        pathOptions: resolveActivePathOptions(
+          trainingProgramService: trainingProgramService,
+          programType: programType,
+          sessionItemsConfig: sessionItemsConfig,
+          branchSelections: branchSelections,
+          categoriesById: categoriesById,
+        ),
+        progressMap: progressMap,
       ),
       weekStrip: buildWeekStripData(
         cycle: cycle,
@@ -383,12 +420,21 @@ class HomeDashboardMetricsCalculator {
   static HomeTodaySummary buildTodaySummary(
     DailyTrainingRecommendation recommendation, {
     PastWorkout? completedWorkout,
+    List<TrainingBranchOption> pathOptions = const [],
+    Map<String, ExerciseStatus> progressMap = const {},
   }) {
     final sessionTitle = recommendation.isRestDay
         ? 'Recovery'
         : _homeSessionTitle(recommendation.sessionType);
-    final plannedExercises =
-        recommendation.items.map(_buildPlannedExerciseSummary).toList();
+    final plannedExercises = recommendation.items
+        .map(
+          (item) => _buildPlannedExerciseSummary(
+            item,
+            pathOptions: pathOptions,
+            progressMap: progressMap,
+          ),
+        )
+        .toList();
     final tags = plannedExercises.map((exercise) => exercise.name);
     final nextSessionLabel = recommendation.isRestDay
         ? 'Rest day'
@@ -591,18 +637,13 @@ class HomeDashboardMetricsCalculator {
       for (final category in SkillCategoryCatalog.browsable())
         category.id: category,
     };
-    final configuredOptions = _activePathOptionsFromSessionConfig(
+    final options = resolveActivePathOptions(
       trainingProgramService: trainingProgramService,
       programType: programType,
       sessionItemsConfig: sessionItemsConfig,
+      branchSelections: branchSelections,
       categoriesById: categoriesById,
     );
-    final options = configuredOptions.isNotEmpty
-        ? configuredOptions
-        : trainingProgramService
-            .resolveSelectedBranches(branchSelections)
-            .values
-            .toList();
 
     final rows = <ActiveSkillPathData>[];
     final comparisonNow = now ?? _dummyComparisonNow;
@@ -631,6 +672,13 @@ class HomeDashboardMetricsCalculator {
         now: comparisonNow,
       );
 
+      final workingIndex = currentExercise == null
+          ? -1
+          : option.exerciseIds.indexOf(currentExercise.id);
+      final goalExercise = option.exerciseIds.isEmpty
+          ? null
+          : ExerciseCatalog.findById(option.exerciseIds.last);
+
       rows.add(
         ActiveSkillPathData(
           track: option.track,
@@ -639,6 +687,16 @@ class HomeDashboardMetricsCalculator {
           trackLabel: option.track.label,
           skillTitle: _skillTitleForOption(category, option.trainingPathId),
           currentExerciseName: currentExercise?.name ?? option.title,
+          goalExerciseName: goalExercise?.name ?? option.title,
+          nodeStates: pathNodeStates(
+            exerciseIds: option.exerciseIds,
+            workingExerciseId: currentExercise?.id,
+            progressMap: progressMap,
+          ),
+          workingPosition: workingIndex >= 0
+              ? workingIndex + 1
+              : option.exerciseIds.length,
+          totalNodes: option.exerciseIds.length,
           level: (progressScore * 10).round(),
           progressPercent: progressPercent,
           momentum: momentum,
@@ -676,21 +734,16 @@ class HomeDashboardMetricsCalculator {
       for (final category in SkillCategoryCatalog.browsable())
         category.id: category,
     };
-    final configuredOptions = _activePathOptionsFromSessionConfig(
+    // A freshly set-up program has an empty session-items config until the
+    // user customises a day, so resolveActivePathOptions falls back to the
+    // selected branches instead of leaving the card empty.
+    final options = resolveActivePathOptions(
       trainingProgramService: trainingProgramService,
       programType: programType,
       sessionItemsConfig: sessionItemsConfig,
+      branchSelections: branchSelections,
       categoriesById: categoriesById,
     );
-    // A freshly set-up program has an empty session-items config until the
-    // user customises a day, so fall back to the selected branches — same as
-    // buildActiveSkillPathData — instead of leaving the card empty.
-    final options = configuredOptions.isNotEmpty
-        ? configuredOptions
-        : trainingProgramService
-            .resolveSelectedBranches(branchSelections)
-            .values
-            .toList();
     final comparisonNow = now ?? _dummyComparisonNow;
     final rows = <JourneySkillProgressData>[];
 
@@ -754,6 +807,7 @@ class HomeDashboardMetricsCalculator {
             previous: previousSessionVolume,
           ),
           progressPercent: progressPercent,
+          isTimed: performance.isTimed,
           stages: _buildJourneySkillStages(
             exerciseIds: option.exerciseIds,
             progressMap: progressMap,
@@ -908,18 +962,76 @@ class HomeDashboardMetricsCalculator {
   }
 
   static HomePlannedExerciseSummary _buildPlannedExerciseSummary(
-    TrainingRecommendationItem item,
-  ) {
+    TrainingRecommendationItem item, {
+    List<TrainingBranchOption> pathOptions = const [],
+    Map<String, ExerciseStatus> progressMap = const {},
+  }) {
     final setCount = _defaultSetCount(item);
     final target = _defaultTarget(item);
     final targetLabel = _isTimedExercise(item.exercise)
         ? '$setCount × ${target}s'
         : '$setCount × $target';
 
+    TrainingBranchOption? option;
+    for (final candidate in pathOptions) {
+      if (candidate.sourceSkillCategoryId == item.sourceSkillCategoryId &&
+          candidate.exerciseIds.contains(item.exercise.id)) {
+        option = candidate;
+        break;
+      }
+    }
+
     return HomePlannedExerciseSummary(
       name: item.exercise.name,
       targetLabel: targetLabel,
+      treeLabel: option == null ? '' : '${option.subtitle} tree',
+      nodeStates: option == null
+          ? const []
+          : pathNodeStates(
+              exerciseIds: option.exerciseIds,
+              workingExerciseId: item.exercise.id,
+              progressMap: progressMap,
+            ),
     );
+  }
+
+  /// The active training-path options for the current program — the
+  /// customised session config when present, otherwise the selected branches.
+  static List<TrainingBranchOption> resolveActivePathOptions({
+    required TrainingProgramService trainingProgramService,
+    required TrainingProgramType programType,
+    required Map<String, dynamic> sessionItemsConfig,
+    required Map<TrainingTrack, String> branchSelections,
+    required Map<String, SkillCategory> categoriesById,
+  }) {
+    final configuredOptions = _activePathOptionsFromSessionConfig(
+      trainingProgramService: trainingProgramService,
+      programType: programType,
+      sessionItemsConfig: sessionItemsConfig,
+      categoriesById: categoriesById,
+    );
+    return configuredOptions.isNotEmpty
+        ? configuredOptions
+        : trainingProgramService
+            .resolveSelectedBranches(branchSelections)
+            .values
+            .toList();
+  }
+
+  static List<PathNodeState> pathNodeStates({
+    required List<String> exerciseIds,
+    required String? workingExerciseId,
+    required Map<String, ExerciseStatus> progressMap,
+  }) {
+    return [
+      for (final exerciseId in exerciseIds)
+        if (exerciseId == workingExerciseId)
+          PathNodeState.working
+        else if (progressMap[exerciseId] == ExerciseStatus.mastered)
+          PathNodeState.mastered
+        else
+          PathNodeState.upcoming,
+    ];
   }
 
   // Timed detection and target math live in ExerciseProgressionService so

@@ -209,6 +209,9 @@ class PillButton extends StatelessWidget {
   final bool trailingIcon;
   final bool tonal;
 
+  /// Overrides the accent background (ignored for tonal/disabled buttons).
+  final Color? color;
+
   const PillButton({
     super.key,
     required this.label,
@@ -216,6 +219,7 @@ class PillButton extends StatelessWidget {
     this.icon,
     this.trailingIcon = false,
     this.tonal = false,
+    this.color,
   });
 
   @override
@@ -225,7 +229,7 @@ class PillButton extends StatelessWidget {
         ? AppColors.surface2
         : tonal
             ? AppColors.surface2
-            : AppColors.accentPrimary;
+            : color ?? AppColors.accentPrimary;
     final foreground = disabled
         ? AppColors.textMuted
         : tonal
