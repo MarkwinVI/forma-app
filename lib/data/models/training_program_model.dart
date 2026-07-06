@@ -135,12 +135,20 @@ class TrainingRecommendationItem {
   final ExerciseCategory sourceCategory;
   final String sourceSkillCategoryId;
 
+  /// Training path id inside the source skill category (e.g. 'weighted').
+  final String trainingPathId;
+
+  /// Ordered exercise ids of the full training path this item comes from.
+  final List<String> pathExerciseIds;
+
   const TrainingRecommendationItem({
     required this.track,
     required this.exercise,
     required this.status,
     required this.sourceCategory,
     required this.sourceSkillCategoryId,
+    this.trainingPathId = '',
+    this.pathExerciseIds = const [],
   });
 }
 

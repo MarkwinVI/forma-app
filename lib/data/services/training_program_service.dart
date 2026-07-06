@@ -91,6 +91,8 @@ class TrainingProgramService {
           sourceSkillCategoryId: branch.sourceSkillCategoryId.isEmpty
               ? branch.sourceCategory.id
               : branch.sourceSkillCategoryId,
+          trainingPathId: branch.pathId,
+          pathExerciseIds: branch.exerciseIds,
         ),
       );
     }
@@ -201,6 +203,7 @@ class TrainingProgramService {
     track: TrainingTrack.skillWork,
     sourceCategory: ExerciseCategory.core,
     sourceSkillCategoryId: SkillCategoryCatalog.coreId,
+    pathId: 'l_sit',
     exerciseIds: SkillCategoryCatalog.core.trainingPaths['l_sit']!,
   );
 
@@ -208,6 +211,7 @@ class TrainingProgramService {
     track: TrainingTrack.verticalPush,
     sourceCategory: ExerciseCategory.verticalPush,
     sourceSkillCategoryId: SkillCategoryCatalog.handstandPushupsId,
+    pathId: SkillCategoryCatalog.handstandPushups.defaultTrainingPathId,
     exerciseIds: SkillCategoryCatalog.handstandPushups.trainingPaths[
         SkillCategoryCatalog.handstandPushups.defaultTrainingPathId]!,
   );
@@ -216,6 +220,7 @@ class TrainingProgramService {
     track: TrainingTrack.horizontalPush,
     sourceCategory: ExerciseCategory.horizontalPush,
     sourceSkillCategoryId: SkillCategoryCatalog.pushupsId,
+    pathId: SkillCategoryCatalog.pushups.defaultTrainingPathId,
     exerciseIds: SkillCategoryCatalog.pushups
         .trainingPaths[SkillCategoryCatalog.pushups.defaultTrainingPathId]!,
   );
@@ -224,6 +229,7 @@ class TrainingProgramService {
     track: TrainingTrack.verticalPull,
     sourceCategory: ExerciseCategory.verticalPull,
     sourceSkillCategoryId: SkillCategoryCatalog.pullupsId,
+    pathId: SkillCategoryCatalog.pullups.defaultTrainingPathId,
     exerciseIds: SkillCategoryCatalog.pullups
         .trainingPaths[SkillCategoryCatalog.pullups.defaultTrainingPathId]!,
   );
@@ -232,6 +238,7 @@ class TrainingProgramService {
     track: TrainingTrack.horizontalPull,
     sourceCategory: ExerciseCategory.horizontalPull,
     sourceSkillCategoryId: SkillCategoryCatalog.rowsId,
+    pathId: SkillCategoryCatalog.rows.defaultTrainingPathId,
     exerciseIds: SkillCategoryCatalog
         .rows.trainingPaths[SkillCategoryCatalog.rows.defaultTrainingPathId]!,
   );
@@ -240,6 +247,7 @@ class TrainingProgramService {
     track: TrainingTrack.core,
     sourceCategory: ExerciseCategory.core,
     sourceSkillCategoryId: SkillCategoryCatalog.coreId,
+    pathId: 'ab_wheel',
     exerciseIds: SkillCategoryCatalog.core.trainingPaths['ab_wheel']!,
   );
 
@@ -247,6 +255,7 @@ class TrainingProgramService {
     track: TrainingTrack.squat,
     sourceCategory: ExerciseCategory.squat,
     sourceSkillCategoryId: SkillCategoryCatalog.squatId,
+    pathId: SkillCategoryCatalog.squat.defaultTrainingPathId,
     exerciseIds: SkillCategoryCatalog
         .squat.trainingPaths[SkillCategoryCatalog.squat.defaultTrainingPathId]!,
   );
@@ -295,12 +304,14 @@ class _TrainingBranch {
   final TrainingTrack track;
   final ExerciseCategory sourceCategory;
   final String sourceSkillCategoryId;
+  final String pathId;
   final List<String> exerciseIds;
 
   const _TrainingBranch({
     required this.track,
     required this.sourceCategory,
     this.sourceSkillCategoryId = '',
+    this.pathId = '',
     required this.exerciseIds,
   });
 }

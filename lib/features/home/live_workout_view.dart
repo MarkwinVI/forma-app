@@ -9,6 +9,7 @@ import '../../data/models/training_program_model.dart';
 import '../exercises/exercise_detail_view.dart';
 import 'completed_workout_model.dart';
 import 'finished_workout_view.dart';
+import 'workout_prescription.dart';
 
 const _workoutCard = Color(0xFF09090B);
 const _workoutBg = _workoutCard;
@@ -144,7 +145,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   void _addSet(TrainingRecommendationItem item) {
     final sets = _setsFor(item);
-    final target = sets.isEmpty ? _defaultTarget(item) : sets.last.target;
+    final target = sets.isEmpty ? defaultTarget(item) : sets.last.target;
 
     _replaceSets(
       item,
@@ -196,7 +197,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final exercises = <CompletedWorkoutExercise>[];
 
     for (final item in widget.recommendation.items) {
-      final isTimed = _isTimedExercise(item.exercise);
+      final isTimed = isTimedExercise(item.exercise);
       final completedSets = _setsFor(item)
           .where((set) => set.hasData)
           .map(
@@ -308,7 +309,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       focusChips: [
         item.sourceCategory.label,
         item.track.label,
-        _difficultyLabel(item.exercise.difficulty),
+        difficultyLabel(item.exercise.difficulty),
       ],
     );
   }
@@ -634,7 +635,7 @@ class _LiveExerciseCard extends StatefulWidget {
 }
 
 class _LiveExerciseCardState extends State<_LiveExerciseCard> {
-  bool get _isTimed => _isTimedExercise(widget.item.exercise);
+  bool get _isTimed => isTimedExercise(widget.item.exercise);
   int get _completedCount => widget.sets.where((set) => set.completed).length;
   bool get _allDone =>
       widget.sets.isNotEmpty && _completedCount == widget.sets.length;
@@ -1399,10 +1400,10 @@ class _WorkoutSetDraft {
 
 List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
   return List.generate(
-    _defaultSetCount(item),
+    defaultSetCount(item),
     (index) => _WorkoutSetDraft(
       number: index + 1,
-      target: _defaultTarget(item),
+      target: defaultTarget(item),
       previousLabel: '-',
     ),
   );
@@ -1421,45 +1422,4 @@ Color _sectionColor(ExerciseProgramSection section) {
   }
 }
 
-bool _isTimedExercise(Exercise exercise) {
-  final name = exercise.name.toLowerCase();
-  final description = exercise.description.toLowerCase();
 
-  return name.contains('hold') ||
-      name.contains('hang') ||
-      name.contains('plank') ||
-      name.contains('lever') ||
-      name.contains('handstand') ||
-      description.contains('for time');
-}
-
-int _defaultSetCount(TrainingRecommendationItem item) {
-  switch (item.exercise.programSection) {
-    case ExerciseProgramSection.warmup:
-      return 2;
-    case ExerciseProgramSection.skillWork:
-      return 3;
-    case ExerciseProgramSection.mainExercises:
-      return item.exercise.difficulty >= 4 ? 4 : 3;
-    case ExerciseProgramSection.coolDown:
-      return 2;
-  }
-}
-
-int _defaultTarget(TrainingRecommendationItem item) {
-  if (_isTimedExercise(item.exercise)) {
-    if (item.exercise.difficulty <= 1) return 30;
-    if (item.exercise.difficulty <= 3) return 20;
-    return 12;
-  }
-
-  if (item.exercise.difficulty <= 1) return 12;
-  if (item.exercise.difficulty <= 3) return 8;
-  return 5;
-}
-
-String _difficultyLabel(int difficulty) {
-  if (difficulty <= 1) return 'Beginner';
-  if (difficulty <= 3) return 'Intermediate';
-  return 'Advanced';
-}
