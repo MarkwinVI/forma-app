@@ -128,6 +128,7 @@ create table public.user_training_programs (
   frequency_per_week int not null default 3,
   accessories       jsonb not null default '[]', -- user-selected accessory config
   variation_rules   jsonb not null default '{}', -- user-selected rule toggles
+  goal_skills       jsonb not null default '[]', -- exercise ids of long-term goal skills
   is_active         boolean not null default true,
   created_at        timestamptz default now() not null,
   updated_at        timestamptz default now() not null,

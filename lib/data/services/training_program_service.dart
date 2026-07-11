@@ -91,6 +91,7 @@ class TrainingProgramService {
           sourceSkillCategoryId: branch.sourceSkillCategoryId.isEmpty
               ? branch.sourceCategory.id
               : branch.sourceSkillCategoryId,
+          progressionExerciseIds: branch.exerciseIds,
         ),
       );
     }

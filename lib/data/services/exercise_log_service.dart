@@ -16,16 +16,6 @@ class WorkoutExerciseLogInput {
 class ExerciseLogService {
   final _client = SupabaseService.client;
 
-  Future<bool> hasAtLeastTwoLogs(String userId) async {
-    final data = await _client
-        .from('workout_sessions')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(2);
-
-    return (data as List).length >= 2;
-  }
-
   Future<List<ExerciseLog>> fetchForExercise(
     String userId,
     String exerciseId,

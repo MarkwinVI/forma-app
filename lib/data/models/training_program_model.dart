@@ -135,12 +135,17 @@ class TrainingRecommendationItem {
   final ExerciseCategory sourceCategory;
   final String sourceSkillCategoryId;
 
+  /// Ordered exercise ids of the progression this exercise was picked from.
+  /// Empty when the branch is not a skill-tree progression.
+  final List<String> progressionExerciseIds;
+
   const TrainingRecommendationItem({
     required this.track,
     required this.exercise,
     required this.status,
     required this.sourceCategory,
     required this.sourceSkillCategoryId,
+    this.progressionExerciseIds = const [],
   });
 }
 
@@ -168,6 +173,9 @@ class UserTrainingProgram {
   final int frequencyPerWeek;
   final bool isActive;
 
+  /// Exercise ids of the long-term goal skills the user is training toward.
+  final List<String> goalSkillIds;
+
   const UserTrainingProgram({
     required this.id,
     required this.userId,
@@ -175,6 +183,7 @@ class UserTrainingProgram {
     required this.scheduleVariant,
     required this.frequencyPerWeek,
     required this.isActive,
+    this.goalSkillIds = const [],
   });
 
   factory UserTrainingProgram.fromMap(Map<String, dynamic> map) {
@@ -187,6 +196,9 @@ class UserTrainingProgram {
       scheduleVariant: map['schedule_variant'] as String?,
       frequencyPerWeek: map['frequency_per_week'] as int? ?? 3,
       isActive: map['is_active'] as bool? ?? true,
+      goalSkillIds: (map['goal_skills'] as List<dynamic>? ?? const [])
+          .map((id) => id as String)
+          .toList(),
     );
   }
 }

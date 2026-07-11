@@ -43,6 +43,29 @@ class TrainingProgramStoreService {
     return UserTrainingProgramSnapshot(program: program, state: state);
   }
 
+  Future<UserTrainingProgram> updateGoalSkills({
+    required String userId,
+    required List<String> goalSkillIds,
+  }) async {
+    var program = await _fetchActiveProgram(userId);
+    program ??= await _createProgram(
+      userId: userId,
+      programType: TrainingProgramType.fullBody,
+    );
+
+    final data = await _client
+        .from('user_training_programs')
+        .update({
+          'goal_skills': goalSkillIds,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', program.id)
+        .select()
+        .single();
+
+    return UserTrainingProgram.fromMap(data);
+  }
+
   Future<UserTrainingProgram?> _fetchActiveProgram(String userId) async {
     final data = await _client
         .from('user_training_programs')
