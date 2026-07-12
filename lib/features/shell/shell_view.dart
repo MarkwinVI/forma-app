@@ -19,19 +19,23 @@ class _ShellViewState extends State<ShellView> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const HomeView(),
+      HomeView(
+        onOpenSettings: () => setState(() => _currentIndex = 3),
+        isActive: _currentIndex == 0,
+      ),
       DataView(isActive: _currentIndex == 1),
-      const SkillsView(),
+      SkillsView(isActive: _currentIndex == 2),
       const SettingsView(),
     ];
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: pages,
       ),
       bottomNavigationBar: AppNavBar(
-        currentIndex: _currentIndex,
+        currentIndex: _currentIndex >= 3 ? -1 : _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
     );

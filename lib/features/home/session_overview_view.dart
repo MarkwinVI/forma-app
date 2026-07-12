@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/skill_category_catalog.dart';
@@ -7,8 +6,8 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
 import 'live_workout_view.dart';
 
-const _overviewBg = Color(0xFF252323);
-const _overviewCard = Color(0xFF09090B);
+const _overviewBg = Color(0xFF111114);
+const _overviewCard = Color(0xFF1C1C20);
 const _overviewSurface = Color(0x08FFFFFF);
 
 class SessionOverviewView extends StatelessWidget {
@@ -60,7 +59,7 @@ class SessionOverviewView extends StatelessWidget {
         surfaceTintColor: _overviewBg,
         title: Text(
           recommendation.sessionLabel,
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
@@ -105,9 +104,9 @@ class SessionOverviewView extends StatelessWidget {
                 ),
               ),
               onPressed: () => _openLiveWorkout(context),
-              child: Text(
+              child: const Text(
                 'Start',
-                style: GoogleFonts.inter(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
@@ -140,23 +139,23 @@ class _OverviewHeroCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'SESSION OVERVIEW',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textMuted,
                     letterSpacing: 1,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'Everything queued for this workout, grouped by training block.',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                     height: 1.5,
@@ -177,7 +176,7 @@ class _OverviewHeroCard extends StatelessWidget {
             ),
             child: Text(
               exerciseCount.toString(),
-              style: GoogleFonts.inter(
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: AppColors.accentPrimary,
@@ -218,7 +217,7 @@ class _SessionSectionCard extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               section.label.toUpperCase(),
-              style: GoogleFonts.inter(
+              style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
@@ -228,7 +227,7 @@ class _SessionSectionCard extends StatelessWidget {
             const SizedBox(width: 7),
             Text(
               '${items.length} exercises',
-              style: GoogleFonts.inter(
+              style: const TextStyle(
                 fontSize: 11,
                 color: AppColors.textMuted,
               ),
@@ -262,10 +261,10 @@ class _EmptySessionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.borderPrimary),
       ),
-      child: Text(
+      child: const Text(
         'No exercises queued for this session.',
         textAlign: TextAlign.center,
-        style: GoogleFonts.inter(
+        style: TextStyle(
           fontSize: 14,
           color: AppColors.textSecondary,
         ),
@@ -324,7 +323,7 @@ class _SessionExerciseRow extends StatelessWidget {
                   item.exercise.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -335,7 +334,7 @@ class _SessionExerciseRow extends StatelessWidget {
                   '${item.track.label} · ${skillCategory?.title ?? item.exercise.category.label}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textMuted,
                   ),
@@ -353,7 +352,7 @@ class _SessionExerciseRow extends StatelessWidget {
             ),
             child: Text(
               _overviewDifficultyLabel(item.exercise.difficulty),
-              style: GoogleFonts.inter(
+              style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textSecondary,

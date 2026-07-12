@@ -12,6 +12,7 @@ import '../../data/models/skill_category_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import '../exercises/exercise_detail_view.dart';
+import 'widgets/exercise_preview_sheet.dart';
 
 const _masteredColor = Color(0xFF4CAF50);
 const _foundationPathId = '__foundation__';
@@ -203,7 +204,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       isScrollControlled: true,
-      builder: (sheetContext) => _ExercisePreviewSheet(
+      builder: (sheetContext) => ExercisePreviewSheet(
         exercise: exercise,
         skillCategoryId: _skillCategory.id,
         initialStatus: _localProgress[exercise.id] ?? ExerciseStatus.inactive,
@@ -251,7 +252,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         ),
         title: Text(
           appBarTitle,
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -443,9 +444,9 @@ class _FoundationHintCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   'This branch comes after the shared foundation progression.',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     fontSize: 13,
                     height: 1.4,
                     color: AppColors.textSecondary,
@@ -465,9 +466,9 @@ class _FoundationHintCard extends StatelessWidget {
                 side: BorderSide(color: accentColor.withValues(alpha: 0.24)),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Open foundation',
-              style: GoogleFonts.inter(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -530,7 +531,7 @@ class _BranchOverviewPanel extends StatelessWidget {
           hasFoundation
               ? 'Begin at the shared foundation, then choose one of the linked specialization branches.'
               : 'Choose the linked path you want to train.',
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             fontSize: 14,
             height: 1.45,
             color: AppColors.textSecondary,
@@ -828,7 +829,7 @@ class _ConstellationTipLabel extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 textAlign: align,
-                style: GoogleFonts.lato(
+                style: TextStyle(
                   fontSize: 18,
                   height: 0.98,
                   fontWeight: selected ? FontWeight.w900 : FontWeight.w800,
@@ -1259,7 +1260,7 @@ class _BranchOverviewRow extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       label,
-                      style: GoogleFonts.inter(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.3,
@@ -1277,7 +1278,7 @@ class _BranchOverviewRow extends StatelessWidget {
                                   : '$unlocked of $total skills unlocked',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
+                      style: const TextStyle(
                         fontSize: 12,
                         height: 1.35,
                         color: AppColors.textSecondary,
@@ -1295,7 +1296,7 @@ class _BranchOverviewRow extends StatelessWidget {
                     RichText(
                       text: TextSpan(
                         text: '${(progress * 100).round()}',
-                        style: GoogleFonts.lato(
+                        style: const TextStyle(
                           fontSize: 24,
                           height: 1,
                           fontWeight: FontWeight.w900,
@@ -1365,7 +1366,7 @@ class _PathTimeline extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           '${exercises.length} skill${exercises.length == 1 ? '' : 's'} in this route',
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
@@ -1537,7 +1538,7 @@ class _PathExerciseRow extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 exercise.name,
-                                style: GoogleFonts.inter(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: -0.25,
@@ -1551,7 +1552,7 @@ class _PathExerciseRow extends StatelessWidget {
                                 exercise.description,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
+                                style: const TextStyle(
                                   fontSize: 12.5,
                                   height: 1.4,
                                   color: AppColors.textSecondary,
@@ -1615,9 +1616,9 @@ class _LockNotice extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Locked',
-            style: GoogleFonts.inter(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: AppColors.accentBright,
@@ -1627,7 +1628,7 @@ class _LockNotice extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             message,
-            style: GoogleFonts.inter(
+            style: const TextStyle(
               fontSize: 13,
               height: 1.45,
               color: AppColors.textPrimary,
@@ -1651,354 +1652,13 @@ class _LockNotice extends StatelessWidget {
             ),
             child: Text(
               ctaLabel ?? 'Open Required Tree',
-              style: GoogleFonts.inter(
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ExercisePreviewSheet extends StatefulWidget {
-  final Exercise exercise;
-  final String skillCategoryId;
-  final ExerciseStatus initialStatus;
-  final FutureOr<void> Function(ExerciseStatus status) onStatusChanged;
-  final VoidCallback onLearnMore;
-
-  const _ExercisePreviewSheet({
-    required this.exercise,
-    required this.skillCategoryId,
-    required this.initialStatus,
-    required this.onStatusChanged,
-    required this.onLearnMore,
-  });
-
-  @override
-  State<_ExercisePreviewSheet> createState() => _ExercisePreviewSheetState();
-}
-
-class _ExercisePreviewSheetState extends State<_ExercisePreviewSheet> {
-  late ExerciseStatus _selectedStatus;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedStatus = widget.initialStatus;
-  }
-
-  Future<void> _handleStatusChanged(ExerciseStatus status) async {
-    setState(() {
-      _selectedStatus = status;
-    });
-    await widget.onStatusChanged(status);
-  }
-
-  List<Color> get _previewGradient {
-    switch (widget.exercise.category) {
-      case ExerciseCategory.verticalPull:
-        return const [Color(0xFF264C62), Color(0xFF101A24)];
-      case ExerciseCategory.verticalPush:
-        return const [Color(0xFF5C3B24), Color(0xFF1D120E)];
-      case ExerciseCategory.horizontalPull:
-        return const [Color(0xFF284559), Color(0xFF111A23)];
-      case ExerciseCategory.horizontalPush:
-        return const [Color(0xFF5A311F), Color(0xFF1D110D)];
-      case ExerciseCategory.squat:
-        return const [Color(0xFF35552F), Color(0xFF141C15)];
-      case ExerciseCategory.hinge:
-        return const [Color(0xFF58482B), Color(0xFF1E1811)];
-      case ExerciseCategory.core:
-        return const [Color(0xFF214658), Color(0xFF10171F)];
-      case ExerciseCategory.skill:
-        return const [Color(0xFF4A2C4F), Color(0xFF181018)];
-    }
-  }
-
-  IconData get _previewIcon {
-    switch (widget.exercise.category) {
-      case ExerciseCategory.verticalPull:
-        return Icons.sports_gymnastics_rounded;
-      case ExerciseCategory.verticalPush:
-        return Icons.front_hand_outlined;
-      case ExerciseCategory.horizontalPull:
-        return Icons.swap_horiz_rounded;
-      case ExerciseCategory.horizontalPush:
-        return Icons.push_pin_outlined;
-      case ExerciseCategory.squat:
-        return Icons.accessibility_new_rounded;
-      case ExerciseCategory.hinge:
-        return Icons.keyboard_double_arrow_down_rounded;
-      case ExerciseCategory.core:
-        return Icons.crop_free_rounded;
-      case ExerciseCategory.skill:
-        return Icons.bolt_rounded;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final skillCategory = SkillCategoryCatalog.findById(widget.skillCategoryId);
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.borderPrimary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              widget.exercise.name,
-              style: GoogleFonts.inter(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.65,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  skillCategory?.title ?? widget.exercise.category.label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _DifficultyStars(difficulty: widget.exercise.difficulty),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              widget.exercise.description,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Container(
-              height: 255,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: _previewGradient,
-                ),
-                border: Border.all(color: AppColors.borderPrimary),
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Positioned(
-                    right: -10,
-                    bottom: -18,
-                    child: Icon(
-                      _previewIcon,
-                      size: 180,
-                      color: Colors.white.withValues(alpha: 0.12),
-                    ),
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.25),
-                          Colors.black.withValues(alpha: 0.72),
-                        ],
-                        stops: const [0.0, 0.45, 1.0],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 18,
-                    right: 18,
-                    bottom: 18,
-                    child: Text(
-                      'Exercise visualization preview',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white.withValues(alpha: 0.92),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: widget.onLearnMore,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Learn more',
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.425,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 22),
-            Text(
-              'STATUS',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: ExerciseStatus.values
-                  .map(
-                    (status) => Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _PreviewStatusChip(
-                          status: status,
-                          isSelected: _selectedStatus == status,
-                          onTap: () => _handleStatusChanged(status),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DifficultyStars extends StatelessWidget {
-  final int difficulty;
-  const _DifficultyStars({required this.difficulty});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(
-        5,
-        (i) => Padding(
-          padding: EdgeInsets.only(right: i == 4 ? 0 : 2),
-          child: Icon(
-            i < difficulty ? Icons.star_rounded : Icons.star_border_rounded,
-            size: 10,
-            color: i < difficulty
-                ? const Color(0xFFFF6900)
-                : const Color(0xFF3F3F46),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PreviewStatusChip extends StatelessWidget {
-  final ExerciseStatus status;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _PreviewStatusChip({
-    required this.status,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  String get _label {
-    switch (status) {
-      case ExerciseStatus.inactive:
-        return 'Inactive';
-      case ExerciseStatus.active:
-        return 'Active';
-      case ExerciseStatus.mastered:
-        return 'Mastered';
-    }
-  }
-
-  Color get _color {
-    switch (status) {
-      case ExerciseStatus.inactive:
-        return AppColors.textMuted;
-      case ExerciseStatus.active:
-        return AppColors.accentBright;
-      case ExerciseStatus.mastered:
-        return _masteredColor;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? _color.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? _color : AppColors.borderPrimary,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            _label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? _color : AppColors.textMuted,
-            ),
-          ),
-        ),
       ),
     );
   }

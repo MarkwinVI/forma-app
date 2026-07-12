@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -9,6 +8,9 @@ import '../../data/models/exercise_log_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/progress_service.dart';
+import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
 
 class FinishedWorkoutView extends StatefulWidget {
@@ -81,6 +83,48 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         }).toList(),
       );
 
+      // First workout of the (local) day consumes today's slot in the split:
+      // advance the program pointer so the dashboard can show a completed
+      // state today and the next session from tomorrow.
+      try {
+        final sessionsToday = await _exerciseLogService.countSessionsOnLocalDate(
+          userId,
+          widget.workout.finishedAt,
+        );
+        if (sessionsToday <= 1) {
+          await TrainingProgramStoreService()
+              .advanceProgramStateAfterWorkout(userId);
+        }
+      } catch (error, stackTrace) {
+        // The workout itself is saved — a failed advance only delays the
+        // dashboard by one session and self-heals on the next save.
+        debugPrint('Failed to advance program state: $error\n$stackTrace');
+      }
+
+      // Auto-progression: exercises whose logged volume met their target are
+      // mastered, unlocking the next move in their skill path.
+      try {
+        final progress = await ProgressService().fetchAll(userId);
+        await ExerciseProgressionService().applySessionResults(
+          userId: userId,
+          progressMap: {
+            for (final entry in progress) entry.exerciseId: entry.status,
+          },
+          results: [
+            for (final exerciseEntry in widget.workout.exercises)
+              SessionExerciseResult(
+                exercise: exerciseEntry.exercise,
+                volume: exerciseEntry.sets
+                    .fold<int>(0, (sum, set) => sum + set.value),
+              ),
+          ],
+        );
+      } catch (error, stackTrace) {
+        // Non-fatal: the user can still master the exercise manually from
+        // the skill tree, and the next met target re-runs this.
+        debugPrint('Failed to apply exercise progression: $error\n$stackTrace');
+      }
+
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
@@ -152,7 +196,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                   : const Icon(Icons.save_alt_rounded, size: 20),
               label: Text(
                 _saving ? 'Saving' : 'Save workout',
-                style: GoogleFonts.inter(
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
@@ -213,19 +257,19 @@ class _CelebrationHeader extends StatelessWidget {
           Text(
             workout.historyTitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: const TextStyle(
               fontSize: 29,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF25272B),
+              color: Color(0xFF25272B),
             ),
           ),
           const SizedBox(height: 6),
           Text(
             _formatFinishedAt(workout.finishedAt),
-            style: GoogleFonts.inter(
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF9A9CA1),
+              color: Color(0xFF9A9CA1),
             ),
           ),
           const SizedBox(height: 26),
@@ -271,20 +315,20 @@ class _HeroStat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
-            color: const Color(0xFF25272B),
-            fontFeatures: const [FontFeature.tabularFigures()],
+            color: Color(0xFF25272B),
+            fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 6),
         Text(
           label,
-          style: GoogleFonts.inter(
+          style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF9A9CA1),
+            color: Color(0xFF9A9CA1),
           ),
         ),
       ],
@@ -378,7 +422,7 @@ class _MetricTile extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
@@ -389,7 +433,7 @@ class _MetricTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
@@ -416,11 +460,11 @@ class _ExerciseOverviewList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             'WORKOUT OVERVIEW',
-            style: GoogleFonts.inter(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,
               color: AppColors.textMuted,
@@ -480,7 +524,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
                   exercise.exercise.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -489,7 +533,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
               ),
               Text(
                 '${exercise.sets.length} sets',
-                style: GoogleFonts.inter(
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textMuted,
@@ -500,7 +544,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${exercise.track.label} · $totalLabel',
-            style: GoogleFonts.inter(
+            style: const TextStyle(
               fontSize: 13,
               color: AppColors.textMuted,
             ),
@@ -546,7 +590,7 @@ class _SetSummaryChip extends StatelessWidget {
       ),
       child: Text(
         'Set ${set.number}: $value',
-        style: GoogleFonts.inter(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w800,
           color: color,
@@ -567,7 +611,7 @@ class _ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final random = math.Random(18);
     const colors = [
-      Color(0xFFFF6900),
+      AppColors.accentPrimary,
       Color(0xFFA78BFA),
       Color(0xFF4ECDC4),
       Color(0xFF34D399),

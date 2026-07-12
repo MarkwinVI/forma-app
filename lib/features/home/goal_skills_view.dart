@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
@@ -34,9 +33,8 @@ List<GoalSkillOption> buildGoalSkillOptions() {
       final exercise = ExerciseCatalog.findById(exerciseIds.last);
       if (exercise == null || !seen.add(exercise.id)) return;
 
-      final branch = category.branches
-          .where((branch) => branch.id == pathId)
-          .toList();
+      final branch =
+          category.branches.where((branch) => branch.id == pathId).toList();
 
       options.add(
         GoalSkillOption(
@@ -52,6 +50,8 @@ List<GoalSkillOption> buildGoalSkillOptions() {
   return options;
 }
 
+/// Multi-select picker for the long-term goal skills shown on the home
+/// dashboard. Offers the terminal exercise of every progression path.
 class GoalSkillsView extends StatefulWidget {
   final List<String> initialGoalIds;
   final Future<void> Function(List<String> goalIds) onSave;
@@ -104,99 +104,73 @@ class _GoalSkillsViewState extends State<GoalSkillsView> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bgSecondary,
-      appBar: AppBar(
-        backgroundColor: AppColors.bgSecondary,
-        foregroundColor: AppColors.textPrimary,
-        surfaceTintColor: AppColors.bgSecondary,
-        elevation: 0,
-        title: Text(
-          'Goal Skills',
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
+      backgroundColor: AppColors.bg,
       body: SafeArea(
-        top: false,
         child: Column(
           children: [
+            SubScreenHeader(
+              title: 'Goal skills',
+              onBack: () => Navigator.of(context).pop(),
+            ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 children: [
-                  Text(
+                  const Text(
                     'Pick the skills you want your training to build toward. '
                     'They show up as long-term goals on your home screen.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
+                    style: TextStyle(
+                      fontSize: 13.5,
                       color: AppColors.textSecondary,
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 20),
                   for (final entry in grouped.entries) ...[
-                    Text(
-                      entry.key.toUpperCase(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textMuted,
-                        letterSpacing: 1,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(2, 22, 2, 10),
+                      child: Text(
+                        entry.key.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textMuted,
+                          letterSpacing: 0.7,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    for (final option in entry.value) ...[
-                      _GoalOptionCard(
-                        option: option,
-                        isSelected: _selected.contains(option.exercise.id),
-                        onTap: () {
-                          setState(() {
-                            if (!_selected.remove(option.exercise.id)) {
-                              _selected.add(option.exercise.id);
-                            }
-                          });
-                        },
+                    SurfaceCard(
+                      clip: true,
+                      child: Column(
+                        children: [
+                          for (var index = 0;
+                              index < entry.value.length;
+                              index++)
+                            _GoalOptionRow(
+                              option: entry.value[index],
+                              showDivider: index > 0,
+                              isSelected: _selected
+                                  .contains(entry.value[index].exercise.id),
+                              onTap: () {
+                                final id = entry.value[index].exercise.id;
+                                setState(() {
+                                  if (!_selected.remove(id)) {
+                                    _selected.add(id);
+                                  }
+                                });
+                              },
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                    ],
-                    const SizedBox(height: 10),
+                    ),
                   ],
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    minimumSize: const Size.fromHeight(56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: LoadingIndicator(),
-                        )
-                      : Text(
-                          'Save goals',
-                          style: GoogleFonts.inter(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                            letterSpacing: -0.425,
-                          ),
-                        ),
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+              child: PillButton(
+                label: _saving ? 'Saving…' : 'Save goals',
+                onTap: _saving ? null : _save,
               ),
             ),
           ],
@@ -206,30 +180,30 @@ class _GoalSkillsViewState extends State<GoalSkillsView> {
   }
 }
 
-class _GoalOptionCard extends StatelessWidget {
+class _GoalOptionRow extends StatelessWidget {
   final GoalSkillOption option;
+  final bool showDivider;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _GoalOptionCard({
+  const _GoalOptionRow({
     required this.option,
+    required this.showDivider,
     required this.isSelected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
         decoration: BoxDecoration(
-          color: AppColors.bgTertiary,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color:
-                isSelected ? AppColors.accentPrimary : AppColors.borderPrimary,
+          border: Border(
+            top: showDivider
+                ? const BorderSide(color: AppColors.divider)
+                : BorderSide.none,
           ),
         ),
         child: Row(
@@ -240,16 +214,19 @@ class _GoalOptionCard extends StatelessWidget {
                 children: [
                   Text(
                     option.exercise.name,
-                    style: GoogleFonts.inter(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
+                      letterSpacing: -0.15,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     '${option.branchLabel} path · ${option.totalSteps} steps',
-                    style: GoogleFonts.inter(
+                    style: const TextStyle(
                       fontSize: 12.5,
                       color: AppColors.textMuted,
                     ),
@@ -258,7 +235,8 @@ class _GoalOptionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
               width: 22,
               height: 22,
               decoration: BoxDecoration(
@@ -266,18 +244,15 @@ class _GoalOptionCard extends StatelessWidget {
                 border: Border.all(
                   color: isSelected
                       ? AppColors.accentPrimary
-                      : AppColors.textMuted,
+                      : AppColors.surface3,
                   width: 2,
                 ),
-                color:
-                    isSelected ? AppColors.accentPrimary : Colors.transparent,
+                color: isSelected
+                    ? AppColors.accentPrimary
+                    : Colors.transparent,
               ),
               child: isSelected
-                  ? const Icon(
-                      Icons.check,
-                      size: 14,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
                   : null,
             ),
           ],

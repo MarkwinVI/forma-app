@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/skill_category_catalog.dart';
@@ -12,7 +11,12 @@ import 'skill_tree_view.dart';
 import 'widgets/category_progress_card.dart';
 
 class SkillsView extends StatefulWidget {
-  const SkillsView({super.key});
+  final bool isActive;
+
+  const SkillsView({
+    super.key,
+    this.isActive = false,
+  });
 
   @override
   State<SkillsView> createState() => _SkillsViewState();
@@ -27,6 +31,18 @@ class _SkillsViewState extends State<SkillsView> {
   void initState() {
     super.initState();
     _loadProgress();
+  }
+
+  @override
+  void didUpdateWidget(covariant SkillsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
+    // this tab becomes active — otherwise resets or workouts logged
+    // elsewhere leave the tree showing stale statuses.
+    if (!oldWidget.isActive && widget.isActive) {
+      _loadProgress();
+    }
   }
 
   Future<void> _loadProgress() async {
@@ -88,9 +104,9 @@ class _SkillsViewState extends State<SkillsView> {
                       border: Border.all(color: AppColors.borderPrimary),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Row(
+                    child: const Row(
                       children: [
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: 14),
                           child: Icon(
                             Icons.search_rounded,
@@ -100,7 +116,7 @@ class _SkillsViewState extends State<SkillsView> {
                         ),
                         Text(
                           'Search exercises...',
-                          style: GoogleFonts.inter(
+                          style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textMuted,
                             letterSpacing: -0.1,

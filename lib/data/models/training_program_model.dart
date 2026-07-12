@@ -106,6 +106,27 @@ enum TrainingTrack {
 }
 
 extension TrainingTrackX on TrainingTrack {
+  String get dbValue {
+    switch (this) {
+      case TrainingTrack.skillWork:
+        return 'skill_work';
+      case TrainingTrack.verticalPush:
+        return 'vertical_push';
+      case TrainingTrack.horizontalPush:
+        return 'horizontal_push';
+      case TrainingTrack.verticalPull:
+        return 'vertical_pull';
+      case TrainingTrack.horizontalPull:
+        return 'horizontal_pull';
+      case TrainingTrack.core:
+        return 'core';
+      case TrainingTrack.squat:
+        return 'squat';
+      case TrainingTrack.hinge:
+        return 'hinge';
+    }
+  }
+
   String get label {
     switch (this) {
       case TrainingTrack.skillWork:
@@ -124,6 +145,77 @@ extension TrainingTrackX on TrainingTrack {
         return 'Squat';
       case TrainingTrack.hinge:
         return 'Hinge';
+    }
+  }
+
+  static TrainingTrack fromDbValue(String value) {
+    switch (value) {
+      case 'skill_work':
+        return TrainingTrack.skillWork;
+      case 'vertical_push':
+        return TrainingTrack.verticalPush;
+      case 'horizontal_push':
+        return TrainingTrack.horizontalPush;
+      case 'vertical_pull':
+        return TrainingTrack.verticalPull;
+      case 'horizontal_pull':
+        return TrainingTrack.horizontalPull;
+      case 'core':
+        return TrainingTrack.core;
+      case 'squat':
+        return TrainingTrack.squat;
+      case 'hinge':
+      default:
+        return TrainingTrack.hinge;
+    }
+  }
+}
+
+enum RepGoalProfile { strength, balanced, volume }
+
+extension RepGoalProfileX on RepGoalProfile {
+  String get dbValue {
+    switch (this) {
+      case RepGoalProfile.strength:
+        return 'strength';
+      case RepGoalProfile.balanced:
+        return 'balanced';
+      case RepGoalProfile.volume:
+        return 'volume';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case RepGoalProfile.strength:
+        return 'Strength';
+      case RepGoalProfile.balanced:
+        return 'Balanced';
+      case RepGoalProfile.volume:
+        return 'Volume';
+    }
+  }
+
+  String get summary {
+    switch (this) {
+      case RepGoalProfile.strength:
+        return 'Bias harder sets and lower rep targets on main lifts.';
+      case RepGoalProfile.balanced:
+        return 'Keep a mix of skill quality, strength, and repeatable volume.';
+      case RepGoalProfile.volume:
+        return 'Bias longer sets, cleaner practice, and total reps.';
+    }
+  }
+
+  static RepGoalProfile fromDbValue(String? value) {
+    switch (value) {
+      case 'strength':
+        return RepGoalProfile.strength;
+      case 'volume':
+        return RepGoalProfile.volume;
+      case 'balanced':
+      default:
+        return RepGoalProfile.balanced;
     }
   }
 }
@@ -171,6 +263,7 @@ class UserTrainingProgram {
   final TrainingProgramType programType;
   final String? scheduleVariant;
   final int frequencyPerWeek;
+  final Map<String, dynamic> variationRules;
   final bool isActive;
 
   /// Exercise ids of the long-term goal skills the user is training toward.
@@ -182,6 +275,7 @@ class UserTrainingProgram {
     required this.programType,
     required this.scheduleVariant,
     required this.frequencyPerWeek,
+    required this.variationRules,
     required this.isActive,
     this.goalSkillIds = const [],
   });
@@ -195,6 +289,9 @@ class UserTrainingProgram {
       ),
       scheduleVariant: map['schedule_variant'] as String?,
       frequencyPerWeek: map['frequency_per_week'] as int? ?? 3,
+      variationRules: Map<String, dynamic>.from(
+        map['variation_rules'] as Map? ?? const {},
+      ),
       isActive: map['is_active'] as bool? ?? true,
       goalSkillIds: (map['goal_skills'] as List<dynamic>? ?? const [])
           .map((id) => id as String)
@@ -238,5 +335,19 @@ class UserTrainingProgramSnapshot {
   const UserTrainingProgramSnapshot({
     required this.program,
     required this.state,
+  });
+}
+
+class TrainingProgramLogicSnapshot {
+  final UserTrainingProgram program;
+  final UserTrainingProgramState state;
+  final Map<TrainingTrack, String> branchSelections;
+  final RepGoalProfile repGoalProfile;
+
+  const TrainingProgramLogicSnapshot({
+    required this.program,
+    required this.state,
+    required this.branchSelections,
+    required this.repGoalProfile,
   });
 }

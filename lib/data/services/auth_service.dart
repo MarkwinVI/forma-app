@@ -26,7 +26,9 @@ class AuthService {
     );
 
     final idToken = credential.identityToken;
-    if (idToken == null) throw Exception('Apple Sign In failed: no identity token received.');
+    if (idToken == null) {
+      throw Exception('Apple Sign In failed: no identity token received.');
+    }
 
     final response = await _client.auth.signInWithIdToken(
       provider: OAuthProvider.apple,
@@ -35,11 +37,14 @@ class AuthService {
     );
 
     final user = response.user;
-    if (user == null) throw Exception('Sign in failed: Supabase returned no user.');
+    if (user == null) {
+      throw Exception('Sign in failed: Supabase returned no user.');
+    }
 
     await _upsertUser(user, credential);
 
-    final data = await _client.from('users').select().eq('id', user.id).single();
+    final data =
+        await _client.from('users').select().eq('id', user.id).single();
     return UserModel.fromMap(data);
   }
 
@@ -49,7 +54,9 @@ class AuthService {
     final response = await _client.auth.signInAnonymously();
 
     final user = response.user;
-    if (user == null) throw Exception('Anonymous sign in failed: no user returned.');
+    if (user == null) {
+      throw Exception('Anonymous sign in failed: no user returned.');
+    }
 
     await _client.from('users').upsert({
       'id': user.id,
@@ -58,7 +65,8 @@ class AuthService {
       'created_at': DateTime.now().toIso8601String(),
     });
 
-    final data = await _client.from('users').select().eq('id', user.id).single();
+    final data =
+        await _client.from('users').select().eq('id', user.id).single();
     return UserModel.fromMap(data);
   }
 
@@ -68,7 +76,20 @@ class AuthService {
     await _client.auth.signOut();
   }
 
+  /// Permanently deletes the account via the `delete_account` Postgres
+  /// function (security definer). Deleting the auth user cascades through
+  /// every user-owned table, so all server data is removed. The local
+  /// session is cleared afterwards, which sends the app to the login view.
+  Future<void> deleteAccount() async {
+    await _client.rpc('delete_account');
+    // The server-side sign-out may 4xx because the user no longer exists;
+    // gotrue clears the local session regardless of those responses.
+    await _client.auth.signOut();
+  }
+
   User? get currentUser => _client.auth.currentUser;
+
+  Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 
   // ---------- Helpers ----------
 
@@ -93,7 +114,8 @@ class AuthService {
     const charset =
         '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
     final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
   }
 
   String _sha256(String input) {

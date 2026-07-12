@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -57,9 +56,9 @@ class _TrainingProgramSettingsViewState
         backgroundColor: AppColors.bgSecondary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Edit Program',
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -73,9 +72,9 @@ class _TrainingProgramSettingsViewState
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                 children: [
-                  Text(
+                  const Text(
                     'Training Program Type',
-                    style: GoogleFonts.inter(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textMuted,
@@ -147,9 +146,9 @@ class _TrainingProgramSettingsViewState
                           height: 20,
                           child: LoadingIndicator(),
                         )
-                      : Text(
+                      : const Text(
                           'Save',
-                          style: GoogleFonts.inter(
+                          style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                             color: Colors.black,
@@ -203,7 +202,7 @@ class _ProgramTypeOptionCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -212,7 +211,7 @@ class _ProgramTypeOptionCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     description,
-                    style: GoogleFonts.inter(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                       height: 1.5,
