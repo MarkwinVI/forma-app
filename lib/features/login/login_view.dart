@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -8,8 +9,6 @@ import '../../data/services/auth_service.dart';
 // Local opacity variants not in the global palette (specific to this screen)
 const _heroTextDim = Color(0x99FFFFFF); // white 60%
 const _subtitleDim = Color(0x66FFFFFF); // white 40%
-const _iconBg = Color(0x1AFF6900); // accent 10%
-const _iconBorder = Color(0x4DFF6900); // accent 30%
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -27,10 +26,17 @@ class _LoginViewState extends State<LoginView> {
     try {
       // _AppEntry listens to auth state and swaps to the shell on success.
       await method();
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // User dismissed the Apple sign-in sheet — not an error.
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in failed. Please try again.')),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign in failed: $e')),
+        const SnackBar(content: Text('Sign in failed. Please try again.')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -73,10 +79,21 @@ class _LoginViewState extends State<LoginView> {
                     'Master advanced skills through proven progressions.',
               ),
               const SizedBox(height: 40),
-              if (_isLoading)
-                const Center(child: LoadingIndicator())
-              else
-                ..._buildButtons(),
+              // Keep the buttons laid out (just invisible) while loading so
+              // the screen doesn't shift when the loader swaps in.
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  IgnorePointer(
+                    ignoring: _isLoading,
+                    child: Opacity(
+                      opacity: _isLoading ? 0 : 1,
+                      child: Column(children: _buildButtons()),
+                    ),
+                  ),
+                  if (_isLoading) const LoadingIndicator(),
+                ],
+              ),
               const SizedBox(height: 16),
               const Center(
                 child: Text(
@@ -202,8 +219,7 @@ class _FeatureItem extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: _iconBg,
-            border: Border.all(color: _iconBorder),
+            border: Border.all(color: AppColors.borderPrimary),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, size: 20, color: AppColors.accentPrimary),
