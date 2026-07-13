@@ -22,7 +22,7 @@ class HomeDashboardMetrics {
   final List<ActiveSkillPathData> activeSkillPaths;
   final List<HomeExercisePerformance> exercisePerformance;
   final List<HomeGoalSkillData> goalSkills;
-  final int nodesClearedAllTime;
+  final int nodesClearedThisMonth;
 
   const HomeDashboardMetrics({
     required this.today,
@@ -32,7 +32,7 @@ class HomeDashboardMetrics {
     required this.activeSkillPaths,
     required this.exercisePerformance,
     required this.goalSkills,
-    required this.nodesClearedAllTime,
+    required this.nodesClearedThisMonth,
   });
 }
 
@@ -454,10 +454,26 @@ class HomeDashboardMetricsCalculator {
         goalSkillIds: goalSkillIds,
         progressMap: progressMap,
       ),
-      nodesClearedAllTime: progressMap.values
-          .where((status) => status == ExerciseStatus.mastered)
-          .length,
+      nodesClearedThisMonth: nodesClearedThisMonth(
+        progressEntries: progressEntries,
+        now: now,
+      ),
     );
+  }
+
+  /// Exercises marked mastered during the current calendar month. Uses the
+  /// progress row's updated_at, so re-toggling an old node counts again.
+  static int nodesClearedThisMonth({
+    required Map<String, ExerciseProgress> progressEntries,
+    DateTime? now,
+  }) {
+    final reference = (now ?? DateTime.now()).toLocal();
+    return progressEntries.values.where((entry) {
+      final updatedAt = entry.updatedAt.toLocal();
+      return entry.status == ExerciseStatus.mastered &&
+          updatedAt.year == reference.year &&
+          updatedAt.month == reference.month;
+    }).length;
   }
 
   /// Weekly streak: consecutive Monday-based weeks with at least one saved

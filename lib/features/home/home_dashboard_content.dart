@@ -16,10 +16,11 @@ class HomeDashboardContent extends StatelessWidget {
   final List<ActiveSkillPathData> activeSkillPaths;
   final List<HomeExercisePerformance> exercisePerformance;
   final List<HomeGoalSkillData> goalSkills;
-  final int nodesClearedAllTime;
+  final int nodesClearedThisMonth;
   final bool showGettingStarted;
   final VoidCallback onPrimaryAction;
   final VoidCallback onSecondaryAction;
+  final VoidCallback onViewExercises;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenProgramSettings;
   final VoidCallback onEditGoals;
@@ -36,10 +37,11 @@ class HomeDashboardContent extends StatelessWidget {
     required this.activeSkillPaths,
     required this.exercisePerformance,
     required this.goalSkills,
-    required this.nodesClearedAllTime,
+    required this.nodesClearedThisMonth,
     this.showGettingStarted = false,
     required this.onPrimaryAction,
     required this.onSecondaryAction,
+    required this.onViewExercises,
     required this.onOpenSettings,
     required this.onOpenProgramSettings,
     required this.onEditGoals,
@@ -77,6 +79,7 @@ class HomeDashboardContent extends StatelessWidget {
                   summary: todaySummary,
                   onPrimaryAction: onPrimaryAction,
                   onSecondaryAction: onSecondaryAction,
+                  onViewExercises: onViewExercises,
                 ),
                 const SizedBox(height: 10),
                 _ProgramRow(
@@ -92,9 +95,9 @@ class HomeDashboardContent extends StatelessWidget {
                 ],
                 SectionHeader(
                   title: 'Your skill trees',
-                  sub: '$nodesClearedAllTime node'
-                      '${nodesClearedAllTime == 1 ? '' : 's'}'
-                      ' cleared all-time',
+                  sub: '$nodesClearedThisMonth node'
+                      '${nodesClearedThisMonth == 1 ? '' : 's'}'
+                      ' cleared this month',
                 ),
                 _ClosestSkillsCard(
                   data: journeySnapshot,
@@ -251,11 +254,13 @@ class _TodayCard extends StatelessWidget {
   final HomeTodaySummary summary;
   final VoidCallback onPrimaryAction;
   final VoidCallback onSecondaryAction;
+  final VoidCallback onViewExercises;
 
   const _TodayCard({
     required this.summary,
     required this.onPrimaryAction,
     required this.onSecondaryAction,
+    required this.onViewExercises,
   });
 
   @override
@@ -268,139 +273,145 @@ class _TodayCard extends StatelessWidget {
       );
     }
 
-    final tags = summary.focusTags;
-
     return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+      clip: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'UP NEXT · TODAY',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.accentPrimary,
-              letterSpacing: 1,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 17),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'UP NEXT · TODAY',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accentPrimary,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            summary.sessionTitle,
+                            style: const TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.42,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            summary.isRestDay
+                                ? summary.supportingText
+                                : '${summary.estimatedDurationMinutes} min'
+                                    ' · ${summary.exerciseCount} exercises',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Pressable(
+                      onTap: onPrimaryAction,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: summary.isRestDay
+                              ? AppColors.surface2
+                              : AppColors.startOrange,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          summary.isRestDay ? 'View plan' : 'Start',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: summary.isRestDay
+                                ? AppColors.textPrimary
+                                : Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      summary.sessionTitle,
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.42,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      summary.isRestDay
-                          ? summary.supportingText
-                          : '${summary.estimatedDurationMinutes} min'
-                              ' · ${summary.exerciseCount} exercises',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Pressable(
-                onTap: onPrimaryAction,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: summary.isRestDay
-                        ? AppColors.surface2
-                        : AppColors.startOrange,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    summary.isRestDay ? 'View plan' : 'Start',
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w800,
-                      color: summary.isRestDay
-                          ? AppColors.textPrimary
-                          : Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (tags.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final tag in tags.take(3)) ...[
-                    _ExerciseChip(label: tag),
-                    const SizedBox(width: 6),
-                  ],
-                  if (tags.length > 3)
-                    _ExerciseChip(label: '+${tags.length - 3} more', muted: true),
-                ],
-              ),
+          if (!summary.isRestDay) ...[
+            _TodayCardActionRow(
+              icon: Icons.list_rounded,
+              label: 'View exercises',
+              emphasized: true,
+              onTap: onViewExercises,
+            ),
+            _TodayCardActionRow(
+              icon: Icons.swap_horiz_rounded,
+              label: 'Train something else',
+              onTap: onSecondaryAction,
             ),
           ],
-          if (!summary.isRestDay)
-            Pressable(
-              onTap: onSecondaryAction,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(top: 12, bottom: 2),
-                alignment: Alignment.center,
-                child: const Text(
-                  'Train something else',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 }
 
-class _ExerciseChip extends StatelessWidget {
+/// Full-width divider-topped action row at the bottom of the hero card.
+class _TodayCardActionRow extends StatelessWidget {
+  final IconData icon;
   final String label;
-  final bool muted;
+  final bool emphasized;
+  final VoidCallback onTap;
 
-  const _ExerciseChip({required this.label, this.muted = false});
+  const _TodayCardActionRow({
+    required this.icon,
+    required this.label,
+    this.emphasized = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.surface2,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w600,
-          color: muted ? AppColors.textMuted : AppColors.textSecondary,
+    final color = emphasized ? AppColors.textPrimary : AppColors.textSecondary;
+
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.divider)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 17, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -510,33 +521,35 @@ class _ProgramRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SurfaceCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
       child: Row(
         children: [
-          const Icon(
-            Icons.fitness_center_rounded,
-            size: 19,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'Your program',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 7),
+          const IconTile(icon: Icons.fitness_center_rounded, size: 40),
+          const SizedBox(width: 13),
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textMuted,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your program',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
           const Icon(
@@ -658,30 +671,17 @@ class _JourneySkillRow extends StatelessWidget {
     required this.onTap,
   });
 
-  String get _remainingLabel {
-    final remaining = data.targetVolume - data.lastSessionVolume;
-    if (remaining <= 0) return 'Ready to attempt';
-    if (data.isTimed) return '${remaining}s longer hold to reach';
-    return remaining == 1
-        ? '1 more clean rep to reach'
-        : '$remaining more clean reps to reach';
-  }
-
   @override
   Widget build(BuildContext context) {
     final percent =
         (data.progressPercent.clamp(0.0, 1.0) * 100).round().clamp(1, 100);
-    final slipping = data.lastSessionTrend == JourneySkillTrend.down;
-    final tone = slipping ? AppColors.amber : AppColors.green;
-    final cleared = data.stages
-        .where((stage) => stage.status == JourneySkillStageStatus.cleared)
-        .length;
-    final total = data.stages.length;
+    final stalled = data.lastSessionTrend == JourneySkillTrend.down;
+    final tone = stalled ? AppColors.amber : AppColors.accentPrimary;
 
     return Pressable(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 15, 18, 16),
+        padding: const EdgeInsets.fromLTRB(18, 15, 18, 17),
         decoration: BoxDecoration(
           border: Border(
             top: showDivider
@@ -694,8 +694,8 @@ class _JourneySkillRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                IconTile(icon: _trackIcon(data.track), size: 34, warn: slipping),
-                const SizedBox(width: 10),
+                IconTile(icon: _trackIcon(data.track), size: 38, warn: stalled),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     data.skillTitle,
@@ -710,119 +710,72 @@ class _JourneySkillRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text.rich(
-                  TextSpan(
-                    text: cleared.toString().padLeft(2, '0'),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '/${total.toString().padLeft(2, '0')} nodes',
-                        style: const TextStyle(color: AppColors.textMuted),
-                      ),
-                    ],
+                Text(
+                  stalled ? 'stalled' : '$percent%',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: tone,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
             ),
             if (data.stages.isNotEmpty) ...[
-              const SizedBox(height: 13),
+              const SizedBox(height: 14),
               _StageSpine(stages: data.stages),
             ],
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: 'Working: ',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textSecondary,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: data.currentExerciseName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.accentPrimary,
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' — ${data.lastLabel} / ${data.targetLabel}',
-                        ),
-                      ],
-                    ),
+                  child: Text(
+                    data.currentExerciseName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: slipping ? AppColors.amberSoft : AppColors.greenSoft,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '$percent%',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: tone,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accentPrimary,
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 9),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: data.progressPercent.clamp(0.02, 1.0),
-                minHeight: 5,
-                backgroundColor: AppColors.surface2,
-                color: tone,
-              ),
-            ),
-            const SizedBox(height: 9),
-            Row(
-              children: [
-                const Icon(
-                  Icons.lock_outline_rounded,
-                  size: 13,
-                  color: AppColors.textMuted,
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 88,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: data.progressPercent.clamp(0.02, 1.0),
+                      minHeight: 4,
+                      backgroundColor: AppColors.surface2,
+                      color: tone,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: '$_remainingLabel ',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textSecondary,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 11,
+                        color: AppColors.textMuted,
                       ),
-                      children: [
-                        TextSpan(
-                          text: data.nextExerciseName,
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          data.nextExerciseName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.accentPrimary,
+                            color: AppColors.textMuted,
                           ),
                         ),
-                      ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],

@@ -44,7 +44,8 @@ void main() {
             activeSkillPaths: [_activeSkillPath()],
             exercisePerformance: const [],
             goalSkills: const [],
-            nodesClearedAllTime: 0,
+            nodesClearedThisMonth: 0,
+            onViewExercises: () {},
             onEditGoals: () {},
             onOpenGoalSkill: (_) {},
             onPrimaryAction: () {},
@@ -92,7 +93,8 @@ void main() {
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
                     goalSkills: const [],
-                    nodesClearedAllTime: 0,
+                    nodesClearedThisMonth: 0,
+                    onViewExercises: () {},
                     onEditGoals: () {},
                     onOpenGoalSkill: (_) {},
                     onPrimaryAction: () {
@@ -138,7 +140,8 @@ void main() {
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
                     goalSkills: const [],
-                    nodesClearedAllTime: 0,
+                    nodesClearedThisMonth: 0,
+                    onViewExercises: () {},
                     onEditGoals: () {},
                     onOpenGoalSkill: (_) {},
                     onPrimaryAction: () {},
@@ -166,8 +169,9 @@ void main() {
     expect(find.byType(AlternateWorkoutOptionsView), findsOneWidget);
   });
 
-  testWidgets('workout card shows the first three exercise chips',
-      (tester) async {
+  testWidgets('workout card shows meta line and action rows', (tester) async {
+    var viewedExercises = false;
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -179,7 +183,8 @@ void main() {
             activeSkillPaths: [_activeSkillPath()],
             exercisePerformance: const [],
             goalSkills: const [],
-            nodesClearedAllTime: 0,
+            nodesClearedThisMonth: 0,
+            onViewExercises: () => viewedExercises = true,
             onEditGoals: () {},
             onOpenGoalSkill: (_) {},
             onPrimaryAction: () {},
@@ -193,15 +198,19 @@ void main() {
       ),
     );
 
-    // The compact hero shows the first three exercises as chips plus a
-    // "+N more" chip, with the duration/count meta line above them.
+    // The compact hero shows the duration/count meta line and two
+    // divider-separated action rows; the exercise list lives behind
+    // "View exercises" now, so no exercise names render on the card.
     expect(find.text('45 min · 5 exercises'), findsOneWidget);
-    expect(find.text('Pull Ups'), findsOneWidget);
-    expect(find.text('Rows'), findsOneWidget);
-    expect(find.text('Hanging Leg Raise'), findsOneWidget);
-    expect(find.text('+2 more'), findsOneWidget);
-    expect(find.text('Face Pulls'), findsNothing);
+    expect(find.text('View exercises'), findsOneWidget);
+    expect(find.text('Train something else'), findsOneWidget);
+    expect(find.text('Pull Ups'), findsNothing);
     expect(find.text('Hammer Curls'), findsNothing);
+
+    await tester.tap(find.text('View exercises'));
+    await tester.pump();
+
+    expect(viewedExercises, isTrue);
   });
 
   testWidgets('active skill paths render grouped comparison stats',
@@ -271,7 +280,8 @@ void main() {
             activeSkillPaths: [_activeSkillPath()],
             exercisePerformance: const [],
             goalSkills: const [],
-            nodesClearedAllTime: 0,
+            nodesClearedThisMonth: 0,
+            onViewExercises: () {},
             onEditGoals: () {},
             onOpenGoalSkill: (_) {},
             onPrimaryAction: () {},
@@ -324,7 +334,8 @@ void main() {
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
                     goalSkills: const [],
-                    nodesClearedAllTime: 0,
+                    nodesClearedThisMonth: 0,
+                    onViewExercises: () {},
                     onEditGoals: () {},
                     onOpenGoalSkill: (_) {},
                     onPrimaryAction: () {},
@@ -442,7 +453,8 @@ void main() {
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
                     goalSkills: const [],
-                    nodesClearedAllTime: 0,
+                    nodesClearedThisMonth: 0,
+                    onViewExercises: () {},
                     onEditGoals: () {},
                     onOpenGoalSkill: (_) {},
                     onPrimaryAction: () {},
@@ -538,7 +550,8 @@ void main() {
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
                     goalSkills: const [],
-                    nodesClearedAllTime: 0,
+                    nodesClearedThisMonth: 0,
+                    onViewExercises: () {},
                     onEditGoals: () {},
                     onOpenGoalSkill: (_) {},
                     onPrimaryAction: () {},

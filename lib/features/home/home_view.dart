@@ -408,6 +408,14 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  void _openSessionOverview(DailyTrainingRecommendation recommendation) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SessionOverviewView(recommendation: recommendation),
+      ),
+    );
+  }
+
   Future<void> _openSkillPath(ActiveSkillPathData data) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -536,10 +544,12 @@ class _HomeViewState extends State<HomeView> {
                       activeSkillPaths: metrics.activeSkillPaths,
                       exercisePerformance: metrics.exercisePerformance,
                       goalSkills: metrics.goalSkills,
-                      nodesClearedAllTime: metrics.nodesClearedAllTime,
+                      nodesClearedThisMonth: metrics.nodesClearedThisMonth,
                       showGettingStarted: _pastWorkouts.isEmpty,
                       onPrimaryAction: () => _openPrimaryAction(recommendation),
                       onSecondaryAction: _openAlternateWorkoutOptions,
+                      onViewExercises: () =>
+                          _openSessionOverview(recommendation),
                       onOpenSettings: widget.onOpenSettings ?? () {},
                       onOpenProgramSettings: _openProgramOverview,
                       onEditGoals: _openGoalPicker,
