@@ -431,14 +431,17 @@ class HeaderCircleButton extends StatelessWidget {
   }
 }
 
-/// Large screen title ("Today", "Welcome") with trailing header buttons.
+/// Large screen title ("Today", "Welcome") with trailing header buttons and
+/// an optional small uppercase eyebrow line (e.g. the current date).
 class ScreenHeader extends StatelessWidget {
   final String title;
+  final String? eyebrow;
   final List<Widget> actions;
 
   const ScreenHeader({
     super.key,
     required this.title,
+    this.eyebrow,
     this.actions = const [],
   });
 
@@ -450,15 +453,34 @@ class ScreenHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.96,
-                height: 1.05,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (eyebrow != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      eyebrow!.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textMuted,
+                        letterSpacing: 1,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.96,
+                    height: 1.05,
+                  ),
+                ),
+              ],
             ),
           ),
           for (var i = 0; i < actions.length; i++) ...[

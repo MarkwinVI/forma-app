@@ -38,7 +38,8 @@ void main() {
         home: Scaffold(
           body: HomeDashboardContent(
             todaySummary: _todaySummary(),
-            weekStrip: _weekStripData(),
+            streak: _streakData(),
+            programLabel: 'Push / Pull · 3-day split',
             journeySnapshot: _journeySnapshot(),
             activeSkillPaths: [_activeSkillPath()],
             exercisePerformance: const [],
@@ -57,19 +58,20 @@ void main() {
       ),
     );
 
+    final streak = tester.getTopLeft(find.text('2-week streak'));
     final hero = tester.getTopLeft(find.text('Pull Day'));
-    // The week calendar no longer has a supporting caption — anchor on the
-    // fixture's single rest-day cell instead.
-    final calendar = tester.getTopLeft(find.text('Rest'));
-    final programOverview = tester.getTopLeft(find.text('Program overview'));
+    final programRow = tester.getTopLeft(find.text('Your program'));
     final progress = tester.getTopLeft(find.text('Your skill trees'));
     expect(find.text('THIS WEEK'), findsNothing);
     expect(find.text('JOURNEY SNAPSHOT'), findsNothing);
     expect(find.text('SKILL PATHS'), findsNothing);
     expect(find.textContaining('sessions done'), findsNothing);
-    expect(hero.dy, lessThan(calendar.dy));
-    expect(calendar.dy, lessThan(programOverview.dy));
-    expect(programOverview.dy, lessThan(progress.dy));
+    // The v3 dashboard drops the week calendar in favour of the streak strip.
+    expect(find.text('Rest'), findsNothing);
+    expect(find.text('UP NEXT · TODAY'), findsOneWidget);
+    expect(streak.dy, lessThan(hero.dy));
+    expect(hero.dy, lessThan(programRow.dy));
+    expect(programRow.dy, lessThan(progress.dy));
   });
 
   testWidgets('start workout CTA can open LiveWorkoutView', (tester) async {
@@ -84,7 +86,8 @@ void main() {
               body: destination ??
                   HomeDashboardContent(
                     todaySummary: _todaySummary(),
-                    weekStrip: _weekStripData(),
+                    streak: _streakData(),
+                    programLabel: 'Push / Pull · 3-day split',
                     journeySnapshot: _journeySnapshot(),
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
@@ -111,7 +114,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Start Pull Day'));
+    await tester.tap(find.text('Start'));
     await tester.pump();
 
     expect(find.byType(LiveWorkoutView), findsOneWidget);
@@ -129,7 +132,8 @@ void main() {
               body: destination ??
                   HomeDashboardContent(
                     todaySummary: _todaySummary(),
-                    weekStrip: _weekStripData(),
+                    streak: _streakData(),
+                    programLabel: 'Push / Pull · 3-day split',
                     journeySnapshot: _journeySnapshot(),
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
@@ -162,14 +166,15 @@ void main() {
     expect(find.byType(AlternateWorkoutOptionsView), findsOneWidget);
   });
 
-  testWidgets('workout card expands planned exercise list on show all',
+  testWidgets('workout card shows the first three exercise chips',
       (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: HomeDashboardContent(
             todaySummary: _todaySummary(),
-            weekStrip: _weekStripData(),
+            streak: _streakData(),
+            programLabel: 'Push / Pull · 3-day split',
             journeySnapshot: _journeySnapshot(),
             activeSkillPaths: [_activeSkillPath()],
             exercisePerformance: const [],
@@ -188,27 +193,15 @@ void main() {
       ),
     );
 
+    // The compact hero shows the first three exercises as chips plus a
+    // "+N more" chip, with the duration/count meta line above them.
+    expect(find.text('45 min · 5 exercises'), findsOneWidget);
     expect(find.text('Pull Ups'), findsOneWidget);
     expect(find.text('Rows'), findsOneWidget);
     expect(find.text('Hanging Leg Raise'), findsOneWidget);
-    expect(find.text('Face Pulls'), findsOneWidget);
-    expect(find.text('4 × 8'), findsOneWidget);
-    expect(find.text('3 × 12'), findsNWidgets(2));
+    expect(find.text('+2 more'), findsOneWidget);
+    expect(find.text('Face Pulls'), findsNothing);
     expect(find.text('Hammer Curls'), findsNothing);
-    expect(find.text('Show all 5'), findsOneWidget);
-
-    await tester.tap(find.text('Show all 5'));
-    await tester.pump();
-
-    expect(find.text('Hammer Curls'), findsOneWidget);
-    expect(find.text('3 × 15'), findsOneWidget);
-    expect(find.text('Show fewer'), findsOneWidget);
-
-    await tester.tap(find.text('Show fewer'));
-    await tester.pump();
-
-    expect(find.text('Hammer Curls'), findsNothing);
-    expect(find.text('Show all 5'), findsOneWidget);
   });
 
   testWidgets('active skill paths render grouped comparison stats',
@@ -272,7 +265,8 @@ void main() {
         home: Scaffold(
           body: HomeDashboardContent(
             todaySummary: _todaySummary(),
-            weekStrip: _weekStripData(),
+            streak: _streakData(),
+            programLabel: 'Push / Pull · 3-day split',
             journeySnapshot: snapshot,
             activeSkillPaths: [_activeSkillPath()],
             exercisePerformance: const [],
@@ -324,7 +318,8 @@ void main() {
               body: destination ??
                   HomeDashboardContent(
                     todaySummary: _todaySummary(),
-                    weekStrip: _weekStripData(),
+                    streak: _streakData(),
+                    programLabel: 'Push / Pull · 3-day split',
                     journeySnapshot: _journeySnapshot(),
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
@@ -441,7 +436,8 @@ void main() {
               body: destination ??
                   HomeDashboardContent(
                     todaySummary: _todaySummary(),
-                    weekStrip: _weekStripData(),
+                    streak: _streakData(),
+                    programLabel: 'Push / Pull · 3-day split',
                     journeySnapshot: _journeySnapshot(),
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
@@ -518,8 +514,8 @@ void main() {
       ),
     );
 
-    await tester.ensureVisible(find.text('Program overview'));
-    await tester.tap(find.text('Program overview'));
+    await tester.ensureVisible(find.text('Your program'));
+    await tester.tap(find.text('Your program'));
     await tester.pump();
 
     expect(find.byType(ProgramOverviewView), findsOneWidget);
@@ -536,7 +532,8 @@ void main() {
               body: destination ??
                   HomeDashboardContent(
                     todaySummary: _todaySummary(),
-                    weekStrip: _weekStripData(),
+                    streak: _streakData(),
+                    programLabel: 'Push / Pull · 3-day split',
                     journeySnapshot: _journeySnapshot(),
                     activeSkillPaths: [_activeSkillPath()],
                     exercisePerformance: const [],
@@ -706,25 +703,12 @@ HomeTodaySummary _todaySummary() {
   );
 }
 
-HomeWeekStripData _weekStripData() {
-  return HomeWeekStripData(
-    days: List.generate(
-      7,
-      (index) => HomeWeekStripDay(
-        date: DateTime(2026, 6, 15 + index),
-        sessionType: index == 3
-            ? TrainingSessionType.rest
-            : index.isEven
-                ? TrainingSessionType.push
-                : TrainingSessionType.pull,
-        isCurrent: index == 4,
-        isCompleted: index < 4 && index != 3,
-      ),
-    ),
-    completedSessions: 3,
-    totalSessions: 5,
-    supportingText:
-        '3 of 5 sessions done. Sessions roll forward, so a missed day becomes your next training day.',
+HomeStreakData _streakData() {
+  return const HomeStreakData(
+    streakWeeks: 2,
+    completedThisWeek: 3,
+    plannedPerWeek: 5,
+    hasWorkouts: true,
   );
 }
 

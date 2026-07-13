@@ -504,6 +504,7 @@ class _HomeViewState extends State<HomeView> {
             progressEntries: _progressEntries,
             workouts: _pastWorkouts,
             goalSkillIds: _goalSkillIds,
+            frequencyPerWeek: _frequencyPerWeek,
           );
 
     return Scaffold(
@@ -528,7 +529,9 @@ class _HomeViewState extends State<HomeView> {
                     onRefresh: _loadHomeData,
                     child: HomeDashboardContent(
                       todaySummary: metrics.today,
-                      weekStrip: metrics.weekStrip,
+                      streak: metrics.streak,
+                      programLabel: '${_selectedProgramType.label}'
+                          ' · $_frequencyPerWeek-day split',
                       journeySnapshot: metrics.journeySnapshot,
                       activeSkillPaths: metrics.activeSkillPaths,
                       exercisePerformance: metrics.exercisePerformance,

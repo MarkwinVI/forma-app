@@ -17,6 +17,7 @@ enum PathNodeState { mastered, working, upcoming }
 class HomeDashboardMetrics {
   final HomeTodaySummary today;
   final HomeWeekStripData weekStrip;
+  final HomeStreakData streak;
   final JourneySnapshotData journeySnapshot;
   final List<ActiveSkillPathData> activeSkillPaths;
   final List<HomeExercisePerformance> exercisePerformance;
@@ -26,12 +27,33 @@ class HomeDashboardMetrics {
   const HomeDashboardMetrics({
     required this.today,
     required this.weekStrip,
+    required this.streak,
     required this.journeySnapshot,
     required this.activeSkillPaths,
     required this.exercisePerformance,
     required this.goalSkills,
     required this.nodesClearedAllTime,
   });
+}
+
+/// Weekly training streak for the strip at the top of the dashboard:
+/// consecutive calendar weeks (Monday-based) with at least one saved workout.
+/// The running week can't break the streak until it is over.
+class HomeStreakData {
+  final int streakWeeks;
+  final int completedThisWeek;
+  final int plannedPerWeek;
+  final bool hasWorkouts;
+
+  const HomeStreakData({
+    required this.streakWeeks,
+    required this.completedThisWeek,
+    required this.plannedPerWeek,
+    required this.hasWorkouts,
+  });
+
+  bool get onTrack =>
+      plannedPerWeek > 0 && completedThisWeek >= plannedPerWeek;
 }
 
 /// Session-over-session totals for one exercise in the current program:
@@ -365,6 +387,7 @@ class HomeDashboardMetricsCalculator {
     required Map<String, ExerciseProgress> progressEntries,
     required List<PastWorkout> workouts,
     List<String> goalSkillIds = const [],
+    int frequencyPerWeek = 3,
     DateTime? now,
   }) {
     final cycle = trainingProgramService.scheduleCycleFor(
@@ -399,6 +422,11 @@ class HomeDashboardMetricsCalculator {
         completedToday: schedule.completedToday,
         now: now,
       ),
+      streak: buildStreakData(
+        workouts: workouts,
+        plannedPerWeek: frequencyPerWeek,
+        now: now,
+      ),
       journeySnapshot: buildJourneySnapshotData(
         trainingProgramService: trainingProgramService,
         programType: programType,
@@ -429,6 +457,45 @@ class HomeDashboardMetricsCalculator {
       nodesClearedAllTime: progressMap.values
           .where((status) => status == ExerciseStatus.mastered)
           .length,
+    );
+  }
+
+  /// Weekly streak: consecutive Monday-based weeks with at least one saved
+  /// workout, counting back from the current (or, if it has no workout yet,
+  /// the previous) week.
+  static HomeStreakData buildStreakData({
+    required List<PastWorkout> workouts,
+    required int plannedPerWeek,
+    DateTime? now,
+  }) {
+    final today = _dateOnly((now ?? DateTime.now()).toLocal());
+    final thisWeek = today.subtract(Duration(days: today.weekday - 1));
+
+    final weeksWithWorkouts = <DateTime>{};
+    var completedThisWeek = 0;
+    for (final workout in workouts) {
+      final day = _dateOnly(workout.loggedAt.toLocal());
+      weeksWithWorkouts.add(day.subtract(Duration(days: day.weekday - 1)));
+      if (!day.isBefore(thisWeek) && !day.isAfter(today)) {
+        completedThisWeek++;
+      }
+    }
+
+    var cursor = thisWeek;
+    if (!weeksWithWorkouts.contains(cursor)) {
+      cursor = cursor.subtract(const Duration(days: 7));
+    }
+    var streakWeeks = 0;
+    while (weeksWithWorkouts.contains(cursor)) {
+      streakWeeks++;
+      cursor = cursor.subtract(const Duration(days: 7));
+    }
+
+    return HomeStreakData(
+      streakWeeks: streakWeeks,
+      completedThisWeek: completedThisWeek,
+      plannedPerWeek: plannedPerWeek,
+      hasWorkouts: workouts.isNotEmpty,
     );
   }
 

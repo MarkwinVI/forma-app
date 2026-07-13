@@ -10,7 +10,8 @@ import 'home_dashboard_metrics.dart';
 
 class HomeDashboardContent extends StatelessWidget {
   final HomeTodaySummary todaySummary;
-  final HomeWeekStripData weekStrip;
+  final HomeStreakData streak;
+  final String programLabel;
   final JourneySnapshotData journeySnapshot;
   final List<ActiveSkillPathData> activeSkillPaths;
   final List<HomeExercisePerformance> exercisePerformance;
@@ -29,7 +30,8 @@ class HomeDashboardContent extends StatelessWidget {
   const HomeDashboardContent({
     super.key,
     required this.todaySummary,
-    required this.weekStrip,
+    required this.streak,
+    required this.programLabel,
     required this.journeySnapshot,
     required this.activeSkillPaths,
     required this.exercisePerformance,
@@ -55,6 +57,7 @@ class HomeDashboardContent extends StatelessWidget {
         children: [
           ScreenHeader(
             title: 'Today',
+            eyebrow: _headerDate(DateTime.now()),
             actions: [
               HeaderCircleButton(
                 icon: Icons.settings_outlined,
@@ -68,15 +71,18 @@ class HomeDashboardContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
+                _StreakCard(streak: streak),
+                const SizedBox(height: 12),
                 _TodayCard(
                   summary: todaySummary,
                   onPrimaryAction: onPrimaryAction,
                   onSecondaryAction: onSecondaryAction,
                 ),
-                const SizedBox(height: 12),
-                _WeekCalendarCard(data: weekStrip),
-                const SizedBox(height: 12),
-                _ProgramOverviewRow(onTap: onOpenProgramSettings),
+                const SizedBox(height: 10),
+                _ProgramRow(
+                  label: programLabel,
+                  onTap: onOpenProgramSettings,
+                ),
                 if (showGettingStarted) ...[
                   const SectionHeader(title: 'Getting started'),
                   GettingStartedChecklist(
@@ -123,9 +129,125 @@ class HomeDashboardContent extends StatelessWidget {
   }
 }
 
-// ── Hero: today's workout ───────────────────────────────────
+// ── Header date + streak strip ──────────────────────────────
 
-class _TodayCard extends StatefulWidget {
+String _headerDate(DateTime now) {
+  const weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+}
+
+class _StreakCard extends StatelessWidget {
+  final HomeStreakData streak;
+
+  const _StreakCard({required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = streak.streakWeeks > 0
+        ? '${streak.streakWeeks}-week streak'
+        : 'Start your streak';
+    final subtitle = streak.hasWorkouts
+        ? '${streak.completedThisWeek} of ${streak.plannedPerWeek} '
+            'sessions this week'
+        : 'Finish your first workout to begin week one';
+
+    return SurfaceCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: AppColors.startOrange.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.local_fire_department_rounded,
+              size: 26,
+              color: AppColors.startOrange,
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.17,
+                  ),
+                ),
+                const SizedBox(height: 1.5),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (streak.hasWorkouts) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: streak.onTrack ? AppColors.green : AppColors.textMuted,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              streak.onTrack
+                  ? 'On track'
+                  : '${streak.completedThisWeek}/${streak.plannedPerWeek}',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: streak.onTrack ? AppColors.green : AppColors.textSecondary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Hero: up next today ─────────────────────────────────────
+
+class _TodayCard extends StatelessWidget {
   final HomeTodaySummary summary;
   final VoidCallback onPrimaryAction;
   final VoidCallback onSecondaryAction;
@@ -137,111 +259,165 @@ class _TodayCard extends StatefulWidget {
   });
 
   @override
-  State<_TodayCard> createState() => _TodayCardState();
-}
-
-class _TodayCardState extends State<_TodayCard> {
-  bool _isExpanded = false;
-
-  @override
   Widget build(BuildContext context) {
-    final summary = widget.summary;
     final completed = summary.completed;
     if (completed != null) {
-      return _buildCompletedState(completed);
+      return _CompletedTodayCard(
+        completed: completed,
+        onSecondaryAction: onSecondaryAction,
+      );
     }
-    final plannedExercises = summary.plannedExercises;
-    final visibleExercises =
-        _isExpanded ? plannedExercises : plannedExercises.take(4).toList();
-    final canToggleExercises = plannedExercises.length > 4;
+
+    final tags = summary.focusTags;
 
     return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            summary.sessionTitle,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.48,
-              height: 1.1,
+          const Text(
+            'UP NEXT · TODAY',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.accentPrimary,
+              letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            summary.isRestDay
-                ? summary.supportingText
-                : '${summary.estimatedDurationMinutes} min · ${summary.exerciseCount} exercises',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          if (visibleExercises.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            for (var index = 0; index < visibleExercises.length; index++)
-              _PlannedExerciseRow(
-                exercise: visibleExercises[index],
-                showDivider: index > 0,
-              ),
-          ],
-          if (canToggleExercises)
-            Pressable(
-              onTap: () => setState(() => _isExpanded = !_isExpanded),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _isExpanded
-                          ? 'Show fewer'
-                          : 'Show all ${plannedExercises.length}',
+                      summary.sessionTitle,
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accentPrimary,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.42,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    AnimatedRotation(
-                      turns: _isExpanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 17,
-                        color: AppColors.accentPrimary,
+                    const SizedBox(height: 3),
+                    Text(
+                      summary.isRestDay
+                          ? summary.supportingText
+                          : '${summary.estimatedDurationMinutes} min'
+                              ' · ${summary.exerciseCount} exercises',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          const SizedBox(height: 14),
-          PillButton(
-            label: summary.ctaLabel,
-            icon: Icons.play_arrow_rounded,
-            color: summary.isRestDay ? null : AppColors.startOrange,
-            onTap: widget.onPrimaryAction,
+              const SizedBox(width: 14),
+              Pressable(
+                onTap: onPrimaryAction,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: summary.isRestDay
+                        ? AppColors.surface2
+                        : AppColors.startOrange,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    summary.isRestDay ? 'View plan' : 'Start',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: summary.isRestDay
+                          ? AppColors.textPrimary
+                          : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          if (!summary.isRestDay) ...[
-            const SizedBox(height: 10),
-            PillButton(
-              label: 'Train something else',
-              tonal: true,
-              onTap: widget.onSecondaryAction,
+          if (tags.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final tag in tags.take(3)) ...[
+                    _ExerciseChip(label: tag),
+                    const SizedBox(width: 6),
+                  ],
+                  if (tags.length > 3)
+                    _ExerciseChip(label: '+${tags.length - 3} more', muted: true),
+                ],
+              ),
             ),
           ],
+          if (!summary.isRestDay)
+            Pressable(
+              onTap: onSecondaryAction,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(top: 12, bottom: 2),
+                alignment: Alignment.center,
+                child: const Text(
+                  'Train something else',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildCompletedState(HomeCompletedWorkoutSummary completed) {
+class _ExerciseChip extends StatelessWidget {
+  final String label;
+  final bool muted;
+
+  const _ExerciseChip({required this.label, this.muted = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.surface2,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+          color: muted ? AppColors.textMuted : AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _CompletedTodayCard extends StatelessWidget {
+  final HomeCompletedWorkoutSummary completed;
+  final VoidCallback onSecondaryAction;
+
+  const _CompletedTodayCard({
+    required this.completed,
+    required this.onSecondaryAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return SurfaceCard(
       padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
       child: Column(
@@ -299,7 +475,7 @@ class _TodayCardState extends State<_TodayCard> {
           ),
           const SizedBox(height: 14),
           Text(
-            'That’s today done — next up: ${completed.nextSessionLabel} '
+            'That\u2019s today done — next up: ${completed.nextSessionLabel} '
             'tomorrow.',
             style: const TextStyle(
               fontSize: 13.5,
@@ -311,7 +487,7 @@ class _TodayCardState extends State<_TodayCard> {
           PillButton(
             label: 'Train something else',
             tonal: true,
-            onTap: widget.onSecondaryAction,
+            onTap: onSecondaryAction,
           ),
         ],
       ),
@@ -319,283 +495,14 @@ class _TodayCardState extends State<_TodayCard> {
   }
 }
 
-class _PlannedExerciseRow extends StatelessWidget {
-  final HomePlannedExerciseSummary exercise;
-  final bool showDivider;
+// ── Program row (kept under the hero) ───────────────────────
 
-  const _PlannedExerciseRow({
-    required this.exercise,
-    required this.showDivider,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hasPath = exercise.nodeStates.isNotEmpty;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 10.5),
-      decoration: BoxDecoration(
-        border: Border(
-          top: showDivider
-              ? const BorderSide(color: AppColors.divider)
-              : BorderSide.none,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  exercise.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.15,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                exercise.targetLabel,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-          if (hasPath) ...[
-            const SizedBox(height: 7),
-            Row(
-              children: [
-                _PathDots(nodeStates: exercise.nodeStates),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    exercise.treeLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Compact node-progress dots: green mastered, blue working, muted upcoming.
-class _PathDots extends StatelessWidget {
-  final List<PathNodeState> nodeStates;
-
-  const _PathDots({required this.nodeStates});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var index = 0; index < nodeStates.length; index++) ...[
-          if (index > 0) const SizedBox(width: 4),
-          _dot(nodeStates[index]),
-        ],
-      ],
-    );
-  }
-
-  Widget _dot(PathNodeState state) {
-    switch (state) {
-      case PathNodeState.mastered:
-        return Container(
-          width: 5,
-          height: 5,
-          decoration: const BoxDecoration(
-            color: AppColors.green,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: AppColors.greenSoft, spreadRadius: 3),
-            ],
-          ),
-        );
-      case PathNodeState.working:
-        return Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: AppColors.accentPrimary,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: AppColors.accentSoft, spreadRadius: 5),
-            ],
-          ),
-        );
-      case PathNodeState.upcoming:
-        return Container(
-          width: 5,
-          height: 5,
-          decoration: const BoxDecoration(
-            color: AppColors.surface3,
-            shape: BoxShape.circle,
-          ),
-        );
-    }
-  }
-}
-
-// ── Week calendar — boxed day cells ─────────────────────────
-
-class _WeekCalendarCard extends StatelessWidget {
-  final HomeWeekStripData data;
-
-  const _WeekCalendarCard({
-    required this.data,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          for (var index = 0; index < data.days.length; index++)
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(left: index > 0 ? 6 : 0),
-                child: _WeekDayCell(day: data.days[index]),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeekDayCell extends StatelessWidget {
-  final HomeWeekStripDay day;
-
-  const _WeekDayCell({
-    required this.day,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isToday = day.isCurrent;
-    final isDone = day.isCompleted;
-    final isRest = day.isRestDay;
-
-    final background = isToday
-        ? AppColors.accentPrimary
-        : isDone
-            ? AppColors.accentSoft
-            : isRest
-                ? Colors.white.withValues(alpha: 0.03)
-                : AppColors.surface2;
-    final dayColor =
-        isToday ? Colors.white.withValues(alpha: 0.75) : AppColors.textMuted;
-    final labelColor = isToday
-        ? Colors.white
-        : isRest
-            ? AppColors.textMuted
-            : AppColors.textPrimary;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(0, 9, 0, 8),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            _weekdayLetter(day.date),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: dayColor,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            _sessionLabel(day),
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: labelColor,
-              letterSpacing: -0.12,
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 13,
-            child: Center(
-              child: isDone
-                  ? Icon(
-                      Icons.check_rounded,
-                      size: 12,
-                      color:
-                          isToday ? Colors.white : AppColors.accentPrimary,
-                    )
-                  : isToday
-                      ? Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            shape: BoxShape.circle,
-                          ),
-                        )
-                      : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _weekdayLetter(DateTime date) {
-    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    return labels[date.weekday - 1];
-  }
-
-  String _sessionLabel(HomeWeekStripDay day) {
-    switch (day.sessionType) {
-      case TrainingSessionType.fullBody:
-        return 'Full';
-      case TrainingSessionType.push:
-        return 'Push';
-      case TrainingSessionType.pull:
-        return 'Pull';
-      case TrainingSessionType.upper:
-        return 'Upper';
-      case TrainingSessionType.lower:
-        return 'Lower';
-      case TrainingSessionType.rest:
-        return 'Rest';
-    }
-  }
-}
-
-// ── Program overview row (kept under the calendar) ──────────
-
-class _ProgramOverviewRow extends StatelessWidget {
+class _ProgramRow extends StatelessWidget {
+  final String label;
   final VoidCallback onTap;
 
-  const _ProgramOverviewRow({
+  const _ProgramRow({
+    required this.label,
     required this.onTap,
   });
 
@@ -603,22 +510,36 @@ class _ProgramOverviewRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SurfaceCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      child: const Row(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+      child: Row(
         children: [
-          IconTile(icon: Icons.tune_rounded),
-          SizedBox(width: 14),
+          const Icon(
+            Icons.fitness_center_rounded,
+            size: 19,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Your program',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 7),
           Expanded(
             child: Text(
-              'Program overview',
-              style: TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: AppColors.textMuted,
               ),
             ),
           ),
-          Icon(
+          const Icon(
             Icons.chevron_right_rounded,
             size: 20,
             color: AppColors.textMuted,
