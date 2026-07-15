@@ -33,21 +33,27 @@ class AppNavBar extends StatelessWidget {
           child: Row(
             children: [
               _NavItem(
+                  icon: Icons.insights_rounded,
+                  label: 'Progress',
+                  index: 0,
+                  currentIndex: currentIndex,
+                  onTap: onTap),
+              _NavItem(
                   icon: Icons.fitness_center_outlined,
                   label: 'Train',
-                  index: 0,
+                  index: 1,
                   currentIndex: currentIndex,
                   onTap: onTap),
               _NavItem(
                   icon: Icons.bar_chart_rounded,
                   label: 'Data',
-                  index: 1,
+                  index: 2,
                   currentIndex: currentIndex,
                   onTap: onTap),
               _NavItem(
                   icon: Icons.account_tree_outlined,
                   label: 'Skills',
-                  index: 2,
+                  index: 3,
                   currentIndex: currentIndex,
                   onTap: onTap),
             ],
