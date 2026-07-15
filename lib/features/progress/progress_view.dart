@@ -16,6 +16,7 @@ import '../../data/services/training_program_store_service.dart';
 import '../home/home_dashboard_metrics.dart';
 import '../skills/skill_tree_view.dart';
 import '../skills/skills_view.dart';
+import 'widgets/biggest_gain_card.dart';
 import 'widgets/skill_tree_progress_card.dart';
 
 /// Progress tab — every skill tree as a node map with the user's path
@@ -222,10 +223,15 @@ class _ProgressViewState extends State<ProgressView> {
 
   Widget _buildSections(HomeDashboardMetrics metrics) {
     final skills = metrics.journeySnapshot.closestSkills;
+    final biggestGain = BiggestGainData.compute(_pastWorkouts);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (biggestGain != null) ...[
+          const SizedBox(height: 16),
+          BiggestGainCard(data: biggestGain, skills: skills),
+        ],
         SectionHeader(
           title: 'Skill trees',
           sub: 'Every branch named — your path is highlighted',

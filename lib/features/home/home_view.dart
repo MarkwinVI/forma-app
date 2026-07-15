@@ -14,12 +14,14 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../settings/settings_view.dart';
+import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
 import 'live_workout_view.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
 import 'widgets/today_workout_card.dart';
+import 'widgets/week_calendar_card.dart';
 
 /// Train tab — today's workout as a performance list (planned exercises with
 /// last result and change vs the previous attempt) plus a coaching tip.
@@ -209,6 +211,38 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  Future<void> _openAlternateWorkoutOptions(
+    DailyTrainingRecommendation recommendation,
+  ) async {
+    final sessionType = recommendation.sessionType == TrainingSessionType.rest
+        ? TrainingSessionType.fullBody
+        : recommendation.sessionType;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AlternateWorkoutOptionsView(
+          onOpenBlankWorkout: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => LiveWorkoutView(
+                  recommendation: DailyTrainingRecommendation(
+                    programType: recommendation.programType,
+                    sessionType: sessionType,
+                    sessionLabel: 'Blank Workout',
+                    isRestDay: false,
+                    items: const [],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    // A workout may have been logged from here — re-fetch.
+    await _loadHomeData();
+  }
+
   @override
   Widget build(BuildContext context) {
     final snapshot = _loading ? null : _buildSnapshot();
@@ -277,6 +311,14 @@ class _HomeViewState extends State<HomeView> {
         ),
         const SizedBox(height: 12),
         TipCard(highlight: tip.$1, body: tip.$2),
+        const SizedBox(height: 12),
+        WeekCalendarCard(weekStrip: metrics.weekStrip),
+        const SizedBox(height: 12),
+        PillButton(
+          label: 'Train something else',
+          tonal: true,
+          onTap: () => _openAlternateWorkoutOptions(snapshot.recommendation),
+        ),
       ],
     );
   }
