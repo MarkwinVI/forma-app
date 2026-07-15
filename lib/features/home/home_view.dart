@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/polished.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/training_program_model.dart';
@@ -11,25 +13,21 @@ import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
-import '../skills/skill_tree_view.dart';
-import 'alternate_workout_options_view.dart';
-import 'goal_skills_view.dart';
-import 'home_dashboard_content.dart';
+import '../settings/settings_view.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
-import 'program_setup_view.dart';
-import 'journey_skill_detail_view.dart';
 import 'live_workout_view.dart';
-import 'program_overview_view.dart';
+import 'program_setup_view.dart';
 import 'session_overview_view.dart';
+import 'widgets/today_workout_card.dart';
 
+/// Train tab — today's workout as a performance list (planned exercises with
+/// last result and change vs the previous attempt) plus a coaching tip.
 class HomeView extends StatefulWidget {
-  final VoidCallback? onOpenSettings;
   final bool isActive;
 
   const HomeView({
     super.key,
-    this.onOpenSettings,
     this.isActive = false,
   });
 
@@ -48,18 +46,7 @@ class _HomeViewState extends State<HomeView> {
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
-  DailyTrainingRecommendation? _recommendation;
-  TrainingProgramType _selectedProgramType = TrainingProgramType.fullBody;
-  String? _scheduleVariant;
-  Map<TrainingTrack, String> _branchSelections = {};
-  RepGoalProfile _repGoalProfile = RepGoalProfile.balanced;
-  Map<String, dynamic> _sessionItemsConfig = const {};
-  int _frequencyPerWeek = 3;
-  Map<String, dynamic>? _setupAnswers;
-  int _nextStepIndex = 0;
-  TrainingSessionType _nextSessionType = TrainingSessionType.fullBody;
-  HomeScheduleResolution? _schedule;
-  List<String> _goalSkillIds = const [];
+  TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
   void initState() {
@@ -73,7 +60,7 @@ class _HomeViewState extends State<HomeView> {
 
     // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
     // this tab becomes active — e.g. after a dev reset from Settings the
-    // dashboard would otherwise keep showing the deleted program.
+    // card would otherwise keep showing the deleted program.
     if (!oldWidget.isActive && widget.isActive) {
       _loadHomeData();
     }
@@ -81,42 +68,36 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _loadHomeData() async {
     final userId = AuthService().currentUser?.id;
-    var progressMap = <String, ExerciseStatus>{};
-    var progressEntries = <String, ExerciseProgress>{};
-    var workouts = const <PastWorkout>[];
-    TrainingProgramLogicSnapshot? logicSnapshot;
-    var loadFailed = false;
-    var hasProgram = true;
-
-    if (userId != null) {
-      try {
-        final results = await Future.wait([
-          _progressService.fetchAll(userId),
-          _trainingProgramStoreService.fetchProgramLogic(userId),
-          _exerciseLogService.fetchPastWorkouts(userId),
-        ]);
-
-        final progress = results[0] as List<ExerciseProgress>;
-        logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
-        workouts = results[2] as List<PastWorkout>;
-        hasProgram = logicSnapshot != null;
-
-        progressEntries = {
-          for (final item in progress) item.exerciseId: item,
-        };
-        progressMap = {
-          for (final item in progress) item.exerciseId: item.status,
-        };
-      } catch (error, stackTrace) {
-        // Fall back to default local state so the screen stays usable.
-        debugPrint('Failed to load home data: $error\n$stackTrace');
-        loadFailed = true;
-      }
+    if (userId == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
     }
 
-    if (!mounted) return;
+    try {
+      final results = await Future.wait([
+        _progressService.fetchAll(userId),
+        _trainingProgramStoreService.fetchProgramLogic(userId),
+        _exerciseLogService.fetchPastWorkouts(userId),
+      ]);
 
-    if (loadFailed) {
+      if (!mounted) return;
+      final progress = results[0] as List<ExerciseProgress>;
+      setState(() {
+        _progressEntries = {
+          for (final item in progress) item.exerciseId: item,
+        };
+        _progressMap = {
+          for (final item in progress) item.exerciseId: item.status,
+        };
+        _logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
+        _hasProgram = _logicSnapshot != null;
+        _pastWorkouts = results[2] as List<PastWorkout>;
+        _loading = false;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load home data: $error\n$stackTrace');
+      if (!mounted) return;
+      setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -125,193 +106,60 @@ class _HomeViewState extends State<HomeView> {
         ),
       );
     }
+  }
 
-    final selectedProgramType =
-        logicSnapshot?.program.programType ?? TrainingProgramType.fullBody;
-    final scheduleVariant = logicSnapshot?.program.scheduleVariant;
+  _TrainSnapshot? _buildSnapshot() {
+    final snapshot = _logicSnapshot;
+    if (snapshot == null) return null;
+
+    final programType = snapshot.program.programType;
+    final scheduleVariant = snapshot.program.scheduleVariant;
     final branchSelections = {
       ..._trainingProgramService.defaultBranchSelections(),
-      ...?logicSnapshot?.branchSelections,
+      ...snapshot.branchSelections,
     };
-    final repGoalProfile =
-        logicSnapshot?.repGoalProfile ?? RepGoalProfile.balanced;
-    final sessionItemsConfig = _sessionItemsConfigFor(logicSnapshot?.program);
-    final frequencyPerWeek = logicSnapshot?.program.frequencyPerWeek ?? 3;
-    final setupAnswers = _setupAnswersFor(logicSnapshot?.program);
-    final nextStepIndex = logicSnapshot?.state.nextStepIndex ?? 0;
-    final nextSessionType =
-        logicSnapshot?.state.nextSessionType ?? TrainingSessionType.fullBody;
-    final schedule = _resolveSchedule(
-      programType: selectedProgramType,
-      scheduleVariant: scheduleVariant,
-      nextStepIndex: nextStepIndex,
-      nextSessionType: nextSessionType,
-      workouts: workouts,
+    final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
+    final schedule = HomeDashboardMetricsCalculator.resolveSchedule(
+      cycle: _trainingProgramService.scheduleCycleFor(
+        programType: programType,
+        scheduleVariant: scheduleVariant,
+      ),
+      nextStepIndex: snapshot.state.nextStepIndex,
+      nextSessionType: snapshot.state.nextSessionType,
+      lastWorkoutAt:
+          _pastWorkouts.isEmpty ? null : _pastWorkouts.first.loggedAt,
     );
     final recommendation = _trainingProgramService.buildToday(
-      progressMap: progressMap,
-      programType: selectedProgramType,
+      progressMap: _progressMap,
+      programType: programType,
       sessionType: schedule.effectiveSessionType,
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
     );
 
-    setState(() {
-      _hasProgram = hasProgram;
-      _progressMap = progressMap;
-      _progressEntries = progressEntries;
-      _pastWorkouts = workouts;
-      _selectedProgramType = selectedProgramType;
-      _scheduleVariant = scheduleVariant;
-      _branchSelections = branchSelections;
-      _repGoalProfile = repGoalProfile;
-      _sessionItemsConfig = sessionItemsConfig;
-      _frequencyPerWeek = frequencyPerWeek;
-      _setupAnswers = setupAnswers;
-      _nextStepIndex = nextStepIndex;
-      _nextSessionType = nextSessionType;
-      _schedule = schedule;
-      _recommendation = recommendation;
-      _goalSkillIds = logicSnapshot?.program.goalSkillIds ?? const [];
-      _loading = false;
-    });
-  }
-
-  /// Where the rolling split stands today (local time): whether today's
-  /// session is already done and which step the dashboard should show, with
-  /// past rest days rolled forward.
-  HomeScheduleResolution _resolveSchedule({
-    required TrainingProgramType programType,
-    required String? scheduleVariant,
-    required int nextStepIndex,
-    required TrainingSessionType nextSessionType,
-    required List<PastWorkout> workouts,
-  }) {
-    return HomeDashboardMetricsCalculator.resolveSchedule(
-      cycle: _trainingProgramService.scheduleCycleFor(
+    return _TrainSnapshot(
+      recommendation: recommendation,
+      metrics: HomeDashboardMetricsCalculator.build(
+        recommendation: recommendation,
+        trainingProgramService: _trainingProgramService,
         programType: programType,
         scheduleVariant: scheduleVariant,
-      ),
-      nextStepIndex: nextStepIndex,
-      nextSessionType: nextSessionType,
-      lastWorkoutAt: workouts.isEmpty ? null : workouts.first.loggedAt,
-    );
-  }
-
-  Map<String, dynamic>? _setupAnswersFor(UserTrainingProgram? program) {
-    final raw = program?.variationRules['program_setup_v1'];
-    if (raw is Map) return Map<String, dynamic>.from(raw);
-    return null;
-  }
-
-  Future<TrainingProgramLogicSnapshot> _updateProgramLogic({
-    required TrainingProgramType programType,
-    required Map<TrainingTrack, String> branchSelections,
-    required RepGoalProfile repGoalProfile,
-    required Map<String, dynamic> sessionItemsConfig,
-    int? frequencyPerWeek,
-    Map<String, dynamic>? setupAnswers,
-  }) async {
-    final userId = AuthService().currentUser?.id;
-    final effectiveSetupAnswers = setupAnswers ?? _setupAnswers;
-    if (userId == null) {
-      final snapshot = TrainingProgramLogicSnapshot(
-        program: UserTrainingProgram(
-          id: 'local',
-          userId: '',
-          programType: programType,
-          scheduleVariant: _scheduleVariant,
-          frequencyPerWeek: frequencyPerWeek ?? _frequencyPerWeek,
-          variationRules: {
-            'rep_goal_profile': repGoalProfile.dbValue,
-            'session_items_v1': sessionItemsConfig,
-            if (effectiveSetupAnswers != null)
-              'program_setup_v1': effectiveSetupAnswers,
-          },
-          isActive: true,
-        ),
-        state: UserTrainingProgramState(
-          id: 'local',
-          programId: 'local',
-          userId: '',
-          nextStepIndex: _nextStepIndex,
-          nextSessionType: _nextSessionType,
-        ),
+        schedule: schedule,
         branchSelections: branchSelections,
-        repGoalProfile: repGoalProfile,
-      );
-
-      if (mounted) {
-        setState(() {
-          _selectedProgramType = programType;
-          _branchSelections = branchSelections;
-          _repGoalProfile = repGoalProfile;
-          _sessionItemsConfig = sessionItemsConfig;
-          _frequencyPerWeek = frequencyPerWeek ?? _frequencyPerWeek;
-          _setupAnswers = effectiveSetupAnswers;
-          _schedule = _resolveSchedule(
-            programType: _selectedProgramType,
-            scheduleVariant: _scheduleVariant,
-            nextStepIndex: _nextStepIndex,
-            nextSessionType: _nextSessionType,
-            workouts: _pastWorkouts,
-          );
-          _recommendation = _trainingProgramService.buildToday(
-            progressMap: _progressMap,
-            programType: _selectedProgramType,
-            sessionType: _schedule!.effectiveSessionType,
-            branchSelections: _branchSelections,
-            sessionItemsConfig: _sessionItemsConfig,
-          );
-        });
-      }
-
-      return snapshot;
-    }
-
-    final snapshot = await _trainingProgramStoreService.updateProgramLogic(
-      userId: userId,
-      programType: programType,
-      branchSelections: branchSelections,
-      repGoalProfile: repGoalProfile,
-      sessionItemsConfig: sessionItemsConfig,
-      frequencyPerWeek: frequencyPerWeek,
-      setupAnswers: setupAnswers,
-    );
-
-    if (!mounted) return snapshot;
-
-    setState(() {
-      _hasProgram = true;
-      _selectedProgramType = snapshot.program.programType;
-      _scheduleVariant = snapshot.program.scheduleVariant;
-      _branchSelections = {
-        ..._trainingProgramService.defaultBranchSelections(),
-        ...snapshot.branchSelections,
-      };
-      _repGoalProfile = snapshot.repGoalProfile;
-      _sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
-      _frequencyPerWeek = snapshot.program.frequencyPerWeek;
-      _setupAnswers = _setupAnswersFor(snapshot.program);
-      _nextStepIndex = snapshot.state.nextStepIndex;
-      _nextSessionType = snapshot.state.nextSessionType;
-      _schedule = _resolveSchedule(
-        programType: _selectedProgramType,
-        scheduleVariant: _scheduleVariant,
-        nextStepIndex: _nextStepIndex,
-        nextSessionType: _nextSessionType,
-        workouts: _pastWorkouts,
-      );
-      _recommendation = _trainingProgramService.buildToday(
+        sessionItemsConfig: sessionItemsConfig,
         progressMap: _progressMap,
-        programType: _selectedProgramType,
-        sessionType: _schedule!.effectiveSessionType,
-        branchSelections: _branchSelections,
-        sessionItemsConfig: _sessionItemsConfig,
-      );
-    });
+        progressEntries: _progressEntries,
+        workouts: _pastWorkouts,
+        goalSkillIds: snapshot.program.goalSkillIds,
+        frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      ),
+    );
+  }
 
-    return snapshot;
+  Map<String, dynamic> _sessionItemsConfigFor(UserTrainingProgram program) {
+    final raw = program.variationRules['session_items_v1'];
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return const {};
   }
 
   Future<void> _openProgramSetup() async {
@@ -322,278 +170,124 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
     );
-    // Re-fetch so the dashboard reflects the freshly created program even if
-    // the user abandoned the wizard midway on a stale state.
+    // Re-fetch so the tab reflects the freshly created program even if the
+    // user abandoned the wizard midway on a stale state.
     await _loadHomeData();
   }
 
   Future<void> _completeProgramSetup(ProgramSetupResult result) async {
-    await _updateProgramLogic(
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    await _trainingProgramStoreService.updateProgramLogic(
+      userId: userId,
       programType: result.split,
-      branchSelections: _branchSelections.isEmpty
-          ? _trainingProgramService.defaultBranchSelections()
-          : _branchSelections,
-      repGoalProfile: _repGoalProfile,
-      sessionItemsConfig: _sessionItemsConfig,
+      branchSelections: _trainingProgramService.defaultBranchSelections(),
+      repGoalProfile: RepGoalProfile.balanced,
+      sessionItemsConfig: const {},
       frequencyPerWeek: result.daysPerWeek,
       setupAnswers: result.toMap(),
     );
+    await _loadHomeData();
   }
 
-  Future<void> _openProgramOverview() async {
+  Future<void> _startWorkout(DailyTrainingRecommendation recommendation) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProgramOverviewView(
-          initialLogic: _buildCurrentLogicSnapshot(),
-          progressMap: _progressMap,
-          onSave: ({
-            required programType,
-            required branchSelections,
-            required repGoalProfile,
-            required sessionItemsConfig,
-            frequencyPerWeek,
-            setupAnswers,
-          }) {
-            return _updateProgramLogic(
-              programType: programType,
-              branchSelections: branchSelections,
-              repGoalProfile: repGoalProfile,
-              sessionItemsConfig: sessionItemsConfig,
-              frequencyPerWeek: frequencyPerWeek,
-              setupAnswers: setupAnswers,
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openAlternateWorkoutOptions() async {
-    final effectiveSessionType =
-        _schedule?.effectiveSessionType ?? _nextSessionType;
-    final sessionType = effectiveSessionType == TrainingSessionType.rest
-        ? TrainingSessionType.fullBody
-        : effectiveSessionType;
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AlternateWorkoutOptionsView(
-          onOpenBlankWorkout: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => LiveWorkoutView(
-                  recommendation: DailyTrainingRecommendation(
-                    programType: _selectedProgramType,
-                    sessionType: sessionType,
-                    sessionLabel: 'Blank Workout',
-                    isRestDay: false,
-                    items: const [],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  void _openPrimaryAction(DailyTrainingRecommendation recommendation) {
-    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => recommendation.isRestDay
             ? SessionOverviewView(recommendation: recommendation)
             : LiveWorkoutView(recommendation: recommendation),
       ),
     );
+    // A finished workout changes today's card — re-fetch.
+    await _loadHomeData();
   }
 
-  void _openSessionOverview(DailyTrainingRecommendation recommendation) {
+  void _openSettings() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SessionOverviewView(recommendation: recommendation),
-      ),
-    );
-  }
-
-  Future<void> _openSkillPath(ActiveSkillPathData data) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SkillTreeView(
-          skillCategoryId: data.skillCategoryId,
-          progressMap: _progressMap,
-          onProgressChanged: (exerciseId, status) {
-            setState(() {
-              final updated = ExerciseProgress(
-                exerciseId: exerciseId,
-                status: status,
-                updatedAt: DateTime.now(),
-              );
-              _progressMap[exerciseId] = status;
-              _progressEntries[exerciseId] = updated;
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openGoalPicker() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GoalSkillsView(
-          initialGoalIds: _goalSkillIds,
-          onSave: (goalIds) async {
-            final userId = AuthService().currentUser?.id;
-            if (userId == null) {
-              if (mounted) setState(() => _goalSkillIds = goalIds);
-              return;
-            }
-            final program = await _trainingProgramStoreService.updateGoalSkills(
-              userId: userId,
-              goalSkillIds: goalIds,
-            );
-            if (!mounted) return;
-            setState(() => _goalSkillIds = program.goalSkillIds);
-          },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openGoalSkillTree(HomeGoalSkillData goal) async {
-    if (goal.skillCategoryId.isEmpty) return;
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SkillTreeView(
-          skillCategoryId: goal.skillCategoryId,
-          progressMap: _progressMap,
-          onProgressChanged: (exerciseId, status) {
-            setState(() {
-              _progressMap[exerciseId] = status;
-              _progressEntries[exerciseId] = ExerciseProgress(
-                exerciseId: exerciseId,
-                status: status,
-                updatedAt: DateTime.now(),
-              );
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openJourneySkill(JourneySkillProgressData data) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => JourneySkillDetailView(
-          skill: data,
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => const SettingsView()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final recommendation = _recommendation;
-    final schedule = _schedule;
-    final metrics = recommendation == null || schedule == null
-        ? null
-        : HomeDashboardMetricsCalculator.build(
-            recommendation: recommendation,
-            trainingProgramService: _trainingProgramService,
-            programType: _selectedProgramType,
-            scheduleVariant: _scheduleVariant,
-            schedule: schedule,
-            branchSelections: _branchSelections,
-            sessionItemsConfig: _sessionItemsConfig,
-            progressMap: _progressMap,
-            progressEntries: _progressEntries,
-            workouts: _pastWorkouts,
-            goalSkillIds: _goalSkillIds,
-            frequencyPerWeek: _frequencyPerWeek,
-          );
+    final snapshot = _loading ? null : _buildSnapshot();
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         bottom: false,
-        child: _loading || recommendation == null || metrics == null
+        child: _loading
             ? const Center(child: LoadingIndicator())
-            : !_hasProgram
+            : !_hasProgram || snapshot == null
                 ? RefreshIndicator(
                     color: AppColors.accentPrimary,
                     backgroundColor: AppColors.surface,
                     onRefresh: _loadHomeData,
                     child: HomeEmptyState(
                       onBuildProgram: _openProgramSetup,
-                      onOpenSettings: widget.onOpenSettings ?? () {},
+                      onOpenSettings: _openSettings,
                     ),
                   )
                 : RefreshIndicator(
                     color: AppColors.accentPrimary,
-                    backgroundColor: AppColors.bgTertiary,
+                    backgroundColor: AppColors.surface,
                     onRefresh: _loadHomeData,
-                    child: HomeDashboardContent(
-                      todaySummary: metrics.today,
-                      streak: metrics.streak,
-                      programLabel: '${_selectedProgramType.label}'
-                          ' · $_frequencyPerWeek-day split',
-                      journeySnapshot: metrics.journeySnapshot,
-                      activeSkillPaths: metrics.activeSkillPaths,
-                      exercisePerformance: metrics.exercisePerformance,
-                      goalSkills: metrics.goalSkills,
-                      nodesClearedThisMonth: metrics.nodesClearedThisMonth,
-                      showGettingStarted: _pastWorkouts.isEmpty,
-                      onPrimaryAction: () => _openPrimaryAction(recommendation),
-                      onSecondaryAction: _openAlternateWorkoutOptions,
-                      onViewExercises: () =>
-                          _openSessionOverview(recommendation),
-                      onOpenSettings: widget.onOpenSettings ?? () {},
-                      onOpenProgramSettings: _openProgramOverview,
-                      onEditGoals: _openGoalPicker,
-                      onOpenJourneySkill: _openJourneySkill,
-                      onOpenSkillPath: _openSkillPath,
-                      onOpenGoalSkill: _openGoalSkillTree,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                            child: Text(
+                              formatHeaderDate(DateTime.now()).toUpperCase(),
+                              style: GoogleFonts.robotoMono(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
+                            child: _buildContent(snapshot),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
       ),
     );
   }
 
-  Map<String, dynamic> _sessionItemsConfigFor(UserTrainingProgram? program) {
-    final raw = program?.variationRules['session_items_v1'];
-    if (raw is Map) {
-      return Map<String, dynamic>.from(raw);
-    }
-    return const {};
-  }
+  Widget _buildContent(_TrainSnapshot snapshot) {
+    final metrics = snapshot.metrics;
+    final tip = TodayWorkoutContent.tip(metrics);
 
-  TrainingProgramLogicSnapshot _buildCurrentLogicSnapshot() {
-    return TrainingProgramLogicSnapshot(
-      program: UserTrainingProgram(
-        id: 'local',
-        userId: '',
-        programType: _selectedProgramType,
-        scheduleVariant: _scheduleVariant,
-        frequencyPerWeek: _frequencyPerWeek,
-        variationRules: {
-          'rep_goal_profile': _repGoalProfile.dbValue,
-          'session_items_v1': _sessionItemsConfig,
-          if (_setupAnswers != null) 'program_setup_v1': _setupAnswers,
-        },
-        isActive: true,
-      ),
-      state: UserTrainingProgramState(
-        id: 'local',
-        programId: 'local',
-        userId: '',
-        nextStepIndex: _nextStepIndex,
-        nextSessionType: _nextSessionType,
-      ),
-      branchSelections: _branchSelections,
-      repGoalProfile: _repGoalProfile,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TodayWorkoutCard(
+          summary: metrics.today,
+          subtitle: TodayWorkoutContent.subtitle(metrics),
+          rows: TodayWorkoutContent.rows(metrics),
+          onStart: () => _startWorkout(snapshot.recommendation),
+        ),
+        const SizedBox(height: 12),
+        TipCard(highlight: tip.$1, body: tip.$2),
+      ],
     );
   }
+}
+
+class _TrainSnapshot {
+  final DailyTrainingRecommendation recommendation;
+  final HomeDashboardMetrics metrics;
+
+  const _TrainSnapshot({
+    required this.recommendation,
+    required this.metrics,
+  });
 }

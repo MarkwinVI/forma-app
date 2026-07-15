@@ -45,14 +45,14 @@ class AppNavBar extends StatelessWidget {
                   currentIndex: currentIndex,
                   onTap: onTap),
               _NavItem(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Data',
+                  icon: Icons.calendar_month_rounded,
+                  label: 'Program',
                   index: 2,
                   currentIndex: currentIndex,
                   onTap: onTap),
               _NavItem(
-                  icon: Icons.account_tree_outlined,
-                  label: 'Skills',
+                  icon: Icons.person_outline_rounded,
+                  label: 'Profile',
                   index: 3,
                   currentIndex: currentIndex,
                   onTap: onTap),

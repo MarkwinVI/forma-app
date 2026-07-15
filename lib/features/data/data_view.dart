@@ -13,6 +13,7 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../home/home_dashboard_metrics.dart';
+import '../settings/settings_view.dart';
 import '../skills/skill_tree_view.dart';
 import 'calendar_view.dart';
 import 'exercises_browse_view.dart';
@@ -209,6 +210,12 @@ class _DataViewState extends State<DataView> {
     );
   }
 
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsView()),
+    );
+  }
+
   void _openAllSessions() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -235,11 +242,11 @@ class _DataViewState extends State<DataView> {
             slivers: [
               SliverToBoxAdapter(
                 child: ScreenHeader(
-                  title: 'Data',
+                  title: 'Profile',
                   actions: [
                     HeaderCircleButton(
-                      icon: Icons.search_rounded,
-                      onTap: _openExercises,
+                      icon: Icons.settings_outlined,
+                      onTap: _openSettings,
                     ),
                   ],
                 ),

@@ -76,6 +76,24 @@ class _SkillsViewState extends State<SkillsView> {
 
     return Scaffold(
       backgroundColor: AppColors.bgSecondary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgSecondary,
+        surfaceTintColor: AppColors.bgSecondary,
+        elevation: 0,
+        foregroundColor: AppColors.textPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left_rounded, size: 30),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Skills',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [

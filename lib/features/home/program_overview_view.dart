@@ -276,7 +276,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+          // Bottom padding clears the floating tab bar now that this screen
+          // is hosted as the Program tab.
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

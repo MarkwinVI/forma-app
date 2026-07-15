@@ -8,6 +8,34 @@ import '../theme/app_colors.dart';
 
 const double kCardRadius = 20;
 
+/// "Wednesday, Jul 16" — the eyebrow date used by the tab screen headers.
+String formatHeaderDate(DateTime now) {
+  const weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+}
+
 /// Scale-down press feedback used across the polished screens.
 class Pressable extends StatefulWidget {
   final Widget child;

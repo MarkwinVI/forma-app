@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
-import '../../home/home_dashboard_metrics.dart';
+import '../home_dashboard_metrics.dart';
 
 /// One planned exercise in today's session, with the result of the last
 /// session it was trained and the change vs the session before that.
@@ -25,7 +25,114 @@ class TodayWorkoutRow {
   });
 }
 
-/// "Today's workout" card on the Progress tab — the planned exercises as a
+/// Derives the Today card's rows, subtitle, and tip from the dashboard
+/// metrics, so any screen hosting the card renders the same story.
+class TodayWorkoutContent {
+  TodayWorkoutContent._();
+
+  static List<TodayWorkoutRow> rows(HomeDashboardMetrics metrics) {
+    final perfByName = {
+      for (final perf in metrics.exercisePerformance) perf.exerciseName: perf,
+    };
+    final stalledNames = {
+      for (final path in metrics.activeSkillPaths)
+        if (path.momentum == HomeSkillMomentum.stalled)
+          path.currentExerciseName,
+    };
+
+    return [
+      for (final planned in metrics.today.plannedExercises)
+        _rowFor(
+          planned,
+          perfByName[planned.name],
+          stalledNames.contains(planned.name),
+        ),
+    ];
+  }
+
+  static TodayWorkoutRow _rowFor(
+    HomePlannedExerciseSummary planned,
+    HomeExercisePerformance? perf,
+    bool stalled,
+  ) {
+    final history = perf?.history ?? const <int>[];
+    final unit = (perf?.isTimed ?? false) ? 's' : '';
+    final delta = perf?.sessionDelta;
+
+    return TodayWorkoutRow(
+      name: planned.name,
+      setsLabel: planned.targetLabel,
+      stalled: stalled,
+      lastLabel: history.isEmpty ? '—' : '${history.last}$unit',
+      changeLabel: delta == null
+          ? '—'
+          : delta == 0
+              ? '±0'
+              : delta > 0
+                  ? '+$delta$unit'
+                  : '−${delta.abs()}$unit',
+      changeDir: delta == null ? 0 : delta.sign,
+    );
+  }
+
+  static String subtitle(HomeDashboardMetrics metrics) {
+    final summary = metrics.today;
+    if (summary.isRestDay) {
+      return 'Rest day — recovery keeps the split moving';
+    }
+
+    final count = '${summary.exerciseCount} exercise'
+        '${summary.exerciseCount == 1 ? '' : 's'}';
+    for (final path in metrics.activeSkillPaths) {
+      if (path.momentum == HomeSkillMomentum.stalled) {
+        return '$count · targets your stalled ${path.skillTitle} node';
+      }
+    }
+    return '$count · built from your current program';
+  }
+
+  /// (highlight, body) for the tip card, from the most pressing momentum
+  /// signal across the active skill paths.
+  static (String, String) tip(HomeDashboardMetrics metrics) {
+    if (metrics.today.isRestDay) {
+      return (
+        'Rest is part of the program.',
+        'Recovery today means better numbers in your next session.',
+      );
+    }
+
+    final perfByName = {
+      for (final perf in metrics.exercisePerformance) perf.exerciseName: perf,
+    };
+    for (final path in metrics.activeSkillPaths) {
+      if (path.momentum != HomeSkillMomentum.stalled) continue;
+      final perf = perfByName[path.currentExerciseName];
+      final at = perf != null && perf.history.isNotEmpty
+          ? ' at ${perf.history.last}${perf.isTimed ? 's' : ' reps'}'
+          : '';
+      return (
+        'Your ${path.currentExerciseName} has stalled$at.',
+        'Focus on clean, full-range reps today — quality sets are what '
+            'break the plateau.',
+      );
+    }
+    for (final path in metrics.activeSkillPaths) {
+      if (path.momentum != HomeSkillMomentum.improving) continue;
+      return (
+        'Your ${path.currentExerciseName} is trending up.',
+        "Keep the momentum — hitting today's targets brings the next "
+            'node closer.',
+      );
+    }
+    return (
+      'Consistency beats intensity.',
+      "Show up for today's session and every tree on this page keeps "
+          'growing.',
+    );
+  }
+}
+
+/// "Today's workout" card on the Train tab — the planned exercises as a
 /// performance list: EXERCISE / LAST / CHANGE columns and a Start CTA.
 class TodayWorkoutCard extends StatelessWidget {
   static const double _lastColWidth = 58;
