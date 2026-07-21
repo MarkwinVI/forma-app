@@ -370,6 +370,15 @@ class TrainingProgramStoreService {
     return UserTrainingProgramState.fromMap(data);
   }
 
+  /// Saves branch selections for individual tracks — used by goal-driven
+  /// fork resolution when mastery switches a track onto a goal's branch.
+  Future<void> upsertBranchSelections(
+    String userId,
+    Map<TrainingTrack, String> selections,
+  ) {
+    return _upsertBranchSelections(userId, selections);
+  }
+
   Future<Map<TrainingTrack, String>> _fetchBranchSelections(
     String userId,
   ) async {

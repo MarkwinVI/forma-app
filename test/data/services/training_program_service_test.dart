@@ -1,9 +1,43 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
+import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
 
 void main() {
   final service = TrainingProgramService();
+
+  group('branchSelectionsForGoals', () {
+    test('each goal claims its branch on the track that offers it', () {
+      final selections =
+          service.branchSelectionsForGoals(const ['pistol', 'frontlever']);
+
+      expect(selections[TrainingTrack.squat], 'squat:pistol');
+      expect(selections[TrainingTrack.horizontalPull], 'rows:front_lever');
+    });
+
+    test('goals disagreeing about one track leave it on the default', () {
+      final selections =
+          service.branchSelectionsForGoals(const ['pistol', 'shrimp']);
+
+      expect(selections.containsKey(TrainingTrack.squat), isFalse);
+    });
+
+    test('goals without a lane branch are ignored', () {
+      expect(service.branchSelectionsForGoals(const ['muscleup']), isEmpty);
+    });
+
+    test('every mapped goal branch exists in the branch universe', () {
+      final optionIds =
+          service.allBranchOptions().map((option) => option.id).toSet();
+      for (final branchId in TrainingProgramService.goalBranchIds.values) {
+        expect(
+          optionIds,
+          contains(branchId),
+          reason: '$branchId is not an offered branch option',
+        );
+      }
+    });
+  });
 
   group('TrainingRecommendationItem.isProgression', () {
     test('lane-built items carry their progression path', () {

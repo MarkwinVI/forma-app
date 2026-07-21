@@ -8,6 +8,8 @@ import '../models/progression_event_model.dart';
 import '../models/training_program_model.dart';
 import 'progress_service.dart';
 import 'progression_event_service.dart';
+import 'training_program_service.dart';
+import 'training_program_store_service.dart';
 
 /// One exercise's outcome in a saved workout session: the exercise as it was
 /// logged (program section intact, so targets match what the user saw) and
@@ -41,17 +43,35 @@ class ExerciseTarget {
 }
 
 /// The progression changes one saved session earns: status transitions
-/// (mastered / newly activated) and incremental target increases.
+/// (mastered / newly activated), incremental target increases, branch
+/// selections implied by fork resolution, and forks the user must decide.
 class SessionProgressionOutcome {
   final Map<String, ExerciseStatus> statusChanges;
   final Map<String, ExerciseTarget> targetChanges;
 
+  /// mastered exercise id → the exercise its mastery activated.
+  final Map<String, String> activationsByMastered;
+
+  /// Branch selections chosen by goal-driven fork resolution, to be saved
+  /// so future workouts follow the new branch.
+  final Map<TrainingTrack, String> branchSelectionsToPersist;
+
+  /// Exercises mastered at a fork that neither the user's selections, goals,
+  /// nor defaults decide — the user must pick the branch themselves.
+  final List<String> branchChoicesNeeded;
+
   const SessionProgressionOutcome({
     required this.statusChanges,
     required this.targetChanges,
+    this.activationsByMastered = const {},
+    this.branchSelectionsToPersist = const {},
+    this.branchChoicesNeeded = const [],
   });
 
-  bool get isEmpty => statusChanges.isEmpty && targetChanges.isEmpty;
+  bool get isEmpty =>
+      statusChanges.isEmpty &&
+      targetChanges.isEmpty &&
+      branchChoicesNeeded.isEmpty;
 }
 
 /// Advances skill-path progress after a workout is saved.
@@ -69,6 +89,7 @@ class SessionProgressionOutcome {
 class ExerciseProgressionService {
   final _progressService = ProgressService();
   final _eventService = ProgressionEventService();
+  final _storeService = TrainingProgramStoreService();
 
   /// Ladder start: 3 × 6 reps, or 3 × 10s for timed exercises.
   static const int initialTargetSets = 3;
@@ -171,17 +192,34 @@ class ExerciseProgressionService {
   /// be applied to them again):
   /// 1. Mastery first: volume ≥ sets × mastery value masters the exercise —
   ///    overshooting the current target masters early — and activates the
-  ///    next move in its skill path.
+  ///    next move in its skill path (fork resolution below).
   /// 2. Otherwise, volume ≥ the current target's volume raises the target by
   ///    one increment, capped at the mastery value.
   /// 3. Otherwise nothing changes: the target holds and no progress is lost.
+  ///
+  /// At a fork — the mastered exercise has different successors on different
+  /// branches — the next move is decided in order by:
+  /// 1. the user's explicitly selected branch ([branchSelections]),
+  /// 2. the branch a goal skill points at ([goalSkillIds]) — which is then
+  ///    returned in [SessionProgressionOutcome.branchSelectionsToPersist];
+  ///    goals pointing at different branches never auto-pick,
+  /// 3. the configured default branch ([defaultBranchSelections]),
+  /// 4. otherwise the fork is reported in `branchChoicesNeeded` for the user
+  ///    to decide.
   static SessionProgressionOutcome computeSessionOutcome({
     required List<SessionExerciseResult> results,
     required Map<String, ExerciseProgress> progressRows,
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+    List<TrainingBranchOption> branchOptions = const [],
+    Map<TrainingTrack, String> branchSelections = const {},
+    Map<TrainingTrack, String> defaultBranchSelections = const {},
+    List<String> goalSkillIds = const [],
   }) {
     final statusChanges = <String, ExerciseStatus>{};
     final targetChanges = <String, ExerciseTarget>{};
+    final activationsByMastered = <String, String>{};
+    final branchSelectionsToPersist = <TrainingTrack, String>{};
+    final branchChoicesNeeded = <String>[];
 
     ExerciseStatus statusOf(String id) =>
         statusChanges[id] ??
@@ -203,9 +241,24 @@ class ExerciseProgressionService {
       if (result.volume >= masteryVolume) {
         statusChanges[exercise.id] = ExerciseStatus.mastered;
 
-        final next = _nextExerciseInPath(exercise);
-        if (next != null && statusOf(next.id) == ExerciseStatus.inactive) {
-          statusChanges[next.id] = ExerciseStatus.active;
+        final resolution = _resolveSuccessor(
+          exercise,
+          branchOptions: branchOptions,
+          branchSelections: branchSelections,
+          defaultBranchSelections: defaultBranchSelections,
+          goalSkillIds: goalSkillIds,
+        );
+        if (resolution.choiceNeeded) {
+          branchChoicesNeeded.add(exercise.id);
+        } else if (resolution.nextExerciseId != null &&
+            statusOf(resolution.nextExerciseId!) == ExerciseStatus.inactive) {
+          statusChanges[resolution.nextExerciseId!] = ExerciseStatus.active;
+          activationsByMastered[exercise.id] = resolution.nextExerciseId!;
+          if (resolution.persistTrack != null &&
+              resolution.persistBranchId != null) {
+            branchSelectionsToPersist[resolution.persistTrack!] =
+                resolution.persistBranchId!;
+          }
         }
       } else if (result.volume >= current.volume) {
         targetChanges[exercise.id] = ExerciseTarget(
@@ -221,7 +274,90 @@ class ExerciseProgressionService {
     return SessionProgressionOutcome(
       statusChanges: statusChanges,
       targetChanges: targetChanges,
+      activationsByMastered: activationsByMastered,
+      branchSelectionsToPersist: branchSelectionsToPersist,
+      branchChoicesNeeded: branchChoicesNeeded,
     );
+  }
+
+  /// The move that follows [exercise], honoring the fork-resolution order in
+  /// [computeSessionOutcome]. Falls back to the catalog-wide unique-successor
+  /// scan for paths that aren't exposed as branch options (e.g. muscle-up).
+  static _SuccessorResolution _resolveSuccessor(
+    Exercise exercise, {
+    required List<TrainingBranchOption> branchOptions,
+    required Map<TrainingTrack, String> branchSelections,
+    required Map<TrainingTrack, String> defaultBranchSelections,
+    required List<String> goalSkillIds,
+  }) {
+    final candidates = <({TrainingBranchOption option, String nextId})>[];
+    for (final option in branchOptions) {
+      final index = option.exerciseIds.indexOf(exercise.id);
+      if (index >= 0 && index + 1 < option.exerciseIds.length) {
+        candidates.add(
+          (option: option, nextId: option.exerciseIds[index + 1]),
+        );
+      }
+    }
+
+    if (candidates.isEmpty) {
+      final next = _nextExerciseInPath(exercise);
+      return next == null
+          ? const _SuccessorResolution.none()
+          : _SuccessorResolution(nextExerciseId: next.id);
+    }
+
+    final distinctNexts = {for (final c in candidates) c.nextId};
+    if (distinctNexts.length == 1) {
+      return _SuccessorResolution(nextExerciseId: distinctNexts.first);
+    }
+
+    // 1. The user's explicitly selected branch continues.
+    final selectedNexts = {
+      for (final c in candidates)
+        if (branchSelections[c.option.track] == c.option.id) c.nextId,
+    };
+    if (selectedNexts.length == 1) {
+      return _SuccessorResolution(nextExerciseId: selectedNexts.first);
+    }
+    if (selectedNexts.length > 1) {
+      return const _SuccessorResolution.choice();
+    }
+
+    // 2. A branch the user's goals point at — persisted so future workouts
+    //    follow it. Conflicting goals never auto-pick.
+    final goalBranchIds = {
+      for (final goalId in goalSkillIds)
+        if (TrainingProgramService.goalBranchIds[goalId] case final id?) id,
+    };
+    final goalCandidates = [
+      for (final c in candidates)
+        if (goalBranchIds.contains(c.option.id)) c,
+    ];
+    final goalNexts = {for (final c in goalCandidates) c.nextId};
+    if (goalNexts.length == 1) {
+      final chosen = goalCandidates.first;
+      return _SuccessorResolution(
+        nextExerciseId: chosen.nextId,
+        persistTrack: chosen.option.track,
+        persistBranchId: chosen.option.id,
+      );
+    }
+    if (goalNexts.length > 1) {
+      return const _SuccessorResolution.choice();
+    }
+
+    // 3. The configured default branch.
+    final defaultNexts = {
+      for (final c in candidates)
+        if (defaultBranchSelections[c.option.track] == c.option.id) c.nextId,
+    };
+    if (defaultNexts.length == 1) {
+      return _SuccessorResolution(nextExerciseId: defaultNexts.first);
+    }
+
+    // 4. Nothing decides the fork — the user does.
+    return const _SuccessorResolution.choice();
   }
 
   /// Applies [computeSessionOutcome], persists every change for [userId],
@@ -236,6 +372,10 @@ class ExerciseProgressionService {
     required List<SessionExerciseResult> results,
     required Map<String, ExerciseProgress> progressRows,
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+    List<TrainingBranchOption> branchOptions = const [],
+    Map<TrainingTrack, String> branchSelections = const {},
+    Map<TrainingTrack, String> defaultBranchSelections = const {},
+    List<String> goalSkillIds = const [],
   }) async {
     if (await _eventService.hasEventsForSession(userId, sessionId)) {
       return const SessionProgressionOutcome(
@@ -248,6 +388,10 @@ class ExerciseProgressionService {
       results: results,
       progressRows: progressRows,
       masterySettings: masterySettings,
+      branchOptions: branchOptions,
+      branchSelections: branchSelections,
+      defaultBranchSelections: defaultBranchSelections,
+      goalSkillIds: goalSkillIds,
     );
     for (final entry in outcome.statusChanges.entries) {
       await _progressService.upsert(userId, entry.key, entry.value);
@@ -259,6 +403,17 @@ class ExerciseProgressionService {
         targetSets: entry.value.sets,
         targetValue: entry.value.value,
       );
+    }
+    if (outcome.branchSelectionsToPersist.isNotEmpty) {
+      try {
+        await _storeService.upsertBranchSelections(
+          userId,
+          outcome.branchSelectionsToPersist,
+        );
+      } catch (_) {
+        // Non-fatal: the successor is already active, so the program shows
+        // the right exercise; only the stored branch preference lags.
+      }
     }
     await _eventService.insertAll(
       userId,
@@ -335,11 +490,10 @@ class ExerciseProgressionService {
         ),
       );
 
-      // The activation this mastery caused, if any: the unique successor of
-      // the mastered exercise that this outcome switched to active.
-      final next = _nextExerciseInPath(exercise);
-      if (next != null &&
-          outcome.statusChanges[next.id] == ExerciseStatus.active) {
+      // The activation this mastery caused, if any.
+      final nextId = outcome.activationsByMastered[exerciseId];
+      final next = nextId == null ? null : ExerciseCatalog.findById(nextId);
+      if (next != null) {
         events.add(
           ProgressionEventInput(
             exerciseId: next.id,
@@ -353,15 +507,26 @@ class ExerciseProgressionService {
       }
     }
 
+    // Forks the user has to decide, surfaced in the what-changed feed.
+    for (final exerciseId in outcome.branchChoicesNeeded) {
+      events.add(
+        ProgressionEventInput(
+          exerciseId: exerciseId,
+          trackId: trackByExercise[exerciseId],
+          kind: ProgressionEventKind.branchChoice,
+        ),
+      );
+    }
+
     return events;
   }
 
   /// The move that follows [exercise] across every training path it appears
   /// in. An exercise's own skillCategoryId/branchId don't identify the path
   /// being trained (paths share prefix exercises), so all catalog paths are
-  /// scanned. At a branch point — multiple distinct successors — nothing is
-  /// activated: mastery alone is enough for the program to pick the next
-  /// move from the user's selected branch.
+  /// scanned. Used as the fallback for paths that aren't exposed as branch
+  /// options; at a branch point — multiple distinct successors — nothing is
+  /// picked.
   static Exercise? _nextExerciseInPath(Exercise exercise) {
     final successors = <String>{};
     for (final category in SkillCategoryCatalog.all()) {
@@ -375,4 +540,32 @@ class ExerciseProgressionService {
     if (successors.length != 1) return null;
     return ExerciseCatalog.findById(successors.first);
   }
+}
+
+/// How a mastered exercise's fork was decided: a successor to activate
+/// (optionally with a branch selection to persist), a user choice to
+/// request, or nothing (end of path).
+class _SuccessorResolution {
+  final String? nextExerciseId;
+  final TrainingTrack? persistTrack;
+  final String? persistBranchId;
+  final bool choiceNeeded;
+
+  const _SuccessorResolution({
+    required this.nextExerciseId,
+    this.persistTrack,
+    this.persistBranchId,
+  }) : choiceNeeded = false;
+
+  const _SuccessorResolution.none()
+      : nextExerciseId = null,
+        persistTrack = null,
+        persistBranchId = null,
+        choiceNeeded = false;
+
+  const _SuccessorResolution.choice()
+      : nextExerciseId = null,
+        persistTrack = null,
+        persistBranchId = null,
+        choiceNeeded = true;
 }

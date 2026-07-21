@@ -114,6 +114,8 @@ class WhatChangedCard extends StatelessWidget {
         return Icons.lock_open_rounded;
       case ProgressionEventKind.personalBest:
         return Icons.emoji_events_rounded;
+      case ProgressionEventKind.branchChoice:
+        return Icons.alt_route_rounded;
     }
   }
 
@@ -127,6 +129,8 @@ class WhatChangedCard extends StatelessWidget {
         return AppColors.accentPrimary;
       case ProgressionEventKind.personalBest:
         return AppColors.amber;
+      case ProgressionEventKind.branchChoice:
+        return AppColors.accentPrimary;
     }
   }
 
@@ -154,6 +158,9 @@ class WhatChangedCard extends StatelessWidget {
             : '${exercise.name} replaces ${related.name} — you mastered it.';
       case ProgressionEventKind.personalBest:
         return null; // Shown as an achievement on the Progress tab.
+      case ProgressionEventKind.branchChoice:
+        return 'You mastered ${exercise.name} — its path forks here. '
+            'Pick your next branch in your program.';
     }
   }
 }

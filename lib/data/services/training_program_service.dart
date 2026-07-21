@@ -29,6 +29,30 @@ class TrainingBranchOption {
 }
 
 class TrainingProgramService {
+  /// Which branch each goal-skill option (program setup / goal sheet ids)
+  /// points at, as branch-option ids. Used to pick the initial branch at
+  /// program creation and to resolve forks after mastery. Goals without a
+  /// lane branch (e.g. 'muscleup') are absent.
+  static const Map<String, String> goalBranchIds = {
+    'weighted': 'pullups:weighted',
+    'highpull': 'pullups:close_grip',
+    'lsitpull': 'pullups:l_sit',
+    'oap': 'pullups:one_arm',
+    'wrow': 'rows:weighted',
+    'oarow': 'rows:one_arm',
+    'frontlever': 'rows:front_lever',
+    'ringpu': 'pushups:rings',
+    'oapu': 'pushups:one_arm',
+    'planchepu': 'pushups:planche',
+    'wdip': 'dips:weighted',
+    'ringdip': 'dips:rings',
+    'pistol': 'squat:pistol',
+    'shrimp': 'squat:shrimp',
+    'lsit': 'core:l_sit',
+    'hspu': 'handstand_pushups:main',
+    'planche': 'pushups:planche',
+  };
+
   static final Map<TrainingTrack, String> _defaultBranchIds = {
     TrainingTrack.skillWork: '${SkillCategoryCatalog.coreId}:l_sit',
     TrainingTrack.verticalPush:
@@ -464,6 +488,51 @@ class TrainingProgramService {
 
   Map<TrainingTrack, String> defaultBranchSelections() =>
       Map<TrainingTrack, String>.from(_defaultBranchIds);
+
+  /// Every branch option across all tracks — the branch universe used to
+  /// resolve forks after mastery.
+  List<TrainingBranchOption> allBranchOptions() {
+    return [
+      for (final track in TrainingTrack.values)
+        ...branchOptionsForTrack(track),
+    ];
+  }
+
+  /// Branch selections implied by the user's goal skills: each goal maps to
+  /// its branch on the track that offers it. When two goals disagree about
+  /// the same track, neither wins — the track keeps its default and the user
+  /// decides later (a fork never picks a branch by goal order or at random).
+  Map<TrainingTrack, String> branchSelectionsForGoals(
+    List<String> goalSkillIds,
+  ) {
+    final selections = <TrainingTrack, String>{};
+    final conflicted = <TrainingTrack>{};
+
+    for (final goalId in goalSkillIds) {
+      final branchId = goalBranchIds[goalId];
+      if (branchId == null) continue;
+
+      for (final track in TrainingTrack.values) {
+        final matches =
+            branchOptionsForTrack(track).any((option) => option.id == branchId);
+        if (!matches) continue;
+
+        final existing = selections[track];
+        if (existing != null && existing != branchId) {
+          conflicted.add(track);
+        } else {
+          selections[track] = branchId;
+        }
+        // A branch can be offered by more than one track (core branches sit
+        // on both the skill-work and core lanes); claim only the first so
+        // one goal doesn't put the same exercise in two lanes.
+        break;
+      }
+    }
+
+    conflicted.forEach(selections.remove);
+    return selections;
+  }
 
   List<TrainingBranchOption> branchOptionsForTrack(TrainingTrack track) {
     switch (track) {

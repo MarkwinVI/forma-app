@@ -17,6 +17,7 @@ import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
+import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
 
@@ -136,17 +137,21 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         // skill path. Standalone/custom exercises are never auto-progressed.
         try {
           final progress = await ProgressService().fetchAll(userId);
-          final masteryTargets =
-              (await TrainingProgramStoreService().fetchProgramLogic(userId))
-                      ?.masteryTargets ??
-                  MasteryTargetSettings.defaults;
+          final logic =
+              await TrainingProgramStoreService().fetchProgramLogic(userId);
+          final programService = TrainingProgramService();
           await ExerciseProgressionService().applySessionResults(
             userId: userId,
             sessionId: sessionId,
             progressRows: {
               for (final entry in progress) entry.exerciseId: entry,
             },
-            masterySettings: masteryTargets,
+            masterySettings:
+                logic?.masteryTargets ?? MasteryTargetSettings.defaults,
+            branchOptions: programService.allBranchOptions(),
+            branchSelections: logic?.branchSelections ?? const {},
+            defaultBranchSelections: programService.defaultBranchSelections(),
+            goalSkillIds: logic?.program.setupGoalIds ?? const [],
             results: [
               for (final exerciseEntry in widget.workout.exercises)
                 if (exerciseEntry.item.isProgression)

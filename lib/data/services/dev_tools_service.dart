@@ -167,6 +167,11 @@ class DevToolsService {
         results: results,
         progressRows: progressRows,
         masterySettings: masteryTargets,
+        branchOptions: _trainingProgramService.allBranchOptions(),
+        branchSelections: logic?.branchSelections ?? const {},
+        defaultBranchSelections:
+            _trainingProgramService.defaultBranchSelections(),
+        goalSkillIds: logic?.program.setupGoalIds ?? const [],
       );
       final now = DateTime.now();
       for (final entry in outcome.statusChanges.entries) {

@@ -343,6 +343,16 @@ class UserTrainingProgram {
           .toList(),
     );
   }
+
+  /// Goal-skill option ids picked during program setup (e.g. 'pistol',
+  /// 'muscleup') — the live goal source, kept in the setup answers.
+  List<String> get setupGoalIds {
+    final setup = variationRules['program_setup_v1'];
+    if (setup is! Map) return const [];
+    final raw = setup['skill_ids'];
+    if (raw is! List) return const [];
+    return raw.whereType<String>().toList();
+  }
 }
 
 class UserTrainingProgramState {

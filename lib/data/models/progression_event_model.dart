@@ -12,6 +12,10 @@ enum ProgressionEventKind {
 
   /// A new best single-set value (valueFrom = previous best, valueTo = new).
   personalBest,
+
+  /// The exercise was mastered at a fork whose branches the user's goals
+  /// don't decide — the user must pick their next path themselves.
+  branchChoice,
 }
 
 extension ProgressionEventKindX on ProgressionEventKind {
@@ -25,6 +29,8 @@ extension ProgressionEventKindX on ProgressionEventKind {
         return 'activated';
       case ProgressionEventKind.personalBest:
         return 'personal_best';
+      case ProgressionEventKind.branchChoice:
+        return 'branch_choice';
     }
   }
 
@@ -38,6 +44,8 @@ extension ProgressionEventKindX on ProgressionEventKind {
         return ProgressionEventKind.activated;
       case 'personal_best':
         return ProgressionEventKind.personalBest;
+      case 'branch_choice':
+        return ProgressionEventKind.branchChoice;
     }
     return null;
   }

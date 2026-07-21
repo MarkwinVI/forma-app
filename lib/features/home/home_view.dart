@@ -220,7 +220,12 @@ class _HomeViewState extends State<HomeView> {
     await _trainingProgramStoreService.updateProgramLogic(
       userId: userId,
       programType: result.split,
-      branchSelections: _trainingProgramService.defaultBranchSelections(),
+      // Goal skills pick their branch from day one; every other track
+      // starts on its default.
+      branchSelections: {
+        ..._trainingProgramService.defaultBranchSelections(),
+        ..._trainingProgramService.branchSelectionsForGoals(result.skillIds),
+      },
       repGoalProfile: RepGoalProfile.balanced,
       sessionItemsConfig: const {},
       frequencyPerWeek: result.daysPerWeek,

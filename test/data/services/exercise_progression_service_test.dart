@@ -5,6 +5,7 @@ import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/exercise_progress_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/exercise_progression_service.dart';
+import 'package:forma_app/data/services/training_program_service.dart';
 
 void main() {
   // Use real path exercises from the catalog so the rules are tested against
@@ -254,9 +255,10 @@ void main() {
       expect(outcome.isEmpty, isTrue);
     });
 
-    test('a branch point masters the exercise but activates nothing', () {
+    test('a branch point without context masters but activates nothing', () {
       // pull_up has different successors per branch (weighted, close grip,
-      // l-sit, one arm), so no single next move can be chosen.
+      // l-sit, one arm), so no single next move can be chosen without
+      // branch options.
       final pullUp = ExerciseCatalog.findById('pull_up')!;
       final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
         pullUp,
@@ -270,6 +272,94 @@ void main() {
       );
 
       expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
+      expect(outcome.branchChoicesNeeded, isEmpty);
+    });
+
+    group('fork resolution', () {
+      final service = TrainingProgramService();
+      late Exercise pullUp;
+      late int masteryVolume;
+      late String weightedNext;
+      late String oneArmNext;
+
+      String successorIn(String pathId) {
+        final path = SkillCategoryCatalog.findById(
+          SkillCategoryCatalog.pullupsId,
+        )!
+            .pathFor(pathId);
+        return path[path.indexOf(pullUp.id) + 1];
+      }
+
+      setUpAll(() {
+        pullUp = ExerciseCatalog.findById('pull_up')!;
+        masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
+          pullUp,
+        ).volume;
+        weightedNext = successorIn('weighted');
+        oneArmNext = successorIn('one_arm');
+        expect(weightedNext, isNot(oneArmNext));
+      });
+
+      SessionProgressionOutcome resolve({
+        Map<TrainingTrack, String> branchSelections = const {},
+        Map<TrainingTrack, String> defaults = const {},
+        List<String> goals = const [],
+      }) {
+        return ExerciseProgressionService.computeSessionOutcome(
+          results: [
+            SessionExerciseResult(exercise: pullUp, volume: masteryVolume),
+          ],
+          progressRows: const {},
+          branchOptions: service.allBranchOptions(),
+          branchSelections: branchSelections,
+          defaultBranchSelections: defaults,
+          goalSkillIds: goals,
+        );
+      }
+
+      test('the explicitly selected branch continues past the fork', () {
+        final outcome = resolve(
+          branchSelections: {TrainingTrack.verticalPull: 'pullups:weighted'},
+        );
+
+        expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
+        expect(outcome.activationsByMastered[pullUp.id], weightedNext);
+        expect(outcome.branchSelectionsToPersist, isEmpty);
+        expect(outcome.branchChoicesNeeded, isEmpty);
+      });
+
+      test('a goal skill decides the fork and the branch is persisted', () {
+        final outcome = resolve(goals: ['oap']);
+
+        expect(outcome.statusChanges[oneArmNext], ExerciseStatus.active);
+        expect(
+          outcome.branchSelectionsToPersist,
+          {TrainingTrack.verticalPull: 'pullups:one_arm'},
+        );
+        expect(outcome.branchChoicesNeeded, isEmpty);
+      });
+
+      test('goals pointing at different branches ask the user instead', () {
+        final outcome = resolve(goals: ['oap', 'lsitpull']);
+
+        expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
+        expect(outcome.branchChoicesNeeded, [pullUp.id]);
+        expect(outcome.branchSelectionsToPersist, isEmpty);
+      });
+
+      test('with no selection or goal, the default branch decides', () {
+        final outcome = resolve(defaults: service.defaultBranchSelections());
+
+        expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
+        expect(outcome.branchSelectionsToPersist, isEmpty);
+      });
+
+      test('nothing decides the fork: the user is asked', () {
+        final outcome = resolve();
+
+        expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
+        expect(outcome.branchChoicesNeeded, [pullUp.id]);
+      });
     });
 
     test('an already-active next exercise is not re-written', () {
