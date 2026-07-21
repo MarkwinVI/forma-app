@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/models/exercise_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../exercises/exercise_detail_view.dart';
+
+const Color _deleteRed = Color(0xFFF2564A);
 
 /// Detail page for one saved workout. Pops with `true` when the session
 /// was deleted so callers can refresh their data.
@@ -28,54 +32,22 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
 
   PastWorkout get workout => widget.workout;
 
-  Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _openActionsSheet() async {
+    final action = await showModalBottomSheet<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          'Delete workout?',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        content: const Text(
-          'This removes the session and every set you logged in it. '
-          'Your stats and calendar will update. This can’t be undone.',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFFF5C5C),
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _ActionsSheet(workout: workout),
+    );
+    if (action == 'delete' && mounted) {
+      await _confirmDelete();
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => const _ConfirmDeleteSheet(),
     );
     if (confirmed != true || !mounted) return;
     await _deleteWorkout();
@@ -132,152 +104,327 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final elapsed = workout.loggedAt.difference(workout.startedAt);
+
     return Scaffold(
-      backgroundColor: AppColors.bgSecondary,
-      appBar: AppBar(
-        backgroundColor: AppColors.bgSecondary,
-        foregroundColor: AppColors.textPrimary,
-        surfaceTintColor: AppColors.bgSecondary,
-        elevation: 0,
-        title: Text(
-          workout.title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _HeaderBar(
+              deleting: _deleting,
+              onBack: () => Navigator.of(context).maybePop(),
+              onMore: _openActionsSheet,
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          workout.title,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '${_formatSessionDate(workout.loggedAt)} · '
+                          '${_formatTime(workout.loggedAt)}',
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SurfaceCard(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _SessionStat(
+                            label: 'DURATION',
+                            value: formatWorkoutDuration(elapsed),
+                          ),
+                        ),
+                        Expanded(
+                          child: _SessionStat(
+                            label: 'EXERCISES',
+                            value: '${workout.exercises.length}',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SectionHeader(
+                    title: 'Exercises',
+                  ),
+                  SurfaceCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < workout.exercises.length; i++)
+                          _ExerciseRow(
+                            exercise: workout.exercises[i],
+                            showDivider: i > 0,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        actions: [
-          if (_deleting)
-            const Padding(
-              padding: EdgeInsets.only(right: 18),
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textMuted,
+      ),
+    );
+  }
+}
+
+class _HeaderBar extends StatelessWidget {
+  final bool deleting;
+  final VoidCallback onBack;
+  final VoidCallback onMore;
+
+  const _HeaderBar({
+    required this.deleting,
+    required this.onBack,
+    required this.onMore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(
+        children: [
+          _CircleButton(
+            onTap: onBack,
+            child: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 16,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          if (deleting)
+            const SizedBox(
+              width: 34,
+              height: 34,
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
             )
           else
-            IconButton(
-              onPressed: _confirmDelete,
-              tooltip: 'Delete workout',
-              icon: const Icon(
-                Icons.delete_outline_rounded,
-                size: 22,
-                color: AppColors.textSecondary,
+            _CircleButton(
+              onTap: onMore,
+              child: const Icon(
+                Icons.more_horiz_rounded,
+                size: 20,
+                color: AppColors.textPrimary,
               ),
             ),
         ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-          children: [
-            _WorkoutDetailHeader(workout: workout),
-            const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                'EXERCISES',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ...workout.exercises.map(
-              (exercise) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _WorkoutExerciseCard(exercise: exercise),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _WorkoutDetailHeader extends StatelessWidget {
-  final PastWorkout workout;
+class _CircleButton extends StatelessWidget {
+  final Widget child;
+  final VoidCallback onTap;
 
-  const _WorkoutDetailHeader({
-    required this.workout,
+  const _CircleButton({
+    required this.child,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.bgTertiary,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.borderPrimary),
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: child,
       ),
+    );
+  }
+}
+
+class _SessionStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _SessionStat({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.3,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textMuted,
+            letterSpacing: 0.9,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExerciseRow extends StatelessWidget {
+  final PastWorkoutExercise exercise;
+  final bool showDivider;
+
+  const _ExerciseRow({
+    required this.exercise,
+    required this.showDivider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final exerciseModel = ExerciseCatalog.findById(exercise.exerciseId);
+    final subtitle = exerciseModel?.category.label ?? 'Exercise';
+
+    return Container(
+      decoration: showDivider
+          ? const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.divider)),
+            )
+          : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              WorkoutTypeIcon(sessionType: workout.sessionType),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      formatWorkoutDate(workout.loggedAt),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+          Pressable(
+            onTap: exerciseModel == null
+                ? null
+                : () => openExerciseDetailView<void>(
+                      context,
+                      exercise: exerciseModel,
+                      initialTab: ExerciseDetailTab.summary,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      formatWorkoutDuration(
-                          workout.loggedAt.difference(workout.startedAt)),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 3),
+              child: Row(
+                children: [
+                  IconTile(
+                    icon: _categoryGlyph(exerciseModel?.category),
+                    size: 38,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          exercise.exerciseName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 1.5),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.textMuted,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              WorkoutSummaryChip(
-                icon: Icons.fitness_center_rounded,
-                label: '${workout.exercises.length} exercises',
-              ),
-              WorkoutSummaryChip(
-                icon: Icons.layers_rounded,
-                label: '${workout.totalSets} sets',
-              ),
-              if (workout.totalReps > 0)
-                WorkoutSummaryChip(
-                  icon: Icons.repeat_rounded,
-                  label: '${workout.totalReps} reps',
-                ),
-              if (workout.totalTimedSeconds > 0)
-                WorkoutSummaryChip(
-                  icon: Icons.timer_outlined,
-                  label: formatWorkoutSeconds(workout.totalTimedSeconds),
-                ),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(50, 3, 4, 13),
+            child: Column(
+              children: [
+                for (var i = 0; i < exercise.sets.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Set ${exercise.sets[i].number}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        Text(
+                          _setValueLabel(exercise.sets[i]),
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -285,91 +432,104 @@ class _WorkoutDetailHeader extends StatelessWidget {
   }
 }
 
-class _WorkoutExerciseCard extends StatelessWidget {
-  final PastWorkoutExercise exercise;
+// ── Bottom sheets ───────────────────────────────────────────────────────
 
-  const _WorkoutExerciseCard({
-    required this.exercise,
-  });
+class _ActionsSheet extends StatelessWidget {
+  final PastWorkout workout;
+
+  const _ActionsSheet({required this.workout});
 
   @override
   Widget build(BuildContext context) {
-    final accentColor =
-        exercise.isTimed ? const Color(0xFFA78BFA) : AppColors.accentPrimary;
-    final exerciseModel = ExerciseCatalog.findById(exercise.exerciseId);
-
-    return GestureDetector(
-      onTap: exerciseModel == null
-          ? null
-          : () => openExerciseDetailView<void>(
-                context,
-                exercise: exerciseModel,
-                accentColor: accentColor,
-                initialTab: ExerciseDetailTab.summary,
-              ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.bgTertiary,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderPrimary),
-        ),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    exercise.exerciseName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface2,
+                borderRadius: BorderRadius.circular(kCardRadius),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 15, 18, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          workout.title,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          '${_formatSessionDate(workout.loggedAt)} · '
+                          '${_formatTime(workout.loggedAt)}',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Text(
-                  '${exercise.setCount} sets',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textMuted,
+                  const Divider(height: 1, color: AppColors.divider),
+                  Pressable(
+                    onTap: () => Navigator.of(context).pop('delete'),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete_outline_rounded,
+                            size: 20,
+                            color: _deleteRed,
+                          ),
+                          SizedBox(width: 13),
+                          Text(
+                            'Delete session',
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w600,
+                              color: _deleteRed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Text(
-              _exerciseTotalLabel(exercise),
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textMuted,
+                ],
               ),
             ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: exercise.sets
-                  .map(
-                    (set) => _SetChip(
-                      set: set,
-                      color: accentColor,
-                    ),
-                  )
-                  .toList(),
+            const SizedBox(height: 8),
+            Pressable(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                decoration: BoxDecoration(
+                  color: AppColors.surface2,
+                  borderRadius: BorderRadius.circular(kCardRadius),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -378,103 +538,115 @@ class _WorkoutExerciseCard extends StatelessWidget {
   }
 }
 
-class WorkoutTypeIcon extends StatelessWidget {
-  final String sessionType;
-
-  const WorkoutTypeIcon({
-    super.key,
-    required this.sessionType,
-  });
+class _ConfirmDeleteSheet extends StatelessWidget {
+  const _ConfirmDeleteSheet();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.accentPrimary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.accentPrimary.withValues(alpha: 0.28),
-        ),
-      ),
-      child: Icon(
-        workoutIconForSessionType(sessionType),
-        color: AppColors.accentPrimary,
-        size: 22,
-      ),
-    );
-  }
-}
-
-class WorkoutSummaryChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const WorkoutSummaryChip({
-    super.key,
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.borderPrimary),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: AppColors.textMuted, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textSecondary,
-            ),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface2,
+            borderRadius: BorderRadius.circular(kCardRadius),
           ),
-        ],
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Delete this session?',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'It comes off your history and streak, and any level-ups it '
+                'earned are rolled back. This can’t be undone.',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Pressable(
+                onTap: () => Navigator.of(context).pop(true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: _deleteRed,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Delete session',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Pressable(
+                onTap: () => Navigator.of(context).pop(false),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 13),
+                  child: Text(
+                    'Keep it',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _SetChip extends StatelessWidget {
-  final PastWorkoutSet set;
-  final Color color;
+// ── Formatting helpers ──────────────────────────────────────────────────
 
-  const _SetChip({
-    required this.set,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final value = set.isTimed ? '${set.value}s' : '${set.value} reps';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
-      child: Text(
-        'Set ${set.number}: $value',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          color: color,
-        ),
-      ),
-    );
+IconData _categoryGlyph(ExerciseCategory? category) {
+  switch (category) {
+    case ExerciseCategory.verticalPull:
+      return Icons.sports_gymnastics_rounded;
+    case ExerciseCategory.verticalPush:
+      return Icons.front_hand_outlined;
+    case ExerciseCategory.horizontalPull:
+      return Icons.swap_horiz_rounded;
+    case ExerciseCategory.horizontalPush:
+      return Icons.push_pin_outlined;
+    case ExerciseCategory.squat:
+      return Icons.accessibility_new_rounded;
+    case ExerciseCategory.hinge:
+      return Icons.keyboard_double_arrow_down_rounded;
+    case ExerciseCategory.core:
+      return Icons.crop_free_rounded;
+    case ExerciseCategory.skill:
+      return Icons.bolt_rounded;
+    case null:
+      return Icons.fitness_center_rounded;
   }
+}
+
+String _setValueLabel(PastWorkoutSet set) {
+  return set.isTimed ? '${set.value}s hold' : '${set.value} reps';
 }
 
 IconData workoutIconForSessionType(String sessionType) {
@@ -493,17 +665,16 @@ IconData workoutIconForSessionType(String sessionType) {
   }
 }
 
-String _exerciseTotalLabel(PastWorkoutExercise exercise) {
-  final parts = <String>[];
-  if (exercise.totalReps > 0) parts.add('${exercise.totalReps} reps');
-  if (exercise.totalTimedSeconds > 0) {
-    parts.add(formatWorkoutSeconds(exercise.totalTimedSeconds));
-  }
-
-  return parts.isEmpty ? 'No completed sets' : parts.join(' · ');
-}
-
-String formatWorkoutDate(DateTime dateTime) {
+String _formatSessionDate(DateTime dateTime) {
+  const weekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
   const months = [
     'Jan',
     'Feb',
@@ -518,9 +689,10 @@ String formatWorkoutDate(DateTime dateTime) {
     'Nov',
     'Dec',
   ];
+  final weekday = weekdays[dateTime.weekday - 1];
   final month = months[dateTime.month - 1];
 
-  return '$month ${dateTime.day}, ${dateTime.year} at ${_formatTime(dateTime)}';
+  return '$weekday, $month ${dateTime.day}';
 }
 
 String _formatTime(DateTime dateTime) {
@@ -548,8 +720,8 @@ String formatWorkoutDuration(Duration duration) {
   String twoDigits(int value) => value.toString().padLeft(2, '0');
 
   if (hours > 0) {
-    return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}';
+    return '$hours:${twoDigits(minutes)}:${twoDigits(seconds)}';
   }
 
-  return '${twoDigits(minutes)}:${twoDigits(seconds)}';
+  return '$minutes:${twoDigits(seconds)}';
 }
