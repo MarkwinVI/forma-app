@@ -68,17 +68,10 @@ class ExerciseProgressionService {
   static const int targetIncrementReps = 1;
   static const int targetIncrementSeconds = 5;
 
-  static bool isTimedExercise(Exercise exercise) {
-    final name = exercise.name.toLowerCase();
-    final description = exercise.description.toLowerCase();
-
-    return name.contains('hold') ||
-        name.contains('hang') ||
-        name.contains('plank') ||
-        name.contains('lever') ||
-        name.contains('handstand') ||
-        description.contains('for time');
-  }
+  /// Timed detection reads the explicit catalog flag. The old name heuristic
+  /// ("hold"/"hang"/"lever"…) both missed isometrics like L-sits and wrongly
+  /// timed rep movements like handstand push-ups and hanging leg raises.
+  static bool isTimedExercise(Exercise exercise) => exercise.isTimed;
 
   /// Initial per-set ladder value for an exercise that was never advanced.
   static int initialTargetValueForExercise(Exercise exercise) {

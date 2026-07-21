@@ -90,6 +90,10 @@ class Exercise {
   final ExerciseProgramSection programSection;
   final String? imageUrl;
 
+  /// True for isometric/hold exercises measured in seconds (L-sits, planks,
+  /// hangs, planche leans); false for rep-based movements.
+  final bool isTimed;
+
   const Exercise({
     required this.id,
     required this.category,
@@ -102,5 +106,6 @@ class Exercise {
     this.prerequisiteIds = const [],
     this.programSection = ExerciseProgramSection.mainExercises,
     this.imageUrl,
+    this.isTimed = false,
   });
 }

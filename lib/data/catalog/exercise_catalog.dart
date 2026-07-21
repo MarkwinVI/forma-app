@@ -19,6 +19,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'arch_hang',
+      isTimed: true,
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'main',
@@ -601,6 +602,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'tuck_front_lever_rows_hold',
+      isTimed: true,
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
@@ -1043,6 +1045,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'planche_lean_just_past',
+      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
@@ -1055,6 +1058,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'planche_lean_moderate',
+      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
@@ -1068,6 +1072,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'planche_lean_far_past',
+      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
@@ -1081,6 +1086,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'tuck_planche_lean',
+      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
@@ -1359,6 +1365,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'foot_supported_l_sit',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1371,6 +1378,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'plank',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'ab_wheel',
       branchId: 'main',
@@ -1394,6 +1402,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'l_sit_tuck',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1407,6 +1416,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'plank_60s',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'ab_wheel',
       branchId: 'main',
@@ -1431,6 +1441,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'advanced_tuck_l_sit',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1444,6 +1455,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'one_arm_one_leg_plank',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'ab_wheel',
       branchId: 'main',
@@ -1468,6 +1480,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'l_sit',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1505,6 +1518,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'straddle_l_sit',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1542,6 +1556,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'v_sit',
+      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
