@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
-import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
 
 void main() {

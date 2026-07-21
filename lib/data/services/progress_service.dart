@@ -23,11 +23,34 @@ class ProgressService {
     // onConflict must name the (user_id, exercise_id) unique key — the
     // default conflict target is the primary key `id`, which is freshly
     // generated per call and turns updates into duplicate-key errors.
+    // Target columns are absent from the payload, so an existing row keeps
+    // its current incremental target.
     await _client.from('user_exercise_progress').upsert(
       {
         'user_id': userId,
         'exercise_id': exerciseId,
         'status': status.name,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      onConflict: 'user_id,exercise_id',
+    );
+  }
+
+  /// Writes the current incremental target for an exercise. Status is absent
+  /// from the payload, so an existing row keeps its status; a fresh row gets
+  /// the database default ('inactive').
+  Future<void> upsertTarget(
+    String userId,
+    String exerciseId, {
+    required int targetSets,
+    required int targetValue,
+  }) async {
+    await _client.from('user_exercise_progress').upsert(
+      {
+        'user_id': userId,
+        'exercise_id': exerciseId,
+        'current_target_sets': targetSets,
+        'current_target_value': targetValue,
         'updated_at': DateTime.now().toIso8601String(),
       },
       onConflict: 'user_id,exercise_id',

@@ -47,6 +47,8 @@ class TrainingProgramStoreService {
       state: state,
       branchSelections: branchSelections,
       repGoalProfile: _repGoalProfileFor(program),
+      masteryTargets:
+          MasteryTargetSettings.fromVariationRules(program.variationRules),
     );
   }
 
@@ -61,7 +63,29 @@ class TrainingProgramStoreService {
       state: snapshot.state,
       branchSelections: branchSelections,
       repGoalProfile: _repGoalProfileFor(snapshot.program),
+      masteryTargets: MasteryTargetSettings.fromVariationRules(
+        snapshot.program.variationRules,
+      ),
     );
+  }
+
+  /// Updates the live global mastery targets. Only the settings values
+  /// change: no progress rows, stored targets, or mastered statuses are
+  /// touched, and no past workouts are re-evaluated.
+  Future<void> updateMasteryTargets({
+    required String userId,
+    required MasteryTargetSettings targets,
+  }) async {
+    final program = await _fetchActiveProgram(userId);
+    if (program == null) return;
+
+    await _client.from('user_training_programs').update({
+      'variation_rules': {
+        ...program.variationRules,
+        ...targets.toVariationRules(),
+      },
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', program.id);
   }
 
   Future<UserTrainingProgramSnapshot> updateProgramType({
@@ -151,6 +175,8 @@ class TrainingProgramStoreService {
       state: state,
       branchSelections: branchSelections,
       repGoalProfile: repGoalProfile,
+      masteryTargets:
+          MasteryTargetSettings.fromVariationRules(program.variationRules),
     );
   }
 

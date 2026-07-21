@@ -2,88 +2,292 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
+import 'package:forma_app/data/models/exercise_progress_model.dart';
+import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/exercise_progression_service.dart';
 
 void main() {
-  group('ExerciseProgressionService.computeChanges', () {
-    // Use a real path from the catalog so the rule is tested against the
-    // data the app actually ships.
-    late Exercise first;
-    late String secondId;
+  // Use real path exercises from the catalog so the rules are tested against
+  // the data the app actually ships.
+  late Exercise first;
+  late String secondId;
+  late Exercise repExercise;
+  late Exercise timedExercise;
 
-    setUpAll(() {
-      final core = SkillCategoryCatalog.findById(SkillCategoryCatalog.coreId)!;
-      final path = core.pathFor('l_sit');
-      expect(path.length, greaterThan(1));
-      first = ExerciseCatalog.findById(path.first)!;
-      secondId = path[1];
+  ExerciseProgress progressWith({
+    required String exerciseId,
+    ExerciseStatus status = ExerciseStatus.active,
+    int? targetSets,
+    int? targetValue,
+  }) {
+    return ExerciseProgress(
+      exerciseId: exerciseId,
+      status: status,
+      updatedAt: DateTime(2026),
+      currentTargetSets: targetSets,
+      currentTargetValue: targetValue,
+    );
+  }
+
+  setUpAll(() {
+    final core = SkillCategoryCatalog.findById(SkillCategoryCatalog.coreId)!;
+    final path = core.pathFor('l_sit');
+    expect(path.length, greaterThan(1));
+    first = ExerciseCatalog.findById(path.first)!;
+    secondId = path[1];
+
+    repExercise = ExerciseCatalog.all().firstWhere(
+      (exercise) => !ExerciseProgressionService.isTimedExercise(exercise),
+    );
+    timedExercise = ExerciseCatalog.all().firstWhere(
+      (exercise) => ExerciseProgressionService.isTimedExercise(exercise),
+    );
+  });
+
+  group('currentTargetForExercise', () {
+    test('starts the ladder at 3 × 6 reps / 3 × 10s timed', () {
+      final rep = ExerciseProgressionService.currentTargetForExercise(
+        repExercise,
+      );
+      expect(rep.sets, 3);
+      expect(rep.value, 6);
+
+      final timed = ExerciseProgressionService.currentTargetForExercise(
+        timedExercise,
+      );
+      expect(timed.sets, 3);
+      expect(timed.value, 10);
     });
 
-    test('meeting the target masters the exercise and activates the next',
+    test('resumes from the stored target when one exists', () {
+      final target = ExerciseProgressionService.currentTargetForExercise(
+        repExercise,
+        progress: progressWith(
+          exerciseId: repExercise.id,
+          targetSets: 3,
+          targetValue: 7,
+        ),
+      );
+      expect(target.value, 7);
+    });
+
+    test('is clamped to a lowered mastery target without touching storage',
         () {
-      final target =
-          ExerciseProgressionService.targetVolumeForExercise(first);
+      final target = ExerciseProgressionService.currentTargetForExercise(
+        repExercise,
+        progress: progressWith(
+          exerciseId: repExercise.id,
+          targetSets: 3,
+          targetValue: 10,
+        ),
+        masterySettings: const MasteryTargetSettings(repsPerSet: 8),
+      );
+      // Shown goal is never harder than mastery requires; the stored 10
+      // stays intact so raising the setting back restores it.
+      expect(target.value, 8);
+    });
+  });
 
-      final changes = ExerciseProgressionService.computeChanges(
-        results: [SessionExerciseResult(exercise: first, volume: target)],
-        progressMap: const {},
+  group('computeSessionOutcome', () {
+    test('reaching the current target raises it by one rep per set', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          // 3 × 6 = 18 total reps: total volume counts, regardless of
+          // per-set distribution.
+          SessionExerciseResult(exercise: repExercise, volume: 18),
+        ],
+        progressRows: const {},
       );
 
-      expect(changes[first.id], ExerciseStatus.mastered);
-      expect(changes[secondId], ExerciseStatus.active);
+      expect(outcome.statusChanges, isEmpty);
+      expect(outcome.targetChanges[repExercise.id]?.sets, 3);
+      expect(outcome.targetChanges[repExercise.id]?.value, 7);
     });
 
-    test('falling short of the target changes nothing', () {
-      final target =
-          ExerciseProgressionService.targetVolumeForExercise(first);
-
-      final changes = ExerciseProgressionService.computeChanges(
-        results: [SessionExerciseResult(exercise: first, volume: target - 1)],
-        progressMap: const {},
+    test('timed exercises climb by five seconds per set', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          // Current 3 × 10s = 30s; mastery 3 × 20s = 60s.
+          SessionExerciseResult(exercise: timedExercise, volume: 30),
+        ],
+        progressRows: const {},
       );
 
-      expect(changes, isEmpty);
+      expect(outcome.statusChanges, isEmpty);
+      expect(outcome.targetChanges[timedExercise.id]?.value, 15);
     });
 
-    test('an already-mastered exercise is left alone', () {
-      final target =
-          ExerciseProgressionService.targetVolumeForExercise(first);
-
-      final changes = ExerciseProgressionService.computeChanges(
-        results: [SessionExerciseResult(exercise: first, volume: target)],
-        progressMap: {first.id: ExerciseStatus.mastered},
+    test('failing the current target changes nothing', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: repExercise, volume: 17),
+        ],
+        progressRows: const {},
       );
 
-      expect(changes, isEmpty);
+      expect(outcome.isEmpty, isTrue);
+    });
+
+    test('the target never climbs past the mastery target', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          // Current 3 × 7 = 21 < mastery 3 × 8 = 24 → increment, capped.
+          SessionExerciseResult(exercise: repExercise, volume: 21),
+        ],
+        progressRows: {
+          repExercise.id: progressWith(
+            exerciseId: repExercise.id,
+            targetSets: 3,
+            targetValue: 7,
+          ),
+        },
+      );
+
+      expect(outcome.targetChanges[repExercise.id]?.value, 8);
+    });
+
+    test('reaching the mastery target masters and activates the next move',
+        () {
+      final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
+        first,
+      ).volume;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: first, volume: masteryVolume),
+        ],
+        progressRows: const {},
+      );
+
+      expect(outcome.statusChanges[first.id], ExerciseStatus.mastered);
+      expect(outcome.statusChanges[secondId], ExerciseStatus.active);
+      expect(outcome.targetChanges, isEmpty);
+    });
+
+    test('overshooting the current target masters early', () {
+      // Current target is still the initial 3 × 6, but the session already
+      // meets mastery volume (3 × 8 = 24) — no intermediate workouts needed.
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: repExercise, volume: 24),
+        ],
+        progressRows: const {},
+      );
+
+      expect(
+        outcome.statusChanges[repExercise.id],
+        ExerciseStatus.mastered,
+      );
+      expect(outcome.targetChanges, isEmpty);
+    });
+
+    test('a raised mastery target extends the ladder of an active exercise',
+        () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          // 3 × 8 = 24 would master under default settings, but mastery was
+          // raised to 10 — so it's a normal target increase instead.
+          SessionExerciseResult(exercise: repExercise, volume: 24),
+        ],
+        progressRows: {
+          repExercise.id: progressWith(
+            exerciseId: repExercise.id,
+            targetSets: 3,
+            targetValue: 8,
+          ),
+        },
+        masterySettings: const MasteryTargetSettings(repsPerSet: 10),
+      );
+
+      expect(outcome.statusChanges, isEmpty);
+      expect(outcome.targetChanges[repExercise.id]?.value, 9);
+    });
+
+    test('a lowered mastery target only masters through a workout result',
+        () {
+      // Stored target 3 × 10 with mastery lowered to 8: nothing happens
+      // until a session actually reaches 3 × 8 = 24 total.
+      final rows = {
+        repExercise.id: progressWith(
+          exerciseId: repExercise.id,
+          targetSets: 3,
+          targetValue: 10,
+        ),
+      };
+      const settings = MasteryTargetSettings(repsPerSet: 8);
+
+      final failing = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: repExercise, volume: 23),
+        ],
+        progressRows: rows,
+        masterySettings: settings,
+      );
+      expect(failing.isEmpty, isTrue);
+
+      final mastering = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: repExercise, volume: 24),
+        ],
+        progressRows: rows,
+        masterySettings: settings,
+      );
+      expect(
+        mastering.statusChanges[repExercise.id],
+        ExerciseStatus.mastered,
+      );
+    });
+
+    test('an already-mastered exercise is never progressed again', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: repExercise, volume: 100),
+        ],
+        progressRows: {
+          repExercise.id: progressWith(
+            exerciseId: repExercise.id,
+            status: ExerciseStatus.mastered,
+          ),
+        },
+      );
+
+      expect(outcome.isEmpty, isTrue);
     });
 
     test('a branch point masters the exercise but activates nothing', () {
       // pull_up has different successors per branch (weighted, close grip,
       // l-sit, one arm), so no single next move can be chosen.
       final pullUp = ExerciseCatalog.findById('pull_up')!;
-      final target =
-          ExerciseProgressionService.targetVolumeForExercise(pullUp);
+      final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
+        pullUp,
+      ).volume;
 
-      final changes = ExerciseProgressionService.computeChanges(
-        results: [SessionExerciseResult(exercise: pullUp, volume: target)],
-        progressMap: const {},
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: pullUp, volume: masteryVolume),
+        ],
+        progressRows: const {},
       );
 
-      expect(changes, {pullUp.id: ExerciseStatus.mastered});
+      expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
     });
 
-    test('an already-active next exercise is not downgraded or re-written',
-        () {
-      final target =
-          ExerciseProgressionService.targetVolumeForExercise(first);
+    test('an already-active next exercise is not re-written', () {
+      final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
+        first,
+      ).volume;
 
-      final changes = ExerciseProgressionService.computeChanges(
-        results: [SessionExerciseResult(exercise: first, volume: target)],
-        progressMap: {secondId: ExerciseStatus.active},
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: first, volume: masteryVolume),
+        ],
+        progressRows: {
+          secondId: progressWith(exerciseId: secondId),
+        },
       );
 
-      expect(changes[first.id], ExerciseStatus.mastered);
-      expect(changes.containsKey(secondId), isFalse);
+      expect(outcome.statusChanges[first.id], ExerciseStatus.mastered);
+      expect(outcome.statusChanges.containsKey(secondId), isFalse);
     });
   });
 }

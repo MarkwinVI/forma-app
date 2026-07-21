@@ -6,7 +6,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/auth_service.dart';
 import '../../data/services/training_program_service.dart';
+import '../../data/services/training_program_store_service.dart';
 import 'program_day_editor_view.dart';
 import 'program_day_items.dart';
 import 'program_setup_view.dart' show GoalSkillGroup, GoalSkillOption, kGoalSkillGroups, kGoalSkillOptions;
@@ -214,6 +216,52 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     );
   }
 
+  Future<void> _openMasterySheet() async {
+    final picked = await showModalBottomSheet<MasteryTargetSettings>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => _MasterySheet(current: _logic.masteryTargets),
+    );
+
+    if (picked == null || !mounted) return;
+
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      // Settings-only write: no progress rows, stored targets, or mastered
+      // statuses are touched, and no past workouts are re-evaluated.
+      await TrainingProgramStoreService().updateMasteryTargets(
+        userId: userId,
+        targets: picked,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't save the mastery target. Try again."),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _logic = TrainingProgramLogicSnapshot(
+        program: _logic.program,
+        state: _logic.state,
+        branchSelections: _logic.branchSelections,
+        repGoalProfile: _logic.repGoalProfile,
+        masteryTargets: picked,
+      );
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Mastery target updated')));
+  }
+
   Future<void> _openSkillsSheet() async {
     final picked = await showModalBottomSheet<List<String>>(
       context: context,
@@ -297,6 +345,12 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                       label: 'Split',
                       value: programType.label,
                       onTap: _openSplitSheet,
+                    ),
+                    _ProgramRow(
+                      label: 'Mastery target',
+                      value: '3 × ${_logic.masteryTargets.repsPerSet} reps · '
+                          '${_logic.masteryTargets.secondsPerSet}s holds',
+                      onTap: _openMasterySheet,
                     ),
                   ],
                 ),
@@ -1015,6 +1069,171 @@ class _SheetShell extends StatelessWidget {
               ),
               child: footer,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MasterySheet extends StatefulWidget {
+  final MasteryTargetSettings current;
+
+  const _MasterySheet({required this.current});
+
+  @override
+  State<_MasterySheet> createState() => _MasterySheetState();
+}
+
+class _MasterySheetState extends State<_MasterySheet> {
+  static const _minReps = 6;
+  static const _maxReps = 15;
+  static const _minSeconds = 10;
+  static const _maxSeconds = 60;
+  static const _secondsStep = 5;
+
+  late int _reps;
+  late int _seconds;
+
+  @override
+  void initState() {
+    super.initState();
+    _reps = widget.current.repsPerSet.clamp(_minReps, _maxReps);
+    _seconds = widget.current.secondsPerSet.clamp(_minSeconds, _maxSeconds);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dirty = _reps != widget.current.repsPerSet ||
+        _seconds != widget.current.secondsPerSet;
+
+    return _SheetShell(
+      title: 'Mastery target',
+      sub: 'What it takes to level an exercise up',
+      footer: PillButton(
+        label: dirty ? 'Save target' : 'No changes yet',
+        onTap: dirty
+            ? () => Navigator.of(context).pop(
+                  MasteryTargetSettings(
+                    repsPerSet: _reps,
+                    secondsPerSet: _seconds,
+                  ),
+                )
+            : null,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _MasteryStepperRow(
+              label: 'Rep exercises',
+              valueLabel: '3 × $_reps reps',
+              onDecrease: _reps > _minReps
+                  ? () => setState(() => _reps -= 1)
+                  : null,
+              onIncrease: _reps < _maxReps
+                  ? () => setState(() => _reps += 1)
+                  : null,
+            ),
+            const SizedBox(height: 10),
+            _MasteryStepperRow(
+              label: 'Timed holds',
+              valueLabel: '3 × ${_seconds}s',
+              onDecrease: _seconds > _minSeconds
+                  ? () => setState(() => _seconds -= _secondsStep)
+                  : null,
+              onIncrease: _seconds < _maxSeconds
+                  ? () => setState(() => _seconds += _secondsStep)
+                  : null,
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Reaching this target masters an exercise and unlocks the next '
+              'move in its path. Changing it applies to exercises you are '
+              'still working on — everything already mastered stays mastered, '
+              'and your current session targets keep climbing from where '
+              'they are.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: AppColors.textMuted,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MasteryStepperRow extends StatelessWidget {
+  final String label;
+  final String valueLabel;
+  final VoidCallback? onDecrease;
+  final VoidCallback? onIncrease;
+
+  const _MasteryStepperRow({
+    required this.label,
+    required this.valueLabel,
+    required this.onDecrease,
+    required this.onIncrease,
+  });
+
+  Widget _stepButton({required IconData icon, required VoidCallback? onTap}) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: const BoxDecoration(
+          color: AppColors.surface2,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 18,
+          color: onTap == null ? AppColors.textMuted : AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          _stepButton(icon: Icons.remove_rounded, onTap: onDecrease),
+          SizedBox(
+            width: 86,
+            child: Text(
+              valueLabel,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          _stepButton(icon: Icons.add_rounded, onTap: onIncrease),
         ],
       ),
     );

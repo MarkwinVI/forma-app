@@ -81,12 +81,14 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             sets: sets,
             isProgression: exerciseEntry.item.isProgression,
             trackId: exerciseEntry.track.dbValue,
-            targetSets: ExerciseProgressionService.setCountForExercise(
-              exerciseEntry.exercise,
-            ),
-            targetValue: ExerciseProgressionService.targetValueForExercise(
-              exerciseEntry.exercise,
-            ),
+            targetSets: exerciseEntry.targetSets ??
+                ExerciseProgressionService.setCountForExercise(
+                  exerciseEntry.exercise,
+                ),
+            targetValue: exerciseEntry.targetValue ??
+                ExerciseProgressionService.targetValueForExercise(
+                  exerciseEntry.exercise,
+                ),
           );
         }).toList(),
       );
@@ -109,16 +111,22 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         debugPrint('Failed to advance program state: $error\n$stackTrace');
       }
 
-      // Auto-progression: progression exercises whose logged volume met their
-      // target are mastered, unlocking the next move in their skill path.
+      // Auto-progression: progression exercises whose logged volume reached
+      // their current target climb the ladder, and reaching the live mastery
+      // target masters them and unlocks the next move in their skill path.
       // Standalone/custom exercises are never auto-progressed.
       try {
         final progress = await ProgressService().fetchAll(userId);
+        final masteryTargets =
+            (await TrainingProgramStoreService().fetchProgramLogic(userId))
+                    ?.masteryTargets ??
+                MasteryTargetSettings.defaults;
         await ExerciseProgressionService().applySessionResults(
           userId: userId,
-          progressMap: {
-            for (final entry in progress) entry.exerciseId: entry.status,
+          progressRows: {
+            for (final entry in progress) entry.exerciseId: entry,
           },
+          masterySettings: masteryTargets,
           results: [
             for (final exerciseEntry in widget.workout.exercises)
               if (exerciseEntry.item.isProgression)

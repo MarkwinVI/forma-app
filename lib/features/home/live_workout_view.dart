@@ -8,6 +8,7 @@ import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
@@ -57,6 +58,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   late Map<String, List<_WorkoutSetDraft>> _setDrafts;
   late Map<String, int> _restSecondsByExercise;
   Map<String, ExerciseStatus> _progressMap = {};
+  Map<String, ExerciseProgress> _progressRows = {};
+  MasteryTargetSettings _masterySettings = MasteryTargetSettings.defaults;
   _ActiveRestTimer? _activeRestTimer;
   Timer? _ticker;
   Duration _pausedDuration = Duration.zero;
@@ -146,12 +149,37 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     try {
       final progress = await _progressService.fetchAll(userId);
+      MasteryTargetSettings masteryTargets = MasteryTargetSettings.defaults;
+      try {
+        masteryTargets = (await _programStoreService.fetchProgramLogic(userId))
+                ?.masteryTargets ??
+            MasteryTargetSettings.defaults;
+      } catch (_) {
+        // Defaults are fine; targets are still coherent, just unpersonalized.
+      }
       if (!mounted) return;
 
       setState(() {
+        _progressRows = {
+          for (final item in progress) item.exerciseId: item,
+        };
         _progressMap = {
           for (final item in progress) item.exerciseId: item.status,
         };
+        _masterySettings = masteryTargets;
+        // Ladder targets arrived after the initial drafts were built from
+        // defaults — rebuild any exercise the user hasn't logged or edited
+        // yet so the shown targets match their stored progression state.
+        if (!_planEdited) {
+          _setDrafts = {
+            for (final item in _sessionItems)
+              item.exercise.id: (_setDrafts[item.exercise.id]
+                          ?.any((set) => set.hasData) ??
+                      false)
+                  ? _setDrafts[item.exercise.id]!
+                  : _initialSetDrafts(item),
+          };
+        }
       });
     } catch (error, stackTrace) {
       // Keep replacement usable with local fallbacks if progress can't load.
@@ -237,6 +265,35 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     return _sessionItems
         .where((item) => item.exercise.programSection == section)
         .toList();
+  }
+
+  /// Prescribed target for an item: the progression ladder target (stored
+  /// state, else 3 × 6 / 3 × 10s, clamped to the live mastery target) for
+  /// progression items, the catalog formula for standalone exercises.
+  ExerciseTarget _prescribedTargetFor(TrainingRecommendationItem item) {
+    if (item.isProgression) {
+      return ExerciseProgressionService.currentTargetForExercise(
+        item.exercise,
+        progress: _progressRows[item.exercise.id],
+        masterySettings: _masterySettings,
+      );
+    }
+    return ExerciseTarget(
+      sets: ExerciseProgressionService.setCountForExercise(item.exercise),
+      value: ExerciseProgressionService.targetValueForExercise(item.exercise),
+    );
+  }
+
+  List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
+    final target = _prescribedTargetFor(item);
+    return List.generate(
+      target.sets,
+      (index) => _WorkoutSetDraft(
+        number: index + 1,
+        target: target.value,
+        previousLabel: '–',
+      ),
+    );
   }
 
   List<_WorkoutSetDraft> _setsFor(TrainingRecommendationItem item) {
@@ -337,7 +394,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   void _addSet(TrainingRecommendationItem item) {
     final sets = _setsFor(item);
-    final target = sets.isEmpty ? _defaultTarget(item) : sets.last.target;
+    final target =
+        sets.isEmpty ? _prescribedTargetFor(item).value : sets.last.target;
 
     _planEdited = true;
     _replaceSets(
@@ -554,10 +612,13 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
       if (completedSets.isEmpty) continue;
 
+      final prescribed = _prescribedTargetFor(item);
       exercises.add(
         CompletedWorkoutExercise(
           item: item,
           sets: completedSets,
+          targetSets: prescribed.sets,
+          targetValue: prescribed.value,
         ),
       );
     }
@@ -3306,17 +3367,6 @@ class _WorkoutSetDraft {
   }
 }
 
-List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
-  return List.generate(
-    _defaultSetCount(item),
-    (index) => _WorkoutSetDraft(
-      number: index + 1,
-      target: _defaultTarget(item),
-      previousLabel: '–',
-    ),
-  );
-}
-
 String _formatRestLabel(int seconds) {
   if (seconds <= 0) return 'Off';
   if (seconds < 60) return '${seconds}s';
@@ -3333,16 +3383,10 @@ String _formatCountdownLabel(int seconds) {
   return '$minutes:${remainder.toString().padLeft(2, '0')}';
 }
 
-// Timed detection and target math live in ExerciseProgressionService so the
-// targets shown in a workout are exactly the targets that advance progression.
+// Timed detection lives in ExerciseProgressionService so the targets shown
+// in a workout are exactly the targets that advance progression.
 bool _isTimedExercise(Exercise exercise) =>
     ExerciseProgressionService.isTimedExercise(exercise);
-
-int _defaultSetCount(TrainingRecommendationItem item) =>
-    ExerciseProgressionService.setCountForExercise(item.exercise);
-
-int _defaultTarget(TrainingRecommendationItem item) =>
-    ExerciseProgressionService.targetValueForExercise(item.exercise);
 
 String _difficultyLabel(int difficulty) {
   if (difficulty <= 1) return 'Beginner';

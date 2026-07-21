@@ -1,4 +1,6 @@
 import '../models/exercise_log_model.dart';
+import '../models/exercise_model.dart';
+import '../models/exercise_progress_model.dart';
 import '../models/training_program_model.dart';
 import 'exercise_log_service.dart';
 import 'exercise_progression_service.dart';
@@ -62,9 +64,14 @@ class DevToolsService {
         : const <String, dynamic>{};
 
     final progressEntries = await _progressService.fetchAll(userId);
+    final progressRows = {
+      for (final entry in progressEntries) entry.exerciseId: entry,
+    };
     final progressMap = {
       for (final entry in progressEntries) entry.exerciseId: entry.status,
     };
+    final masteryTargets =
+        logic?.masteryTargets ?? MasteryTargetSettings.defaults;
 
     final trainingDays = _trainingProgramStoreService
         .scheduleCycleFor(programType: programType)
@@ -91,10 +98,31 @@ class DevToolsService {
       final results = <SessionExerciseResult>[];
       final exercises = <WorkoutExerciseLogInput>[];
       for (final item in recommendation.items) {
-        final target = ExerciseProgressionService.targetVolumeForExercise(
-          item.exercise,
-        );
-        final volume = (target * _sessionRamp[index]).round();
+        final progress = progressRows[item.exercise.id];
+        final prescribed = item.isProgression
+            ? ExerciseProgressionService.currentTargetForExercise(
+                item.exercise,
+                progress: progress,
+                masterySettings: masteryTargets,
+              )
+            : ExerciseTarget(
+                sets: ExerciseProgressionService.setCountForExercise(
+                  item.exercise,
+                ),
+                value: ExerciseProgressionService.targetValueForExercise(
+                  item.exercise,
+                ),
+              );
+        // Ramp toward the mastery volume so the final full-volume sessions
+        // actually master exercises and the progression visibly moves.
+        final rampTarget = item.isProgression
+            ? ExerciseProgressionService.masteryTargetForExercise(
+                item.exercise,
+                progress: progress,
+                masterySettings: masteryTargets,
+              ).volume
+            : prescribed.volume;
+        final volume = (rampTarget * _sessionRamp[index]).round();
         if (item.isProgression) {
           results.add(
             SessionExerciseResult(exercise: item.exercise, volume: volume),
@@ -110,12 +138,8 @@ class DevToolsService {
             ),
             isProgression: item.isProgression,
             trackId: item.track.dbValue,
-            targetSets: ExerciseProgressionService.setCountForExercise(
-              item.exercise,
-            ),
-            targetValue: ExerciseProgressionService.targetValueForExercise(
-              item.exercise,
-            ),
+            targetSets: prescribed.sets,
+            targetValue: prescribed.value,
           ),
         );
       }
@@ -129,14 +153,38 @@ class DevToolsService {
         exercises: exercises,
       );
 
-      // Same rule as a real workout: met targets master the exercise, so
-      // the next seeded session trains the next move in the path.
-      final changes = await _progressionService.applySessionResults(
+      // Same rule as a real workout: met targets climb the ladder or master
+      // the exercise, so the next seeded session trains the next move.
+      final outcome = await _progressionService.applySessionResults(
         userId: userId,
         results: results,
-        progressMap: progressMap,
+        progressRows: progressRows,
+        masterySettings: masteryTargets,
       );
-      progressMap.addAll(changes);
+      final now = DateTime.now();
+      for (final entry in outcome.statusChanges.entries) {
+        progressMap[entry.key] = entry.value;
+        progressRows[entry.key] = (progressRows[entry.key] ??
+                ExerciseProgress(
+                  exerciseId: entry.key,
+                  status: entry.value,
+                  updatedAt: now,
+                ))
+            .copyWith(status: entry.value, updatedAt: now);
+      }
+      for (final entry in outcome.targetChanges.entries) {
+        progressRows[entry.key] = (progressRows[entry.key] ??
+                ExerciseProgress(
+                  exerciseId: entry.key,
+                  status: ExerciseStatus.inactive,
+                  updatedAt: now,
+                ))
+            .copyWith(
+          currentTargetSets: entry.value.sets,
+          currentTargetValue: entry.value.value,
+          updatedAt: now,
+        );
+      }
     }
   }
 

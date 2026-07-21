@@ -388,6 +388,7 @@ class HomeDashboardMetricsCalculator {
     required List<PastWorkout> workouts,
     List<String> goalSkillIds = const [],
     int frequencyPerWeek = 3,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
     DateTime? now,
   }) {
     final cycle = trainingProgramService.scheduleCycleFor(
@@ -415,6 +416,8 @@ class HomeDashboardMetricsCalculator {
           categoriesById: categoriesById,
         ),
         progressMap: progressMap,
+        progressEntries: progressEntries,
+        masterySettings: masterySettings,
       ),
       weekStrip: buildWeekStripData(
         cycle: cycle,
@@ -433,6 +436,8 @@ class HomeDashboardMetricsCalculator {
         branchSelections: branchSelections,
         sessionItemsConfig: sessionItemsConfig,
         progressMap: progressMap,
+        progressEntries: progressEntries,
+        masterySettings: masterySettings,
         workouts: workouts,
         now: now,
       ),
@@ -658,6 +663,8 @@ class HomeDashboardMetricsCalculator {
     PastWorkout? completedWorkout,
     List<TrainingBranchOption> pathOptions = const [],
     Map<String, ExerciseStatus> progressMap = const {},
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) {
     final sessionTitle = recommendation.isRestDay
         ? 'Recovery'
@@ -668,6 +675,8 @@ class HomeDashboardMetricsCalculator {
             item,
             pathOptions: pathOptions,
             progressMap: progressMap,
+            progressEntries: progressEntries,
+            masterySettings: masterySettings,
           ),
         )
         .toList();
@@ -765,6 +774,8 @@ class HomeDashboardMetricsCalculator {
     required Map<String, dynamic> sessionItemsConfig,
     required Map<String, ExerciseStatus> progressMap,
     required List<PastWorkout> workouts,
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
     DateTime? now,
   }) {
     final categories = SkillCategoryCatalog.browsable();
@@ -789,6 +800,8 @@ class HomeDashboardMetricsCalculator {
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
       progressMap: progressMap,
+      progressEntries: progressEntries,
+      masterySettings: masterySettings,
       workouts: workouts,
       now: now,
     );
@@ -964,6 +977,8 @@ class HomeDashboardMetricsCalculator {
     required Map<String, dynamic> sessionItemsConfig,
     required Map<String, ExerciseStatus> progressMap,
     required List<PastWorkout> workouts,
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
     DateTime? now,
   }) {
     final categoriesById = {
@@ -1001,7 +1016,11 @@ class HomeDashboardMetricsCalculator {
         workouts,
         limit: 2,
       );
-      final targetVolume = _targetVolumeForExercise(currentExercise);
+      final targetVolume = _masteryVolumeFor(
+        currentExercise,
+        progressEntries: progressEntries,
+        masterySettings: masterySettings,
+      );
       final lastSessionVolume =
           _latestSessionVolumeForExercise(currentExercise.id, workouts);
       final previousSessionVolume =
@@ -1047,6 +1066,8 @@ class HomeDashboardMetricsCalculator {
           stages: _buildJourneySkillStages(
             exerciseIds: option.exerciseIds,
             progressMap: progressMap,
+            progressEntries: progressEntries,
+            masterySettings: masterySettings,
             workouts: workouts,
           ),
         ),
@@ -1201,12 +1222,17 @@ class HomeDashboardMetricsCalculator {
     TrainingRecommendationItem item, {
     List<TrainingBranchOption> pathOptions = const [],
     Map<String, ExerciseStatus> progressMap = const {},
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) {
-    final setCount = _defaultSetCount(item);
-    final target = _defaultTarget(item);
+    final prescribed = _prescribedTargetFor(
+      item,
+      progressEntries: progressEntries,
+      masterySettings: masterySettings,
+    );
     final targetLabel = _isTimedExercise(item.exercise)
-        ? '$setCount × ${target}s'
-        : '$setCount × $target';
+        ? '${prescribed.sets} × ${prescribed.value}s'
+        : '${prescribed.sets} × ${prescribed.value}';
 
     TrainingBranchOption? option;
     for (final candidate in pathOptions) {
@@ -1275,14 +1301,38 @@ class HomeDashboardMetricsCalculator {
   static bool _isTimedExercise(Exercise exercise) =>
       ExerciseProgressionService.isTimedExercise(exercise);
 
-  static int _defaultSetCount(TrainingRecommendationItem item) =>
-      ExerciseProgressionService.setCountForExercise(item.exercise);
+  /// Prescribed target for a planned item: the progression ladder target for
+  /// progression items, the catalog formula for standalone exercises.
+  static ExerciseTarget _prescribedTargetFor(
+    TrainingRecommendationItem item, {
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+  }) {
+    if (item.isProgression) {
+      return ExerciseProgressionService.currentTargetForExercise(
+        item.exercise,
+        progress: progressEntries[item.exercise.id],
+        masterySettings: masterySettings,
+      );
+    }
+    return ExerciseTarget(
+      sets: ExerciseProgressionService.setCountForExercise(item.exercise),
+      value: ExerciseProgressionService.targetValueForExercise(item.exercise),
+    );
+  }
 
-  static int _defaultTarget(TrainingRecommendationItem item) =>
-      ExerciseProgressionService.targetValueForExercise(item.exercise);
-
-  static int _targetVolumeForExercise(Exercise exercise) =>
-      ExerciseProgressionService.targetVolumeForExercise(exercise);
+  /// Volume that masters (levels up) a progression exercise.
+  static int _masteryVolumeFor(
+    Exercise exercise, {
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+  }) {
+    return ExerciseProgressionService.masteryTargetForExercise(
+      exercise,
+      progress: progressEntries[exercise.id],
+      masterySettings: masterySettings,
+    ).volume;
+  }
 
   static int _latestSessionVolumeForExercise(
     String exerciseId,
@@ -1356,6 +1406,8 @@ class HomeDashboardMetricsCalculator {
     required List<String> exerciseIds,
     required Map<String, ExerciseStatus> progressMap,
     required List<PastWorkout> workouts,
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) {
     if (exerciseIds.isEmpty) return const [];
 
@@ -1379,6 +1431,8 @@ class HomeDashboardMetricsCalculator {
           previousExerciseId: index > 0 ? exerciseIds[index - 1] : null,
           currentIndex: currentIndex,
           progressMap: progressMap,
+          progressEntries: progressEntries,
+          masterySettings: masterySettings,
           workouts: workouts,
         ),
     ];
@@ -1391,6 +1445,8 @@ class HomeDashboardMetricsCalculator {
     required int currentIndex,
     required Map<String, ExerciseStatus> progressMap,
     required List<PastWorkout> workouts,
+    Map<String, ExerciseProgress> progressEntries = const {},
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) {
     final exercise = ExerciseCatalog.findById(exerciseId);
     if (exercise == null) {
@@ -1405,7 +1461,11 @@ class HomeDashboardMetricsCalculator {
       );
     }
 
-    final targetVolume = _targetVolumeForExercise(exercise);
+    final targetVolume = _masteryVolumeFor(
+      exercise,
+      progressEntries: progressEntries,
+      masterySettings: masterySettings,
+    );
     final orderedHistory = _historyForExercise(
       exerciseId: exerciseId,
       workouts: workouts,

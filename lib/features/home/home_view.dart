@@ -154,6 +154,9 @@ class _HomeViewState extends State<HomeView> {
         workouts: _pastWorkouts,
         goalSkillIds: snapshot.program.goalSkillIds,
         frequencyPerWeek: snapshot.program.frequencyPerWeek,
+        masterySettings: MasteryTargetSettings.fromVariationRules(
+          snapshot.program.variationRules,
+        ),
       ),
     );
   }

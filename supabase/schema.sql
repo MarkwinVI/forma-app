@@ -25,14 +25,20 @@ create policy "Users can update their own profile"
   using (auth.uid() = id);
 
 -- ── Exercise Progress ─────────────────────────────────────────────────────
--- Tracks each user's status (inactive / active / mastered) per exercise.
+-- Tracks each user's status (inactive / active / mastered) per exercise,
+-- plus their current incremental target on the progression ladder. Null
+-- targets mean "never advanced": the app falls back to the initial ladder
+-- target (3 × 6 reps / 3 × 10s timed). The mastery target is a live global
+-- program setting and is intentionally not stored here.
 
 create table public.user_exercise_progress (
-  id          uuid default gen_random_uuid() primary key,
-  user_id     uuid references auth.users(id) on delete cascade not null,
-  exercise_id text not null,  -- matches Exercise.id in the local catalog
-  status      text not null default 'inactive', -- 'inactive' | 'active' | 'mastered'
-  updated_at  timestamptz default now() not null,
+  id                   uuid default gen_random_uuid() primary key,
+  user_id              uuid references auth.users(id) on delete cascade not null,
+  exercise_id          text not null,  -- matches Exercise.id in the local catalog
+  status               text not null default 'inactive', -- 'inactive' | 'active' | 'mastered'
+  current_target_sets  int,  -- set count of the current incremental target
+  current_target_value int,  -- per-set reps (or seconds when timed)
+  updated_at           timestamptz default now() not null,
   unique(user_id, exercise_id)
 );
 

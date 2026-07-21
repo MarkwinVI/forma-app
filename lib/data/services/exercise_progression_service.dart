@@ -1,6 +1,10 @@
+import 'dart:math' as math;
+
 import '../catalog/exercise_catalog.dart';
 import '../catalog/skill_category_catalog.dart';
 import '../models/exercise_model.dart';
+import '../models/exercise_progress_model.dart';
+import '../models/training_program_model.dart';
 import 'progress_service.dart';
 
 /// One exercise's outcome in a saved workout session: the exercise as it was
@@ -13,13 +17,56 @@ class SessionExerciseResult {
   const SessionExerciseResult({required this.exercise, required this.volume});
 }
 
-/// Advances skill-path progress after a workout is saved: an exercise whose
-/// session volume meets its target is marked mastered, and the next move in
-/// its skill path becomes active. The target math is the single source of
-/// truth shared with the dashboard ("Closest to levelling up"), so the goal
-/// the user sees is the goal that advances them.
+/// A resolved sets × value target (reps, or seconds when timed).
+class ExerciseTarget {
+  final int sets;
+  final int value;
+
+  const ExerciseTarget({required this.sets, required this.value});
+
+  /// Total volume the target requires. Reaching a target is evaluated on
+  /// total volume: 18 total reps satisfies 3 × 6 regardless of how the reps
+  /// were distributed across sets.
+  int get volume => sets * value;
+}
+
+/// The progression changes one saved session earns: status transitions
+/// (mastered / newly activated) and incremental target increases.
+class SessionProgressionOutcome {
+  final Map<String, ExerciseStatus> statusChanges;
+  final Map<String, ExerciseTarget> targetChanges;
+
+  const SessionProgressionOutcome({
+    required this.statusChanges,
+    required this.targetChanges,
+  });
+
+  bool get isEmpty => statusChanges.isEmpty && targetChanges.isEmpty;
+}
+
+/// Advances skill-path progress after a workout is saved.
+///
+/// Each progression exercise carries an incremental target that climbs from
+/// an initial 3 × 6 (3 × 10s timed) toward the live global mastery target:
+/// reaching the current target raises it by one increment for the next
+/// workout, and reaching the mastery target — checked first, so overshooting
+/// masters early — marks the exercise mastered and activates the next move in
+/// its skill path. Failing a target changes nothing.
+///
+/// The mastery target is read from [MasteryTargetSettings] at evaluation
+/// time, never snapshotted, so changing the global setting applies to active
+/// and future exercises but never removes mastery or resets stored targets.
 class ExerciseProgressionService {
   final _progressService = ProgressService();
+
+  /// Ladder start: 3 × 6 reps, or 3 × 10s for timed exercises.
+  static const int initialTargetSets = 3;
+  static const int initialTargetReps = 6;
+  static const int initialTargetSeconds = 10;
+
+  /// Per-set increase when the current target is reached.
+  static const int targetIncrementReps = 1;
+  static const int targetIncrementSeconds = 5;
 
   static bool isTimedExercise(Exercise exercise) {
     final name = exercise.name.toLowerCase();
@@ -33,7 +80,65 @@ class ExerciseProgressionService {
         description.contains('for time');
   }
 
-  /// Per-set target (reps, or seconds when timed).
+  /// Initial per-set ladder value for an exercise that was never advanced.
+  static int initialTargetValueForExercise(Exercise exercise) {
+    return isTimedExercise(exercise) ? initialTargetSeconds : initialTargetReps;
+  }
+
+  /// Per-set increase applied when the current target is reached.
+  static int targetIncrementForExercise(Exercise exercise) {
+    return isTimedExercise(exercise)
+        ? targetIncrementSeconds
+        : targetIncrementReps;
+  }
+
+  /// Per-set value the exercise must reach (as total volume) to be mastered,
+  /// from the live global settings.
+  static int masteryValueForExercise(
+    Exercise exercise,
+    MasteryTargetSettings settings,
+  ) {
+    return isTimedExercise(exercise)
+        ? settings.secondsPerSet
+        : settings.repsPerSet;
+  }
+
+  /// The user's current incremental target for a progression exercise:
+  /// stored state when present, the initial ladder target otherwise. The
+  /// value is clamped to the live mastery target so users are never shown a
+  /// goal harder than mastery requires; the stored value stays untouched, so
+  /// raising the setting back restores it.
+  static ExerciseTarget currentTargetForExercise(
+    Exercise exercise, {
+    ExerciseProgress? progress,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+  }) {
+    final storedValue =
+        progress?.currentTargetValue ?? initialTargetValueForExercise(exercise);
+
+    return ExerciseTarget(
+      sets: progress?.currentTargetSets ?? initialTargetSets,
+      value: math.min(
+        storedValue,
+        masteryValueForExercise(exercise, masterySettings),
+      ),
+    );
+  }
+
+  /// The target that masters the exercise, at the user's current set count.
+  static ExerciseTarget masteryTargetForExercise(
+    Exercise exercise, {
+    ExerciseProgress? progress,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+  }) {
+    return ExerciseTarget(
+      sets: progress?.currentTargetSets ?? initialTargetSets,
+      value: masteryValueForExercise(exercise, masterySettings),
+    );
+  }
+
+  /// Per-set target for standalone (non-progression) exercises, derived from
+  /// the catalog. Progression exercises use [currentTargetForExercise].
   static int targetValueForExercise(Exercise exercise) {
     if (isTimedExercise(exercise)) {
       if (exercise.difficulty <= 1) return 30;
@@ -46,7 +151,7 @@ class ExerciseProgressionService {
     return 5;
   }
 
-  /// Prescribed set count for the section the exercise is programmed in.
+  /// Prescribed set count for standalone (non-progression) exercises.
   static int setCountForExercise(Exercise exercise) {
     return switch (exercise.programSection) {
       ExerciseProgramSection.warmup => 2,
@@ -56,52 +161,90 @@ class ExerciseProgressionService {
     };
   }
 
-  /// Whole-session target volume: per-set target × the section's set count.
-  static int targetVolumeForExercise(Exercise exercise) {
-    return setCountForExercise(exercise) * targetValueForExercise(exercise);
-  }
-
-  /// Pure progression rule, separated from persistence so it is testable:
-  /// returns the status changes a session's results earn. Exercises that met
-  /// their target become mastered and unlock (activate) the next move in
-  /// their skill path.
-  static Map<String, ExerciseStatus> computeChanges({
+  /// Pure progression rule, separated from persistence so it is testable.
+  ///
+  /// For each result (mastered exercises are skipped, so a session can never
+  /// be applied to them again):
+  /// 1. Mastery first: volume ≥ sets × mastery value masters the exercise —
+  ///    overshooting the current target masters early — and activates the
+  ///    next move in its skill path.
+  /// 2. Otherwise, volume ≥ the current target's volume raises the target by
+  ///    one increment, capped at the mastery value.
+  /// 3. Otherwise nothing changes: the target holds and no progress is lost.
+  static SessionProgressionOutcome computeSessionOutcome({
     required List<SessionExerciseResult> results,
-    required Map<String, ExerciseStatus> progressMap,
+    required Map<String, ExerciseProgress> progressRows,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) {
-    final changes = <String, ExerciseStatus>{};
+    final statusChanges = <String, ExerciseStatus>{};
+    final targetChanges = <String, ExerciseTarget>{};
 
     ExerciseStatus statusOf(String id) =>
-        changes[id] ?? progressMap[id] ?? ExerciseStatus.inactive;
+        statusChanges[id] ??
+        progressRows[id]?.status ??
+        ExerciseStatus.inactive;
 
     for (final result in results) {
       final exercise = result.exercise;
       if (statusOf(exercise.id) == ExerciseStatus.mastered) continue;
-      if (result.volume < targetVolumeForExercise(exercise)) continue;
 
-      changes[exercise.id] = ExerciseStatus.mastered;
+      final current = currentTargetForExercise(
+        exercise,
+        progress: progressRows[exercise.id],
+        masterySettings: masterySettings,
+      );
+      final masteryValue = masteryValueForExercise(exercise, masterySettings);
+      final masteryVolume = current.sets * masteryValue;
 
-      final next = _nextExerciseInPath(exercise);
-      if (next != null && statusOf(next.id) == ExerciseStatus.inactive) {
-        changes[next.id] = ExerciseStatus.active;
+      if (result.volume >= masteryVolume) {
+        statusChanges[exercise.id] = ExerciseStatus.mastered;
+
+        final next = _nextExerciseInPath(exercise);
+        if (next != null && statusOf(next.id) == ExerciseStatus.inactive) {
+          statusChanges[next.id] = ExerciseStatus.active;
+        }
+      } else if (result.volume >= current.volume) {
+        targetChanges[exercise.id] = ExerciseTarget(
+          sets: current.sets,
+          value: math.min(
+            current.value + targetIncrementForExercise(exercise),
+            masteryValue,
+          ),
+        );
       }
     }
 
-    return changes;
+    return SessionProgressionOutcome(
+      statusChanges: statusChanges,
+      targetChanges: targetChanges,
+    );
   }
 
-  /// Applies [computeChanges] and persists every change for [userId].
-  /// Returns the changes so callers can update their in-memory progress map.
-  Future<Map<String, ExerciseStatus>> applySessionResults({
+  /// Applies [computeSessionOutcome] and persists every change for [userId].
+  /// Returns the outcome so callers can update their in-memory state.
+  Future<SessionProgressionOutcome> applySessionResults({
     required String userId,
     required List<SessionExerciseResult> results,
-    required Map<String, ExerciseStatus> progressMap,
+    required Map<String, ExerciseProgress> progressRows,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) async {
-    final changes = computeChanges(results: results, progressMap: progressMap);
-    for (final entry in changes.entries) {
+    final outcome = computeSessionOutcome(
+      results: results,
+      progressRows: progressRows,
+      masterySettings: masterySettings,
+    );
+    for (final entry in outcome.statusChanges.entries) {
       await _progressService.upsert(userId, entry.key, entry.value);
     }
-    return changes;
+    for (final entry in outcome.targetChanges.entries) {
+      await _progressService.upsertTarget(
+        userId,
+        entry.key,
+        targetSets: entry.value.sets,
+        targetValue: entry.value.value,
+      );
+    }
+    return outcome;
   }
 
   /// The move that follows [exercise] across every training path it appears

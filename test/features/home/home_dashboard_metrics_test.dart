@@ -145,7 +145,11 @@ void main() {
       expect(snapshot.closestSkills.first.skillCategoryId, 'core');
       expect(snapshot.closestSkills.first.motionLabel, 'Core');
       expect(snapshot.closestSkills.first.skillTitle, 'L-Sit / V-Sit');
-      expect(snapshot.closestSkills.first.targetLabel, '36s');
+      // Level-up goal is the mastery volume: 3 sets × the default mastery
+      // target of 8 (foot_supported_l_sit is not caught by the timed-name
+      // heuristic, so it gets the rep target — same misclassification the
+      // old difficulty formula made).
+      expect(snapshot.closestSkills.first.targetLabel, '24s');
       expect(snapshot.closestSkills.first.lastLabel, '36s');
     });
 

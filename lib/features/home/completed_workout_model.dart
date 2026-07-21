@@ -51,9 +51,17 @@ class CompletedWorkoutExercise {
   final TrainingRecommendationItem item;
   final List<CompletedWorkoutSet> sets;
 
+  /// Prescribed target shown to the user when the session started: set count
+  /// and per-set value (reps, or seconds when timed). Captured here so the
+  /// saved log records the goal the user was actually working toward.
+  final int? targetSets;
+  final int? targetValue;
+
   const CompletedWorkoutExercise({
     required this.item,
     required this.sets,
+    this.targetSets,
+    this.targetValue,
   });
 
   Exercise get exercise => item.exercise;

@@ -220,6 +220,47 @@ extension RepGoalProfileX on RepGoalProfile {
   }
 }
 
+/// Global mastery targets from the training-program settings. Read live at
+/// evaluation and display time — never snapshotted per exercise — so changing
+/// them applies to active and future exercises but never removes mastery,
+/// relocks exercises, or resets current incremental targets.
+class MasteryTargetSettings {
+  static const int defaultRepsPerSet = 8;
+  static const int defaultSecondsPerSet = 20;
+  static const MasteryTargetSettings defaults = MasteryTargetSettings();
+
+  /// Per-set reps a rep-based exercise must reach (as total volume) to be
+  /// mastered.
+  final int repsPerSet;
+
+  /// Per-set seconds a timed exercise must reach (as total volume) to be
+  /// mastered.
+  final int secondsPerSet;
+
+  const MasteryTargetSettings({
+    this.repsPerSet = defaultRepsPerSet,
+    this.secondsPerSet = defaultSecondsPerSet,
+  });
+
+  factory MasteryTargetSettings.fromVariationRules(
+    Map<String, dynamic> variationRules,
+  ) {
+    return MasteryTargetSettings(
+      repsPerSet:
+          variationRules['mastery_target_reps'] as int? ?? defaultRepsPerSet,
+      secondsPerSet: variationRules['mastery_target_seconds'] as int? ??
+          defaultSecondsPerSet,
+    );
+  }
+
+  Map<String, dynamic> toVariationRules() {
+    return {
+      'mastery_target_reps': repsPerSet,
+      'mastery_target_seconds': secondsPerSet,
+    };
+  }
+}
+
 class TrainingRecommendationItem {
   final TrainingTrack track;
   final Exercise exercise;
@@ -347,11 +388,13 @@ class TrainingProgramLogicSnapshot {
   final UserTrainingProgramState state;
   final Map<TrainingTrack, String> branchSelections;
   final RepGoalProfile repGoalProfile;
+  final MasteryTargetSettings masteryTargets;
 
   const TrainingProgramLogicSnapshot({
     required this.program,
     required this.state,
     required this.branchSelections,
     required this.repGoalProfile,
+    this.masteryTargets = MasteryTargetSettings.defaults,
   });
 }
