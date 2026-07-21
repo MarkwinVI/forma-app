@@ -25,6 +25,7 @@ class DevToolsService {
   /// lands on the new-user home state.
   Future<void> resetToNewUser(String userId) async {
     // Children before parents to respect foreign keys.
+    await _client.from('progression_events').delete().eq('user_id', userId);
     await _client.from('workout_exercise_logs').delete().eq('user_id', userId);
     await _client.from('workout_sessions').delete().eq('user_id', userId);
     await _client.from('user_exercise_progress').delete().eq('user_id', userId);
@@ -125,7 +126,11 @@ class DevToolsService {
         final volume = (rampTarget * _sessionRamp[index]).round();
         if (item.isProgression) {
           results.add(
-            SessionExerciseResult(exercise: item.exercise, volume: volume),
+            SessionExerciseResult(
+              exercise: item.exercise,
+              volume: volume,
+              trackId: item.track.dbValue,
+            ),
           );
         }
         exercises.add(
@@ -144,7 +149,7 @@ class DevToolsService {
         );
       }
 
-      await _exerciseLogService.saveWorkoutSession(
+      final sessionId = await _exerciseLogService.saveWorkoutSession(
         userId: userId,
         title: recommendation.sessionLabel,
         sessionType: sessionType.dbValue,
@@ -152,11 +157,13 @@ class DevToolsService {
         finishedAt: finishedAt,
         exercises: exercises,
       );
+      if (sessionId == null) continue;
 
       // Same rule as a real workout: met targets climb the ladder or master
       // the exercise, so the next seeded session trains the next move.
       final outcome = await _progressionService.applySessionResults(
         userId: userId,
+        sessionId: sessionId,
         results: results,
         progressRows: progressRows,
         masterySettings: masteryTargets,

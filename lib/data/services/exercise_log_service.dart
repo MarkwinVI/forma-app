@@ -115,7 +115,9 @@ class ExerciseLogService {
         .toList();
   }
 
-  Future<void> saveWorkoutSession({
+  /// Saves the session and its exercise logs; returns the new session's id
+  /// (null when there was nothing to save).
+  Future<String?> saveWorkoutSession({
     required String userId,
     required String title,
     required String sessionType,
@@ -123,7 +125,7 @@ class ExerciseLogService {
     required DateTime finishedAt,
     required List<WorkoutExerciseLogInput> exercises,
   }) async {
-    if (exercises.isEmpty) return;
+    if (exercises.isEmpty) return null;
 
     final session = await _client
         .from('workout_sessions')
@@ -159,6 +161,46 @@ class ExerciseLogService {
           'target_value': exercises[index].targetValue,
         },
     ]);
+
+    return sessionId;
+  }
+
+  /// Best single-set value (reps, or seconds when timed) the user has ever
+  /// logged per exercise, optionally excluding one session — used to detect
+  /// personal bests for the session being saved without counting itself.
+  Future<Map<String, int>> bestSetValues(
+    String userId,
+    Set<String> exerciseIds, {
+    String? excludeSessionId,
+  }) async {
+    if (exerciseIds.isEmpty) return const {};
+
+    final data = await _client
+        .from('workout_exercise_logs')
+        .select('exercise_id, workout_session_id, sets')
+        .eq('user_id', userId)
+        .inFilter('exercise_id', exerciseIds.toList());
+
+    final bests = <String, int>{};
+    for (final row in data as List) {
+      final map = row as Map<String, dynamic>;
+      if (excludeSessionId != null &&
+          map['workout_session_id'] == excludeSessionId) {
+        continue;
+      }
+
+      final exerciseId = map['exercise_id'] as String;
+      for (final rawSet in map['sets'] as List<dynamic>? ?? const []) {
+        final set = ExerciseSet.fromJson(rawSet as Map<String, dynamic>);
+        final value =
+            set.durationSeconds > 0 ? set.durationSeconds : set.reps;
+        if (value > (bests[exerciseId] ?? 0)) {
+          bests[exerciseId] = value;
+        }
+      }
+    }
+
+    return bests;
   }
 
   ExerciseLog _exerciseLogFromWorkoutExerciseMap(Map<String, dynamic> map) {

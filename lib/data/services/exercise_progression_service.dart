@@ -4,8 +4,10 @@ import '../catalog/exercise_catalog.dart';
 import '../catalog/skill_category_catalog.dart';
 import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
+import '../models/progression_event_model.dart';
 import '../models/training_program_model.dart';
 import 'progress_service.dart';
+import 'progression_event_service.dart';
 
 /// One exercise's outcome in a saved workout session: the exercise as it was
 /// logged (program section intact, so targets match what the user saw) and
@@ -14,7 +16,15 @@ class SessionExerciseResult {
   final Exercise exercise;
   final int volume;
 
-  const SessionExerciseResult({required this.exercise, required this.volume});
+  /// Progression track the exercise was trained under (TrainingTrack
+  /// dbValue); recorded on the events this result produces.
+  final String? trackId;
+
+  const SessionExerciseResult({
+    required this.exercise,
+    required this.volume,
+    this.trackId,
+  });
 }
 
 /// A resolved sets × value target (reps, or seconds when timed).
@@ -58,6 +68,7 @@ class SessionProgressionOutcome {
 /// and future exercises but never removes mastery or resets stored targets.
 class ExerciseProgressionService {
   final _progressService = ProgressService();
+  final _eventService = ProgressionEventService();
 
   /// Ladder start: 3 × 6 reps, or 3 × 10s for timed exercises.
   static const int initialTargetSets = 3;
@@ -213,14 +224,26 @@ class ExerciseProgressionService {
     );
   }
 
-  /// Applies [computeSessionOutcome] and persists every change for [userId].
+  /// Applies [computeSessionOutcome], persists every change for [userId],
+  /// and records the changes as progression events tied to [sessionId].
   /// Returns the outcome so callers can update their in-memory state.
+  ///
+  /// Idempotent per session: when events for [sessionId] already exist the
+  /// result was applied before, so nothing is evaluated or written again.
   Future<SessionProgressionOutcome> applySessionResults({
     required String userId,
+    required String sessionId,
     required List<SessionExerciseResult> results,
     required Map<String, ExerciseProgress> progressRows,
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
   }) async {
+    if (await _eventService.hasEventsForSession(userId, sessionId)) {
+      return const SessionProgressionOutcome(
+        statusChanges: {},
+        targetChanges: {},
+      );
+    }
+
     final outcome = computeSessionOutcome(
       results: results,
       progressRows: progressRows,
@@ -237,7 +260,100 @@ class ExerciseProgressionService {
         targetValue: entry.value.value,
       );
     }
+    await _eventService.insertAll(
+      userId,
+      sessionId,
+      buildSessionEvents(
+        outcome: outcome,
+        results: results,
+        progressRows: progressRows,
+        masterySettings: masterySettings,
+      ),
+    );
     return outcome;
+  }
+
+  /// Pure translation of a session outcome into ledger events, using the
+  /// pre-apply [progressRows] to reconstruct before-values:
+  /// - target increases carry the old and new per-set value;
+  /// - masteries carry the mastery target that was met;
+  /// - activations carry the mastered exercise that unlocked them and the
+  ///   starting target of the new move.
+  static List<ProgressionEventInput> buildSessionEvents({
+    required SessionProgressionOutcome outcome,
+    required List<SessionExerciseResult> results,
+    required Map<String, ExerciseProgress> progressRows,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+  }) {
+    final trackByExercise = {
+      for (final result in results)
+        if (result.trackId != null) result.exercise.id: result.trackId,
+    };
+    final events = <ProgressionEventInput>[];
+
+    for (final entry in outcome.targetChanges.entries) {
+      final exercise = ExerciseCatalog.findById(entry.key);
+      if (exercise == null) continue;
+
+      final before = currentTargetForExercise(
+        exercise,
+        progress: progressRows[entry.key],
+        masterySettings: masterySettings,
+      );
+      events.add(
+        ProgressionEventInput(
+          exerciseId: entry.key,
+          trackId: trackByExercise[entry.key],
+          kind: ProgressionEventKind.targetIncrease,
+          valueFrom: before.value,
+          valueTo: entry.value.value,
+          targetSets: entry.value.sets,
+        ),
+      );
+    }
+
+    final masteredIds = [
+      for (final entry in outcome.statusChanges.entries)
+        if (entry.value == ExerciseStatus.mastered) entry.key,
+    ];
+    for (final exerciseId in masteredIds) {
+      final exercise = ExerciseCatalog.findById(exerciseId);
+      if (exercise == null) continue;
+
+      final mastery = masteryTargetForExercise(
+        exercise,
+        progress: progressRows[exerciseId],
+        masterySettings: masterySettings,
+      );
+      events.add(
+        ProgressionEventInput(
+          exerciseId: exerciseId,
+          trackId: trackByExercise[exerciseId],
+          kind: ProgressionEventKind.mastered,
+          valueTo: mastery.value,
+          targetSets: mastery.sets,
+        ),
+      );
+
+      // The activation this mastery caused, if any: the unique successor of
+      // the mastered exercise that this outcome switched to active.
+      final next = _nextExerciseInPath(exercise);
+      if (next != null &&
+          outcome.statusChanges[next.id] == ExerciseStatus.active) {
+        events.add(
+          ProgressionEventInput(
+            exerciseId: next.id,
+            trackId: trackByExercise[exerciseId],
+            kind: ProgressionEventKind.activated,
+            relatedExerciseId: exerciseId,
+            valueTo: initialTargetValueForExercise(next),
+            targetSets: initialTargetSets,
+          ),
+        );
+      }
+    }
+
+    return events;
   }
 
   /// The move that follows [exercise] across every training path it appears

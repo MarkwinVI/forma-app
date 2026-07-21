@@ -10,6 +10,7 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
+import '../../data/services/progression_event_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
 
@@ -60,7 +61,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     setState(() => _saving = true);
 
     try {
-      await _exerciseLogService.saveWorkoutSession(
+      final sessionId = await _exerciseLogService.saveWorkoutSession(
         userId: userId,
         title: widget.workout.historyTitle,
         sessionType: widget.workout.sessionType.dbValue,
@@ -114,33 +115,48 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       // Auto-progression: progression exercises whose logged volume reached
       // their current target climb the ladder, and reaching the live mastery
       // target masters them and unlocks the next move in their skill path.
-      // Standalone/custom exercises are never auto-progressed.
-      try {
-        final progress = await ProgressService().fetchAll(userId);
-        final masteryTargets =
-            (await TrainingProgramStoreService().fetchProgramLogic(userId))
-                    ?.masteryTargets ??
-                MasteryTargetSettings.defaults;
-        await ExerciseProgressionService().applySessionResults(
-          userId: userId,
-          progressRows: {
-            for (final entry in progress) entry.exerciseId: entry,
-          },
-          masterySettings: masteryTargets,
-          results: [
-            for (final exerciseEntry in widget.workout.exercises)
-              if (exerciseEntry.item.isProgression)
-                SessionExerciseResult(
-                  exercise: exerciseEntry.exercise,
-                  volume: exerciseEntry.sets
-                      .fold<int>(0, (sum, set) => sum + set.value),
-                ),
-          ],
-        );
-      } catch (error, stackTrace) {
-        // Non-fatal: the user can still master the exercise manually from
-        // the skill tree, and the next met target re-runs this.
-        debugPrint('Failed to apply exercise progression: $error\n$stackTrace');
+      // Standalone/custom exercises are never auto-progressed. Every change
+      // is recorded as a progression event tied to this session.
+      if (sessionId != null) {
+        try {
+          final progress = await ProgressService().fetchAll(userId);
+          final masteryTargets =
+              (await TrainingProgramStoreService().fetchProgramLogic(userId))
+                      ?.masteryTargets ??
+                  MasteryTargetSettings.defaults;
+          await ExerciseProgressionService().applySessionResults(
+            userId: userId,
+            sessionId: sessionId,
+            progressRows: {
+              for (final entry in progress) entry.exerciseId: entry,
+            },
+            masterySettings: masteryTargets,
+            results: [
+              for (final exerciseEntry in widget.workout.exercises)
+                if (exerciseEntry.item.isProgression)
+                  SessionExerciseResult(
+                    exercise: exerciseEntry.exercise,
+                    volume: exerciseEntry.sets
+                        .fold<int>(0, (sum, set) => sum + set.value),
+                    trackId: exerciseEntry.track.dbValue,
+                  ),
+            ],
+          );
+        } catch (error, stackTrace) {
+          // Non-fatal: the user can still master the exercise manually from
+          // the skill tree, and the next met target re-runs this.
+          debugPrint(
+              'Failed to apply exercise progression: $error\n$stackTrace');
+        }
+
+        // Personal bests: compare this session's best single-set values
+        // against earlier history (any exercise, progression or standalone).
+        try {
+          await _recordPersonalBests(userId, sessionId);
+        } catch (error, stackTrace) {
+          // Non-fatal: PBs are informational; the workout itself is saved.
+          debugPrint('Failed to record personal bests: $error\n$stackTrace');
+        }
       }
 
       if (!mounted) return;
@@ -152,6 +168,36 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         SnackBar(content: Text('Failed to save workout: $error')),
       );
     }
+  }
+
+  Future<void> _recordPersonalBests(String userId, String sessionId) async {
+    final candidates = [
+      for (final exerciseEntry in widget.workout.exercises)
+        if (exerciseEntry.sets.isNotEmpty)
+          PersonalBestCandidate(
+            exerciseId: exerciseEntry.exercise.id,
+            trackId: exerciseEntry.item.isProgression
+                ? exerciseEntry.track.dbValue
+                : null,
+            bestSetValue: exerciseEntry.sets
+                .fold<int>(0, (best, set) => math.max(best, set.value)),
+          ),
+    ];
+    if (candidates.isEmpty) return;
+
+    final previousBests = await _exerciseLogService.bestSetValues(
+      userId,
+      {for (final candidate in candidates) candidate.exerciseId},
+      excludeSessionId: sessionId,
+    );
+    await ProgressionEventService().insertAll(
+      userId,
+      sessionId,
+      ProgressionEventService.computePersonalBests(
+        candidates: candidates,
+        previousBests: previousBests,
+      ),
+    );
   }
 
   @override
