@@ -89,7 +89,13 @@ class _CalendarPanelState extends State<CalendarPanel> {
     final workouts =
         _metrics.workoutsOnDay(DateTime(_month.year, _month.month, day));
     if (workouts.isEmpty) return;
-    final opened = workouts.first;
+
+    // A single session opens straight away; multiple sessions on the same
+    // day let the user choose which one to open.
+    final opened =
+        workouts.length == 1 ? workouts.first : await _pickWorkout(workouts);
+    if (opened == null || !mounted) return;
+
     final deleted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => PastWorkoutDetailView(workout: opened),
@@ -102,6 +108,57 @@ class _CalendarPanelState extends State<CalendarPanel> {
       });
       widget.onDataChanged?.call();
     }
+  }
+
+  Future<PastWorkout?> _pickWorkout(List<PastWorkout> workouts) {
+    return showModalBottomSheet<PastWorkout>(
+      context: context,
+      backgroundColor: AppColors.bgTertiary,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 10),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                child: Text(
+                  '${workouts.length} sessions this day',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              for (var i = 0; i < workouts.length; i++)
+                _DaySessionRow(
+                  workout: workouts[i],
+                  showDivider: i > 0,
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(workouts[i]),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -421,6 +478,84 @@ class _StreakHeroCard extends StatelessWidget {
   }
 }
 
+/// Row in the "multiple sessions this day" picker sheet.
+class _DaySessionRow extends StatelessWidget {
+  final PastWorkout workout;
+  final bool showDivider;
+  final VoidCallback onTap;
+
+  const _DaySessionRow({
+    required this.workout,
+    required this.showDivider,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final summaryParts = <String>[
+      _formatClock(workout.loggedAt),
+      '${workout.totalSets} sets',
+      if (workout.totalReps > 0) '${workout.totalReps} reps',
+      if (workout.totalTimedSeconds > 0)
+        formatWorkoutSeconds(workout.totalTimedSeconds),
+    ];
+
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: showDivider
+              ? const Border(top: BorderSide(color: AppColors.divider))
+              : null,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+        child: Row(
+          children: [
+            IconTile(
+              icon: workoutIconForSessionType(workout.sessionType),
+              size: 40,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    workout.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    summaryParts.join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _StatCard extends StatelessWidget {
   final String big;
   final String small;
@@ -522,4 +657,11 @@ String _formatTotalTime(Duration duration) {
   final minutes = duration.inMinutes.remainder(60);
   if (hours <= 0) return '${minutes}m';
   return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+}
+
+String _formatClock(DateTime dateTime) {
+  final minute = dateTime.minute.toString().padLeft(2, '0');
+  final suffix = dateTime.hour >= 12 ? 'PM' : 'AM';
+  final displayHour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+  return '$displayHour:$minute $suffix';
 }
