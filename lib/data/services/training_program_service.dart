@@ -154,8 +154,16 @@ class TrainingProgramService {
     required Map<String, ExerciseStatus> progressMap,
   }) {
     final kind = rawItem['kind'] as String? ?? 'exercise';
+    final progressionPath = kind == 'progression'
+        ? _pathForConfiguredProgression(rawItem)
+        : const <String>[];
     final exercise = kind == 'progression'
-        ? _exerciseForConfiguredProgression(rawItem, progressMap, component)
+        ? _exerciseForConfiguredProgression(
+            rawItem,
+            progressMap,
+            component,
+            progressionPath,
+          )
         : _exerciseForConfiguredSingle(rawItem, component);
     if (exercise == null) return null;
 
@@ -175,20 +183,29 @@ class TrainingProgramService {
       sourceCategory: sourceCategory,
       sourceSkillCategoryId: (rawItem['skill_category_id'] as String?) ??
           ExerciseCatalog.skillCategoryIdForExercise(exercise),
+      progressionExerciseIds: progressionPath,
     );
+  }
+
+  List<String> _pathForConfiguredProgression(Map<String, dynamic> rawItem) {
+    final skillCategoryId = rawItem['skill_category_id'] as String?;
+    final branchId = rawItem['branch_id'] as String?;
+    if (skillCategoryId == null || branchId == null) return const [];
+
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    return category?.pathFor(branchId) ?? const <String>[];
   }
 
   Exercise? _exerciseForConfiguredProgression(
     Map<String, dynamic> rawItem,
     Map<String, ExerciseStatus> progressMap,
     String component,
+    List<String> path,
   ) {
     final skillCategoryId = rawItem['skill_category_id'] as String?;
-    final branchId = rawItem['branch_id'] as String?;
-    if (skillCategoryId == null || branchId == null) return null;
+    if (skillCategoryId == null || path.isEmpty) return null;
 
     final category = SkillCategoryCatalog.findById(skillCategoryId);
-    final path = category?.pathFor(branchId) ?? const <String>[];
     final current = _pickCurrentExercise(
       _TrainingBranch(
         track: _trackForConfiguredItem(

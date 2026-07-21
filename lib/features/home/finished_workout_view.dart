@@ -79,6 +79,14 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           return WorkoutExerciseLogInput(
             exerciseId: exerciseEntry.exercise.id,
             sets: sets,
+            isProgression: exerciseEntry.item.isProgression,
+            trackId: exerciseEntry.track.dbValue,
+            targetSets: ExerciseProgressionService.setCountForExercise(
+              exerciseEntry.exercise,
+            ),
+            targetValue: ExerciseProgressionService.targetValueForExercise(
+              exerciseEntry.exercise,
+            ),
           );
         }).toList(),
       );
@@ -101,8 +109,9 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         debugPrint('Failed to advance program state: $error\n$stackTrace');
       }
 
-      // Auto-progression: exercises whose logged volume met their target are
-      // mastered, unlocking the next move in their skill path.
+      // Auto-progression: progression exercises whose logged volume met their
+      // target are mastered, unlocking the next move in their skill path.
+      // Standalone/custom exercises are never auto-progressed.
       try {
         final progress = await ProgressService().fetchAll(userId);
         await ExerciseProgressionService().applySessionResults(
@@ -112,11 +121,12 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           },
           results: [
             for (final exerciseEntry in widget.workout.exercises)
-              SessionExerciseResult(
-                exercise: exerciseEntry.exercise,
-                volume: exerciseEntry.sets
-                    .fold<int>(0, (sum, set) => sum + set.value),
-              ),
+              if (exerciseEntry.item.isProgression)
+                SessionExerciseResult(
+                  exercise: exerciseEntry.exercise,
+                  volume: exerciseEntry.sets
+                      .fold<int>(0, (sum, set) => sum + set.value),
+                ),
           ],
         );
       } catch (error, stackTrace) {

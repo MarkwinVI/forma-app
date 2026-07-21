@@ -95,9 +95,11 @@ class DevToolsService {
           item.exercise,
         );
         final volume = (target * _sessionRamp[index]).round();
-        results.add(
-          SessionExerciseResult(exercise: item.exercise, volume: volume),
-        );
+        if (item.isProgression) {
+          results.add(
+            SessionExerciseResult(exercise: item.exercise, volume: volume),
+          );
+        }
         exercises.add(
           WorkoutExerciseLogInput(
             exerciseId: item.exercise.id,
@@ -105,6 +107,14 @@ class DevToolsService {
               volume,
               isTimed:
                   ExerciseProgressionService.isTimedExercise(item.exercise),
+            ),
+            isProgression: item.isProgression,
+            trackId: item.track.dbValue,
+            targetSets: ExerciseProgressionService.setCountForExercise(
+              item.exercise,
+            ),
+            targetValue: ExerciseProgressionService.targetValueForExercise(
+              item.exercise,
             ),
           ),
         );

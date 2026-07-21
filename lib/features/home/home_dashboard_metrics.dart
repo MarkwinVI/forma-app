@@ -1275,30 +1275,11 @@ class HomeDashboardMetricsCalculator {
   static bool _isTimedExercise(Exercise exercise) =>
       ExerciseProgressionService.isTimedExercise(exercise);
 
-  static int _defaultSetCount(TrainingRecommendationItem item) {
-    switch (item.exercise.programSection) {
-      case ExerciseProgramSection.warmup:
-        return 2;
-      case ExerciseProgramSection.skillWork:
-        return 3;
-      case ExerciseProgramSection.mainExercises:
-        return item.exercise.difficulty >= 4 ? 4 : 3;
-      case ExerciseProgramSection.coolDown:
-        return 2;
-    }
-  }
+  static int _defaultSetCount(TrainingRecommendationItem item) =>
+      ExerciseProgressionService.setCountForExercise(item.exercise);
 
-  static int _defaultTarget(TrainingRecommendationItem item) {
-    if (_isTimedExercise(item.exercise)) {
-      if (item.exercise.difficulty <= 1) return 30;
-      if (item.exercise.difficulty <= 3) return 20;
-      return 12;
-    }
-
-    if (item.exercise.difficulty <= 1) return 12;
-    if (item.exercise.difficulty <= 3) return 8;
-    return 5;
-  }
+  static int _defaultTarget(TrainingRecommendationItem item) =>
+      ExerciseProgressionService.targetValueForExercise(item.exercise);
 
   static int _targetVolumeForExercise(Exercise exercise) =>
       ExerciseProgressionService.targetVolumeForExercise(exercise);

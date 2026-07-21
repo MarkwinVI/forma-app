@@ -71,6 +71,9 @@ create policy "Users manage own workout sessions"
 -- Each row is one exercise performed inside one workout session.
 -- sets: [{reps?: int, duration_seconds?: int, weight_kg?: float, notes?: string}]
 -- Totals are pre-computed for fast history and progress queries.
+-- Progression context (is_progression, track_id, target_*) records what the
+-- program prescribed at save time, so progression logic can attribute results
+-- to tracks and roll changes back from history.
 
 create table public.workout_exercise_logs (
   id                     uuid default gen_random_uuid() primary key,
@@ -82,6 +85,10 @@ create table public.workout_exercise_logs (
   total_reps             int not null default 0,
   total_duration_seconds int not null default 0,
   total_volume_kg        float not null default 0,
+  is_progression         boolean not null default false,
+  track_id               text,     -- e.g. 'vertical_pull'; null for standalone
+  target_sets            int,      -- prescribed set count shown to the user
+  target_value           int,      -- prescribed per-set reps (or seconds when timed)
   created_at             timestamptz default now() not null,
   check (order_index >= 0)
 );
@@ -91,6 +98,10 @@ create index workout_exercise_logs_session_idx
 
 create index workout_exercise_logs_user_exercise_idx
   on public.workout_exercise_logs (user_id, exercise_id, created_at desc);
+
+create index workout_exercise_logs_user_track_idx
+  on public.workout_exercise_logs (user_id, track_id, created_at desc)
+  where is_progression;
 
 alter table public.workout_exercise_logs enable row level security;
 

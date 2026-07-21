@@ -11,6 +11,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
@@ -3332,42 +3333,16 @@ String _formatCountdownLabel(int seconds) {
   return '$minutes:${remainder.toString().padLeft(2, '0')}';
 }
 
-bool _isTimedExercise(Exercise exercise) {
-  final name = exercise.name.toLowerCase();
-  final description = exercise.description.toLowerCase();
+// Timed detection and target math live in ExerciseProgressionService so the
+// targets shown in a workout are exactly the targets that advance progression.
+bool _isTimedExercise(Exercise exercise) =>
+    ExerciseProgressionService.isTimedExercise(exercise);
 
-  return name.contains('hold') ||
-      name.contains('hang') ||
-      name.contains('plank') ||
-      name.contains('lever') ||
-      name.contains('handstand') ||
-      description.contains('for time');
-}
+int _defaultSetCount(TrainingRecommendationItem item) =>
+    ExerciseProgressionService.setCountForExercise(item.exercise);
 
-int _defaultSetCount(TrainingRecommendationItem item) {
-  switch (item.exercise.programSection) {
-    case ExerciseProgramSection.warmup:
-      return 2;
-    case ExerciseProgramSection.skillWork:
-      return 3;
-    case ExerciseProgramSection.mainExercises:
-      return item.exercise.difficulty >= 4 ? 4 : 3;
-    case ExerciseProgramSection.coolDown:
-      return 2;
-  }
-}
-
-int _defaultTarget(TrainingRecommendationItem item) {
-  if (_isTimedExercise(item.exercise)) {
-    if (item.exercise.difficulty <= 1) return 30;
-    if (item.exercise.difficulty <= 3) return 20;
-    return 12;
-  }
-
-  if (item.exercise.difficulty <= 1) return 12;
-  if (item.exercise.difficulty <= 3) return 8;
-  return 5;
-}
+int _defaultTarget(TrainingRecommendationItem item) =>
+    ExerciseProgressionService.targetValueForExercise(item.exercise);
 
 String _difficultyLabel(int difficulty) {
   if (difficulty <= 1) return 'Beginner';
@@ -3419,6 +3394,7 @@ TrainingRecommendationItem _progressionReplacement(
     status: progressMap[exercise.id] ?? ExerciseStatus.inactive,
     sourceCategory: category.track,
     sourceSkillCategoryId: category.id,
+    progressionExerciseIds: category.pathFor(branchId),
   );
 }
 

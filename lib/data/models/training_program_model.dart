@@ -239,6 +239,10 @@ class TrainingRecommendationItem {
     required this.sourceSkillCategoryId,
     this.progressionExerciseIds = const [],
   });
+
+  /// Whether this item is the current exercise of a skill-tree progression.
+  /// Standalone/custom exercises are never auto-progressed.
+  bool get isProgression => progressionExerciseIds.isNotEmpty;
 }
 
 class DailyTrainingRecommendation {

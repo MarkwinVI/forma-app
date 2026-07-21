@@ -46,16 +46,19 @@ class ExerciseProgressionService {
     return 5;
   }
 
-  /// Whole-session target volume: per-set target × the section's set count.
-  static int targetVolumeForExercise(Exercise exercise) {
-    final setCount = switch (exercise.programSection) {
+  /// Prescribed set count for the section the exercise is programmed in.
+  static int setCountForExercise(Exercise exercise) {
+    return switch (exercise.programSection) {
       ExerciseProgramSection.warmup => 2,
       ExerciseProgramSection.skillWork => 3,
       ExerciseProgramSection.mainExercises => exercise.difficulty >= 4 ? 4 : 3,
       ExerciseProgramSection.coolDown => 2,
     };
-    final targetPerSet = targetValueForExercise(exercise);
-    return setCount * targetPerSet;
+  }
+
+  /// Whole-session target volume: per-set target × the section's set count.
+  static int targetVolumeForExercise(Exercise exercise) {
+    return setCountForExercise(exercise) * targetValueForExercise(exercise);
   }
 
   /// Pure progression rule, separated from persistence so it is testable:

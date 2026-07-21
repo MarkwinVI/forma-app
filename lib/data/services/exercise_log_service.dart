@@ -7,9 +7,26 @@ class WorkoutExerciseLogInput {
   final String exerciseId;
   final List<ExerciseSet> sets;
 
+  /// Whether the exercise was a skill-tree progression item at save time.
+  /// Standalone/custom exercises are false and are never auto-progressed.
+  final bool isProgression;
+
+  /// Progression track the exercise was trained under (TrainingTrack
+  /// dbValue). Null for standalone exercises.
+  final String? trackId;
+
+  /// Prescribed target shown to the user for this session: set count and
+  /// per-set value (reps, or seconds when timed).
+  final int? targetSets;
+  final int? targetValue;
+
   const WorkoutExerciseLogInput({
     required this.exerciseId,
     required this.sets,
+    this.isProgression = false,
+    this.trackId,
+    this.targetSets,
+    this.targetValue,
   });
 }
 
@@ -136,6 +153,10 @@ class ExerciseLogService {
             exercises[index].sets,
           ),
           'total_volume_kg': _totalVolumeKg(exercises[index].sets),
+          'is_progression': exercises[index].isProgression,
+          'track_id': exercises[index].trackId,
+          'target_sets': exercises[index].targetSets,
+          'target_value': exercises[index].targetValue,
         },
     ]);
   }

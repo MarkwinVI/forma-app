@@ -9,6 +9,7 @@ import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 
 /// Which tab the exercise detail view opens on. Live workout and the skill
@@ -1113,30 +1114,10 @@ class _ExerciseCoachData {
 }
 
 _ExerciseTargetPlan _targetPlanFor(Exercise exercise) {
-  final isTimed = _isTimedExercise(exercise);
-  final sets = switch (exercise.programSection) {
-    ExerciseProgramSection.warmup => 2,
-    ExerciseProgramSection.skillWork => 3,
-    ExerciseProgramSection.mainExercises => exercise.difficulty >= 4 ? 4 : 3,
-    ExerciseProgramSection.coolDown => 2,
-  };
-
-  final target = isTimed
-      ? (exercise.difficulty <= 1
-          ? 30
-          : exercise.difficulty <= 3
-              ? 20
-              : 12)
-      : (exercise.difficulty <= 1
-          ? 12
-          : exercise.difficulty <= 3
-              ? 8
-              : 5);
-
   return _ExerciseTargetPlan(
-    sets: sets,
-    primaryTarget: target,
-    isTimed: isTimed,
+    sets: ExerciseProgressionService.setCountForExercise(exercise),
+    primaryTarget: ExerciseProgressionService.targetValueForExercise(exercise),
+    isTimed: _isTimedExercise(exercise),
   );
 }
 
@@ -1257,16 +1238,8 @@ _ExerciseCoachData _coachDataFor(Exercise exercise) {
   }
 }
 
-bool _isTimedExercise(Exercise exercise) {
-  final name = exercise.name.toLowerCase();
-  final description = exercise.description.toLowerCase();
-  return name.contains('hold') ||
-      name.contains('hang') ||
-      name.contains('plank') ||
-      name.contains('lever') ||
-      name.contains('handstand') ||
-      description.contains('for time');
-}
+bool _isTimedExercise(Exercise exercise) =>
+    ExerciseProgressionService.isTimedExercise(exercise);
 
 String _branchLabel(String branchId) {
   if (branchId.isEmpty || branchId == 'main') return 'Main line';
