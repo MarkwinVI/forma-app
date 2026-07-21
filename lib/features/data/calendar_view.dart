@@ -21,9 +21,10 @@ const _monthNames = [
   'December',
 ];
 
-/// Training calendar: month grid with logged days, month totals, and the
-/// weekly streak breakdown directly underneath.
-class CalendarView extends StatefulWidget {
+/// Embeddable training calendar: month grid with logged days, month totals,
+/// and the weekly streak breakdown directly underneath. Rendered inline (for
+/// example in the Profile tab) rather than as its own page.
+class CalendarPanel extends StatefulWidget {
   final List<PastWorkout> workouts;
   final int weeklyGoal;
 
@@ -31,18 +32,22 @@ class CalendarView extends StatefulWidget {
   /// owning screen can reload its data.
   final VoidCallback? onDataChanged;
 
-  const CalendarView({
+  /// When false the "Last 13 weeks" activity heatmap is omitted.
+  final bool showActivityHeatmap;
+
+  const CalendarPanel({
     super.key,
     required this.workouts,
     required this.weeklyGoal,
     this.onDataChanged,
+    this.showActivityHeatmap = true,
   });
 
   @override
-  State<CalendarView> createState() => _CalendarViewState();
+  State<CalendarPanel> createState() => _CalendarPanelState();
 }
 
-class _CalendarViewState extends State<CalendarView> {
+class _CalendarPanelState extends State<CalendarPanel> {
   late List<PastWorkout> _workouts;
   late WorkoutCalendarMetrics _metrics;
   late DateTime _month;
@@ -54,6 +59,17 @@ class _CalendarViewState extends State<CalendarView> {
     _rebuildMetrics();
     final now = DateTime.now();
     _month = DateTime(now.year, now.month);
+  }
+
+  @override
+  void didUpdateWidget(covariant CalendarPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Keep in sync when the owning screen reloads its workout list.
+    if (!identical(oldWidget.workouts, widget.workouts) ||
+        oldWidget.weeklyGoal != widget.weeklyGoal) {
+      _workouts = List.of(widget.workouts);
+      _rebuildMetrics();
+    }
   }
 
   void _rebuildMetrics() {
@@ -94,131 +110,87 @@ class _CalendarViewState extends State<CalendarView> {
     final sessionsThisMonth = _metrics.sessionsInMonth(_month);
     final monthTime = _metrics.totalTimeInMonth(_month);
 
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Streak — sits above the month content.
+        _StreakHeroCard(streak: streak),
+        const SizedBox(height: 12),
+        _MonthCard(
+          month: _month,
+          metrics: _metrics,
+          onPrev: () => _shiftMonth(-1),
+          onNext: () => _shiftMonth(1),
+          onDayTap: _openDay,
+        ),
+        const SizedBox(height: 12),
+        Row(
           children: [
-            SubScreenHeader(
-              title: 'Calendar',
-              onBack: () => Navigator.of(context).pop(),
-            ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 44),
-                children: [
-                  _MonthCard(
-                    month: _month,
-                    metrics: _metrics,
-                    onPrev: () => _shiftMonth(-1),
-                    onNext: () => _shiftMonth(1),
-                    onDayTap: _openDay,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          big: '$sessionsThisMonth',
-                          small: 'sessions in ${_monthNames[_month.month - 1]}',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          big: _formatTotalTime(monthTime),
-                          small: 'total time',
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Streak — lives directly under the month content.
-                  const SectionHeader(title: 'Weekly streak'),
-                  _StreakHeroCard(streak: streak),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          big: '$streak',
-                          small: 'week streak',
-                          accent: true,
-                          centered: true,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          big: '${_metrics.bestStreakWeeks}',
-                          small: 'best run (wks)',
-                          centered: true,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          big: '${_metrics.sessionsYearToDate}',
-                          small: 'sessions YTD',
-                          centered: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SectionHeader(title: 'Last 13 weeks'),
-                  SurfaceCard(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-                    child: Column(
-                      children: [
-                        _ActivityHeatmap(metrics: _metrics),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'Rest',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                            const SizedBox(width: 7),
-                            for (final opacity in [0.0, 0.3, 0.55, 0.8, 1.0])
-                              Padding(
-                                padding: const EdgeInsets.only(right: 7),
-                                child: Container(
-                                  width: 13,
-                                  height: 13,
-                                  decoration: BoxDecoration(
-                                    color: opacity == 0
-                                        ? Colors.white.withValues(alpha: 0.05)
-                                        : AppColors.accentPrimary
-                                            .withValues(alpha: opacity),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                              ),
-                            const Text(
-                              'Hard',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              child: _StatCard(
+                big: '$sessionsThisMonth',
+                small: 'sessions in ${_monthNames[_month.month - 1]}',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                big: _formatTotalTime(monthTime),
+                small: 'total time',
               ),
             ),
           ],
         ),
-      ),
+        if (widget.showActivityHeatmap) ...[
+          const SectionHeader(title: 'Last 13 weeks'),
+          SurfaceCard(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+            child: Column(
+              children: [
+                _ActivityHeatmap(metrics: _metrics),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Rest',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    for (final opacity in [0.0, 0.3, 0.55, 0.8, 1.0])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 7),
+                        child: Container(
+                          width: 13,
+                          height: 13,
+                          decoration: BoxDecoration(
+                            color: opacity == 0
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : AppColors.accentPrimary
+                                    .withValues(alpha: opacity),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    const Text(
+                      'Hard',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -384,31 +356,14 @@ class _DayCell extends StatelessWidget {
                 day == null ? Colors.white.withValues(alpha: 0.03) : background,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                day == null ? '' : '$day',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: isToday
-                      ? Colors.white
-                      : hasSession
-                          ? AppColors.accentPrimary
-                          : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
+          alignment: Alignment.center,
+          child: Text(
+            day == null ? '' : '$day',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
           ),
         ),
       ),
@@ -469,14 +424,10 @@ class _StreakHeroCard extends StatelessWidget {
 class _StatCard extends StatelessWidget {
   final String big;
   final String small;
-  final bool accent;
-  final bool centered;
 
   const _StatCard({
     required this.big,
     required this.small,
-    this.accent = false,
-    this.centered = false,
   });
 
   @override
@@ -484,20 +435,19 @@ class _StatCard extends StatelessWidget {
     return SurfaceCard(
       padding: const EdgeInsets.all(14),
       child: Column(
-        crossAxisAlignment:
-            centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             big,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: accent ? AppColors.accentPrimary : AppColors.textPrimary,
+              color: AppColors.textPrimary,
               letterSpacing: -0.44,
               height: 1,
-              fontFeatures: const [FontFeature.tabularFigures()],
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(height: 5),
@@ -505,7 +455,6 @@ class _StatCard extends StatelessWidget {
             small,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textAlign: centered ? TextAlign.center : TextAlign.start,
             style: const TextStyle(
               fontSize: 10.5,
               color: AppColors.textMuted,
