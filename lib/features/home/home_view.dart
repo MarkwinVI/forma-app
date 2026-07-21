@@ -6,11 +6,13 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
+import '../../data/models/progression_event_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
+import '../../data/services/progression_event_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../settings/settings_view.dart';
@@ -22,6 +24,7 @@ import 'program_setup_view.dart';
 import 'session_overview_view.dart';
 import 'widgets/today_workout_card.dart';
 import 'widgets/week_calendar_card.dart';
+import 'widgets/what_changed_card.dart';
 
 /// Train tab — today's workout as a performance list (planned exercises with
 /// last result and change vs the previous attempt) plus a coaching tip.
@@ -42,12 +45,14 @@ class _HomeViewState extends State<HomeView> {
   final _exerciseLogService = ExerciseLogService();
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
+  final _progressionEventService = ProgressionEventService();
 
   bool _loading = true;
   bool _hasProgram = true;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
+  List<ProgressionEvent> _whatChanged = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
@@ -81,6 +86,15 @@ class _HomeViewState extends State<HomeView> {
         _trainingProgramStoreService.fetchProgramLogic(userId),
         _exerciseLogService.fetchPastWorkouts(userId),
       ]);
+      // Best-effort: a failed feed fetch shouldn't block the whole tab.
+      var whatChanged = const <ProgressionEvent>[];
+      try {
+        whatChanged = (await _progressionEventService.fetchUnseen(userId))
+            .where((event) => event.kind != ProgressionEventKind.personalBest)
+            .toList();
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load progression feed: $error\n$stackTrace');
+      }
 
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
@@ -94,6 +108,7 @@ class _HomeViewState extends State<HomeView> {
         _logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = results[2] as List<PastWorkout>;
+        _whatChanged = whatChanged;
         _loading = false;
       });
     } catch (error, stackTrace) {
@@ -107,6 +122,24 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> _dismissWhatChanged() async {
+    final userId = AuthService().currentUser?.id;
+    final dismissed = _whatChanged;
+    if (userId == null || dismissed.isEmpty) return;
+
+    // Hide immediately; the seen-marking is best-effort and retried
+    // naturally because unseen events are re-fetched on the next load.
+    setState(() => _whatChanged = const []);
+    try {
+      await _progressionEventService.markSeen(
+        userId,
+        [for (final event in dismissed) event.id],
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Failed to mark events seen: $error\n$stackTrace');
     }
   }
 
@@ -312,6 +345,13 @@ class _HomeViewState extends State<HomeView> {
           rows: TodayWorkoutContent.rows(metrics),
           onStart: () => _startWorkout(snapshot.recommendation),
         ),
+        if (_whatChanged.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          WhatChangedCard(
+            events: _whatChanged,
+            onDismiss: _dismissWhatChanged,
+          ),
+        ],
         const SizedBox(height: 12),
         TipCard(highlight: tip.$1, body: tip.$2),
         const SizedBox(height: 12),

@@ -1015,6 +1015,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                               sets: _setsFor(entry.items[i]),
                               isTimed: _isTimedExercise(entry.items[i].exercise),
                               targetLabel: _targetSummary(entry.items[i]),
+                              goalValue: entry.items[i].isProgression
+                                  ? _prescribedTargetFor(entry.items[i]).value
+                                  : null,
                               restSeconds: _restSecondsByExercise[
                                       entry.items[i].exercise.id] ??
                                   0,
@@ -1318,6 +1321,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final List<_WorkoutSetDraft> sets;
   final bool isTimed;
   final String targetLabel;
+
+  /// Per-set goal from the progression ladder; null for standalone
+  /// exercises, whose GOAL cells stay blank.
+  final int? goalValue;
   final int restSeconds;
   final int? openStepNumber;
   final void Function(int number) onToggleSet;
@@ -1335,6 +1342,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.sets,
     required this.isTimed,
     required this.targetLabel,
+    required this.goalValue,
     required this.restSeconds,
     required this.openStepNumber,
     required this.onToggleSet,
@@ -1504,6 +1512,9 @@ class _WorkoutExerciseCard extends StatelessWidget {
             child: _SetGridRow(
               leading: const Text('SET', style: _columnLabelStyle),
               middle: const Text('LAST', style: _columnLabelStyle),
+              goal: const Center(
+                child: Text('GOAL', style: _columnLabelStyle),
+              ),
               value: Center(
                 child: Text(
                   isTimed ? 'TIME' : 'REPS',
@@ -1598,6 +1609,17 @@ class _WorkoutExerciseCard extends StatelessWidget {
             fontSize: 13,
             color: AppColors.textMuted,
             fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+        goal: Center(
+          child: Text(
+            goalValue == null ? '' : '$goalValue${isTimed ? 's' : ''}',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
           ),
         ),
         value: Pressable(
@@ -1740,17 +1762,19 @@ class _WorkoutExerciseCard extends StatelessWidget {
   }
 }
 
-/// Shared 4-column grid used by the set header and set rows:
-/// set number · last session · value · check.
+/// Shared 5-column grid used by the set header and set rows:
+/// set number · last session · goal · value · check.
 class _SetGridRow extends StatelessWidget {
   final Widget leading;
   final Widget middle;
+  final Widget goal;
   final Widget value;
   final Widget trailing;
 
   const _SetGridRow({
     required this.leading,
     required this.middle,
+    required this.goal,
     required this.value,
     required this.trailing,
   });
@@ -1764,6 +1788,8 @@ class _SetGridRow extends StatelessWidget {
           SizedBox(width: 30, child: leading),
           const SizedBox(width: 10),
           Expanded(child: middle),
+          const SizedBox(width: 10),
+          SizedBox(width: 44, child: goal),
           const SizedBox(width: 10),
           SizedBox(width: 64, child: value),
           const SizedBox(width: 10),

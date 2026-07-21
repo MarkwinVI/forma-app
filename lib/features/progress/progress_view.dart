@@ -6,16 +6,19 @@ import '../../core/widgets/polished.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
+import '../../data/models/progression_event_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
+import '../../data/services/progression_event_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../home/home_dashboard_metrics.dart';
 import '../skills/skill_tree_view.dart';
 import '../skills/skills_view.dart';
+import 'widgets/achievements_card.dart';
 import 'widgets/biggest_gain_card.dart';
 import 'widgets/skill_tree_progress_card.dart';
 
@@ -38,12 +41,16 @@ class _ProgressViewState extends State<ProgressView> {
   final _exerciseLogService = ExerciseLogService();
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
+  final _progressionEventService = ProgressionEventService();
+
+  static const _maxAchievements = 6;
 
   bool _loading = true;
   bool _hasProgram = true;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
+  List<ProgressionEvent> _personalBests = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
@@ -77,6 +84,18 @@ class _ProgressViewState extends State<ProgressView> {
         _trainingProgramStoreService.fetchProgramLogic(userId),
         _exerciseLogService.fetchPastWorkouts(userId),
       ]);
+      // Best-effort: missing achievements shouldn't block the tab.
+      var personalBests = const <ProgressionEvent>[];
+      try {
+        personalBests = (await _progressionEventService.fetchRecent(userId))
+            .where(
+              (event) => event.kind == ProgressionEventKind.personalBest,
+            )
+            .take(_maxAchievements)
+            .toList();
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load achievements: $error\n$stackTrace');
+      }
 
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
@@ -90,6 +109,7 @@ class _ProgressViewState extends State<ProgressView> {
         _logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = results[2] as List<PastWorkout>;
+        _personalBests = personalBests;
         _loading = false;
       });
     } catch (error, stackTrace) {
@@ -231,6 +251,13 @@ class _ProgressViewState extends State<ProgressView> {
         if (biggestGain != null) ...[
           const SizedBox(height: 16),
           BiggestGainCard(data: biggestGain, skills: skills),
+        ],
+        if (_personalBests.isNotEmpty) ...[
+          const SectionHeader(
+            title: 'Achievements',
+            sub: 'Your latest personal bests',
+          ),
+          AchievementsCard(personalBests: _personalBests),
         ],
         SectionHeader(
           title: 'Skill trees',

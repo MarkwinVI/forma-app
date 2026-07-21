@@ -1,10 +1,16 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/polished.dart';
+import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_log_model.dart';
+import '../../data/models/exercise_model.dart';
+import '../../data/models/progression_event_model.dart';
+import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
@@ -14,6 +20,9 @@ import '../../data/services/progression_event_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
 
+/// Post-workout celebration flow: a summary step that saves the session,
+/// followed by one step per progression change the session earned — target
+/// level-ups, masteries, and newly unlocked exercises — Duolingo-style.
 class FinishedWorkoutView extends StatefulWidget {
   final CompletedWorkout workout;
 
@@ -30,7 +39,11 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     with SingleTickerProviderStateMixin {
   final _exerciseLogService = ExerciseLogService();
   late final AnimationController _confettiController;
-  bool _saving = false;
+
+  bool _saving = true;
+  bool _saveFailed = false;
+  int _stepIndex = 0;
+  List<_CelebrationStep> _steps = const [_CelebrationStep.summary()];
 
   @override
   void initState() {
@@ -39,6 +52,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       vsync: this,
       duration: const Duration(milliseconds: 2600),
     )..repeat();
+    _saveWorkout();
   }
 
   @override
@@ -48,17 +62,19 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   }
 
   Future<void> _saveWorkout() async {
-    if (_saving) return;
-
     final userId = AuthService().currentUser?.id;
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sign in again to save this workout.')),
-      );
+      setState(() {
+        _saving = false;
+        _saveFailed = true;
+      });
       return;
     }
 
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _saveFailed = false;
+    });
 
     try {
       final sessionId = await _exerciseLogService.saveWorkoutSession(
@@ -112,12 +128,12 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         debugPrint('Failed to advance program state: $error\n$stackTrace');
       }
 
-      // Auto-progression: progression exercises whose logged volume reached
-      // their current target climb the ladder, and reaching the live mastery
-      // target masters them and unlocks the next move in their skill path.
-      // Standalone/custom exercises are never auto-progressed. Every change
-      // is recorded as a progression event tied to this session.
+      var events = const <ProgressionEvent>[];
       if (sessionId != null) {
+        // Auto-progression: progression exercises whose logged volume reached
+        // their current target climb the ladder, and reaching the live
+        // mastery target masters them and unlocks the next move in their
+        // skill path. Standalone/custom exercises are never auto-progressed.
         try {
           final progress = await ProgressService().fetchAll(userId);
           final masteryTargets =
@@ -157,16 +173,29 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           // Non-fatal: PBs are informational; the workout itself is saved.
           debugPrint('Failed to record personal bests: $error\n$stackTrace');
         }
+
+        try {
+          events = await ProgressionEventService()
+              .fetchForSession(userId, sessionId);
+        } catch (error, stackTrace) {
+          // Non-fatal: without events the flow simply ends at the summary.
+          debugPrint(
+              'Failed to load progression events: $error\n$stackTrace');
+        }
       }
 
       if (!mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } catch (error) {
+      setState(() {
+        _saving = false;
+        _steps = _buildSteps(events);
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save workout: $error\n$stackTrace');
       if (!mounted) return;
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save workout: $error')),
-      );
+      setState(() {
+        _saving = false;
+        _saveFailed = true;
+      });
     }
   }
 
@@ -200,177 +229,491 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     );
   }
 
+  /// Summary first, then level-ups, standalone masteries, and unlocks —
+  /// the order the story reads best in. PBs live on the Progress tab.
+  List<_CelebrationStep> _buildSteps(List<ProgressionEvent> events) {
+    final activatedByRelated = {
+      for (final event in events)
+        if (event.kind == ProgressionEventKind.activated &&
+            event.relatedExerciseId != null)
+          event.relatedExerciseId!: event,
+    };
+    final masteredById = {
+      for (final event in events)
+        if (event.kind == ProgressionEventKind.mastered)
+          event.exerciseId: event,
+    };
+
+    final steps = <_CelebrationStep>[const _CelebrationStep.summary()];
+
+    for (final event in events) {
+      if (event.kind != ProgressionEventKind.targetIncrease) continue;
+      final exercise = ExerciseCatalog.findById(event.exerciseId);
+      if (exercise == null) continue;
+      steps.add(_CelebrationStep.levelUp(_LevelUpData(
+        exercise: exercise,
+        sets: event.targetSets ?? 3,
+        from: event.valueFrom ?? 0,
+        to: event.valueTo ?? 0,
+      )));
+    }
+
+    // Masteries without an unlock (branch points, completed paths).
+    for (final event in events) {
+      if (event.kind != ProgressionEventKind.mastered) continue;
+      if (activatedByRelated.containsKey(event.exerciseId)) continue;
+      final exercise = ExerciseCatalog.findById(event.exerciseId);
+      if (exercise == null) continue;
+      steps.add(_CelebrationStep.mastered(_MasteredData(
+        exercise: exercise,
+        sets: event.targetSets ?? 3,
+        value: event.valueTo ?? 0,
+      )));
+    }
+
+    for (final event in events) {
+      if (event.kind != ProgressionEventKind.activated) continue;
+      final unlock = _resolveUnlock(event, masteredById);
+      if (unlock != null) steps.add(_CelebrationStep.unlock(unlock));
+    }
+
+    return steps;
+  }
+
+  _UnlockData? _resolveUnlock(
+    ProgressionEvent event,
+    Map<String, ProgressionEvent> masteredById,
+  ) {
+    final newExercise = ExerciseCatalog.findById(event.exerciseId);
+    final mastered = event.relatedExerciseId == null
+        ? null
+        : ExerciseCatalog.findById(event.relatedExerciseId!);
+    if (newExercise == null || mastered == null) return null;
+
+    // The path this unlock happened on: mastered followed by the new move.
+    for (final category in SkillCategoryCatalog.all()) {
+      for (final entry in category.trainingPaths.entries) {
+        final path = entry.value;
+        final index = path.indexOf(mastered.id);
+        if (index < 0 ||
+            index + 1 >= path.length ||
+            path[index + 1] != newExercise.id) {
+          continue;
+        }
+
+        // Window of up to five nodes around the cleared one.
+        final start = math.max(0, index - 2);
+        final end = math.min(path.length, index + 3);
+        final masteredEvent = masteredById[mastered.id];
+
+        return _UnlockData(
+          newExercise: newExercise,
+          mastered: mastered,
+          startSets: event.targetSets ?? 3,
+          startValue: event.valueTo ??
+              ExerciseProgressionService.initialTargetValueForExercise(
+                newExercise,
+              ),
+          masterySets: masteredEvent?.targetSets ?? 3,
+          masteryValue: masteredEvent?.valueTo ?? 0,
+          treeTitle: category.title,
+          branchLabel: _branchLabel(category, entry.key),
+          nodeNames: [
+            for (final id in path.sublist(start, end))
+              ExerciseCatalog.findById(id)?.name ?? id,
+          ],
+          clearedIndex: index - start,
+        );
+      }
+    }
+    return null;
+  }
+
+  String _branchLabel(SkillCategory category, String pathId) {
+    for (final branch in category.branches) {
+      if (branch.id == pathId) return branch.label;
+    }
+    return pathId == 'main' ? 'Main line' : pathId;
+  }
+
+  void _advance() {
+    if (_stepIndex >= _steps.length - 1) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
+    }
+    setState(() => _stepIndex += 1);
+  }
+
+  void _skip() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  String get _ctaLabel {
+    if (_saving) return 'Saving';
+    if (_saveFailed) return 'Try again';
+    if (_stepIndex == _steps.length - 1) return 'Nice work';
+    return _stepIndex == 0 ? "See what's new" : 'Continue';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final workout = widget.workout;
+    final step = _steps[_stepIndex];
 
-    return Scaffold(
-      backgroundColor: AppColors.bgSecondary,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _saving) return;
+        if (_saveFailed) {
+          // Nothing was saved — back returns to the workout to retry.
+          Navigator.of(context).pop();
+        } else {
+          // Saved: leaving the flow means done, never back into the
+          // finished workout where a second save could be triggered.
+          _skip();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Stack(
           children: [
-            AnimatedBuilder(
-              animation: _confettiController,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter:
-                      _ConfettiPainter(progress: _confettiController.value),
-                  size: Size.infinite,
-                );
-              },
-            ),
-            ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-              children: [
-                _CelebrationHeader(workout: workout),
-                const SizedBox(height: 18),
-                _MetricGrid(workout: workout),
-                const SizedBox(height: 22),
-                _ExerciseOverviewList(workout: workout),
-              ],
+            if (_stepIndex == 0)
+              AnimatedBuilder(
+                animation: _confettiController,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter:
+                        _ConfettiPainter(progress: _confettiController.value),
+                    size: Size.infinite,
+                  );
+                },
+              ),
+            SafeArea(
+              child: Column(
+                children: [
+                  // Progress bars + skip
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < _steps.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 8),
+                          Expanded(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 350),
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: i <= _stepIndex
+                                    ? AppColors.accentPrimary
+                                    : Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (!_saving && !_saveFailed) ...[
+                          const SizedBox(width: 12),
+                          Pressable(
+                            onTap: _skip,
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: const BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 15,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: switch (step) {
+                      _SummaryStep() => _SummaryContent(
+                          workout: widget.workout,
+                          hasNext: _steps.length > 1,
+                        ),
+                      _LevelUpStep(data: final data) =>
+                        _LevelUpContent(key: ValueKey(data.exercise.id), data: data),
+                      _MasteredStep(data: final data) => _MasteredContent(
+                          key: ValueKey(data.exercise.id), data: data),
+                      _UnlockStep(data: final data) => _UnlockContent(
+                          key: ValueKey(data.newExercise.id), data: data),
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    child: PillButton(
+                      label: _ctaLabel,
+                      onTap: _saving
+                          ? null
+                          : _saveFailed
+                              ? _saveWorkout
+                              : _advance,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          color: AppColors.bgSecondary,
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _saving ? null : _saveWorkout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                disabledBackgroundColor: Colors.white.withValues(alpha: 0.35),
-                minimumSize: const Size.fromHeight(58),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-              ),
-              icon: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: LoadingIndicator(),
-                    )
-                  : const Icon(Icons.save_alt_rounded, size: 20),
-              label: Text(
-                _saving ? 'Saving' : 'Save workout',
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
 
-class _CelebrationHeader extends StatelessWidget {
-  final CompletedWorkout workout;
+// ── Steps ─────────────────────────────────────────────────────────────
 
-  const _CelebrationHeader({
+sealed class _CelebrationStep {
+  const _CelebrationStep();
+
+  const factory _CelebrationStep.summary() = _SummaryStep;
+  const factory _CelebrationStep.levelUp(_LevelUpData data) = _LevelUpStep;
+  const factory _CelebrationStep.mastered(_MasteredData data) = _MasteredStep;
+  const factory _CelebrationStep.unlock(_UnlockData data) = _UnlockStep;
+}
+
+class _SummaryStep extends _CelebrationStep {
+  const _SummaryStep();
+}
+
+class _LevelUpStep extends _CelebrationStep {
+  final _LevelUpData data;
+  const _LevelUpStep(this.data);
+}
+
+class _MasteredStep extends _CelebrationStep {
+  final _MasteredData data;
+  const _MasteredStep(this.data);
+}
+
+class _UnlockStep extends _CelebrationStep {
+  final _UnlockData data;
+  const _UnlockStep(this.data);
+}
+
+class _LevelUpData {
+  final Exercise exercise;
+  final int sets;
+  final int from;
+  final int to;
+
+  const _LevelUpData({
+    required this.exercise,
+    required this.sets,
+    required this.from,
+    required this.to,
+  });
+}
+
+class _MasteredData {
+  final Exercise exercise;
+  final int sets;
+  final int value;
+
+  const _MasteredData({
+    required this.exercise,
+    required this.sets,
+    required this.value,
+  });
+}
+
+class _UnlockData {
+  final Exercise newExercise;
+  final Exercise mastered;
+  final int startSets;
+  final int startValue;
+  final int masterySets;
+  final int masteryValue;
+  final String treeTitle;
+  final String branchLabel;
+  final List<String> nodeNames;
+  final int clearedIndex;
+
+  const _UnlockData({
+    required this.newExercise,
+    required this.mastered,
+    required this.startSets,
+    required this.startValue,
+    required this.masterySets,
+    required this.masteryValue,
+    required this.treeTitle,
+    required this.branchLabel,
+    required this.nodeNames,
+    required this.clearedIndex,
+  });
+}
+
+// ── Summary step ──────────────────────────────────────────────────────
+
+class _SummaryContent extends StatelessWidget {
+  final CompletedWorkout workout;
+  final bool hasNext;
+
+  const _SummaryContent({
     required this.workout,
+    required this.hasNext,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 30,
-            offset: Offset(0, 14),
-          ),
-        ],
-      ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(30, 26, 30, 12),
       child: Column(
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF4D8),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentPrimary.withValues(alpha: 0.18),
-                  blurRadius: 28,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.celebration_rounded,
-              color: AppColors.accentPrimary,
-              size: 36,
+          const _RiseIn(
+            delay: Duration.zero,
+            child: _CelebrationBadge(
+              color: AppColors.green,
+              size: 84,
+              child: Icon(
+                Icons.check_rounded,
+                size: 40,
+                color: AppColors.green,
+              ),
             ),
           ),
           const SizedBox(height: 18),
-          Text(
-            workout.historyTitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 29,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF25272B),
+          const _RiseIn(
+            delay: Duration(milliseconds: 40),
+            child: Text(
+              'Workout complete',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            _formatFinishedAt(workout.finishedAt),
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF9A9CA1),
+          _RiseIn(
+            delay: const Duration(milliseconds: 80),
+            child: Text(
+              '${workout.historyTitle} · '
+              '${_formatFinishedAt(workout.finishedAt)}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
-          const SizedBox(height: 26),
-          Row(
-            children: [
-              Expanded(
-                child: _HeroStat(
-                  value: _formatDuration(workout.totalDuration),
-                  label: 'Total duration',
-                ),
+          const SizedBox(height: 22),
+          _RiseIn(
+            delay: const Duration(milliseconds: 120),
+            child: SurfaceCard(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _SummaryStat(
+                      label: 'DURATION',
+                      value: _formatDuration(workout.totalDuration),
+                    ),
+                  ),
+                  Expanded(
+                    child: _SummaryStat(
+                      label: 'SETS',
+                      value: '${workout.totalSets}',
+                    ),
+                  ),
+                  Expanded(
+                    child: _SummaryStat(
+                      label: 'EXERCISES',
+                      value: '${workout.exercises.length}',
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                width: 1,
-                height: 54,
-                color: const Color(0xFFE9EAEC),
-              ),
-              Expanded(
-                child: _HeroStat(
-                  value: workout.totalSets.toString(),
-                  label: 'Sets logged',
-                ),
-              ),
-            ],
+            ),
           ),
+          const SizedBox(height: 10),
+          _RiseIn(
+            delay: const Duration(milliseconds: 160),
+            child: SurfaceCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Column(
+                children: [
+                  for (var i = 0; i < workout.exercises.length; i++)
+                    Container(
+                      decoration: i > 0
+                          ? const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: AppColors.divider),
+                              ),
+                            )
+                          : null,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              workout.exercises[i].exercise.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            _setsSummary(workout.exercises[i]),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (hasNext) ...[
+            const SizedBox(height: 18),
+            const _RiseIn(
+              delay: Duration(milliseconds: 220),
+              child: Text(
+                "There's more — keep going.",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+
+  String _setsSummary(CompletedWorkoutExercise exercise) {
+    return exercise.sets
+        .map((set) => set.isTimed ? '${set.value}s' : '${set.value}')
+        .join(' · ');
+  }
 }
 
-class _HeroStat extends StatelessWidget {
-  final String value;
+class _SummaryStat extends StatelessWidget {
   final String label;
+  final String value;
 
-  const _HeroStat({
-    required this.value,
+  const _SummaryStat({
     required this.label,
+    required this.value,
   });
 
   @override
@@ -380,19 +723,21 @@ class _HeroStat extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF25272B),
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.2,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 3),
         Text(
           label,
           style: const TextStyle(
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF9A9CA1),
+            color: AppColors.textMuted,
+            letterSpacing: 0.9,
           ),
         ),
       ],
@@ -400,110 +745,584 @@ class _HeroStat extends StatelessWidget {
   }
 }
 
-class _MetricGrid extends StatelessWidget {
-  final CompletedWorkout workout;
+// ── Level-up step ─────────────────────────────────────────────────────
 
-  const _MetricGrid({
-    required this.workout,
+class _LevelUpContent extends StatelessWidget {
+  final _LevelUpData data;
+
+  const _LevelUpContent({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final suffix = data.exercise.isTimed ? 's' : '';
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _CelebrationTag(color: AppColors.amber, label: 'Level up'),
+            const SizedBox(height: 8),
+            _RiseIn(
+              delay: const Duration(milliseconds: 80),
+              child: Text(
+                data.exercise.name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _RiseIn(
+              delay: const Duration(milliseconds: 160),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '${data.sets} ×',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  _RollingValue(
+                    from: '${data.from}$suffix',
+                    to: '${data.to}$suffix',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            _RiseIn(
+              delay: const Duration(milliseconds: 650),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Text(
+                  'You hit ${data.sets} × ${data.from}$suffix — the program '
+                  'just raised your target.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Mastered step (branch point / completed path) ─────────────────────
+
+class _MasteredContent extends StatelessWidget {
+  final _MasteredData data;
+
+  const _MasteredContent({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final suffix = data.exercise.isTimed ? 's' : '';
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _CelebrationTag(color: AppColors.green, label: 'Mastered'),
+            const SizedBox(height: 8),
+            _RiseIn(
+              delay: const Duration(milliseconds: 80),
+              child: Text(
+                data.exercise.name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _RiseIn(
+              delay: const Duration(milliseconds: 160),
+              child: Text(
+                '${data.sets} × ${data.value}$suffix',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.green,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _RiseIn(
+              delay: const Duration(milliseconds: 280),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Text(
+                  'You cleared the mastery target — '
+                  '${data.exercise.name} is yours now.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Unlock step ───────────────────────────────────────────────────────
+
+/// The previous exercise's bar fills to its mastery target, then the title
+/// swaps to the newly unlocked exercise and the tree spine below clears the
+/// working node and activates the next one.
+class _UnlockContent extends StatefulWidget {
+  final _UnlockData data;
+
+  const _UnlockContent({super.key, required this.data});
+
+  @override
+  State<_UnlockContent> createState() => _UnlockContentState();
+}
+
+class _UnlockContentState extends State<_UnlockContent> {
+  bool _fill = false;
+  bool _swapped = false;
+  Timer? _fillTimer;
+  Timer? _swapTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fillTimer = Timer(const Duration(milliseconds: 600), () {
+      if (mounted) setState(() => _fill = true);
+    });
+    _swapTimer = Timer(const Duration(milliseconds: 2150), () {
+      if (mounted) {
+        setState(() {
+          _swapped = true;
+          _fill = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fillTimer?.cancel();
+    _swapTimer?.cancel();
+    super.dispose();
+  }
+
+  _NodeState _nodeState(int index) {
+    final cleared = widget.data.clearedIndex;
+    if (index < cleared) return _NodeState.done;
+    if (index == cleared) return _swapped ? _NodeState.done : _NodeState.current;
+    if (index == cleared + 1 && _swapped) return _NodeState.current;
+    return _NodeState.locked;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+    final title = _swapped ? data.newExercise.name : data.mastered.name;
+    final targetLabel = _swapped
+        ? '${data.startSets} × ${data.startValue}'
+            '${data.newExercise.isTimed ? 's' : ''}'
+        : '${data.masterySets} × ${data.masteryValue}'
+            '${data.mastered.isTimed ? 's' : ''}';
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _CelebrationTag(
+              color: AppColors.accentPrimary,
+              label: 'New exercise unlocked',
+            ),
+            const SizedBox(height: 6),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              child: Text(
+                title,
+                key: ValueKey(title),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            _RiseIn(
+              delay: const Duration(milliseconds: 80),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _swapped ? 'STARTING TARGET' : 'PREREQUISITE',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMuted,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                        Text(
+                          targetLabel,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: _swapped
+                                ? AppColors.textSecondary
+                                : AppColors.accentPrimary,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures()
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: SizedBox(
+                        height: 10,
+                        child: Stack(
+                          children: [
+                            Container(color: AppColors.surface2),
+                            AnimatedFractionallySizedBox(
+                              duration: _fill
+                                  ? const Duration(milliseconds: 1250)
+                                  : Duration.zero,
+                              curve: Curves.easeOutCubic,
+                              widthFactor: _fill ? 1 : 0,
+                              alignment: Alignment.centerLeft,
+                              child:
+                                  Container(color: AppColors.accentPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _RiseIn(
+              delay: const Duration(milliseconds: 140),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 280),
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.07),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${data.treeTitle.toUpperCase()} TREE',
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.accentPrimary,
+                            letterSpacing: 1.05,
+                          ),
+                        ),
+                        Text(
+                          data.branchLabel,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 13),
+                    for (var i = 0; i < data.nodeNames.length; i++)
+                      _TreeNode(
+                        state: _nodeState(i),
+                        name: data.nodeNames[i],
+                        last: i == data.nodeNames.length - 1,
+                        isNew: _swapped && i == data.clearedIndex + 1,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 500),
+              opacity: _swapped ? 1 : 0,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 290),
+                child: Text(
+                  'Clearing ${data.mastered.name} at ${data.masterySets} × '
+                  '${data.masteryValue}${data.mastered.isTimed ? 's' : ''} '
+                  'opens ${data.newExercise.name} — your next move on this '
+                  'path.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.55,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _NodeState { done, current, locked }
+
+class _TreeNode extends StatelessWidget {
+  final _NodeState state;
+  final String name;
+  final bool last;
+  final bool isNew;
+
+  const _TreeNode({
+    required this.state,
+    required this.name,
+    required this.last,
+    required this.isNew,
+  });
+
+  static const _currentBlue = Color(0xFF4A8CFF);
+
+  Color get _dotColor {
+    switch (state) {
+      case _NodeState.done:
+        return AppColors.green;
+      case _NodeState.current:
+        return _currentBlue;
+      case _NodeState.locked:
+        return Colors.white.withValues(alpha: 0.16);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 14,
+            child: Column(
+              children: [
+                const SizedBox(height: 3),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: state == _NodeState.locked
+                        ? Colors.transparent
+                        : _dotColor,
+                    border: state == _NodeState.locked
+                        ? Border.all(color: _dotColor, width: 2)
+                        : null,
+                    boxShadow: state == _NodeState.locked
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: _dotColor.withValues(alpha: 0.18),
+                              spreadRadius: 3.5,
+                            ),
+                          ],
+                  ),
+                ),
+                if (!last)
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 500),
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(1),
+                        color: state == _NodeState.done
+                            ? AppColors.green
+                            : Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: last ? 0 : 14),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 18 / 13.5,
+                        fontWeight: state == _NodeState.locked
+                            ? FontWeight.w600
+                            : FontWeight.w700,
+                        color: switch (state) {
+                          _NodeState.locked => AppColors.textMuted,
+                          _NodeState.current => AppColors.textPrimary,
+                          _NodeState.done => AppColors.textSecondary,
+                        },
+                      ),
+                    ),
+                  ),
+                  if (isNew) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'NEW',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.accentPrimary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared celebration primitives ─────────────────────────────────────
+
+class _CelebrationBadge extends StatelessWidget {
+  final Color color;
+  final double size;
+  final Widget child;
+
+  const _CelebrationBadge({
+    required this.color,
+    required this.size,
+    required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    final timedSeconds = workout.totalTimedSeconds;
-
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.95,
-      children: [
-        _MetricTile(
-          icon: Icons.fitness_center_rounded,
-          value: workout.exercises.length.toString(),
-          label: 'Exercises',
-        ),
-        _MetricTile(
-          icon: Icons.repeat_rounded,
-          value: workout.totalReps.toString(),
-          label: 'Total reps',
-        ),
-        _MetricTile(
-          icon: Icons.timer_outlined,
-          value: timedSeconds > 0 ? _formatShortDuration(timedSeconds) : '0s',
-          label: 'Hold time',
-        ),
-        _MetricTile(
-          icon: Icons.layers_rounded,
-          value: workout.totalSets.toString(),
-          label: 'Total sets',
-        ),
-      ],
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.13),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+            spreadRadius: -8,
+          ),
+          const BoxShadow(
+            color: Color(0x4D000000),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: child,
     );
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  final IconData icon;
-  final String value;
+class _CelebrationTag extends StatelessWidget {
+  final Color color;
   final String label;
 
-  const _MetricTile({
-    required this.icon,
-    required this.value,
+  const _CelebrationTag({
+    required this.color,
     required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: AppColors.bgTertiary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderPrimary),
+        color: color.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-            ),
-            child: Icon(icon, color: AppColors.textMuted, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
+          Icon(Icons.bolt_rounded, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: 1.1,
             ),
           ),
         ],
@@ -512,157 +1331,137 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _ExerciseOverviewList extends StatelessWidget {
-  final CompletedWorkout workout;
+/// Slide-up + fade-in entrance, staggered by [delay].
+class _RiseIn extends StatefulWidget {
+  final Duration delay;
+  final Widget child;
 
-  const _ExerciseOverviewList({
-    required this.workout,
+  const _RiseIn({
+    required this.delay,
+    required this.child,
   });
 
   @override
+  State<_RiseIn> createState() => _RiseInState();
+}
+
+class _RiseInState extends State<_RiseIn> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  Timer? _delayTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      _delayTimer = Timer(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _delayTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            'WORKOUT OVERVIEW',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...workout.exercises.map(
-          (exercise) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _ExerciseSummaryCard(exercise: exercise),
-          ),
-        ),
-      ],
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: const Cubic(0.32, 0.72, 0, 1),
+    );
+
+    return FadeTransition(
+      opacity: curve,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.08),
+          end: Offset.zero,
+        ).animate(curve),
+        child: widget.child,
+      ),
     );
   }
 }
 
-class _ExerciseSummaryCard extends StatelessWidget {
-  final CompletedWorkoutExercise exercise;
+/// Old value rolls up and out while the new value rolls in, odometer-style.
+class _RollingValue extends StatefulWidget {
+  final String from;
+  final String to;
 
-  const _ExerciseSummaryCard({
-    required this.exercise,
+  const _RollingValue({
+    required this.from,
+    required this.to,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final accentColor =
-        exercise.isTimed ? const Color(0xFFA78BFA) : AppColors.accentPrimary;
-    final totalLabel = exercise.isTimed
-        ? _formatShortDuration(exercise.totalTimedSeconds)
-        : '${exercise.totalReps} reps';
+  State<_RollingValue> createState() => _RollingValueState();
+}
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgTertiary,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.borderPrimary),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+class _RollingValueState extends State<_RollingValue> {
+  bool _rolled = false;
+  Timer? _timer;
+
+  static const _height = 38.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _rolled = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.w800,
+      height: _height / 32,
+      fontFeatures: [FontFeature.tabularFigures()],
+    );
+
+    return ClipRect(
+      child: SizedBox(
+        height: _height,
+        child: AnimatedSlide(
+          duration: const Duration(milliseconds: 700),
+          curve: const Cubic(0.65, 0, 0.35, 1),
+          offset: _rolled ? const Offset(0, -0.5) : Offset.zero,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  exercise.exercise.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+              Text(
+                widget.from,
+                style: style.copyWith(color: AppColors.textMuted),
               ),
               Text(
-                '${exercise.sets.length} sets',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMuted,
-                ),
+                widget.to,
+                style: style.copyWith(color: AppColors.amber),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${exercise.track.label} · $totalLabel',
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: exercise.sets
-                .map(
-                  (set) => _SetSummaryChip(
-                    set: set,
-                    color: accentColor,
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SetSummaryChip extends StatelessWidget {
-  final CompletedWorkoutSet set;
-  final Color color;
-
-  const _SetSummaryChip({
-    required this.set,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final value = set.isTimed ? '${set.value}s' : '${set.value} reps';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
-      child: Text(
-        'Set ${set.number}: $value',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          color: color,
         ),
       ),
     );
   }
 }
+
+// ── Confetti ──────────────────────────────────────────────────────────
 
 class _ConfettiPainter extends CustomPainter {
   final double progress;
@@ -676,14 +1475,11 @@ class _ConfettiPainter extends CustomPainter {
     final random = math.Random(18);
     const colors = [
       AppColors.accentPrimary,
-      Color(0xFFA78BFA),
-      Color(0xFF4ECDC4),
-      Color(0xFF34D399),
-      Color(0xFFFFD166),
-      Color(0xFFFF6B9A),
+      AppColors.amber,
+      AppColors.green,
     ];
 
-    for (var i = 0; i < 72; i++) {
+    for (var i = 0; i < 54; i++) {
       final baseX = random.nextDouble() * size.width;
       final baseY = random.nextDouble() * size.height;
       final speed = 0.55 + random.nextDouble() * 0.9;
@@ -691,10 +1487,10 @@ class _ConfettiPainter extends CustomPainter {
       final x = baseX + sway;
       final y =
           ((baseY + progress * size.height * speed) % (size.height + 70)) - 35;
-      final width = 4 + random.nextDouble() * 5;
-      final height = 9 + random.nextDouble() * 12;
+      final width = 4 + random.nextDouble() * 3;
+      final height = 9 + random.nextDouble() * 6;
       final paint = Paint()
-        ..color = colors[i % colors.length].withValues(alpha: 0.52);
+        ..color = colors[i % colors.length].withValues(alpha: 0.4);
 
       canvas.save();
       canvas.translate(x, y);
@@ -718,6 +1514,8 @@ class _ConfettiPainter extends CustomPainter {
   bool shouldRepaint(_ConfettiPainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
+
+// ── Formatting ────────────────────────────────────────────────────────
 
 String _formatFinishedAt(DateTime dateTime) {
   final now = DateTime.now();
@@ -747,17 +1545,8 @@ String _formatDuration(Duration duration) {
   String twoDigits(int value) => value.toString().padLeft(2, '0');
 
   if (hours > 0) {
-    return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}';
+    return '$hours:${twoDigits(minutes)}:${twoDigits(seconds)}';
   }
 
-  return '${twoDigits(minutes)}:${twoDigits(seconds)}';
-}
-
-String _formatShortDuration(int seconds) {
-  final minutes = seconds ~/ 60;
-  final remainingSeconds = seconds % 60;
-
-  if (minutes == 0) return '${remainingSeconds}s';
-  if (remainingSeconds == 0) return '${minutes}m';
-  return '${minutes}m ${remainingSeconds}s';
+  return '$minutes:${twoDigits(seconds)}';
 }
