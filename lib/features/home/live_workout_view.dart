@@ -354,33 +354,20 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     }
   }
 
-  /// Opens a numeric keyboard so the user can type the reps (or seconds for
-  /// timed exercises) for a set directly, instead of tapping +/- steppers.
-  Future<void> _editSetValue(
+  /// Applies a reps (or seconds, for timed exercises) value typed inline on
+  /// a set row. Marks the set edited so it counts toward the logged session.
+  void _setSetValue(
     TrainingRecommendationItem item,
     int number,
-  ) async {
-    final set = _setsFor(item).firstWhere((set) => set.number == number);
+    int value,
+  ) {
     final isTimed = _isTimedExercise(item.exercise);
+    final clamped = value.clamp(0, isTimed ? 3600 : 999);
 
-    final entered = await showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _SetValueSheet(
-        exerciseName: item.exercise.name,
-        setNumber: number,
-        isTimed: isTimed,
-        initialValue: set.target,
-      ),
-    );
-    if (entered == null || !mounted) return;
-
-    final value = entered.clamp(1, isTimed ? 3600 : 999);
     final sets = _setsFor(item)
         .map(
           (set) => set.number == number
-              ? set.copyWith(target: value, isEdited: true)
+              ? set.copyWith(target: clamped, isEdited: true)
               : set,
         )
         .toList();
@@ -1027,8 +1014,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                   0,
                               onToggleSet: (number) =>
                                   _toggleSet(entry.items[i], number),
-                              onEditValue: (number) =>
-                                  _editSetValue(entry.items[i], number),
+                              onValueChanged: (number, value) =>
+                                  _setSetValue(entry.items[i], number, value),
                               onRemoveSet: (number) =>
                                   _removeSet(entry.items[i], number),
                               onAddSet: () => _addSet(entry.items[i]),
@@ -1092,144 +1079,104 @@ class _SectionEntry {
   const _SectionEntry({required this.section, required this.items});
 }
 
-/// Bottom sheet with a numeric keyboard for typing a set's reps (or seconds
-/// for timed exercises) directly. Pops with the entered value, or null if
-/// dismissed without a valid number.
-class _SetValueSheet extends StatefulWidget {
-  final String exerciseName;
-  final int setNumber;
-  final bool isTimed;
-  final int initialValue;
+/// Inline, editable reps/seconds cell for a set row. Owns its controller and
+/// focus node so the numeric keyboard can stay docked and the whole set list
+/// stays visible while typing — and so the once-a-second workout-timer
+/// rebuilds of the parent never reset the cursor or clobber what's typed.
+class _RepField extends StatefulWidget {
+  final int value;
+  final bool completed;
+  final ValueChanged<int> onChanged;
 
-  const _SetValueSheet({
-    required this.exerciseName,
-    required this.setNumber,
-    required this.isTimed,
-    required this.initialValue,
+  const _RepField({
+    super.key,
+    required this.value,
+    required this.completed,
+    required this.onChanged,
   });
 
   @override
-  State<_SetValueSheet> createState() => _SetValueSheetState();
+  State<_RepField> createState() => _RepFieldState();
 }
 
-class _SetValueSheetState extends State<_SetValueSheet> {
+class _RepFieldState extends State<_RepField> {
   late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: '${widget.initialValue}');
+    _controller = TextEditingController(text: '${widget.value}');
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(_RepField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reflect external value changes (progression target on load, add-set
+    // copying the last target) — but never while the user is typing.
+    if (widget.value != oldWidget.value &&
+        !_focusNode.hasFocus &&
+        int.tryParse(_controller.text) != widget.value) {
+      _controller.text = '${widget.value}';
+    }
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      // Select all so the first keystroke replaces the shown value.
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    } else if (_controller.text.trim().isEmpty) {
+      // Left blank — restore the last known value.
+      _controller.text = '${widget.value}';
+    }
+  }
+
+  void _handleChanged(String text) {
+    final parsed = int.tryParse(text.trim());
+    if (parsed != null) widget.onChanged(parsed);
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    final value = int.tryParse(_controller.text.trim());
-    Navigator.of(context).pop(value);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final unit = widget.isTimed ? 'seconds' : 'reps';
-
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
+    return Container(
+      height: 32,
+      decoration: BoxDecoration(
+        color: widget.completed ? AppColors.accentSoft : AppColors.surface2,
+        borderRadius: BorderRadius.circular(9),
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(kCardRadius),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${widget.exerciseName} · Set ${widget.setNumber}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Enter your $unit',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        autofocus: true,
-                        keyboardType: TextInputType.number,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _submit(),
-                        onTap: () => _controller.selection = TextSelection(
-                          baseOffset: 0,
-                          extentOffset: _controller.text.length,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                        cursorColor: AppColors.accentPrimary,
-                        decoration: InputDecoration(
-                          isCollapsed: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 10),
-                          filled: true,
-                          fillColor: AppColors.surface2,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          hintText: '0',
-                          hintStyle: const TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      unit,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                PillButton(label: 'Done', onTap: _submit),
-              ],
-            ),
-          ),
+      alignment: Alignment.center,
+      child: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.center,
+        onChanged: _handleChanged,
+        cursorColor: AppColors.accentPrimary,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: widget.completed
+              ? AppColors.accentPrimary
+              : AppColors.textPrimary,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+        decoration: const InputDecoration(
+          isDense: true,
+          isCollapsed: true,
+          contentPadding: EdgeInsets.zero,
+          border: InputBorder.none,
         ),
       ),
     );
@@ -1463,7 +1410,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final int? goalValue;
   final int restSeconds;
   final void Function(int number) onToggleSet;
-  final void Function(int number) onEditValue;
+  final void Function(int number, int value) onValueChanged;
   final void Function(int number) onRemoveSet;
   final VoidCallback onAddSet;
   final VoidCallback onRestTap;
@@ -1479,7 +1426,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.goalValue,
     required this.restSeconds,
     required this.onToggleSet,
-    required this.onEditValue,
+    required this.onValueChanged,
     required this.onRemoveSet,
     required this.onAddSet,
     required this.onRestTap,
@@ -1489,9 +1436,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
 
   int get _doneCount => sets.where((set) => set.completed).length;
   bool get _allDone => sets.isNotEmpty && _doneCount == sets.length;
-
-  String _valueLabel(_WorkoutSetDraft set) =>
-      isTimed ? '${set.target}s' : '${set.target}';
 
   @override
   Widget build(BuildContext context) {
@@ -1747,27 +1691,11 @@ class _WorkoutExerciseCard extends StatelessWidget {
             ),
           ),
         ),
-        value: Pressable(
-          onTap: () => onEditValue(set.number),
-          child: Container(
-            height: 32,
-            decoration: BoxDecoration(
-              color: set.completed ? AppColors.accentSoft : AppColors.surface2,
-              borderRadius: BorderRadius.circular(9),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              _valueLabel(set),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: set.completed
-                    ? AppColors.accentPrimary
-                    : AppColors.textPrimary,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
+        value: _RepField(
+          key: ValueKey('rep-${item.exercise.id}-${set.number}'),
+          value: set.target,
+          completed: set.completed,
+          onChanged: (value) => onValueChanged(set.number, value),
         ),
         trailing: Align(
           alignment: Alignment.centerRight,
