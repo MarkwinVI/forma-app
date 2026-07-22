@@ -20,7 +20,10 @@ class _ShellViewState extends State<ShellView> {
   Widget build(BuildContext context) {
     final pages = [
       ProgressView(isActive: _currentIndex == 0),
-      HomeView(isActive: _currentIndex == 1),
+      HomeView(
+        isActive: _currentIndex == 1,
+        onGoToProgram: () => setState(() => _currentIndex = 2),
+      ),
       ProgramView(isActive: _currentIndex == 2),
       DataView(isActive: _currentIndex == 3),
     ];

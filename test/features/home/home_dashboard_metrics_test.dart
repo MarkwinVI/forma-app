@@ -8,6 +8,28 @@ import 'package:forma_app/features/home/home_dashboard_metrics.dart';
 
 void main() {
   group('HomeDashboardMetricsCalculator', () {
+    test('active path options show each skill category at most once', () {
+      final service = TrainingProgramService();
+      final categoriesById = {
+        for (final category in SkillCategoryCatalog.browsable())
+          category.id: category,
+      };
+
+      // Default lanes put a core branch on both the skill-work lane
+      // (l-sit) and the core lane (ab-wheel) — the tree must not show twice.
+      final options = HomeDashboardMetricsCalculator.resolveActivePathOptions(
+        trainingProgramService: service,
+        programType: TrainingProgramType.fullBody,
+        sessionItemsConfig: const {},
+        branchSelections: service.defaultBranchSelections(),
+        categoriesById: categoriesById,
+      );
+
+      final categoryIds =
+          options.map((option) => option.sourceSkillCategoryId).toList();
+      expect(categoryIds.length, categoryIds.toSet().length);
+    });
+
     test('tree level is zero when a skill tree is untouched', () {
       final level = HomeDashboardMetricsCalculator.treeLevelForCategory(
         SkillCategoryCatalog.pullups,

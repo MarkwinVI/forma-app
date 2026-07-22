@@ -33,9 +33,14 @@ import 'widgets/what_changed_card.dart';
 class HomeView extends StatefulWidget {
   final bool isActive;
 
+  /// Switches the shell to the Program tab — used by the no-program state
+  /// to send the user to where setup lives.
+  final VoidCallback? onGoToProgram;
+
   const HomeView({
     super.key,
     this.isActive = false,
+    this.onGoToProgram,
   });
 
   @override
@@ -328,7 +333,7 @@ class _HomeViewState extends State<HomeView> {
                     backgroundColor: AppColors.surface,
                     onRefresh: _loadHomeData,
                     child: HomeEmptyState(
-                      onBuildProgram: _openProgramSetup,
+                      onGoToProgram: widget.onGoToProgram ?? _openProgramSetup,
                       onOpenSettings: _openSettings,
                     ),
                   )

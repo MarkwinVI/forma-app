@@ -1272,12 +1272,21 @@ class HomeDashboardMetricsCalculator {
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
     );
-    return configuredOptions.isNotEmpty
+    final options = configuredOptions.isNotEmpty
         ? configuredOptions
         : trainingProgramService
             .resolveSelectedBranches(branchSelections)
             .values
             .toList();
+
+    // A skill tree is a category — the skill-work and core lanes can both
+    // resolve to a core-category branch (l-sit vs ab-wheel), which would
+    // otherwise show "Core" twice. Keep one option per category.
+    final seenCategories = <String>{};
+    return [
+      for (final option in options)
+        if (seenCategories.add(option.sourceSkillCategoryId)) option,
+    ];
   }
 
   static List<PathNodeState> pathNodeStates({

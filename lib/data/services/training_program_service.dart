@@ -651,14 +651,18 @@ class TrainingProgramService {
 
   /// Legacy-lane view of the user's skill tracks, so lane-keyed consumers
   /// (dashboards, day configs) keep working: each lane shows the first
-  /// included track whose branch that lane offers.
+  /// included track whose branch that lane offers. A track claims only one
+  /// lane — core branches are offered by both the skill-work and core lanes,
+  /// and claiming both would show the same tree twice.
   Map<TrainingTrack, String> laneSelectionsFromTracks(
     List<SkillTrack> skillTracks,
   ) {
     final selections = <TrainingTrack, String>{};
+    final claimed = <String>{};
 
     for (final track in TrainingTrack.values) {
       for (final option in branchOptionsForTrack(track)) {
+        if (claimed.contains(option.id)) continue;
         final match = skillTracks.any(
           (skillTrack) =>
               skillTrack.included &&
@@ -667,6 +671,7 @@ class TrainingProgramService {
         );
         if (match) {
           selections[track] = option.id;
+          claimed.add(option.id);
           break;
         }
       }

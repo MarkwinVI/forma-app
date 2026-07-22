@@ -2,23 +2,25 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
-import 'getting_started_checklist.dart';
 
-/// First-run home screen shown while the user has no training program yet.
+/// First-run Train tab shown while the user has no training program yet.
+/// Program setup itself lives on the Program tab — this screen just points
+/// the way and explains how Forma works.
 class HomeEmptyState extends StatelessWidget {
-  final VoidCallback onBuildProgram;
+  /// Sends the user to the Program tab, where setup lives.
+  final VoidCallback onGoToProgram;
   final VoidCallback onOpenSettings;
 
   const HomeEmptyState({
     super.key,
-    required this.onBuildProgram,
+    required this.onGoToProgram,
     required this.onOpenSettings,
   });
 
   void _openHowItWorks(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => HowFormaWorksView(onBuildProgram: onBuildProgram),
+        builder: (_) => HowFormaWorksView(onGoToProgram: onGoToProgram),
       ),
     );
   }
@@ -56,87 +58,55 @@ class HomeEmptyState extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                _SetupCard(onBuildProgram: onBuildProgram),
+                SurfaceCard(
+                  onTap: onGoToProgram,
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                  child: const Row(
+                    children: [
+                      IconTile(
+                        icon: Icons.event_note_rounded,
+                        size: 44,
+                        tint: true,
+                      ),
+                      SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'No program yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Head to the Program tab to set up your '
+                              'training program — it takes about 2 minutes.',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: AppColors.textSecondary,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.textMuted,
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 12),
                 _HowItWorksRow(onTap: () => _openHowItWorks(context)),
-                const SectionHeader(title: 'Getting started'),
-                GettingStartedChecklist(
-                  programDone: false,
-                  onSetupProgram: onBuildProgram,
-                ),
-                const SectionHeader(title: 'Your progress'),
-                const _LockedProgressCard(),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Hero: set up your training program ──────────────────────
-
-class _SetupCard extends StatelessWidget {
-  final VoidCallback onBuildProgram;
-
-  const _SetupCard({
-    required this.onBuildProgram,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Set up your training program',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.48,
-              height: 1.15,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Tell Forma your goals and schedule. We’ll build a balanced '
-            'program across every movement pattern — and adapt it as you '
-            'progress.',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 18),
-          PillButton(
-            label: 'Build my program',
-            icon: Icons.chevron_right_rounded,
-            trailingIcon: true,
-            onTap: onBuildProgram,
-          ),
-          const SizedBox(height: 12),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.schedule_rounded,
-                size: 13,
-                color: AppColors.textMuted,
-              ),
-              SizedBox(width: 6),
-              Text(
-                'Takes about 2 minutes',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -183,131 +153,14 @@ class _HowItWorksRow extends StatelessWidget {
   }
 }
 
-// ── Locked progress preview ─────────────────────────────────
-
-class _LockedProgressCard extends StatelessWidget {
-  const _LockedProgressCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fitness level',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '—',
-                      style: TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textMuted,
-                        letterSpacing: -1.26,
-                        height: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surface2,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Locked',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: const LinearProgressIndicator(
-              value: 0,
-              minHeight: 6,
-              backgroundColor: AppColors.surface2,
-              color: AppColors.accentPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.only(top: 14),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: AppColors.divider),
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.person_outline_rounded,
-                  size: 19,
-                  color: AppColors.textMuted,
-                ),
-                SizedBox(width: 11),
-                Expanded(
-                  child: Text(
-                    'Complete your first workout to start tracking progress',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── "How Forma works" walkthrough ───────────────────────────
 
 class HowFormaWorksView extends StatelessWidget {
-  final VoidCallback onBuildProgram;
+  final VoidCallback onGoToProgram;
 
   const HowFormaWorksView({
     super.key,
-    required this.onBuildProgram,
+    required this.onGoToProgram,
   });
 
   static const _steps = [
@@ -399,7 +252,7 @@ class HowFormaWorksView extends StatelessWidget {
               trailingIcon: true,
               onTap: () {
                 Navigator.of(context).pop();
-                onBuildProgram();
+                onGoToProgram();
               },
             ),
           ],
