@@ -162,7 +162,6 @@ class _HowToTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coachData = _coachDataFor(exercise);
-    final targetPlan = _targetPlanFor(exercise);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 44),
@@ -179,34 +178,6 @@ class _HowToTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        SurfaceCard(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 16,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _StatBlock(
-                  label: 'TARGET',
-                  value: targetPlan.targetLabel,
-                ),
-              ),
-              Expanded(
-                child: _StatBlock(
-                  label: 'LEVEL',
-                  value: _levelLabel(exercise.difficulty),
-                ),
-              ),
-              Expanded(
-                child: _StatBlock(
-                  label: 'REST',
-                  value: _formatRestLabel(restSeconds),
-                ),
-              ),
-            ],
-          ),
-        ),
         const SectionHeader(title: 'How to'),
         SurfaceCard(
           clip: true,
@@ -952,44 +923,6 @@ class _DemoPlaceholder extends StatelessWidget {
   }
 }
 
-class _StatBlock extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatBlock({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 1.1,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.17,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _MessageCard extends StatelessWidget {
   final String message;
 
@@ -1088,21 +1021,6 @@ class _HistoryCard extends StatelessWidget {
 
 // ── Coach content & helpers ───────────────────────────────────────────
 
-class _ExerciseTargetPlan {
-  final int sets;
-  final int primaryTarget;
-  final bool isTimed;
-
-  const _ExerciseTargetPlan({
-    required this.sets,
-    required this.primaryTarget,
-    required this.isTimed,
-  });
-
-  String get targetLabel =>
-      isTimed ? '$sets × ${primaryTarget}s' : '$sets × $primaryTarget';
-}
-
 class _ExerciseCoachData {
   final List<String> steps;
   final List<String> formChecks;
@@ -1111,14 +1029,6 @@ class _ExerciseCoachData {
     required this.steps,
     required this.formChecks,
   });
-}
-
-_ExerciseTargetPlan _targetPlanFor(Exercise exercise) {
-  return _ExerciseTargetPlan(
-    sets: ExerciseProgressionService.setCountForExercise(exercise),
-    primaryTarget: ExerciseProgressionService.targetValueForExercise(exercise),
-    isTimed: _isTimedExercise(exercise),
-  );
 }
 
 _ExerciseCoachData _coachDataFor(Exercise exercise) {
@@ -1247,22 +1157,6 @@ String _branchLabel(String branchId) {
       .split('_')
       .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
       .join(' ');
-}
-
-String _levelLabel(int difficulty) {
-  if (difficulty <= 2) return 'Beginner';
-  if (difficulty <= 5) return 'Intermediate';
-  if (difficulty <= 7) return 'Advanced';
-  return 'Expert';
-}
-
-String _formatRestLabel(int seconds) {
-  if (seconds <= 0) return 'Off';
-  if (seconds < 60) return '${seconds}s';
-  final minutes = seconds ~/ 60;
-  final remainder = seconds % 60;
-  if (remainder == 0) return '$minutes min';
-  return '$minutes:${remainder.toString().padLeft(2, '0')}';
 }
 
 String _formatSeconds(int seconds) {
