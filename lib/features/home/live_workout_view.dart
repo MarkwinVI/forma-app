@@ -968,16 +968,25 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final visibleSections = _visibleSections();
     final restRemaining = _activeRestRemainingSeconds();
 
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                _WorkoutHeader(
-                  title: widget.recommendation.sessionLabel,
+    // The session isn't saved until the user finishes, so an iOS edge-swipe
+    // or Android back must not silently drop it. Intercept the pop and route
+    // to the same leave confirmation as the header's collapse button.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _confirmLeaveWorkout();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  _WorkoutHeader(
+                    title: widget.recommendation.sessionLabel,
                   subtitle:
                       '${_formatSessionSubtitle()} · $_completedSetCount/$_totalSetCount sets',
                   elapsed: _formatElapsed(),
@@ -1081,6 +1090,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
             ),
           ],
         ),
+      ),
       ),
     );
   }
