@@ -2,6 +2,7 @@ import '../catalog/exercise_catalog.dart';
 import '../catalog/skill_category_catalog.dart';
 import '../models/exercise_model.dart';
 import '../models/skill_category_model.dart';
+import '../models/skill_track_model.dart';
 import '../models/training_program_model.dart';
 
 class TrainingBranchOption {
@@ -71,7 +72,35 @@ class TrainingProgramService {
     TrainingSessionType? sessionType,
     Map<TrainingTrack, String> branchSelections = const {},
     Map<String, dynamic> sessionItemsConfig = const {},
+    List<SkillTrack> skillTracks = const [],
   }) {
+    // Skills-as-tracks: when the user has skill tracks and no custom day
+    // plan, sessions are built from the included tracks (any number per
+    // movement pattern) instead of the 8 fixed lanes.
+    if (skillTracks.any((track) => track.included)) {
+      final currentSessionType = sessionType ?? _defaultSessionTypeFor(programType);
+      final configuredItems = currentSessionType == TrainingSessionType.rest
+          ? const <TrainingRecommendationItem>[]
+          : _buildConfiguredItems(
+              sessionType: currentSessionType,
+              progressMap: progressMap,
+              sessionItemsConfig: sessionItemsConfig,
+            );
+      return DailyTrainingRecommendation(
+        programType: programType,
+        sessionType: currentSessionType,
+        sessionLabel: currentSessionType.label,
+        isRestDay: currentSessionType == TrainingSessionType.rest,
+        items: configuredItems ??
+            (currentSessionType == TrainingSessionType.rest
+                ? const []
+                : _buildItems(
+                    _trackBranchesForSession(currentSessionType, skillTracks),
+                    progressMap,
+                  )),
+      );
+    }
+
     final selectedBranches = resolveSelectedBranches(branchSelections);
 
     switch (programType) {
@@ -488,6 +517,163 @@ class TrainingProgramService {
 
   Map<TrainingTrack, String> defaultBranchSelections() =>
       Map<TrainingTrack, String>.from(_defaultBranchIds);
+
+  static TrainingSessionType _defaultSessionTypeFor(
+    TrainingProgramType programType,
+  ) {
+    switch (programType) {
+      case TrainingProgramType.fullBody:
+        return TrainingSessionType.fullBody;
+      case TrainingProgramType.pushPull:
+        return TrainingSessionType.push;
+      case TrainingProgramType.upperLower:
+        return TrainingSessionType.upper;
+    }
+  }
+
+  /// Which movement patterns each session type trains, mirroring the lane
+  /// day shapes. Tracks whose category pattern matches are scheduled in.
+  static const Map<TrainingSessionType, Set<ExerciseCategory>>
+      _sessionPatterns = {
+    TrainingSessionType.fullBody: {
+      ExerciseCategory.skill,
+      ExerciseCategory.verticalPush,
+      ExerciseCategory.horizontalPush,
+      ExerciseCategory.verticalPull,
+      ExerciseCategory.horizontalPull,
+      ExerciseCategory.core,
+      ExerciseCategory.squat,
+      ExerciseCategory.hinge,
+    },
+    TrainingSessionType.push: {
+      ExerciseCategory.skill,
+      ExerciseCategory.horizontalPush,
+      ExerciseCategory.verticalPush,
+      ExerciseCategory.squat,
+      ExerciseCategory.core,
+    },
+    TrainingSessionType.pull: {
+      ExerciseCategory.skill,
+      ExerciseCategory.horizontalPull,
+      ExerciseCategory.verticalPull,
+      ExerciseCategory.hinge,
+      ExerciseCategory.core,
+    },
+    TrainingSessionType.upper: {
+      ExerciseCategory.skill,
+      ExerciseCategory.verticalPush,
+      ExerciseCategory.horizontalPush,
+      ExerciseCategory.verticalPull,
+      ExerciseCategory.horizontalPull,
+    },
+    TrainingSessionType.lower: {
+      ExerciseCategory.squat,
+      ExerciseCategory.hinge,
+      ExerciseCategory.core,
+    },
+  };
+
+  /// Presentation order of patterns within a session: skill work first,
+  /// then pushes/pulls, then lower-body and core.
+  static const List<ExerciseCategory> _patternOrder = [
+    ExerciseCategory.skill,
+    ExerciseCategory.verticalPush,
+    ExerciseCategory.horizontalPush,
+    ExerciseCategory.verticalPull,
+    ExerciseCategory.horizontalPull,
+    ExerciseCategory.squat,
+    ExerciseCategory.hinge,
+    ExerciseCategory.core,
+  ];
+
+  /// The movement lane a pattern reports as (for item labels, logging, and
+  /// dashboards); tracks are scheduled by pattern, not stored by lane.
+  static TrainingTrack trainingTrackForPattern(ExerciseCategory pattern) {
+    switch (pattern) {
+      case ExerciseCategory.verticalPush:
+        return TrainingTrack.verticalPush;
+      case ExerciseCategory.horizontalPush:
+        return TrainingTrack.horizontalPush;
+      case ExerciseCategory.verticalPull:
+        return TrainingTrack.verticalPull;
+      case ExerciseCategory.horizontalPull:
+        return TrainingTrack.horizontalPull;
+      case ExerciseCategory.core:
+        return TrainingTrack.core;
+      case ExerciseCategory.squat:
+        return TrainingTrack.squat;
+      case ExerciseCategory.hinge:
+        return TrainingTrack.hinge;
+      case ExerciseCategory.skill:
+        return TrainingTrack.skillWork;
+    }
+  }
+
+  /// The branches a session trains under skills-as-tracks: every included
+  /// track whose category pattern belongs to the session, ordered by
+  /// pattern, plus the fixed hinge pair on hinge days (there is no hinge
+  /// skill category yet).
+  List<_TrainingBranch> _trackBranchesForSession(
+    TrainingSessionType sessionType,
+    List<SkillTrack> skillTracks,
+  ) {
+    final patterns =
+        _sessionPatterns[sessionType] ?? const <ExerciseCategory>{};
+    final branches = <_TrainingBranch>[];
+
+    for (final pattern in _patternOrder) {
+      if (!patterns.contains(pattern)) continue;
+      for (final track in skillTracks) {
+        if (!track.included) continue;
+        final category = SkillCategoryCatalog.findById(track.skillCategoryId);
+        if (category == null || category.track != pattern) continue;
+        final path = category.pathFor(track.branchId);
+        if (path.isEmpty) continue;
+
+        branches.add(
+          _TrainingBranch(
+            track: trainingTrackForPattern(pattern),
+            sourceCategory: category.track,
+            sourceSkillCategoryId: category.id,
+            exerciseIds: path,
+          ),
+        );
+      }
+      if (pattern == ExerciseCategory.hinge) {
+        branches.add(
+          _branchFromOption(branchOptionsForTrack(TrainingTrack.hinge).first),
+        );
+      }
+    }
+
+    return branches;
+  }
+
+  /// Legacy-lane view of the user's skill tracks, so lane-keyed consumers
+  /// (dashboards, day configs) keep working: each lane shows the first
+  /// included track whose branch that lane offers.
+  Map<TrainingTrack, String> laneSelectionsFromTracks(
+    List<SkillTrack> skillTracks,
+  ) {
+    final selections = <TrainingTrack, String>{};
+
+    for (final track in TrainingTrack.values) {
+      for (final option in branchOptionsForTrack(track)) {
+        final match = skillTracks.any(
+          (skillTrack) =>
+              skillTrack.included &&
+              '${skillTrack.skillCategoryId}:${skillTrack.branchId}' ==
+                  option.id,
+        );
+        if (match) {
+          selections[track] = option.id;
+          break;
+        }
+      }
+    }
+
+    return selections;
+  }
 
   /// Every branch option across all tracks — the branch universe used to
   /// resolve forks after mastery.

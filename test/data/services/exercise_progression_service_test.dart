@@ -5,7 +5,6 @@ import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/exercise_progress_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/exercise_progression_service.dart';
-import 'package:forma_app/data/services/training_program_service.dart';
 
 void main() {
   // Use real path exercises from the catalog so the rules are tested against
@@ -255,14 +254,20 @@ void main() {
       expect(outcome.isEmpty, isTrue);
     });
 
-    test('a branch point without context masters but activates nothing', () {
+    test('a branch point without context falls back to the category default',
+        () {
       // pull_up has different successors per branch (weighted, close grip,
-      // l-sit, one arm), so no single next move can be chosen without
-      // branch options.
+      // l-sit, one arm); with no active branch or goal, the pullups
+      // category's default branch (weighted) decides.
       final pullUp = ExerciseCatalog.findById('pull_up')!;
       final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
         pullUp,
       ).volume;
+      final weightedPath = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pullupsId,
+      )!
+          .pathFor('weighted');
+      final weightedNext = weightedPath[weightedPath.indexOf(pullUp.id) + 1];
 
       final outcome = ExerciseProgressionService.computeSessionOutcome(
         results: [
@@ -271,12 +276,12 @@ void main() {
         progressRows: const {},
       );
 
-      expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
+      expect(outcome.statusChanges[pullUp.id], ExerciseStatus.mastered);
+      expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
       expect(outcome.branchChoicesNeeded, isEmpty);
     });
 
     group('fork resolution', () {
-      final service = TrainingProgramService();
       late Exercise pullUp;
       late int masteryVolume;
       late String weightedNext;
@@ -301,8 +306,7 @@ void main() {
       });
 
       SessionProgressionOutcome resolve({
-        Map<TrainingTrack, String> branchSelections = const {},
-        Map<TrainingTrack, String> defaults = const {},
+        Map<String, String> activeBranches = const {},
         List<String> goals = const [],
       }) {
         return ExerciseProgressionService.computeSessionOutcome(
@@ -310,21 +314,17 @@ void main() {
             SessionExerciseResult(exercise: pullUp, volume: masteryVolume),
           ],
           progressRows: const {},
-          branchOptions: service.allBranchOptions(),
-          branchSelections: branchSelections,
-          defaultBranchSelections: defaults,
+          activeBranchByCategory: activeBranches,
           goalSkillIds: goals,
         );
       }
 
-      test('the explicitly selected branch continues past the fork', () {
-        final outcome = resolve(
-          branchSelections: {TrainingTrack.verticalPull: 'pullups:weighted'},
-        );
+      test('the track\'s active branch continues past the fork', () {
+        final outcome = resolve(activeBranches: {'pullups': 'one_arm'});
 
-        expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
-        expect(outcome.activationsByMastered[pullUp.id], weightedNext);
-        expect(outcome.branchSelectionsToPersist, isEmpty);
+        expect(outcome.statusChanges[oneArmNext], ExerciseStatus.active);
+        expect(outcome.activationsByMastered[pullUp.id], oneArmNext);
+        expect(outcome.branchesToPersist, isEmpty);
         expect(outcome.branchChoicesNeeded, isEmpty);
       });
 
@@ -332,10 +332,7 @@ void main() {
         final outcome = resolve(goals: ['oap']);
 
         expect(outcome.statusChanges[oneArmNext], ExerciseStatus.active);
-        expect(
-          outcome.branchSelectionsToPersist,
-          {TrainingTrack.verticalPull: 'pullups:one_arm'},
-        );
+        expect(outcome.branchesToPersist, {'pullups': 'one_arm'});
         expect(outcome.branchChoicesNeeded, isEmpty);
       });
 
@@ -344,21 +341,24 @@ void main() {
 
         expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
         expect(outcome.branchChoicesNeeded, [pullUp.id]);
-        expect(outcome.branchSelectionsToPersist, isEmpty);
+        expect(outcome.branchesToPersist, isEmpty);
       });
 
-      test('with no selection or goal, the default branch decides', () {
-        final outcome = resolve(defaults: service.defaultBranchSelections());
-
-        expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
-        expect(outcome.branchSelectionsToPersist, isEmpty);
-      });
-
-      test('nothing decides the fork: the user is asked', () {
+      test('with no active branch or goal, the category default decides', () {
         final outcome = resolve();
 
-        expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
-        expect(outcome.branchChoicesNeeded, [pullUp.id]);
+        expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
+        expect(outcome.branchesToPersist, isEmpty);
+      });
+
+      test('the active branch outranks a conflicting goal', () {
+        final outcome = resolve(
+          activeBranches: {'pullups': 'weighted'},
+          goals: ['oap'],
+        );
+
+        expect(outcome.statusChanges[weightedNext], ExerciseStatus.active);
+        expect(outcome.branchesToPersist, isEmpty);
       });
     });
 

@@ -7,12 +7,14 @@ import '../../core/widgets/polished.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/progression_event_model.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
+import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../settings/settings_view.dart';
@@ -46,6 +48,7 @@ class _HomeViewState extends State<HomeView> {
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
   final _progressionEventService = ProgressionEventService();
+  final _skillTrackService = SkillTrackService();
 
   bool _loading = true;
   bool _hasProgram = true;
@@ -53,6 +56,7 @@ class _HomeViewState extends State<HomeView> {
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
   List<ProgressionEvent> _whatChanged = const [];
+  List<SkillTrack> _skillTracks = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
@@ -96,6 +100,25 @@ class _HomeViewState extends State<HomeView> {
         debugPrint('Failed to load progression feed: $error\n$stackTrace');
       }
 
+      final logic = results[1] as TrainingProgramLogicSnapshot?;
+      // Skills-as-tracks: seeded on first use from the legacy lane
+      // selections + goals, so existing users keep what they trained.
+      var skillTracks = const <SkillTrack>[];
+      if (logic != null) {
+        try {
+          skillTracks = await _skillTrackService.getOrSeed(
+            userId,
+            laneSelections: {
+              ..._trainingProgramService.defaultBranchSelections(),
+              ...logic.branchSelections,
+            },
+            goalSkillIds: logic.program.setupGoalIds,
+          );
+        } catch (error, stackTrace) {
+          debugPrint('Failed to load skill tracks: $error\n$stackTrace');
+        }
+      }
+
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
       setState(() {
@@ -105,10 +128,11 @@ class _HomeViewState extends State<HomeView> {
         _progressMap = {
           for (final item in progress) item.exerciseId: item.status,
         };
-        _logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
+        _logicSnapshot = logic;
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = results[2] as List<PastWorkout>;
         _whatChanged = whatChanged;
+        _skillTracks = skillTracks;
         _loading = false;
       });
     } catch (error, stackTrace) {
@@ -149,9 +173,12 @@ class _HomeViewState extends State<HomeView> {
 
     final programType = snapshot.program.programType;
     final scheduleVariant = snapshot.program.scheduleVariant;
+    // Lane view bridges skill tracks into lane-keyed consumers (dashboards,
+    // config fallback); the actual session items come from the tracks.
     final branchSelections = {
       ..._trainingProgramService.defaultBranchSelections(),
       ...snapshot.branchSelections,
+      ..._trainingProgramService.laneSelectionsFromTracks(_skillTracks),
     };
     final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
     final schedule = HomeDashboardMetricsCalculator.resolveSchedule(
@@ -170,6 +197,7 @@ class _HomeViewState extends State<HomeView> {
       sessionType: schedule.effectiveSessionType,
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
+      skillTracks: _skillTracks,
     );
 
     return _TrainSnapshot(

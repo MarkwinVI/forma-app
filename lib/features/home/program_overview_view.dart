@@ -4,9 +4,17 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_progress_model.dart';
+import '../../data/models/skill_category_model.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/progress_service.dart';
+import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import 'program_day_editor_view.dart';
@@ -83,14 +91,44 @@ class ProgramOverviewView extends StatefulWidget {
 
 class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   final _programService = TrainingProgramService();
+  final _skillTrackService = SkillTrackService();
 
   late TrainingProgramLogicSnapshot _logic;
   String? _openBalance; // 'cov' | 'mus' | null
+
+  /// Skills-as-tracks state, loaded here so the tab reflects adds/pauses
+  /// immediately. Status edits from the adjust sheet land in
+  /// [_progressOverrides] on top of the read-only widget.progressMap.
+  List<SkillTrack> _skillTracks = const [];
+  final Map<String, ExerciseStatus> _progressOverrides = {};
+
+  Map<String, ExerciseStatus> get _progress => {
+        ...widget.progressMap,
+        ..._progressOverrides,
+      };
 
   @override
   void initState() {
     super.initState();
     _logic = widget.initialLogic;
+    _loadSkillTracks();
+  }
+
+  Future<void> _loadSkillTracks() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final tracks = await _skillTrackService.getOrSeed(
+        userId,
+        laneSelections: _branchSelections,
+        goalSkillIds: _logic.program.setupGoalIds,
+      );
+      if (!mounted) return;
+      setState(() => _skillTracks = tracks);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load skill tracks: $error\n$stackTrace');
+    }
   }
 
   Map<String, dynamic> get _sessionItemsConfig {
@@ -117,6 +155,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   Map<TrainingTrack, String> get _branchSelections => {
         ..._programService.defaultBranchSelections(),
         ..._logic.branchSelections,
+        // Lane-keyed view of the skill tracks for lane-based consumers
+        // (day editor, weekly balance).
+        ..._programService.laneSelectionsFromTracks(_skillTracks),
       };
 
   List<TrainingSessionType> _weekPlan(int days, TrainingProgramType type) {
@@ -214,6 +255,82 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       setupAnswers: {..._setupAnswers, 'split': picked.dbValue},
       toast: 'Split changed — sessions rebuilt',
     );
+  }
+
+  Future<void> _openAddTrackSheet() async {
+    final trackedIds = {
+      for (final track in _skillTracks) track.skillCategoryId,
+    };
+    final available = [
+      for (final category in SkillCategoryCatalog.all())
+        if (!trackedIds.contains(category.id) &&
+            category.trainingPaths.isNotEmpty)
+          category,
+    ];
+    if (available.isEmpty) return;
+
+    final picked = await showModalBottomSheet<SkillCategory>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => _AddTrackSheet(categories: available),
+    );
+    if (picked == null || !mounted) return;
+
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      await _skillTrackService.upsertTrack(
+        userId,
+        skillCategoryId: picked.id,
+        branchId: picked.defaultTrainingPathId,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't add the skill track.")),
+      );
+      return;
+    }
+    await _loadSkillTracks();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('${picked.title} added')));
+  }
+
+  Future<void> _openAdjustSheet(SkillTrack track) async {
+    final category = SkillCategoryCatalog.findById(track.skillCategoryId);
+    if (category == null) return;
+
+    final result = await showModalBottomSheet<_AdjustTrackResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => _AdjustTrackSheet(
+        track: track,
+        category: category,
+        progressMap: _progress,
+        masterySettings: _logic.masteryTargets,
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    setState(() {
+      _skillTracks = [
+        for (final existing in _skillTracks)
+          existing.skillCategoryId == result.track.skillCategoryId
+              ? result.track
+              : existing,
+      ];
+      _progressOverrides.addAll(result.statusChanges);
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
   Future<void> _openMasterySheet() async {
@@ -355,6 +472,41 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                   ],
                 ),
               ),
+              SectionHeader(
+                title: 'Skill tracks',
+                sub: 'Each skill progresses on its own — pause any without '
+                    'losing progress',
+                action: 'Add',
+                onAction: _openAddTrackSheet,
+              ),
+              SurfaceCard(
+                clip: true,
+                child: Column(
+                  children: [
+                    if (_skillTracks.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(18),
+                        child: Text(
+                          'No skill tracks yet — add the skills you want to '
+                          'train and each gets its own progression.',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      )
+                    else
+                      for (var i = 0; i < _skillTracks.length; i++)
+                        _SkillTrackRow(
+                          first: i == 0,
+                          track: _skillTracks[i],
+                          progressMap: _progress,
+                          onTap: () => _openAdjustSheet(_skillTracks[i]),
+                        ),
+                  ],
+                ),
+              ),
               const SectionHeader(
                 title: 'Sessions',
                 sub: 'Tap a day to edit its exercises',
@@ -373,7 +525,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                           programType: programType,
                           sessionType: trainingDays[i],
                           branchSelections: _branchSelections,
-                          progressMap: widget.progressMap,
+                          progressMap: _progress,
+                          skillTracks: _skillTracks,
                         ),
                         onTap: () => _openDayEditor(trainingDays[i]),
                       ),
@@ -1070,6 +1223,684 @@ class _SheetShell extends StatelessWidget {
               child: footer,
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Skill tracks ────────────────────────────────────────────
+
+class _SkillTrackRow extends StatelessWidget {
+  final bool first;
+  final SkillTrack track;
+  final Map<String, ExerciseStatus> progressMap;
+  final VoidCallback onTap;
+
+  const _SkillTrackRow({
+    required this.first,
+    required this.track,
+    required this.progressMap,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final category = SkillCategoryCatalog.findById(track.skillCategoryId);
+    if (category == null) return const SizedBox.shrink();
+
+    final current = ProgramSessionPlan.currentExerciseForPath(
+      skillCategoryId: track.skillCategoryId,
+      branchId: track.branchId,
+      progressMap: progressMap,
+    );
+    final branchLabel = _trackBranchLabel(category, track.branchId);
+
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        decoration: first
+            ? null
+            : const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+        padding: const EdgeInsets.fromLTRB(16, 13, 14, 13),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          branchLabel == null
+                              ? category.title
+                              : '${category.title} · $branchLabel',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: track.included
+                                ? AppColors.textPrimary
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                      if (!track.included) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface2,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'PAUSED',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textMuted,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    current == null
+                        ? programPatternLabel(category.track)
+                        : 'Now: ${current.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String? _trackBranchLabel(SkillCategory category, String branchId) {
+  if (category.trainingPaths.length <= 1) return null;
+  for (final branch in category.branches) {
+    if (branch.id == branchId) return branch.label;
+  }
+  return branchId;
+}
+
+class _AddTrackSheet extends StatelessWidget {
+  final List<SkillCategory> categories;
+
+  const _AddTrackSheet({required this.categories});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SheetShell(
+      title: 'Add skill track',
+      sub: 'Each skill progresses independently',
+      expand: true,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return Padding(
+            padding: EdgeInsets.only(top: index == 0 ? 0 : 10),
+            child: Pressable(
+              onTap: () => Navigator.of(context).pop(category),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 13, 14, 13),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.title,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            programPatternLabel(category.track),
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.add_rounded,
+                      size: 20,
+                      color: AppColors.accentPrimary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// What the adjust sheet changed, so the host can update local state.
+class _AdjustTrackResult {
+  final SkillTrack track;
+  final Map<String, ExerciseStatus> statusChanges;
+
+  const _AdjustTrackResult({
+    required this.track,
+    required this.statusChanges,
+  });
+}
+
+/// Adjust Progression: change a track's branch, position (current exercise),
+/// current target, or pause it — the sanctioned way to correct progression
+/// state instead of deleting workout history.
+class _AdjustTrackSheet extends StatefulWidget {
+  final SkillTrack track;
+  final SkillCategory category;
+  final Map<String, ExerciseStatus> progressMap;
+  final MasteryTargetSettings masterySettings;
+
+  const _AdjustTrackSheet({
+    required this.track,
+    required this.category,
+    required this.progressMap,
+    required this.masterySettings,
+  });
+
+  @override
+  State<_AdjustTrackSheet> createState() => _AdjustTrackSheetState();
+}
+
+class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
+  final _progressService = ProgressService();
+
+  late String _branchId;
+  late bool _included;
+  late int _position;
+  Map<String, ExerciseProgress> _progressRows = const {};
+  int? _targetValue; // edited per-set value for the current exercise
+  bool _saving = false;
+
+  List<String> get _path => widget.category.pathFor(_branchId);
+
+  Exercise? get _currentExercise {
+    final path = _path;
+    if (path.isEmpty) return null;
+    return ExerciseCatalog.findById(path[_position.clamp(0, path.length - 1)]);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _branchId = widget.track.branchId;
+    _included = widget.track.included;
+    _position = _derivedPosition();
+    _loadTargets();
+  }
+
+  Future<void> _loadTargets() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+    try {
+      final rows = await _progressService.fetchAll(userId);
+      if (!mounted) return;
+      setState(() {
+        _progressRows = {for (final row in rows) row.exerciseId: row};
+      });
+    } catch (_) {
+      // Target stepper just starts from the ladder default.
+    }
+  }
+
+  int _derivedPosition() {
+    final path = _path;
+    for (var i = 0; i < path.length; i++) {
+      if (widget.progressMap[path[i]] == ExerciseStatus.active) return i;
+    }
+    for (var i = 0; i < path.length; i++) {
+      if (widget.progressMap[path[i]] != ExerciseStatus.mastered) return i;
+    }
+    return path.isEmpty ? 0 : path.length - 1;
+  }
+
+  int get _effectiveTarget {
+    final exercise = _currentExercise;
+    if (exercise == null) return ExerciseProgressionService.initialTargetReps;
+    return ExerciseProgressionService.currentTargetForExercise(
+      exercise,
+      progress: _progressRows[exercise.id],
+      masterySettings: widget.masterySettings,
+    ).value;
+  }
+
+  void _selectBranch(String branchId) {
+    setState(() {
+      _branchId = branchId;
+      _targetValue = null;
+      final path = _path;
+      _position = 0;
+      for (var i = 0; i < path.length; i++) {
+        if (widget.progressMap[path[i]] != ExerciseStatus.mastered) {
+          _position = i;
+          return;
+        }
+      }
+      _position = path.isEmpty ? 0 : path.length - 1;
+    });
+  }
+
+  Future<void> _save() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null || _saving) return;
+
+    setState(() => _saving = true);
+    final service = SkillTrackService();
+    final statusChanges = <String, ExerciseStatus>{};
+
+    try {
+      if (_branchId != widget.track.branchId) {
+        await service.setBranch(
+          userId,
+          widget.track.skillCategoryId,
+          branchId: _branchId,
+        );
+      }
+      if (_included != widget.track.included) {
+        await service.setIncluded(
+          userId,
+          widget.track.skillCategoryId,
+          included: _included,
+        );
+      }
+
+      // Position on the path: everything before the current exercise is
+      // mastered, the current one is active, everything after is inactive.
+      final path = _path;
+      for (var i = 0; i < path.length; i++) {
+        final desired = i < _position
+            ? ExerciseStatus.mastered
+            : i == _position
+                ? ExerciseStatus.active
+                : ExerciseStatus.inactive;
+        final existing =
+            widget.progressMap[path[i]] ?? ExerciseStatus.inactive;
+        if (existing != desired) {
+          await _progressService.upsert(userId, path[i], desired);
+          statusChanges[path[i]] = desired;
+        }
+      }
+
+      final exercise = _currentExercise;
+      if (exercise != null &&
+          _targetValue != null &&
+          _targetValue != _effectiveTarget) {
+        final sets = _progressRows[exercise.id]?.currentTargetSets ??
+            ExerciseProgressionService.initialTargetSets;
+        await _progressService.upsertTarget(
+          userId,
+          exercise.id,
+          targetSets: sets,
+          targetValue: _targetValue!,
+        );
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pop(
+        _AdjustTrackResult(
+          track: widget.track.copyWith(
+            branchId: _branchId,
+            included: _included,
+          ),
+          statusChanges: statusChanges,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't save the changes. Try again.")),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final path = _path;
+    final exercise = _currentExercise;
+    final isTimed = exercise != null &&
+        ExerciseProgressionService.isTimedExercise(exercise);
+    final step = isTimed
+        ? ExerciseProgressionService.targetIncrementSeconds
+        : ExerciseProgressionService.targetIncrementReps;
+    final shownTarget = _targetValue ?? _effectiveTarget;
+
+    return _SheetShell(
+      title: widget.category.title,
+      sub: 'Adjust progression',
+      expand: true,
+      footer: PillButton(
+        label: _saving ? 'Saving' : 'Save changes',
+        onTap: _saving ? null : _save,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.category.trainingPaths.length > 1) ...[
+              const Text(
+                'BRANCH',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textMuted,
+                  letterSpacing: 0.9,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final pathId in widget.category.trainingPaths.keys)
+                    Pressable(
+                      onTap: () => _selectBranch(pathId),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: pathId == _branchId
+                              ? AppColors.accentSoft
+                              : AppColors.surface,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: pathId == _branchId
+                                ? AppColors.accentPrimary
+                                : Colors.transparent,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          _trackBranchLabel(widget.category, pathId) ?? pathId,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: pathId == _branchId
+                                ? AppColors.accentPrimary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 18),
+            ],
+            const Text(
+              'PATH — TAP WHERE YOU ARE',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMuted,
+                letterSpacing: 0.9,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Column(
+                children: [
+                  for (var i = 0; i < path.length; i++)
+                    _AdjustPathRow(
+                      first: i == 0,
+                      name: ExerciseCatalog.findById(path[i])?.name ?? path[i],
+                      state: i < _position
+                          ? ExerciseStatus.mastered
+                          : i == _position
+                              ? ExerciseStatus.active
+                              : ExerciseStatus.inactive,
+                      onTap: () => setState(() {
+                        _position = i;
+                        _targetValue = null;
+                      }),
+                    ),
+                ],
+              ),
+            ),
+            if (exercise != null) ...[
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Current target · ${exercise.name}',
+                        maxLines: 2,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    _AdjustStepButton(
+                      icon: Icons.remove_rounded,
+                      onTap: shownTarget - step >= step
+                          ? () => setState(
+                              () => _targetValue = shownTarget - step)
+                          : null,
+                    ),
+                    SizedBox(
+                      width: 62,
+                      child: Text(
+                        '3 × $shownTarget${isTimed ? 's' : ''}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                    _AdjustStepButton(
+                      icon: Icons.add_rounded,
+                      onTap: () =>
+                          setState(() => _targetValue = shownTarget + step),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 6, 6, 6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _included
+                          ? 'Included in your program'
+                          : 'Paused — progress is kept',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: _included,
+                    activeTrackColor: AppColors.accentPrimary,
+                    onChanged: (value) => setState(() => _included = value),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdjustPathRow extends StatelessWidget {
+  final bool first;
+  final String name;
+  final ExerciseStatus state;
+  final VoidCallback onTap;
+
+  const _AdjustPathRow({
+    required this.first,
+    required this.name,
+    required this.state,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dotColor = switch (state) {
+      ExerciseStatus.mastered => AppColors.green,
+      ExerciseStatus.active => AppColors.accentPrimary,
+      ExerciseStatus.inactive => Colors.white.withValues(alpha: 0.16),
+    };
+
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        decoration: first
+            ? null
+            : const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 11,
+              height: 11,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: state == ExerciseStatus.inactive
+                    ? Colors.transparent
+                    : dotColor,
+                border: state == ExerciseStatus.inactive
+                    ? Border.all(color: dotColor, width: 2)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: state == ExerciseStatus.active
+                      ? FontWeight.w700
+                      : FontWeight.w600,
+                  color: state == ExerciseStatus.inactive
+                      ? AppColors.textMuted
+                      : AppColors.textPrimary,
+                ),
+              ),
+            ),
+            if (state == ExerciseStatus.active)
+              const Text(
+                'CURRENT',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.accentPrimary,
+                  letterSpacing: 0.8,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdjustStepButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _AdjustStepButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: const BoxDecoration(
+          color: AppColors.surface2,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 17,
+          color:
+              onTap == null ? AppColors.textMuted : AppColors.textPrimary,
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
@@ -103,6 +104,7 @@ class ProgramSessionPlan {
     required TrainingSessionType sessionType,
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
+    List<SkillTrack> skillTracks = const [],
   }) {
     final raw = sessionItemsConfig[sessionType.dbValue];
     if (raw is Map) {
@@ -119,6 +121,34 @@ class ProgramSessionPlan {
         }
       }
       return items;
+    }
+
+    // Skills-as-tracks: the default day is the included tracks scheduled for
+    // this session type, each on its own branch — no lane juggling.
+    if (skillTracks.any((track) => track.included)) {
+      final recommendation = service.buildToday(
+        progressMap: progressMap,
+        programType: programType,
+        sessionType: sessionType,
+        skillTracks: skillTracks,
+      );
+      final branchByCategory = {
+        for (final track in skillTracks)
+          if (track.included) track.skillCategoryId: track.branchId,
+      };
+
+      return [
+        for (final item in recommendation.items)
+          ProgramDayItem(
+            id: 'track-${item.sourceSkillCategoryId}-${item.exercise.id}',
+            kind: ProgramDayItemKind.progression,
+            name: item.exercise.name,
+            skillCategoryId: item.sourceSkillCategoryId,
+            branchId: branchByCategory[item.sourceSkillCategoryId] ??
+                item.exercise.branchId,
+            exerciseId: item.exercise.id,
+          ),
+      ];
     }
 
     return _defaultDay(

@@ -5,6 +5,7 @@ import '../models/training_program_model.dart';
 import 'exercise_log_service.dart';
 import 'exercise_progression_service.dart';
 import 'progress_service.dart';
+import 'skill_track_service.dart';
 import 'supabase_service.dart';
 import 'training_program_service.dart';
 import 'training_program_store_service.dart';
@@ -26,6 +27,7 @@ class DevToolsService {
   Future<void> resetToNewUser(String userId) async {
     // Children before parents to respect foreign keys.
     await _client.from('progression_events').delete().eq('user_id', userId);
+    await _client.from('user_skill_tracks').delete().eq('user_id', userId);
     await _client.from('workout_exercise_logs').delete().eq('user_id', userId);
     await _client.from('workout_sessions').delete().eq('user_id', userId);
     await _client.from('user_exercise_progress').delete().eq('user_id', userId);
@@ -73,6 +75,11 @@ class DevToolsService {
     };
     final masteryTargets =
         logic?.masteryTargets ?? MasteryTargetSettings.defaults;
+    final skillTracks = await SkillTrackService().getOrSeed(
+      userId,
+      laneSelections: branchSelections,
+      goalSkillIds: logic?.program.setupGoalIds ?? const [],
+    );
 
     final trainingDays = _trainingProgramStoreService
         .scheduleCycleFor(programType: programType)
@@ -89,6 +96,7 @@ class DevToolsService {
         sessionType: sessionType,
         branchSelections: branchSelections,
         sessionItemsConfig: sessionItemsConfig,
+        skillTracks: skillTracks,
       );
       if (recommendation.items.isEmpty) continue;
 
@@ -167,10 +175,10 @@ class DevToolsService {
         results: results,
         progressRows: progressRows,
         masterySettings: masteryTargets,
-        branchOptions: _trainingProgramService.allBranchOptions(),
-        branchSelections: logic?.branchSelections ?? const {},
-        defaultBranchSelections:
-            _trainingProgramService.defaultBranchSelections(),
+        activeBranchByCategory: {
+          for (final track in skillTracks)
+            track.skillCategoryId: track.branchId,
+        },
         goalSkillIds: logic?.program.setupGoalIds ?? const [],
       );
       final now = DateTime.now();

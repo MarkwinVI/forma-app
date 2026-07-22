@@ -17,6 +17,7 @@ import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
+import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import 'completed_workout_model.dart';
@@ -139,7 +140,15 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           final progress = await ProgressService().fetchAll(userId);
           final logic =
               await TrainingProgramStoreService().fetchProgramLogic(userId);
-          final programService = TrainingProgramService();
+          final goalIds = logic?.program.setupGoalIds ?? const <String>[];
+          final tracks = await SkillTrackService().getOrSeed(
+            userId,
+            laneSelections: {
+              ...TrainingProgramService().defaultBranchSelections(),
+              ...?logic?.branchSelections,
+            },
+            goalSkillIds: goalIds,
+          );
           await ExerciseProgressionService().applySessionResults(
             userId: userId,
             sessionId: sessionId,
@@ -148,10 +157,11 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             },
             masterySettings:
                 logic?.masteryTargets ?? MasteryTargetSettings.defaults,
-            branchOptions: programService.allBranchOptions(),
-            branchSelections: logic?.branchSelections ?? const {},
-            defaultBranchSelections: programService.defaultBranchSelections(),
-            goalSkillIds: logic?.program.setupGoalIds ?? const [],
+            activeBranchByCategory: {
+              for (final track in tracks)
+                track.skillCategoryId: track.branchId,
+            },
+            goalSkillIds: goalIds,
             results: [
               for (final exerciseEntry in widget.workout.exercises)
                 if (exerciseEntry.item.isProgression)

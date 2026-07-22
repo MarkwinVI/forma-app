@@ -7,12 +7,14 @@ import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/progression_event_model.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
+import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../home/home_dashboard_metrics.dart';
@@ -51,6 +53,7 @@ class _ProgressViewState extends State<ProgressView> {
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
   List<ProgressionEvent> _personalBests = const [];
+  List<SkillTrack> _skillTracks = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
@@ -96,6 +99,12 @@ class _ProgressViewState extends State<ProgressView> {
       } catch (error, stackTrace) {
         debugPrint('Failed to load achievements: $error\n$stackTrace');
       }
+      var skillTracks = const <SkillTrack>[];
+      try {
+        skillTracks = await SkillTrackService().fetchAll(userId);
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load skill tracks: $error\n$stackTrace');
+      }
 
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
@@ -110,6 +119,7 @@ class _ProgressViewState extends State<ProgressView> {
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = results[2] as List<PastWorkout>;
         _personalBests = personalBests;
+        _skillTracks = skillTracks;
         _loading = false;
       });
     } catch (error, stackTrace) {
@@ -133,6 +143,7 @@ class _ProgressViewState extends State<ProgressView> {
     final branchSelections = {
       ..._trainingProgramService.defaultBranchSelections(),
       ...snapshot.branchSelections,
+      ..._trainingProgramService.laneSelectionsFromTracks(_skillTracks),
     };
     final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
     final schedule = HomeDashboardMetricsCalculator.resolveSchedule(
@@ -151,6 +162,7 @@ class _ProgressViewState extends State<ProgressView> {
       sessionType: schedule.effectiveSessionType,
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
+      skillTracks: _skillTracks,
     );
 
     return HomeDashboardMetricsCalculator.build(

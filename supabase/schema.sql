@@ -170,6 +170,33 @@ create policy "Users manage own progression events"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- ── Skill Tracks ──────────────────────────────────────────────────────────
+-- Skills as independent progression tracks: one row per skill tree the user
+-- runs (or has paused). Several tracks can cover the same movement pattern.
+-- included = false pauses the track, retaining its branch here and its
+-- exercise statuses/targets in user_exercise_progress.
+
+create table public.user_skill_tracks (
+  id                uuid default gen_random_uuid() primary key,
+  user_id           uuid references auth.users(id) on delete cascade not null,
+  skill_category_id text not null,  -- SkillCategory.id in the local catalog
+  branch_id         text not null,  -- active training path within the category
+  included          boolean not null default true,
+  created_at        timestamptz default now() not null,
+  updated_at        timestamptz default now() not null,
+  unique(user_id, skill_category_id)
+);
+
+create index user_skill_tracks_user_idx
+  on public.user_skill_tracks (user_id, updated_at desc);
+
+alter table public.user_skill_tracks enable row level security;
+
+create policy "Users manage own skill tracks"
+  on public.user_skill_tracks for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
 -- ── Training Programs ─────────────────────────────────────────────────────
 -- Stores the user's selected program template and configuration.
 -- `program_type`, `schedule_variant`, `track_id`, and `branch_id` map to

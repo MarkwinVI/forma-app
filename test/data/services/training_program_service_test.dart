@@ -1,10 +1,109 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
+import 'package:forma_app/data/models/skill_track_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
+import 'package:forma_app/data/services/skill_track_service.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
 
 void main() {
   final service = TrainingProgramService();
+
+  SkillTrack track(String categoryId, String branchId,
+      {bool included = true}) {
+    return SkillTrack(
+      skillCategoryId: categoryId,
+      branchId: branchId,
+      included: included,
+      updatedAt: DateTime(2026),
+    );
+  }
+
+  group('skills as independent tracks', () {
+    test('two tracks on the same movement pattern are both scheduled', () {
+      final recommendation = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.push,
+        skillTracks: [
+          track('pushups', 'one_arm'),
+          track('planche', 'main'),
+          track('squat', 'pistol'),
+        ],
+      );
+
+      final categories = recommendation.items
+          .map((item) => item.sourceSkillCategoryId)
+          .toSet();
+      expect(categories, containsAll(['pushups', 'planche', 'squat']));
+      // Both horizontal-push tracks coexist — the lane model allowed one.
+      expect(
+        recommendation.items
+            .where((item) => item.exercise.category ==
+                ExerciseCategory.horizontalPush)
+            .length,
+        greaterThanOrEqualTo(2),
+      );
+    });
+
+    test('a paused track leaves future workouts', () {
+      final recommendation = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.push,
+        skillTracks: [
+          track('pushups', 'one_arm'),
+          track('planche', 'main', included: false),
+        ],
+      );
+
+      final categories = recommendation.items
+          .map((item) => item.sourceSkillCategoryId)
+          .toSet();
+      expect(categories, contains('pushups'));
+      expect(categories, isNot(contains('planche')));
+    });
+
+    test('pull-day tracks only schedule pull-day patterns', () {
+      final recommendation = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.pull,
+        skillTracks: [
+          track('pullups', 'weighted'),
+          track('pushups', 'one_arm'),
+        ],
+      );
+
+      final categories = recommendation.items
+          .map((item) => item.sourceSkillCategoryId)
+          .toSet();
+      expect(categories, contains('pullups'));
+      expect(categories, isNot(contains('pushups')));
+    });
+
+    test('seeding converts lane selections and adds goal-only categories',
+        () {
+      final seeds = SkillTrackService.seedTracksFrom(
+        laneSelections: service.defaultBranchSelections(),
+        goalSkillIds: const ['shrimp'],
+      );
+
+      expect(seeds['pullups'], 'weighted');
+      // The skill lane claims the core category first; the core lane's
+      // ab_wheel selection can't double-book the same category.
+      expect(seeds['core'], 'l_sit');
+      // A goal referencing an already-claimed category doesn't override the
+      // lane's branch...
+      expect(seeds['squat'], 'pistol');
+
+      // ...but with no lane coverage the goal creates the track.
+      final goalOnly = SkillTrackService.seedTracksFrom(
+        laneSelections: const {},
+        goalSkillIds: const ['shrimp'],
+      );
+      expect(goalOnly, {'squat': 'shrimp'});
+    });
+  });
 
   group('branchSelectionsForGoals', () {
     test('each goal claims its branch on the track that offers it', () {
