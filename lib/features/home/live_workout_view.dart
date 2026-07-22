@@ -67,6 +67,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   DateTime? _pausedAt;
   bool _isRunning = true;
 
+  /// Number of reps fields currently focused; drives the hide-keyboard button.
+  int _repFocusCount = 0;
+
   /// Set when the session's exercises or sets no longer match the planned day
   /// — used to offer updating the program plan on finish. Rest-timer changes
   /// deliberately do NOT set this: rest is a standalone per-exercise
@@ -352,6 +355,17 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     } else if (_activeRestTimer?.exerciseId == item.exercise.id) {
       _clearActiveRestTimer();
     }
+  }
+
+  /// Reps fields report focus so the "hide keyboard" button can appear only
+  /// while one is being edited. Counting avoids a flicker when focus jumps
+  /// straight from one field to another.
+  void _onRepFocusChanged(bool focused) {
+    setState(() {
+      _repFocusCount = focused
+          ? _repFocusCount + 1
+          : (_repFocusCount - 1).clamp(0, 999);
+    });
   }
 
   /// Applies a reps (or seconds, for timed exercises) value typed inline on
@@ -1018,6 +1032,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                   _setSetValue(entry.items[i], number, value),
                               onRemoveSet: (number) =>
                                   _removeSet(entry.items[i], number),
+                              onRepFocusChanged: _onRepFocusChanged,
                               onAddSet: () => _addSet(entry.items[i]),
                               onRestTap: () => _pickRestInterval(entry.items[i]),
                               onMenu: () => _openExerciseActions(entry.items[i]),
@@ -1064,6 +1079,16 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                 ),
               ),
             ),
+            // Floats just above the keyboard while a reps field is focused.
+            if (_repFocusCount > 0)
+              Positioned(
+                right: 16,
+                bottom: 12,
+                child: _HideKeyboardButton(
+                  onTap: () =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
+                ),
+              ),
           ],
         ),
       ),
@@ -1083,16 +1108,24 @@ class _SectionEntry {
 /// focus node so the numeric keyboard can stay docked and the whole set list
 /// stays visible while typing — and so the once-a-second workout-timer
 /// rebuilds of the parent never reset the cursor or clobber what's typed.
+///
+/// Until the set is logged (typed into or checked off), the prescribed value
+/// shows as a faded placeholder and the field is empty — so typing replaces
+/// it rather than appending. Once logged, the value renders fully white.
 class _RepField extends StatefulWidget {
   final int value;
   final bool completed;
+  final bool isEdited;
   final ValueChanged<int> onChanged;
+  final ValueChanged<bool> onFocusChanged;
 
   const _RepField({
     super.key,
     required this.value,
     required this.completed,
+    required this.isEdited,
     required this.onChanged,
+    required this.onFocusChanged,
   });
 
   @override
@@ -1103,35 +1136,47 @@ class _RepFieldState extends State<_RepField> {
   late final TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
 
+  /// A logged set (edited or checked) shows a real, white value; an untouched
+  /// set shows its default as a faded placeholder with an empty field.
+  bool get _showsValue => widget.completed || widget.isEdited;
+
+  String get _desiredText => _showsValue ? '${widget.value}' : '';
+
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: '${widget.value}');
+    _controller = TextEditingController(text: _desiredText);
     _focusNode.addListener(_onFocusChange);
   }
 
   @override
   void didUpdateWidget(_RepField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Reflect external value changes (progression target on load, add-set
-    // copying the last target) — but never while the user is typing.
-    if (widget.value != oldWidget.value &&
-        !_focusNode.hasFocus &&
-        int.tryParse(_controller.text) != widget.value) {
-      _controller.text = '${widget.value}';
+    // Reflect external changes (progression target on load, add-set copy, or
+    // logging a default via the checkmark) — but never while the user types.
+    if (!_focusNode.hasFocus) _syncText();
+  }
+
+  void _syncText() {
+    if (_controller.text != _desiredText) {
+      _controller.value = TextEditingValue(
+        text: _desiredText,
+        selection: TextSelection.collapsed(offset: _desiredText.length),
+      );
     }
   }
 
   void _onFocusChange() {
+    widget.onFocusChanged(_focusNode.hasFocus);
     if (_focusNode.hasFocus) {
-      // Select all so the first keystroke replaces the shown value.
+      // Select any existing value so the first keystroke replaces it.
       _controller.selection = TextSelection(
         baseOffset: 0,
         extentOffset: _controller.text.length,
       );
-    } else if (_controller.text.trim().isEmpty) {
-      // Left blank — restore the last known value.
-      _controller.text = '${widget.value}';
+    } else {
+      // Left blank or unlogged — fall back to the model's text.
+      _syncText();
     }
   }
 
@@ -1164,19 +1209,60 @@ class _RepFieldState extends State<_RepField> {
         textAlign: TextAlign.center,
         onChanged: _handleChanged,
         cursorColor: AppColors.accentPrimary,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: widget.completed
-              ? AppColors.accentPrimary
-              : AppColors.textPrimary,
-          fontFeatures: const [FontFeature.tabularFigures()],
+          color: AppColors.textPrimary,
+          fontFeatures: [FontFeature.tabularFigures()],
         ),
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           isDense: true,
           isCollapsed: true,
           contentPadding: EdgeInsets.zero,
           border: InputBorder.none,
+          hintText: '${widget.value}',
+          hintStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textMuted,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Floating "hide keyboard" button shown above the keyboard while a rep field
+/// is focused (matches the Hevy-style dismiss control).
+class _HideKeyboardButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _HideKeyboardButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x40000000),
+              blurRadius: 14,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: const Icon(
+          Icons.keyboard_hide_rounded,
+          size: 22,
+          color: Color(0xFF1C1C20),
         ),
       ),
     );
@@ -1412,6 +1498,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final void Function(int number) onToggleSet;
   final void Function(int number, int value) onValueChanged;
   final void Function(int number) onRemoveSet;
+  final ValueChanged<bool> onRepFocusChanged;
   final VoidCallback onAddSet;
   final VoidCallback onRestTap;
   final VoidCallback onMenu;
@@ -1428,6 +1515,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.onToggleSet,
     required this.onValueChanged,
     required this.onRemoveSet,
+    required this.onRepFocusChanged,
     required this.onAddSet,
     required this.onRestTap,
     required this.onMenu,
@@ -1695,7 +1783,9 @@ class _WorkoutExerciseCard extends StatelessWidget {
           key: ValueKey('rep-${item.exercise.id}-${set.number}'),
           value: set.target,
           completed: set.completed,
+          isEdited: set.isEdited,
           onChanged: (value) => onValueChanged(set.number, value),
+          onFocusChanged: onRepFocusChanged,
         ),
         trailing: Align(
           alignment: Alignment.centerRight,
