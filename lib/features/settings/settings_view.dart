@@ -177,6 +177,13 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
     );
   }
 
+  Future<void> _advanceDay() {
+    return _run(
+      _devToolsService.advanceOneDay,
+      'Advanced one day — Home now shows the next scheduled session.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -220,6 +227,13 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
           title: 'Generate 5 workouts',
           sub: 'Seed sample sessions spaced over the last 30 days',
           onTap: _busy ? null : _generateWorkouts,
+        ),
+        const SizedBox(height: 10),
+        _DevToolRow(
+          icon: Icons.fast_forward_rounded,
+          title: 'Advance one day',
+          sub: 'Skip to the next day in the program schedule',
+          onTap: _busy ? null : _advanceDay,
         ),
       ],
     );

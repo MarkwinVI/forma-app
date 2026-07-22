@@ -42,6 +42,29 @@ class DevToolsService {
     await _client.from('user_training_programs').delete().eq('user_id', userId);
   }
 
+  /// Fast-forwards the program by one day. There is no injectable clock — the
+  /// dashboard derives "today's" session from the real date relative to the
+  /// last workout's `finished_at` — so we roll the whole workout history back
+  /// 24h instead. The next scheduled session (rolling past any rest day)
+  /// becomes due, exactly as it would if a real day had elapsed.
+  Future<void> advanceOneDay(String userId) async {
+    const shift = Duration(days: 1);
+
+    final sessions = await _client
+        .from('workout_sessions')
+        .select('id, started_at, finished_at')
+        .eq('user_id', userId);
+
+    for (final session in sessions) {
+      final startedAt = DateTime.parse(session['started_at'] as String);
+      final finishedAt = DateTime.parse(session['finished_at'] as String);
+      await _client.from('workout_sessions').update({
+        'started_at': startedAt.subtract(shift).toIso8601String(),
+        'finished_at': finishedAt.subtract(shift).toIso8601String(),
+      }).eq('id', session['id'] as String);
+    }
+  }
+
   /// Volume ramp for the five seeded sessions, as a share of each exercise's
   /// target. The last two hit 100%, so early path exercises get mastered and
   /// the progression (skill tree, "closest to levelling up") visibly moves.
