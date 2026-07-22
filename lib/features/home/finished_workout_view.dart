@@ -1450,31 +1450,37 @@ class _RollingValueState extends State<_RollingValue> {
       fontFeatures: [FontFeature.tabularFigures()],
     );
 
+    // IntrinsicWidth pins the box to the text width, giving the OverflowBox a
+    // bounded width constraint. Without it the surrounding Row hands down an
+    // unbounded width and the OverflowBox (which sizes to the max constraint)
+    // resolves to an infinite width, crashing layout.
     return ClipRect(
-      child: SizedBox(
-        height: _height,
-        // The two stacked values are twice the visible height; OverflowBox
-        // lets them lay out at full size so the slide can roll between them
-        // without tripping the vertical-overflow error.
-        child: OverflowBox(
-          maxHeight: _height * 2,
-          alignment: Alignment.topCenter,
-          child: AnimatedSlide(
-            duration: const Duration(milliseconds: 700),
-            curve: const Cubic(0.65, 0, 0.35, 1),
-            offset: _rolled ? const Offset(0, -0.5) : Offset.zero,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.from,
-                  style: style.copyWith(color: AppColors.textMuted),
-                ),
-                Text(
-                  widget.to,
-                  style: style.copyWith(color: AppColors.amber),
-                ),
-              ],
+      child: IntrinsicWidth(
+        child: SizedBox(
+          height: _height,
+          // The two stacked values are twice the visible height; OverflowBox
+          // lets them lay out at full size so the slide can roll between them
+          // without tripping the vertical-overflow error.
+          child: OverflowBox(
+            maxHeight: _height * 2,
+            alignment: Alignment.topCenter,
+            child: AnimatedSlide(
+              duration: const Duration(milliseconds: 700),
+              curve: const Cubic(0.65, 0, 0.35, 1),
+              offset: _rolled ? const Offset(0, -0.5) : Offset.zero,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.from,
+                    style: style.copyWith(color: AppColors.textMuted),
+                  ),
+                  Text(
+                    widget.to,
+                    style: style.copyWith(color: AppColors.amber),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
