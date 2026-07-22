@@ -67,9 +67,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   DateTime? _pausedAt;
   bool _isRunning = true;
 
-  /// Inline reps/duration stepper open for one set at a time.
-  _OpenStep? _openStep;
-
   /// Set when the session's exercises or sets no longer match the planned day
   /// — used to offer updating the program plan on finish. Rest-timer changes
   /// deliberately do NOT set this: rest is a standalone per-exercise
@@ -351,40 +348,39 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     _replaceSets(item, sets);
     if (shouldComplete) {
-      setState(() => _openStep = null);
       _startRestTimer(item);
     } else if (_activeRestTimer?.exerciseId == item.exercise.id) {
       _clearActiveRestTimer();
     }
   }
 
-  void _toggleStepFor(TrainingRecommendationItem item, int number) {
+  /// Opens a numeric keyboard so the user can type the reps (or seconds for
+  /// timed exercises) for a set directly, instead of tapping +/- steppers.
+  Future<void> _editSetValue(
+    TrainingRecommendationItem item,
+    int number,
+  ) async {
     final set = _setsFor(item).firstWhere((set) => set.number == number);
-    if (set.completed) return;
-
-    setState(() {
-      final current = _openStep;
-      _openStep = current != null &&
-              current.exerciseId == item.exercise.id &&
-              current.number == number
-          ? null
-          : _OpenStep(exerciseId: item.exercise.id, number: number);
-    });
-  }
-
-  void _stepSetTarget(TrainingRecommendationItem item, int number, int delta) {
     final isTimed = _isTimedExercise(item.exercise);
-    final step = isTimed ? 5 : 1;
-    final low = isTimed ? 5 : 1;
-    final high = isTimed ? 600 : 99;
 
+    final entered = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _SetValueSheet(
+        exerciseName: item.exercise.name,
+        setNumber: number,
+        isTimed: isTimed,
+        initialValue: set.target,
+      ),
+    );
+    if (entered == null || !mounted) return;
+
+    final value = entered.clamp(1, isTimed ? 3600 : 999);
     final sets = _setsFor(item)
         .map(
           (set) => set.number == number
-              ? set.copyWith(
-                  target: (set.target + delta * step).clamp(low, high),
-                  isEdited: true,
-                )
+              ? set.copyWith(target: value, isEdited: true)
               : set,
         )
         .toList();
@@ -417,7 +413,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     final remaining = sets.where((set) => set.number != number).toList();
     _planEdited = true;
-    setState(() => _openStep = null);
     _replaceSets(
       item,
       [
@@ -1030,16 +1025,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                               restSeconds: _restSecondsByExercise[
                                       entry.items[i].exercise.id] ??
                                   0,
-                              openStepNumber: _openStep?.exerciseId ==
-                                      entry.items[i].exercise.id
-                                  ? _openStep!.number
-                                  : null,
                               onToggleSet: (number) =>
                                   _toggleSet(entry.items[i], number),
-                              onToggleStep: (number) =>
-                                  _toggleStepFor(entry.items[i], number),
-                              onStepTarget: (number, delta) =>
-                                  _stepSetTarget(entry.items[i], number, delta),
+                              onEditValue: (number) =>
+                                  _editSetValue(entry.items[i], number),
                               onRemoveSet: (number) =>
                                   _removeSet(entry.items[i], number),
                               onAddSet: () => _addSet(entry.items[i]),
@@ -1103,11 +1092,148 @@ class _SectionEntry {
   const _SectionEntry({required this.section, required this.items});
 }
 
-class _OpenStep {
-  final String exerciseId;
-  final int number;
+/// Bottom sheet with a numeric keyboard for typing a set's reps (or seconds
+/// for timed exercises) directly. Pops with the entered value, or null if
+/// dismissed without a valid number.
+class _SetValueSheet extends StatefulWidget {
+  final String exerciseName;
+  final int setNumber;
+  final bool isTimed;
+  final int initialValue;
 
-  const _OpenStep({required this.exerciseId, required this.number});
+  const _SetValueSheet({
+    required this.exerciseName,
+    required this.setNumber,
+    required this.isTimed,
+    required this.initialValue,
+  });
+
+  @override
+  State<_SetValueSheet> createState() => _SetValueSheetState();
+}
+
+class _SetValueSheetState extends State<_SetValueSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.initialValue}');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = int.tryParse(_controller.text.trim());
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unit = widget.isTimed ? 'seconds' : 'reps';
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(kCardRadius),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${widget.exerciseName} · Set ${widget.setNumber}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Enter your $unit',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        autofocus: true,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _submit(),
+                        onTap: () => _controller.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: _controller.text.length,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                        cursorColor: AppColors.accentPrimary,
+                        decoration: InputDecoration(
+                          isCollapsed: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 10),
+                          filled: true,
+                          fillColor: AppColors.surface2,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          hintText: '0',
+                          hintStyle: const TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      unit,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                PillButton(label: 'Done', onTap: _submit),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ── Header ────────────────────────────────────────────────────────────
@@ -1336,10 +1462,8 @@ class _WorkoutExerciseCard extends StatelessWidget {
   /// exercises, whose GOAL cells stay blank.
   final int? goalValue;
   final int restSeconds;
-  final int? openStepNumber;
   final void Function(int number) onToggleSet;
-  final void Function(int number) onToggleStep;
-  final void Function(int number, int delta) onStepTarget;
+  final void Function(int number) onEditValue;
   final void Function(int number) onRemoveSet;
   final VoidCallback onAddSet;
   final VoidCallback onRestTap;
@@ -1354,10 +1478,8 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.targetLabel,
     required this.goalValue,
     required this.restSeconds,
-    required this.openStepNumber,
     required this.onToggleSet,
-    required this.onToggleStep,
-    required this.onStepTarget,
+    required this.onEditValue,
     required this.onRemoveSet,
     required this.onAddSet,
     required this.onRestTap,
@@ -1535,11 +1657,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
             ),
           ),
           // Set rows
-          for (final set in sets) ...[
-            _buildSetRow(context, set),
-            if (openStepNumber == set.number && !set.completed)
-              _buildStepper(set),
-          ],
+          for (final set in sets) _buildSetRow(context, set),
           // Add set
           Container(
             decoration: const BoxDecoration(
@@ -1593,13 +1711,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
   );
 
   Widget _buildSetRow(BuildContext context, _WorkoutSetDraft set) {
-    final open = openStepNumber == set.number && !set.completed;
-
     final row = Container(
       height: 52,
-      decoration: BoxDecoration(
-        color: open ? AppColors.cardHighlight : Colors.transparent,
-        border: const Border(top: BorderSide(color: AppColors.divider)),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: _SetGridRow(
         leading: Text(
@@ -1633,16 +1748,12 @@ class _WorkoutExerciseCard extends StatelessWidget {
           ),
         ),
         value: Pressable(
-          onTap: () => onToggleStep(set.number),
+          onTap: () => onEditValue(set.number),
           child: Container(
             height: 32,
             decoration: BoxDecoration(
               color: set.completed ? AppColors.accentSoft : AppColors.surface2,
               borderRadius: BorderRadius.circular(9),
-              border: Border.all(
-                color: open ? AppColors.accentPrimary : Colors.transparent,
-                width: 1.5,
-              ),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -1710,66 +1821,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStepper(_WorkoutSetDraft set) {
-    Widget stepButton(IconData icon, VoidCallback onTap) {
-      return Pressable(
-        onTap: onTap,
-        child: Container(
-          width: 28,
-          height: 28,
-          decoration: const BoxDecoration(
-            color: AppColors.surface2,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Icon(icon, size: 14, color: AppColors.textPrimary),
-        ),
-      );
-    }
-
-    return Container(
-      color: AppColors.cardHighlight,
-      padding: const EdgeInsets.fromLTRB(52, 2, 58, 13),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            isTimed ? 'Adjust duration' : 'Adjust reps',
-            style: const TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          Row(
-            children: [
-              stepButton(
-                Icons.remove_rounded,
-                () => onStepTarget(set.number, -1),
-              ),
-              SizedBox(
-                width: 50,
-                child: Text(
-                  _valueLabel(set),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-              stepButton(
-                Icons.add_rounded,
-                () => onStepTarget(set.number, 1),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Shared 5-column grid used by the set header and set rows:
