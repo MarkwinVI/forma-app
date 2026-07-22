@@ -6,6 +6,7 @@ import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
 import '../models/progression_event_model.dart';
 import '../models/training_program_model.dart';
+import 'exercise_log_service.dart';
 import 'progress_service.dart';
 import 'progression_event_service.dart';
 import 'training_program_service.dart';
@@ -90,6 +91,7 @@ class ExerciseProgressionService {
   final _progressService = ProgressService();
   final _eventService = ProgressionEventService();
   final _storeService = TrainingProgramStoreService();
+  final _logService = ExerciseLogService();
 
   /// Ladder start: 3 × 6 reps, or 3 × 10s for timed exercises.
   static const int initialTargetSets = 3;
@@ -521,6 +523,143 @@ class ExerciseProgressionService {
     return events;
   }
 
+  // ── Deletion rollback ─────────────────────────────────────────────
+  //
+  // Workout history and progression state are related but not the same:
+  // deleting a session only reverses its progression effects when it is the
+  // most recent progression result of its track. A later result in the same
+  // track preserves everything — deleting an old workout must never relock
+  // exercises or rewrite later sessions.
+
+  /// Splits a deleted session's events into reversible and preserved, by
+  /// checking each event's track (or its exercise, for legacy events without
+  /// a track) for later progression results. Fetch this BEFORE deleting the
+  /// session — its events cascade away with it.
+  Future<SessionRollbackAssessment> assessSessionRollback({
+    required String userId,
+    required String sessionId,
+    required DateTime sessionFinishedAt,
+  }) async {
+    final events = await _eventService.fetchForSession(userId, sessionId);
+    final progressionEvents = [
+      for (final event in events)
+        if (event.kind == ProgressionEventKind.targetIncrease ||
+            event.kind == ProgressionEventKind.mastered ||
+            event.kind == ProgressionEventKind.activated)
+          event,
+    ];
+    if (progressionEvents.isEmpty) {
+      return const SessionRollbackAssessment(
+        reversible: [],
+        preserved: [],
+      );
+    }
+
+    // One later-result check per track (or per exercise when no track).
+    final blockedKeys = <String>{};
+    final checkedKeys = <String>{};
+    for (final event in progressionEvents) {
+      final key = _rollbackScopeKey(event);
+      if (!checkedKeys.add(key)) continue;
+
+      final hasLater = await _logService.hasLaterProgressionResult(
+        userId,
+        trackId: event.trackId,
+        exerciseId: event.trackId == null ? event.exerciseId : null,
+        after: sessionFinishedAt,
+        excludeSessionId: sessionId,
+      );
+      if (hasLater) blockedKeys.add(key);
+    }
+
+    return splitReversibleEvents(
+      events: progressionEvents,
+      isBlocked: (event) => blockedKeys.contains(_rollbackScopeKey(event)),
+    );
+  }
+
+  /// Pure partition of a session's progression events by a blocked test —
+  /// separated from the queries so the rule is testable.
+  static SessionRollbackAssessment splitReversibleEvents({
+    required List<ProgressionEvent> events,
+    required bool Function(ProgressionEvent event) isBlocked,
+  }) {
+    final reversible = <ProgressionEvent>[];
+    final preserved = <ProgressionEvent>[];
+    for (final event in events) {
+      (isBlocked(event) ? preserved : reversible).add(event);
+    }
+    return SessionRollbackAssessment(
+      reversible: reversible,
+      preserved: preserved,
+    );
+  }
+
+  /// What undoing each event means:
+  /// - a target increase restores the target to its before-value;
+  /// - a mastery makes the exercise active again (its stored target was
+  ///   untouched by mastering, so it resumes where it was);
+  /// - an activation returns the unlocked exercise to inactive, removing it
+  ///   from future workouts.
+  static List<RollbackAction> rollbackActionsFor(
+    List<ProgressionEvent> events,
+  ) {
+    final actions = <RollbackAction>[];
+    for (final event in events) {
+      switch (event.kind) {
+        case ProgressionEventKind.targetIncrease:
+          if (event.valueFrom != null) {
+            actions.add(RollbackAction.target(
+              exerciseId: event.exerciseId,
+              targetSets: event.targetSets ?? initialTargetSets,
+              targetValue: event.valueFrom!,
+            ));
+          }
+        case ProgressionEventKind.mastered:
+          actions.add(RollbackAction.status(
+            exerciseId: event.exerciseId,
+            status: ExerciseStatus.active,
+          ));
+        case ProgressionEventKind.activated:
+          actions.add(RollbackAction.status(
+            exerciseId: event.exerciseId,
+            status: ExerciseStatus.inactive,
+          ));
+        case ProgressionEventKind.personalBest:
+        case ProgressionEventKind.branchChoice:
+          break; // Nothing was written to progression state.
+      }
+    }
+    return actions;
+  }
+
+  /// Applies the reversals for [events]. Call after the session was deleted.
+  Future<void> reverseSessionEvents({
+    required String userId,
+    required List<ProgressionEvent> events,
+  }) async {
+    for (final action in rollbackActionsFor(events)) {
+      if (action.status != null) {
+        await _progressService.upsert(
+          userId,
+          action.exerciseId,
+          action.status!,
+        );
+      }
+      if (action.targetValue != null) {
+        await _progressService.upsertTarget(
+          userId,
+          action.exerciseId,
+          targetSets: action.targetSets!,
+          targetValue: action.targetValue!,
+        );
+      }
+    }
+  }
+
+  static String _rollbackScopeKey(ProgressionEvent event) =>
+      event.trackId ?? 'exercise:${event.exerciseId}';
+
   /// The move that follows [exercise] across every training path it appears
   /// in. An exercise's own skillCategoryId/branchId don't identify the path
   /// being trained (paths share prefix exercises), so all catalog paths are
@@ -540,6 +679,41 @@ class ExerciseProgressionService {
     if (successors.length != 1) return null;
     return ExerciseCatalog.findById(successors.first);
   }
+}
+
+/// A deleted session's progression events split by rollback eligibility:
+/// [reversible] events get undone; [preserved] events stay because later
+/// workouts in their track depend on them.
+class SessionRollbackAssessment {
+  final List<ProgressionEvent> reversible;
+  final List<ProgressionEvent> preserved;
+
+  const SessionRollbackAssessment({
+    required this.reversible,
+    required this.preserved,
+  });
+
+  bool get hasProgression => reversible.isNotEmpty || preserved.isNotEmpty;
+}
+
+/// One reversal step: a status restore, a target restore, or both.
+class RollbackAction {
+  final String exerciseId;
+  final ExerciseStatus? status;
+  final int? targetSets;
+  final int? targetValue;
+
+  const RollbackAction.status({
+    required this.exerciseId,
+    required ExerciseStatus this.status,
+  })  : targetSets = null,
+        targetValue = null;
+
+  const RollbackAction.target({
+    required this.exerciseId,
+    required int this.targetSets,
+    required int this.targetValue,
+  }) : status = null;
 }
 
 /// How a mastered exercise's fork was decided: a successor to activate

@@ -133,6 +133,92 @@ void main() {
     });
   });
 
+  group('deletion rollback', () {
+    ProgressionEvent event({
+      required String exerciseId,
+      required ProgressionEventKind kind,
+      String? trackId,
+      int? valueFrom,
+      int? valueTo,
+      int? targetSets,
+    }) {
+      return ProgressionEvent(
+        id: 'evt-$exerciseId-${kind.name}',
+        exerciseId: exerciseId,
+        kind: kind,
+        createdAt: DateTime(2026),
+        trackId: trackId,
+        valueFrom: valueFrom,
+        valueTo: valueTo,
+        targetSets: targetSets,
+      );
+    }
+
+    test('events in a blocked track are preserved, others reverse', () {
+      final blockedIncrease = event(
+        exerciseId: 'pull_up',
+        kind: ProgressionEventKind.targetIncrease,
+        trackId: 'vertical_pull',
+        valueFrom: 6,
+        valueTo: 7,
+      );
+      final freeMastery = event(
+        exerciseId: 'box_pistol',
+        kind: ProgressionEventKind.mastered,
+        trackId: 'squat',
+        valueTo: 8,
+      );
+
+      final assessment = ExerciseProgressionService.splitReversibleEvents(
+        events: [blockedIncrease, freeMastery],
+        isBlocked: (candidate) => candidate.trackId == 'vertical_pull',
+      );
+
+      expect(assessment.preserved, [blockedIncrease]);
+      expect(assessment.reversible, [freeMastery]);
+      expect(assessment.hasProgression, isTrue);
+    });
+
+    test('rollback actions restore targets and statuses, and skip the rest',
+        () {
+      final actions = ExerciseProgressionService.rollbackActionsFor([
+        event(
+          exerciseId: 'push_up',
+          kind: ProgressionEventKind.targetIncrease,
+          valueFrom: 6,
+          valueTo: 7,
+          targetSets: 3,
+        ),
+        event(exerciseId: 'chin_up', kind: ProgressionEventKind.mastered),
+        event(exerciseId: 'muscle_up', kind: ProgressionEventKind.activated),
+        event(exerciseId: 'row', kind: ProgressionEventKind.personalBest),
+        event(exerciseId: 'pull_up', kind: ProgressionEventKind.branchChoice),
+        // A legacy increase without a before-value can't be restored.
+        event(
+          exerciseId: 'dip',
+          kind: ProgressionEventKind.targetIncrease,
+          valueTo: 9,
+        ),
+      ]);
+
+      expect(actions, hasLength(3));
+
+      final target = actions[0];
+      expect(target.exerciseId, 'push_up');
+      expect(target.targetSets, 3);
+      expect(target.targetValue, 6);
+      expect(target.status, isNull);
+
+      final unmaster = actions[1];
+      expect(unmaster.exerciseId, 'chin_up');
+      expect(unmaster.status, ExerciseStatus.active);
+
+      final deactivate = actions[2];
+      expect(deactivate.exerciseId, 'muscle_up');
+      expect(deactivate.status, ExerciseStatus.inactive);
+    });
+  });
+
   group('ProgressionEventService.computePersonalBests', () {
     test('a higher best set with history is a personal best', () {
       final events = ProgressionEventService.computePersonalBests(

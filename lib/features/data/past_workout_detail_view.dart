@@ -7,6 +7,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../exercises/exercise_detail_view.dart';
 
@@ -44,19 +45,59 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => const _ConfirmDeleteSheet(),
-    );
-    if (confirmed != true || !mounted) return;
-    await _deleteWorkout();
-  }
-
-  Future<void> _deleteWorkout() async {
     final userId = AuthService().currentUser?.id;
     if (userId == null) return;
 
+    // What deleting this session would do to progression: events of the
+    // track's most recent session get rolled back; anything a later workout
+    // depends on is preserved. Assessed BEFORE deleting — the session's
+    // events cascade away with it.
+    SessionRollbackAssessment assessment = const SessionRollbackAssessment(
+      reversible: [],
+      preserved: [],
+    );
+    try {
+      assessment = await ExerciseProgressionService().assessSessionRollback(
+        userId: userId,
+        sessionId: workout.id,
+        sessionFinishedAt: workout.loggedAt,
+      );
+    } catch (error, stackTrace) {
+      // Best-effort: without the assessment the delete still works, the
+      // sheet just shows the generic copy and nothing is rolled back.
+      debugPrint('Failed to assess rollback: $error\n$stackTrace');
+    }
+    if (!mounted) return;
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _ConfirmDeleteSheet(
+        message: _deleteMessageFor(assessment),
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _deleteWorkout(userId, assessment);
+  }
+
+  String _deleteMessageFor(SessionRollbackAssessment assessment) {
+    if (assessment.reversible.isNotEmpty) {
+      return 'It comes off your history and streak, and the level-ups and '
+          'target increases it earned are rolled back. This can’t be undone.';
+    }
+    if (assessment.preserved.isNotEmpty) {
+      return 'It comes off your workout history and statistics. Your current '
+          'progression won’t change — you’ve completed later workouts in '
+          'this progression.';
+    }
+    return 'This removes the session and every set you logged in it. '
+        'Your stats and calendar will update. This can’t be undone.';
+  }
+
+  Future<void> _deleteWorkout(
+    String userId,
+    SessionRollbackAssessment assessment,
+  ) async {
     setState(() => _deleting = true);
     try {
       // Saving the first workout of a local day advances the program
@@ -82,6 +123,19 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
           // The workout itself is deleted — a failed rewind only leaves the
           // schedule one session ahead and self-heals on the next save.
           debugPrint('Failed to rewind program state: $error\n$stackTrace');
+        }
+      }
+
+      if (assessment.reversible.isNotEmpty) {
+        try {
+          await ExerciseProgressionService().reverseSessionEvents(
+            userId: userId,
+            events: assessment.reversible,
+          );
+        } catch (error, stackTrace) {
+          // The workout is gone either way; a failed reversal leaves the
+          // earned progression in place, which the user can adjust manually.
+          debugPrint('Failed to roll back progression: $error\n$stackTrace');
         }
       }
 
@@ -539,7 +593,9 @@ class _ActionsSheet extends StatelessWidget {
 }
 
 class _ConfirmDeleteSheet extends StatelessWidget {
-  const _ConfirmDeleteSheet();
+  final String message;
+
+  const _ConfirmDeleteSheet({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -567,10 +623,9 @@ class _ConfirmDeleteSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 7),
-              const Text(
-                'It comes off your history and streak, and any level-ups it '
-                'earned are rolled back. This can’t be undone.',
-                style: TextStyle(
+              Text(
+                message,
+                style: const TextStyle(
                   fontSize: 13.5,
                   color: AppColors.textSecondary,
                   height: 1.5,

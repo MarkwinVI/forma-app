@@ -165,6 +165,39 @@ class ExerciseLogService {
     return sessionId;
   }
 
+  /// Whether a progression result exists in [trackId] (or for [exerciseId]
+  /// when the track is unknown) from a session finished after [after],
+  /// excluding [excludeSessionId]. Used by deletion rollback: a later result
+  /// in the same track means the deleted session's progression effects are
+  /// preserved rather than reversed.
+  Future<bool> hasLaterProgressionResult(
+    String userId, {
+    String? trackId,
+    String? exerciseId,
+    required DateTime after,
+    required String excludeSessionId,
+  }) async {
+    var query = _client
+        .from('workout_exercise_logs')
+        .select('id, workout_sessions!inner(finished_at)')
+        .eq('user_id', userId)
+        .eq('is_progression', true)
+        .neq('workout_session_id', excludeSessionId)
+        .gt(
+          'workout_sessions.finished_at',
+          after.toUtc().toIso8601String(),
+        );
+    if (trackId != null) {
+      query = query.eq('track_id', trackId);
+    }
+    if (exerciseId != null) {
+      query = query.eq('exercise_id', exerciseId);
+    }
+
+    final data = await query.limit(1);
+    return (data as List).isNotEmpty;
+  }
+
   /// Best single-set value (reps, or seconds when timed) the user has ever
   /// logged per exercise, optionally excluding one session — used to detect
   /// personal bests for the session being saved without counting itself.
