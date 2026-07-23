@@ -68,8 +68,10 @@ void main() {
     );
   }
 
-  testWidgets('shows plan rows with last result and change', (tester) async {
+  testWidgets('shows plan rows with the last and change columns',
+      (tester) async {
     var started = false;
+    var trainElse = false;
     await tester.pumpWidget(
       host(
         TodayWorkoutCard(
@@ -77,20 +79,26 @@ void main() {
           subtitle: '5 exercises · targets your stalled Pull-up node',
           rows: rows,
           onStart: () => started = true,
+          onTrainSomethingElse: () => trainElse = true,
         ),
       ),
     );
 
-    expect(find.text('UP NEXT · TODAY'), findsOneWidget);
+    // No eyebrow row — the title leads the card.
     expect(find.text('Pull Day'), findsOneWidget);
-    expect(find.text('48 min'), findsOneWidget);
+    expect(find.textContaining('SESSION'), findsNothing);
+    expect(find.textContaining('min'), findsNothing);
     expect(find.text('EXERCISE'), findsOneWidget);
     expect(find.text('LAST'), findsOneWidget);
     expect(find.text('CHANGE'), findsOneWidget);
     expect(find.text('Wall Handstand'), findsOneWidget);
+    expect(find.text('20s'), findsOneWidget);
     expect(find.text('+2s'), findsOneWidget);
     expect(find.text('±0'), findsOneWidget);
     expect(find.textContaining('stalled', findRichText: true), findsWidgets);
+
+    await tester.tap(find.text('Train something else'));
+    expect(trainElse, isTrue);
 
     await tester.tap(find.text('Start'));
     expect(started, isTrue);
@@ -120,8 +128,7 @@ void main() {
     expect(find.text('Start'), findsNothing);
   });
 
-  testWidgets('captures a preview image of the today card and tip',
-      (tester) async {
+  testWidgets('captures a preview image of the today card', (tester) async {
     final key = GlobalKey();
 
     await tester.pumpWidget(
@@ -137,12 +144,7 @@ void main() {
                   subtitle: '5 exercises · targets your stalled Pull-up node',
                   rows: rows,
                   onStart: () {},
-                ),
-                const SizedBox(height: 12),
-                const TipCard(
-                  highlight: 'Your Pull-ups have stalled at 6 reps.',
-                  body: 'Focus on clean, full-range reps today — quality sets '
-                      'are what break the plateau.',
+                  onTrainSomethingElse: () {},
                 ),
               ],
             ),

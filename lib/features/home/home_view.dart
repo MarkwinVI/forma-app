@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
-import '../../core/widgets/polished.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/progression_event_model.dart';
@@ -24,8 +22,9 @@ import 'home_empty_state.dart';
 import 'live_workout_view.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
+import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
-import 'widgets/week_calendar_card.dart';
+import 'widgets/week_strip.dart';
 import 'widgets/what_changed_card.dart';
 
 /// Train tab — today's workout as a performance list (planned exercises with
@@ -95,14 +94,23 @@ class _HomeViewState extends State<HomeView> {
         _trainingProgramStoreService.fetchProgramLogic(userId),
         _exerciseLogService.fetchPastWorkouts(userId),
       ]);
-      // Best-effort: a failed feed fetch shouldn't block the whole tab.
+      final pastWorkouts = results[2] as List<PastWorkout>;
+      // The insight reflects only the most recently finished session (past
+      // workouts come back newest first). It clears once a newer workout is
+      // logged — that session becomes the source, and if it produced no
+      // changes there's simply nothing to show.
       var whatChanged = const <ProgressionEvent>[];
-      try {
-        whatChanged = (await _progressionEventService.fetchUnseen(userId))
-            .where((event) => event.kind != ProgressionEventKind.personalBest)
-            .toList();
-      } catch (error, stackTrace) {
-        debugPrint('Failed to load progression feed: $error\n$stackTrace');
+      final latestSessionId =
+          pastWorkouts.isEmpty ? null : pastWorkouts.first.id;
+      if (latestSessionId != null) {
+        try {
+          whatChanged = (await _progressionEventService.fetchForSession(
+                  userId, latestSessionId))
+              .where((event) => event.kind != ProgressionEventKind.personalBest)
+              .toList();
+        } catch (error, stackTrace) {
+          debugPrint('Failed to load progression feed: $error\n$stackTrace');
+        }
       }
 
       final logic = results[1] as TrainingProgramLogicSnapshot?;
@@ -135,7 +143,7 @@ class _HomeViewState extends State<HomeView> {
         };
         _logicSnapshot = logic;
         _hasProgram = _logicSnapshot != null;
-        _pastWorkouts = results[2] as List<PastWorkout>;
+        _pastWorkouts = pastWorkouts;
         _whatChanged = whatChanged;
         _skillTracks = skillTracks;
         _loading = false;
@@ -151,24 +159,6 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
       );
-    }
-  }
-
-  Future<void> _dismissWhatChanged() async {
-    final userId = AuthService().currentUser?.id;
-    final dismissed = _whatChanged;
-    if (userId == null || dismissed.isEmpty) return;
-
-    // Hide immediately; the seen-marking is best-effort and retried
-    // naturally because unseen events are re-fetched on the next load.
-    setState(() => _whatChanged = const []);
-    try {
-      await _progressionEventService.markSeen(
-        userId,
-        [for (final event in dismissed) event.id],
-      );
-    } catch (error, stackTrace) {
-      debugPrint('Failed to mark events seen: $error\n$stackTrace');
     }
   }
 
@@ -337,71 +327,131 @@ class _HomeViewState extends State<HomeView> {
                       onOpenSettings: _openSettings,
                     ),
                   )
-                : RefreshIndicator(
-                    color: AppColors.accentPrimary,
-                    backgroundColor: AppColors.surface,
-                    onRefresh: _loadHomeData,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                            child: Text(
-                              formatHeaderDate(DateTime.now()).toUpperCase(),
-                              style: GoogleFonts.robotoMono(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
+                : snapshot.metrics.today.isRestDay
+                    // Recovery day fills the viewport and never scrolls — the
+                    // illustration flexes so the footer stays above the fold.
+                    ? _buildRestBody(snapshot)
+                    : RefreshIndicator(
+                        color: AppColors.accentPrimary,
+                        backgroundColor: AppColors.surface,
+                        onRefresh: _loadHomeData,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 120),
                             child: _buildContent(snapshot),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+      ),
+    );
+  }
+
+  Widget _buildRestBody(_TrainSnapshot snapshot) {
+    final metrics = snapshot.metrics;
+    final (nextTitle, nextWhen) = _nextSession(metrics.weekStrip);
+    // Reserve room for the shell's floating nav bar (it extends behind the
+    // body), so the "train something else" link isn't hidden by it.
+    final navReserve = MediaQuery.of(context).padding.bottom + 74;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 18, 16, navReserve),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          WeekStrip(weekStrip: metrics.weekStrip),
+          Expanded(
+            child: RestDayView(
+              nextTitle: nextTitle,
+              nextWhen: nextWhen,
+              onTrainSomethingElse: () =>
+                  _openAlternateWorkoutOptions(snapshot.recommendation),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildContent(_TrainSnapshot snapshot) {
     final metrics = snapshot.metrics;
-    final tip = TodayWorkoutContent.tip(metrics);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        WeekStrip(weekStrip: metrics.weekStrip),
+        const SizedBox(height: 16),
         TodayWorkoutCard(
           summary: metrics.today,
           subtitle: TodayWorkoutContent.subtitle(metrics),
           rows: TodayWorkoutContent.rows(metrics),
           onStart: () => _startWorkout(snapshot.recommendation),
+          onTrainSomethingElse: () =>
+              _openAlternateWorkoutOptions(snapshot.recommendation),
         ),
-        if (_whatChanged.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          WhatChangedCard(
+        if (_whatChanged.isNotEmpty)
+          TrainInsight(
             events: _whatChanged,
-            onDismiss: _dismissWhatChanged,
+            volumeTrend: _volumeTrend(metrics.exercisePerformance),
           ),
-        ],
-        const SizedBox(height: 12),
-        TipCard(highlight: tip.$1, body: tip.$2),
-        const SizedBox(height: 12),
-        WeekCalendarCard(weekStrip: metrics.weekStrip),
-        const SizedBox(height: 12),
-        PillButton(
-          label: 'Train something else',
-          tonal: true,
-          onTap: () => _openAlternateWorkoutOptions(snapshot.recommendation),
-        ),
       ],
     );
+  }
+
+  /// The next training session after today and how far off it is, walking the
+  /// program cycle forward from today (wrapping into the next cycle). Returns
+  /// (null, null) when the cycle has no training day.
+  (String?, String?) _nextSession(HomeWeekStripData weekStrip) {
+    final days = weekStrip.days;
+    final currentIndex = days.indexWhere((day) => day.isCurrent);
+    if (currentIndex < 0) return (null, null);
+
+    for (var offset = 1; offset <= days.length; offset++) {
+      final day = days[(currentIndex + offset) % days.length];
+      if (day.sessionType == TrainingSessionType.rest) continue;
+      final title = _sessionTitle(day.sessionType);
+      final when = offset == 1 ? 'tomorrow' : 'in $offset days';
+      return (title, when);
+    }
+    return (null, null);
+  }
+
+  String _sessionTitle(TrainingSessionType type) {
+    switch (type) {
+      case TrainingSessionType.fullBody:
+        return 'Full Body';
+      case TrainingSessionType.push:
+        return 'Push Day';
+      case TrainingSessionType.pull:
+        return 'Pull Day';
+      case TrainingSessionType.upper:
+        return 'Upper Day';
+      case TrainingSessionType.lower:
+        return 'Lower Day';
+      case TrainingSessionType.rest:
+        return 'Recovery';
+    }
+  }
+
+  /// Total training volume per recent session (oldest → newest), summed across
+  /// today's exercises and right-aligned to the most recent session, for the
+  /// insight sparkline.
+  List<int> _volumeTrend(List<HomeExercisePerformance> performance) {
+    var maxLen = 0;
+    for (final perf in performance) {
+      if (perf.history.length > maxLen) maxLen = perf.history.length;
+    }
+    if (maxLen < 2) return const [];
+
+    final totals = List<int>.filled(maxLen, 0);
+    for (final perf in performance) {
+      final history = perf.history;
+      final offset = maxLen - history.length;
+      for (var i = 0; i < history.length; i++) {
+        totals[offset + i] += history[i];
+      }
+    }
+    return totals;
   }
 }
 

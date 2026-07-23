@@ -1,99 +1,159 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/polished.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/models/progression_event_model.dart';
 
-/// "What changed" feed on the Train tab: unseen progression events from
-/// recent workouts — target raises, masteries, and exercise swaps — with a
-/// single dismiss that marks them seen. Personal bests live on Progress.
-class WhatChangedCard extends StatelessWidget {
-  final List<ProgressionEvent> events;
-  final VoidCallback onDismiss;
+/// One rendered change line in the insight block: a leading glyph, a short
+/// description with the exercise name emphasized, and a value on the right.
+class _InsightItem {
+  final String glyph;
+  final Color color;
+  final String name;
+  final String detail;
+  final String value;
 
-  const WhatChangedCard({
+  const _InsightItem({
+    required this.glyph,
+    required this.color,
+    required this.name,
+    required this.detail,
+    required this.value,
+  });
+}
+
+/// Editorial "Insight" block on the Train tab — an unbordered section under the
+/// Today card, separated by a hairline, that combines both design variants: a
+/// coaching lead line with a volume-trend sparkline on top, and a compact
+/// glyph / text / value change list underneath. Driven by the unseen
+/// progression events from recent workouts (target raises, masteries, exercise
+/// swaps). Personal bests live on Progress.
+class TrainInsight extends StatelessWidget {
+  final List<ProgressionEvent> events;
+
+  /// Chronological total-volume per recent session (oldest → newest) used to
+  /// draw the sparkline. Fewer than two points hides the bars.
+  final List<int> volumeTrend;
+
+  const TrainInsight({
     super.key,
     required this.events,
-    required this.onDismiss,
+    this.volumeTrend = const [],
   });
 
   @override
   Widget build(BuildContext context) {
-    final rows = [
+    final items = [
       for (final event in events)
-        if (_lineFor(event) case final line?) (event: event, line: line),
+        if (_itemFor(event) case final item?) item,
     ];
-    if (rows.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) return const SizedBox.shrink();
 
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+    final count = items.length;
+    final kicker = count == 1 ? 'INSIGHT' : 'INSIGHT · $count CHANGES';
+    final lead = count == 1
+        ? 'Your recent training is paying off — the program adjusted one '
+            'thing to keep you moving.'
+        : 'Your recent training is paying off — the program adjusted $count '
+            'things to keep you moving.';
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 28, 8, 0),
+      padding: const EdgeInsets.only(top: 20),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            kicker,
+            style: GoogleFonts.robotoMono(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.3,
+              color: AppColors.accentPrimary,
+            ),
+          ),
+          const SizedBox(height: 7),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.auto_awesome_rounded,
-                size: 15,
-                color: AppColors.accentPrimary,
-              ),
-              const SizedBox(width: 7),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'What changed',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.1,
+                  lead,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
                   ),
                 ),
               ),
-              Pressable(
-                onTap: onDismiss,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Text(
-                    'Got it',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.accentPrimary,
-                    ),
-                  ),
-                ),
-              ),
+              if (volumeTrend.length >= 2) ...[
+                const SizedBox(width: 18),
+                _TrendBars(values: volumeTrend),
+              ],
             ],
           ),
-          const SizedBox(height: 4),
-          for (var i = 0; i < rows.length; i++)
+          const SizedBox(height: 6),
+          for (var i = 0; i < items.length; i++)
             Container(
-              decoration: i > 0
+              decoration: i < items.length - 1
                   ? const BoxDecoration(
                       border: Border(
-                        top: BorderSide(color: AppColors.divider),
+                        bottom: BorderSide(color: AppColors.divider),
                       ),
                     )
                   : null,
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 9),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    _iconFor(rows[i].event.kind),
-                    size: 16,
-                    color: _colorFor(rows[i].event.kind),
+                  SizedBox(
+                    width: 16,
+                    child: Text(
+                      items[i].glyph,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.robotoMono(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: items[i].color,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      rows[i].line,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        height: 1.45,
+                    child: Text.rich(
+                      TextSpan(
+                        text: items[i].name,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: ' ${items[i].detail}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    items[i].value,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: items[i].color,
                     ),
                   ),
                 ],
@@ -104,63 +164,92 @@ class WhatChangedCard extends StatelessWidget {
     );
   }
 
-  IconData _iconFor(ProgressionEventKind kind) {
-    switch (kind) {
-      case ProgressionEventKind.targetIncrease:
-        return Icons.trending_up_rounded;
-      case ProgressionEventKind.mastered:
-        return Icons.verified_rounded;
-      case ProgressionEventKind.activated:
-        return Icons.lock_open_rounded;
-      case ProgressionEventKind.personalBest:
-        return Icons.emoji_events_rounded;
-      case ProgressionEventKind.branchChoice:
-        return Icons.alt_route_rounded;
-    }
-  }
-
-  Color _colorFor(ProgressionEventKind kind) {
-    switch (kind) {
-      case ProgressionEventKind.targetIncrease:
-        return AppColors.amber;
-      case ProgressionEventKind.mastered:
-        return AppColors.green;
-      case ProgressionEventKind.activated:
-        return AppColors.accentPrimary;
-      case ProgressionEventKind.personalBest:
-        return AppColors.amber;
-      case ProgressionEventKind.branchChoice:
-        return AppColors.accentPrimary;
-    }
-  }
-
-  String? _lineFor(ProgressionEvent event) {
+  /// Maps a progression event to a compact insight row, or null when it has no
+  /// catalog exercise (or is a personal best, which lives on Progress).
+  _InsightItem? _itemFor(ProgressionEvent event) {
     final exercise = ExerciseCatalog.findById(event.exerciseId);
     if (exercise == null) return null;
-    final suffix = exercise.isTimed ? 's' : '';
+    final unit = exercise.isTimed ? 's' : '';
     final sets = event.targetSets ?? 3;
 
     switch (event.kind) {
       case ProgressionEventKind.targetIncrease:
-        return 'We raised your target for ${exercise.name} to '
-            '$sets × ${event.valueTo}$suffix'
-            '${event.valueFrom == null ? '' : ' (was ${event.valueFrom}$suffix)'}.';
+        return _InsightItem(
+          glyph: '↑',
+          color: AppColors.green,
+          name: exercise.name,
+          detail: 'target raised',
+          value: event.valueFrom == null
+              ? '→ ${event.valueTo}$unit'
+              : '${event.valueFrom}$unit → ${event.valueTo}$unit',
+        );
       case ProgressionEventKind.mastered:
-        return 'You mastered ${exercise.name} at '
-            '$sets × ${event.valueTo}$suffix.';
+        return _InsightItem(
+          glyph: '★',
+          color: AppColors.green,
+          name: exercise.name,
+          detail: 'mastered',
+          value: '$sets × ${event.valueTo}$unit',
+        );
       case ProgressionEventKind.activated:
         final related = event.relatedExerciseId == null
             ? null
             : ExerciseCatalog.findById(event.relatedExerciseId!);
-        return related == null
-            ? '${exercise.name} is your next move — starting at '
-                '$sets × ${event.valueTo}$suffix.'
-            : '${exercise.name} replaces ${related.name} — you mastered it.';
+        return _InsightItem(
+          glyph: '⇄',
+          color: AppColors.accentPrimary,
+          name: exercise.name,
+          detail:
+              related == null ? 'is your next move' : 'replaces ${related.name}',
+          value: related == null ? 'new' : 'unlocked',
+        );
       case ProgressionEventKind.personalBest:
         return null; // Shown as an achievement on the Progress tab.
       case ProgressionEventKind.branchChoice:
-        return 'You mastered ${exercise.name} — its path forks here. '
-            'Pick your next branch in your program.';
+        return _InsightItem(
+          glyph: '⇄',
+          color: AppColors.accentPrimary,
+          name: exercise.name,
+          detail: 'path forks here',
+          value: 'choose',
+        );
     }
+  }
+}
+
+/// Small volume-trend sparkline — the most recent bar is accented.
+class _TrendBars extends StatelessWidget {
+  static const double _height = 46;
+
+  final List<int> values;
+
+  const _TrendBars({required this.values});
+
+  @override
+  Widget build(BuildContext context) {
+    final maxValue = values.reduce(math.max);
+    if (maxValue <= 0) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: _height,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (var i = 0; i < values.length; i++) ...[
+            if (i > 0) const SizedBox(width: 5),
+            Container(
+              width: 8,
+              height: _height * (0.16 + 0.84 * (values[i] / maxValue)),
+              decoration: BoxDecoration(
+                color: i == values.length - 1
+                    ? AppColors.accentPrimary
+                    : AppColors.surface2,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

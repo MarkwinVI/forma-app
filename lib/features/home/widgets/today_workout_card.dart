@@ -90,58 +90,21 @@ class TodayWorkoutContent {
     }
     return '$count · built from your current program';
   }
-
-  /// (highlight, body) for the tip card, from the most pressing momentum
-  /// signal across the active skill paths.
-  static (String, String) tip(HomeDashboardMetrics metrics) {
-    if (metrics.today.isRestDay) {
-      return (
-        'Rest is part of the program.',
-        'Recovery today means better numbers in your next session.',
-      );
-    }
-
-    final perfByName = {
-      for (final perf in metrics.exercisePerformance) perf.exerciseName: perf,
-    };
-    for (final path in metrics.activeSkillPaths) {
-      if (path.momentum != HomeSkillMomentum.stalled) continue;
-      final perf = perfByName[path.currentExerciseName];
-      final at = perf != null && perf.history.isNotEmpty
-          ? ' at ${perf.history.last}${perf.isTimed ? 's' : ' reps'}'
-          : '';
-      return (
-        'Your ${path.currentExerciseName} has stalled$at.',
-        'Focus on clean, full-range reps today — quality sets are what '
-            'break the plateau.',
-      );
-    }
-    for (final path in metrics.activeSkillPaths) {
-      if (path.momentum != HomeSkillMomentum.improving) continue;
-      return (
-        'Your ${path.currentExerciseName} is trending up.',
-        "Keep the momentum — hitting today's targets brings the next "
-            'node closer.',
-      );
-    }
-    return (
-      'Consistency beats intensity.',
-      "Show up for today's session and every tree on this page keeps "
-          'growing.',
-    );
-  }
 }
 
 /// "Today's workout" card on the Train tab — the planned exercises as a
-/// performance list: EXERCISE / LAST / CHANGE columns and a Start CTA.
+/// performance list: EXERCISE / LAST / CHANGE columns and a Start CTA. Last is
+/// the total reps of the most recent logged session; Change is the difference
+/// in total reps versus the session before it.
 class TodayWorkoutCard extends StatelessWidget {
   static const double _lastColWidth = 58;
-  static const double _changeColWidth = 52;
+  static const double _changeColWidth = 60;
 
   final HomeTodaySummary summary;
   final String subtitle;
   final List<TodayWorkoutRow> rows;
   final VoidCallback onStart;
+  final VoidCallback? onTrainSomethingElse;
 
   const TodayWorkoutCard({
     super.key,
@@ -149,6 +112,7 @@ class TodayWorkoutCard extends StatelessWidget {
     required this.subtitle,
     required this.rows,
     required this.onStart,
+    this.onTrainSomethingElse,
   });
 
   @override
@@ -156,36 +120,11 @@ class TodayWorkoutCard extends StatelessWidget {
     final completed = summary.completed;
 
     return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'UP NEXT · TODAY',
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
-                    color: AppColors.startOrange,
-                  ),
-                ),
-              ),
-              if (!summary.isRestDay)
-                Text(
-                  '${summary.estimatedDurationMinutes} min',
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
           Text(
             summary.sessionTitle,
             style: const TextStyle(
@@ -267,7 +206,7 @@ class TodayWorkoutCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 decoration: BoxDecoration(
-                  color: AppColors.startOrange,
+                  color: AppColors.accentPrimary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
@@ -278,6 +217,35 @@ class TodayWorkoutCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
+                ),
+              ),
+            ),
+          if (onTrainSomethingElse != null)
+            Pressable(
+              onTap: onTrainSomethingElse,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(top: 14, bottom: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.swap_horiz_rounded,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      summary.isRestDay
+                          ? 'Feeling fresh? Train something else'
+                          : 'Train something else',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -377,79 +345,36 @@ class _ExerciseRow extends StatelessWidget {
               style: GoogleFonts.robotoMono(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: row.lastLabel == '—'
+                    ? AppColors.textMuted
+                    : AppColors.textPrimary,
               ),
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
             width: TodayWorkoutCard._changeColWidth,
-            child: Text(
-              row.changeLabel,
-              textAlign: TextAlign.right,
-              style: GoogleFonts.robotoMono(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: changeColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Coaching tip card shown under the Today card: soft accent icon plus one
-/// bold insight sentence and a plain follow-up.
-class TipCard extends StatelessWidget {
-  final String highlight;
-  final String body;
-
-  const TipCard({super.key, required this.highlight, required this.body});
-
-  @override
-  Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppColors.startOrange.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.bolt_rounded,
-              size: 18,
-              color: AppColors.startOrange,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text.rich(
-              TextSpan(
-                text: highlight,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  height: 1.55,
-                ),
-                children: [
-                  TextSpan(
-                    text: ' $body',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary,
-                    ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (row.changeDir != 0)
+                  Icon(
+                    row.changeDir > 0
+                        ? Icons.arrow_drop_up_rounded
+                        : Icons.arrow_drop_down_rounded,
+                    size: 18,
+                    color: changeColor,
                   ),
-                ],
-              ),
+                Text(
+                  row.changeLabel,
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.robotoMono(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: changeColor,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -457,3 +382,4 @@ class TipCard extends StatelessWidget {
     );
   }
 }
+
