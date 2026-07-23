@@ -97,7 +97,7 @@ class TodayWorkoutContent {
 /// the total reps of the most recent logged session; Change is the difference
 /// in total reps versus the session before it.
 class TodayWorkoutCard extends StatelessWidget {
-  static const double _lastColWidth = 58;
+  static const double _lastColWidth = 66;
   static const double _changeColWidth = 60;
 
   final HomeTodaySummary summary;
@@ -154,12 +154,12 @@ class TodayWorkoutCard extends StatelessWidget {
                   Expanded(child: _columnLabel('EXERCISE')),
                   SizedBox(
                     width: _lastColWidth,
-                    child: _columnLabel('LAST', alignRight: true),
+                    child: _columnLabel('PREVIOUS', alignRight: true),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
                     width: _changeColWidth,
-                    child: _columnLabel('CHANGE', alignRight: true),
+                    child: _columnLabel('LAST', alignRight: true),
                   ),
                 ],
               ),

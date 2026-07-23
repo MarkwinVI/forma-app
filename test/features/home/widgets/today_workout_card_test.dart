@@ -89,8 +89,9 @@ void main() {
     expect(find.textContaining('SESSION'), findsNothing);
     expect(find.textContaining('min'), findsNothing);
     expect(find.text('EXERCISE'), findsOneWidget);
+    expect(find.text('PREVIOUS'), findsOneWidget);
     expect(find.text('LAST'), findsOneWidget);
-    expect(find.text('CHANGE'), findsOneWidget);
+    expect(find.text('CHANGE'), findsNothing);
     expect(find.text('Wall Handstand'), findsOneWidget);
     expect(find.text('20s'), findsOneWidget);
     expect(find.text('+2s'), findsOneWidget);
