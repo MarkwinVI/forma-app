@@ -53,12 +53,10 @@ class TrainInsight extends StatelessWidget {
     if (items.isEmpty) return const SizedBox.shrink();
 
     final count = items.length;
-    final kicker = count == 1 ? 'INSIGHT' : 'INSIGHT · $count CHANGES';
+    const kicker = 'INSIGHT';
     final lead = count == 1
-        ? 'Your recent training is paying off — the program adjusted one '
-            'thing to keep you moving.'
-        : 'Your recent training is paying off — the program adjusted $count '
-            'things to keep you moving.';
+        ? 'The program adjusted one thing to keep you moving.'
+        : 'The program adjusted $count things to keep you moving.';
 
     return Container(
       margin: const EdgeInsets.fromLTRB(8, 28, 8, 0),
