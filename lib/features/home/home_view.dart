@@ -26,6 +26,8 @@ import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
 import 'widgets/week_strip.dart';
 import 'widgets/what_changed_card.dart';
+import 'widgets/workout_done_view.dart';
+import '../data/past_workout_detail_view.dart';
 
 /// Train tab — today's workout as a performance list (planned exercises with
 /// last result and change vs the previous attempt) plus a coaching tip.
@@ -375,20 +377,33 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildContent(_TrainSnapshot snapshot) {
     final metrics = snapshot.metrics;
+    final completed = metrics.today.completed;
+    final (nextTitle, nextWhen) = _nextSession(metrics.weekStrip);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         WeekStrip(weekStrip: metrics.weekStrip),
-        const SizedBox(height: 16),
-        TodayWorkoutCard(
-          summary: metrics.today,
-          subtitle: TodayWorkoutContent.subtitle(metrics),
-          rows: TodayWorkoutContent.rows(metrics),
-          onStart: () => _startWorkout(snapshot.recommendation),
-          onTrainSomethingElse: () =>
-              _openAlternateWorkoutOptions(snapshot.recommendation),
-        ),
+        if (completed != null)
+          WorkoutDoneView(
+            completed: completed,
+            nextTitle: nextTitle,
+            nextWhen: nextWhen,
+            onViewWorkout:
+                _pastWorkouts.isEmpty ? null : _openLatestWorkoutDetail,
+            onNextUp: widget.onGoToProgram,
+          )
+        else ...[
+          const SizedBox(height: 16),
+          TodayWorkoutCard(
+            summary: metrics.today,
+            subtitle: TodayWorkoutContent.subtitle(metrics),
+            rows: TodayWorkoutContent.rows(metrics),
+            onStart: () => _startWorkout(snapshot.recommendation),
+            onTrainSomethingElse: () =>
+                _openAlternateWorkoutOptions(snapshot.recommendation),
+          ),
+        ],
         if (_whatChanged.isNotEmpty)
           TrainInsight(
             events: _whatChanged,
@@ -396,6 +411,16 @@ class _HomeViewState extends State<HomeView> {
           ),
       ],
     );
+  }
+
+  Future<void> _openLatestWorkoutDetail() async {
+    if (_pastWorkouts.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PastWorkoutDetailView(workout: _pastWorkouts.first),
+      ),
+    );
+    await _loadHomeData();
   }
 
   /// The next training session after today and how far off it is, walking the
