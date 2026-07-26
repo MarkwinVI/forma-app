@@ -52,12 +52,12 @@ void main() {
     return map;
   }
 
-  Widget host(Widget child) {
+  Widget host(Widget child, {double width = 370}) {
     return MaterialApp(
       home: Scaffold(
         backgroundColor: const Color(0xFF111114),
         body: Center(
-          child: SizedBox(width: 370, child: child),
+          child: SizedBox(width: width, child: child),
         ),
       ),
     );
@@ -73,7 +73,9 @@ void main() {
             category: category,
             progressMap: progressFor(category, branchId),
             stalled: false,
-            onTap: () {},
+            expanded: true,
+            onToggleExpanded: () {},
+            onOpenTree: () {},
           ),
         ),
       );
@@ -81,9 +83,138 @@ void main() {
 
       expect(tester.takeException(), isNull,
           reason: 'painter failed for ${category.id}');
-      expect(find.textContaining('node '), findsOneWidget);
-      expect(find.text('ACTIVE'), findsOneWidget);
-      expect(find.text('GOAL'), findsOneWidget);
+      expect(find.text('NOW'), findsOneWidget);
+      expect(find.text('NEXT'), findsOneWidget);
+      expect(find.text('Weighted Pull-up'), findsOneWidget);
+      expect(find.text('Archer Pull-up'), findsOneWidget);
+    }
+  });
+
+  testWidgets('collapsed card shows the unlock and the current → next step',
+      (tester) async {
+    final category = SkillCategoryCatalog.browsable().first;
+    await tester.pumpWidget(
+      host(
+        SkillTreeProgressCard(
+          skill: skillData(category, category.defaultTrainingPathId),
+          category: category,
+          progressMap: const {},
+          stalled: false,
+          expanded: false,
+          onToggleExpanded: () {},
+          onOpenTree: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(category.title), findsOneWidget);
+    expect(find.textContaining('2 reps', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('Archer Pull-up', findRichText: true),
+      findsOneWidget,
+    );
+    // The map and its rail belong to the expanded card only.
+    expect(find.text('NOW'), findsNothing);
+  });
+
+  testWidgets('header toggles expansion instead of opening the tree view',
+      (tester) async {
+    final category = SkillCategoryCatalog.browsable().first;
+    final branchId = category.defaultTrainingPathId;
+    var toggles = 0;
+    var opens = 0;
+
+    Widget card({required bool expanded}) => host(
+          SkillTreeProgressCard(
+            skill: skillData(category, branchId),
+            category: category,
+            progressMap: progressFor(category, branchId),
+            stalled: false,
+            expanded: expanded,
+            onToggleExpanded: () => toggles++,
+            onOpenTree: () => opens++,
+          ),
+        );
+
+    // Expanded: the header collapses, the map opens the full tree.
+    await tester.pumpWidget(card(expanded: true));
+    await tester.pump();
+    await tester.tap(find.text(category.title));
+    await tester.pump();
+    expect(toggles, 1);
+    expect(opens, 0);
+
+    await tester.tap(find.byType(CustomPaint).last);
+    await tester.pump();
+    expect(opens, 1);
+    expect(toggles, 1);
+
+    // Collapsed: tapping anywhere expands, it never navigates.
+    await tester.pumpWidget(card(expanded: false));
+    await tester.pump();
+    await tester.tap(find.text(category.title));
+    await tester.pump();
+    expect(toggles, 2);
+    expect(opens, 1);
+  });
+
+  testWidgets('both card states survive narrow phones and long names',
+      (tester) async {
+    const longSkill = JourneySkillProgressData(
+      track: TrainingTrack.squat,
+      skillCategoryId: 'squat',
+      branchId: 'main',
+      motionLabel: 'Squat',
+      skillTitle: 'Squat',
+      currentExerciseName: 'Bulgarian Split Squat with a Very Long Name',
+      nextExerciseName: 'Advanced Elevated Pike Pushup Progression',
+      targetVolume: 24,
+      lastSessionVolume: 21,
+      targetLabel: '24 reps',
+      lastLabel: '21 reps',
+      lastSessionDeltaLabel: '+1',
+      lastSessionTrend: JourneySkillTrend.up,
+      progressPercent: 0.875,
+      stages: [],
+    );
+
+    for (final width in const [288.0, 320.0, 358.0]) {
+      for (final category in SkillCategoryCatalog.browsable()) {
+        await tester.pumpWidget(
+          host(
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SkillTreeProgressCard(
+                  skill: longSkill,
+                  category: category,
+                  progressMap: const {},
+                  stalled: true,
+                  expanded: true,
+                  onToggleExpanded: () {},
+                  onOpenTree: () {},
+                ),
+                SkillTreeProgressCard(
+                  skill: longSkill,
+                  category: category,
+                  progressMap: const {},
+                  stalled: false,
+                  expanded: false,
+                  onToggleExpanded: () {},
+                  onOpenTree: () {},
+                ),
+              ],
+            ),
+            width: width,
+          ),
+        );
+        await tester.pump();
+
+        expect(tester.takeException(), isNull,
+            reason: 'overflow for ${category.id} at $width');
+      }
     }
   });
 
@@ -102,7 +233,9 @@ void main() {
             category: category,
             progressMap: progressFor(category, branchId),
             stalled: true,
-            onTap: () {},
+            expanded: true,
+            onToggleExpanded: () {},
+            onOpenTree: () {},
           ),
         ),
       ),

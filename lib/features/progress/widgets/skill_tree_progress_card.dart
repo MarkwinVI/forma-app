@@ -10,16 +10,19 @@ import '../../../data/models/skill_category_model.dart';
 import '../../../data/models/training_program_model.dart';
 import '../../home/home_dashboard_metrics.dart';
 
-/// One skill tree on the Progress tab: header row, a horizontal node map of
-/// the whole tree (spine → hub → named branches, the user's path highlighted),
-/// and a "node rail" anchored to the map — its left cap is the active node,
-/// its right cap the next unlock; when the rail fills, the ring activates.
+/// One skill tree on the Progress tab. Expanded it shows the header, a
+/// NOW → NEXT rail that fills with session volume, and the node map of the
+/// whole tree (spine → hub → named branches, the user's path highlighted);
+/// collapsed it folds down to a single row. Tapping the header toggles
+/// between the two — only the map opens the full tree view.
 class SkillTreeProgressCard extends StatelessWidget {
   final JourneySkillProgressData skill;
   final SkillCategory category;
   final Map<String, ExerciseStatus> progressMap;
   final bool stalled;
-  final VoidCallback onTap;
+  final bool expanded;
+  final VoidCallback onToggleExpanded;
+  final VoidCallback onOpenTree;
 
   const SkillTreeProgressCard({
     super.key,
@@ -27,11 +30,121 @@ class SkillTreeProgressCard extends StatelessWidget {
     required this.category,
     required this.progressMap,
     required this.stalled,
-    required this.onTap,
+    required this.expanded,
+    required this.onToggleExpanded,
+    required this.onOpenTree,
   });
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: expanded ? _buildExpanded() : _buildCollapsed(),
+    );
+  }
+
+  Widget _buildCollapsed() {
+    final toGo = _toGoLabel(skill);
+
+    return SurfaceCard(
+      onTap: onToggleExpanded,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          IconTile(icon: trackIcon(skill.track), size: 42, warn: stalled),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            category.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.16,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // The unlock label keeps its natural width, but never
+                        // more than most of the row — the tree name gives way
+                        // first, then this ellipsizes.
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth * 0.6,
+                          ),
+                          child: Text.rich(
+                            TextSpan(
+                              text: toGo,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.green,
+                              ),
+                              children: const [
+                                TextSpan(
+                                  text: ' to unlock',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 3.5),
+                Text.rich(
+                  TextSpan(
+                    text: skill.currentExerciseName,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                    ),
+                    children: [
+                      const TextSpan(
+                        text: '  →  ',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
+                      TextSpan(text: _nextLabel(skill)),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpanded() {
     final viz = TreeVizModel.fromCategory(
       category: category,
       progressMap: progressMap,
@@ -39,134 +152,80 @@ class SkillTreeProgressCard extends StatelessWidget {
     );
 
     return SurfaceCard(
-      onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              IconTile(
-                icon: _trackIcon(skill.track),
-                size: 34,
-                warn: stalled,
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Text(
-                  category.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.16,
+          Pressable(
+            onTap: onToggleExpanded,
+            child: Row(
+              children: [
+                IconTile(
+                  icon: trackIcon(skill.track),
+                  size: 40,
+                  warn: stalled,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.17,
+                        ),
+                      ),
+                      const SizedBox(height: 2.5),
+                      _UnlockLine(skill: skill, fontSize: 13),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'node ${viz.position} of ${viz.totalNodes}',
-                style: GoogleFonts.robotoMono(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.keyboard_arrow_up_rounded,
+                  size: 20,
                   color: AppColors.textMuted,
                 ),
-              ),
-            ],
-          ),
-          SizedBox(
-            width: double.infinity,
-            height: _TreeRailPainter.treeHeight + _TreeRailPainter.railZone,
-            child: CustomPaint(
-              painter: _TreeRailPainter(
-                viz: viz,
-                fillPct: skill.progressPercent,
-              ),
+              ],
             ),
           ),
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ACTIVE',
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                        color: AppColors.accentBright,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      skill.currentExerciseName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text.rich(
-                      TextSpan(
-                        text: 'last ${skill.lastLabel}',
-                        style: GoogleFonts.robotoMono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                        ),
-                        children: [
-                          if (stalled)
-                            TextSpan(
-                              text: ' · stalled',
-                              style: GoogleFonts.robotoMono(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.amber,
-                              ),
-                            ),
-                        ],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+          const SizedBox(height: 18),
+          _NowNextRail(skill: skill),
+          const SizedBox(height: 10),
+          Pressable(
+            onTap: onOpenTree,
+            child: Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 4),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.divider)),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'GOAL',
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1,
-                      color: AppColors.textMuted,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final layout = _TreeLayout(
+                    viz: viz,
+                    width: constraints.maxWidth,
+                  );
+                  return SizedBox(
+                    width: double.infinity,
+                    height: layout.height,
+                    child: CustomPaint(
+                      painter: _TreeMapPainter(
+                        layout: layout,
+                        fillPct: skill.progressPercent,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    skill.targetLabel,
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -174,7 +233,204 @@ class SkillTreeProgressCard extends StatelessWidget {
   }
 }
 
-IconData _trackIcon(TrainingTrack track) {
+/// "3 reps to unlock Incline Pushups" — the volume left is the only number
+/// on the line, so it carries the accent.
+class _UnlockLine extends StatelessWidget {
+  final JourneySkillProgressData skill;
+  final double fontSize;
+
+  const _UnlockLine({required this.skill, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    final atEnd = skill.nextExerciseName == skill.currentExerciseName;
+
+    return Text.rich(
+      TextSpan(
+        text: _toGoLabel(skill),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          color: AppColors.green,
+        ),
+        children: [
+          TextSpan(
+            text: atEnd
+                ? ' to finish the tree'
+                : ' to unlock ${skill.nextExerciseName}',
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+/// NOW → NEXT: the working exercise and its last set on the left, the unlock
+/// and its target on the right, joined by a rail that fills with progress.
+class _NowNextRail extends StatelessWidget {
+  final JourneySkillProgressData skill;
+
+  const _NowNextRail({required this.skill});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The rail keeps a minimum length; the two label columns split what is
+        // left so a long exercise name can't squeeze it away.
+        const railMin = 56.0;
+        const gap = 8.0;
+        final columnMax =
+            math.max(64.0, (constraints.maxWidth - railMin - gap * 2) / 2);
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: columnMax),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'NOW',
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: AppColors.green,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    skill.currentExerciseName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text.rich(
+                    TextSpan(
+                      text: 'Last set ',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: skill.lastLabel,
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: gap),
+            Expanded(
+              child: SizedBox(
+                height: 14,
+                child: CustomPaint(
+                  painter: _RailPainter(fillPct: skill.progressPercent),
+                ),
+              ),
+            ),
+            const SizedBox(width: gap),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: columnMax),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'NEXT',
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    _nextLabel(skill),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text.rich(
+                    TextSpan(
+                      text: 'Unlocks at ',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: skill.targetLabel,
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Volume still owed before the next node unlocks — "3 reps", "8s", or
+/// "Ready" once the target has been hit.
+String _toGoLabel(JourneySkillProgressData skill) {
+  final remaining = skill.targetVolume - skill.lastSessionVolume;
+  if (remaining <= 0) return 'Ready';
+  if (skill.isTimed) return '${remaining}s';
+  return '$remaining ${remaining == 1 ? 'rep' : 'reps'}';
+}
+
+/// The next node's name, or a plain marker when the path has no node left.
+String _nextLabel(JourneySkillProgressData skill) =>
+    skill.nextExerciseName == skill.currentExerciseName
+        ? 'Final step'
+        : skill.nextExerciseName;
+
+IconData trackIcon(TrainingTrack track) {
   switch (track) {
     case TrainingTrack.skillWork:
       return Icons.self_improvement_rounded;
@@ -336,294 +592,501 @@ class TreeVizModel {
   }
 }
 
-/// Paints the node map plus the node-anchored progress rail underneath.
-/// Geometry ported from the v10 design: spine dots spaced [_sp] apart, a hub
-/// ring, branches fanned within ±[_maxAngleDeg]°, monospace branch labels at
-/// the tips. If the natural layout is wider than the canvas it is squashed
-/// horizontally so nothing clips.
-class _TreeRailPainter extends CustomPainter {
-  static const double treeHeight = 126;
-  static const double railZone = 46;
-
-  static const double _sp = 20; // spine node spacing
-  static const double _bsp = 24; // branch node spacing
-  static const double _dot = 4;
-  static const double _pad = 12;
-  static const double _hubR = 7;
-  static const double _maxAngleDeg = 32;
+/// Geometry for the node map, resolved against the width it has to fill.
+///
+/// Two rules shape it: every tree fills the same width (spacing stretches or
+/// squashes so the widest element lands on the right edge), and every branch
+/// runs the same distance from the hub (a short branch spreads its nodes
+/// further apart rather than stopping early).
+class _TreeLayout {
+  static const double dot = 4;
+  static const double pad = 10;
+  static const double hubR = 6;
+  static const double _maxAngleDeg = 24;
+  static const double _maxHeight = 164;
+  static const double _plainHeight = 62;
+  static const double _spineRef = 22; // reference spine spacing
+  static const double _branchRef = 17; // reference branch spacing
 
   final TreeVizModel viz;
-  final double fillPct;
+  final double width;
 
-  const _TreeRailPainter({required this.viz, required this.fillPct});
+  late final double height;
+  late final List<_Segment> segments;
+  late final List<_Dot> dots;
+  late final List<_Label> labels;
+  late final Offset? hub;
+  late final _Segment? fillSegment;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final lineColor = Colors.white.withValues(alpha: 0.10);
-    final pathColor = AppColors.accentBright.withValues(alpha: 0.5);
-    const doneColor = AppColors.green;
-    const curColor = AppColors.accentBright;
-    final curSoft = AppColors.accentBright.withValues(alpha: 0.15);
-    const lockedColor = AppColors.surface3;
+  _TreeLayout({required this.viz, required this.width}) {
+    _build();
+  }
 
-    const midY = treeHeight / 2;
+  /// The design fans three branches within ±24°; wider trees open up so their
+  /// tip labels stay legible instead of stacking on top of each other.
+  static double _baseAngle(int branchCount) =>
+      (_maxAngleDeg + 3.5 * (branchCount - 3)).clamp(_maxAngleDeg, 34.0) *
+      math.pi /
+      180;
+
+  /// Radial room every branch gets at scale 1 — set by the longest branch, so
+  /// shorter ones simply space their nodes out over the same distance.
+  double get _referenceSpan {
+    if (viz.branches.isEmpty) return 0;
+    final maxN =
+        viz.branches.map((branch) => branch.states.length).reduce(math.max);
+    return (maxN + 0.6) * _branchRef;
+  }
+
+  /// Fan angle at a given scale: flattened only when the branches would
+  /// otherwise grow taller than the card allows.
+  double _angleFor(double scale) {
+    if (viz.branches.isEmpty) return 0;
+    final base = _baseAngle(viz.branches.length);
+    final radial = hubR + _referenceSpan * scale;
+    final fitRatio = ((_maxHeight / 2 - 13) / radial).clamp(0.18, 1.0);
+    return math.min(base, math.asin(fitRatio));
+  }
+
+  double _hubXFor(double scale) =>
+      pad + viz.spine.length * _spineRef * scale + hubR - 4;
+
+  /// A tree whose branches fork straight from the start (Core) has no shared
+  /// step to mark, so it gets no hub node — the branches just diverge from a
+  /// bare point.
+  bool get _hasHub => viz.branches.isNotEmpty && viz.spine.isNotEmpty;
+
+  /// Where a branch's first segment leaves the fork: off the hub ring when
+  /// there is one, straight from the fork point when there isn't.
+  double get _stemRadius => _hasHub ? hubR : 0;
+
+  /// Radial distance of branch [j]'s node [k] — the +0.6 slot past the last
+  /// node is where the branch label sits.
+  double _radialFor(double scale, int nodeCount, int k) =>
+      hubR + _referenceSpan * scale * (k + 1) / (nodeCount + 0.6);
+
+  /// Rightmost painted edge at a given scale, labels and dot radii included.
+  double _rightEdgeFor(double scale, List<_Label> labelPainters) {
+    var right = pad + dot + 4;
+    for (var index = 0; index < viz.spine.length; index++) {
+      right = math.max(right, pad + index * _spineRef * scale + dot + 4);
+    }
+    if (viz.branches.isEmpty) return right;
+
+    final hubX = _hubXFor(scale);
+    if (_hasHub) right = math.max(right, hubX + hubR);
+    final angle = _angleFor(scale);
+    final angles = _anglesFor(angle);
+    for (var j = 0; j < viz.branches.length; j++) {
+      final nodeCount = viz.branches[j].states.length;
+      final cos = math.cos(angles[j]);
+      for (var k = 0; k < nodeCount; k++) {
+        right = math.max(
+          right,
+          hubX + cos * _radialFor(scale, nodeCount, k) + dot + 4,
+        );
+      }
+      final tipX = hubX + cos * (hubR + _referenceSpan * scale);
+      right = math.max(right, tipX + 2 + labelPainters[j].painter.width);
+    }
+    return right;
+  }
+
+  List<double> _anglesFor(double maxAngle) {
+    final count = viz.branches.length;
+    if (count == 1) return const [0.0];
+    return [
+      for (var index = 0; index < count; index++)
+        -maxAngle + (2 * maxAngle * index) / (count - 1),
+    ];
+  }
+
+  void _build() {
     final spine = viz.spine;
     final branches = viz.branches;
+    final activeIndex = branches.indexWhere((branch) => branch.isActive);
 
-    final curS = spine.indexOf(TreeNodeState.cur);
-    final goalS = spine.indexOf(TreeNodeState.goal);
-    final actB = branches.indexWhere((branch) => branch.isActive);
+    final labelPainters = [
+      for (var j = 0; j < branches.length; j++)
+        _Label(
+          anchor: Offset.zero,
+          painter: TextPainter(
+            text: TextSpan(
+              text: branches[j].label,
+              style: GoogleFonts.robotoMono(
+                fontSize: 9.5,
+                fontWeight:
+                    j == activeIndex ? FontWeight.w700 : FontWeight.w600,
+                color: j == activeIndex
+                    ? AppColors.textSecondary
+                    : AppColors.textMuted,
+              ),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout(),
+        ),
+    ];
 
-    final hubU = _pad + spine.length * _sp + _hubR - 2;
-
-    // Fan angle: the design's ±32°, tightened when a branch is long enough
-    // that its tip would leave the canvas vertically.
-    var maxAngle = _maxAngleDeg * math.pi / 180;
-    final maxN = branches.isEmpty
-        ? 0
-        : branches.map((branch) => branch.states.length).reduce(math.max);
-    if (maxN > 0) {
-      final maxRadial = _hubR + (maxN + 0.55) * _bsp;
-      final fitRatio = ((midY - 10) / maxRadial).clamp(0.18, 1.0);
-      maxAngle = math.min(maxAngle, math.asin(fitRatio));
+    // Largest scale whose rightmost edge still fits — the map ends flush with
+    // the card no matter how many nodes the tree has.
+    final limit = width - 2;
+    var low = 0.25;
+    var high = 3.0;
+    if (_rightEdgeFor(low, labelPainters) > limit) {
+      high = low;
+    } else if (_rightEdgeFor(high, labelPainters) <= limit) {
+      low = high;
+    } else {
+      for (var step = 0; step < 24; step++) {
+        final mid = (low + high) / 2;
+        if (_rightEdgeFor(mid, labelPainters) <= limit) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
     }
-    final angles = branches.length == 1
-        ? [0.0]
-        : [
-            for (var index = 0; index < branches.length; index++)
-              -maxAngle + (2 * maxAngle * index) / (branches.length - 1),
-          ];
+    final scale = low;
+    final angle = _angleFor(scale);
+    final angles = _anglesFor(angle);
 
-    final segments = <_Segment>[];
-    final dots = <_Dot>[];
-    final labels = <_Label>[];
+    height = branches.isEmpty
+        ? _plainHeight
+        : math.min(
+            2 * (math.sin(angle) * (hubR + _referenceSpan * scale) + 13),
+            _maxHeight,
+          );
+    final midY = height / 2;
+    Offset point(double x, double dy) => Offset(x, midY + dy);
 
-    Offset point(double u, double v) => Offset(u, midY + v);
+    final builtSegments = <_Segment>[];
+    final builtDots = <_Dot>[];
+    final builtLabels = <_Label>[];
+    _Segment? fill;
 
+    final spineSpacing = _spineRef * scale;
     final spinePoints = [
       for (var index = 0; index < spine.length; index++)
-        point(_pad + index * _sp, 0),
+        point(pad + index * spineSpacing, 0),
     ];
     for (var index = 1; index < spine.length; index++) {
-      segments.add(_Segment(
+      builtSegments.add(_Segment(
         a: spinePoints[index - 1],
         b: spinePoints[index],
-        on: curS >= 0 &&
-            index > curS &&
-            (goalS >= 0 ? index <= goalS : actB >= 0),
+        on: spine[index - 1] == TreeNodeState.done,
       ));
     }
+
+    final hubX = _hubXFor(scale);
+    hub = _hasHub ? point(hubX, 0) : null;
     if (spine.isNotEmpty && branches.isNotEmpty) {
-      segments.add(_Segment(
+      builtSegments.add(_Segment(
         a: spinePoints.last,
-        b: point(hubU - _hubR, 0),
-        on: curS >= 0 && actB >= 0 && goalS < 0,
+        b: point(hubX - hubR, 0),
+        on: spine.last == TreeNodeState.done,
       ));
+    }
+
+    // The volume fill runs along the segment from the working node to the next
+    // unlock — only meaningful while the two sit next to each other.
+    final curS = spine.indexOf(TreeNodeState.cur);
+    final goalS = spine.indexOf(TreeNodeState.goal);
+    if (curS >= 0 && goalS == curS + 1) {
+      final from = spinePoints[curS];
+      final to = spinePoints[goalS];
+      if ((to.dx - from.dx) > 18) {
+        fill = _Segment(
+          a: Offset(from.dx + 11, from.dy),
+          b: Offset(to.dx - 7, to.dy),
+          on: true,
+        );
+      }
     }
 
     for (var j = 0; j < branches.length; j++) {
       final branch = branches[j];
-      final angle = angles[j];
       final states = branch.states;
-      final curB = states.indexOf(TreeNodeState.cur);
-      final goalB = states.indexOf(TreeNodeState.goal);
+      final branchAngle = angles[j];
+      final cos = math.cos(branchAngle);
+      final sin = math.sin(branchAngle);
 
-      Offset nodeAt(int k) => point(
-            hubU + math.cos(angle) * (_hubR + (k + 1) * _bsp),
-            math.sin(angle) * (_hubR + (k + 1) * _bsp),
-          );
+      Offset nodeAt(int k) {
+        final radial = _radialFor(scale, states.length, k);
+        return point(hubX + cos * radial, sin * radial);
+      }
 
-      segments.add(_Segment(
-        a: point(
-          hubU + math.cos(angle) * _hubR,
-          math.sin(angle) * _hubR,
-        ),
+      builtSegments.add(_Segment(
+        a: point(hubX + cos * _stemRadius, sin * _stemRadius),
         b: nodeAt(0),
-        on: j == actB && curB < 0 && curS >= 0 && goalB >= 0,
+        on: j == activeIndex &&
+            spine.isNotEmpty &&
+            spine.last == TreeNodeState.done,
+        faint: j != activeIndex,
       ));
       for (var k = 1; k < states.length; k++) {
-        segments.add(_Segment(
+        builtSegments.add(_Segment(
           a: nodeAt(k - 1),
           b: nodeAt(k),
-          on: j == actB &&
-              ((curB >= 0 && k > curB && (goalB < 0 || k <= goalB)) ||
-                  (curB < 0 && curS >= 0 && goalB >= 0 && k <= goalB)),
+          on: j == activeIndex && states[k - 1] == TreeNodeState.done,
+          faint: j != activeIndex,
         ));
       }
       for (var k = 0; k < states.length; k++) {
-        dots.add(_Dot(center: nodeAt(k), state: states[k]));
+        builtDots.add(_Dot(
+          center: nodeAt(k),
+          state: states[k],
+          faint: j != activeIndex,
+        ));
       }
 
-      final tipRadial = _hubR + (states.length + 0.55) * _bsp;
-      final tip = point(
-        hubU + math.cos(angle) * tipRadial,
-        math.sin(angle) * tipRadial,
-      );
-      labels.add(_Label(
-        anchor: tip,
-        painter: TextPainter(
-          text: TextSpan(
-            text: branch.label,
-            style: GoogleFonts.robotoMono(
-              fontSize: 9.5,
-              fontWeight: j == actB ? FontWeight.w700 : FontWeight.w600,
-              color: j == actB ? AppColors.textPrimary : AppColors.textMuted,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout(),
+      if (j == activeIndex) {
+        final curB = states.indexOf(TreeNodeState.cur);
+        final goalB = states.indexOf(TreeNodeState.goal);
+        if (curB >= 0 && goalB == curB + 1) {
+          final from = nodeAt(curB);
+          final to = nodeAt(goalB);
+          final delta = to - from;
+          final length = delta.distance;
+          if (length > 18) {
+            final unit = delta / length;
+            fill = _Segment(a: from + unit * 11, b: to - unit * 7, on: true);
+          }
+        }
+      }
+
+      builtLabels.add(_Label(
+        anchor: point(
+          hubX + cos * (hubR + _referenceSpan * scale),
+          sin * (hubR + _referenceSpan * scale),
+        ),
+        painter: labelPainters[j].painter,
       ));
     }
 
     for (var index = 0; index < spine.length; index++) {
-      dots.add(_Dot(center: spinePoints[index], state: spine[index]));
+      builtDots.add(_Dot(center: spinePoints[index], state: spine[index]));
     }
 
-    // Squash node positions horizontally if the natural layout overflows the
-    // card. Dot radii and label text keep their size, so each element's
-    // untransformed overhang is subtracted from the room its anchor may use.
-    var scaleX = 1.0;
-    void constrain(double anchorX, double overhang) {
-      final reach = anchorX - _pad;
-      if (reach <= 0) return;
-      scaleX =
-          math.min(scaleX, (size.width - 2 - overhang - _pad) / reach);
-    }
+    segments = builtSegments;
+    dots = builtDots;
+    labels = builtLabels;
+    fillSegment = fill;
+  }
+}
 
-    for (final dot in dots) {
-      constrain(dot.center.dx, _dot + 3.2);
-    }
-    for (final label in labels) {
-      constrain(label.anchor.dx, 2 + label.painter.width);
-    }
-    if (branches.isNotEmpty) {
-      constrain(hubU, _hubR);
-    }
-    scaleX = scaleX.clamp(0.3, 1.0);
-    double sx(double x) => _pad + (x - _pad) * scaleX;
+/// Paints the node map from a resolved [_TreeLayout]. Progress lives on the
+/// map itself — the working node wears a rep ring and the segment toward the
+/// next unlock fills as volume lands.
+class _TreeMapPainter extends CustomPainter {
+  final _TreeLayout layout;
+  final double fillPct;
 
-    // ── Segments, hub, dots, labels ──
-    for (final segment in segments) {
+  const _TreeMapPainter({required this.layout, required this.fillPct});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final lineColor = Colors.white.withValues(alpha: 0.10);
+    final branchLineColor = Colors.white.withValues(alpha: 0.08);
+    final pathColor = AppColors.green.withValues(alpha: 0.45);
+    const doneColor = AppColors.green;
+    const curColor = AppColors.accentBright;
+    final curSoft = AppColors.accentBright.withValues(alpha: 0.2);
+    const lockedColor = AppColors.surface3;
+    const dot = _TreeLayout.dot;
+
+    for (final segment in layout.segments) {
       canvas.drawLine(
-        Offset(sx(segment.a.dx), segment.a.dy),
-        Offset(sx(segment.b.dx), segment.b.dy),
+        segment.a,
+        segment.b,
         Paint()
-          ..color = segment.on ? pathColor : lineColor
-          ..strokeWidth = segment.on ? 1.6 : 1.2,
+          ..color = segment.on
+              ? pathColor
+              : segment.faint
+                  ? branchLineColor
+                  : lineColor
+          ..strokeWidth = 1.3
+          ..strokeCap = StrokeCap.round,
       );
     }
 
-    if (branches.isNotEmpty) {
-      final hub = Offset(sx(hubU), midY);
-      final hubOn = curS >= 0 && actB >= 0 && goalS < 0;
+    final fill = layout.fillSegment;
+    if (fill != null) {
+      canvas.drawLine(
+        fill.a,
+        fill.a + (fill.b - fill.a) * fillPct.clamp(0.0, 1.0),
+        Paint()
+          ..color = curColor
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    final hub = layout.hub;
+    if (hub != null) {
       canvas.drawCircle(
         hub,
-        _hubR,
+        _TreeLayout.hubR,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2
-          ..color = hubOn ? pathColor : lineColor,
+          ..color = lineColor,
       );
-      canvas.drawCircle(hub, 2.1, Paint()..color = lockedColor);
+      canvas.drawCircle(hub, 1.9, Paint()..color = lockedColor);
     }
 
-    for (final dot in dots) {
-      final center = Offset(sx(dot.center.dx), dot.center.dy);
-      switch (dot.state) {
+    for (final node in layout.dots) {
+      final center = node.center;
+      switch (node.state) {
         case TreeNodeState.done:
-          canvas.drawCircle(center, _dot, Paint()..color = doneColor);
+          canvas.drawCircle(center, dot, Paint()..color = doneColor);
         case TreeNodeState.cur:
-          canvas.drawCircle(center, _dot + 3.2, Paint()..color = curSoft);
-          canvas.drawCircle(center, _dot, Paint()..color = curColor);
+          // Rep ring: how much of the target this session's volume covers.
+          canvas.drawCircle(
+            center,
+            8,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2
+              ..color = curSoft,
+          );
+          canvas.drawArc(
+            Rect.fromCircle(center: center, radius: 8),
+            -math.pi / 2,
+            2 * math.pi * fillPct.clamp(0.0, 1.0),
+            false,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2
+              ..strokeCap = StrokeCap.round
+              ..color = curColor,
+          );
+          canvas.drawCircle(center, dot, Paint()..color = curColor);
         case TreeNodeState.goal:
           canvas.drawCircle(
             center,
-            _dot + 0.8,
+            dot + 0.6,
             Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = 1.7
               ..color = curColor,
           );
         case TreeNodeState.locked:
-          canvas.drawCircle(center, _dot - 0.6, Paint()..color = lockedColor);
+          canvas.drawCircle(
+            center,
+            node.faint ? dot - 1.3 : dot - 0.8,
+            Paint()
+              ..color = node.faint
+                  ? lockedColor.withValues(alpha: 0.75)
+                  : lockedColor,
+          );
       }
     }
 
-    for (final label in labels) {
+    for (final label in layout.labels) {
       label.painter.paint(
         canvas,
         Offset(
-          sx(label.anchor.dx) + 2,
+          label.anchor.dx + 2,
           label.anchor.dy - label.painter.height / 2,
         ),
       );
     }
+  }
 
-    // ── Node rail: active node → next unlock, fill = progress ──
-    const railY = treeHeight + 32;
-    const railL = _pad;
-    final railR = size.width - 14;
-    const ringR = _dot + 0.8;
-    const t0 = railL + _dot + 7;
-    final t1 = railR - ringR - 7;
-    final fillX = t0 + (t1 - t0) * fillPct.clamp(0.0, 1.0);
+  @override
+  bool shouldRepaint(covariant _TreeMapPainter oldDelegate) =>
+      oldDelegate.layout != layout || oldDelegate.fillPct != fillPct;
+}
 
-    canvas.drawLine(
-      const Offset(t0, railY),
-      Offset(t1, railY),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.09)
-        ..strokeWidth = 5
-        ..strokeCap = StrokeCap.round,
-    );
-    if (fillX > t0) {
+/// The NOW → NEXT rail: filled cap, progress bar, dotted remainder, and a
+/// hollow cap for the node still to unlock.
+class _RailPainter extends CustomPainter {
+  final double fillPct;
+
+  const _RailPainter({required this.fillPct});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height / 2;
+    const startR = 6.5;
+    const endR = 5.0;
+    final start = Offset(startR, y);
+    final end = Offset(size.width - endR, y);
+    final trackStart = start.dx + startR + 2;
+    final trackEnd = end.dx - endR - 2;
+    final fillX =
+        trackStart + (trackEnd - trackStart) * fillPct.clamp(0.0, 1.0);
+
+    if (fillX > trackStart) {
       canvas.drawLine(
-        const Offset(t0, railY),
-        Offset(fillX, railY),
+        Offset(trackStart, y),
+        Offset(fillX, y),
         Paint()
-          ..color = curColor
-          ..strokeWidth = 5
+          ..color = AppColors.green
+          ..strokeWidth = 2.4
           ..strokeCap = StrokeCap.round,
       );
     }
+
+    // Dotted remainder — what is still to be earned.
+    final dottedPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.28)
+      ..strokeWidth = 1.7
+      ..strokeCap = StrokeCap.round;
+    for (var x = fillX + 4; x < trackEnd; x += 5) {
+      canvas.drawLine(Offset(x, y), Offset(math.min(x + 1, trackEnd), y),
+          dottedPaint);
+    }
+
     canvas.drawCircle(
-      const Offset(railL, railY),
-      _dot + 3.2,
-      Paint()..color = curSoft,
-    );
-    canvas.drawCircle(
-      const Offset(railL, railY),
-      _dot,
-      Paint()..color = curColor,
-    );
-    canvas.drawCircle(
-      Offset(railR, railY),
-      ringR,
+      start,
+      startR,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.7
-        ..color = curColor,
+        ..strokeWidth = 1.6
+        ..color = AppColors.green,
+    );
+    canvas.drawCircle(start, 3, Paint()..color = AppColors.green);
+    canvas.drawCircle(end, endR, Paint()..color = AppColors.surface);
+    canvas.drawCircle(
+      end,
+      endR,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = Colors.white.withValues(alpha: 0.28),
     );
   }
 
   @override
-  bool shouldRepaint(covariant _TreeRailPainter oldDelegate) =>
-      oldDelegate.viz != viz || oldDelegate.fillPct != fillPct;
+  bool shouldRepaint(covariant _RailPainter oldDelegate) =>
+      oldDelegate.fillPct != fillPct;
 }
 
 class _Segment {
   final Offset a;
   final Offset b;
   final bool on;
+  final bool faint;
 
-  const _Segment({required this.a, required this.b, required this.on});
+  const _Segment({
+    required this.a,
+    required this.b,
+    required this.on,
+    this.faint = false,
+  });
 }
 
 class _Dot {
   final Offset center;
   final TreeNodeState state;
+  final bool faint;
 
-  const _Dot({required this.center, required this.state});
+  const _Dot({
+    required this.center,
+    required this.state,
+    this.faint = false,
+  });
 }
 
 class _Label {
