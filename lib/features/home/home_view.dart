@@ -186,15 +186,31 @@ class _HomeViewState extends State<HomeView> {
     };
     final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
     final lastPlannedWorkout = _latestPlannedWorkout();
+    // The plan is anchored on the stored program pointer, not on workout
+    // history, so deleting an older session leaves the schedule alone —
+    // history only fills in which days already have a workout on them.
+    // History is the fallback for the case where the pointer was never
+    // written (a failed save on the very first session).
+    final anchorDate =
+        snapshot.state.lastCompletedAt ?? lastPlannedWorkout?.loggedAt;
+    final anchorSessionType = snapshot.state.lastSessionType ??
+        (lastPlannedWorkout == null
+            ? null
+            : TrainingSessionTypeX.fromDbValue(lastPlannedWorkout.sessionType));
+    final completedSessions = {
+      for (final workout in _pastWorkouts)
+        if (workout.affectsSchedule)
+          TrainingScheduleService.dateOnly(workout.loggedAt):
+              TrainingSessionTypeX.fromDbValue(workout.sessionType),
+    };
     final scheduleWindow = _trainingScheduleService.buildWindow(
       programType: programType,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
       currentStepIndex: snapshot.state.nextStepIndex,
       currentSessionType: snapshot.state.nextSessionType,
-      lastPlannedWorkoutAt: lastPlannedWorkout?.loggedAt,
-      lastCompletedSessionType: lastPlannedWorkout == null
-          ? null
-          : TrainingSessionTypeX.fromDbValue(lastPlannedWorkout.sessionType),
+      lastPlannedWorkoutAt: anchorDate,
+      lastCompletedSessionType: anchorSessionType,
+      completedSessions: completedSessions,
       now: now,
     );
     final calendarWindow = _trainingScheduleService.buildWindow(
@@ -202,10 +218,9 @@ class _HomeViewState extends State<HomeView> {
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
       currentStepIndex: snapshot.state.nextStepIndex,
       currentSessionType: snapshot.state.nextSessionType,
-      lastPlannedWorkoutAt: lastPlannedWorkout?.loggedAt,
-      lastCompletedSessionType: lastPlannedWorkout == null
-          ? null
-          : TrainingSessionTypeX.fromDbValue(lastPlannedWorkout.sessionType),
+      lastPlannedWorkoutAt: anchorDate,
+      lastCompletedSessionType: anchorSessionType,
+      completedSessions: completedSessions,
       daysBeforeToday: 7,
       daysAfterToday: 7,
       now: now,
@@ -246,6 +261,28 @@ class _HomeViewState extends State<HomeView> {
     final completedWorkout = selectedDay.isCompleted
         ? _workoutForDate(selectedDay.date, plannedOnly: true)
         : null;
+    final masterySettings = MasteryTargetSettings.fromVariationRules(
+      snapshot.program.variationRules,
+    );
+    // Per-day workouts already logged in the window — the day list shows what
+    // was actually done on those days, not what was planned.
+    final calendarWorkouts = <DateTime, PastWorkout>{};
+    for (final day in calendarWindow.days) {
+      final workout = _workoutForDate(day.date, plannedOnly: true);
+      if (workout != null) {
+        calendarWorkouts[TrainingScheduleService.dateOnly(day.date)] = workout;
+      }
+    }
+    final calendarSummaries = {
+      for (final entry in calendarRecommendations.entries)
+        entry.key: HomeDashboardMetricsCalculator.buildTodaySummary(
+          entry.value,
+          completedWorkout: calendarWorkouts[entry.key],
+          progressMap: _progressMap,
+          progressEntries: _progressEntries,
+          masterySettings: masterySettings,
+        ),
+    };
 
     return _TrainSnapshot(
       recommendation: recommendation,
@@ -265,12 +302,12 @@ class _HomeViewState extends State<HomeView> {
         scheduleWindow: scheduleWindow,
         completedWorkout: completedWorkout,
         now: now,
-        masterySettings: MasteryTargetSettings.fromVariationRules(
-          snapshot.program.variationRules,
-        ),
+        masterySettings: masterySettings,
       ),
       calendarDays: _calendarDaysForWindow(calendarWindow),
       calendarRecommendations: calendarRecommendations,
+      calendarSummaries: calendarSummaries,
+      calendarWorkouts: calendarWorkouts,
       now: now,
     );
   }
@@ -371,11 +408,19 @@ class _HomeViewState extends State<HomeView> {
         builder: (_) => TrainingCalendarView(
           days: snapshot.calendarDays,
           recommendations: snapshot.calendarRecommendations,
+          summaries: snapshot.calendarSummaries,
+          completedWorkouts: snapshot.calendarWorkouts,
           now: snapshot.now,
         ),
       ),
     );
-    if (!mounted || recommendation == null) return;
+    if (!mounted) return;
+    if (recommendation == null) {
+      // The schedule can open (and delete) past sessions — re-fetch on the way
+      // back so the tab never renders against a stale window.
+      await _loadHomeData();
+      return;
+    }
     await _startWorkout(recommendation);
   }
 
@@ -507,7 +552,6 @@ class _HomeViewState extends State<HomeView> {
             nextWhen: nextWhen,
             onViewWorkout:
                 _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
-            onNextUp: widget.onGoToProgram,
           )
         else ...[
           const SizedBox(height: 16),
@@ -603,6 +647,8 @@ class _TrainSnapshot {
   final HomeDashboardMetrics metrics;
   final List<HomeWeekStripDay> calendarDays;
   final Map<DateTime, DailyTrainingRecommendation> calendarRecommendations;
+  final Map<DateTime, HomeTodaySummary> calendarSummaries;
+  final Map<DateTime, PastWorkout> calendarWorkouts;
   final DateTime now;
 
   const _TrainSnapshot({
@@ -610,6 +656,8 @@ class _TrainSnapshot {
     required this.metrics,
     required this.calendarDays,
     required this.calendarRecommendations,
+    required this.calendarSummaries,
+    required this.calendarWorkouts,
     required this.now,
   });
 }

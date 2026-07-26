@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -7,6 +9,84 @@ import '../theme/app_colors.dart';
 /// sentence-case section titles, real press states, pill CTAs.
 
 const double kCardRadius = 20;
+
+/// Dashed rounded outline around [child] — Flutter has no dashed border, so
+/// it is painted by hand. Across the app a dashed edge means "nothing
+/// logged here": a session skipped, or one still ahead.
+class DashedRoundedBorder extends StatelessWidget {
+  final Widget child;
+  final Color color;
+  final double radius;
+  final double dash;
+  final double gap;
+
+  const DashedRoundedBorder({
+    super.key,
+    required this.child,
+    required this.color,
+    this.radius = 9,
+    this.dash = 3,
+    this.gap = 2.6,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedRoundedBorderPainter(
+        color: color,
+        radius: radius,
+        dash: dash,
+        gap: gap,
+      ),
+      child: child,
+    );
+  }
+}
+
+class _DashedRoundedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double dash;
+  final double gap;
+
+  const _DashedRoundedBorderPainter({
+    required this.color,
+    required this.radius,
+    required this.dash,
+    required this.gap,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1),
+          Radius.circular(radius),
+        ),
+      );
+
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + dash, metric.length);
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance = end + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRoundedBorderPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.radius != radius ||
+      oldDelegate.dash != dash ||
+      oldDelegate.gap != gap;
+}
 
 /// "Wednesday, Jul 16" — the eyebrow date used by the tab screen headers.
 String formatHeaderDate(DateTime now) {

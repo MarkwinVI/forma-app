@@ -6,9 +6,11 @@ import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import '../exercises/exercise_detail_view.dart';
 
 const Color _deleteRed = Color(0xFFF2564A);
@@ -100,16 +102,27 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
   ) async {
     setState(() => _deleting = true);
     try {
-      // Deleting the only planned workout for a day means the schedule state
-      // should be rebuilt from the newest remaining planned completion.
+      // Deleting a session only reopens the slot it consumed when it happened
+      // today. An older workout is history being corrected, not a plan
+      // change — rewinding the pointer there would make every day since then
+      // read as missed and drag the whole schedule backwards.
+      final loggedOn = TrainingScheduleService.dateOnly(workout.loggedAt);
+      final deletedToday = loggedOn.isAtSameMomentAs(
+        TrainingScheduleService.dateOnly(DevClockService().now()),
+      );
+
+      // Only the day's last remaining session releases the slot; a second
+      // workout logged the same day still holds it.
       var wasOnlySessionOfDay = false;
-      try {
-        wasOnlySessionOfDay = await _exerciseLogService
-                .countSessionsOnLocalDate(userId, workout.loggedAt) ==
-            1;
-      } catch (_) {
-        // Count is best-effort; worst case the pointer stays one step ahead
-        // and self-heals on the next save.
+      if (deletedToday) {
+        try {
+          wasOnlySessionOfDay = await _exerciseLogService
+                  .countSessionsOnLocalDate(userId, workout.loggedAt) ==
+              1;
+        } catch (_) {
+          // Count is best-effort; worst case the pointer stays one step ahead
+          // and self-heals on the next save.
+        }
       }
 
       await _exerciseLogService.deleteWorkoutSession(userId, workout.id);

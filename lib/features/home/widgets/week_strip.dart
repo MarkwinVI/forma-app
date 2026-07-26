@@ -75,15 +75,20 @@ class _DayPill extends StatelessWidget {
       background = Colors.transparent;
     }
 
+    // A skipped day is outlined in dashes, the same "nothing logged here"
+    // language the schedule uses. Painted rather than bordered, so the pill
+    // keeps its size either way.
+    final Color? dashedBorder = isMissed
+        ? _skippedRed.withValues(alpha: isSelected ? 0.9 : 0.7)
+        : null;
+
     final Border border;
-    if (isSelected) {
+    if (isMissed) {
+      border = Border.all(color: Colors.transparent);
+    } else if (isSelected) {
       border = Border.all(
-        color: isMissed
-            ? _skippedRed.withValues(alpha: 0.9)
-            : AppColors.accentPrimary.withValues(alpha: 0.75),
+        color: AppColors.accentPrimary.withValues(alpha: 0.75),
       );
-    } else if (isMissed) {
-      border = Border.all(color: _skippedRed.withValues(alpha: 0.7));
     } else if (isToday) {
       border = Border.all(
         color: isRest
@@ -104,7 +109,7 @@ class _DayPill extends StatelessWidget {
                     ? AppColors.textSecondary
                     : AppColors.textMuted;
 
-    return Container(
+    final pill = Container(
       height: 32,
       decoration: BoxDecoration(
         color: background,
@@ -112,16 +117,19 @@ class _DayPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(9),
       ),
       alignment: Alignment.center,
-      child: isCompleted
-          ? const Icon(Icons.check_rounded, size: 14, color: AppColors.green)
-          : Text(
-              WeekStrip._weekdayLetters[day.date.weekday - 1],
-              style: GoogleFonts.robotoMono(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: letterColor,
-              ),
-            ),
+      // The day letter always stays readable — a finished day says so with
+      // its green fill and green letter, not by dropping out of the week.
+      child: Text(
+        WeekStrip._weekdayLetters[day.date.weekday - 1],
+        style: GoogleFonts.robotoMono(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: letterColor,
+        ),
+      ),
     );
+
+    if (dashedBorder == null) return pill;
+    return DashedRoundedBorder(color: dashedBorder, child: pill);
   }
 }

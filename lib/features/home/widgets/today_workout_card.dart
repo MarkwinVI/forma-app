@@ -354,27 +354,16 @@ class _ExerciseRow extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: TodayWorkoutCard._changeColWidth,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (row.changeDir != 0)
-                  Icon(
-                    row.changeDir > 0
-                        ? Icons.arrow_drop_up_rounded
-                        : Icons.arrow_drop_down_rounded,
-                    size: 18,
-                    color: changeColor,
-                  ),
-                Text(
-                  row.changeLabel,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: changeColor,
-                  ),
-                ),
-              ],
+            // The signed number carries the direction on its own — an arrow
+            // beside it is the same fact twice.
+            child: Text(
+              row.changeLabel,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: changeColor,
+              ),
             ),
           ),
         ],

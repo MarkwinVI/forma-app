@@ -17,7 +17,6 @@ class WorkoutDoneView extends StatefulWidget {
   final String? nextTitle;
   final String? nextWhen;
   final VoidCallback? onViewWorkout;
-  final VoidCallback? onNextUp;
 
   const WorkoutDoneView({
     super.key,
@@ -25,7 +24,6 @@ class WorkoutDoneView extends StatefulWidget {
     this.nextTitle,
     this.nextWhen,
     this.onViewWorkout,
-    this.onNextUp,
   });
 
   @override
@@ -144,8 +142,10 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
     );
   }
 
+  /// Static line — what comes next is context for the session just finished,
+  /// not somewhere to go from here.
   Widget _nextUpRow() {
-    final row = Padding(
+    return Padding(
       padding: const EdgeInsets.only(top: 14, bottom: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -184,20 +184,9 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (widget.onNextUp != null) ...[
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.textMuted,
-            ),
-          ],
         ],
       ),
     );
-
-    if (widget.onNextUp == null) return row;
-    return Pressable(onTap: widget.onNextUp, child: row);
   }
 }
 
