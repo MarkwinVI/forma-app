@@ -180,7 +180,7 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
   Future<void> _advanceDay() {
     return _run(
       _devToolsService.advanceOneDay,
-      'Advanced one day — Home now shows the next scheduled session.',
+      'Dev clock advanced 24h.',
     );
   }
 
@@ -231,8 +231,8 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
         const SizedBox(height: 10),
         _DevToolRow(
           icon: Icons.fast_forward_rounded,
-          title: 'Advance one day',
-          sub: 'Skip to the next day in the program schedule',
+          title: 'Advance dev clock 24h',
+          sub: 'Test tomorrow without rewriting workout history',
           onTap: _busy ? null : _advanceDay,
         ),
       ],

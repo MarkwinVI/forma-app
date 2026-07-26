@@ -444,26 +444,26 @@ void main() {
     );
 
     test('marks today complete when the last workout finished today', () {
-      // Workout done today; stored state already advanced to the rest step.
+      // Workout done today; stored state still points at the completed step.
       final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
         cycle: cycle,
-        nextStepIndex: 1,
-        nextSessionType: TrainingSessionType.rest,
+        nextStepIndex: 0,
+        nextSessionType: TrainingSessionType.push,
         lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
         now: DateTime(2026, 6, 15, 21),
       );
 
       expect(resolution.completedToday, isTrue);
       expect(resolution.todayPosition, 0);
-      expect(resolution.effectiveStepIndex, 1);
-      expect(resolution.effectiveSessionType, TrainingSessionType.rest);
+      expect(resolution.effectiveStepIndex, 0);
+      expect(resolution.effectiveSessionType, TrainingSessionType.push);
     });
 
     test('shows the rest day on the day after a completed workout', () {
       final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
         cycle: cycle,
-        nextStepIndex: 1,
-        nextSessionType: TrainingSessionType.rest,
+        nextStepIndex: 0,
+        nextSessionType: TrainingSessionType.push,
         lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
         now: DateTime(2026, 6, 16, 9),
       );
@@ -476,8 +476,8 @@ void main() {
     test('rolls past an elapsed rest day to the next training day', () {
       final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
         cycle: cycle,
-        nextStepIndex: 1,
-        nextSessionType: TrainingSessionType.rest,
+        nextStepIndex: 0,
+        nextSessionType: TrainingSessionType.push,
         lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
         now: DateTime(2026, 6, 17, 9),
       );
@@ -491,8 +491,8 @@ void main() {
       // Pull was due two days ago but never done — it remains today's session.
       final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
         cycle: cycle,
-        nextStepIndex: 2,
-        nextSessionType: TrainingSessionType.pull,
+        nextStepIndex: 0,
+        nextSessionType: TrainingSessionType.push,
         lastWorkoutAt: DateTime(2026, 6, 13, 18, 30),
         now: DateTime(2026, 6, 17, 9),
       );
@@ -511,8 +511,8 @@ void main() {
 
       final resolution = HomeDashboardMetricsCalculator.resolveSchedule(
         cycle: fullBodyCycle,
-        nextStepIndex: 5,
-        nextSessionType: TrainingSessionType.rest,
+        nextStepIndex: 4,
+        nextSessionType: TrainingSessionType.fullBody,
         lastWorkoutAt: DateTime(2026, 6, 15, 18, 30),
         now: DateTime(2026, 6, 18, 9),
       );
@@ -533,6 +533,71 @@ void main() {
       expect(resolution.completedToday, isFalse);
       expect(resolution.effectiveSessionType, TrainingSessionType.push);
       expect(resolution.todayPosition, 0);
+    });
+  });
+
+  group('buildStreakData', () {
+    test('requires the planned weekly session goal for completed weeks', () {
+      final streak = HomeDashboardMetricsCalculator.buildStreakData(
+        workouts: [
+          _workout(
+            'last-week-1',
+            'pull_up',
+            [5],
+            loggedAt: DateTime(2026, 6, 8),
+          ),
+          _workout(
+            'this-week-1',
+            'pull_up',
+            [5],
+            loggedAt: DateTime(2026, 6, 15),
+          ),
+          _workout(
+            'this-week-2',
+            'pull_up',
+            [5],
+            loggedAt: DateTime(2026, 6, 17),
+          ),
+        ],
+        plannedPerWeek: 2,
+        now: DateTime(2026, 6, 18),
+      );
+
+      expect(streak.streakWeeks, 1);
+      expect(streak.completedThisWeek, 2);
+      expect(streak.onTrack, isTrue);
+    });
+
+    test('current week below goal does not break previous completed streak',
+        () {
+      final streak = HomeDashboardMetricsCalculator.buildStreakData(
+        workouts: [
+          _workout(
+            'last-week-1',
+            'pull_up',
+            [5],
+            loggedAt: DateTime(2026, 6, 8),
+          ),
+          _workout(
+            'last-week-2',
+            'pull_up',
+            [5],
+            loggedAt: DateTime(2026, 6, 10),
+          ),
+          _workout(
+            'this-week-1',
+            'pull_up',
+            [5],
+            loggedAt: DateTime(2026, 6, 15),
+          ),
+        ],
+        plannedPerWeek: 2,
+        now: DateTime(2026, 6, 18),
+      );
+
+      expect(streak.streakWeeks, 1);
+      expect(streak.completedThisWeek, 1);
+      expect(streak.onTrack, isFalse);
     });
   });
 }

@@ -100,9 +100,8 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
   ) async {
     setState(() => _deleting = true);
     try {
-      // Saving the first workout of a local day advances the program
-      // pointer, so deleting the only workout of that day rewinds it —
-      // the session becomes due again on the Home dashboard.
+      // Deleting the only planned workout for a day means the schedule state
+      // should be rebuilt from the newest remaining planned completion.
       var wasOnlySessionOfDay = false;
       try {
         wasOnlySessionOfDay = await _exerciseLogService
@@ -118,11 +117,11 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
       if (wasOnlySessionOfDay) {
         try {
           await TrainingProgramStoreService()
-              .rewindProgramStateAfterWorkoutDeletion(userId);
+              .syncProgramStateToLatestPlannedWorkout(userId);
         } catch (error, stackTrace) {
-          // The workout itself is deleted — a failed rewind only leaves the
-          // schedule one session ahead and self-heals on the next save.
-          debugPrint('Failed to rewind program state: $error\n$stackTrace');
+          // The workout itself is deleted — a failed sync only leaves the
+          // schedule cursor stale and self-heals on the next planned save.
+          debugPrint('Failed to sync program state: $error\n$stackTrace');
         }
       }
 
@@ -540,7 +539,8 @@ class _ActionsSheet extends StatelessWidget {
                   Pressable(
                     onTap: () => Navigator.of(context).pop('delete'),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 18, vertical: 15),
                       child: Row(
                         children: [
                           Icon(

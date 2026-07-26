@@ -9,12 +9,14 @@ import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import '../settings/settings_view.dart';
 import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
@@ -22,6 +24,7 @@ import 'home_empty_state.dart';
 import 'live_workout_view.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
+import 'training_calendar_view.dart';
 import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
 import 'widgets/week_strip.dart';
@@ -50,9 +53,11 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final _progressService = ProgressService();
+  final _devClockService = DevClockService();
   final _exerciseLogService = ExerciseLogService();
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
+  final _trainingScheduleService = TrainingScheduleService();
   final _progressionEventService = ProgressionEventService();
   final _skillTrackService = SkillTrackService();
 
@@ -91,6 +96,7 @@ class _HomeViewState extends State<HomeView> {
     }
 
     try {
+      await _devClockService.loadOffset();
       final results = await Future.wait([
         _progressService.fetchAll(userId),
         _trainingProgramStoreService.fetchProgramLogic(userId),
@@ -170,6 +176,7 @@ class _HomeViewState extends State<HomeView> {
 
     final programType = snapshot.program.programType;
     final scheduleVariant = snapshot.program.scheduleVariant;
+    final now = _devClockService.now();
     // Lane view bridges skill tracks into lane-keyed consumers (dashboards,
     // config fallback); the actual session items come from the tracks.
     final branchSelections = {
@@ -178,15 +185,37 @@ class _HomeViewState extends State<HomeView> {
       ..._trainingProgramService.laneSelectionsFromTracks(_skillTracks),
     };
     final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
-    final schedule = HomeDashboardMetricsCalculator.resolveSchedule(
-      cycle: _trainingProgramService.scheduleCycleFor(
-        programType: programType,
-        scheduleVariant: scheduleVariant,
-      ),
-      nextStepIndex: snapshot.state.nextStepIndex,
-      nextSessionType: snapshot.state.nextSessionType,
-      lastWorkoutAt:
-          _pastWorkouts.isEmpty ? null : _pastWorkouts.first.loggedAt,
+    final lastPlannedWorkout = _latestPlannedWorkout();
+    final scheduleWindow = _trainingScheduleService.buildWindow(
+      programType: programType,
+      frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      currentStepIndex: snapshot.state.nextStepIndex,
+      currentSessionType: snapshot.state.nextSessionType,
+      lastPlannedWorkoutAt: lastPlannedWorkout?.loggedAt,
+      lastCompletedSessionType: lastPlannedWorkout == null
+          ? null
+          : TrainingSessionTypeX.fromDbValue(lastPlannedWorkout.sessionType),
+      now: now,
+    );
+    final calendarWindow = _trainingScheduleService.buildWindow(
+      programType: programType,
+      frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      currentStepIndex: snapshot.state.nextStepIndex,
+      currentSessionType: snapshot.state.nextSessionType,
+      lastPlannedWorkoutAt: lastPlannedWorkout?.loggedAt,
+      lastCompletedSessionType: lastPlannedWorkout == null
+          ? null
+          : TrainingSessionTypeX.fromDbValue(lastPlannedWorkout.sessionType),
+      daysBeforeToday: 7,
+      daysAfterToday: 7,
+      now: now,
+    );
+    final selectedDay = scheduleWindow.selectedDay;
+    final schedule = HomeScheduleResolution(
+      effectiveStepIndex: selectedDay.stepIndex,
+      effectiveSessionType: selectedDay.sessionType,
+      todayPosition: scheduleWindow.days.indexWhere((day) => day.isToday),
+      completedToday: selectedDay.isCompleted,
     );
     final recommendation = _trainingProgramService.buildToday(
       progressMap: _progressMap,
@@ -195,7 +224,28 @@ class _HomeViewState extends State<HomeView> {
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
       skillTracks: _skillTracks,
+      plannedDate: selectedDay.date,
+      plannedStepIndex: selectedDay.stepIndex,
+      affectsSchedule: !selectedDay.isRestDay,
     );
+    final calendarRecommendations = {
+      for (final day in calendarWindow.days)
+        TrainingScheduleService.dateOnly(day.date):
+            _trainingProgramService.buildToday(
+          progressMap: _progressMap,
+          programType: programType,
+          sessionType: day.sessionType,
+          branchSelections: branchSelections,
+          sessionItemsConfig: sessionItemsConfig,
+          skillTracks: _skillTracks,
+          plannedDate: day.date,
+          plannedStepIndex: day.stepIndex,
+          affectsSchedule: !day.isRestDay,
+        ),
+    };
+    final completedWorkout = selectedDay.isCompleted
+        ? _workoutForDate(selectedDay.date, plannedOnly: true)
+        : null;
 
     return _TrainSnapshot(
       recommendation: recommendation,
@@ -212,17 +262,60 @@ class _HomeViewState extends State<HomeView> {
         workouts: _pastWorkouts,
         goalSkillIds: snapshot.program.goalSkillIds,
         frequencyPerWeek: snapshot.program.frequencyPerWeek,
+        scheduleWindow: scheduleWindow,
+        completedWorkout: completedWorkout,
+        now: now,
         masterySettings: MasteryTargetSettings.fromVariationRules(
           snapshot.program.variationRules,
         ),
       ),
+      calendarDays: _calendarDaysForWindow(calendarWindow),
+      calendarRecommendations: calendarRecommendations,
+      now: now,
     );
+  }
+
+  List<HomeWeekStripDay> _calendarDaysForWindow(
+    TrainingScheduleWindow scheduleWindow,
+  ) {
+    return [
+      for (final day in scheduleWindow.days)
+        HomeWeekStripDay(
+          date: day.date,
+          sessionType: day.sessionType,
+          isCurrent: day.isToday,
+          isSelected: day.isSelected,
+          isCompleted: day.isCompleted ||
+              _workoutForDate(day.date, plannedOnly: true) != null,
+          isMissed: day.isMissed,
+          stepIndex: day.stepIndex,
+        ),
+    ];
   }
 
   Map<String, dynamic> _sessionItemsConfigFor(UserTrainingProgram program) {
     final raw = program.variationRules['session_items_v1'];
     if (raw is Map) return Map<String, dynamic>.from(raw);
     return const {};
+  }
+
+  PastWorkout? _latestPlannedWorkout() {
+    for (final workout in _pastWorkouts) {
+      if (workout.affectsSchedule) return workout;
+    }
+    return null;
+  }
+
+  PastWorkout? _workoutForDate(DateTime date, {bool plannedOnly = false}) {
+    final target = TrainingScheduleService.dateOnly(date);
+    for (final workout in _pastWorkouts) {
+      if (plannedOnly && !workout.affectsSchedule) continue;
+      if (TrainingScheduleService.dateOnly(workout.loggedAt)
+          .isAtSameMomentAs(target)) {
+        return workout;
+      }
+    }
+    return null;
   }
 
   Future<void> _openProgramSetup() async {
@@ -271,10 +364,26 @@ class _HomeViewState extends State<HomeView> {
     await _loadHomeData();
   }
 
-  void _openSettings() {
-    Navigator.of(context).push(
+  Future<void> _openTrainingCalendar(_TrainSnapshot snapshot) async {
+    final recommendation =
+        await Navigator.of(context).push<DailyTrainingRecommendation>(
+      MaterialPageRoute(
+        builder: (_) => TrainingCalendarView(
+          days: snapshot.calendarDays,
+          recommendations: snapshot.calendarRecommendations,
+          now: snapshot.now,
+        ),
+      ),
+    );
+    if (!mounted || recommendation == null) return;
+    await _startWorkout(recommendation);
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SettingsView()),
     );
+    await _loadHomeData();
   }
 
   Future<void> _openAlternateWorkoutOptions(
@@ -297,6 +406,7 @@ class _HomeViewState extends State<HomeView> {
                     sessionLabel: 'Blank Workout',
                     isRestDay: false,
                     items: const [],
+                    affectsSchedule: false,
                   ),
                 ),
               ),
@@ -361,7 +471,10 @@ class _HomeViewState extends State<HomeView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          WeekStrip(weekStrip: metrics.weekStrip),
+          WeekStrip(
+            weekStrip: metrics.weekStrip,
+            onDayTap: (_) => _openTrainingCalendar(snapshot),
+          ),
           Expanded(
             child: RestDayView(
               nextTitle: nextTitle,
@@ -383,14 +496,17 @@ class _HomeViewState extends State<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WeekStrip(weekStrip: metrics.weekStrip),
+        WeekStrip(
+          weekStrip: metrics.weekStrip,
+          onDayTap: (_) => _openTrainingCalendar(snapshot),
+        ),
         if (completed != null)
           WorkoutDoneView(
             completed: completed,
             nextTitle: nextTitle,
             nextWhen: nextWhen,
             onViewWorkout:
-                _pastWorkouts.isEmpty ? null : _openLatestWorkoutDetail,
+                _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
             onNextUp: widget.onGoToProgram,
           )
         else ...[
@@ -413,11 +529,13 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Future<void> _openLatestWorkoutDetail() async {
-    if (_pastWorkouts.isEmpty) return;
+  Future<void> _openSelectedWorkoutDetail() async {
+    final workout = _workoutForDate(_devClockService.now()) ??
+        (_pastWorkouts.isEmpty ? null : _pastWorkouts.first);
+    if (workout == null) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PastWorkoutDetailView(workout: _pastWorkouts.first),
+        builder: (_) => PastWorkoutDetailView(workout: workout),
       ),
     );
     await _loadHomeData();
@@ -483,9 +601,15 @@ class _HomeViewState extends State<HomeView> {
 class _TrainSnapshot {
   final DailyTrainingRecommendation recommendation;
   final HomeDashboardMetrics metrics;
+  final List<HomeWeekStripDay> calendarDays;
+  final Map<DateTime, DailyTrainingRecommendation> calendarRecommendations;
+  final DateTime now;
 
   const _TrainSnapshot({
     required this.recommendation,
     required this.metrics,
+    required this.calendarDays,
+    required this.calendarRecommendations,
+    required this.now,
   });
 }

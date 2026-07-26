@@ -292,6 +292,9 @@ class DailyTrainingRecommendation {
   final String sessionLabel;
   final bool isRestDay;
   final List<TrainingRecommendationItem> items;
+  final DateTime? plannedDate;
+  final int? plannedStepIndex;
+  final bool affectsSchedule;
 
   const DailyTrainingRecommendation({
     required this.programType,
@@ -299,6 +302,9 @@ class DailyTrainingRecommendation {
     required this.sessionLabel,
     required this.isRestDay,
     required this.items,
+    this.plannedDate,
+    this.plannedStepIndex,
+    this.affectsSchedule = true,
   });
 }
 
@@ -361,6 +367,8 @@ class UserTrainingProgramState {
   final String userId;
   final int nextStepIndex;
   final TrainingSessionType nextSessionType;
+  final TrainingSessionType? lastSessionType;
+  final DateTime? lastCompletedAt;
 
   const UserTrainingProgramState({
     required this.id,
@@ -368,9 +376,12 @@ class UserTrainingProgramState {
     required this.userId,
     required this.nextStepIndex,
     required this.nextSessionType,
+    this.lastSessionType,
+    this.lastCompletedAt,
   });
 
   factory UserTrainingProgramState.fromMap(Map<String, dynamic> map) {
+    final rawLastCompletedAt = map['last_completed_at'] as String?;
     return UserTrainingProgramState(
       id: map['id'] as String,
       programId: map['program_id'] as String,
@@ -379,6 +390,14 @@ class UserTrainingProgramState {
       nextSessionType: TrainingSessionTypeX.fromDbValue(
         map['next_session_type'] as String,
       ),
+      lastSessionType: map['last_session_type'] == null
+          ? null
+          : TrainingSessionTypeX.fromDbValue(
+              map['last_session_type'] as String,
+            ),
+      lastCompletedAt: rawLastCompletedAt == null
+          ? null
+          : DateTime.parse(rawLastCompletedAt).toLocal(),
     );
   }
 }

@@ -11,6 +11,7 @@ import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
@@ -40,6 +41,7 @@ class ProgressView extends StatefulWidget {
 
 class _ProgressViewState extends State<ProgressView> {
   final _progressService = ProgressService();
+  final _devClockService = DevClockService();
   final _exerciseLogService = ExerciseLogService();
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
@@ -82,6 +84,7 @@ class _ProgressViewState extends State<ProgressView> {
     }
 
     try {
+      await _devClockService.loadOffset();
       final results = await Future.wait([
         _progressService.fetchAll(userId),
         _trainingProgramStoreService.fetchProgramLogic(userId),
@@ -140,6 +143,7 @@ class _ProgressViewState extends State<ProgressView> {
 
     final programType = snapshot.program.programType;
     final scheduleVariant = snapshot.program.scheduleVariant;
+    final now = _devClockService.now();
     final branchSelections = {
       ..._trainingProgramService.defaultBranchSelections(),
       ...snapshot.branchSelections,
@@ -150,11 +154,13 @@ class _ProgressViewState extends State<ProgressView> {
       cycle: _trainingProgramService.scheduleCycleFor(
         programType: programType,
         scheduleVariant: scheduleVariant,
+        frequencyPerWeek: snapshot.program.frequencyPerWeek,
       ),
       nextStepIndex: snapshot.state.nextStepIndex,
       nextSessionType: snapshot.state.nextSessionType,
       lastWorkoutAt:
           _pastWorkouts.isEmpty ? null : _pastWorkouts.first.loggedAt,
+      now: now,
     );
     final recommendation = _trainingProgramService.buildToday(
       progressMap: _progressMap,
@@ -178,6 +184,7 @@ class _ProgressViewState extends State<ProgressView> {
       workouts: _pastWorkouts,
       goalSkillIds: snapshot.program.goalSkillIds,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      now: now,
     );
   }
 
@@ -237,7 +244,7 @@ class _ProgressViewState extends State<ProgressView> {
                     children: [
                       ScreenHeader(
                         title: 'Progress',
-                        eyebrow: formatHeaderDate(DateTime.now()),
+                        eyebrow: formatHeaderDate(_devClockService.now()),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),

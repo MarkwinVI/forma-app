@@ -20,6 +20,7 @@ import '../../data/services/progression_event_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import 'completed_workout_model.dart';
 
 /// Post-workout celebration flow: a summary step that saves the session,
@@ -85,6 +86,20 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         sessionType: widget.workout.sessionType.dbValue,
         startedAt: widget.workout.startedAt,
         finishedAt: widget.workout.finishedAt,
+        scheduleSource: widget.workout.affectsSchedule
+            ? widget.workout.plannedDate != null &&
+                    !TrainingScheduleService.dateOnly(
+                            widget.workout.plannedDate!)
+                        .isAtSameMomentAs(
+                      TrainingScheduleService.dateOnly(
+                        widget.workout.finishedAt,
+                      ),
+                    )
+                ? 'future_planned'
+                : 'planned'
+            : 'ad_hoc',
+        plannedDate: widget.workout.plannedDate,
+        plannedStepIndex: widget.workout.plannedStepIndex,
         exercises: widget.workout.exercises.map((exerciseEntry) {
           final sets = exerciseEntry.sets
               .map(
@@ -112,22 +127,22 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         }).toList(),
       );
 
-      // First workout of the (local) day consumes today's slot in the split:
-      // advance the program pointer so the dashboard can show a completed
-      // state today and the next session from tomorrow.
-      try {
-        final sessionsToday = await _exerciseLogService.countSessionsOnLocalDate(
-          userId,
-          widget.workout.finishedAt,
-        );
-        if (sessionsToday <= 1) {
-          await TrainingProgramStoreService()
-              .advanceProgramStateAfterWorkout(userId);
+      if (widget.workout.affectsSchedule) {
+        try {
+          await TrainingProgramStoreService().markProgramStepCompleted(
+            userId: userId,
+            sessionType: widget.workout.sessionType,
+            stepIndex: widget.workout.plannedStepIndex,
+            plannedDate: widget.workout.plannedDate,
+            completedAt: widget.workout.finishedAt,
+            workoutSessionId: sessionId,
+          );
+        } catch (error, stackTrace) {
+          // The workout itself is saved. If this write fails, the next reload
+          // falls back to workout history and keeps the plan usable.
+          debugPrint(
+              'Failed to mark program step complete: $error\n$stackTrace');
         }
-      } catch (error, stackTrace) {
-        // The workout itself is saved — a failed advance only delays the
-        // dashboard by one session and self-heals on the next save.
-        debugPrint('Failed to advance program state: $error\n$stackTrace');
       }
 
       var events = const <ProgressionEvent>[];
@@ -158,8 +173,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             masterySettings:
                 logic?.masteryTargets ?? MasteryTargetSettings.defaults,
             activeBranchByCategory: {
-              for (final track in tracks)
-                track.skillCategoryId: track.branchId,
+              for (final track in tracks) track.skillCategoryId: track.branchId,
             },
             goalSkillIds: goalIds,
             results: [
@@ -194,8 +208,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
               .fetchForSession(userId, sessionId);
         } catch (error, stackTrace) {
           // Non-fatal: without events the flow simply ends at the summary.
-          debugPrint(
-              'Failed to load progression events: $error\n$stackTrace');
+          debugPrint('Failed to load progression events: $error\n$stackTrace');
         }
       }
 
@@ -454,8 +467,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                           workout: widget.workout,
                           hasNext: _steps.length > 1,
                         ),
-                      _LevelUpStep(data: final data) =>
-                        _LevelUpContent(key: ValueKey(data.exercise.id), data: data),
+                      _LevelUpStep(data: final data) => _LevelUpContent(
+                          key: ValueKey(data.exercise.id), data: data),
                       _MasteredStep(data: final data) => _MasteredContent(
                           key: ValueKey(data.exercise.id), data: data),
                       _UnlockStep(data: final data) => _UnlockContent(
@@ -623,8 +636,7 @@ class _SummaryContent extends StatelessWidget {
           _RiseIn(
             delay: const Duration(milliseconds: 120),
             child: SurfaceCard(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               child: Row(
                 children: [
                   Expanded(
@@ -954,7 +966,9 @@ class _UnlockContentState extends State<_UnlockContent> {
   _NodeState _nodeState(int index) {
     final cleared = widget.data.clearedIndex;
     if (index < cleared) return _NodeState.done;
-    if (index == cleared) return _swapped ? _NodeState.done : _NodeState.current;
+    if (index == cleared) {
+      return _swapped ? _NodeState.done : _NodeState.current;
+    }
     if (index == cleared + 1 && _swapped) return _NodeState.current;
     return _NodeState.locked;
   }
@@ -1021,9 +1035,7 @@ class _UnlockContentState extends State<_UnlockContent> {
                             color: _swapped
                                 ? AppColors.textSecondary
                                 : AppColors.accentPrimary,
-                            fontFeatures: const [
-                              FontFeature.tabularFigures()
-                            ],
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                       ],
@@ -1043,8 +1055,7 @@ class _UnlockContentState extends State<_UnlockContent> {
                               curve: Curves.easeOutCubic,
                               widthFactor: _fill ? 1 : 0,
                               alignment: Alignment.centerLeft,
-                              child:
-                                  Container(color: AppColors.accentPrimary),
+                              child: Container(color: AppColors.accentPrimary),
                             ),
                           ],
                         ),

@@ -1,5 +1,6 @@
 import '../models/training_program_model.dart';
 import 'supabase_service.dart';
+import 'training_schedule_service.dart';
 
 class TrainingProgramStoreService {
   static const _defaultFrequencyPerWeek = 3;
@@ -102,6 +103,7 @@ class TrainingProgramStoreService {
       userId: userId,
       programId: program.id,
       programType: programType,
+      frequencyPerWeek: program.frequencyPerWeek,
     );
 
     return UserTrainingProgramSnapshot(program: program, state: state);
@@ -166,6 +168,7 @@ class TrainingProgramStoreService {
       programId: program.id,
       programType: programType,
       previousProgramType: existingProgram?.programType,
+      frequencyPerWeek: program.frequencyPerWeek,
     );
 
     await _upsertBranchSelections(userId, branchSelections);
@@ -191,7 +194,10 @@ class TrainingProgramStoreService {
     final state = await _fetchProgramState(program.id);
     if (state == null) return;
 
-    final cycle = scheduleCycleFor(programType: program.programType);
+    final cycle = scheduleCycleFor(
+      programType: program.programType,
+      frequencyPerWeek: program.frequencyPerWeek,
+    );
     if (cycle.isEmpty) return;
 
     var index = state.nextStepIndex;
@@ -210,6 +216,62 @@ class TrainingProgramStoreService {
     }).eq('id', state.id);
   }
 
+  /// Records the planned schedule step that was completed without advancing
+  /// the pointer immediately. The dashboard resolves the next step from the
+  /// local date, so today's completed state remains visible until tomorrow.
+  Future<void> markProgramStepCompleted({
+    required String userId,
+    required TrainingSessionType sessionType,
+    required DateTime completedAt,
+    int? stepIndex,
+    DateTime? plannedDate,
+    String? workoutSessionId,
+  }) async {
+    final program = await _fetchActiveProgram(userId);
+    if (program == null) return;
+
+    final state = await _fetchProgramState(program.id);
+    if (state == null) return;
+
+    final cycle = scheduleCycleFor(
+      programType: program.programType,
+      frequencyPerWeek: program.frequencyPerWeek,
+    );
+    if (cycle.isEmpty) return;
+
+    final resolvedStepIndex = stepIndex == null ||
+            stepIndex < 0 ||
+            stepIndex >= cycle.length ||
+            cycle[stepIndex] != sessionType
+        ? _stepIndexForSessionType(
+            programType: program.programType,
+            sessionType: sessionType,
+            frequencyPerWeek: program.frequencyPerWeek,
+          )
+        : stepIndex;
+
+    await _client.from('user_training_program_state').update({
+      'next_step_index': resolvedStepIndex,
+      'next_session_type': sessionType.dbValue,
+      'last_session_type': sessionType.dbValue,
+      'last_completed_at': completedAt.toUtc().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', state.id);
+
+    await _client.from('user_training_session_events').insert({
+      'program_id': program.id,
+      'user_id': userId,
+      'schedule_index': resolvedStepIndex,
+      'session_type': sessionType.dbValue,
+      'action': 'completed',
+      'planned_date': TrainingScheduleService.dateOnly(
+        plannedDate ?? completedAt,
+      ).toIso8601String(),
+      if (workoutSessionId != null) 'workout_session_id': workoutSessionId,
+      'occurred_at': completedAt.toUtc().toIso8601String(),
+    });
+  }
+
   /// Undoes one [advanceProgramStateAfterWorkout] step. Called when the only
   /// workout of a local day is deleted, so the slot it consumed in the split
   /// becomes due again.
@@ -220,7 +282,10 @@ class TrainingProgramStoreService {
     final state = await _fetchProgramState(program.id);
     if (state == null) return;
 
-    final cycle = scheduleCycleFor(programType: program.programType);
+    final cycle = scheduleCycleFor(
+      programType: program.programType,
+      frequencyPerWeek: program.frequencyPerWeek,
+    );
     if (cycle.isEmpty) return;
 
     var index = state.nextStepIndex;
@@ -235,6 +300,54 @@ class TrainingProgramStoreService {
     await _client.from('user_training_program_state').update({
       'next_step_index': previousIndex,
       'next_session_type': cycle[previousIndex].dbValue,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', state.id);
+  }
+
+  /// Rebuilds the stored current-step marker from the newest remaining
+  /// planned workout. Used after workout deletion because schedule state no
+  /// longer advances blindly on save.
+  Future<void> syncProgramStateToLatestPlannedWorkout(String userId) async {
+    final program = await _fetchActiveProgram(userId);
+    if (program == null) return;
+
+    final state = await _fetchProgramState(program.id);
+    if (state == null) return;
+
+    final latest = await _client
+        .from('workout_sessions')
+        .select('session_type, finished_at, planned_step_index')
+        .eq('user_id', userId)
+        .neq('schedule_source', 'ad_hoc')
+        .order('finished_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    final TrainingSessionType sessionType;
+    final int stepIndex;
+    final DateTime? completedAt;
+    if (latest == null) {
+      sessionType = _defaultSessionType(program.programType);
+      stepIndex = 0;
+      completedAt = null;
+    } else {
+      sessionType = TrainingSessionTypeX.fromDbValue(
+        latest['session_type'] as String,
+      );
+      stepIndex = latest['planned_step_index'] as int? ??
+          _stepIndexForSessionType(
+            programType: program.programType,
+            sessionType: sessionType,
+            frequencyPerWeek: program.frequencyPerWeek,
+          );
+      completedAt = DateTime.parse(latest['finished_at'] as String);
+    }
+
+    await _client.from('user_training_program_state').update({
+      'next_step_index': stepIndex,
+      'next_session_type': sessionType.dbValue,
+      'last_session_type': latest == null ? null : sessionType.dbValue,
+      'last_completed_at': completedAt?.toUtc().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', state.id);
   }
@@ -329,6 +442,7 @@ class TrainingProgramStoreService {
     required String userId,
     required String programId,
     required TrainingProgramType programType,
+    int frequencyPerWeek = 3,
     TrainingProgramType? previousProgramType,
   }) async {
     final existingState = await _fetchProgramState(programId);
@@ -348,12 +462,14 @@ class TrainingProgramStoreService {
         : _remapSessionType(
             current: existingState.nextSessionType,
             programType: programType,
+            frequencyPerWeek: frequencyPerWeek,
           );
     final nextStepIndex = sameProgramType
         ? existingState.nextStepIndex
         : _stepIndexForSessionType(
             programType: programType,
             sessionType: nextSessionType,
+            frequencyPerWeek: frequencyPerWeek,
           );
 
     final data = await _client
@@ -445,8 +561,12 @@ class TrainingProgramStoreService {
   TrainingSessionType _remapSessionType({
     required TrainingSessionType current,
     required TrainingProgramType programType,
+    int frequencyPerWeek = 3,
   }) {
-    final cycle = scheduleCycleFor(programType: programType);
+    final cycle = scheduleCycleFor(
+      programType: programType,
+      frequencyPerWeek: frequencyPerWeek,
+    );
     if (cycle.contains(current)) {
       return current;
     }
@@ -459,46 +579,23 @@ class TrainingProgramStoreService {
   int _stepIndexForSessionType({
     required TrainingProgramType programType,
     required TrainingSessionType sessionType,
+    int frequencyPerWeek = 3,
   }) {
-    final cycle = scheduleCycleFor(programType: programType);
+    final cycle = scheduleCycleFor(
+      programType: programType,
+      frequencyPerWeek: frequencyPerWeek,
+    );
     final index = cycle.indexOf(sessionType);
     return index >= 0 ? index : 0;
   }
 
   List<TrainingSessionType> scheduleCycleFor({
     required TrainingProgramType programType,
+    int frequencyPerWeek = 3,
   }) {
-    switch (programType) {
-      case TrainingProgramType.fullBody:
-        return const [
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.fullBody,
-          TrainingSessionType.rest,
-          TrainingSessionType.rest,
-        ];
-      case TrainingProgramType.pushPull:
-        return const [
-          TrainingSessionType.push,
-          TrainingSessionType.rest,
-          TrainingSessionType.pull,
-          TrainingSessionType.rest,
-          TrainingSessionType.push,
-          TrainingSessionType.pull,
-          TrainingSessionType.rest,
-        ];
-      case TrainingProgramType.upperLower:
-        return const [
-          TrainingSessionType.upper,
-          TrainingSessionType.rest,
-          TrainingSessionType.lower,
-          TrainingSessionType.rest,
-          TrainingSessionType.upper,
-          TrainingSessionType.lower,
-          TrainingSessionType.rest,
-        ];
-    }
+    return TrainingScheduleService().cycleFor(
+      programType: programType,
+      frequencyPerWeek: frequencyPerWeek,
+    );
   }
 }

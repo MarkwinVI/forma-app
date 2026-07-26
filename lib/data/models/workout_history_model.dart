@@ -5,6 +5,9 @@ class PastWorkout {
   final DateTime startedAt;
   final DateTime loggedAt;
   final List<PastWorkoutExercise> exercises;
+  final String scheduleSource;
+  final DateTime? plannedDate;
+  final int? plannedStepIndex;
 
   const PastWorkout({
     required this.id,
@@ -13,7 +16,12 @@ class PastWorkout {
     required this.startedAt,
     required this.loggedAt,
     required this.exercises,
+    this.scheduleSource = 'planned',
+    this.plannedDate,
+    this.plannedStepIndex,
   });
+
+  bool get affectsSchedule => scheduleSource != 'ad_hoc';
 
   int get totalSets =>
       exercises.fold(0, (sum, exercise) => sum + exercise.setCount);

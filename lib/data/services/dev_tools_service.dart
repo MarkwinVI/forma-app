@@ -2,6 +2,7 @@ import '../models/exercise_log_model.dart';
 import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
 import '../models/training_program_model.dart';
+import 'dev_clock_service.dart';
 import 'exercise_log_service.dart';
 import 'exercise_progression_service.dart';
 import 'progress_service.dart';
@@ -19,12 +20,14 @@ class DevToolsService {
   final _trainingProgramStoreService = TrainingProgramStoreService();
   final _progressService = ProgressService();
   final _progressionService = ExerciseProgressionService();
+  final _devClockService = DevClockService();
 
   /// Wipes everything that makes this account look like an existing user:
   /// workout history, exercise progress, branch choices, and the training
   /// program itself. The auth session and `users` row are kept, so the app
   /// lands on the new-user home state.
   Future<void> resetToNewUser(String userId) async {
+    await _devClockService.reset();
     // Children before parents to respect foreign keys.
     await _client.from('progression_events').delete().eq('user_id', userId);
     await _client.from('user_skill_tracks').delete().eq('user_id', userId);
@@ -42,27 +45,11 @@ class DevToolsService {
     await _client.from('user_training_programs').delete().eq('user_id', userId);
   }
 
-  /// Fast-forwards the program by one day. There is no injectable clock — the
-  /// dashboard derives "today's" session from the real date relative to the
-  /// last workout's `finished_at` — so we roll the whole workout history back
-  /// 24h instead. The next scheduled session (rolling past any rest day)
-  /// becomes due, exactly as it would if a real day had elapsed.
-  Future<void> advanceOneDay(String userId) async {
-    const shift = Duration(days: 1);
-
-    final sessions = await _client
-        .from('workout_sessions')
-        .select('id, started_at, finished_at')
-        .eq('user_id', userId);
-
-    for (final session in sessions) {
-      final startedAt = DateTime.parse(session['started_at'] as String);
-      final finishedAt = DateTime.parse(session['finished_at'] as String);
-      await _client.from('workout_sessions').update({
-        'started_at': startedAt.subtract(shift).toIso8601String(),
-        'finished_at': finishedAt.subtract(shift).toIso8601String(),
-      }).eq('id', session['id'] as String);
-    }
+  /// Fast-forwards the local developer clock by one day. Workout history stays
+  /// untouched; schedule, streak, and new workout timestamps read the shifted
+  /// clock so the app behaves as if 24 real hours elapsed.
+  Future<void> advanceOneDay(String _) async {
+    await _devClockService.advanceBy(const Duration(days: 1));
   }
 
   /// Volume ramp for the five seeded sessions, as a share of each exercise's
@@ -83,8 +70,7 @@ class DevToolsService {
       ..._trainingProgramService.defaultBranchSelections(),
       ...?logic?.branchSelections,
     };
-    final rawSessionItems =
-        logic?.program.variationRules['session_items_v1'];
+    final rawSessionItems = logic?.program.variationRules['session_items_v1'];
     final sessionItemsConfig = rawSessionItems is Map
         ? Map<String, dynamic>.from(rawSessionItems)
         : const <String, dynamic>{};
@@ -105,11 +91,14 @@ class DevToolsService {
     );
 
     final trainingDays = _trainingProgramStoreService
-        .scheduleCycleFor(programType: programType)
+        .scheduleCycleFor(
+          programType: programType,
+          frequencyPerWeek: logic?.program.frequencyPerWeek ?? 3,
+        )
         .where((session) => session != TrainingSessionType.rest)
         .toList();
 
-    final today = DateTime.now();
+    final today = await _devClockService.loadNow();
     for (var index = 0; index < _sessionRamp.length; index++) {
       final daysAgo = 29 - index * 7;
       final sessionType = trainingDays[index % trainingDays.length];
@@ -204,7 +193,7 @@ class DevToolsService {
         },
         goalSkillIds: logic?.program.setupGoalIds ?? const [],
       );
-      final now = DateTime.now();
+      final now = _devClockService.now();
       for (final entry in outcome.statusChanges.entries) {
         progressMap[entry.key] = entry.value;
         progressRows[entry.key] = (progressRows[entry.key] ??

@@ -27,6 +27,7 @@ const _monthNames = [
 class CalendarPanel extends StatefulWidget {
   final List<PastWorkout> workouts;
   final int weeklyGoal;
+  final DateTime? now;
 
   /// Called when a workout was deleted from within the calendar so the
   /// owning screen can reload its data.
@@ -39,6 +40,7 @@ class CalendarPanel extends StatefulWidget {
     super.key,
     required this.workouts,
     required this.weeklyGoal,
+    this.now,
     this.onDataChanged,
     this.showActivityHeatmap = true,
   });
@@ -57,7 +59,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
     super.initState();
     _workouts = List.of(widget.workouts);
     _rebuildMetrics();
-    final now = DateTime.now();
+    final now = widget.now ?? DateTime.now();
     _month = DateTime(now.year, now.month);
   }
 
@@ -70,12 +72,18 @@ class _CalendarPanelState extends State<CalendarPanel> {
       _workouts = List.of(widget.workouts);
       _rebuildMetrics();
     }
+    if (oldWidget.now != widget.now) {
+      final now = widget.now ?? DateTime.now();
+      _month = DateTime(now.year, now.month);
+      _rebuildMetrics();
+    }
   }
 
   void _rebuildMetrics() {
     _metrics = WorkoutCalendarMetrics(
       workouts: _workouts,
       weeklyGoal: widget.weeklyGoal,
+      now: widget.now,
     );
   }
 
@@ -150,8 +158,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
                 _DaySessionRow(
                   workout: workouts[i],
                   showDivider: i > 0,
-                  onTap: () =>
-                      Navigator.of(sheetContext).pop(workouts[i]),
+                  onTap: () => Navigator.of(sheetContext).pop(workouts[i]),
                 ),
               const SizedBox(height: 8),
             ],
@@ -270,7 +277,7 @@ class _MonthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sessionDays = metrics.sessionDaysInMonth(month);
-    final now = DateTime.now();
+    final now = metrics.now;
     final today =
         now.year == month.year && now.month == month.month ? now.day : null;
     final weeks = _monthWeeks(month);
@@ -611,7 +618,7 @@ class _ActivityHeatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thisWeek = WorkoutCalendarMetrics.weekStartOf(DateTime.now());
+    final thisWeek = WorkoutCalendarMetrics.weekStartOf(metrics.now);
     final weekStarts = [
       for (var i = 12; i >= 0; i--) thisWeek.subtract(Duration(days: 7 * i)),
     ];

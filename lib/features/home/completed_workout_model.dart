@@ -7,6 +7,9 @@ class CompletedWorkout {
   final DateTime startedAt;
   final DateTime finishedAt;
   final List<CompletedWorkoutExercise> exercises;
+  final DateTime? plannedDate;
+  final int? plannedStepIndex;
+  final bool affectsSchedule;
 
   const CompletedWorkout({
     required this.sessionLabel,
@@ -14,6 +17,9 @@ class CompletedWorkout {
     required this.startedAt,
     required this.finishedAt,
     required this.exercises,
+    this.plannedDate,
+    this.plannedStepIndex,
+    this.affectsSchedule = true,
   });
 
   String get historyTitle {

@@ -6,6 +6,7 @@ import '../../core/widgets/polished.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../settings/settings_view.dart';
@@ -27,6 +28,7 @@ class DataView extends StatefulWidget {
 
 class _DataViewState extends State<DataView> {
   final _exerciseLogService = ExerciseLogService();
+  final _devClockService = DevClockService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
 
   bool _loading = true;
@@ -67,6 +69,7 @@ class _DataViewState extends State<DataView> {
     });
 
     try {
+      await _devClockService.loadOffset();
       final results = await Future.wait([
         _exerciseLogService.fetchPastWorkouts(userId),
         _trainingProgramStoreService.fetchProgramLogic(userId),
@@ -108,10 +111,11 @@ class _DataViewState extends State<DataView> {
     );
   }
 
-  void _openSettings() {
-    Navigator.of(context).push(
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SettingsView()),
     );
+    await _loadData();
   }
 
   void _openAllSessions() {
@@ -119,6 +123,7 @@ class _DataViewState extends State<DataView> {
       MaterialPageRoute(
         builder: (_) => _AllSessionsView(
           workouts: _workouts,
+          now: _devClockService.now(),
           onDataChanged: _loadData,
         ),
       ),
@@ -184,6 +189,7 @@ class _DataViewState extends State<DataView> {
       CalendarPanel(
         workouts: _workouts,
         weeklyGoal: _weeklyGoal,
+        now: _devClockService.now(),
         onDataChanged: _loadData,
         showActivityHeatmap: false,
       ),
@@ -213,6 +219,7 @@ class _DataViewState extends State<DataView> {
               for (var i = 0; i < recentWorkouts.length; i++)
                 _SessionRow(
                   workout: recentWorkouts[i],
+                  now: _devClockService.now(),
                   showDivider: i > 0,
                   onTap: () => _openWorkout(recentWorkouts[i]),
                 ),
@@ -257,11 +264,13 @@ class _DataViewState extends State<DataView> {
 
 class _SessionRow extends StatelessWidget {
   final PastWorkout workout;
+  final DateTime now;
   final bool showDivider;
   final VoidCallback onTap;
 
   const _SessionRow({
     required this.workout,
+    required this.now,
     required this.showDivider,
     required this.onTap,
   });
@@ -308,7 +317,7 @@ class _SessionRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    _relativeSessionLabel(workout.loggedAt),
+                    _relativeSessionLabel(workout.loggedAt, now: now),
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textMuted,
@@ -349,10 +358,12 @@ class _SessionRow extends StatelessWidget {
 
 class _AllSessionsView extends StatefulWidget {
   final List<PastWorkout> workouts;
+  final DateTime now;
   final VoidCallback onDataChanged;
 
   const _AllSessionsView({
     required this.workouts,
+    required this.now,
     required this.onDataChanged,
   });
 
@@ -415,6 +426,7 @@ class _AllSessionsViewState extends State<_AllSessionsView> {
                           for (var i = 0; i < _workouts.length; i++)
                             _SessionRow(
                               workout: _workouts[i],
+                              now: widget.now,
                               showDivider: i > 0,
                               onTap: () => _openWorkout(_workouts[i]),
                             ),
@@ -484,8 +496,7 @@ class _DataStateMessage extends StatelessWidget {
   }
 }
 
-String _relativeSessionLabel(DateTime dateTime) {
-  final now = DateTime.now();
+String _relativeSessionLabel(DateTime dateTime, {required DateTime now}) {
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(dateTime.year, dateTime.month, dateTime.day);
   final difference = today.difference(day).inDays;

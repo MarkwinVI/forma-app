@@ -14,6 +14,8 @@ class WorkoutCalendarMetrics {
   })  : weeklyGoal = weeklyGoal < 1 ? 1 : weeklyGoal,
         _now = now ?? DateTime.now();
 
+  DateTime get now => _now;
+
   static DateTime dayOf(DateTime dateTime) =>
       DateTime(dateTime.year, dateTime.month, dateTime.day);
 
@@ -43,23 +45,23 @@ class WorkoutCalendarMetrics {
 
   int get sessionsThisWeek => _sessionsPerWeek[weekStartOf(_now)] ?? 0;
 
-  /// Consecutive weeks with at least one session, ending with this week if
-  /// it already has one, otherwise last week. A single such week already
-  /// counts as a 1-week streak.
+  /// Consecutive weeks that met the program's weekly session goal. The
+  /// current week can extend the streak once it reaches the goal, but it
+  /// cannot break an existing streak until the week is over.
   int get currentStreakWeeks {
     var week = weekStartOf(_now);
-    if ((_sessionsPerWeek[week] ?? 0) < 1) {
+    if ((_sessionsPerWeek[week] ?? 0) < weeklyGoal) {
       week = week.subtract(const Duration(days: 7));
     }
     var streak = 0;
-    while ((_sessionsPerWeek[week] ?? 0) >= 1) {
+    while ((_sessionsPerWeek[week] ?? 0) >= weeklyGoal) {
       streak++;
       week = week.subtract(const Duration(days: 7));
     }
     return streak;
   }
 
-  /// Longest run of consecutive weeks with at least one session.
+  /// Longest run of consecutive weeks that met the weekly session goal.
   int get bestStreakWeeks {
     if (_sessionsPerWeek.isEmpty) return 0;
     final weeks = _sessionsPerWeek.keys.toList()..sort();
@@ -68,7 +70,7 @@ class WorkoutCalendarMetrics {
     var cursor = weeks.first;
     final last = weekStartOf(_now);
     while (!cursor.isAfter(last)) {
-      if ((_sessionsPerWeek[cursor] ?? 0) >= 1) {
+      if ((_sessionsPerWeek[cursor] ?? 0) >= weeklyGoal) {
         run++;
         if (run > best) best = run;
       } else {

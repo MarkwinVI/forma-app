@@ -91,7 +91,7 @@ class _StrengthExercise {
   });
 }
 
-const _strengthExercises = [
+const _baseStrengthExercises = [
   _StrengthExercise(
     id: 'pushups',
     label: 'Push-ups',
@@ -116,16 +116,44 @@ const _strengthExercises = [
     def: 5,
     max: 50,
   ),
-  _StrengthExercise(
-    id: 'squat',
-    label: 'Barbell squat',
-    sub: 'One rep maximum',
-    icon: Icons.accessibility_new_rounded,
-    unit: 'kg',
-    step: 5,
-    def: 40,
-    max: 300,
-  ),
+];
+
+/// Asked when the user has a gym: strength gate for the squat is a loaded
+/// one-rep max.
+const _barbellSquat = _StrengthExercise(
+  id: 'squat',
+  label: 'Barbell squat',
+  sub: 'One rep maximum',
+  icon: Icons.accessibility_new_rounded,
+  unit: 'kg',
+  step: 5,
+  def: 40,
+  max: 300,
+);
+
+/// Asked when the user has no gym: bodyweight squats measured in reps instead.
+const _bodyweightSquat = _StrengthExercise(
+  id: 'squat_bw',
+  label: 'Squat',
+  sub: 'Max reps in one set',
+  icon: Icons.accessibility_new_rounded,
+  def: 20,
+  max: 100,
+);
+
+/// The starting-strength questions for the current equipment choice — the
+/// squat gate swaps between a barbell 1RM and a bodyweight rep count.
+List<_StrengthExercise> _strengthExercisesFor({required bool hasGym}) => [
+      ..._baseStrengthExercises,
+      hasGym ? _barbellSquat : _bodyweightSquat,
+    ];
+
+/// Every strength question that can appear, so an answer is retained when the
+/// user toggles gym access back and forth.
+const _allStrengthExercises = [
+  ..._baseStrengthExercises,
+  _barbellSquat,
+  _bodyweightSquat,
 ];
 
 const _difficultyLabels = ['Approachable', 'Intermediate', 'Advanced'];
@@ -215,7 +243,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   TrainingProgramType? _split; // null = follow recommendation
   bool _hasGym = true;
   final Map<String, _StrengthAnswer> _strength = {
-    for (final exercise in _strengthExercises)
+    for (final exercise in _allStrengthExercises)
       exercise.id: _StrengthAnswer(exercise.def),
   };
   final List<String> _pickedSkills = [];
@@ -250,9 +278,13 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
           daysPerWeek: _days,
           split: _effectiveSplit,
           hasGym: _hasGym,
+          // Only record the squat variant matching the equipment choice, so
+          // the opposite variant's default doesn't leak into the answers.
           startingStrength: {
-            for (final entry in _strength.entries)
-              entry.key: entry.value.unsure ? null : entry.value.value,
+            for (final exercise in _strengthExercisesFor(hasGym: _hasGym))
+              exercise.id: _strength[exercise.id]!.unsure
+                  ? null
+                  : _strength[exercise.id]!.value,
           },
           skillIds: List.of(_pickedSkills),
         ),
@@ -318,6 +350,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                     ),
                   3 => _StrengthStep(
                       strength: _strength,
+                      hasGym: _hasGym,
                       onChanged: () => setState(() {}),
                     ),
                   _ => _SkillsStep(
@@ -925,15 +958,18 @@ class _EquipmentStep extends StatelessWidget {
 
 class _StrengthStep extends StatelessWidget {
   final Map<String, _StrengthAnswer> strength;
+  final bool hasGym;
   final VoidCallback onChanged;
 
   const _StrengthStep({
     required this.strength,
+    required this.hasGym,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final exercises = _strengthExercisesFor(hasGym: hasGym);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -943,11 +979,11 @@ class _StrengthStep extends StatelessWidget {
               'progressions. Not sure? Your first session will find out.',
         ),
         const SizedBox(height: 18),
-        for (var index = 0; index < _strengthExercises.length; index++) ...[
+        for (var index = 0; index < exercises.length; index++) ...[
           if (index > 0) const SizedBox(height: 10),
           _StrengthCard(
-            exercise: _strengthExercises[index],
-            answer: strength[_strengthExercises[index].id]!,
+            exercise: exercises[index],
+            answer: strength[exercises[index].id]!,
             onChanged: onChanged,
           ),
         ],

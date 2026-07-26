@@ -12,6 +12,7 @@ import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
@@ -49,6 +50,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     ExerciseProgramSection.coolDown,
   ];
   final _progressService = ProgressService();
+  final _devClockService = DevClockService();
   final _restPreferencesService = WorkoutRestPreferencesService();
   final _programService = TrainingProgramService();
   final _programStoreService = TrainingProgramStoreService();
@@ -87,6 +89,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _devClockService.loadOffset();
     _startedAt = DateTime.now();
     _sessionItems = List.of(widget.recommendation.items);
     _setDrafts = {
@@ -173,11 +176,11 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         if (!_planEdited) {
           _setDrafts = {
             for (final item in _sessionItems)
-              item.exercise.id: (_setDrafts[item.exercise.id]
-                          ?.any((set) => set.hasData) ??
-                      false)
-                  ? _setDrafts[item.exercise.id]!
-                  : _initialSetDrafts(item),
+              item.exercise.id:
+                  (_setDrafts[item.exercise.id]?.any((set) => set.hasData) ??
+                          false)
+                      ? _setDrafts[item.exercise.id]!
+                      : _initialSetDrafts(item),
           };
         }
       });
@@ -252,7 +255,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       'Nov',
       'Dec',
     ];
-    final startedAt = _startedAt;
+    final startedAt = _devClockService.now().subtract(_elapsedDuration());
     return '${weekdays[startedAt.weekday - 1]}, '
         '${months[startedAt.month - 1]} ${startedAt.day}';
   }
@@ -362,9 +365,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   /// straight from one field to another.
   void _onRepFocusChanged(bool focused) {
     setState(() {
-      _repFocusCount = focused
-          ? _repFocusCount + 1
-          : (_repFocusCount - 1).clamp(0, 999);
+      _repFocusCount =
+          focused ? _repFocusCount + 1 : (_repFocusCount - 1).clamp(0, 999);
     });
   }
 
@@ -622,9 +624,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     return CompletedWorkout(
       sessionLabel: widget.recommendation.sessionLabel,
       sessionType: widget.recommendation.sessionType,
-      startedAt: _startedAt,
-      finishedAt: DateTime.now(),
+      startedAt: _devClockService.now().subtract(_elapsedDuration()),
+      finishedAt: _devClockService.now(),
       exercises: exercises,
+      plannedDate: widget.recommendation.plannedDate,
+      plannedStepIndex: widget.recommendation.plannedStepIndex,
+      affectsSchedule: widget.recommendation.affectsSchedule,
     );
   }
 
@@ -832,8 +837,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       return;
     }
 
-    final reordered = await Navigator.of(context).push<
-        Map<ExerciseProgramSection, List<TrainingRecommendationItem>>>(
+    final reordered = await Navigator.of(context)
+        .push<Map<ExerciseProgramSection, List<TrainingRecommendationItem>>>(
       MaterialPageRoute(
         builder: (_) => _ReorderExercisesPage(sections: sections),
       ),
@@ -983,115 +988,119 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                 children: [
                   _WorkoutHeader(
                     title: widget.recommendation.sessionLabel,
-                  subtitle:
-                      '${_formatSessionSubtitle()} · $_completedSetCount/$_totalSetCount sets',
-                  elapsed: _formatElapsed(),
-                  isRunning: _isRunning,
-                  progress: _totalSetCount == 0
-                      ? 0
-                      : _completedSetCount / _totalSetCount,
-                  onToggleRunning: _toggleSessionRunning,
-                  onFinish: _finishWorkout,
-                  onCollapse: _confirmLeaveWorkout,
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      0,
-                      16,
-                      _hasActiveRestTimer ? 110 + bottomSafePadding : 40,
-                    ),
-                    children: [
-                      if (visibleSections.isEmpty)
-                        _EmptyWorkoutState(onAddExercise: _openAddExercise)
-                      else
-                        for (final entry in visibleSections) ...[
-                          SectionHeader(
-                            title: entry.section.label,
-                            sub: '${entry.items.length} '
-                                'exercise${entry.items.length == 1 ? '' : 's'}',
-                          ),
-                          for (var i = 0; i < entry.items.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 14),
-                            _WorkoutExerciseCard(
-                              key: ValueKey(entry.items[i].exercise.id),
-                              item: entry.items[i],
-                              sets: _setsFor(entry.items[i]),
-                              isTimed: _isTimedExercise(entry.items[i].exercise),
-                              targetLabel: _targetSummary(entry.items[i]),
-                              goalValue: entry.items[i].isProgression
-                                  ? _prescribedTargetFor(entry.items[i]).value
-                                  : null,
-                              restSeconds: _restSecondsByExercise[
-                                      entry.items[i].exercise.id] ??
-                                  0,
-                              onToggleSet: (number) =>
-                                  _toggleSet(entry.items[i], number),
-                              onValueChanged: (number, value) =>
-                                  _setSetValue(entry.items[i], number, value),
-                              onRemoveSet: (number) =>
-                                  _removeSet(entry.items[i], number),
-                              onRepFocusChanged: _onRepFocusChanged,
-                              onAddSet: () => _addSet(entry.items[i]),
-                              onRestTap: () => _pickRestInterval(entry.items[i]),
-                              onMenu: () => _openExerciseActions(entry.items[i]),
-                              onOpenDetail: () =>
-                                  _openExerciseDetail(entry.items[i]),
+                    subtitle:
+                        '${_formatSessionSubtitle()} · $_completedSetCount/$_totalSetCount sets',
+                    elapsed: _formatElapsed(),
+                    isRunning: _isRunning,
+                    progress: _totalSetCount == 0
+                        ? 0
+                        : _completedSetCount / _totalSetCount,
+                    onToggleRunning: _toggleSessionRunning,
+                    onFinish: _finishWorkout,
+                    onCollapse: _confirmLeaveWorkout,
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        0,
+                        16,
+                        _hasActiveRestTimer ? 110 + bottomSafePadding : 40,
+                      ),
+                      children: [
+                        if (visibleSections.isEmpty)
+                          _EmptyWorkoutState(onAddExercise: _openAddExercise)
+                        else
+                          for (final entry in visibleSections) ...[
+                            SectionHeader(
+                              title: entry.section.label,
+                              sub: '${entry.items.length} '
+                                  'exercise${entry.items.length == 1 ? '' : 's'}',
                             ),
+                            for (var i = 0; i < entry.items.length; i++) ...[
+                              if (i > 0) const SizedBox(height: 14),
+                              _WorkoutExerciseCard(
+                                key: ValueKey(entry.items[i].exercise.id),
+                                item: entry.items[i],
+                                sets: _setsFor(entry.items[i]),
+                                isTimed:
+                                    _isTimedExercise(entry.items[i].exercise),
+                                targetLabel: _targetSummary(entry.items[i]),
+                                goalValue: entry.items[i].isProgression
+                                    ? _prescribedTargetFor(entry.items[i]).value
+                                    : null,
+                                restSeconds: _restSecondsByExercise[
+                                        entry.items[i].exercise.id] ??
+                                    0,
+                                onToggleSet: (number) =>
+                                    _toggleSet(entry.items[i], number),
+                                onValueChanged: (number, value) =>
+                                    _setSetValue(entry.items[i], number, value),
+                                onRemoveSet: (number) =>
+                                    _removeSet(entry.items[i], number),
+                                onRepFocusChanged: _onRepFocusChanged,
+                                onAddSet: () => _addSet(entry.items[i]),
+                                onRestTap: () =>
+                                    _pickRestInterval(entry.items[i]),
+                                onMenu: () =>
+                                    _openExerciseActions(entry.items[i]),
+                                onOpenDetail: () =>
+                                    _openExerciseDetail(entry.items[i]),
+                              ),
+                            ],
                           ],
+                        if (visibleSections.isNotEmpty) ...[
+                          const SizedBox(height: 22),
+                          _AddExerciseButton(onTap: _openAddExercise),
                         ],
-                      if (visibleSections.isNotEmpty) ...[
-                        const SizedBox(height: 22),
-                        _AddExerciseButton(onTap: _openAddExercise),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            if (_hasActiveRestTimer)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 24 + bottomSafePadding,
-                child: Center(
-                  child: _RestCountdownPill(
-                    label: _formatCountdownLabel(restRemaining),
-                    onSkip: _clearActiveRestTimer,
-                  ),
-                ),
+                ],
               ),
-            Positioned(
-              left: 20,
-              right: 20,
-              top: 74,
-              child: IgnorePointer(
-                child: AnimatedSlide(
-                  offset: _toast == null ? const Offset(0, -0.3) : Offset.zero,
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOut,
-                  child: AnimatedOpacity(
-                    opacity: _toast == null ? 0 : 1,
+              if (_hasActiveRestTimer)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 24 + bottomSafePadding,
+                  child: Center(
+                    child: _RestCountdownPill(
+                      label: _formatCountdownLabel(restRemaining),
+                      onSkip: _clearActiveRestTimer,
+                    ),
+                  ),
+                ),
+              Positioned(
+                left: 20,
+                right: 20,
+                top: 74,
+                child: IgnorePointer(
+                  child: AnimatedSlide(
+                    offset:
+                        _toast == null ? const Offset(0, -0.3) : Offset.zero,
                     duration: const Duration(milliseconds: 240),
-                    child: Center(child: _WorkoutToast(message: _toast ?? '')),
+                    curve: Curves.easeOut,
+                    child: AnimatedOpacity(
+                      opacity: _toast == null ? 0 : 1,
+                      duration: const Duration(milliseconds: 240),
+                      child:
+                          Center(child: _WorkoutToast(message: _toast ?? '')),
+                    ),
                   ),
                 ),
               ),
-            ),
-            // Floats just above the keyboard while a reps field is focused.
-            if (_repFocusCount > 0)
-              Positioned(
-                right: 16,
-                bottom: 12,
-                child: _HideKeyboardButton(
-                  onTap: () =>
-                      FocusManager.instance.primaryFocus?.unfocus(),
+              // Floats just above the keyboard while a reps field is focused.
+              if (_repFocusCount > 0)
+                Positioned(
+                  right: 16,
+                  bottom: 12,
+                  child: _HideKeyboardButton(
+                    onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -1754,7 +1763,8 @@ class _WorkoutExerciseCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: set.completed ? AppColors.textMuted : AppColors.textSecondary,
+            color:
+                set.completed ? AppColors.textMuted : AppColors.textSecondary,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
@@ -1795,8 +1805,9 @@ class _WorkoutExerciseCard extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color:
-                    set.completed ? AppColors.accentPrimary : Colors.transparent,
+                color: set.completed
+                    ? AppColors.accentPrimary
+                    : Colors.transparent,
                 shape: BoxShape.circle,
                 border: set.completed
                     ? null
@@ -1838,7 +1849,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
       child: row,
     );
   }
-
 }
 
 /// Shared 5-column grid used by the set header and set rows:
@@ -2914,8 +2924,7 @@ class _ReorderExercisesPageState extends State<_ReorderExercisesPage> {
   void initState() {
     super.initState();
     _items = {
-      for (final entry in widget.sections)
-        entry.section: List.of(entry.items),
+      for (final entry in widget.sections) entry.section: List.of(entry.items),
     };
   }
 
@@ -3008,8 +3017,7 @@ class _ReorderExercisesPageState extends State<_ReorderExercisesPage> {
                             decoration: BoxDecoration(
                               border: index > 0
                                   ? const Border(
-                                      top:
-                                          BorderSide(color: AppColors.divider),
+                                      top: BorderSide(color: AppColors.divider),
                                     )
                                   : null,
                             ),
@@ -3025,8 +3033,7 @@ class _ReorderExercisesPageState extends State<_ReorderExercisesPage> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -3225,9 +3232,7 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
               ),
             ),
             Text(
-              _showBranches
-                  ? '${category.title} · step 2 of 2'
-                  : 'Step 1 of 2',
+              _showBranches ? '${category.title} · step 2 of 2' : 'Step 1 of 2',
               style: const TextStyle(
                 fontSize: 12.5,
                 color: AppColors.textSecondary,
@@ -3361,8 +3366,7 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
               color: selected ? AppColors.accentSoft : AppColors.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color:
-                    selected ? AppColors.accentPrimary : Colors.transparent,
+                color: selected ? AppColors.accentPrimary : Colors.transparent,
                 width: 1.5,
               ),
             ),
@@ -3393,13 +3397,10 @@ class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
                   ),
                 ),
                 Icon(
-                  selected
-                      ? Icons.check_circle_rounded
-                      : Icons.circle_outlined,
+                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
                   size: 20,
-                  color: selected
-                      ? AppColors.accentPrimary
-                      : AppColors.textMuted,
+                  color:
+                      selected ? AppColors.accentPrimary : AppColors.textMuted,
                 ),
               ],
             ),

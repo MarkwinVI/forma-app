@@ -97,6 +97,9 @@ class ExerciseLogService {
           id,
           title,
           session_type,
+          schedule_source,
+          planned_date,
+          planned_step_index,
           started_at,
           finished_at,
           workout_exercise_logs(
@@ -124,6 +127,9 @@ class ExerciseLogService {
     required DateTime startedAt,
     required DateTime finishedAt,
     required List<WorkoutExerciseLogInput> exercises,
+    String scheduleSource = 'planned',
+    DateTime? plannedDate,
+    int? plannedStepIndex,
   }) async {
     if (exercises.isEmpty) return null;
 
@@ -133,6 +139,12 @@ class ExerciseLogService {
           'user_id': userId,
           'title': title,
           'session_type': sessionType,
+          'schedule_source': scheduleSource,
+          if (plannedDate != null)
+            'planned_date':
+                DateTime(plannedDate.year, plannedDate.month, plannedDate.day)
+                    .toIso8601String(),
+          if (plannedStepIndex != null) 'planned_step_index': plannedStepIndex,
           // Store UTC so local-date logic (workout-complete state, schedule
           // rollover) can convert back with .toLocal() reliably.
           'started_at': startedAt.toUtc().toIso8601String(),
@@ -225,8 +237,7 @@ class ExerciseLogService {
       final exerciseId = map['exercise_id'] as String;
       for (final rawSet in map['sets'] as List<dynamic>? ?? const []) {
         final set = ExerciseSet.fromJson(rawSet as Map<String, dynamic>);
-        final value =
-            set.durationSeconds > 0 ? set.durationSeconds : set.reps;
+        final value = set.durationSeconds > 0 ? set.durationSeconds : set.reps;
         if (value > (bests[exerciseId] ?? 0)) {
           bests[exerciseId] = value;
         }
@@ -270,6 +281,11 @@ class ExerciseLogService {
       sessionType: map['session_type'] as String,
       startedAt: DateTime.parse(map['started_at'] as String).toLocal(),
       loggedAt: DateTime.parse(map['finished_at'] as String).toLocal(),
+      scheduleSource: map['schedule_source'] as String? ?? 'planned',
+      plannedDate: map['planned_date'] == null
+          ? null
+          : DateTime.parse(map['planned_date'] as String).toLocal(),
+      plannedStepIndex: map['planned_step_index'] as int?,
       exercises: exercises
           .map(
             (exercise) => PastWorkoutExercise(

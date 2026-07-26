@@ -4,6 +4,7 @@ import '../models/exercise_model.dart';
 import '../models/skill_category_model.dart';
 import '../models/skill_track_model.dart';
 import '../models/training_program_model.dart';
+import 'training_schedule_service.dart';
 
 class TrainingBranchOption {
   final String id;
@@ -73,12 +74,16 @@ class TrainingProgramService {
     Map<TrainingTrack, String> branchSelections = const {},
     Map<String, dynamic> sessionItemsConfig = const {},
     List<SkillTrack> skillTracks = const [],
+    DateTime? plannedDate,
+    int? plannedStepIndex,
+    bool affectsSchedule = true,
   }) {
     // Skills-as-tracks: when the user has skill tracks and no custom day
     // plan, sessions are built from the included tracks (any number per
     // movement pattern) instead of the 8 fixed lanes.
     if (skillTracks.any((track) => track.included)) {
-      final currentSessionType = sessionType ?? _defaultSessionTypeFor(programType);
+      final currentSessionType =
+          sessionType ?? _defaultSessionTypeFor(programType);
       final configuredItems = currentSessionType == TrainingSessionType.rest
           ? const <TrainingRecommendationItem>[]
           : _buildConfiguredItems(
@@ -98,6 +103,9 @@ class TrainingProgramService {
                     _trackBranchesForSession(currentSessionType, skillTracks),
                     progressMap,
                   )),
+        plannedDate: plannedDate,
+        plannedStepIndex: plannedStepIndex,
+        affectsSchedule: affectsSchedule,
       );
     }
 
@@ -125,6 +133,9 @@ class TrainingProgramService {
                       _fullBodyBranches(selectedBranches),
                       progressMap,
                     )),
+          plannedDate: plannedDate,
+          plannedStepIndex: plannedStepIndex,
+          affectsSchedule: affectsSchedule,
         );
       case TrainingProgramType.pushPull:
         final currentSessionType = sessionType ?? TrainingSessionType.push;
@@ -146,6 +157,9 @@ class TrainingProgramService {
                 progressMap,
                 selectedBranches,
               ),
+          plannedDate: plannedDate,
+          plannedStepIndex: plannedStepIndex,
+          affectsSchedule: affectsSchedule,
         );
       case TrainingProgramType.upperLower:
         final currentSessionType = sessionType ?? TrainingSessionType.upper;
@@ -167,6 +181,9 @@ class TrainingProgramService {
                 progressMap,
                 selectedBranches,
               ),
+          plannedDate: plannedDate,
+          plannedStepIndex: plannedStepIndex,
+          affectsSchedule: affectsSchedule,
         );
     }
   }
@@ -394,7 +411,17 @@ class TrainingProgramService {
   List<TrainingSessionType> scheduleCycleFor({
     required TrainingProgramType programType,
     String? scheduleVariant,
+    int frequencyPerWeek = 3,
   }) {
+    if (scheduleVariant == null ||
+        scheduleVariant.endsWith('_3x') ||
+        scheduleVariant.contains('_rest_')) {
+      return TrainingScheduleService().cycleFor(
+        programType: programType,
+        frequencyPerWeek: frequencyPerWeek,
+      );
+    }
+
     switch (scheduleVariant) {
       case 'push_rest_pull_rest_push_pull_rest':
         return const [
@@ -684,8 +711,7 @@ class TrainingProgramService {
   /// resolve forks after mastery.
   List<TrainingBranchOption> allBranchOptions() {
     return [
-      for (final track in TrainingTrack.values)
-        ...branchOptionsForTrack(track),
+      for (final track in TrainingTrack.values) ...branchOptionsForTrack(track),
     ];
   }
 

@@ -58,9 +58,13 @@ create table public.workout_sessions (
   user_id      uuid references auth.users(id) on delete cascade not null,
   title        text not null, -- 'Full Body' | 'Push' | 'Pull' | 'Upper' | 'Lower'
   session_type text not null, -- 'full_body' | 'push' | 'pull' | 'upper' | 'lower' | 'rest'
+  schedule_source text not null default 'planned', -- 'planned' | 'future_planned' | 'ad_hoc'
+  planned_date date,
+  planned_step_index int,
   started_at   timestamptz not null,
   finished_at  timestamptz not null,
-  created_at   timestamptz default now() not null
+  created_at   timestamptz default now() not null,
+  check (planned_step_index is null or planned_step_index >= 0)
 );
 
 create index workout_sessions_user_finished_idx
@@ -293,6 +297,8 @@ create table public.user_training_session_events (
   schedule_index  int not null,
   session_type    text not null, -- 'full_body' | 'push' | 'pull' | 'upper' | 'lower' | 'rest'
   action          text not null, -- 'completed' | 'skipped' | 'rest_taken'
+  planned_date    date,
+  workout_session_id uuid references public.workout_sessions(id) on delete set null,
   occurred_at     timestamptz default now() not null,
   notes           text,
   check (schedule_index >= 0)

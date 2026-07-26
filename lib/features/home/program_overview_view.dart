@@ -17,9 +17,11 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import 'program_day_editor_view.dart';
 import 'program_day_items.dart';
-import 'program_setup_view.dart' show GoalSkillGroup, GoalSkillOption, kGoalSkillGroups, kGoalSkillOptions;
+import 'program_setup_view.dart'
+    show GoalSkillGroup, GoalSkillOption, kGoalSkillGroups, kGoalSkillOptions;
 
 const _statusRed = Color(0xFFE5484D);
 
@@ -57,13 +59,6 @@ const _muscleStatusText = {
   _BalanceStatus.over: 'More volume than you need',
 };
 
-const _weekTemplates = <int, List<int>>{
-  2: [1, 0, 0, 1, 0, 0, 0],
-  3: [1, 0, 1, 0, 1, 0, 0],
-  4: [1, 1, 0, 1, 1, 0, 0],
-  5: [1, 1, 1, 0, 1, 1, 0],
-  6: [1, 1, 1, 1, 1, 1, 0],
-};
 const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 class ProgramOverviewView extends StatefulWidget {
@@ -149,8 +144,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     return const [];
   }
 
-  int get _trainingDaysPerWeek =>
-      _logic.program.frequencyPerWeek.clamp(2, 6);
+  int get _trainingDaysPerWeek => _logic.program.frequencyPerWeek.clamp(2, 6);
 
   Map<TrainingTrack, String> get _branchSelections => {
         ..._programService.defaultBranchSelections(),
@@ -161,15 +155,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       };
 
   List<TrainingSessionType> _weekPlan(int days, TrainingProgramType type) {
-    final sequence = _programService.trainingDaysForProgramType(type);
-    final template = _weekTemplates[days.clamp(2, 6)]!;
-    var next = 0;
-    return [
-      for (final on in template)
-        on == 1
-            ? sequence[(next++) % sequence.length]
-            : TrainingSessionType.rest,
-    ];
+    return TrainingScheduleService().cycleFor(
+      programType: type,
+      frequencyPerWeek: days,
+    );
   }
 
   Future<void> _saveLogic({
@@ -220,8 +209,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => _DaysSheet(
         current: _trainingDaysPerWeek,
-        weekPlanBuilder: (days) =>
-            _weekPlan(days, _logic.program.programType),
+        weekPlanBuilder: (days) => _weekPlan(days, _logic.program.programType),
       ),
     );
 
@@ -559,8 +547,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                             children: [
                               for (final skill in goalSkills)
                                 Container(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      10, 8, 13, 8),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 8, 13, 8),
                                   decoration: BoxDecoration(
                                     color: AppColors.surface2,
                                     borderRadius: BorderRadius.circular(999),
@@ -675,8 +663,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
 
   Widget _buildMuscleGroup(Map<String, int> muscleSets) {
     final under = kProgramMuscleGroups
-        .where((group) => _muscleStatus(muscleSets[group]!) ==
-            _BalanceStatus.under)
+        .where((group) =>
+            _muscleStatus(muscleSets[group]!) == _BalanceStatus.under)
         .toList();
     final over = kProgramMuscleGroups
         .where(
@@ -713,10 +701,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
             icon: programMuscleIcon(group),
             title: group,
             subtitle: _muscleStatusText[_muscleStatus(muscleSets[group]!)]!,
-            subtitleColor: _muscleStatus(muscleSets[group]!) ==
-                    _BalanceStatus.ok
-                ? AppColors.textSecondary
-                : _statusColor(_muscleStatus(muscleSets[group]!)),
+            subtitleColor:
+                _muscleStatus(muscleSets[group]!) == _BalanceStatus.ok
+                    ? AppColors.textSecondary
+                    : _statusColor(_muscleStatus(muscleSets[group]!)),
             ringValue: muscleSets[group]!,
             ringFraction: muscleSets[group]! / kProgramSetsMax,
             ringColor: _statusColor(_muscleStatus(muscleSets[group]!)),
@@ -1557,8 +1545,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
             : i == _position
                 ? ExerciseStatus.active
                 : ExerciseStatus.inactive;
-        final existing =
-            widget.progressMap[path[i]] ?? ExerciseStatus.inactive;
+        final existing = widget.progressMap[path[i]] ?? ExerciseStatus.inactive;
         if (existing != desired) {
           await _progressService.upsert(userId, path[i], desired);
           statusChanges[path[i]] = desired;
@@ -1732,8 +1719,8 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
                     _AdjustStepButton(
                       icon: Icons.remove_rounded,
                       onTap: shownTarget - step >= step
-                          ? () => setState(
-                              () => _targetValue = shownTarget - step)
+                          ? () =>
+                              setState(() => _targetValue = shownTarget - step)
                           : null,
                     ),
                     SizedBox(
@@ -1898,8 +1885,7 @@ class _AdjustStepButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 17,
-          color:
-              onTap == null ? AppColors.textMuted : AppColors.textPrimary,
+          color: onTap == null ? AppColors.textMuted : AppColors.textPrimary,
         ),
       ),
     );
@@ -1959,12 +1945,10 @@ class _MasterySheetState extends State<_MasterySheet> {
             _MasteryStepperRow(
               label: 'Rep exercises',
               valueLabel: '3 × $_reps reps',
-              onDecrease: _reps > _minReps
-                  ? () => setState(() => _reps -= 1)
-                  : null,
-              onIncrease: _reps < _maxReps
-                  ? () => setState(() => _reps += 1)
-                  : null,
+              onDecrease:
+                  _reps > _minReps ? () => setState(() => _reps -= 1) : null,
+              onIncrease:
+                  _reps < _maxReps ? () => setState(() => _reps += 1) : null,
             ),
             const SizedBox(height: 10),
             _MasteryStepperRow(
@@ -2179,8 +2163,7 @@ class _DaysSheetState extends State<_DaysSheet> {
                           const SizedBox(height: 5),
                           Container(
                             width: double.infinity,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                               color: plan[i] == TrainingSessionType.rest
                                   ? AppColors.surface2
@@ -2424,7 +2407,8 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
 
     return _SheetShell(
       title: 'Goal skills',
-      sub: 'Pick anything that excites you — Forma builds the path from where you are today',
+      sub:
+          'Pick anything that excites you — Forma builds the path from where you are today',
       expand: true,
       footer: PillButton(
         label: dirty ? 'Save goal skills' : 'No changes yet',
@@ -2453,9 +2437,8 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
   }
 
   List<Widget> _buildGroup(GoalSkillGroup group) {
-    final skills = kGoalSkillOptions
-        .where((skill) => skill.group == group.id)
-        .toList();
+    final skills =
+        kGoalSkillOptions.where((skill) => skill.group == group.id).toList();
     if (skills.isEmpty) return const [];
 
     final rows = <Widget>[];
@@ -2519,9 +2502,7 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
                 Icon(
                   skill.icon,
                   size: 22,
-                  color: on
-                      ? AppColors.accentPrimary
-                      : AppColors.textSecondary,
+                  color: on ? AppColors.accentPrimary : AppColors.textSecondary,
                 ),
                 if (on)
                   Container(

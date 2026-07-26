@@ -7,6 +7,7 @@ import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/training_program_service.dart';
+import '../../data/services/training_schedule_service.dart';
 
 enum HomeSkillMomentum { stalled, steady, improving }
 
@@ -52,8 +53,7 @@ class HomeStreakData {
     required this.hasWorkouts,
   });
 
-  bool get onTrack =>
-      plannedPerWeek > 0 && completedThisWeek >= plannedPerWeek;
+  bool get onTrack => plannedPerWeek > 0 && completedThisWeek >= plannedPerWeek;
 }
 
 /// Session-over-session totals for one exercise in the current program:
@@ -75,9 +75,8 @@ class HomeExercisePerformance {
 
   /// Latest session total minus the previous one; null with fewer than two
   /// logged sessions.
-  int? get sessionDelta => history.length >= 2
-      ? history.last - history[history.length - 2]
-      : null;
+  int? get sessionDelta =>
+      history.length >= 2 ? history.last - history[history.length - 2] : null;
 }
 
 /// One long-term goal skill picked in the training program, with progress
@@ -218,13 +217,19 @@ class HomeWeekStripDay {
   final DateTime date;
   final TrainingSessionType sessionType;
   final bool isCurrent;
+  final bool isSelected;
   final bool isCompleted;
+  final bool isMissed;
+  final int stepIndex;
 
   const HomeWeekStripDay({
     required this.date,
     required this.sessionType,
     required this.isCurrent,
+    this.isSelected = false,
     required this.isCompleted,
+    this.isMissed = false,
+    this.stepIndex = 0,
   });
 
   bool get isRestDay => sessionType == TrainingSessionType.rest;
@@ -388,16 +393,20 @@ class HomeDashboardMetricsCalculator {
     required List<PastWorkout> workouts,
     List<String> goalSkillIds = const [],
     int frequencyPerWeek = 3,
+    PastWorkout? completedWorkout,
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+    TrainingScheduleWindow? scheduleWindow,
     DateTime? now,
   }) {
     final cycle = trainingProgramService.scheduleCycleFor(
       programType: programType,
       scheduleVariant: scheduleVariant,
+      frequencyPerWeek: frequencyPerWeek,
     );
-    final completedWorkout = schedule.completedToday && workouts.isNotEmpty
-        ? workouts.first
-        : null;
+    final resolvedCompletedWorkout = completedWorkout ??
+        (schedule.completedToday && workouts.isNotEmpty
+            ? workouts.first
+            : null);
 
     final categoriesById = {
       for (final category in SkillCategoryCatalog.browsable())
@@ -407,7 +416,7 @@ class HomeDashboardMetricsCalculator {
     return HomeDashboardMetrics(
       today: buildTodaySummary(
         recommendation,
-        completedWorkout: completedWorkout,
+        completedWorkout: resolvedCompletedWorkout,
         pathOptions: resolveActivePathOptions(
           trainingProgramService: trainingProgramService,
           programType: programType,
@@ -423,6 +432,7 @@ class HomeDashboardMetricsCalculator {
         cycle: cycle,
         todayPosition: schedule.todayPosition,
         completedToday: schedule.completedToday,
+        scheduleWindow: scheduleWindow,
         now: now,
       ),
       streak: buildStreakData(
@@ -481,9 +491,9 @@ class HomeDashboardMetricsCalculator {
     }).length;
   }
 
-  /// Weekly streak: consecutive Monday-based weeks with at least one saved
-  /// workout, counting back from the current (or, if it has no workout yet,
-  /// the previous) week.
+  /// Weekly streak: consecutive completed Monday-based weeks that met the
+  /// user's planned weekly sessions. The running week can extend the streak
+  /// once it reaches the goal, but cannot break it before Sunday is over.
   static HomeStreakData buildStreakData({
     required List<PastWorkout> workouts,
     required int plannedPerWeek,
@@ -492,22 +502,23 @@ class HomeDashboardMetricsCalculator {
     final today = _dateOnly((now ?? DateTime.now()).toLocal());
     final thisWeek = today.subtract(Duration(days: today.weekday - 1));
 
-    final weeksWithWorkouts = <DateTime>{};
+    final sessionsPerWeek = <DateTime, int>{};
     var completedThisWeek = 0;
     for (final workout in workouts) {
       final day = _dateOnly(workout.loggedAt.toLocal());
-      weeksWithWorkouts.add(day.subtract(Duration(days: day.weekday - 1)));
+      final week = day.subtract(Duration(days: day.weekday - 1));
+      sessionsPerWeek[week] = (sessionsPerWeek[week] ?? 0) + 1;
       if (!day.isBefore(thisWeek) && !day.isAfter(today)) {
         completedThisWeek++;
       }
     }
 
     var cursor = thisWeek;
-    if (!weeksWithWorkouts.contains(cursor)) {
+    if ((sessionsPerWeek[cursor] ?? 0) < plannedPerWeek) {
       cursor = cursor.subtract(const Duration(days: 7));
     }
     var streakWeeks = 0;
-    while (weeksWithWorkouts.contains(cursor)) {
+    while ((sessionsPerWeek[cursor] ?? 0) >= plannedPerWeek) {
       streakWeeks++;
       cursor = cursor.subtract(const Duration(days: 7));
     }
@@ -639,9 +650,14 @@ class HomeDashboardMetricsCalculator {
       final lastWorkoutDate = _dateOnly(lastWorkoutAt.toLocal());
       completedToday = lastWorkoutDate.isAtSameMomentAs(today);
 
-      // The stored step is due the day after the last workout. Rest steps
-      // whose day has passed roll forward; training steps wait to be done.
-      var due = lastWorkoutDate.add(const Duration(days: 1));
+      if (!completedToday) {
+        index = (index + 1) % cycle.length;
+      }
+
+      // The next step is due the day after the last workout. Rest steps whose
+      // day has passed roll forward; training steps wait to be done.
+      var due =
+          completedToday ? today : lastWorkoutDate.add(const Duration(days: 1));
       while (cycle[index] == TrainingSessionType.rest && due.isBefore(today)) {
         index = (index + 1) % cycle.length;
         due = due.add(const Duration(days: 1));
@@ -651,9 +667,7 @@ class HomeDashboardMetricsCalculator {
     return HomeScheduleResolution(
       effectiveStepIndex: index,
       effectiveSessionType: cycle[index],
-      todayPosition: completedToday
-          ? (index - 1 + cycle.length) % cycle.length
-          : index,
+      todayPosition: index,
       completedToday: completedToday,
     );
   }
@@ -724,8 +738,30 @@ class HomeDashboardMetricsCalculator {
     required List<TrainingSessionType> cycle,
     required int todayPosition,
     required bool completedToday,
+    TrainingScheduleWindow? scheduleWindow,
     DateTime? now,
   }) {
+    if (scheduleWindow != null) {
+      return HomeWeekStripData(
+        days: [
+          for (final day in scheduleWindow.days)
+            HomeWeekStripDay(
+              date: day.date,
+              sessionType: day.sessionType,
+              isCurrent: day.isToday,
+              isSelected: day.isSelected,
+              isCompleted: day.isCompleted,
+              isMissed: day.isMissed,
+              stepIndex: day.stepIndex,
+            ),
+        ],
+        completedSessions: scheduleWindow.completedSessions,
+        totalSessions: scheduleWindow.totalSessions,
+        supportingText:
+            '${scheduleWindow.completedSessions} of ${scheduleWindow.totalSessions} sessions done. Sessions roll forward, so a missed day becomes your next training day.',
+      );
+    }
+
     if (cycle.isEmpty) {
       return const HomeWeekStripData(
         days: [],
@@ -942,9 +978,8 @@ class HomeDashboardMetricsCalculator {
             workingExerciseId: currentExercise?.id,
             progressMap: progressMap,
           ),
-          workingPosition: workingIndex >= 0
-              ? workingIndex + 1
-              : option.exerciseIds.length,
+          workingPosition:
+              workingIndex >= 0 ? workingIndex + 1 : option.exerciseIds.length,
           totalNodes: option.exerciseIds.length,
           level: (progressScore * 10).round(),
           progressPercent: progressPercent,
