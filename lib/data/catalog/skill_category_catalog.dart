@@ -236,6 +236,13 @@ class SkillCategoryCatalog {
         'full_planche_hold',
       ],
     },
+    unlockRequirement: SkillCategoryUnlockRequirement(
+      exerciseId: 'diamond_push_up',
+      message:
+          'This tree is locked until you unlock Diamond Pushup in the Pushups track.',
+      ctaLabel: 'Go to Pushups',
+      targetSkillCategoryId: pushupsId,
+    ),
   );
 
   static const SkillCategory squat = SkillCategory(
@@ -342,6 +349,13 @@ class SkillCategoryCatalog {
         'muscle_up',
       ],
     },
+    unlockRequirement: SkillCategoryUnlockRequirement(
+      exerciseId: 'pull_up',
+      message:
+          'This tree is locked until you unlock Pull-up in the Pullups track.',
+      ctaLabel: 'Go to Pullups',
+      targetSkillCategoryId: pullupsId,
+    ),
   );
 
   static const SkillCategory handstandPushups = SkillCategory(

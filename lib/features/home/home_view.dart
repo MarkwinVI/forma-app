@@ -203,9 +203,12 @@ class _HomeViewState extends State<HomeView> {
           TrainingScheduleService.dateOnly(workout.loggedAt):
               TrainingSessionTypeX.fromDbValue(workout.sessionType),
     };
+    final dayMask =
+        TrainingScheduleService.dayMaskFrom(snapshot.program.variationRules);
     final scheduleWindow = _trainingScheduleService.buildWindow(
       programType: programType,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      dayMask: dayMask,
       currentStepIndex: snapshot.state.nextStepIndex,
       currentSessionType: snapshot.state.nextSessionType,
       lastPlannedWorkoutAt: anchorDate,
@@ -216,6 +219,7 @@ class _HomeViewState extends State<HomeView> {
     final calendarWindow = _trainingScheduleService.buildWindow(
       programType: programType,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      dayMask: dayMask,
       currentStepIndex: snapshot.state.nextStepIndex,
       currentSessionType: snapshot.state.nextSessionType,
       lastPlannedWorkoutAt: anchorDate,
@@ -299,6 +303,7 @@ class _HomeViewState extends State<HomeView> {
         workouts: _pastWorkouts,
         goalSkillIds: snapshot.program.goalSkillIds,
         frequencyPerWeek: snapshot.program.frequencyPerWeek,
+        dayMask: dayMask,
         scheduleWindow: scheduleWindow,
         completedWorkout: completedWorkout,
         now: now,

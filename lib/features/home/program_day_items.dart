@@ -105,10 +105,14 @@ class ProgramSessionPlan {
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
     List<SkillTrack> skillTracks = const [],
+    int? weekday,
   }) {
-    final raw = sessionItemsConfig[sessionType.dbValue];
-    if (raw is Map) {
-      final sessionMap = Map<String, dynamic>.from(raw);
+    final sessionMap = programDayConfig(
+      sessionItemsConfig,
+      sessionType,
+      weekday: weekday,
+    );
+    if (sessionMap != null) {
       final items = <ProgramDayItem>[];
       for (final component
           in const ['warmup', 'skill', 'strength', 'cooldown']) {
@@ -176,19 +180,35 @@ class ProgramSessionPlan {
     required TrainingProgramType programType,
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
+    List<TrainingSessionType>? weekCycle,
   }) {
     final coverage = <ExerciseCategory, List<ProgramDayItem>>{
       for (final category in coverageOrder) category: <ProgramDayItem>[],
     };
 
-    for (final sessionType in service.trainingDaysForProgramType(programType)) {
+    // With a week cycle, coverage is read off the days actually trained, so
+    // days edited on their own count for what they really hold.
+    final days = <({TrainingSessionType sessionType, int? weekday})>[
+      if (weekCycle == null)
+        for (final sessionType in service.trainingDaysForProgramType(
+          programType,
+        ))
+          (sessionType: sessionType, weekday: null)
+      else
+        for (var i = 0; i < weekCycle.length; i++)
+          if (weekCycle[i] != TrainingSessionType.rest)
+            (sessionType: weekCycle[i], weekday: i),
+    ];
+
+    for (final day in days) {
       final items = loadDay(
         service: service,
         sessionItemsConfig: sessionItemsConfig,
         programType: programType,
-        sessionType: sessionType,
+        sessionType: day.sessionType,
         branchSelections: branchSelections,
         progressMap: progressMap,
+        weekday: day.weekday,
       );
       for (final item in items) {
         coverage[item.category]!.add(item);
@@ -229,6 +249,12 @@ class ProgramSessionPlan {
 
     return sets;
   }
+
+  /// Which muscle groups a movement pattern trains. Muscles are a property
+  /// of the pattern, not of the individual exercise, so every step of a tree
+  /// reports the same groups.
+  static List<String> musclesForCategory(ExerciseCategory category) =>
+      _musclesForCategory[category] ?? const [];
 
   static const Map<ExerciseCategory, List<String>> _musclesForCategory = {
     ExerciseCategory.verticalPull: ['Back', 'Arms'],

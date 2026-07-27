@@ -1,23 +1,33 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/reorder_exercises_page.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
-import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
+import '../exercises/exercise_detail_view.dart';
 import 'program_day_items.dart';
 
-/// Full-page editor for one training day: a flat exercise list with
-/// remove, reorder, per-exercise set volume, and a two-step add flow
-/// (skill path with one active branch per tree, or a single lift).
+/// Destructive action colour, matching the design's red.
+const _dangerRed = Color(0xFFFF6B57);
+
+/// Full-page editor for one training day: a flat exercise list where each
+/// row opens its own options — reorder, replace, remove — and Add exercise
+/// goes straight to the exercise search.
 class ProgramDayEditorView extends StatefulWidget {
   final TrainingSessionType sessionType;
+
+  /// Which weekday is being edited, Monday first. Edits are saved against
+  /// this day alone, so two days running the same session can differ.
+  final int weekday;
+
   final TrainingProgramType programType;
   final Map<TrainingTrack, String> branchSelections;
   final Map<String, ExerciseStatus> progressMap;
@@ -27,6 +37,7 @@ class ProgramDayEditorView extends StatefulWidget {
   const ProgramDayEditorView({
     super.key,
     required this.sessionType,
+    required this.weekday,
     required this.programType,
     required this.branchSelections,
     required this.progressMap,
@@ -43,10 +54,9 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
 
   late List<ProgramDayItem> _items;
   late String _initialSerialized;
-  String? _expandedId;
   bool _saving = false;
 
-  String get _dayTitle => programDayTitle(widget.sessionType);
+  String get _dayTitle => kWeekdayNames[widget.weekday];
 
   @override
   void initState() {
@@ -58,6 +68,7 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
       sessionType: widget.sessionType,
       branchSelections: widget.branchSelections,
       progressMap: widget.progressMap,
+      weekday: widget.weekday,
     );
     _initialSerialized = _serialized();
   }
@@ -70,8 +81,10 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     if (_saving) return;
     setState(() => _saving = true);
 
+    // Written against this weekday only — the other days running the same
+    // session keep whatever they had.
     final config = Map<String, dynamic>.from(widget.sessionItemsConfig);
-    config[widget.sessionType.dbValue] =
+    config[programDayConfigKey(widget.sessionType, weekday: widget.weekday)] =
         ProgramSessionPlan.serializeDay(_items);
 
     try {
@@ -81,118 +94,135 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save $_dayTitle day: $error')),
+        SnackBar(content: Text('Failed to save $_dayTitle: $error')),
       );
       setState(() => _saving = false);
     }
   }
 
   void _removeItem(String id) {
-    setState(() {
-      _items.removeWhere((item) => item.id == id);
-      if (_expandedId == id) _expandedId = null;
-    });
+    setState(() => _items.removeWhere((item) => item.id == id));
   }
 
-  void _patchItem(String id, {int? sets, String? reps}) {
-    setState(() {
-      final index = _items.indexWhere((item) => item.id == id);
-      if (index == -1) return;
-      _items[index] = _items[index].copyWith(sets: sets, reps: reps);
-    });
-  }
-
-  /// One active branch per skill tree per day: picking a new branch replaces
-  /// the tree's current one in place; picking the active one removes it.
-  void _pickBranch(SkillCategory category, SkillCategoryBranch branch) {
-    setState(() {
-      final index = _items.indexWhere(
-        (item) =>
-            item.kind == ProgramDayItemKind.progression &&
-            item.skillCategoryId == category.id,
+  ProgramDayItem _itemFor(Exercise exercise) => ProgramDayItem(
+        id: newProgramItemId(),
+        kind: ProgramDayItemKind.exercise,
+        name: exercise.name,
+        exerciseId: exercise.id,
       );
 
-      if (index >= 0 && _items[index].branchId == branch.id) {
-        _items.removeAt(index);
+  /// Both adding and replacing open the exercise search. Replacing takes the
+  /// first tap and drops it into that row's slot; adding accumulates picks
+  /// and appends them all at once.
+  Future<void> _openAddPicker({int? replacingIndex}) async {
+    final picked = await Navigator.of(context).push<List<Exercise>>(
+      MaterialPageRoute(
+        builder: (_) => _AddExercisePage(
+          excludedIds: {
+            for (final item in _items)
+              if (item.exerciseId != null) item.exerciseId!,
+          },
+          progressMap: widget.progressMap,
+          singlePick: replacingIndex != null,
+        ),
+      ),
+    );
+    if (picked == null || picked.isEmpty || !mounted) return;
+
+    setState(() {
+      if (replacingIndex != null && replacingIndex < _items.length) {
+        _items[replacingIndex] = _itemFor(picked.first);
         return;
       }
-
-      final current = ProgramSessionPlan.currentExerciseForPath(
-        skillCategoryId: category.id,
-        branchId: branch.id,
-        progressMap: widget.progressMap,
-      );
-      final item = ProgramDayItem(
-        id: newProgramItemId(),
-        kind: ProgramDayItemKind.progression,
-        name: current?.name ??
-            '${programBranchLabel(category, branch)} ${category.title}',
-        skillCategoryId: category.id,
-        branchId: branch.id,
-        exerciseId: current?.id,
-      );
-
-      if (index >= 0) {
-        _items[index] = item;
-      } else {
-        _items.add(item);
-      }
+      _items.addAll(picked.map(_itemFor));
     });
   }
 
-  void _toggleLift(Exercise exercise) {
-    setState(() {
-      final index = _items.indexWhere(
-        (item) =>
-            item.kind == ProgramDayItemKind.exercise &&
-            item.exerciseId == exercise.id,
-      );
-      if (index >= 0) {
-        _items.removeAt(index);
-      } else {
-        _items.add(
-          ProgramDayItem(
-            id: newProgramItemId(),
-            kind: ProgramDayItemKind.exercise,
-            name: exercise.name,
-            exerciseId: exercise.id,
-          ),
-        );
-      }
-    });
-  }
+  /// Options for one row — the same menu the live workout shows, minus the
+  /// things that only make sense mid-session.
+  Future<void> _openItemActions(ProgramDayItem item) async {
+    final index = _items.indexWhere((entry) => entry.id == item.id);
+    if (index < 0) return;
 
-  Future<void> _openAddPicker() async {
-    setState(() => _expandedId = null);
-    final kind = await showModalBottomSheet<_PickerKind>(
+    final exercise = item.exerciseId == null
+        ? null
+        : ExerciseCatalog.findById(item.exerciseId!);
+
+    final action = await showModalBottomSheet<_ItemAction>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (_) => _AddKindSheet(dayTitle: _dayTitle),
+      builder: (_) => _ItemMenuSheet(
+        title: item.name,
+        subtitle: _itemSubtitle(item),
+        icon: programPatternIcon(item.category),
+        hasExercise: exercise != null,
+        canReorder: _items.length > 1,
+      ),
     );
-    if (kind == null || !mounted) return;
+    if (action == null || !mounted) return;
 
-    if (kind == _PickerKind.path) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => _SkillTreePickerPage(
-            dayTitle: _dayTitle,
-            progressMap: widget.progressMap,
-            items: () => _items,
-            onPickBranch: _pickBranch,
-          ),
-        ),
-      );
-    } else {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => _LiftPickerPage(
-            items: () => _items,
-            onToggleLift: _toggleLift,
-          ),
-        ),
-      );
+    switch (action) {
+      case _ItemAction.howToPerform:
+        if (exercise != null) {
+          await openExerciseDetailView<void>(
+            context,
+            exercise: exercise,
+            skillCategoryId: item.skillCategoryId,
+          );
+        }
+      case _ItemAction.history:
+        if (exercise != null) {
+          await openExerciseDetailView<void>(
+            context,
+            exercise: exercise,
+            skillCategoryId: item.skillCategoryId,
+            initialTab: ExerciseDetailTab.history,
+          );
+        }
+      case _ItemAction.reorder:
+        await _openReorder();
+      case _ItemAction.replace:
+        await _openAddPicker(replacingIndex: index);
+      case _ItemAction.remove:
+        _removeItem(item.id);
     }
+  }
+
+  Future<void> _openReorder() async {
+    if (_items.length < 2) return;
+
+    final order = await Navigator.of(context).push<List<List<String>>>(
+      MaterialPageRoute(
+        builder: (_) => ReorderExercisesPage(
+          sections: [
+            ReorderExercisesSection(
+              entries: [
+                for (final item in _items)
+                  ReorderExerciseEntry(
+                    id: item.id,
+                    name: item.name,
+                    subtitle: _itemSubtitle(item),
+                    icon: programPatternIcon(item.category),
+                  ),
+              ],
+            ),
+          ],
+          footnote: 'Exercises run in this order every time this workout '
+              'comes up.',
+        ),
+      ),
+    );
+    if (order == null || !mounted) return;
+
+    final byId = {for (final item in _items) item.id: item};
+    setState(() {
+      _items = [
+        for (final id in order.first)
+          if (byId[id] != null) byId[id]!,
+      ];
+    });
   }
 
   @override
@@ -201,126 +231,100 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: AppColors.bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.chevron_left_rounded,
-            size: 30,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$_dayTitle day',
-              style: const TextStyle(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              '${_items.length} exercises · hold ≡ to reorder',
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        titleSpacing: 0,
-      ),
       body: SafeArea(
-        top: false,
-        child: Column(
+        bottom: false,
+        child: Stack(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SurfaceCard(
-                      clip: true,
-                      child: Column(
-                        children: [
-                          if (_items.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(18),
-                              child: Text(
-                                'Nothing planned for $_dayTitle yet — add your first exercise below.',
-                                style: const TextStyle(
-                                  fontSize: 13.5,
-                                  color: AppColors.textSecondary,
-                                  height: 1.5,
-                                ),
-                              ),
-                            )
-                          else
-                            ReorderableListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              buildDefaultDragHandles: false,
-                              itemCount: _items.length,
-                              onReorder: (oldIndex, newIndex) {
-                                setState(() {
-                                  if (newIndex > oldIndex) newIndex -= 1;
-                                  final item = _items.removeAt(oldIndex);
-                                  _items.insert(newIndex, item);
-                                });
-                              },
-                              proxyDecorator: (child, _, __) => Material(
-                                color: AppColors.surface2,
-                                borderRadius: BorderRadius.circular(14),
-                                child: child,
-                              ),
-                              itemBuilder: (context, index) => _buildItemRow(
-                                index,
-                                _items[index],
-                              ),
-                            ),
-                          _AddExerciseRow(
-                            withDivider: _items.isNotEmpty,
-                            onTap: _openAddPicker,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Pressable(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 12, bottom: 4),
+                          child: Icon(
+                            Icons.chevron_left_rounded,
+                            size: 26,
+                            color: AppColors.textSecondary,
                           ),
-                        ],
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(2, 10, 2, 0),
-                      child: Text(
-                        'Tap the sets pill to adjust volume. Removing a skill path pauses it — progress is kept.',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.textMuted,
-                          height: 1.5,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(
+                        _dayTitle,
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.9,
+                          height: 1.05,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(22, 4, 22, 130),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_items.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Text(
+                              'Nothing planned for $_dayTitle yet — add your '
+                              'first exercise below.',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                                height: 1.55,
+                              ),
+                            ),
+                          )
+                        else
+                          for (final item in _items)
+                            _ItemRow(
+                              item: item,
+                              subtitle: _itemSubtitle(item),
+                              onOptions: () => _openItemActions(item),
+                            ),
+                        _AddExerciseRow(onTap: _openAddPicker),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              decoration: const BoxDecoration(
-                color: AppColors.bg,
-                border: Border(top: BorderSide(color: AppColors.divider)),
-              ),
+            Positioned(
+              left: 22,
+              right: 22,
+              bottom: MediaQuery.of(context).padding.bottom + 24,
               child: _saving
                   ? const SizedBox(
                       height: 52,
                       child: Center(child: LoadingIndicator()),
                     )
-                  : PillButton(
-                      label: dirty ? 'Save $_dayTitle day' : 'No changes yet',
-                      onTap: dirty ? _save : null,
+                  : DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x73000000),
+                            offset: Offset(0, 10),
+                            blurRadius: 30,
+                          ),
+                        ],
+                      ),
+                      child: PillButton(
+                        label: dirty ? 'Save $_dayTitle' : 'No changes yet',
+                        onTap: dirty ? _save : null,
+                      ),
                     ),
             ),
           ],
@@ -329,245 +333,7 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     );
   }
 
-  Widget _buildItemRow(int index, ProgramDayItem item) {
-    final open = _expandedId == item.id;
-    final isPath = item.kind == ProgramDayItemKind.progression;
-
-    return Container(
-      key: ValueKey(item.id),
-      decoration: BoxDecoration(
-        color: open ? AppColors.cardHighlight : Colors.transparent,
-        border: index > 0
-            ? const Border(top: BorderSide(color: AppColors.divider))
-            : null,
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 62,
-            child: Row(
-              children: [
-                const SizedBox(width: 16),
-                IconTile(icon: programPatternIcon(item.category), size: 38),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Pressable(
-                    onTap: () => setState(
-                      () => _expandedId = open ? null : item.id,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.15,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          _itemSubtitle(item),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Pressable(
-                  onTap: () => setState(
-                    () => _expandedId = open ? null : item.id,
-                  ),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: open ? AppColors.accentSoft : AppColors.surface2,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Text(
-                      isPath
-                          ? '${item.sets} sets'
-                          : '${item.sets} × ${item.reps}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: open
-                            ? AppColors.accentPrimary
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Pressable(
-                  onTap: () => _removeItem(item.id),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface2,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.remove_rounded,
-                      size: 17,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                ReorderableDragStartListener(
-                  index: index,
-                  child: const SizedBox(
-                    width: 40,
-                    height: 44,
-                    child: Icon(
-                      Icons.drag_handle_rounded,
-                      size: 19,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (open) _buildItemConfig(item),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemConfig(ProgramDayItem item) {
-    final isPath = item.kind == ProgramDayItemKind.progression;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(65, 0, 18, 15),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 36,
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Sets',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                _StepButton(
-                  icon: Icons.remove_rounded,
-                  onTap: () => _patchItem(
-                    item.id,
-                    sets: item.sets > 1 ? item.sets - 1 : 1,
-                  ),
-                ),
-                SizedBox(
-                  width: 40,
-                  child: Text(
-                    '${item.sets}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                _StepButton(
-                  icon: Icons.add_rounded,
-                  onTap: () => _patchItem(
-                    item.id,
-                    sets: item.sets < 6 ? item.sets + 1 : 6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isPath)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text(
-                'Reps follow your level on this path — Forma sets them each session.',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textMuted,
-                  height: 1.5,
-                ),
-              ),
-            )
-          else
-            SizedBox(
-              height: 36,
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Reps',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  for (final option in kProgramRepOptions) ...[
-                    const SizedBox(width: 5),
-                    Pressable(
-                      onTap: () => _patchItem(item.id, reps: option),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 11,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: item.reps == option
-                              ? AppColors.accentSoft
-                              : AppColors.surface2,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: item.reps == option
-                                ? AppColors.accentPrimary
-                                : Colors.transparent,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Text(
-                          option,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: item.reps == option
-                                ? AppColors.accentPrimary
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
+  /// "Vertical pull" — what the row and the options sheet both read.
   String _itemSubtitle(ProgramDayItem item) {
     if (item.kind == ProgramDayItemKind.progression) {
       final category = item.skillCategoryId == null
@@ -579,61 +345,243 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
           orElse: () => category.branches.first,
         );
         return '${programBranchLabel(category, branch)} '
-            '${category.title.toLowerCase()} · advances automatically';
+            '${category.title.toLowerCase()}';
       }
-      return 'Skill path · advances automatically';
+      return 'Skill path';
     }
     return programPatternLabel(item.category);
   }
 }
 
-class _StepButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
+/// One exercise in the workout: name, what it trains, and a single options
+/// button — everything else lives in the sheet behind it.
+class _ItemRow extends StatelessWidget {
+  final ProgramDayItem item;
+  final String subtitle;
+  final VoidCallback onOptions;
 
-  const _StepButton({required this.icon, required this.onTap});
+  const _ItemRow({
+    required this.item,
+    required this.subtitle,
+    required this.onOptions,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: const BoxDecoration(
-          color: AppColors.surface2,
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 15, color: AppColors.textPrimary),
+    return Container(
+      padding: const EdgeInsets.only(top: 15, bottom: 17),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.25,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Pressable(
+            onTap: onOptions,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.more_horiz_rounded,
+                size: 17,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _AddExerciseRow extends StatelessWidget {
-  final bool withDivider;
-  final VoidCallback onTap;
+enum _ItemAction { howToPerform, history, reorder, replace, remove }
 
-  const _AddExerciseRow({required this.withDivider, required this.onTap});
+/// The row's options, grouped the way the live workout groups them: what the
+/// exercise is, then what you can do to the workout.
+class _ItemMenuSheet extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool hasExercise;
+  final bool canReorder;
+
+  const _ItemMenuSheet({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.hasExercise,
+    required this.canReorder,
+  });
 
   @override
   Widget build(BuildContext context) {
+    void pick(_ItemAction action) => Navigator.of(context).pop(action);
+
+    return SheetShell(
+      title: title,
+      sub: subtitle,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SurfaceCard(
+              clip: true,
+              child: Column(
+                children: [
+                  _MenuRow(
+                    label: 'How to perform',
+                    enabled: hasExercise,
+                    onTap: () => pick(_ItemAction.howToPerform),
+                  ),
+                  _MenuRow(
+                    label: 'History',
+                    enabled: hasExercise,
+                    withDivider: true,
+                    onTap: () => pick(_ItemAction.history),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SurfaceCard(
+              clip: true,
+              child: Column(
+                children: [
+                  _MenuRow(
+                    label: 'Reorder exercises',
+                    enabled: canReorder,
+                    onTap: () => pick(_ItemAction.reorder),
+                  ),
+                  _MenuRow(
+                    label: 'Replace exercise',
+                    withDivider: true,
+                    onTap: () => pick(_ItemAction.replace),
+                  ),
+                  _MenuRow(
+                    label: 'Remove exercise',
+                    danger: true,
+                    withDivider: true,
+                    onTap: () => pick(_ItemAction.remove),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  final String label;
+  final bool danger;
+  final bool enabled;
+  final bool withDivider;
+  final VoidCallback onTap;
+
+  const _MenuRow({
+    required this.label,
+    this.danger = false,
+    this.enabled = true,
+    this.withDivider = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = !enabled
+        ? AppColors.textMuted
+        : danger
+            ? _dangerRed
+            : AppColors.textPrimary;
+
     return Pressable(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
         decoration: BoxDecoration(
           border: withDivider
               ? const Border(top: BorderSide(color: AppColors.divider))
               : null,
         ),
         child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                  letterSpacing: -0.25,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: enabled ? AppColors.textMuted : AppColors.surface3,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddExerciseRow extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddExerciseRow({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 18, bottom: 4),
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 20,
-              height: 20,
+              width: 24,
+              height: 24,
               decoration: const BoxDecoration(
                 color: AppColors.accentSoft,
                 shape: BoxShape.circle,
@@ -641,7 +589,7 @@ class _AddExerciseRow extends StatelessWidget {
               alignment: Alignment.center,
               child: const Icon(
                 Icons.add_rounded,
-                size: 14,
+                size: 16,
                 color: AppColors.accentPrimary,
               ),
             ),
@@ -649,7 +597,7 @@ class _AddExerciseRow extends StatelessWidget {
             const Text(
               'Add exercise',
               style: TextStyle(
-                fontSize: 14.5,
+                fontSize: 15.5,
                 fontWeight: FontWeight.w700,
                 color: AppColors.accentPrimary,
               ),
@@ -661,544 +609,49 @@ class _AddExerciseRow extends StatelessWidget {
   }
 }
 
-enum _PickerKind { path, fixed }
 
-/// Step 1 of the add flow: pick what kind of exercise to add. Selecting a
-/// kind closes the sheet and opens a full-page picker.
-class _AddKindSheet extends StatelessWidget {
-  final String dayTitle;
-
-  const _AddKindSheet({required this.dayTitle});
-
-  @override
-  Widget build(BuildContext context) {
-    const options = [
-      (
-        kind: _PickerKind.path,
-        icon: Icons.route_rounded,
-        label: 'Skill path',
-        sub:
-            'Advances automatically as you level up — one path, many progressions',
-      ),
-      (
-        kind: _PickerKind.fixed,
-        icon: Icons.fitness_center,
-        label: 'Single lift',
-        sub: 'One fixed exercise — you progress by load and reps',
-      ),
-    ];
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.divider)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Add to $dayTitle',
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          const Text(
-                            'What kind of exercise?',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Pressable(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.close_rounded,
-                          size: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Column(
-              children: [
-                for (final option in options)
-                  Pressable(
-                    onTap: () => Navigator.of(context).pop(option.kind),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          IconTile(
-                            icon: option.icon,
-                            size: 44,
-                            tint: option.kind == _PickerKind.path,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  option.label,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                    letterSpacing: -0.2,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  option.sub,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textSecondary,
-                                    height: 1.45,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            size: 20,
-                            color: AppColors.textMuted,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-AppBar _pickerAppBar(
-  BuildContext context, {
-  required String title,
-  required String sub,
-}) {
-  return AppBar(
-    backgroundColor: AppColors.bg,
-    surfaceTintColor: AppColors.bg,
-    elevation: 0,
-    leading: IconButton(
-      icon: const Icon(
-        Icons.chevron_left_rounded,
-        size: 30,
-        color: AppColors.textPrimary,
-      ),
-      onPressed: () => Navigator.of(context).pop(),
-    ),
-    titleSpacing: 0,
-    title: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 17.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.2,
-          ),
-        ),
-        Text(
-          sub,
-          style: const TextStyle(
-            fontSize: 12.5,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-/// Full-page list of skill trees; tapping one opens its branches.
-class _SkillTreePickerPage extends StatefulWidget {
-  final String dayTitle;
+/// Full-screen exercise search. Every exercise is a step of a skill tree, so
+/// results lead with the steps that continue a path the user is already on,
+/// and filtering is by movement pattern and the muscles that pattern trains.
+///
+/// Pops the picked exercises, or null when cancelled.
+class _AddExercisePage extends StatefulWidget {
+  /// Exercises already in the day — nothing to add, so they are left out.
+  final Set<String> excludedIds;
   final Map<String, ExerciseStatus> progressMap;
-  final List<ProgramDayItem> Function() items;
-  final void Function(SkillCategory category, SkillCategoryBranch branch)
-      onPickBranch;
 
-  const _SkillTreePickerPage({
-    required this.dayTitle,
+  /// Replacing takes the first tap and returns; adding accumulates picks.
+  final bool singlePick;
+
+  const _AddExercisePage({
+    required this.excludedIds,
     required this.progressMap,
-    required this.items,
-    required this.onPickBranch,
+    this.singlePick = false,
   });
 
   @override
-  State<_SkillTreePickerPage> createState() => _SkillTreePickerPageState();
+  State<_AddExercisePage> createState() => _AddExercisePageState();
 }
 
-class _SkillTreePickerPageState extends State<_SkillTreePickerPage> {
-  List<SkillCategory> get _trees => SkillCategoryCatalog.browsable()
-      .where((category) => _selectableBranches(category).isNotEmpty)
-      .toList();
+class _AddExercisePageState extends State<_AddExercisePage> {
+  final _searchController = TextEditingController();
 
-  List<SkillCategoryBranch> _selectableBranches(SkillCategory category) {
-    return category.branches
-        .where((branch) => category.pathFor(branch.id).isNotEmpty)
-        .toList();
-  }
-
-  bool _treeAdded(SkillCategory category) {
-    return widget.items().any(
-          (item) =>
-              item.kind == ProgramDayItemKind.progression &&
-              item.skillCategoryId == category.id,
-        );
-  }
-
-  Future<void> _openBranches(SkillCategory category) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _BranchPickerPage(
-          dayTitle: widget.dayTitle,
-          category: category,
-          progressMap: widget.progressMap,
-          items: widget.items,
-          onPickBranch: widget.onPickBranch,
-        ),
-      ),
-    );
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: _pickerAppBar(
-        context,
-        title: 'Choose a skill tree',
-        sub: 'Each tree has branches you can train',
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
-          children: [
-            for (final category in _trees)
-              Builder(builder: (context) {
-                final branches = _selectableBranches(category);
-                final added = _treeAdded(category);
-                return Pressable(
-                  onTap: () => _openBranches(category),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 11,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: [
-                        IconTile(
-                          icon: programPatternIcon(category.track),
-                          size: 40,
-                          tint: added,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                category.title,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -0.15,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                '${branches.length} branch${branches.length > 1 ? 'es' : ''} · ${programPatternLabel(category.track)}',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (added)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 6),
-                            child: Text(
-                              'Added',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.accentPrimary,
-                              ),
-                            ),
-                          ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 20,
-                          color: AppColors.textMuted,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Full-page branch list for one skill tree. One branch can be active per
-/// day — picking another switches it in place.
-class _BranchPickerPage extends StatefulWidget {
-  final String dayTitle;
-  final SkillCategory category;
-  final Map<String, ExerciseStatus> progressMap;
-  final List<ProgramDayItem> Function() items;
-  final void Function(SkillCategory category, SkillCategoryBranch branch)
-      onPickBranch;
-
-  const _BranchPickerPage({
-    required this.dayTitle,
-    required this.category,
-    required this.progressMap,
-    required this.items,
-    required this.onPickBranch,
-  });
-
-  @override
-  State<_BranchPickerPage> createState() => _BranchPickerPageState();
-}
-
-class _BranchPickerPageState extends State<_BranchPickerPage> {
-  ProgramDayItem? get _active {
-    for (final item in widget.items()) {
-      if (item.kind == ProgramDayItemKind.progression &&
-          item.skillCategoryId == widget.category.id) {
-        return item;
-      }
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final category = widget.category;
-    final branches = category.branches
-        .where((branch) => category.pathFor(branch.id).isNotEmpty)
-        .toList();
-    final active = _active;
-    SkillCategoryBranch? activeBranch;
-    if (active != null) {
-      for (final branch in branches) {
-        if (branch.id == active.branchId) {
-          activeBranch = branch;
-          break;
-        }
-      }
-    }
-
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: _pickerAppBar(
-        context,
-        title: category.title,
-        sub: 'One branch active per day',
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 30),
-          children: [
-            for (final branch in branches)
-              Builder(builder: (context) {
-                final on = active?.branchId == branch.id;
-                final willSwitch = !on && active != null;
-                final current = ProgramSessionPlan.currentExerciseForPath(
-                  skillCategoryId: category.id,
-                  branchId: branch.id,
-                  progressMap: widget.progressMap,
-                );
-                final sub = willSwitch && activeBranch != null
-                    ? 'Now: ${current?.name ?? '—'} · switches from ${programBranchLabel(category, activeBranch)}'
-                    : 'Now: ${current?.name ?? '—'}';
-
-                return Pressable(
-                  onTap: () {
-                    widget.onPickBranch(category, branch);
-                    setState(() {});
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 11,
-                    ),
-                    decoration: BoxDecoration(
-                      color: on ? AppColors.accentSoft : AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color:
-                            on ? AppColors.accentPrimary : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        IconTile(
-                          icon: programPatternIcon(category.track),
-                          size: 38,
-                          tint: on,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                programBranchLabel(category, branch),
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -0.15,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                sub,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _BranchTrailing(on: on, willSwitch: willSwitch),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(2, 6, 2, 0),
-              child: Text(
-                'One active branch per ${widget.dayTitle} day — picking another switches it. Paused branches keep their progress.',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Full-page searchable list of single lifts. Tapping toggles them on the
-/// day being edited.
-class _LiftPickerPage extends StatefulWidget {
-  final List<ProgramDayItem> Function() items;
-  final void Function(Exercise exercise) onToggleLift;
-
-  const _LiftPickerPage({
-    required this.items,
-    required this.onToggleLift,
-  });
-
-  @override
-  State<_LiftPickerPage> createState() => _LiftPickerPageState();
-}
-
-class _LiftPickerPageState extends State<_LiftPickerPage> {
   String _query = '';
+  Set<ExerciseCategory> _patterns = {};
+  Set<String> _muscles = {};
+  final List<Exercise> _picked = [];
 
-  bool _liftAdded(Exercise exercise) {
-    return widget.items().any(
-          (item) =>
-              item.kind == ProgramDayItemKind.exercise &&
-              item.exerciseId == exercise.id,
-        );
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   /// Lowercase and drop separators so "pullup" matches "Pull-Up" / "Pull Up".
   static String _normalize(String value) =>
       value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
-  List<Exercise> get _lifts {
+  List<Exercise> get _matches {
     final tokens = _query
         .toLowerCase()
         .split(RegExp(r'\s+'))
@@ -1206,7 +659,17 @@ class _LiftPickerPageState extends State<_LiftPickerPage> {
         .where((token) => token.isNotEmpty)
         .toList();
 
-    final lifts = ExerciseCatalog.all().where((exercise) {
+    final matches = ExerciseCatalog.all().where((exercise) {
+      if (widget.excludedIds.contains(exercise.id)) return false;
+      if (_isLocked(exercise)) return false;
+      if (_patterns.isNotEmpty && !_patterns.contains(exercise.category)) {
+        return false;
+      }
+      if (_muscles.isNotEmpty &&
+          !ProgramSessionPlan.musclesForCategory(exercise.category)
+              .any(_muscles.contains)) {
+        return false;
+      }
       if (tokens.isEmpty) return true;
       final haystack = _normalize(
         '${exercise.name} ${programPatternLabel(exercise.category)}',
@@ -1219,155 +682,411 @@ class _LiftPickerPageState extends State<_LiftPickerPage> {
         queryNorm.isNotEmpty && _normalize(exercise.name).startsWith(queryNorm)
             ? 0
             : 1;
-    lifts.sort((a, b) {
+    matches.sort((a, b) {
       final byRank = rank(a).compareTo(rank(b));
       if (byRank != 0) return byRank;
       return a.name.compareTo(b.name);
     });
-    return lifts;
+    return matches;
+  }
+
+  /// Exercises of a tree that is still behind its unlock requirement are not
+  /// offered — a handstand pushup cannot be picked before the pushup
+  /// foundation is finished.
+  bool _isLocked(Exercise exercise) {
+    if (exercise.skillCategoryId.isEmpty) return false;
+    final category = SkillCategoryCatalog.findById(exercise.skillCategoryId);
+    return category?.isLockedFor(widget.progressMap) ?? false;
+  }
+
+  /// The step a tree is currently sitting on — adding it resumes that path.
+  bool _continuesAPath(Exercise exercise) =>
+      widget.progressMap[exercise.id] == ExerciseStatus.active;
+
+  void _toggle(Exercise exercise) {
+    if (widget.singlePick) {
+      Navigator.of(context).pop([exercise]);
+      return;
+    }
+    setState(() {
+      final index = _picked.indexWhere((entry) => entry.id == exercise.id);
+      if (index >= 0) {
+        _picked.removeAt(index);
+      } else {
+        _picked.add(exercise);
+      }
+    });
+  }
+
+  Future<void> _openPatternFilter() async {
+    final picked = await showModalBottomSheet<Set<ExerciseCategory>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => _FilterSheet<ExerciseCategory>(
+        title: 'Movement pattern',
+        sub: 'Narrow the catalogue to what this day needs',
+        options: [
+          for (final category in ExerciseCategory.values)
+            (value: category, label: programPatternLabel(category)),
+        ],
+        selected: _patterns,
+        resultCount: (selection) => _countFor(patterns: selection),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _patterns = picked);
+  }
+
+  Future<void> _openMuscleFilter() async {
+    final picked = await showModalBottomSheet<Set<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => _FilterSheet<String>(
+        title: 'Muscle group',
+        sub: 'Filter by what the exercise trains',
+        options: [
+          for (final group in kProgramMuscleGroups)
+            (value: group, label: group),
+        ],
+        selected: _muscles,
+        resultCount: (selection) => _countFor(muscles: selection),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _muscles = picked);
+  }
+
+  /// Live result count for a filter sheet's pending selection.
+  int _countFor({
+    Set<ExerciseCategory>? patterns,
+    Set<String>? muscles,
+  }) {
+    final byPattern = patterns ?? _patterns;
+    final byMuscle = muscles ?? _muscles;
+    return ExerciseCatalog.all().where((exercise) {
+      if (widget.excludedIds.contains(exercise.id)) return false;
+      if (_isLocked(exercise)) return false;
+      if (byPattern.isNotEmpty && !byPattern.contains(exercise.category)) {
+        return false;
+      }
+      if (byMuscle.isNotEmpty &&
+          !ProgramSessionPlan.musclesForCategory(exercise.category)
+              .any(byMuscle.contains)) {
+        return false;
+      }
+      return true;
+    }).length;
   }
 
   @override
   Widget build(BuildContext context) {
-    final lifts = _lifts;
+    final matches = _matches;
+    final resumes = matches.where(_continuesAPath).toList();
+    final rest = matches.where((e) => !_continuesAPath(e)).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: _pickerAppBar(
-        context,
-        title: 'Add a single lift',
-        sub: 'Tap to add or remove',
-      ),
       body: SafeArea(
-        top: false,
-        child: Column(
+        bottom: false,
+        child: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.search_rounded,
-                      size: 17,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (value) => setState(() => _query = value),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                        cursorColor: AppColors.accentPrimary,
-                        decoration: const InputDecoration(
-                          hintText: 'Search lifts…',
-                          hintStyle: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textMuted,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Pressable(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accentPrimary,
                           ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 11),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Add exercise',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.9,
+                          height: 1.05,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Every exercise is a step of a skill tree — adding one '
+                        'starts or resumes that path.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _SearchField(
+                        controller: _searchController,
+                        onChanged: (value) => setState(() => _query = value),
+                        onClear: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _FilterChip(
+                              label: _patterns.isEmpty
+                                  ? 'All patterns'
+                                  : '${_patterns.length} pattern'
+                                      '${_patterns.length > 1 ? 's' : ''}',
+                              active: _patterns.isNotEmpty,
+                              onTap: _openPatternFilter,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _FilterChip(
+                              label: _muscles.isEmpty
+                                  ? 'All muscles'
+                                  : '${_muscles.length} muscle'
+                                      '${_muscles.length > 1 ? 's' : ''}',
+                              active: _muscles.isNotEmpty,
+                              onTap: _openMuscleFilter,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: matches.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(22, 36, 22, 0),
+                          child: Text(
+                            _query.trim().isEmpty
+                                ? 'Nothing matches these filters. Clear one to '
+                                    'see more of the catalogue.'
+                                : 'Nothing matches “${_query.trim()}”. Try a '
+                                    'movement pattern — rows, dips, handstand.',
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              color: AppColors.textSecondary,
+                              height: 1.55,
+                            ),
+                          ),
+                        )
+                      : ListView(
+                          padding: EdgeInsets.fromLTRB(
+                            22,
+                            0,
+                            22,
+                            _picked.isEmpty ? 40 : 130,
+                          ),
+                          children: [
+                            if (resumes.isNotEmpty) ...[
+                              const _ResultsHeader(
+                                'Continues a path you’re on',
+                              ),
+                              for (final exercise in resumes)
+                                _ExerciseResultRow(
+                                  exercise: exercise,
+                                  added: _picked.any(
+                                    (entry) => entry.id == exercise.id,
+                                  ),
+                                  onTap: () => _toggle(exercise),
+                                ),
+                            ],
+                            if (rest.isNotEmpty) ...[
+                              _ResultsHeader(
+                                resumes.isEmpty
+                                    ? 'All exercises'
+                                    : 'Everything else',
+                              ),
+                              for (final exercise in rest)
+                                _ExerciseResultRow(
+                                  exercise: exercise,
+                                  added: _picked.any(
+                                    (entry) => entry.id == exercise.id,
+                                  ),
+                                  onTap: () => _toggle(exercise),
+                                ),
+                            ],
+                          ],
+                        ),
+                ),
+              ],
+            ),
+            if (_picked.isNotEmpty)
+              Positioned(
+                left: 22,
+                right: 22,
+                bottom: MediaQuery.of(context).padding.bottom + 24,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(26),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x73000000),
+                        offset: Offset(0, 10),
+                        blurRadius: 30,
+                      ),
+                    ],
+                  ),
+                  child: PillButton(
+                    label: 'Add ${_picked.length} exercise'
+                        '${_picked.length > 1 ? 's' : ''}',
+                    onTap: () => Navigator.of(context).pop(List.of(_picked)),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _SearchField({
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.055),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.search_rounded,
+            size: 18,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.15,
+              ),
+              cursorColor: AppColors.accentPrimary,
+              decoration: const InputDecoration(
+                hintText: 'Search exercises and patterns',
+                hintStyle: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textMuted,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          if (controller.text.isNotEmpty)
+            Pressable(
+              onTap: onClear,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 12,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
-            Expanded(
-              child: lifts.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          'No lifts match “${_query.trim()}”.',
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 30),
-                      itemCount: lifts.length,
-                      itemBuilder: (context, index) {
-                        final exercise = lifts[index];
-                        final on = _liftAdded(exercise);
-                        return Pressable(
-                          onTap: () {
-                            widget.onToggleLift(exercise);
-                            setState(() {});
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: on
-                                  ? AppColors.accentSoft
-                                  : AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: on
-                                    ? AppColors.accentPrimary
-                                    : Colors.transparent,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                IconTile(
-                                  icon: programPatternIcon(exercise.category),
-                                  size: 36,
-                                  tint: on,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        exercise.name,
-                                        style: const TextStyle(
-                                          fontSize: 14.5,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                          letterSpacing: -0.15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 1),
-                                      Text(
-                                        programPatternLabel(
-                                            exercise.category),
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _CheckCircle(on: on),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.accentSoft
+              : Colors.white.withValues(alpha: 0.055),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(
+            color: active
+                ? AppColors.accentPrimary.withValues(alpha: 0.4)
+                : Colors.transparent,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: active
+                      ? AppColors.accentPrimary
+                      : AppColors.textSecondary,
+                  letterSpacing: -0.15,
+                ),
+              ),
+            ),
+            const SizedBox(width: 7),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 16,
+              color: active ? AppColors.accentPrimary : AppColors.textMuted,
             ),
           ],
         ),
@@ -1376,71 +1095,234 @@ class _LiftPickerPageState extends State<_LiftPickerPage> {
   }
 }
 
-class _BranchTrailing extends StatelessWidget {
-  final bool on;
-  final bool willSwitch;
+class _ResultsHeader extends StatelessWidget {
+  final String label;
 
-  const _BranchTrailing({required this.on, required this.willSwitch});
+  const _ResultsHeader(this.label);
 
   @override
   Widget build(BuildContext context) {
-    if (willSwitch) {
-      return Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.18),
-            width: 1.8,
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 26, bottom: 2),
+      child: Text(
+        label.toUpperCase(),
+        style: GoogleFonts.robotoMono(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textMuted,
+          letterSpacing: 1.65,
         ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.swap_horiz_rounded,
-          size: 13,
-          color: AppColors.textSecondary,
-        ),
-      );
-    }
-    return _CheckCircle(on: on);
+      ),
+    );
   }
 }
 
-class _CheckCircle extends StatelessWidget {
-  final bool on;
+class _ExerciseResultRow extends StatelessWidget {
+  final Exercise exercise;
+  final bool added;
+  final VoidCallback onTap;
 
-  const _CheckCircle({required this.on});
+  const _ExerciseResultRow({
+    required this.exercise,
+    required this.added,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (on) {
-      return Container(
-        width: 22,
-        height: 22,
+    final muscles = ProgramSessionPlan.musclesForCategory(exercise.category);
+    final subtitle = [
+      programPatternLabel(exercise.category),
+      if (muscles.isNotEmpty) muscles.join(', '),
+    ].join(' · ');
+
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.only(top: 14, bottom: 15),
         decoration: const BoxDecoration(
-          color: AppColors.accentPrimary,
-          shape: BoxShape.circle,
+          border: Border(bottom: BorderSide(color: AppColors.divider)),
         ),
-        alignment: Alignment.center,
-        child: const Icon(Icons.check_rounded, size: 13, color: Colors.white),
-      );
-    }
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.18),
-          width: 1.8,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    exercise.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.25,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: added
+                    ? AppColors.green
+                    : Colors.white.withValues(alpha: 0.07),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                added ? Icons.check_rounded : Icons.add_rounded,
+                size: 16,
+                color: added ? AppColors.bg : AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.add_rounded,
-        size: 13,
-        color: AppColors.textSecondary,
+    );
+  }
+}
+
+/// Two-column filter picker shared by the pattern and muscle chips. Each
+/// option carries how much of the catalogue it covers; the primary button
+/// shows how many results the pending selection leaves.
+class _FilterSheet<T> extends StatefulWidget {
+  final String title;
+  final String sub;
+  final List<({T value, String label})> options;
+  final Set<T> selected;
+  final int Function(Set<T> selection) resultCount;
+
+  const _FilterSheet({
+    required this.title,
+    required this.sub,
+    required this.options,
+    required this.selected,
+    required this.resultCount,
+  });
+
+  @override
+  State<_FilterSheet<T>> createState() => _FilterSheetState<T>();
+}
+
+class _FilterSheetState<T> extends State<_FilterSheet<T>> {
+  late Set<T> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = Set.of(widget.selected);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final count = widget.resultCount(_selected);
+
+    return SheetShell(
+      title: widget.title,
+      sub: widget.sub,
+      footer: Row(
+        children: [
+          Expanded(
+            flex: 10,
+            child: PillButton(
+              label: 'Clear filters',
+              tonal: true,
+              onTap: _selected.isEmpty
+                  ? null
+                  : () => setState(_selected.clear),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 13,
+            child: PillButton(
+              label: 'Show $count result${count == 1 ? '' : 's'}',
+              onTap: () => Navigator.of(context).pop(_selected),
+            ),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Wrap(
+          spacing: 9,
+          runSpacing: 9,
+          children: [
+            for (final option in widget.options)
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 32 - 9) / 2,
+                child: _FilterOption(
+                  label: option.label,
+                  selected: _selected.contains(option.value),
+                  onTap: () => setState(() {
+                    if (!_selected.remove(option.value)) {
+                      _selected.add(option.value);
+                    }
+                  }),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterOption extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.accentSoft
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: selected
+                ? AppColors.accentPrimary.withValues(alpha: 0.4)
+                : Colors.transparent,
+          ),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+            letterSpacing: -0.15,
+          ),
+        ),
       ),
     );
   }

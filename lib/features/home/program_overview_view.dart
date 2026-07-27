@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -16,48 +17,13 @@ import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
-import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
+import 'program_balance_view.dart';
 import 'program_day_editor_view.dart';
 import 'program_day_items.dart';
+import 'program_faq.dart';
 import 'program_setup_view.dart'
     show GoalSkillGroup, GoalSkillOption, kGoalSkillGroups, kGoalSkillOptions;
-
-const _statusRed = Color(0xFFE5484D);
-
-/// Balance status: green optimal, amber under target, red over target.
-enum _BalanceStatus { under, ok, over }
-
-Color _statusColor(_BalanceStatus status) {
-  switch (status) {
-    case _BalanceStatus.under:
-      return AppColors.amber;
-    case _BalanceStatus.ok:
-      return AppColors.green;
-    case _BalanceStatus.over:
-      return _statusRed;
-  }
-}
-
-/// Movement coverage: 1–2 exercises is optimal, 0 is a gap, more than 2 is
-/// overloaded.
-_BalanceStatus _coverageStatus(int count) {
-  if (count == 0) return _BalanceStatus.under;
-  if (count <= 2) return _BalanceStatus.ok;
-  return _BalanceStatus.over;
-}
-
-_BalanceStatus _muscleStatus(int sets) {
-  if (sets < kProgramSetsMin) return _BalanceStatus.under;
-  if (sets <= kProgramSetsMax) return _BalanceStatus.ok;
-  return _BalanceStatus.over;
-}
-
-const _muscleStatusText = {
-  _BalanceStatus.under: 'Below target — add a set or two',
-  _BalanceStatus.ok: 'In the optimal range',
-  _BalanceStatus.over: 'More volume than you need',
-};
 
 const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -89,13 +55,17 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   final _skillTrackService = SkillTrackService();
 
   late TrainingProgramLogicSnapshot _logic;
-  String? _openBalance; // 'cov' | 'mus' | null
 
   /// Skills-as-tracks state, loaded here so the tab reflects adds/pauses
   /// immediately. Status edits from the adjust sheet land in
   /// [_progressOverrides] on top of the read-only widget.progressMap.
   List<SkillTrack> _skillTracks = const [];
   final Map<String, ExerciseStatus> _progressOverrides = {};
+
+  /// Temporarily hides the "Skill tracks" section from the Program tab. The
+  /// tracks themselves still load — sessions and lane selections depend on
+  /// them — only the UI is off.
+  final bool _showSkillTracksSection = false;
 
   Map<String, ExerciseStatus> get _progress => {
         ...widget.progressMap,
@@ -144,7 +114,16 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     return const [];
   }
 
-  int get _trainingDaysPerWeek => _logic.program.frequencyPerWeek.clamp(2, 6);
+  int get _trainingDaysPerWeek => _dayMask.where((day) => day == 1).length;
+
+  /// The week as the user laid it out, falling back to the template for their
+  /// session count while they have never touched the calendar.
+  List<int> get _dayMask => TrainingScheduleService().weekTemplateFor(
+        _logic.program.frequencyPerWeek,
+        dayMask: TrainingScheduleService.normalizeDayMask(
+          _setupAnswers['training_days'],
+        ),
+      );
 
   Map<TrainingTrack, String> get _branchSelections => {
         ..._programService.defaultBranchSelections(),
@@ -154,10 +133,11 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         ..._programService.laneSelectionsFromTracks(_skillTracks),
       };
 
-  List<TrainingSessionType> _weekPlan(int days, TrainingProgramType type) {
+  List<TrainingSessionType> _weekPlan(List<int> mask, TrainingProgramType type) {
     return TrainingScheduleService().cycleFor(
       programType: type,
-      frequencyPerWeek: days,
+      frequencyPerWeek: mask.where((day) => day == 1).length,
+      dayMask: mask,
     );
   }
 
@@ -183,18 +163,22 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text(toast)));
   }
 
-  Future<void> _openDayEditor(TrainingSessionType sessionType) async {
+  Future<void> _openDayEditor(
+    TrainingSessionType sessionType, {
+    required int weekday,
+  }) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProgramDayEditorView(
           sessionType: sessionType,
+          weekday: weekday,
           programType: _logic.program.programType,
           branchSelections: _branchSelections,
           progressMap: widget.progressMap,
           sessionItemsConfig: _sessionItemsConfig,
           onSave: (config) => _saveLogic(
             sessionItemsConfig: config,
-            toast: '${programDayTitle(sessionType)} day updated',
+            toast: '${kWeekdayNames[weekday]} updated',
           ),
         ),
       ),
@@ -202,22 +186,29 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   }
 
   Future<void> _openDaysSheet() async {
-    final picked = await showModalBottomSheet<int>(
+    final picked = await showModalBottomSheet<List<int>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => _DaysSheet(
-        current: _trainingDaysPerWeek,
-        weekPlanBuilder: (days) => _weekPlan(days, _logic.program.programType),
+        currentMask: _dayMask,
+        weekPlanBuilder: (mask) => _weekPlan(mask, _logic.program.programType),
       ),
     );
 
-    if (picked == null || picked == _trainingDaysPerWeek || !mounted) return;
+    if (picked == null || !mounted) return;
 
+    final days = picked.where((day) => day == 1).length;
+    // Both the count and the week itself are stored: the count drives volume
+    // and streak targets, the mask decides which days actually train.
     await _saveLogic(
-      frequencyPerWeek: picked,
-      setupAnswers: {..._setupAnswers, 'days_per_week': picked},
+      frequencyPerWeek: days,
+      setupAnswers: {
+        ..._setupAnswers,
+        'days_per_week': days,
+        'training_days': picked,
+      },
       toast: 'Schedule updated',
     );
   }
@@ -242,6 +233,23 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       sessionItemsConfig: const {},
       setupAnswers: {..._setupAnswers, 'split': picked.dbValue},
       toast: 'Split changed — sessions rebuilt',
+    );
+  }
+
+  Future<void> _openEquipmentSheet() async {
+    final picked = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => _EquipmentSheet(current: _hasGym),
+    );
+
+    if (picked == null || picked == _hasGym || !mounted) return;
+
+    await _saveLogic(
+      setupAnswers: {..._setupAnswers, 'has_gym': picked},
+      toast: 'Equipment updated',
     );
   }
 
@@ -321,408 +329,551 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
-  Future<void> _openMasterySheet() async {
-    final picked = await showModalBottomSheet<MasteryTargetSettings>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (_) => _MasterySheet(current: _logic.masteryTargets),
-    );
-
-    if (picked == null || !mounted) return;
-
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      // Settings-only write: no progress rows, stored targets, or mastered
-      // statuses are touched, and no past workouts are re-evaluated.
-      await TrainingProgramStoreService().updateMasteryTargets(
-        userId: userId,
-        targets: picked,
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't save the mastery target. Try again."),
-        ),
-      );
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _logic = TrainingProgramLogicSnapshot(
-        program: _logic.program,
-        state: _logic.state,
-        branchSelections: _logic.branchSelections,
-        repGoalProfile: _logic.repGoalProfile,
-        masteryTargets: picked,
-      );
-    });
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Mastery target updated')));
-  }
-
   Future<void> _openSkillsSheet() async {
     final picked = await showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (_) => _GoalSkillsSheet(picked: _goalSkillIds),
+      builder: (_) => _GoalSkillsSheet(
+        picked: _goalSkillIds,
+        progressMap: _progress,
+      ),
     );
 
     if (picked == null || !mounted) return;
 
     await _saveLogic(
       setupAnswers: {..._setupAnswers, 'skill_ids': picked},
-      toast: 'Goal skills updated',
+      toast: 'Active skill trees updated',
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final programType = _logic.program.programType;
-    final trainingDays = _programService.trainingDaysForProgramType(
-      programType,
-    );
-    final coverage = ProgramSessionPlan.weeklyCoverage(
-      service: _programService,
-      sessionItemsConfig: _sessionItemsConfig,
-      programType: programType,
-      branchSelections: _branchSelections,
-      progressMap: widget.progressMap,
-    );
-    final muscleSets = ProgramSessionPlan.weeklyMuscleSets(
-      service: _programService,
-      sessionItemsConfig: _sessionItemsConfig,
-      programType: programType,
-      branchSelections: _branchSelections,
-      progressMap: widget.progressMap,
-    );
+    final weekCycle = _weekPlan(_dayMask, programType);
     final goalSkills = [
       for (final id in _goalSkillIds)
         for (final option in kGoalSkillOptions)
           if (option.id == id) option,
     ];
 
+    // One workout per training weekday — Thursday's Upper is its own plan,
+    // separate from Monday's.
+    final workouts = [
+      for (var i = 0; i < weekCycle.length; i++)
+        if (weekCycle[i] != TrainingSessionType.rest)
+          (
+            weekday: i,
+            sessionType: weekCycle[i],
+            items: ProgramSessionPlan.loadDay(
+              service: _programService,
+              sessionItemsConfig: _sessionItemsConfig,
+              programType: programType,
+              sessionType: weekCycle[i],
+              branchSelections: _branchSelections,
+              progressMap: _progress,
+              skillTracks: _skillTracks,
+              weekday: i,
+            ),
+          ),
+    ];
+    final week = [
+      for (final workout in workouts)
+        ProgramWeekDay(weekday: workout.weekday, items: workout.items),
+    ];
+    final balance = balanceFromWeek(week);
+    final evenness = balanceEvenness(week);
+
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: AppColors.bg,
-        elevation: 0,
-        title: const Text(
-          'Program settings',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.3,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          // Bottom padding clears the floating tab bar now that this screen
-          // is hosted as the Program tab.
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SectionHeader(title: 'Your program'),
-              SurfaceCard(
-                clip: true,
-                child: Column(
-                  children: [
-                    _ProgramRow(
-                      first: true,
-                      label: 'Training days',
-                      value: '$_trainingDaysPerWeek days / week',
-                      onTap: _openDaysSheet,
-                    ),
-                    _ProgramRow(
-                      label: 'Split',
-                      value: programType.label,
-                      onTap: _openSplitSheet,
-                    ),
-                    _ProgramRow(
-                      label: 'Mastery target',
-                      value: '3 × ${_logic.masteryTargets.repsPerSet} reps · '
-                          '${_logic.masteryTargets.secondsPerSet}s holds',
-                      onTap: _openMasterySheet,
-                    ),
-                  ],
-                ),
+      body: SingleChildScrollView(
+        // No top SafeArea — the hero runs full-bleed under the status bar.
+        // The bottom padding clears the floating tab bar.
+        padding: const EdgeInsets.only(bottom: 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ProgramHero(
+              clearedFraction: _clearedFraction(
+                [for (final workout in workouts) workout.items],
               ),
-              SectionHeader(
-                title: 'Skill tracks',
-                sub: 'Each skill progresses on its own — pause any without '
-                    'losing progress',
-                action: 'Add',
-                onAction: _openAddTrackSheet,
-              ),
-              SurfaceCard(
-                clip: true,
-                child: Column(
-                  children: [
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
+                    _programSummary(programType),
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      color: Color(0xFFC9CAD1),
+                      height: 1.55,
+                    ),
+                  ),
+                  const _ProgramSectionLabel('Your program'),
+                  _ProgramRow(
+                    label: 'Training days',
+                    value: '$_trainingDaysPerWeek days / week',
+                    onTap: _openDaysSheet,
+                  ),
+                  _ProgramRow(
+                    label: 'Split',
+                    value: programType.label,
+                    onTap: _openSplitSheet,
+                  ),
+                  _ProgramRow(
+                    label: 'Equipment',
+                    value: _hasGym ? 'Full gym' : 'No gym',
+                    onTap: _openEquipmentSheet,
+                  ),
+                  _BalanceRow(
+                    headline: balanceHeadline(balance, evenness),
+                    allOptimal: evenness.isEmpty &&
+                        balance.every(
+                          (entry) =>
+                              !entry.group.primary ||
+                              entry.verdict == BalanceVerdict.optimal,
+                        ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProgramBalanceView(week: week),
+                      ),
+                    ),
+                  ),
+                  if (_showSkillTracksSection) ...[
+                    _ProgramSectionLabel(
+                      'Skill tracks',
+                      sub: 'Each skill progresses on its own — pause any '
+                          'without losing progress',
+                      action: 'Add',
+                      onAction: _openAddTrackSheet,
+                    ),
                     if (_skillTracks.isEmpty)
                       const Padding(
-                        padding: EdgeInsets.all(18),
+                        padding: EdgeInsets.only(top: 14, bottom: 2),
                         child: Text(
                           'No skill tracks yet — add the skills you want to '
                           'train and each gets its own progression.',
                           style: TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 14,
                             color: AppColors.textSecondary,
-                            height: 1.5,
+                            height: 1.55,
                           ),
                         ),
                       )
                     else
-                      for (var i = 0; i < _skillTracks.length; i++)
+                      for (final track in _skillTracks)
                         _SkillTrackRow(
-                          first: i == 0,
-                          track: _skillTracks[i],
+                          track: track,
                           progressMap: _progress,
-                          onTap: () => _openAdjustSheet(_skillTracks[i]),
+                          onTap: () => _openAdjustSheet(track),
                         ),
                   ],
-                ),
-              ),
-              const SectionHeader(
-                title: 'Sessions',
-                sub: 'Tap a day to edit its exercises',
-              ),
-              SurfaceCard(
-                clip: true,
-                child: Column(
-                  children: [
-                    for (var i = 0; i < trainingDays.length; i++)
-                      _SessionRow(
-                        first: i == 0,
-                        title: programDayTitle(trainingDays[i]),
-                        items: ProgramSessionPlan.loadDay(
-                          service: _programService,
-                          sessionItemsConfig: _sessionItemsConfig,
-                          programType: programType,
-                          sessionType: trainingDays[i],
-                          branchSelections: _branchSelections,
-                          progressMap: _progress,
-                          skillTracks: _skillTracks,
-                        ),
-                        onTap: () => _openDayEditor(trainingDays[i]),
-                      ),
-                  ],
-                ),
-              ),
-              SectionHeader(
-                title: 'Goal skills',
-                action: 'Edit',
-                onAction: _openSkillsSheet,
-              ),
-              SurfaceCard(
-                onTap: _openSkillsSheet,
-                padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
-                child: goalSkills.isEmpty
-                    ? const Text(
-                        'No specific skills picked — Forma keeps the program balanced across every movement pattern.',
+                  _ProgramSectionLabel(
+                    'Active skill trees',
+                    action: 'Edit',
+                    onAction: _openSkillsSheet,
+                  ),
+                  if (goalSkills.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 14, bottom: 2),
+                      child: Text(
+                        'No specific skills picked — Forma keeps the program '
+                        'balanced across every movement pattern.',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
-                          height: 1.5,
+                          height: 1.55,
                         ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              for (final skill in goalSkills)
-                                Container(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(10, 8, 13, 8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface2,
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        skill.icon,
-                                        size: 16,
-                                        color: AppColors.accentPrimary,
-                                      ),
-                                      const SizedBox(width: 7),
-                                      Text(
-                                        skill.label,
-                                        style: const TextStyle(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Each session weaves in progressions toward these skills.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
                       ),
+                    )
+                  else
+                    Pressable(
+                      onTap: _openSkillsSheet,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 14, bottom: 2),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final skill in goalSkills)
+                                  Container(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 8, 13, 8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface2,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          skill.icon,
+                                          size: 16,
+                                          color: AppColors.accentPrimary,
+                                        ),
+                                        const SizedBox(width: 7),
+                                        Text(
+                                          skill.label,
+                                          style: const TextStyle(
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Each session weaves in progressions toward '
+                              'these skills.',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: AppColors.textSecondary,
+                                height: 1.55,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const _ProgramSectionLabel('Workouts'),
+                  for (final workout in workouts)
+                    _SessionRow(
+                      title: kWeekdayNames[workout.weekday],
+                      sessionLabel: programDayTitle(workout.sessionType),
+                      items: workout.items,
+                      onTap: () => _openDayEditor(
+                        workout.sessionType,
+                        weekday: workout.weekday,
+                      ),
+                    ),
+                  const _ProgramSectionLabel('About the program'),
+                  for (var i = 0; i < kProgramFaq.length; i++)
+                    _FaqRow(
+                      question: kProgramFaq[i].question,
+                      last: i == kProgramFaq.length - 1,
+                      onTap: () => showFaqSheet(context, kProgramFaq[i]),
+                    ),
+                ],
               ),
-              const SectionHeader(title: 'Weekly balance'),
-              SurfaceCard(
-                clip: true,
-                child: Column(
-                  children: [
-                    _buildCoverageGroup(coverage),
-                    _buildMuscleGroup(muscleSets),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildCoverageGroup(
-    Map<ExerciseCategory, List<ProgramDayItem>> coverage,
-  ) {
-    const categories = ProgramSessionPlan.coverageOrder;
-    final missing =
-        categories.where((category) => coverage[category]!.isEmpty).length;
-    final over =
-        categories.where((category) => coverage[category]!.length > 2).length;
-
-    final String summary;
-    final Color summaryColor;
-    if (missing == 0 && over == 0) {
-      summary = 'All ${categories.length} patterns covered';
-      summaryColor = AppColors.green;
-    } else {
-      summary = [
-        if (missing > 0) '$missing pattern${missing > 1 ? 's' : ''} missing',
-        if (over > 0) '$over overloaded',
-      ].join(' · ');
-      summaryColor = missing > 0 ? AppColors.amber : _statusRed;
-    }
-
-    return _BalanceGroup(
-      first: true,
-      title: 'Movement coverage',
-      summary: summary,
-      summaryColor: summaryColor,
-      statuses: [
-        for (final category in categories)
-          _coverageStatus(coverage[category]!.length),
-      ],
-      open: _openBalance == 'cov',
-      onToggle: () => setState(
-        () => _openBalance = _openBalance == 'cov' ? null : 'cov',
-      ),
-      footer: 'Exercises per movement · aim for 1–2',
-      children: [
-        for (final category in categories)
-          _BalanceRow(
-            icon: programPatternIcon(category),
-            title: programPatternLabel(category),
-            subtitle: coverage[category]!.isEmpty
-                ? 'No exercises programmed'
-                : coverage[category]!.map((item) => item.name).join(' · '),
-            subtitleColor: coverage[category]!.isEmpty
-                ? AppColors.amber
-                : AppColors.textSecondary,
-            ringValue: coverage[category]!.length,
-            ringFraction: coverage[category]!.length / 2,
-            ringColor: _statusColor(
-              _coverageStatus(coverage[category]!.length),
-            ),
-          ),
-      ],
-    );
+  /// Share of the exercises the program currently trains that are mastered —
+  /// drives how much of the hero constellation is lit.
+  double _clearedFraction(Iterable<List<ProgramDayItem>> plans) {
+    final ids = <String>{
+      for (final items in plans)
+        for (final item in items)
+          if (item.exerciseId != null) item.exerciseId!,
+    };
+    if (ids.isEmpty) return 0;
+    final progress = _progress;
+    final cleared = ids
+        .where((id) => progress[id] == ExerciseStatus.mastered)
+        .length;
+    return cleared / ids.length;
   }
 
-  Widget _buildMuscleGroup(Map<String, int> muscleSets) {
-    final under = kProgramMuscleGroups
-        .where((group) =>
-            _muscleStatus(muscleSets[group]!) == _BalanceStatus.under)
-        .toList();
-    final over = kProgramMuscleGroups
-        .where(
-            (group) => _muscleStatus(muscleSets[group]!) == _BalanceStatus.over)
-        .toList();
+  /// The setup wizard defaults to a full gym, so an unanswered program reads
+  /// the same way here.
+  bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
 
-    final String summary;
-    final Color summaryColor;
-    if (under.isEmpty && over.isEmpty) {
-      summary = 'All muscle groups in range';
-      summaryColor = AppColors.green;
-    } else {
-      summary = [...over, ...under].join(', ') +
-          (over.isNotEmpty ? ' overworked' : ' below target');
-      summaryColor = over.isNotEmpty ? _statusRed : AppColors.amber;
+  String _programSummary(TrainingProgramType programType) {
+    switch (programType) {
+      case TrainingProgramType.fullBody:
+        return 'Every session runs the whole body — one horizontal and one '
+            'vertical push, the same two pulls, hinge, squat and core — with '
+            'skill practice up front.';
+      case TrainingProgramType.pushPull:
+        return 'Pushes and pulls take turns, so the same muscles never work '
+            'back to back — legs and core are carried across both, with skill '
+            'practice up front.';
+      case TrainingProgramType.upperLower:
+        return 'Upper and lower days alternate — half the body per session, '
+            'and the week still covers every movement pattern.';
     }
+  }
+}
 
-    return _BalanceGroup(
-      title: 'Muscle volume',
-      summary: summary,
-      summaryColor: summaryColor,
-      statuses: [
-        for (final group in kProgramMuscleGroups)
-          _muscleStatus(muscleSets[group]!),
-      ],
-      open: _openBalance == 'mus',
-      onToggle: () => setState(
-        () => _openBalance = _openBalance == 'mus' ? null : 'mus',
-      ),
-      footer: 'Sets per week · aim for $kProgramSetsMin–$kProgramSetsMax',
-      children: [
-        for (final group in kProgramMuscleGroups)
-          _BalanceRow(
-            icon: programMuscleIcon(group),
-            title: group,
-            subtitle: _muscleStatusText[_muscleStatus(muscleSets[group]!)]!,
-            subtitleColor:
-                _muscleStatus(muscleSets[group]!) == _BalanceStatus.ok
-                    ? AppColors.textSecondary
-                    : _statusColor(_muscleStatus(muscleSets[group]!)),
-            ringValue: muscleSets[group]!,
-            ringFraction: muscleSets[group]! / kProgramSetsMax,
-            ringColor: _statusColor(_muscleStatus(muscleSets[group]!)),
+/// Hero constellation: an abstract read of the program itself — cleared nodes
+/// green, everything still ahead locked — under the display title.
+class _ProgramHero extends StatelessWidget {
+  /// 0–1 share of the program's exercises already mastered.
+  final double clearedFraction;
+
+  const _ProgramHero({required this.clearedFraction});
+
+  @override
+  Widget build(BuildContext context) {
+    // The spine holds seven nodes; the cleared share decides how many are lit.
+    final cleared = (clearedFraction.clamp(0.0, 1.0) * 7).floor();
+
+    return SizedBox(
+      height: 318,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10151F), Color(0xFF111219), AppColors.bg],
+                stops: [0, 0.45, 1],
+              ),
+            ),
+            child: SizedBox.expand(),
           ),
-      ],
+          CustomPaint(painter: _ConstellationPainter(cleared: cleared)),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x00111114),
+                  Color(0x80111114),
+                  AppColors.bg,
+                ],
+                stops: [0.55, 0.78, 1],
+              ),
+            ),
+            child: SizedBox.expand(),
+          ),
+          const Positioned(
+            left: 22,
+            right: 22,
+            bottom: 16,
+            child: Text(
+              'Program',
+              style: TextStyle(
+                fontSize: 52,
+                fontWeight: FontWeight.w900,
+                fontStyle: FontStyle.italic,
+                color: Colors.white,
+                letterSpacing: -2.34,
+                height: 0.98,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Plain settings row: label · value · chevron.
+/// Paints the hero's node graph — a spine with two locked branches, laid out
+/// on the 402 × 318 grid the design uses and scaled to the screen width.
+class _ConstellationPainter extends CustomPainter {
+  /// How many spine nodes are cleared; the rest stay locked.
+  final int cleared;
+
+  const _ConstellationPainter({required this.cleared});
+
+  static const _spine = [
+    Offset(26, 208),
+    Offset(82, 196),
+    Offset(138, 182),
+    Offset(194, 166),
+    Offset(252, 150),
+    Offset(310, 136),
+    Offset(368, 124),
+  ];
+  static const _upperBranch = [
+    Offset(214, 118),
+    Offset(252, 92),
+    Offset(296, 72),
+  ];
+  static const _lowerBranch = [Offset(286, 196), Offset(330, 216)];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 402;
+    Offset at(Offset point) => Offset(point.dx * scale, point.dy * scale);
+
+    // Soft accent bloom behind the graph.
+    canvas.drawCircle(
+      at(const Offset(194, 166)),
+      120 * scale,
+      Paint()..color = AppColors.accentPrimary.withValues(alpha: 0.07),
+    );
+    canvas.drawCircle(
+      at(const Offset(310, 110)),
+      80 * scale,
+      Paint()..color = AppColors.accentPrimary.withValues(alpha: 0.05),
+    );
+
+    // Green links only ever join two cleared nodes.
+    for (var i = 1; i < _spine.length; i++) {
+      _segment(canvas, at(_spine[i - 1]), at(_spine[i]), i < cleared);
+    }
+    _segment(canvas, at(_spine[3]), at(_upperBranch[0]), false);
+    _segment(canvas, at(_upperBranch[0]), at(_upperBranch[1]), false);
+    _segment(canvas, at(_upperBranch[1]), at(_upperBranch[2]), false);
+    _segment(canvas, at(_spine[4]), at(_lowerBranch[0]), false);
+    _segment(canvas, at(_lowerBranch[0]), at(_lowerBranch[1]), false);
+
+    for (var i = 0; i < _spine.length; i++) {
+      _node(
+        canvas,
+        at(_spine[i]),
+        scale,
+        i < cleared ? _NodeState.cleared : _NodeState.locked,
+      );
+    }
+    for (final point in [..._upperBranch, ..._lowerBranch]) {
+      _node(canvas, at(point), scale, _NodeState.locked);
+    }
+  }
+
+  void _segment(Canvas canvas, Offset a, Offset b, bool cleared) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..color = cleared
+          ? AppColors.green.withValues(alpha: 0.55)
+          : Colors.white.withValues(alpha: 0.14);
+
+    if (cleared) {
+      canvas.drawLine(a, b, paint);
+      return;
+    }
+
+    // Locked links are dashed — the same "nothing here yet" language the rest
+    // of the app uses.
+    const dash = 4.0, gap = 5.0;
+    final total = (b - a).distance;
+    final step = (b - a) / total;
+    for (var travelled = 0.0; travelled < total; travelled += dash + gap) {
+      final end = math.min(travelled + dash, total);
+      canvas.drawLine(a + step * travelled, a + step * end, paint);
+    }
+  }
+
+  void _node(Canvas canvas, Offset center, double scale, _NodeState state) {
+    final radius = 6.5 * scale;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = switch (state) {
+          _NodeState.cleared => AppColors.green,
+          _NodeState.locked => Colors.white.withValues(alpha: 0.10),
+        },
+    );
+    if (state == _NodeState.locked) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.3
+          ..color = Colors.white.withValues(alpha: 0.22),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConstellationPainter oldDelegate) =>
+      oldDelegate.cleared != cleared;
+}
+
+enum _NodeState { cleared, locked }
+
+/// Mono, uppercase section eyebrow — the type-led alternative to a card
+/// header, with an optional subtitle and trailing action.
+class _ProgramSectionLabel extends StatelessWidget {
+  final String label;
+  final String? sub;
+  final String? action;
+  final VoidCallback? onAction;
+
+  const _ProgramSectionLabel(
+    this.label, {
+    this.sub,
+    this.action,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 34, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: GoogleFonts.robotoMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                    letterSpacing: 1.65,
+                  ),
+                ),
+              ),
+              if (action != null)
+                Pressable(
+                  onTap: onAction,
+                  child: Text(
+                    action!,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.accentPrimary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (sub != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                sub!,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textMuted,
+                  height: 1.45,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Flat settings row: label · value · chevron, separated by a hairline.
 class _ProgramRow extends StatelessWidget {
-  final bool first;
   final String label;
   final String value;
   final VoidCallback onTap;
 
   const _ProgramRow({
-    this.first = false,
     required this.label,
     required this.value,
     required this.onTap,
@@ -733,11 +884,9 @@ class _ProgramRow extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
-        decoration: BoxDecoration(
-          border: first
-              ? null
-              : const Border(top: BorderSide(color: AppColors.divider)),
+        padding: const EdgeInsets.symmetric(vertical: 17),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.divider)),
         ),
         child: Row(
           children: [
@@ -745,25 +894,26 @@ class _ProgramRow extends StatelessWidget {
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
-                  letterSpacing: -0.15,
+                  letterSpacing: -0.25,
                 ),
               ),
             ),
+            const SizedBox(width: 10),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 13.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             const Icon(
               Icons.chevron_right_rounded,
-              size: 20,
+              size: 18,
               color: AppColors.textMuted,
             ),
           ],
@@ -774,28 +924,31 @@ class _ProgramRow extends StatelessWidget {
 }
 
 class _SessionRow extends StatelessWidget {
-  final bool first;
   final String title;
+  final String sessionLabel;
   final List<ProgramDayItem> items;
   final VoidCallback onTap;
 
   const _SessionRow({
-    required this.first,
     required this.title,
+    required this.sessionLabel,
     required this.items,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final meta = [
+      sessionLabel,
+      items.length == 1 ? '1 exercise' : '${items.length} exercises',
+    ].join(' · ');
+
     return Pressable(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 13, 14, 13),
-        decoration: BoxDecoration(
-          border: first
-              ? null
-              : const Border(top: BorderSide(color: AppColors.divider)),
+        padding: const EdgeInsets.symmetric(vertical: 17),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.divider)),
         ),
         child: Row(
           children: [
@@ -810,30 +963,34 @@ class _SessionRow extends StatelessWidget {
                       Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
-                          letterSpacing: -0.15,
+                          letterSpacing: -0.38,
                         ),
                       ),
                       const SizedBox(width: 9),
-                      Text(
-                        '${items.length} exercises',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted,
+                      Expanded(
+                        child: Text(
+                          meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
                   Text(
                     items.map((item) => item.name).join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 13.5,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -843,7 +1000,7 @@ class _SessionRow extends StatelessWidget {
             const SizedBox(width: 10),
             const Icon(
               Icons.chevron_right_rounded,
-              size: 20,
+              size: 18,
               color: AppColors.textMuted,
             ),
           ],
@@ -853,364 +1010,111 @@ class _SessionRow extends StatelessWidget {
   }
 }
 
-/// Collapsible balance group: summary row with status dots → detail rows.
-class _BalanceGroup extends StatelessWidget {
-  final bool first;
-  final String title;
-  final String summary;
-  final Color summaryColor;
-  final List<_BalanceStatus> statuses;
-  final bool open;
-  final VoidCallback onToggle;
-  final List<Widget> children;
-  final String footer;
+/// Weekly balance summary — the verdict plus a way into the full read.
+class _BalanceRow extends StatelessWidget {
+  final String headline;
+  final bool allOptimal;
+  final VoidCallback onTap;
 
-  const _BalanceGroup({
-    this.first = false,
-    required this.title,
-    required this.summary,
-    required this.summaryColor,
-    required this.statuses,
-    required this.open,
-    required this.onToggle,
-    required this.children,
-    required this.footer,
+  const _BalanceRow({
+    required this.headline,
+    required this.allOptimal,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: first
-            ? null
-            : const Border(top: BorderSide(color: AppColors.divider)),
-      ),
-      child: Column(
-        children: [
-          Pressable(
-            onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
-              child: Row(
+    return Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 17),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.15,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          summary,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: summaryColor,
-                          ),
-                        ),
-                      ],
+                  const Text(
+                    'Weekly balance',
+                    style: TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.25,
                     ),
                   ),
-                  Row(
-                    children: [
-                      for (final status in statuses)
-                        Container(
-                          width: 6,
-                          height: 6,
-                          margin: const EdgeInsets.only(left: 3.5),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _statusColor(status),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: AppColors.textMuted,
+                  const SizedBox(height: 4),
+                  Text(
+                    headline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: allOptimal ? AppColors.green : AppColors.amber,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          if (open) ...[
-            ...children,
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 9, 18, 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  footer,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
+            const SizedBox(width: 10),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _BalanceRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color subtitleColor;
-  final int ringValue;
-  final double ringFraction;
-  final Color ringColor;
-
-  const _BalanceRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.subtitleColor,
-    required this.ringValue,
-    required this.ringFraction,
-    required this.ringColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
-      ),
-      child: Row(
-        children: [
-          IconTile(icon: icon, size: 36),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12.5, color: subtitleColor),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          _CountRing(
-            value: ringValue,
-            fraction: ringFraction,
-            color: ringColor,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CountRing extends StatelessWidget {
-  final int value;
-  final double fraction;
-  final Color color;
-
-  const _CountRing({
-    required this.value,
-    required this.fraction,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 32,
-      height: 32,
-      child: CustomPaint(
-        painter: _RingPainter(fraction: fraction, color: color),
-        child: Center(
-          child: Text(
-            '$value',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
         ),
       ),
     );
   }
 }
 
-class _RingPainter extends CustomPainter {
-  final double fraction;
-  final Color color;
+/// One "about the program" question — the answer lives in its sheet.
+class _FaqRow extends StatelessWidget {
+  final String question;
+  final bool last;
+  final VoidCallback onTap;
 
-  const _RingPainter({required this.fraction, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - 4) / 2;
-
-    final track = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..color = Colors.white.withValues(alpha: 0.09);
-    canvas.drawCircle(center, radius, track);
-
-    final arc = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round
-      ..color = color;
-    final sweep = 2 * math.pi * fraction.clamp(0.02, 1.0);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      sweep,
-      false,
-      arc,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_RingPainter oldDelegate) =>
-      oldDelegate.fraction != fraction || oldDelegate.color != color;
-}
-
-/// Shared scrim + slide-up sheet chrome: grabber, title, close, content.
-class _SheetShell extends StatelessWidget {
-  final String title;
-  final String sub;
-  final Widget child;
-  final Widget? footer;
-  final bool expand;
-
-  const _SheetShell({
-    required this.title,
-    required this.sub,
-    required this.child,
-    this.footer,
-    this.expand = false,
+  const _FaqRow({
+    required this.question,
+    required this.last,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final maxHeight = media.size.height - media.padding.top - 24;
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: math.min(media.size.height * 0.88, maxHeight),
-      ),
-      decoration: const BoxDecoration(
-        color: AppColors.bg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-      ),
-      padding: EdgeInsets.only(bottom: media.padding.bottom + 14),
-      child: Column(
-        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.divider)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 17),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : const Border(bottom: BorderSide(color: AppColors.divider)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                question,
+                style: const TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.25,
+                  height: 1.3,
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 17.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            sub,
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Pressable(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.close_rounded,
-                          size: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (expand) Expanded(child: child) else Flexible(child: child),
-          if (footer != null)
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 11, 16, 0),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: AppColors.divider)),
               ),
-              child: footer,
             ),
-        ],
+            const SizedBox(width: 10),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1219,13 +1123,11 @@ class _SheetShell extends StatelessWidget {
 // ── Skill tracks ────────────────────────────────────────────
 
 class _SkillTrackRow extends StatelessWidget {
-  final bool first;
   final SkillTrack track;
   final Map<String, ExerciseStatus> progressMap;
   final VoidCallback onTap;
 
   const _SkillTrackRow({
-    required this.first,
     required this.track,
     required this.progressMap,
     required this.onTap,
@@ -1246,12 +1148,10 @@ class _SkillTrackRow extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       child: Container(
-        decoration: first
-            ? null
-            : const BoxDecoration(
-                border: Border(top: BorderSide(color: AppColors.divider)),
-              ),
-        padding: const EdgeInsets.fromLTRB(16, 13, 14, 13),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.divider)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         child: Row(
           children: [
             Expanded(
@@ -1343,7 +1243,7 @@ class _AddTrackSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SheetShell(
+    return SheetShell(
       title: 'Add skill track',
       sub: 'Each skill progresses independently',
       expand: true,
@@ -1596,7 +1496,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
         : ExerciseProgressionService.targetIncrementReps;
     final shownTarget = _targetValue ?? _effectiveTarget;
 
-    return _SheetShell(
+    return SheetShell(
       title: widget.category.title,
       sub: 'Adjust progression',
       expand: true,
@@ -1892,310 +1792,190 @@ class _AdjustStepButton extends StatelessWidget {
   }
 }
 
-class _MasterySheet extends StatefulWidget {
-  final MasteryTargetSettings current;
-
-  const _MasterySheet({required this.current});
-
-  @override
-  State<_MasterySheet> createState() => _MasterySheetState();
-}
-
-class _MasterySheetState extends State<_MasterySheet> {
-  static const _minReps = 6;
-  static const _maxReps = 15;
-  static const _minSeconds = 10;
-  static const _maxSeconds = 60;
-  static const _secondsStep = 5;
-
-  late int _reps;
-  late int _seconds;
-
-  @override
-  void initState() {
-    super.initState();
-    _reps = widget.current.repsPerSet.clamp(_minReps, _maxReps);
-    _seconds = widget.current.secondsPerSet.clamp(_minSeconds, _maxSeconds);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dirty = _reps != widget.current.repsPerSet ||
-        _seconds != widget.current.secondsPerSet;
-
-    return _SheetShell(
-      title: 'Mastery target',
-      sub: 'What it takes to level an exercise up',
-      footer: PillButton(
-        label: dirty ? 'Save target' : 'No changes yet',
-        onTap: dirty
-            ? () => Navigator.of(context).pop(
-                  MasteryTargetSettings(
-                    repsPerSet: _reps,
-                    secondsPerSet: _seconds,
-                  ),
-                )
-            : null,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _MasteryStepperRow(
-              label: 'Rep exercises',
-              valueLabel: '3 × $_reps reps',
-              onDecrease:
-                  _reps > _minReps ? () => setState(() => _reps -= 1) : null,
-              onIncrease:
-                  _reps < _maxReps ? () => setState(() => _reps += 1) : null,
-            ),
-            const SizedBox(height: 10),
-            _MasteryStepperRow(
-              label: 'Timed holds',
-              valueLabel: '3 × ${_seconds}s',
-              onDecrease: _seconds > _minSeconds
-                  ? () => setState(() => _seconds -= _secondsStep)
-                  : null,
-              onIncrease: _seconds < _maxSeconds
-                  ? () => setState(() => _seconds += _secondsStep)
-                  : null,
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Reaching this target masters an exercise and unlocks the next '
-              'move in its path. Changing it applies to exercises you are '
-              'still working on — everything already mastered stays mastered, '
-              'and your current session targets keep climbing from where '
-              'they are.',
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textMuted,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MasteryStepperRow extends StatelessWidget {
-  final String label;
-  final String valueLabel;
-  final VoidCallback? onDecrease;
-  final VoidCallback? onIncrease;
-
-  const _MasteryStepperRow({
-    required this.label,
-    required this.valueLabel,
-    required this.onDecrease,
-    required this.onIncrease,
-  });
-
-  Widget _stepButton({required IconData icon, required VoidCallback? onTap}) {
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: const BoxDecoration(
-          color: AppColors.surface2,
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 18,
-          color: onTap == null ? AppColors.textMuted : AppColors.textPrimary,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          _stepButton(icon: Icons.remove_rounded, onTap: onDecrease),
-          SizedBox(
-            width: 86,
-            child: Text(
-              valueLabel,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-          _stepButton(icon: Icons.add_rounded, onTap: onIncrease),
-        ],
-      ),
-    );
-  }
-}
-
 class _DaysSheet extends StatefulWidget {
-  final int current;
-  final List<TrainingSessionType> Function(int days) weekPlanBuilder;
+  /// Monday-first 0/1 mask of the week as it stands today.
+  final List<int> currentMask;
+  final List<TrainingSessionType> Function(List<int> mask) weekPlanBuilder;
 
-  const _DaysSheet({required this.current, required this.weekPlanBuilder});
+  const _DaysSheet({required this.currentMask, required this.weekPlanBuilder});
 
   @override
   State<_DaysSheet> createState() => _DaysSheetState();
 }
 
 class _DaysSheetState extends State<_DaysSheet> {
-  static const _dayOptions = [2, 3, 4, 5, 6];
-  late int _days;
+  static const _dayOptions = [1, 2, 3, 4, 5, 6, 7];
+
+  late List<int> _mask;
 
   @override
   void initState() {
     super.initState();
-    _days = widget.current;
+    _mask = List.of(widget.currentMask);
+  }
+
+  int get _days => _mask.where((day) => day == 1).length;
+
+  bool get _dirty {
+    for (var i = 0; i < _mask.length; i++) {
+      if (_mask[i] != widget.currentMask[i]) return true;
+    }
+    return false;
+  }
+
+  /// Picking a count lays the week out from the default template, so the two
+  /// controls always agree: the chips read the count back off the week.
+  void _pickCount(int days) {
+    setState(() {
+      _mask = List.of(
+        TrainingScheduleService.weekTemplates[days] ?? widget.currentMask,
+      );
+    });
+  }
+
+  /// Tapping a day flips just that day and lets the chip row follow. The last
+  /// training day can't be turned off — a week with no sessions has nothing
+  /// to schedule.
+  void _toggleDay(int index) {
+    if (_mask[index] == 1 && _days == 1) return;
+    setState(() => _mask[index] = _mask[index] == 1 ? 0 : 1);
   }
 
   @override
   Widget build(BuildContext context) {
-    final dirty = _days != widget.current;
-    final plan = widget.weekPlanBuilder(_days);
+    final plan = widget.weekPlanBuilder(_mask);
 
-    return _SheetShell(
+    return SheetShell(
       title: 'Weekly schedule',
-      sub: 'How many days a week you train',
+      sub: 'Pick how many days — or tap the days themselves',
       footer: PillButton(
-        label: dirty ? 'Save schedule' : 'No changes yet',
-        onTap: dirty ? () => Navigator.of(context).pop(_days) : null,
+        label: _dirty ? 'Save schedule' : 'No changes yet',
+        onTap: _dirty ? () => Navigator.of(context).pop(_mask) : null,
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        padding: const EdgeInsets.fromLTRB(0, 16, 0, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                for (final option in _dayOptions)
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: option == _dayOptions.last ? 0 : 8,
-                      ),
-                      child: Pressable(
-                        onTap: () => setState(() => _days = option),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: option == _days
-                                ? AppColors.accentPrimary
-                                : AppColors.surface,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                '$option',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: option == _days
-                                      ? Colors.white
-                                      : AppColors.textPrimary,
-                                ),
+            // Seven chips don't fit a phone width, so the row scrolls. The
+            // chips size to their own text rather than a fixed height, so a
+            // large text scale can't clip them.
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  for (final option in _dayOptions) ...[
+                    if (option != _dayOptions.first) const SizedBox(width: 8),
+                    Pressable(
+                      onTap: () => _pickCount(option),
+                      child: Container(
+                        width: 62,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: option == _days
+                              ? AppColors.accentPrimary
+                              : AppColors.surface,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$option',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: option == _days
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'days',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: option == _days
-                                      ? Colors.white.withValues(alpha: 0.8)
-                                      : AppColors.textMuted,
-                                ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              option == 1 ? 'day' : 'days',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: option == _days
+                                    ? Colors.white.withValues(alpha: 0.8)
+                                    : AppColors.textMuted,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-              ],
+                  ],
+                ],
+              ),
             ),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                for (var i = 0; i < plan.length; i++)
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: i == plan.length - 1 ? 0 : 5,
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            _weekdayLetters[i],
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textMuted,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  for (var i = 0; i < plan.length; i++)
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: i == plan.length - 1 ? 0 : 5,
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              _weekdayLetters[i],
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textMuted,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 5),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: plan[i] == TrainingSessionType.rest
-                                  ? AppColors.surface2
-                                  : AppColors.accentSoft,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                _dayAbbr(plan[i]),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
+                            const SizedBox(height: 5),
+                            Pressable(
+                              onTap: () => _toggleDay(i),
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
                                   color: plan[i] == TrainingSessionType.rest
-                                      ? AppColors.textMuted
-                                      : AppColors.accentPrimary,
+                                      ? AppColors.surface2
+                                      : AppColors.accentSoft,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _dayAbbr(plan[i]),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color:
+                                          plan[i] == TrainingSessionType.rest
+                                              ? AppColors.textMuted
+                                              : AppColors.accentPrimary,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Sessions repeat in order — miss one and it slots into your next training day.',
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textMuted,
-                height: 1.5,
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Text(
+                'Tap a day to train or rest on it. Sessions repeat in order — '
+                'miss one and it slots into your next training day.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textMuted,
+                  height: 1.5,
+                ),
               ),
             ),
           ],
@@ -2255,7 +2035,7 @@ class _SplitSheetState extends State<_SplitSheet> {
   Widget build(BuildContext context) {
     final dirty = _picked != widget.current;
 
-    return _SheetShell(
+    return SheetShell(
       title: 'Split',
       sub: 'How each week is divided into sessions',
       footer: PillButton(
@@ -2269,79 +2049,11 @@ class _SplitSheetState extends State<_SplitSheet> {
             for (final type in TrainingProgramType.values)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: Pressable(
+                child: _SheetRadioRow(
+                  selected: _picked == type,
+                  label: type.label,
+                  sub: _splitSub(type),
                   onTap: () => setState(() => _picked = type),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 15,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _picked == type
-                          ? AppColors.accentSoft
-                          : AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _picked == type
-                            ? AppColors.accentPrimary
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _picked == type
-                                  ? AppColors.accentPrimary
-                                  : Colors.white.withValues(alpha: 0.14),
-                              width: 2,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: _picked == type
-                              ? Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.accentPrimary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 13),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                type.label,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                _splitSub(type),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             if (dirty)
@@ -2363,10 +2075,166 @@ class _SplitSheetState extends State<_SplitSheet> {
   }
 }
 
+/// Where you train — the same two choices the setup wizard asks, so the
+/// answer can be revised without re-running it.
+class _EquipmentSheet extends StatefulWidget {
+  final bool current;
+
+  const _EquipmentSheet({required this.current});
+
+  @override
+  State<_EquipmentSheet> createState() => _EquipmentSheetState();
+}
+
+class _EquipmentSheetState extends State<_EquipmentSheet> {
+  late bool _picked;
+
+  @override
+  void initState() {
+    super.initState();
+    _picked = widget.current;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dirty = _picked != widget.current;
+
+    return SheetShell(
+      title: 'Equipment',
+      sub: 'What you have to train with',
+      footer: PillButton(
+        label: dirty ? 'Save changes' : 'No changes yet',
+        onTap: dirty ? () => Navigator.of(context).pop(_picked) : null,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Column(
+          children: [
+            for (final option in const [
+              (true, 'Yes, a full gym', 'Pull-up bar, rings, barbells — the works'),
+              (false, 'No gym', 'Training at home or outdoors'),
+            ])
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _SheetRadioRow(
+                  selected: _picked == option.$1,
+                  label: option.$2,
+                  sub: option.$3,
+                  onTap: () => setState(() => _picked = option.$1),
+                ),
+              ),
+            if (!_picked)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(2, 2, 2, 0),
+                child: Text(
+                  'You’ll need access to at least a pull-up bar — most of '
+                  'Forma’s pulling work hangs from one. A doorway bar or a '
+                  'park is enough.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textMuted,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Radio option card used by the picker sheets.
+class _SheetRadioRow extends StatelessWidget {
+  final bool selected;
+  final String label;
+  final String sub;
+  final VoidCallback onTap;
+
+  const _SheetRadioRow({
+    required this.selected,
+    required this.label,
+    required this.sub,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accentSoft : AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? AppColors.accentPrimary : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected
+                      ? AppColors.accentPrimary
+                      : Colors.white.withValues(alpha: 0.14),
+                  width: 2,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: selected
+                  ? Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: AppColors.accentPrimary,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    sub,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _GoalSkillsSheet extends StatefulWidget {
   final List<String> picked;
+  final Map<String, ExerciseStatus> progressMap;
 
-  const _GoalSkillsSheet({required this.picked});
+  const _GoalSkillsSheet({required this.picked, required this.progressMap});
 
   @override
   State<_GoalSkillsSheet> createState() => _GoalSkillsSheetState();
@@ -2405,13 +2273,13 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
   Widget build(BuildContext context) {
     final dirty = _dirty;
 
-    return _SheetShell(
-      title: 'Goal skills',
+    return SheetShell(
+      title: 'Active skill trees',
       sub:
           'Pick anything that excites you — Forma builds the path from where you are today',
       expand: true,
       footer: PillButton(
-        label: dirty ? 'Save goal skills' : 'No changes yet',
+        label: dirty ? 'Save skill trees' : 'No changes yet',
         onTap: dirty ? () => Navigator.of(context).pop(_picked) : null,
       ),
       child: ListView(
@@ -2480,19 +2348,29 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
 
   Widget _buildSkillCard(GoalSkillOption skill) {
     final on = _picked.contains(skill.id);
+    final locked = TrainingProgramService.lockedGoal(
+      skill.id,
+      widget.progressMap,
+    );
 
     return Pressable(
-      onTap: () => _toggle(skill.id),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
-        decoration: BoxDecoration(
-          color: on ? AppColors.accentSoft : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: on ? AppColors.accentPrimary : Colors.transparent,
-            width: 1.5,
+      onTap: locked == null
+          ? () => _toggle(skill.id)
+          : () => ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(locked.message))),
+      child: Opacity(
+        opacity: locked == null ? 1 : 0.45,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
+          decoration: BoxDecoration(
+            color: on ? AppColors.accentSoft : AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: on ? AppColors.accentPrimary : Colors.transparent,
+              width: 1.5,
+            ),
           ),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2504,7 +2382,13 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
                   size: 22,
                   color: on ? AppColors.accentPrimary : AppColors.textSecondary,
                 ),
-                if (on)
+                if (locked != null)
+                  const Icon(
+                    Icons.lock_rounded,
+                    size: 15,
+                    color: AppColors.textMuted,
+                  )
+                else if (on)
                   Container(
                     width: 18,
                     height: 18,
@@ -2552,6 +2436,7 @@ class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
               ],
             ),
           ],
+          ),
         ),
       ),
     );

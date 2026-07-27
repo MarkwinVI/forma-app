@@ -56,23 +56,53 @@ class TrainingScheduleWindow {
 }
 
 class TrainingScheduleService {
-  static const minFrequencyPerWeek = 2;
-  static const maxFrequencyPerWeek = 6;
+  static const minFrequencyPerWeek = 1;
+  static const maxFrequencyPerWeek = 7;
 
+  /// Where a given count of training days falls in the week by default. A
+  /// user who picks their own days overrides this — see [dayMaskFrom].
   static const Map<int, List<int>> weekTemplates = {
+    1: [1, 0, 0, 0, 0, 0, 0],
     2: [1, 0, 0, 1, 0, 0, 0],
     3: [1, 0, 1, 0, 1, 0, 0],
     4: [1, 1, 0, 1, 1, 0, 0],
     5: [1, 1, 1, 0, 1, 1, 0],
     6: [1, 1, 1, 1, 1, 1, 0],
+    7: [1, 1, 1, 1, 1, 1, 1],
   };
+
+  /// The week the user laid out by hand in the schedule sheet, Monday first,
+  /// or null when they never moved off the template. Stored alongside the
+  /// other setup answers so it travels with the program.
+  static List<int>? dayMaskFrom(Map<String, dynamic>? variationRules) {
+    final setup = variationRules?['program_setup_v1'];
+    if (setup is! Map) return null;
+    return normalizeDayMask(setup['training_days']);
+  }
+
+  /// Coerces stored JSON (ints or bools) into a 7-long 0/1 mask, or null if
+  /// it is unusable — a mask with no training day at all included.
+  static List<int>? normalizeDayMask(Object? raw) {
+    if (raw is! List || raw.length != 7) return null;
+    final mask = [
+      for (final value in raw) value == true || value == 1 ? 1 : 0,
+    ];
+    return mask.contains(1) ? mask : null;
+  }
+
+  /// Which days of the week train: the user's own mask when they have one,
+  /// otherwise the template for their session count.
+  List<int> weekTemplateFor(int frequencyPerWeek, {List<int>? dayMask}) =>
+      normalizeDayMask(dayMask) ??
+      weekTemplates[_clampFrequency(frequencyPerWeek)]!;
 
   List<TrainingSessionType> cycleFor({
     required TrainingProgramType programType,
     required int frequencyPerWeek,
+    List<int>? dayMask,
   }) {
     final sequence = trainingSequenceFor(programType);
-    final template = weekTemplates[_clampFrequency(frequencyPerWeek)]!;
+    final template = weekTemplateFor(frequencyPerWeek, dayMask: dayMask);
     var next = 0;
     return [
       for (final trains in template)
@@ -98,8 +128,8 @@ class TrainingScheduleService {
   /// How many training days the program's week template ever stacks back to
   /// back — the recovery ceiling. Two sessions a week never touch (1); six a
   /// week run six deep. Training off-plan may not push a run past this.
-  int maxConsecutiveTrainingDays(int frequencyPerWeek) {
-    final template = weekTemplates[_clampFrequency(frequencyPerWeek)]!;
+  int maxConsecutiveTrainingDays(int frequencyPerWeek, {List<int>? dayMask}) {
+    final template = weekTemplateFor(frequencyPerWeek, dayMask: dayMask);
     var best = 0;
     // Walked twice so a run wrapping the end of the week is measured whole.
     var run = 0;
@@ -138,6 +168,7 @@ class TrainingScheduleService {
   TrainingScheduleWindow buildWindow({
     required TrainingProgramType programType,
     required int frequencyPerWeek,
+    List<int>? dayMask,
     required int currentStepIndex,
     required TrainingSessionType currentSessionType,
     DateTime? lastPlannedWorkoutAt,
@@ -161,6 +192,7 @@ class TrainingScheduleService {
     final cycle = cycleFor(
       programType: programType,
       frequencyPerWeek: frequencyPerWeek,
+      dayMask: dayMask,
     );
     final totalSessions =
         cycle.where((session) => session != TrainingSessionType.rest).length;

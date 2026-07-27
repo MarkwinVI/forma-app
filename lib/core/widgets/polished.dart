@@ -363,13 +363,20 @@ class PillButton extends StatelessWidget {
               iconWidget,
               const SizedBox(width: 7),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: foreground,
-                letterSpacing: -0.2,
+            // Flexible so a long label or a large text scale ellipsizes
+            // instead of overflowing a narrow button.
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: foreground,
+                  letterSpacing: -0.2,
+                ),
               ),
             ),
             if (iconWidget != null && trailingIcon) ...[
@@ -598,6 +605,124 @@ class ScreenHeader extends StatelessWidget {
               child: actions[i],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Slide-up sheet chrome shared by every picker sheet: grabber, title and
+/// subtitle, close button, scrolling content and an optional pinned footer.
+class SheetShell extends StatelessWidget {
+  final String title;
+
+  /// Optional — sheets whose title already says everything omit it.
+  final String? sub;
+  final Widget child;
+  final Widget? footer;
+  final bool expand;
+
+  const SheetShell({
+    super.key,
+    required this.title,
+    this.sub,
+    required this.child,
+    this.footer,
+    this.expand = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final maxHeight = media.size.height - media.padding.top - 24;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: math.min(media.size.height * 0.88, maxHeight),
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.bg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      padding: EdgeInsets.only(bottom: media.padding.bottom + 14),
+      child: Column(
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 17.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          if (sub != null) ...[
+                            const SizedBox(height: 1),
+                            Text(
+                              sub!,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Pressable(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 15,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (expand) Expanded(child: child) else Flexible(child: child),
+          if (footer != null)
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 11, 16, 0),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+              child: footer,
+            ),
         ],
       ),
     );

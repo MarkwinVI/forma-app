@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/reorder_exercises_page.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
@@ -289,8 +290,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
     final target = _prescribedTargetFor(item);
+    // The set count the user last saved for this exercise on this day wins;
+    // reps still come from where they are on the progression.
     return List.generate(
-      target.sets,
+      item.plannedSets ?? target.sets,
       (index) => _WorkoutSetDraft(
         number: index + 1,
         target: target.value,
@@ -687,7 +690,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     }
     if (logic == null || !mounted) return;
 
-    final dayTitle = programDayTitle(widget.recommendation.sessionType);
+    final plannedDate = widget.recommendation.plannedDate;
+    final dayTitle = plannedDate == null
+        ? programDayTitle(widget.recommendation.sessionType)
+        : kWeekdayNames[plannedDate.weekday - 1];
     final update = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -712,6 +718,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     TrainingProgramLogicSnapshot logic,
   ) async {
     final sessionType = widget.recommendation.sessionType;
+    // Plans belong to a weekday, so the changes land on the day that was
+    // actually trained rather than every day running this session.
+    final plannedDate = widget.recommendation.plannedDate;
+    final weekday = plannedDate == null ? null : plannedDate.weekday - 1;
     final config = Map<String, dynamic>.from(
       logic.program.variationRules['session_items_v1'] as Map? ?? const {},
     );
@@ -722,6 +732,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       sessionType: sessionType,
       branchSelections: logic.branchSelections,
       progressMap: _progressMap,
+      weekday: weekday,
     );
 
     final unmatched = List.of(planItems);
@@ -767,7 +778,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       );
     }
 
-    config[sessionType.dbValue] = ProgramSessionPlan.serializeDay(updated);
+    config[programDayConfigKey(sessionType, weekday: weekday)] =
+        ProgramSessionPlan.serializeDay(updated);
 
     await _programStoreService.updateProgramLogic(
       userId: userId,
@@ -837,14 +849,40 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       return;
     }
 
-    final reordered = await Navigator.of(context)
-        .push<Map<ExerciseProgramSection, List<TrainingRecommendationItem>>>(
+    final order = await Navigator.of(context).push<List<List<String>>>(
       MaterialPageRoute(
-        builder: (_) => _ReorderExercisesPage(sections: sections),
+        builder: (_) => ReorderExercisesPage(
+          sections: [
+            for (final entry in sections)
+              ReorderExercisesSection(
+                title: entry.section.label,
+                entries: [
+                  for (final item in entry.items)
+                    ReorderExerciseEntry(
+                      id: item.exercise.id,
+                      name: item.exercise.name,
+                      subtitle: item.track.label,
+                      icon: programPatternIcon(item.exercise.category),
+                    ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
-    if (reordered == null || !mounted) return;
-    _applyReorderedSections(reordered);
+    if (order == null || !mounted) return;
+
+    final byId = {
+      for (final entry in sections)
+        for (final item in entry.items) item.exercise.id: item,
+    };
+    _applyReorderedSections({
+      for (var i = 0; i < sections.length; i++)
+        sections[i].section: [
+          for (final id in order[i])
+            if (byId[id] != null) byId[id]!,
+        ],
+    });
   }
 
   Future<void> _openReplaceExercise(TrainingRecommendationItem item) async {
@@ -2906,213 +2944,6 @@ class _WorkoutToast extends StatelessWidget {
 }
 
 // ── Reorder page ──────────────────────────────────────────────────────
-
-class _ReorderExercisesPage extends StatefulWidget {
-  final List<_SectionEntry> sections;
-
-  const _ReorderExercisesPage({required this.sections});
-
-  @override
-  State<_ReorderExercisesPage> createState() => _ReorderExercisesPageState();
-}
-
-class _ReorderExercisesPageState extends State<_ReorderExercisesPage> {
-  late final Map<ExerciseProgramSection, List<TrainingRecommendationItem>>
-      _items;
-
-  @override
-  void initState() {
-    super.initState();
-    _items = {
-      for (final entry in widget.sections) entry.section: List.of(entry.items),
-    };
-  }
-
-  bool get _dirty {
-    for (final entry in widget.sections) {
-      final current = _items[entry.section]!;
-      for (var i = 0; i < current.length; i++) {
-        if (current[i].exercise.id != entry.items[i].exercise.id) return true;
-      }
-    }
-    return false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dirty = _dirty;
-
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: AppColors.bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.chevron_left_rounded,
-            size: 30,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Reorder exercises',
-              style: TextStyle(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              'Drag ≡ to change the order',
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        titleSpacing: 0,
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                children: [
-                  for (final entry in widget.sections) ...[
-                    SectionHeader(title: entry.section.label),
-                    SurfaceCard(
-                      clip: true,
-                      child: ReorderableListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        buildDefaultDragHandles: false,
-                        itemCount: _items[entry.section]!.length,
-                        onReorder: (oldIndex, newIndex) {
-                          setState(() {
-                            if (newIndex > oldIndex) newIndex -= 1;
-                            final list = _items[entry.section]!;
-                            final item = list.removeAt(oldIndex);
-                            list.insert(newIndex, item);
-                          });
-                        },
-                        proxyDecorator: (child, _, __) => Material(
-                          color: AppColors.surface2,
-                          borderRadius: BorderRadius.circular(14),
-                          child: child,
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = _items[entry.section]![index];
-                          return Container(
-                            key: ValueKey(item.exercise.id),
-                            height: 60,
-                            decoration: BoxDecoration(
-                              border: index > 0
-                                  ? const Border(
-                                      top: BorderSide(color: AppColors.divider),
-                                    )
-                                  : null,
-                            ),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 16),
-                                IconTile(
-                                  icon: programPatternIcon(
-                                    item.exercise.category,
-                                  ),
-                                  size: 38,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.exercise.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                          letterSpacing: -0.15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 1),
-                                      Text(
-                                        item.track.label,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 12.5,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                ReorderableDragStartListener(
-                                  index: index,
-                                  child: const SizedBox(
-                                    width: 44,
-                                    height: 44,
-                                    child: Icon(
-                                      Icons.drag_handle_rounded,
-                                      size: 19,
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(2, 14, 2, 0),
-                    child: Text(
-                      'Exercises stay inside their block — skill work always '
-                      'comes before the main lifts.',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textMuted,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              decoration: const BoxDecoration(
-                color: AppColors.bg,
-                border: Border(top: BorderSide(color: AppColors.divider)),
-              ),
-              child: PillButton(
-                label: dirty ? 'Save order' : 'No changes yet',
-                onTap: dirty ? () => Navigator.of(context).pop(_items) : null,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── Empty state ───────────────────────────────────────────────────────
 

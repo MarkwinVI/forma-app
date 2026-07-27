@@ -18,6 +18,7 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import '../home/home_dashboard_metrics.dart';
 import '../skills/skill_tree_view.dart';
 import 'widgets/skill_tree_row.dart';
@@ -135,11 +136,14 @@ class _ProgressViewState extends State<ProgressView> {
       ..._trainingProgramService.laneSelectionsFromTracks(_skillTracks),
     };
     final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
+    final dayMask =
+        TrainingScheduleService.dayMaskFrom(snapshot.program.variationRules);
     final schedule = HomeDashboardMetricsCalculator.resolveSchedule(
       cycle: _trainingProgramService.scheduleCycleFor(
         programType: programType,
         scheduleVariant: scheduleVariant,
         frequencyPerWeek: snapshot.program.frequencyPerWeek,
+        dayMask: dayMask,
       ),
       nextStepIndex: snapshot.state.nextStepIndex,
       nextSessionType: snapshot.state.nextSessionType,
@@ -169,6 +173,7 @@ class _ProgressViewState extends State<ProgressView> {
       workouts: _pastWorkouts,
       goalSkillIds: snapshot.program.goalSkillIds,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      dayMask: dayMask,
       now: now,
     );
   }

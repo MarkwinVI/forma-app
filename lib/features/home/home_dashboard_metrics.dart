@@ -393,6 +393,7 @@ class HomeDashboardMetricsCalculator {
     required List<PastWorkout> workouts,
     List<String> goalSkillIds = const [],
     int frequencyPerWeek = 3,
+    List<int>? dayMask,
     PastWorkout? completedWorkout,
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
     TrainingScheduleWindow? scheduleWindow,
@@ -402,6 +403,7 @@ class HomeDashboardMetricsCalculator {
       programType: programType,
       scheduleVariant: scheduleVariant,
       frequencyPerWeek: frequencyPerWeek,
+      dayMask: dayMask,
     );
     final resolvedCompletedWorkout = completedWorkout ??
         (schedule.completedToday && workouts.isNotEmpty

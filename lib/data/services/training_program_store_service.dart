@@ -197,6 +197,7 @@ class TrainingProgramStoreService {
     final cycle = scheduleCycleFor(
       programType: program.programType,
       frequencyPerWeek: program.frequencyPerWeek,
+      dayMask: TrainingScheduleService.dayMaskFrom(program.variationRules),
     );
     if (cycle.isEmpty) return;
 
@@ -236,6 +237,7 @@ class TrainingProgramStoreService {
     final cycle = scheduleCycleFor(
       programType: program.programType,
       frequencyPerWeek: program.frequencyPerWeek,
+      dayMask: TrainingScheduleService.dayMaskFrom(program.variationRules),
     );
     if (cycle.isEmpty) return;
 
@@ -247,6 +249,8 @@ class TrainingProgramStoreService {
             programType: program.programType,
             sessionType: sessionType,
             frequencyPerWeek: program.frequencyPerWeek,
+            dayMask:
+                TrainingScheduleService.dayMaskFrom(program.variationRules),
           )
         : stepIndex;
 
@@ -285,6 +289,7 @@ class TrainingProgramStoreService {
     final cycle = scheduleCycleFor(
       programType: program.programType,
       frequencyPerWeek: program.frequencyPerWeek,
+      dayMask: TrainingScheduleService.dayMaskFrom(program.variationRules),
     );
     if (cycle.isEmpty) return;
 
@@ -562,10 +567,12 @@ class TrainingProgramStoreService {
     required TrainingSessionType current,
     required TrainingProgramType programType,
     int frequencyPerWeek = 3,
+    List<int>? dayMask,
   }) {
     final cycle = scheduleCycleFor(
       programType: programType,
       frequencyPerWeek: frequencyPerWeek,
+      dayMask: dayMask,
     );
     if (cycle.contains(current)) {
       return current;
@@ -580,10 +587,12 @@ class TrainingProgramStoreService {
     required TrainingProgramType programType,
     required TrainingSessionType sessionType,
     int frequencyPerWeek = 3,
+    List<int>? dayMask,
   }) {
     final cycle = scheduleCycleFor(
       programType: programType,
       frequencyPerWeek: frequencyPerWeek,
+      dayMask: dayMask,
     );
     final index = cycle.indexOf(sessionType);
     return index >= 0 ? index : 0;
@@ -592,10 +601,12 @@ class TrainingProgramStoreService {
   List<TrainingSessionType> scheduleCycleFor({
     required TrainingProgramType programType,
     int frequencyPerWeek = 3,
+    List<int>? dayMask,
   }) {
     return TrainingScheduleService().cycleFor(
       programType: programType,
       frequencyPerWeek: frequencyPerWeek,
+      dayMask: dayMask,
     );
   }
 }

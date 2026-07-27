@@ -51,6 +51,15 @@ class SkillCategory {
     this.unlockRequirement,
   });
 
+  /// Whether this tree is still behind its unlock requirement — the gating
+  /// exercise has not been mastered yet. Trees without a requirement are
+  /// always open.
+  bool isLockedFor(Map<String, ExerciseStatus> progressMap) {
+    final requirement = unlockRequirement;
+    if (requirement == null) return false;
+    return progressMap[requirement.exerciseId] != ExerciseStatus.mastered;
+  }
+
   /// Exercise ids for a branch. The `main` (Foundation) branch of some
   /// categories has no explicit path — every specialised branch shares the
   /// same opening steps instead — so it falls back to the longest common

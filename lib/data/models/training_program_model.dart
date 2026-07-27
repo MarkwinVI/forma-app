@@ -38,6 +38,47 @@ extension TrainingProgramTypeX on TrainingProgramType {
   }
 }
 
+
+/// Weekday names, Monday first — the index used to key a day's own plan.
+const List<String> kWeekdayNames = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+/// Where one training day's exercise list lives in `session_items_v1`.
+///
+/// Editing a single day writes a weekday-scoped entry ("3:upper"), so
+/// Thursday's Upper can differ from Monday's. Days that have never been
+/// edited on their own share the session-type entry ("upper"), which is also
+/// what every program written before per-day plans existed uses. The session
+/// type is part of the key so a stale override cannot leak onto a weekday
+/// that later changes session.
+String programDayConfigKey(TrainingSessionType sessionType, {int? weekday}) =>
+    weekday == null ? sessionType.dbValue : '$weekday:${sessionType.dbValue}';
+
+/// The stored plan for a day: its own if it has one, else the shared plan for
+/// its session type, else null when the day still runs on generated defaults.
+Map<String, dynamic>? programDayConfig(
+  Map<String, dynamic> sessionItemsConfig,
+  TrainingSessionType sessionType, {
+  int? weekday,
+}) {
+  if (weekday != null) {
+    final own = sessionItemsConfig[programDayConfigKey(
+      sessionType,
+      weekday: weekday,
+    )];
+    if (own is Map) return Map<String, dynamic>.from(own);
+  }
+  final shared = sessionItemsConfig[sessionType.dbValue];
+  return shared is Map ? Map<String, dynamic>.from(shared) : null;
+}
+
 enum TrainingSessionType { fullBody, push, pull, upper, lower, rest }
 
 extension TrainingSessionTypeX on TrainingSessionType {
@@ -272,6 +313,11 @@ class TrainingRecommendationItem {
   /// Empty when the branch is not a skill-tree progression.
   final List<String> progressionExerciseIds;
 
+  /// Sets saved on this exercise in the day's plan — what the user last left
+  /// it at in a workout. Null when the day runs on defaults, in which case
+  /// the progression's own set count applies.
+  final int? plannedSets;
+
   const TrainingRecommendationItem({
     required this.track,
     required this.exercise,
@@ -279,6 +325,7 @@ class TrainingRecommendationItem {
     required this.sourceCategory,
     required this.sourceSkillCategoryId,
     this.progressionExerciseIds = const [],
+    this.plannedSets,
   });
 
   /// Whether this item is the current exercise of a skill-tree progression.

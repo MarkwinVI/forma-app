@@ -64,10 +64,7 @@ class _SkillsViewState extends State<SkillsView> {
   }
 
   bool _isCategoryLocked(SkillCategory category) {
-    final unlockRequirement = category.unlockRequirement;
-    if (unlockRequirement == null) return false;
-    return _progressMap[unlockRequirement.exerciseId] !=
-        ExerciseStatus.mastered;
+    return category.isLockedFor(_progressMap);
   }
 
   @override

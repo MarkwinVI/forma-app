@@ -55,10 +55,31 @@ class TrainingProgramService {
     'planche': 'pushups:planche',
   };
 
+  /// Goal options whose tree is gated: picking them means nothing until the
+  /// foundation behind them is finished.
+  static const Map<String, String> goalSkillCategoryIds = {
+    'hspu': SkillCategoryCatalog.handstandPushupsId,
+    'planche': SkillCategoryCatalog.plancheId,
+    'muscleup': SkillCategoryCatalog.muscleUpId,
+  };
+
+  /// The unmet requirement standing in front of a goal option, if any.
+  static SkillCategoryUnlockRequirement? lockedGoal(
+    String goalId,
+    Map<String, ExerciseStatus> progressMap,
+  ) {
+    final categoryId = goalSkillCategoryIds[goalId];
+    if (categoryId == null) return null;
+    final category = SkillCategoryCatalog.findById(categoryId);
+    if (category == null || !category.isLockedFor(progressMap)) return null;
+    return category.unlockRequirement;
+  }
+
   static final Map<TrainingTrack, String> _defaultBranchIds = {
     TrainingTrack.skillWork: '${SkillCategoryCatalog.coreId}:l_sit',
-    TrainingTrack.verticalPush:
-        '${SkillCategoryCatalog.handstandPushupsId}:main',
+    // Dips, not handstand pushups: the HSPU tree is locked behind the
+    // pushup foundation, so it can never be where a program starts.
+    TrainingTrack.verticalPush: '${SkillCategoryCatalog.dipsId}:weighted',
     TrainingTrack.horizontalPush: '${SkillCategoryCatalog.pushupsId}:one_arm',
     TrainingTrack.verticalPull: '${SkillCategoryCatalog.pullupsId}:weighted',
     TrainingTrack.horizontalPull: '${SkillCategoryCatalog.rowsId}:front_lever',
@@ -77,7 +98,12 @@ class TrainingProgramService {
     DateTime? plannedDate,
     int? plannedStepIndex,
     bool affectsSchedule = true,
+    int? weekday,
   }) {
+    // A day edited on its own runs its own plan; the date it is planned for
+    // is what says which day that is.
+    weekday ??= plannedDate == null ? null : plannedDate.weekday - 1;
+
     // Skills-as-tracks: when the user has skill tracks and no custom day
     // plan, sessions are built from the included tracks (any number per
     // movement pattern) instead of the 8 fixed lanes.
@@ -90,6 +116,7 @@ class TrainingProgramService {
               sessionType: currentSessionType,
               progressMap: progressMap,
               sessionItemsConfig: sessionItemsConfig,
+              weekday: weekday,
             );
       return DailyTrainingRecommendation(
         programType: programType,
@@ -120,6 +147,7 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
+                weekday: weekday,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -145,6 +173,7 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
+                weekday: weekday,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -169,6 +198,7 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
+                weekday: weekday,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -192,11 +222,14 @@ class TrainingProgramService {
     required TrainingSessionType sessionType,
     required Map<String, ExerciseStatus> progressMap,
     required Map<String, dynamic> sessionItemsConfig,
+    int? weekday,
   }) {
-    final rawSession = sessionItemsConfig[sessionType.dbValue];
-    if (rawSession is! Map) return null;
-
-    final sessionMap = Map<String, dynamic>.from(rawSession);
+    final sessionMap = programDayConfig(
+      sessionItemsConfig,
+      sessionType,
+      weekday: weekday,
+    );
+    if (sessionMap == null) return null;
     final items = <TrainingRecommendationItem>[];
 
     for (final component in const ['warmup', 'skill', 'strength', 'cooldown']) {
@@ -254,6 +287,11 @@ class TrainingProgramService {
       sourceSkillCategoryId: (rawItem['skill_category_id'] as String?) ??
           ExerciseCatalog.skillCategoryIdForExercise(exercise),
       progressionExerciseIds: progressionPath,
+      // Clamped so a malformed config can't spawn an unusable set list.
+      plannedSets: switch (rawItem['sets']) {
+        final int sets => sets.clamp(1, 10),
+        _ => null,
+      },
     );
   }
 
@@ -412,13 +450,17 @@ class TrainingProgramService {
     required TrainingProgramType programType,
     String? scheduleVariant,
     int frequencyPerWeek = 3,
+    List<int>? dayMask,
   }) {
-    if (scheduleVariant == null ||
+    // A hand-picked week always wins over the canned variants below.
+    if (TrainingScheduleService.normalizeDayMask(dayMask) != null ||
+        scheduleVariant == null ||
         scheduleVariant.endsWith('_3x') ||
         scheduleVariant.contains('_rest_')) {
       return TrainingScheduleService().cycleFor(
         programType: programType,
         frequencyPerWeek: frequencyPerWeek,
+        dayMask: dayMask,
       );
     }
 
