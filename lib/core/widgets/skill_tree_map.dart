@@ -54,6 +54,18 @@ class SkillTreeMap extends StatelessWidget {
     this.onFoundationTap,
   });
 
+  void _handleTap(_TreeLayout layout, Offset position) {
+    final routeId = layout.routeAt(position);
+    if (routeId == null) return;
+    if (routeId == foundationRouteId) {
+      onFoundationTap?.call();
+      return;
+    }
+    final branch =
+        viz.branches.where((item) => item.id == routeId).firstOrNull;
+    if (branch != null) onBranchTap?.call(branch);
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -78,43 +90,12 @@ class SkillTreeMap extends StatelessWidget {
         );
         if (onBranchTap == null && onFoundationTap == null) return map;
 
-        // Hit targets sit on the painted tip labels, which are the handles for
-        // picking a branch; the spine's target covers everything left of the
-        // fork.
-        return SizedBox(
-          width: double.infinity,
-          height: layout.height,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              if (onFoundationTap != null && viz.spine.isNotEmpty)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  width: layout.forkX,
-                  height: layout.height,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: onFoundationTap,
-                  ),
-                ),
-              map,
-              if (onBranchTap != null)
-                for (var index = 0; index < layout.labels.length; index++)
-                  Positioned(
-                    left: layout.labels[index].anchor.dx,
-                    top: layout.labels[index].anchor.dy -
-                        layout.labels[index].painter.height / 2 -
-                        8,
-                    width: layout.labels[index].painter.width + 16,
-                    height: layout.labels[index].painter.height + 16,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => onBranchTap!(viz.branches[index]),
-                    ),
-                  ),
-            ],
-          ),
+        // Anything belonging to a route is a handle for picking it: its nodes,
+        // its tip label, or the stretch of canvas nearest to them.
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (details) => _handleTap(layout, details.localPosition),
+          child: map,
         );
       },
     );
@@ -355,6 +336,49 @@ class _TreeLayout {
       right = math.max(right, tipX + 2 + labelPainters[j].painter.width);
     }
     return right;
+  }
+
+  /// The route a tap belongs to: whichever node or tip label sits nearest,
+  /// falling back to the foundation for taps along the spine's stretch of
+  /// canvas. Null when the tap has nothing to select.
+  String? routeAt(Offset point, {double reach = 40}) {
+    String? bestRoute;
+    var bestDistance = double.infinity;
+
+    for (final node in dots) {
+      final distance = (node.center - point).distance;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestRoute = node.routeId;
+      }
+    }
+    for (final label in labels) {
+      final rect = Rect.fromLTWH(
+        label.anchor.dx + 2,
+        label.anchor.dy - label.painter.height / 2,
+        label.painter.width,
+        label.painter.height,
+      ).inflate(6);
+      final distance = _distanceToRect(rect, point);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestRoute = label.routeId;
+      }
+    }
+
+    if (bestRoute != null && bestDistance <= reach) return bestRoute;
+    // Nothing close enough: the spine's half of the canvas still means the
+    // foundation, so a tap in open space near it isn't dead.
+    if (viz.spine.isNotEmpty && point.dx <= forkX) {
+      return SkillTreeMap.foundationRouteId;
+    }
+    return null;
+  }
+
+  static double _distanceToRect(Rect rect, Offset point) {
+    final dx = math.max(math.max(rect.left - point.dx, 0), point.dx - rect.right);
+    final dy = math.max(math.max(rect.top - point.dy, 0), point.dy - rect.bottom);
+    return math.sqrt(dx * dx + dy * dy);
   }
 
   /// Selected route reads brightest; with a selection in play the others step

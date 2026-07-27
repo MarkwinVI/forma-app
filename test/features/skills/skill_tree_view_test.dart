@@ -92,22 +92,30 @@ void main() {
     expect(sectionTitles(tester).first.data, 'Foundation');
     expect(sectionTitles(tester).first.style?.color, AppColors.textPrimary);
 
-    await tester.tap(
-      find
-          .descendant(
-            of: find.byType(SkillTreeMap),
-            matching: find.byType(GestureDetector),
-          )
-          .last,
+    // Well away from the tip labels: this lands on the upper branch's nodes.
+    final map = tester.getRect(find.byType(SkillTreeMap));
+    await tester.tapAt(
+      Offset(map.left + map.width * 0.55, map.top + map.height * 0.25),
     );
     await tester.pumpAndSettle();
 
     // The map stays put — selection moved off the foundation onto a branch.
     expect(find.byType(SkillTreeMap), findsOneWidget);
-    final selected = sectionTitles(tester)
+    var selected = sectionTitles(tester)
         .where((text) => text.style?.color == AppColors.textPrimary);
     expect(selected.length, 1);
     expect(selected.first.data, isNot('Foundation'));
+
+    // And the spine takes it back to the foundation.
+    await tester.tapAt(
+      Offset(map.left + 12, map.top + map.height / 2),
+    );
+    await tester.pumpAndSettle();
+
+    selected = sectionTitles(tester)
+        .where((text) => text.style?.color == AppColors.textPrimary);
+    expect(selected.length, 1);
+    expect(selected.first.data, 'Foundation');
   });
 
   testWidgets('steps report where they stand in the route', (tester) async {

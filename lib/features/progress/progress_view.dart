@@ -50,9 +50,9 @@ class _ProgressViewState extends State<ProgressView> {
   List<PastWorkout> _pastWorkouts = const [];
   List<SkillTrack> _skillTracks = const [];
 
-  /// Null until the user touches a card — the closest tree is expanded by
-  /// default, everything else folded.
-  Set<String>? _expandedTrees;
+  /// Rows the user has opened. Every tree starts folded, so the tab opens as
+  /// a plain list.
+  final Set<String> _expandedTrees = {};
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
@@ -248,8 +248,8 @@ class _ProgressViewState extends State<ProgressView> {
 
   Widget _buildSections(HomeDashboardMetrics metrics) {
     // closestSkills is ordered by how close each tree is to its next unlock,
-    // so the list leads with the tree nearest levelling up and that one starts
-    // expanded. Every other catalog tree follows as one not started yet.
+    // so the list leads with the tree nearest levelling up. Every other
+    // catalog tree follows as one not started yet.
     final active = <({JourneySkillProgressData skill, SkillCategory category})>[
       for (final skill in metrics.journeySnapshot.closestSkills)
         if (SkillCategoryCatalog.findById(skill.skillCategoryId)
@@ -261,8 +261,6 @@ class _ProgressViewState extends State<ProgressView> {
       for (final category in SkillCategoryCatalog.browsable())
         if (!activeIds.contains(category.id)) category,
     ];
-    final expandedKeys = _expandedTrees ??
-        {if (active.isNotEmpty) _skillKey(active.first.skill)};
 
     Widget rowFor(
       ({JourneySkillProgressData skill, SkillCategory category}) tree, {
@@ -274,13 +272,12 @@ class _ProgressViewState extends State<ProgressView> {
         skill: tree.skill,
         category: tree.category,
         progressMap: _progressMap,
-        expanded: expandedKeys.contains(key),
+        expanded: _expandedTrees.contains(key),
         last: last,
-        onToggleExpanded: () => _toggleTree(key, expandedKeys),
+        onToggleExpanded: () => _toggleTree(key),
         onOpenTree: () => _openSkillTree(tree.category.id),
       );
     }
-
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,10 +307,9 @@ class _ProgressViewState extends State<ProgressView> {
               skill: null,
               category: category,
               progressMap: _progressMap,
-              expanded: expandedKeys.contains(_categoryKey(category)),
+              expanded: _expandedTrees.contains(_categoryKey(category)),
               last: category == inactive.last,
-              onToggleExpanded: () =>
-                  _toggleTree(_categoryKey(category), expandedKeys),
+              onToggleExpanded: () => _toggleTree(_categoryKey(category)),
               onOpenTree: () => _openSkillTree(category.id),
             ),
         ],
@@ -328,10 +324,9 @@ class _ProgressViewState extends State<ProgressView> {
 
   String _categoryKey(SkillCategory category) => '${category.id}:*';
 
-  void _toggleTree(String key, Set<String> current) {
+  void _toggleTree(String key) {
     setState(() {
-      _expandedTrees = {...current};
-      if (!_expandedTrees!.remove(key)) _expandedTrees!.add(key);
+      if (!_expandedTrees.remove(key)) _expandedTrees.add(key);
     });
   }
 
