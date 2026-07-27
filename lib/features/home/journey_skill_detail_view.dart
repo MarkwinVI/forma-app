@@ -329,8 +329,6 @@ class _JourneyStageRow extends StatelessWidget {
       builder: (sheetContext) => ExercisePreviewSheet(
         exercise: exercise,
         skillCategoryId: skillCategoryId,
-        initialStatus: _statusForStage(stage.status),
-        onStatusChanged: (_) async {},
         onLearnMore: () {
           Navigator.of(sheetContext).pop();
           openExerciseDetailView<void>(
@@ -630,17 +628,6 @@ IconData _trackIcon(TrainingTrack track) {
       return Icons.accessibility_new_rounded;
     case TrainingTrack.hinge:
       return Icons.fit_screen_rounded;
-  }
-}
-
-ExerciseStatus _statusForStage(JourneySkillStageStatus status) {
-  switch (status) {
-    case JourneySkillStageStatus.cleared:
-      return ExerciseStatus.mastered;
-    case JourneySkillStageStatus.inProgress:
-      return ExerciseStatus.active;
-    case JourneySkillStageStatus.locked:
-      return ExerciseStatus.inactive;
   }
 }
 

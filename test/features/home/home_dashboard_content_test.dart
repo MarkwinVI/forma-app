@@ -383,7 +383,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Learn more'), findsOneWidget);
-    expect(find.text('STATUS'), findsOneWidget);
+    // The sheet previews the exercise — difficulty in words, no status chips.
+    expect(find.text('Beginner'), findsOneWidget);
+    expect(find.text('STATUS'), findsNothing);
   });
 
   testWidgets('progress detail chart fits when history reaches the goal',

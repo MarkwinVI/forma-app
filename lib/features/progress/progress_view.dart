@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -19,8 +20,7 @@ import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../home/home_dashboard_metrics.dart';
 import '../skills/skill_tree_view.dart';
-import '../skills/skills_view.dart';
-import 'widgets/skill_tree_progress_card.dart';
+import 'widgets/skill_tree_row.dart';
 
 /// Progress tab — every skill tree as a node map with the user's path
 /// highlighted and a node-anchored rail toward the next unlock.
@@ -179,14 +179,6 @@ class _ProgressViewState extends State<ProgressView> {
     return const {};
   }
 
-  Future<void> _openAllTrees() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SkillsView()),
-    );
-    // Statuses may have changed while browsing the trees.
-    await _loadData();
-  }
-
   Future<void> _openSkillTree(String skillCategoryId) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -227,8 +219,21 @@ class _ProgressViewState extends State<ProgressView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(22, 38, 22, 0),
+                        child: Text(
+                          'Skill trees',
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -1.02,
+                            height: 1.05,
+                          ),
+                        ),
+                      ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                        padding: const EdgeInsets.fromLTRB(22, 0, 22, 130),
                         child: !_hasProgram || metrics == null
                             ? const _NoProgramCard()
                             : _buildSections(metrics),
@@ -243,80 +248,116 @@ class _ProgressViewState extends State<ProgressView> {
 
   Widget _buildSections(HomeDashboardMetrics metrics) {
     // closestSkills is ordered by how close each tree is to its next unlock,
-    // so the first one is the tree that starts out expanded.
-    final trees = <({JourneySkillProgressData skill, SkillCategory category})>[
+    // so the list leads with the tree nearest levelling up and that one starts
+    // expanded. Every other catalog tree follows as one not started yet.
+    final active = <({JourneySkillProgressData skill, SkillCategory category})>[
       for (final skill in metrics.journeySnapshot.closestSkills)
         if (SkillCategoryCatalog.findById(skill.skillCategoryId)
             case final category?)
           (skill: skill, category: category),
     ];
+    final activeIds = {for (final tree in active) tree.category.id};
+    final inactive = [
+      for (final category in SkillCategoryCatalog.browsable())
+        if (!activeIds.contains(category.id)) category,
+    ];
     final expandedKeys = _expandedTrees ??
-        {if (trees.isNotEmpty) _treeKey(trees.first.skill)};
+        {if (active.isNotEmpty) _skillKey(active.first.skill)};
+
+    Widget rowFor(
+      ({JourneySkillProgressData skill, SkillCategory category}) tree, {
+      required bool last,
+    }) {
+      final key = _skillKey(tree.skill);
+      return SkillTreeRow(
+        key: ValueKey(key),
+        skill: tree.skill,
+        category: tree.category,
+        progressMap: _progressMap,
+        expanded: expandedKeys.contains(key),
+        last: last,
+        onToggleExpanded: () => _toggleTree(key, expandedKeys),
+        onOpenTree: () => _openSkillTree(tree.category.id),
+      );
+    }
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
-          title: 'Skill roadmap',
-          action: 'View all',
-          onAction: _openAllTrees,
-        ),
-        if (trees.isEmpty)
-          const SurfaceCard(
-            padding: EdgeInsets.all(18),
+        if (active.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 28),
             child: Text(
               'Your program has no active skill progressions yet. '
               'Pick branches in your program settings to grow your trees.',
               style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w500,
+                fontSize: 14.5,
+                height: 1.45,
                 color: AppColors.textSecondary,
-                height: 1.5,
               ),
             ),
           )
-        else
-          for (final tree in trees) ...[
-            if (tree != trees.first) const SizedBox(height: 12),
-            SkillTreeProgressCard(
-              key: ValueKey(_treeKey(tree.skill)),
-              skill: tree.skill,
-              category: tree.category,
+        else ...[
+          const _GroupLabel('Training now'),
+          for (final tree in active) rowFor(tree, last: tree == active.last),
+        ],
+        if (inactive.isNotEmpty) ...[
+          const _GroupLabel('Not started'),
+          for (final category in inactive)
+            SkillTreeRow(
+              key: ValueKey(_categoryKey(category)),
+              skill: null,
+              category: category,
               progressMap: _progressMap,
-              stalled: _isStalled(tree.skill, metrics),
-              expanded: expandedKeys.contains(_treeKey(tree.skill)),
-              onToggleExpanded: () => _toggleTree(tree.skill, expandedKeys),
-              onOpenTree: () => _openSkillTree(tree.skill.skillCategoryId),
+              expanded: expandedKeys.contains(_categoryKey(category)),
+              last: category == inactive.last,
+              onToggleExpanded: () =>
+                  _toggleTree(_categoryKey(category), expandedKeys),
+              onOpenTree: () => _openSkillTree(category.id),
             ),
-          ],
+        ],
       ],
     );
   }
 
-  /// Cards are identified by category + branch: the same tree can appear on
-  /// two branches, and each keeps its own expanded state.
-  String _treeKey(JourneySkillProgressData skill) =>
+  /// Trained trees are keyed by category + branch — the same tree can appear
+  /// on two branches, and each keeps its own expanded state.
+  String _skillKey(JourneySkillProgressData skill) =>
       '${skill.skillCategoryId}:${skill.branchId}';
 
-  void _toggleTree(JourneySkillProgressData skill, Set<String> current) {
-    final key = _treeKey(skill);
+  String _categoryKey(SkillCategory category) => '${category.id}:*';
+
+  void _toggleTree(String key, Set<String> current) {
     setState(() {
       _expandedTrees = {...current};
       if (!_expandedTrees!.remove(key)) _expandedTrees!.add(key);
     });
   }
 
-  bool _isStalled(
-    JourneySkillProgressData skill,
-    HomeDashboardMetrics metrics,
-  ) {
-    for (final path in metrics.activeSkillPaths) {
-      if (path.skillCategoryId == skill.skillCategoryId &&
-          path.branchId == skill.branchId) {
-        return path.momentum == HomeSkillMomentum.stalled;
-      }
-    }
-    return false;
+}
+
+/// Splits the list into the tree closest to levelling up, the rest of the
+/// program, and everything not started — spacing and type only, no chrome.
+class _GroupLabel extends StatelessWidget {
+  final String label;
+
+  const _GroupLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 34, 0, 6),
+      child: Text(
+        label.toUpperCase(),
+        style: GoogleFonts.robotoMono(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.65,
+          color: AppColors.textMuted,
+        ),
+      ),
+    );
   }
 }
 

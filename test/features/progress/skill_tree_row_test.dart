@@ -4,12 +4,13 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/core/widgets/skill_tree_map.dart';
 import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/skill_category_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/features/home/home_dashboard_metrics.dart';
-import 'package:forma_app/features/progress/widgets/skill_tree_progress_card.dart';
+import 'package:forma_app/features/progress/widgets/skill_tree_row.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() {
@@ -68,12 +69,12 @@ void main() {
       final branchId = category.defaultTrainingPathId;
       await tester.pumpWidget(
         host(
-          SkillTreeProgressCard(
+          SkillTreeRow(
             skill: skillData(category, branchId),
             category: category,
             progressMap: progressFor(category, branchId),
-            stalled: false,
             expanded: true,
+            last: true,
             onToggleExpanded: () {},
             onOpenTree: () {},
           ),
@@ -90,17 +91,16 @@ void main() {
     }
   });
 
-  testWidgets('collapsed card shows the unlock and the current → next step',
-      (tester) async {
+  testWidgets('a collapsed row says how far the next level is', (tester) async {
     final category = SkillCategoryCatalog.browsable().first;
     await tester.pumpWidget(
       host(
-        SkillTreeProgressCard(
+        SkillTreeRow(
           skill: skillData(category, category.defaultTrainingPathId),
           category: category,
           progressMap: const {},
-          stalled: false,
           expanded: false,
+          last: true,
           onToggleExpanded: () {},
           onOpenTree: () {},
         ),
@@ -110,12 +110,11 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text(category.title), findsOneWidget);
-    expect(find.textContaining('2 reps', findRichText: true), findsOneWidget);
     expect(
-      find.textContaining('Archer Pull-up', findRichText: true),
+      find.textContaining('2 reps to level up', findRichText: true),
       findsOneWidget,
     );
-    // The map and its rail belong to the expanded card only.
+    // The NOW → NEXT pair and the map belong to the expanded row only.
     expect(find.text('NOW'), findsNothing);
   });
 
@@ -127,18 +126,19 @@ void main() {
     var opens = 0;
 
     Widget card({required bool expanded}) => host(
-          SkillTreeProgressCard(
+          SkillTreeRow(
             skill: skillData(category, branchId),
             category: category,
             progressMap: progressFor(category, branchId),
-            stalled: false,
             expanded: expanded,
+            last: true,
             onToggleExpanded: () => toggles++,
             onOpenTree: () => opens++,
           ),
         );
 
-    // Expanded: the header collapses, the map opens the full tree.
+    // Expanded: the header and the NOW → NEXT block collapse the row; only
+    // the map opens the full tree.
     await tester.pumpWidget(card(expanded: true));
     await tester.pump();
     await tester.tap(find.text(category.title));
@@ -151,13 +151,64 @@ void main() {
     expect(opens, 1);
     expect(toggles, 1);
 
+    await tester.tap(find.text('NOW'));
+    await tester.pump();
+    expect(toggles, 2);
+    expect(opens, 1);
+
     // Collapsed: tapping anywhere expands, it never navigates.
     await tester.pumpWidget(card(expanded: false));
     await tester.pump();
     await tester.tap(find.text(category.title));
     await tester.pump();
-    expect(toggles, 2);
+    expect(toggles, 3);
     expect(opens, 1);
+  });
+
+  testWidgets('a tree outside the program says what it builds',
+      (tester) async {
+    final category = SkillCategoryCatalog.browsable().first;
+
+    await tester.pumpWidget(
+      host(
+        SkillTreeRow(
+          skill: null,
+          category: category,
+          progressMap: progressFor(category, category.defaultTrainingPathId),
+          expanded: false,
+          last: true,
+          onToggleExpanded: () {},
+          onOpenTree: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(category.description), findsOneWidget);
+    expect(find.textContaining('to level up', findRichText: true), findsNothing);
+
+    // Expanded it drops the session block but keeps the map.
+    await tester.pumpWidget(
+      host(
+        SkillTreeRow(
+          skill: null,
+          category: category,
+          progressMap: progressFor(category, category.defaultTrainingPathId),
+          expanded: true,
+          last: true,
+          onToggleExpanded: () {},
+          onOpenTree: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('NOW'), findsNothing);
+    expect(find.byType(SkillTreeMap), findsOneWidget);
+    // Opening the row keeps the line about what the tree builds.
+    expect(find.text(category.description), findsOneWidget);
   });
 
   testWidgets('both card states survive narrow phones and long names',
@@ -187,21 +238,21 @@ void main() {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SkillTreeProgressCard(
+                SkillTreeRow(
                   skill: longSkill,
                   category: category,
                   progressMap: const {},
-                  stalled: true,
                   expanded: true,
+            last: true,
                   onToggleExpanded: () {},
                   onOpenTree: () {},
                 ),
-                SkillTreeProgressCard(
+                SkillTreeRow(
                   skill: longSkill,
                   category: category,
                   progressMap: const {},
-                  stalled: false,
                   expanded: false,
+                  last: true,
                   onToggleExpanded: () {},
                   onOpenTree: () {},
                 ),
@@ -228,12 +279,12 @@ void main() {
       host(
         RepaintBoundary(
           key: key,
-          child: SkillTreeProgressCard(
+          child: SkillTreeRow(
             skill: skillData(category, branchId),
             category: category,
             progressMap: progressFor(category, branchId),
-            stalled: true,
             expanded: true,
+            last: true,
             onToggleExpanded: () {},
             onOpenTree: () {},
           ),

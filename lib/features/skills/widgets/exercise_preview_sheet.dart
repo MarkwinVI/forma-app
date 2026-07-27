@@ -1,51 +1,31 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/catalog/skill_category_catalog.dart';
 import '../../../data/models/exercise_model.dart';
 
-const _previewMasteredColor = Color(0xFF4CAF50);
-
-class ExercisePreviewSheet extends StatefulWidget {
+class ExercisePreviewSheet extends StatelessWidget {
   final Exercise exercise;
   final String skillCategoryId;
-  final ExerciseStatus initialStatus;
-  final FutureOr<void> Function(ExerciseStatus status) onStatusChanged;
   final VoidCallback onLearnMore;
 
   const ExercisePreviewSheet({
     super.key,
     required this.exercise,
     required this.skillCategoryId,
-    required this.initialStatus,
-    required this.onStatusChanged,
     required this.onLearnMore,
   });
 
-  @override
-  State<ExercisePreviewSheet> createState() => _ExercisePreviewSheetState();
-}
-
-class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
-  late ExerciseStatus _selectedStatus;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedStatus = widget.initialStatus;
-  }
-
-  Future<void> _handleStatusChanged(ExerciseStatus status) async {
-    setState(() {
-      _selectedStatus = status;
-    });
-    await widget.onStatusChanged(status);
+  /// Difficulty in words — the 1–5 catalog scale collapsed to the three
+  /// levels the app talks in.
+  String get _difficultyLabel {
+    if (exercise.difficulty <= 1) return 'Beginner';
+    if (exercise.difficulty == 2) return 'Intermediate';
+    return 'Advanced';
   }
 
   List<Color> get _previewGradient {
-    switch (widget.exercise.category) {
+    switch (exercise.category) {
       case ExerciseCategory.verticalPull:
         return const [Color(0xFF264C62), Color(0xFF101A24)];
       case ExerciseCategory.verticalPush:
@@ -66,7 +46,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
   }
 
   IconData get _previewIcon {
-    switch (widget.exercise.category) {
+    switch (exercise.category) {
       case ExerciseCategory.verticalPull:
         return Icons.sports_gymnastics_rounded;
       case ExerciseCategory.verticalPush:
@@ -88,7 +68,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final skillCategory = SkillCategoryCatalog.findById(widget.skillCategoryId);
+    final skillCategory = SkillCategoryCatalog.findById(skillCategoryId);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -114,7 +94,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              widget.exercise.name,
+              exercise.name,
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
@@ -126,7 +106,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
             Row(
               children: [
                 Text(
-                  skillCategory?.title ?? widget.exercise.category.label,
+                  skillCategory?.title ?? exercise.category.label,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -134,12 +114,28 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                DifficultyStars(difficulty: widget.exercise.difficulty),
+                const Text(
+                  '·',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _difficultyLabel,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
             Text(
-              widget.exercise.description,
+              exercise.description,
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -207,7 +203,7 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: widget.onLearnMore,
+                onPressed: onLearnMore,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
@@ -228,33 +224,6 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            const Text(
-              'STATUS',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: ExerciseStatus.values
-                  .map(
-                    (status) => Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _PreviewStatusChip(
-                          status: status,
-                          isSelected: _selectedStatus == status,
-                          onTap: () => _handleStatusChanged(status),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -263,93 +232,3 @@ class _ExercisePreviewSheetState extends State<ExercisePreviewSheet> {
   }
 }
 
-class DifficultyStars extends StatelessWidget {
-  final int difficulty;
-
-  const DifficultyStars({
-    super.key,
-    required this.difficulty,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(
-        5,
-        (i) => Padding(
-          padding: EdgeInsets.only(right: i == 4 ? 0 : 2),
-          child: Icon(
-            i < difficulty ? Icons.star_rounded : Icons.star_border_rounded,
-            size: 10,
-            color: i < difficulty
-                ? AppColors.accentPrimary
-                : const Color(0xFF3F3F46),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PreviewStatusChip extends StatelessWidget {
-  final ExerciseStatus status;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _PreviewStatusChip({
-    required this.status,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  String get _label {
-    switch (status) {
-      case ExerciseStatus.inactive:
-        return 'Inactive';
-      case ExerciseStatus.active:
-        return 'Active';
-      case ExerciseStatus.mastered:
-        return 'Mastered';
-    }
-  }
-
-  Color get _color {
-    switch (status) {
-      case ExerciseStatus.inactive:
-        return AppColors.textMuted;
-      case ExerciseStatus.active:
-        return AppColors.accentBright;
-      case ExerciseStatus.mastered:
-        return _previewMasteredColor;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? _color.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? _color : AppColors.borderPrimary,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            _label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? _color : AppColors.textMuted,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
