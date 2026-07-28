@@ -23,7 +23,6 @@ void main() {
 
     expect(find.text('Your workouts will appear here'), findsOneWidget);
     expect(find.text("TODAY'S SESSION"), findsOneWidget);
-    expect(find.text('AFTER SETUP'), findsOneWidget);
     // A week with no state on any day, and four placeholder exercises.
     expect(find.text('Exercise'), findsNWidgets(4));
 

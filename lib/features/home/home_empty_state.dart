@@ -42,13 +42,9 @@ class HomeEmptyState extends StatelessWidget {
             ],
           ),
         ),
-        const TypeSectionLabel(
-          "Today's session",
-          right: 'after setup',
-          top: 24,
-        ),
+        const TypeSectionLabel("Today's session", top: 24),
         for (var i = 0; i < 4; i++)
-          GhostRow(name: 'Exercise', note: '—', last: i == 3),
+          GhostRow(name: 'Exercise', last: i == 3),
       ],
     );
   }

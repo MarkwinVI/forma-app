@@ -401,10 +401,7 @@ class _ProgressEmptyState extends StatelessWidget {
           'movement path and unlock harder exercises.',
       onCreateProgram: onCreateProgram,
       children: [
-        TypeSectionLabel(
-          'Movement paths',
-          right: '0 / ${_paths.length} started',
-        ),
+        const TypeSectionLabel('Movement paths'),
         for (var i = 0; i < _paths.length; i++)
           GhostRow(
             name: programPatternLabel(_paths[i]),

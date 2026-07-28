@@ -60,18 +60,18 @@ class NoProgramState extends StatelessWidget {
   }
 }
 
-/// A row of the thing that is not there yet: a name stepped back, and a mono
-/// note on the right saying so.
+/// A row of the thing that is not there yet: a name stepped back, and an
+/// optional mono note on the right saying so.
 class GhostRow extends StatelessWidget {
   final String name;
-  final String note;
+  final String? note;
   final double nameSize;
   final bool last;
 
   const GhostRow({
     super.key,
     required this.name,
-    required this.note,
+    this.note,
     this.nameSize = 21,
     this.last = false,
   });
@@ -103,14 +103,10 @@ class GhostRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            note,
-            style: monoStyle(
-              size: note == '—' ? 14 : 12.5,
-              letterSpacing: note == '—' ? 0 : 1,
-            ),
-          ),
+          if (note != null) ...[
+            const SizedBox(width: 12),
+            Text(note!, style: monoStyle(size: 12.5, letterSpacing: 1)),
+          ],
         ],
       ),
     );
