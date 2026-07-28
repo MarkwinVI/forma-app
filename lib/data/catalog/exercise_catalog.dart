@@ -1250,6 +1250,7 @@ class ExerciseCatalog {
     // equipment and goals.
     Exercise(
       id: 'barbell_squat',
+      isLoaded: true,
       category: ExerciseCategory.squat,
       skillCategoryId: 'barbell_squat',
       name: 'Barbell Squat',
@@ -1260,6 +1261,7 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'romanian_deadlift',
+      isLoaded: true,
       category: ExerciseCategory.hinge,
       name: 'Romanian Deadlift',
       description:

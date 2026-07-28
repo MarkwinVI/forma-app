@@ -50,6 +50,8 @@ class ProgressionEventService {
           'value_from': event.valueFrom,
           'value_to': event.valueTo,
           'target_sets': event.targetSets,
+          'weight_from': event.weightFrom,
+          'weight_to': event.weightTo,
           'related_exercise_id': event.relatedExerciseId,
         },
     ]);

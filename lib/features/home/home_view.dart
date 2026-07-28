@@ -5,12 +5,14 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/progression_event_model.dart';
+import '../../data/models/progression_suggestion_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
 import '../../data/services/skill_track_service.dart';
@@ -25,6 +27,7 @@ import 'program_setup_completion.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
 import 'training_calendar_view.dart';
+import 'widgets/needs_approval_card.dart';
 import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
 import 'widgets/week_strip.dart';
@@ -59,6 +62,7 @@ class _HomeViewState extends State<HomeView> {
   final _trainingProgramStoreService = TrainingProgramStoreService();
   final _trainingScheduleService = TrainingScheduleService();
   final _progressionEventService = ProgressionEventService();
+  final _progressionService = ExerciseProgressionService();
   final _skillTrackService = SkillTrackService();
 
   bool _loading = true;
@@ -67,6 +71,9 @@ class _HomeViewState extends State<HomeView> {
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
   List<ProgressionEvent> _whatChanged = const [];
+
+  /// Loaded-lift changes the program has proposed and is waiting on.
+  List<ProgressionSuggestion> _needsApproval = const [];
   List<SkillTrack> _skillTracks = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
@@ -121,6 +128,15 @@ class _HomeViewState extends State<HomeView> {
         }
       }
 
+      // Waiting on the user, and not tied to the latest session: a proposal
+      // stands until it is approved or turned down.
+      var needsApproval = const <ProgressionSuggestion>[];
+      try {
+        needsApproval = await _progressionService.fetchOpenSuggestions(userId);
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load pending approvals: $error\n$stackTrace');
+      }
+
       final logic = results[1] as TrainingProgramLogicSnapshot?;
       // Skills-as-tracks: seeded on first use from the legacy lane
       // selections + goals, so existing users keep what they trained.
@@ -153,6 +169,7 @@ class _HomeViewState extends State<HomeView> {
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = pastWorkouts;
         _whatChanged = whatChanged;
+        _needsApproval = needsApproval;
         _skillTracks = skillTracks;
         _loading = false;
       });
@@ -587,7 +604,13 @@ class _HomeViewState extends State<HomeView> {
             onViewWorkout:
                 _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
           ),
-          // Finished: the changes read as a receipt under the session.
+          // Finished: the changes read as a receipt under the session, with
+          // anything still waiting on the user above it.
+          if (_needsApproval.isNotEmpty)
+            NeedsApprovalLine(
+              suggestions: _needsApproval,
+              onTap: _openNeedsApproval,
+            ),
           if (_whatChanged.isNotEmpty) TrainInsight(events: _whatChanged),
         ] else ...[
           const SizedBox(height: 30),
@@ -595,17 +618,47 @@ class _HomeViewState extends State<HomeView> {
             summary: metrics.today,
             rows: TodayWorkoutContent.rows(metrics),
             // Still to train: the same changes compress to one line, so they
-            // never become a second list beside today's.
-            updatedLine: _whatChanged.isEmpty
-                ? null
-                : WhatChangedLine(
-                    events: _whatChanged,
-                    onTap: () => showWhatChangedSheet(context, _whatChanged),
-                  ),
+            // never become a second list beside today's. A pending approval
+            // outranks a report of what already happened — it is the only
+            // one of the two the user has to answer.
+            updatedLine: _needsApproval.isNotEmpty
+                ? NeedsApprovalLine(
+                    suggestions: _needsApproval,
+                    onTap: _openNeedsApproval,
+                  )
+                : _whatChanged.isEmpty
+                    ? null
+                    : WhatChangedLine(
+                        events: _whatChanged,
+                        onTap: () =>
+                            showWhatChangedSheet(context, _whatChanged),
+                      ),
           ),
         ],
       ],
     );
+  }
+
+  Future<void> _openNeedsApproval() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    await showNeedsApprovalSheet(
+      context,
+      _needsApproval,
+      onApprove: (suggestion) => _progressionService.approveSuggestion(
+        userId: userId,
+        suggestion: suggestion,
+      ),
+      onDismiss: (suggestion) => _progressionService.dismissSuggestion(
+        userId: userId,
+        suggestion: suggestion,
+      ),
+    );
+    if (!mounted) return;
+    // Approving rewrites the lift's target, so today's card has to be rebuilt
+    // from fresh progress rows either way.
+    await _loadHomeData();
   }
 
   Future<void> _openSelectedWorkoutDetail() async {

@@ -108,6 +108,12 @@ class Exercise {
   /// hangs, planche leans); false for rep-based movements.
   final bool isTimed;
 
+  /// True for exercises trained by adding weight rather than by climbing a
+  /// progression (barbell squat, Romanian deadlift). They have no harder
+  /// variation to unlock, so they are never mastered: the program suggests
+  /// the next step — more reps, then more load — and the user approves it.
+  final bool isLoaded;
+
   const Exercise({
     required this.id,
     required this.category,
@@ -121,5 +127,6 @@ class Exercise {
     this.programSection = ExerciseProgramSection.mainExercises,
     this.imageUrl,
     this.isTimed = false,
+    this.isLoaded = false,
   });
 }

@@ -153,10 +153,12 @@ create table public.progression_events (
   workout_session_id  uuid references public.workout_sessions(id) on delete cascade,
   exercise_id         text not null,
   track_id            text,     -- progression track; null for standalone PBs
-  kind                text not null, -- 'target_increase' | 'mastered' | 'activated' | 'personal_best'
+  kind                text not null, -- 'target_increase' | 'mastered' | 'activated' | 'personal_best' | 'branch_choice' | 'load_increase'
   value_from          int,      -- per-set value before (reps or seconds); previous best for PBs
   value_to            int,      -- per-set value after; new best for PBs
   target_sets         int,      -- set count the target values apply to
+  weight_from         numeric,  -- for 'load_increase': working weight before, in kg
+  weight_to           numeric,  -- for 'load_increase': working weight after, in kg
   related_exercise_id text,     -- for 'activated': the mastered exercise that unlocked it
   created_at          timestamptz default now() not null,
   seen_at             timestamptz -- null until the user has seen it in the feed
@@ -176,6 +178,45 @@ alter table public.progression_events enable row level security;
 
 create policy "Users manage own progression events"
   on public.progression_events for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- ── Progression Suggestions ───────────────────────────────────────────────
+-- Changes to loaded lifts (barbell squat, Romanian deadlift) waiting on the
+-- user. Those lifts have no harder variation to unlock, so they are never
+-- mastered and never advanced automatically: reaching the target proposes
+-- one more rep per set, or — at the top of the rep range — more weight with
+-- the reps back at the bottom. Approving writes the target and weight in
+-- user_exercise_progress and records a progression_events row.
+
+create table public.user_progression_suggestions (
+  id                 uuid default gen_random_uuid() primary key,
+  user_id            uuid references auth.users(id) on delete cascade not null,
+  exercise_id        text not null,  -- matches Exercise.id in the local catalog
+  workout_session_id uuid references public.workout_sessions(id) on delete cascade,
+  kind               text not null,  -- 'rep_increase' | 'load_increase'
+  target_sets        int not null,
+  from_value         int not null,   -- per-set reps now
+  to_value           int not null,   -- per-set reps proposed
+  from_weight_kg     numeric,        -- working weight now; null = never set
+  to_weight_kg       numeric,        -- working weight proposed
+  created_at         timestamptz default now() not null,
+  resolved_at        timestamptz,    -- null while the suggestion is open
+  resolution         text            -- 'approved' | 'dismissed'
+);
+
+-- One open suggestion per exercise: the newest proposal replaces the last.
+create unique index user_progression_suggestions_open_idx
+  on public.user_progression_suggestions (user_id, exercise_id)
+  where resolved_at is null;
+
+create index user_progression_suggestions_user_idx
+  on public.user_progression_suggestions (user_id, created_at desc);
+
+alter table public.user_progression_suggestions enable row level security;
+
+create policy "Users manage own progression suggestions"
+  on public.user_progression_suggestions for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 

@@ -169,9 +169,10 @@ void main() {
     });
 
     test('the Romanian deadlift opens light and the Nordic curl at 3 × 5', () {
+      final rdl = planFor(hasGym: true).targets['romanian_deadlift']!;
       expect(
-        planFor(hasGym: true).targets['romanian_deadlift']!.weightKg,
-        ProgramStartPlanner.romanianDeadliftStartKg,
+        (rdl.sets, rdl.value, rdl.weightKg),
+        (3, 5, ProgramStartPlanner.romanianDeadliftStartKg),
       );
 
       final nordic = planFor().targets['nordic_curl']!;

@@ -16,6 +16,11 @@ enum ProgressionEventKind {
   /// The exercise was mastered at a fork whose branches the user's goals
   /// don't decide — the user must pick their next path themselves.
   branchChoice,
+
+  /// A loaded lift's working weight went up (weightFrom → weightTo) and its
+  /// reps went back to the bottom of the rep range (valueFrom → valueTo).
+  /// Only ever written after the user approves the suggestion.
+  loadIncrease,
 }
 
 extension ProgressionEventKindX on ProgressionEventKind {
@@ -31,6 +36,8 @@ extension ProgressionEventKindX on ProgressionEventKind {
         return 'personal_best';
       case ProgressionEventKind.branchChoice:
         return 'branch_choice';
+      case ProgressionEventKind.loadIncrease:
+        return 'load_increase';
     }
   }
 
@@ -46,6 +53,8 @@ extension ProgressionEventKindX on ProgressionEventKind {
         return ProgressionEventKind.personalBest;
       case 'branch_choice':
         return ProgressionEventKind.branchChoice;
+      case 'load_increase':
+        return ProgressionEventKind.loadIncrease;
     }
     return null;
   }
@@ -62,6 +71,8 @@ class ProgressionEvent {
   final int? valueFrom;
   final int? valueTo;
   final int? targetSets;
+  final double? weightFrom;
+  final double? weightTo;
   final String? relatedExerciseId;
   final DateTime createdAt;
   final DateTime? seenAt;
@@ -76,6 +87,8 @@ class ProgressionEvent {
     this.valueFrom,
     this.valueTo,
     this.targetSets,
+    this.weightFrom,
+    this.weightTo,
     this.relatedExerciseId,
     this.seenAt,
   });
@@ -95,6 +108,8 @@ class ProgressionEvent {
       valueFrom: map['value_from'] as int?,
       valueTo: map['value_to'] as int?,
       targetSets: map['target_sets'] as int?,
+      weightFrom: (map['weight_from'] as num?)?.toDouble(),
+      weightTo: (map['weight_to'] as num?)?.toDouble(),
       relatedExerciseId: map['related_exercise_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
       seenAt: map['seen_at'] == null
@@ -113,6 +128,8 @@ class ProgressionEventInput {
   final int? valueFrom;
   final int? valueTo;
   final int? targetSets;
+  final double? weightFrom;
+  final double? weightTo;
   final String? relatedExerciseId;
 
   const ProgressionEventInput({
@@ -122,6 +139,8 @@ class ProgressionEventInput {
     this.valueFrom,
     this.valueTo,
     this.targetSets,
+    this.weightFrom,
+    this.weightTo,
     this.relatedExerciseId,
   });
 }

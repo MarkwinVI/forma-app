@@ -76,9 +76,9 @@ class ProgramStartPlanner {
   /// Fraction of the reported squat 1RM used as the opening working weight.
   static const double barbellSquatOneRepMaxFraction = 0.70;
 
-  /// Barbell squats open at 3 × 5 working sets.
-  static const int barbellSquatSets = 3;
-  static const int barbellSquatReps = 5;
+  /// Loaded lifts open at 3 × 5 working sets and climb from there.
+  static const int loadedLiftSets = 3;
+  static const int loadedLiftStartReps = 5;
 
   /// Deliberately light opening load for the Romanian deadlift: the hinge is
   /// there to balance the knee-dominant work, not to be tested on day one.
@@ -200,8 +200,8 @@ class ProgramStartPlanner {
           statuses: const {'barbell_squat': ExerciseStatus.active},
           targets: {
             'barbell_squat': ProgramStartTarget(
-              sets: barbellSquatSets,
-              value: barbellSquatReps,
+              sets: loadedLiftSets,
+              value: loadedLiftStartReps,
               weightKg: barbellSquatStartKg(startingStrength['squat']),
             ),
           },
@@ -240,12 +240,11 @@ class ProgramStartPlanner {
         return const _StartingPosition(
           statuses: {'romanian_deadlift': ExerciseStatus.active},
           targets: {
-            // Reps start where every rep exercise starts (3 × 6 on the
-            // ladder); only the load is set here, and it is set low on
-            // purpose.
+            // Same 3 × 5 the barbell squat opens on, so both loaded lifts
+            // run the same climb; the load is what is set low here.
             'romanian_deadlift': ProgramStartTarget(
-              sets: 3,
-              value: 6,
+              sets: loadedLiftSets,
+              value: loadedLiftStartReps,
               weightKg: romanianDeadliftStartKg,
             ),
           },

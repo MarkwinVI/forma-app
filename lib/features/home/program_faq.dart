@@ -73,22 +73,43 @@ const List<FaqItem> kProgramFaq = [
       ),
     ],
   ),
+  kHowTargetsAreSetFaq,
   FaqItem(
-    question: 'How do I progress to a harder exercise?',
+    question: 'Why do my weighted lifts ask before they change?',
     answer: [
-      FaqBlock('For repetition-based exercises, the standard progression is:'),
-      FaqBlock('3×5 → 3×6 → 3×7 → 3×8'),
       FaqBlock(
-        'Once you complete 3×8 with the required quality, Forma moves you to '
-        'the next exercise progression, usually starting again at 3×5.',
+        'Barbell squats and Romanian deadlifts have no harder variation to '
+        'unlock — they get heavier instead. So Forma never moves them on its '
+        'own: it proposes the next step and waits for you.',
       ),
+      FaqBlock('3×5 → 3×6 → 3×7 → 3×8 → +10 kg, back to 3×5'),
       FaqBlock(
-        'For timed holds, you normally progress from 3×10 seconds towards '
-        '3×30 seconds before moving to the next progression.',
+        'When a lift reaches its target, "Needs approval" appears on the '
+        'Train tab. Approve it and the new target applies from your next '
+        'session; turn it down and the lift keeps what it has and asks again '
+        'next time.',
       ),
     ],
   ),
 ];
+
+/// How a target moves — the rule the change feed links to when it reports a
+/// raise.
+const FaqItem kHowTargetsAreSetFaq = FaqItem(
+  question: 'How do I progress to a harder exercise?',
+  answer: [
+    FaqBlock('For repetition-based exercises, the standard progression is:'),
+    FaqBlock('3×5 → 3×6 → 3×7 → 3×8'),
+    FaqBlock(
+      'Once you complete 3×8 with the required quality, Forma moves you to '
+      'the next exercise progression, usually starting again at 3×5.',
+    ),
+    FaqBlock(
+      'For timed holds, you normally progress from 3×10 seconds towards '
+      '3×30 seconds before moving to the next progression.',
+    ),
+  ],
+);
 
 /// Opens one FAQ answer in a bottom sheet.
 Future<void> showFaqSheet(BuildContext context, FaqItem item) {

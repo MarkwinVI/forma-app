@@ -269,7 +269,7 @@ class _WhatChangedSheet extends StatelessWidget {
             child: Pressable(
               onTap: () {
                 Navigator.of(context).pop();
-                showFaqSheet(context, kProgramFaq.last);
+                showFaqSheet(context, kHowTargetsAreSetFaq);
               },
               child: const Row(
                 children: [
@@ -480,5 +480,25 @@ _InsightItem? _itemFor(ProgressionEvent event) {
         value: 'choose',
         noun: (count) => _plural(count, 'path to choose', 'paths to choose'),
       );
+    case ProgressionEventKind.loadIncrease:
+      return _InsightItem(
+        color: AppColors.green,
+        name: exercise.name,
+        detail: 'load raised',
+        value: '${weightLabel(event.weightFrom)} → '
+            '${weightLabel(event.weightTo)}',
+        noun: (count) => _plural(count, 'load raised', 'loads raised'),
+      );
   }
+}
+
+/// A working weight as the app writes it: whole numbers stay whole, halves
+/// keep their decimal, and a missing weight reads as a dash.
+String weightLabel(double? weightKg) {
+  if (weightKg == null) return '—';
+  final rounded = (weightKg * 10).round() / 10;
+  final value = rounded == rounded.roundToDouble()
+      ? rounded.round().toString()
+      : rounded.toStringAsFixed(1);
+  return '$value kg';
 }
