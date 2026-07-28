@@ -534,7 +534,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
               clearedFraction: _clearedFraction(
                 [for (final workout in workouts) workout.items],
               ),
-              summary: _programSummary,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -660,58 +659,16 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   /// The setup wizard defaults to a full gym, so an unanswered program reads
   /// the same way here.
   bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
-
-  /// One sentence under the title: the whole program — its week, its trees and
-  /// what it was built around — before any of the rows below spell it out.
-  String get _programSummary {
-    final split = switch (_logic.program.programType) {
-      TrainingProgramType.fullBody => 'full-body',
-      TrainingProgramType.pushPull => 'push / pull',
-      TrainingProgramType.upperLower => 'upper / lower',
-    };
-    final days = _spelled(_trainingDaysPerWeek);
-    final trees = switch (_activeTrackCount) {
-      0 => 'no trees running yet',
-      1 => 'one tree running',
-      final count => '${_spelled(count)} trees running',
-    };
-    final equipment = _hasGym ? 'a full gym' : 'a bar and bodyweight';
-
-    return '${days[0].toUpperCase()}${days.substring(1)} $split days, '
-        '$trees, built around $equipment.';
-  }
-}
-
-/// Small counts read better spelled out in the summary sentence; anything
-/// past the words falls back to the digit.
-String _spelled(int count) {
-  const words = [
-    'zero',
-    'one',
-    'two',
-    'three',
-    'four',
-    'five',
-    'six',
-    'seven',
-    'eight',
-    'nine',
-    'ten',
-  ];
-  return count >= 0 && count < words.length ? words[count] : '$count';
 }
 
 /// Hero constellation: an abstract read of the program itself — cleared nodes
-/// green, everything still ahead locked — with the title and the one-line
-/// summary of the program sitting under it, where the graph has faded out.
+/// green, everything still ahead locked — with the title sitting under it,
+/// where the graph has faded out.
 class _ProgramHero extends StatelessWidget {
   /// 0–1 share of the program's exercises already mastered.
   final double clearedFraction;
 
-  /// The sentence under the title.
-  final String summary;
-
-  const _ProgramHero({required this.clearedFraction, required this.summary});
+  const _ProgramHero({required this.clearedFraction});
 
   @override
   Widget build(BuildContext context) {
@@ -751,34 +708,19 @@ class _ProgramHero extends StatelessWidget {
             ),
             child: SizedBox.expand(),
           ),
-          Positioned(
+          const Positioned(
             left: 22,
             right: 22,
-            bottom: 6,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Program',
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -1.02,
-                    height: 1.05,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  summary,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    color: AppColors.textSecondary,
-                    height: 1.45,
-                  ),
-                ),
-              ],
+            bottom: 16,
+            child: Text(
+              'Program',
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -1.02,
+                height: 1.05,
+              ),
             ),
           ),
         ],
