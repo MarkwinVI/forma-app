@@ -297,32 +297,35 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
                 ),
               ],
             ),
-            Positioned(
-              left: 22,
-              right: 22,
-              bottom: MediaQuery.of(context).padding.bottom + 24,
-              child: _saving
-                  ? const SizedBox(
-                      height: 52,
-                      child: Center(child: LoadingIndicator()),
-                    )
-                  : DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(26),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x73000000),
-                            offset: Offset(0, 10),
-                            blurRadius: 30,
-                          ),
-                        ],
+            // Nothing to save is nothing to say — the button appears with the
+            // first edit rather than sitting there disabled.
+            if (dirty || _saving)
+              Positioned(
+                left: 22,
+                right: 22,
+                bottom: MediaQuery.of(context).padding.bottom + 24,
+                child: _saving
+                    ? const SizedBox(
+                        height: 52,
+                        child: Center(child: LoadingIndicator()),
+                      )
+                    : DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(26),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x73000000),
+                              offset: Offset(0, 10),
+                              blurRadius: 30,
+                            ),
+                          ],
+                        ),
+                        child: PillButton(
+                          label: 'Save $_dayTitle',
+                          onTap: _save,
+                        ),
                       ),
-                      child: PillButton(
-                        label: dirty ? 'Save $_dayTitle' : 'No changes yet',
-                        onTap: dirty ? _save : null,
-                      ),
-                    ),
-            ),
+              ),
           ],
         ),
       ),
@@ -381,34 +384,17 @@ class _ItemRow extends StatelessWidget {
                 // states where the exercise came from should do nothing.
                 Pressable(
                   onTap: onOpenDetail,
-                  child: Row(
-                    // Hugs the name so the chevron sits against it rather
-                    // than drifting to the far side of the row.
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.25,
-                            height: 1.25,
-                          ),
-                        ),
-                      ),
-                      if (onOpenDetail != null) ...[
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 17,
-                          color: AppColors.textMuted,
-                        ),
-                      ],
-                    ],
+                  child: Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.25,
+                      height: 1.25,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
