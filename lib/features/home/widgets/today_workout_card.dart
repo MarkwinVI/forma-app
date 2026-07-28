@@ -25,8 +25,8 @@ class TodayWorkoutRow {
   });
 }
 
-/// Derives the session list's rows, subtitle, and tip from the dashboard
-/// metrics, so any screen hosting it renders the same story.
+/// Derives the session list's rows from the dashboard metrics, so any screen
+/// hosting it renders the same story.
 class TodayWorkoutContent {
   TodayWorkoutContent._();
 
@@ -49,8 +49,7 @@ class TodayWorkoutContent {
     final isTimed = perf?.isTimed ?? false;
     // The change is measured against the session before last, so that is the
     // total worth showing beside it — the last session is the two added up.
-    final previous =
-        history.length >= 2 ? history[history.length - 2] : null;
+    final previous = history.length >= 2 ? history[history.length - 2] : null;
     final delta = perf?.sessionDelta;
 
     return TodayWorkoutRow(
@@ -70,22 +69,6 @@ class TodayWorkoutContent {
       changeDir: delta == null ? 0 : delta.sign,
     );
   }
-
-  static String subtitle(HomeDashboardMetrics metrics) {
-    final summary = metrics.today;
-    if (summary.isRestDay) {
-      return 'Rest day — recovery keeps the split moving';
-    }
-
-    final count = '${summary.exerciseCount} exercise'
-        '${summary.exerciseCount == 1 ? '' : 's'}';
-    for (final path in metrics.activeSkillPaths) {
-      if (path.momentum == HomeSkillMomentum.stalled) {
-        return '$count · targets your stalled ${path.skillTitle} node';
-      }
-    }
-    return '$count · built from your current program';
-  }
 }
 
 /// Today's session on the Train tab, written as a list rather than boxed in a
@@ -97,7 +80,6 @@ class TodayWorkoutCard extends StatelessWidget {
   static const double _changeColWidth = 58;
 
   final HomeTodaySummary summary;
-  final String subtitle;
   final List<TodayWorkoutRow> rows;
 
   /// The one-line note about what the program changed, if anything has. Sits
@@ -107,7 +89,6 @@ class TodayWorkoutCard extends StatelessWidget {
   const TodayWorkoutCard({
     super.key,
     required this.summary,
-    required this.subtitle,
     required this.rows,
     this.updatedLine,
   });
@@ -118,14 +99,14 @@ class TodayWorkoutCard extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TypeTitle(summary.sessionTitle, sub: subtitle),
+        TypeTitle(summary.sessionTitle),
         if (updatedLine != null) updatedLine!,
         if (rows.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 30, 0, 6),
             child: Row(
               children: [
-                Expanded(child: Text('THE SESSION', style: _headStyle)),
+                Expanded(child: Text('EXERCISES', style: _headStyle)),
                 SizedBox(
                   width: _previousColWidth,
                   child: Text('PREVIOUS', style: _headStyle),

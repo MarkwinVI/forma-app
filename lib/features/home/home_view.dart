@@ -600,7 +600,6 @@ class _HomeViewState extends State<HomeView> {
           const SizedBox(height: 30),
           TodayWorkoutCard(
             summary: metrics.today,
-            subtitle: TodayWorkoutContent.subtitle(metrics),
             rows: TodayWorkoutContent.rows(metrics),
             // Still to train: the same changes compress to one line, so they
             // never become a second list beside today's.

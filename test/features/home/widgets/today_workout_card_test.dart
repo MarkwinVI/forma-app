@@ -72,7 +72,6 @@ void main() {
           children: [
             TodayWorkoutCard(
               summary: summary(),
-              subtitle: '5 exercises · targets your stalled Pull-up node',
               rows: rows,
             ),
             TodayWorkoutActions(
@@ -87,7 +86,7 @@ void main() {
 
     // The day names itself, then every exercise with what it last totalled.
     expect(find.text('Pull Day'), findsOneWidget);
-    expect(find.text('THE SESSION'), findsOneWidget);
+    expect(find.text('EXERCISES'), findsOneWidget);
     expect(find.text('PREVIOUS'), findsOneWidget);
     expect(find.text('LAST'), findsOneWidget);
     expect(find.text('CHANGE'), findsNothing);
@@ -95,7 +94,7 @@ void main() {
     expect(find.text('18s'), findsOneWidget);
     expect(find.text('+2'), findsOneWidget);
     expect(find.text('±0'), findsOneWidget);
-    // The per-row target line is gone; the subtitle carries the stall note.
+    // The per-row target line is gone; the day names itself and nothing else.
     expect(find.textContaining('3 × 30s'), findsNothing);
 
     await tester.tap(find.text('Train something else'));
@@ -140,8 +139,7 @@ void main() {
               children: [
                 TodayWorkoutCard(
                   summary: summary(),
-                  subtitle: '5 exercises · targets your stalled Pull-up node',
-                  rows: rows,
+                      rows: rows,
                 ),
                 TodayWorkoutActions(
                   summary: summary(),
