@@ -1027,8 +1027,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                 children: [
                   _WorkoutHeader(
                     title: widget.recommendation.sessionLabel,
-                    subtitle:
-                        '${_formatSessionSubtitle()} · $_completedSetCount/$_totalSetCount sets',
                     elapsed: _formatElapsed(),
                     isRunning: _isRunning,
                     progress: _totalSetCount == 0
@@ -1314,7 +1312,6 @@ class _HideKeyboardButton extends StatelessWidget {
 
 class _WorkoutHeader extends StatelessWidget {
   final String title;
-  final String subtitle;
   final String elapsed;
   final bool isRunning;
   final double progress;
@@ -1324,7 +1321,6 @@ class _WorkoutHeader extends StatelessWidget {
 
   const _WorkoutHeader({
     required this.title,
-    required this.subtitle,
     required this.elapsed,
     required this.isRunning,
     required this.progress,
@@ -1362,32 +1358,16 @@ class _WorkoutHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 17.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.textSecondary,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
