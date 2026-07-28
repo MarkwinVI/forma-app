@@ -153,7 +153,7 @@ class SkillCategoryCatalog {
     description:
         'Build your pushup strength from foundation work into one-arm, ring, or planche pushing goals.',
     track: ExerciseCategory.horizontalPush,
-    defaultTrainingPathId: 'one_arm',
+    defaultTrainingPathId: 'planche',
     branches: [
       SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
       SkillCategoryBranch(
@@ -291,7 +291,7 @@ class SkillCategoryCatalog {
     description:
         'Train your core through three parallel branches: compression holds, ab wheel strength, and leg raise control.',
     track: ExerciseCategory.core,
-    defaultTrainingPathId: 'ab_wheel',
+    defaultTrainingPathId: 'l_sit',
     branches: [
       SkillCategoryBranch(id: 'l_sit', label: 'L-Sit / V-Sit', lane: -1),
       SkillCategoryBranch(

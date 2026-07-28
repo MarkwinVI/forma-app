@@ -80,10 +80,10 @@ class TrainingProgramService {
     // Dips, not handstand pushups: the HSPU tree is locked behind the
     // pushup foundation, so it can never be where a program starts.
     TrainingTrack.verticalPush: '${SkillCategoryCatalog.dipsId}:weighted',
-    TrainingTrack.horizontalPush: '${SkillCategoryCatalog.pushupsId}:one_arm',
+    TrainingTrack.horizontalPush: '${SkillCategoryCatalog.pushupsId}:planche',
     TrainingTrack.verticalPull: '${SkillCategoryCatalog.pullupsId}:weighted',
     TrainingTrack.horizontalPull: '${SkillCategoryCatalog.rowsId}:front_lever',
-    TrainingTrack.core: '${SkillCategoryCatalog.coreId}:ab_wheel',
+    TrainingTrack.core: '${SkillCategoryCatalog.coreId}:l_sit',
     TrainingTrack.squat: '${SkillCategoryCatalog.squatId}:pistol',
     TrainingTrack.hinge: 'hinge:posterior_chain',
   };
@@ -642,6 +642,13 @@ class TrainingProgramService {
     },
   };
 
+  /// Which movement patterns a session type can train — what the weekly
+  /// balance counts as an opportunity for a movement.
+  static Set<ExerciseCategory> patternsForSession(
+    TrainingSessionType sessionType,
+  ) =>
+      _sessionPatterns[sessionType] ?? const <ExerciseCategory>{};
+
   /// Presentation order of patterns within a session: skill work first,
   /// then pushes/pulls, then lower-body and core.
   static const List<ExerciseCategory> _patternOrder = [
@@ -716,6 +723,37 @@ class TrainingProgramService {
     }
 
     return branches;
+  }
+
+  /// The branch options for the trees the program actually trains: one per
+  /// included skill track, each on its own branch. Unlike the lane-keyed
+  /// views below this is lossless — two trees sharing a movement pattern
+  /// (dips and handstand pushups both press vertically) each keep an option
+  /// instead of one silently claiming the lane and hiding the other.
+  ///
+  /// This is the single source of truth for "which skill trees are active",
+  /// shared by the Program tab's tree list and everything the dashboard
+  /// derives from [HomeDashboardMetricsCalculator.resolveActivePathOptions].
+  List<TrainingBranchOption> activeTrackOptions(List<SkillTrack> skillTracks) {
+    final options = <TrainingBranchOption>[];
+
+    for (final skillTrack in skillTracks) {
+      if (!skillTrack.included) continue;
+      final category = SkillCategoryCatalog.findById(skillTrack.skillCategoryId);
+      if (category == null) continue;
+      if (category.pathFor(skillTrack.branchId).isEmpty) continue;
+
+      options.add(
+        _branchOptionFromCategory(
+          track: trainingTrackForPattern(category.track),
+          category: category,
+          pathId: skillTrack.branchId,
+          rationale: '',
+        ),
+      );
+    }
+
+    return options;
   }
 
   /// Legacy-lane view of the user's skill tracks, so lane-keyed consumers
@@ -1253,7 +1291,9 @@ class TrainingProgramService {
     required String pathId,
     required String rationale,
   }) {
-    final exercises = category.trainingPaths[pathId] ?? const <String>[];
+    // pathFor, not a raw map lookup: a track can sit on a declared branch
+    // ('main') that has no path of its own and resolves to the shared trunk.
+    final exercises = category.pathFor(pathId);
 
     return TrainingBranchOption(
       id: '${category.id}:$pathId',

@@ -3,6 +3,7 @@ import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/exercise_progression_service.dart';
@@ -391,6 +392,7 @@ class HomeDashboardMetricsCalculator {
     required Map<String, ExerciseStatus> progressMap,
     required Map<String, ExerciseProgress> progressEntries,
     required List<PastWorkout> workouts,
+    List<SkillTrack> skillTracks = const [],
     List<String> goalSkillIds = const [],
     int frequencyPerWeek = 3,
     List<int>? dayMask,
@@ -425,6 +427,7 @@ class HomeDashboardMetricsCalculator {
           sessionItemsConfig: sessionItemsConfig,
           branchSelections: branchSelections,
           categoriesById: categoriesById,
+          skillTracks: skillTracks,
         ),
         progressMap: progressMap,
         progressEntries: progressEntries,
@@ -451,6 +454,7 @@ class HomeDashboardMetricsCalculator {
         progressEntries: progressEntries,
         masterySettings: masterySettings,
         workouts: workouts,
+        skillTracks: skillTracks,
         now: now,
       ),
       activeSkillPaths: buildActiveSkillPathData(
@@ -461,6 +465,7 @@ class HomeDashboardMetricsCalculator {
         progressMap: progressMap,
         progressEntries: progressEntries,
         workouts: workouts,
+        skillTracks: skillTracks,
         now: now,
       ),
       exercisePerformance: buildExercisePerformance(
@@ -814,6 +819,7 @@ class HomeDashboardMetricsCalculator {
     required List<PastWorkout> workouts,
     Map<String, ExerciseProgress> progressEntries = const {},
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+    List<SkillTrack> skillTracks = const [],
     DateTime? now,
   }) {
     final categories = SkillCategoryCatalog.browsable();
@@ -841,6 +847,7 @@ class HomeDashboardMetricsCalculator {
       progressEntries: progressEntries,
       masterySettings: masterySettings,
       workouts: workouts,
+      skillTracks: skillTracks,
       now: now,
     );
 
@@ -918,6 +925,7 @@ class HomeDashboardMetricsCalculator {
     required Map<String, ExerciseStatus> progressMap,
     required Map<String, ExerciseProgress> progressEntries,
     required List<PastWorkout> workouts,
+    List<SkillTrack> skillTracks = const [],
     DateTime? now,
   }) {
     final categoriesById = {
@@ -930,6 +938,7 @@ class HomeDashboardMetricsCalculator {
       sessionItemsConfig: sessionItemsConfig,
       branchSelections: branchSelections,
       categoriesById: categoriesById,
+      skillTracks: skillTracks,
     );
 
     final rows = <ActiveSkillPathData>[];
@@ -1016,21 +1025,23 @@ class HomeDashboardMetricsCalculator {
     required List<PastWorkout> workouts,
     Map<String, ExerciseProgress> progressEntries = const {},
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+    List<SkillTrack> skillTracks = const [],
     DateTime? now,
   }) {
     final categoriesById = {
       for (final category in SkillCategoryCatalog.browsable())
         category.id: category,
     };
-    // A freshly set-up program has an empty session-items config until the
-    // user customises a day, so resolveActivePathOptions falls back to the
-    // selected branches instead of leaving the card empty.
+    // A freshly set-up program has no tracks and an empty session-items
+    // config until the user customises a day, so resolveActivePathOptions
+    // falls back to the selected branches instead of leaving the card empty.
     final options = resolveActivePathOptions(
       trainingProgramService: trainingProgramService,
       programType: programType,
       sessionItemsConfig: sessionItemsConfig,
       branchSelections: branchSelections,
       categoriesById: categoriesById,
+      skillTracks: skillTracks,
     );
     final comparisonNow = now ?? _dummyComparisonNow;
     final rows = <JourneySkillProgressData>[];
@@ -1294,14 +1305,21 @@ class HomeDashboardMetricsCalculator {
     );
   }
 
-  /// The active training-path options for the current program — the
-  /// customised session config when present, otherwise the selected branches.
+  /// The active training-path options for the current program — the skill
+  /// tracks the user runs, plus anything a customised session config adds on
+  /// top, falling back to the selected branches for programs with neither.
+  ///
+  /// The tracks are the source of truth the Program tab edits, so they are
+  /// never routed through the lane map on the way here: two trees on the same
+  /// pattern (dips and handstand pushups) both survive, and a tree the user
+  /// removed can't come back as a lane default.
   static List<TrainingBranchOption> resolveActivePathOptions({
     required TrainingProgramService trainingProgramService,
     required TrainingProgramType programType,
     required Map<String, dynamic> sessionItemsConfig,
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, SkillCategory> categoriesById,
+    List<SkillTrack> skillTracks = const [],
   }) {
     final configuredOptions = _activePathOptionsFromSessionConfig(
       trainingProgramService: trainingProgramService,
@@ -1309,12 +1327,16 @@ class HomeDashboardMetricsCalculator {
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
     );
-    final options = configuredOptions.isNotEmpty
-        ? configuredOptions
-        : trainingProgramService
-            .resolveSelectedBranches(branchSelections)
-            .values
-            .toList();
+    final trackOptions =
+        trainingProgramService.activeTrackOptions(skillTracks);
+    final options = trackOptions.isNotEmpty
+        ? [...configuredOptions, ...trackOptions]
+        : configuredOptions.isNotEmpty
+            ? configuredOptions
+            : trainingProgramService
+                .resolveSelectedBranches(branchSelections)
+                .values
+                .toList();
 
     // A skill tree is a category — the skill-work and core lanes can both
     // resolve to a core-category branch (l-sit vs ab-wheel), which would

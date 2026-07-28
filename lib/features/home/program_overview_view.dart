@@ -22,8 +22,7 @@ import 'program_balance_view.dart';
 import 'program_day_editor_view.dart';
 import 'program_day_items.dart';
 import 'program_faq.dart';
-import 'program_setup_view.dart'
-    show GoalSkillGroup, GoalSkillOption, kGoalSkillGroups, kGoalSkillOptions;
+import 'program_skill_trees_view.dart';
 
 const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -106,12 +105,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     final raw = _logic.program.variationRules['program_setup_v1'];
     if (raw is Map) return Map<String, dynamic>.from(raw);
     return const {};
-  }
-
-  List<String> get _goalSkillIds {
-    final raw = _setupAnswers['skill_ids'];
-    if (raw is List) return raw.whereType<String>().toList();
-    return const [];
   }
 
   int get _trainingDaysPerWeek => _dayMask.where((day) => day == 1).length;
@@ -329,35 +322,174 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
-  Future<void> _openSkillsSheet() async {
-    final picked = await showModalBottomSheet<List<String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (_) => _GoalSkillsSheet(
-        picked: _goalSkillIds,
+  int get _activeTrackCount =>
+      _skillTracks.where((track) => track.included).length;
+
+  /// What the balance copy needs to know about the program itself — the split
+  /// it can schedule around, the equipment it can suggest for, and the trees
+  /// it must not suggest adding when they already run.
+  BalanceProgramContext get _balanceContext => BalanceProgramContext(
+        programType: _logic.program.programType,
+        trainingDaysPerWeek: _trainingDaysPerWeek,
+        hasGym: _hasGym,
+        skillTracks: _skillTracks,
         progressMap: _progress,
+        goalSkillCategoryIds: {
+          for (final goalId in _logic.program.setupGoalIds)
+            if (TrainingProgramService.goalBranchIds[goalId]
+                case final branchId?)
+              branchId.split(':').first,
+        },
+      );
+
+  /// The week the program would run with [tracks].
+  List<ProgramWeekDay> _weekFor(List<SkillTrack> tracks) {
+    final programType = _logic.program.programType;
+    final cycle = _weekPlan(_dayMask, programType);
+    return [
+      for (var i = 0; i < cycle.length; i++)
+        if (cycle[i] != TrainingSessionType.rest)
+          ProgramWeekDay(
+            weekday: i,
+            sessionType: cycle[i],
+            items: ProgramSessionPlan.loadDay(
+              service: _programService,
+              sessionItemsConfig: _sessionItemsConfig,
+              programType: programType,
+              sessionType: cycle[i],
+              branchSelections: _branchSelections,
+              progressMap: _progress,
+              skillTracks: tracks,
+              weekday: i,
+            ),
+          ),
+    ];
+  }
+
+  /// What adding or removing a tree would do, worked out by building the week
+  /// both ways rather than guessing.
+  SkillTrackImpact? _impactOfTrackChange(String skillCategoryId, bool include) {
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    if (category == null) return null;
+
+    final existing = _skillTracks
+        .where((track) => track.skillCategoryId == skillCategoryId)
+        .firstOrNull;
+    final simulated = [
+      for (final track in _skillTracks)
+        if (track.skillCategoryId != skillCategoryId) track,
+      SkillTrack(
+        skillCategoryId: skillCategoryId,
+        branchId: existing?.branchId ?? category.defaultTrainingPathId,
+        included: include,
+        updatedAt: DateTime.now(),
+      ),
+    ];
+
+    final before = _weekFor(_skillTracks);
+    final after = _weekFor(simulated);
+
+    bool trains(ProgramWeekDay day) =>
+        day.items.any((item) => item.skillCategoryId == skillCategoryId);
+    // Removing names the days it leaves; adding names the days it joins.
+    final source = include ? after : before;
+    final days = [
+      for (final day in source)
+        if (trains(day)) day,
+    ];
+    final dayNames = [for (final day in days) kWeekdayNames[day.weekday]];
+
+    // One kind of workout, and every one of them? Then the copy can say "all
+    // four full-body workouts" instead of listing weekdays. A tree on both
+    // push and pull days (core sits on each) has no single kind to name.
+    final kinds = {for (final day in days) day.sessionType};
+    final kind = kinds.length == 1 ? kinds.single : null;
+    final coversEverySession = kind != null &&
+        source.where((day) => day.sessionType == kind).length == days.length;
+
+    final balanceBefore = balanceFromWeek(before, context: _balanceContext);
+    final balanceAfter = balanceFromWeek(after, context: _balanceContext);
+    final index = balanceBefore.indexWhere(
+      (entry) => entry.group.categories.contains(category.track),
+    );
+    if (index < 0) return null;
+
+    final step = ProgramSessionPlan.currentExerciseForPath(
+      skillCategoryId: skillCategoryId,
+      branchId: existing?.branchId ?? category.defaultTrainingPathId,
+      progressMap: _progress,
+    );
+
+    return SkillTrackImpact(
+      exerciseName: step?.name ?? category.title,
+      dayNames: dayNames,
+      sessionType: kind,
+      coversEverySession: coversEverySession,
+      balanceLabel: balanceBefore[index].label,
+      before: balanceBefore[index].weeklyBlocks,
+      after: balanceAfter[index].weeklyBlocks,
+      target: balanceBefore[index].target,
+    );
+  }
+
+  Future<void> _openSkillTrees() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProgramSkillTreesView(
+          tracks: _skillTracks,
+          progressMap: _progress,
+          onUpdate: _updateSkillTrack,
+          describeImpact: _impactOfTrackChange,
+        ),
       ),
     );
+    if (mounted) setState(() {});
+  }
 
-    if (picked == null || !mounted) return;
+  /// Writes one track change, reloads, and reports which days moved.
+  Future<SkillTrackChange?> _updateSkillTrack({
+    required String skillCategoryId,
+    String? branchId,
+    bool? included,
+  }) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return null;
 
-    await _saveLogic(
-      setupAnswers: {..._setupAnswers, 'skill_ids': picked},
-      toast: 'Active skill trees updated',
-    );
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    final existing = _skillTracks
+        .where((track) => track.skillCategoryId == skillCategoryId)
+        .firstOrNull;
+    try {
+      await _skillTrackService.upsertTrack(
+        userId,
+        skillCategoryId: skillCategoryId,
+        branchId: branchId ??
+            existing?.branchId ??
+            category?.defaultTrainingPathId ??
+            'main',
+        included: included ?? existing?.included ?? true,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Failed to update skill track: $error\n$stackTrace');
+      if (!mounted) return null;
+      return SkillTrackChange(
+        tracks: _skillTracks,
+        message: "Couldn't save that change. Try again.",
+      );
+    }
+
+    await _loadSkillTracks();
+    if (!mounted) return null;
+
+    // The confirmation sheet already spelled out what this does, so there is
+    // nothing left to announce.
+    return SkillTrackChange(tracks: _skillTracks);
   }
 
   @override
   Widget build(BuildContext context) {
     final programType = _logic.program.programType;
     final weekCycle = _weekPlan(_dayMask, programType);
-    final goalSkills = [
-      for (final id in _goalSkillIds)
-        for (final option in kGoalSkillOptions)
-          if (option.id == id) option,
-    ];
 
     // One workout per training weekday — Thursday's Upper is its own plan,
     // separate from Monday's.
@@ -381,10 +513,13 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     ];
     final week = [
       for (final workout in workouts)
-        ProgramWeekDay(weekday: workout.weekday, items: workout.items),
+        ProgramWeekDay(
+          weekday: workout.weekday,
+          sessionType: workout.sessionType,
+          items: workout.items,
+        ),
     ];
-    final balance = balanceFromWeek(week);
-    final evenness = balanceEvenness(week);
+    final balance = balanceFromWeek(week, context: _balanceContext);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -405,16 +540,12 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    _programSummary(programType),
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      color: Color(0xFFC9CAD1),
-                      height: 1.55,
-                    ),
-                  ),
                   const _ProgramSectionLabel('Your program'),
+                  _ProgramRow(
+                    label: 'Equipment',
+                    value: _hasGym ? 'Full gym' : 'No gym',
+                    onTap: _openEquipmentSheet,
+                  ),
                   _ProgramRow(
                     label: 'Training days',
                     value: '$_trainingDaysPerWeek days / week',
@@ -426,21 +557,25 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                     onTap: _openSplitSheet,
                   ),
                   _ProgramRow(
-                    label: 'Equipment',
-                    value: _hasGym ? 'Full gym' : 'No gym',
-                    onTap: _openEquipmentSheet,
+                    label: 'Active skill trees',
+                    value: _activeTrackCount == 1
+                        ? '1 tree'
+                        : '$_activeTrackCount trees',
+                    onTap: _openSkillTrees,
                   ),
                   _BalanceRow(
-                    headline: balanceHeadline(balance, evenness),
-                    allOptimal: evenness.isEmpty &&
-                        balance.every(
-                          (entry) =>
-                              !entry.group.primary ||
-                              entry.verdict == BalanceVerdict.optimal,
-                        ),
+                    headline: balanceHeadline(balance),
+                    allOptimal: balance.every(
+                      (entry) =>
+                          !entry.group.primary ||
+                          entry.verdict == BalanceVerdict.optimal,
+                    ),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => ProgramBalanceView(week: week),
+                        builder: (_) => ProgramBalanceView(
+                          week: week,
+                          program: _balanceContext,
+                        ),
                       ),
                     ),
                   ),
@@ -473,80 +608,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                           onTap: () => _openAdjustSheet(track),
                         ),
                   ],
-                  _ProgramSectionLabel(
-                    'Active skill trees',
-                    action: 'Edit',
-                    onAction: _openSkillsSheet,
-                  ),
-                  if (goalSkills.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 14, bottom: 2),
-                      child: Text(
-                        'No specific skills picked — Forma keeps the program '
-                        'balanced across every movement pattern.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.55,
-                        ),
-                      ),
-                    )
-                  else
-                    Pressable(
-                      onTap: _openSkillsSheet,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 14, bottom: 2),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                for (final skill in goalSkills)
-                                  Container(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(10, 8, 13, 8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface2,
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          skill.icon,
-                                          size: 16,
-                                          color: AppColors.accentPrimary,
-                                        ),
-                                        const SizedBox(width: 7),
-                                        Text(
-                                          skill.label,
-                                          style: const TextStyle(
-                                            fontSize: 13.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Each session weaves in progressions toward '
-                              'these skills.',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                color: AppColors.textSecondary,
-                                height: 1.55,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   const _ProgramSectionLabel('Workouts'),
                   for (final workout in workouts)
                     _SessionRow(
@@ -593,22 +654,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   /// The setup wizard defaults to a full gym, so an unanswered program reads
   /// the same way here.
   bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
-
-  String _programSummary(TrainingProgramType programType) {
-    switch (programType) {
-      case TrainingProgramType.fullBody:
-        return 'Every session runs the whole body — one horizontal and one '
-            'vertical push, the same two pulls, hinge, squat and core — with '
-            'skill practice up front.';
-      case TrainingProgramType.pushPull:
-        return 'Pushes and pulls take turns, so the same muscles never work '
-            'back to back — legs and core are carried across both, with skill '
-            'practice up front.';
-      case TrainingProgramType.upperLower:
-        return 'Upper and lower days alternate — half the body per session, '
-            'and the week still covers every movement pattern.';
-    }
-  }
 }
 
 /// Hero constellation: an abstract read of the program itself — cleared nodes
@@ -2224,219 +2269,6 @@ class _SheetRadioRow extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GoalSkillsSheet extends StatefulWidget {
-  final List<String> picked;
-  final Map<String, ExerciseStatus> progressMap;
-
-  const _GoalSkillsSheet({required this.picked, required this.progressMap});
-
-  @override
-  State<_GoalSkillsSheet> createState() => _GoalSkillsSheetState();
-}
-
-class _GoalSkillsSheetState extends State<_GoalSkillsSheet> {
-  late List<String> _picked;
-
-  @override
-  void initState() {
-    super.initState();
-    _picked = List.of(widget.picked);
-  }
-
-  bool get _dirty {
-    final a = [..._picked]..sort();
-    final b = [...widget.picked]..sort();
-    if (a.length != b.length) return true;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return true;
-    }
-    return false;
-  }
-
-  void _toggle(String id) {
-    setState(() {
-      if (_picked.contains(id)) {
-        _picked.remove(id);
-      } else {
-        _picked.add(id);
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dirty = _dirty;
-
-    return SheetShell(
-      title: 'Active skill trees',
-      sub:
-          'Pick anything that excites you — Forma builds the path from where you are today',
-      expand: true,
-      footer: PillButton(
-        label: dirty ? 'Save skill trees' : 'No changes yet',
-        onTap: dirty ? () => Navigator.of(context).pop(_picked) : null,
-      ),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(2, 8, 2, 0),
-            child: Text(
-              '${_picked.length} picked',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: _picked.isEmpty
-                    ? AppColors.textMuted
-                    : AppColors.accentPrimary,
-              ),
-            ),
-          ),
-          for (final group in kGoalSkillGroups) ..._buildGroup(group),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildGroup(GoalSkillGroup group) {
-    final skills =
-        kGoalSkillOptions.where((skill) => skill.group == group.id).toList();
-    if (skills.isEmpty) return const [];
-
-    final rows = <Widget>[];
-    for (var index = 0; index < skills.length; index += 2) {
-      rows.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildSkillCard(skills[index])),
-              const SizedBox(width: 8),
-              Expanded(
-                child: index + 1 < skills.length
-                    ? _buildSkillCard(skills[index + 1])
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(2, 16, 2, 9),
-        child: Text(
-          group.label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-      ...rows,
-    ];
-  }
-
-  Widget _buildSkillCard(GoalSkillOption skill) {
-    final on = _picked.contains(skill.id);
-    final locked = TrainingProgramService.lockedGoal(
-      skill.id,
-      widget.progressMap,
-    );
-
-    return Pressable(
-      onTap: locked == null
-          ? () => _toggle(skill.id)
-          : () => ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(locked.message))),
-      child: Opacity(
-        opacity: locked == null ? 1 : 0.45,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
-          decoration: BoxDecoration(
-            color: on ? AppColors.accentSoft : AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: on ? AppColors.accentPrimary : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  skill.icon,
-                  size: 22,
-                  color: on ? AppColors.accentPrimary : AppColors.textSecondary,
-                ),
-                if (locked != null)
-                  const Icon(
-                    Icons.lock_rounded,
-                    size: 15,
-                    color: AppColors.textMuted,
-                  )
-                else if (on)
-                  Container(
-                    width: 18,
-                    height: 18,
-                    decoration: const BoxDecoration(
-                      color: AppColors.accentPrimary,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.check_rounded,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              skill.label,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.15,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                for (var dot = 1; dot <= 3; dot++)
-                  Container(
-                    width: 4.5,
-                    height: 4.5,
-                    margin: const EdgeInsets.only(right: 2.5),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: dot <= skill.difficulty + 1
-                          ? (on
-                              ? AppColors.accentPrimary
-                              : AppColors.textSecondary)
-                          : Colors.white.withValues(alpha: 0.12),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-          ),
         ),
       ),
     );

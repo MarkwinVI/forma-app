@@ -138,15 +138,27 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     });
   }
 
-  /// Options for one row — the same menu the live workout shows, minus the
-  /// things that only make sense mid-session.
+  Exercise? _exerciseFor(ProgramDayItem item) =>
+      item.exerciseId == null ? null : ExerciseCatalog.findById(item.exerciseId!);
+
+  /// The exercise's own page — how to perform it and its history both live
+  /// there, which is why the row's menu no longer duplicates them.
+  Future<void> _openItemDetail(ProgramDayItem item) async {
+    final exercise = _exerciseFor(item);
+    if (exercise == null) return;
+
+    await openExerciseDetailView<void>(
+      context,
+      exercise: exercise,
+      skillCategoryId: item.skillCategoryId,
+    );
+  }
+
+  /// Options for one row: what you can do to the workout. Reading about the
+  /// exercise is a tap on its name instead.
   Future<void> _openItemActions(ProgramDayItem item) async {
     final index = _items.indexWhere((entry) => entry.id == item.id);
     if (index < 0) return;
-
-    final exercise = item.exerciseId == null
-        ? null
-        : ExerciseCatalog.findById(item.exerciseId!);
 
     final action = await showModalBottomSheet<_ItemAction>(
       context: context,
@@ -156,31 +168,12 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
       builder: (_) => _ItemMenuSheet(
         title: item.name,
         subtitle: _itemSubtitle(item),
-        icon: programPatternIcon(item.category),
-        hasExercise: exercise != null,
         canReorder: _items.length > 1,
       ),
     );
     if (action == null || !mounted) return;
 
     switch (action) {
-      case _ItemAction.howToPerform:
-        if (exercise != null) {
-          await openExerciseDetailView<void>(
-            context,
-            exercise: exercise,
-            skillCategoryId: item.skillCategoryId,
-          );
-        }
-      case _ItemAction.history:
-        if (exercise != null) {
-          await openExerciseDetailView<void>(
-            context,
-            exercise: exercise,
-            skillCategoryId: item.skillCategoryId,
-            initialTab: ExerciseDetailTab.history,
-          );
-        }
       case _ItemAction.reorder:
         await _openReorder();
       case _ItemAction.replace:
@@ -293,6 +286,9 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
                               item: item,
                               subtitle: _itemSubtitle(item),
                               onOptions: () => _openItemActions(item),
+                              onOpenDetail: _exerciseFor(item) == null
+                                  ? null
+                                  : () => _openItemDetail(item),
                             ),
                         _AddExerciseRow(onTap: _openAddPicker),
                       ],
@@ -333,23 +329,19 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     );
   }
 
-  /// "Vertical pull" — what the row and the options sheet both read.
+  /// Where the exercise came from — the tree that schedules it and advances
+  /// it on its own, or the user adding it by hand. That is what decides how
+  /// the row behaves, so it is what the row says.
   String _itemSubtitle(ProgramDayItem item) {
-    if (item.kind == ProgramDayItemKind.progression) {
-      final category = item.skillCategoryId == null
-          ? null
-          : SkillCategoryCatalog.findById(item.skillCategoryId!);
-      if (category != null) {
-        final branch = category.branches.firstWhere(
-          (candidate) => candidate.id == item.branchId,
-          orElse: () => category.branches.first,
-        );
-        return '${programBranchLabel(category, branch)} '
-            '${category.title.toLowerCase()}';
-      }
-      return 'Skill path';
+    if (item.kind != ProgramDayItemKind.progression) {
+      return 'Standalone exercise';
     }
-    return programPatternLabel(item.category);
+
+    final category = item.skillCategoryId == null
+        ? null
+        : SkillCategoryCatalog.findById(item.skillCategoryId!);
+    if (category == null) return 'Skill tree progression';
+    return 'From: ${category.title} skill tree';
   }
 }
 
@@ -360,10 +352,15 @@ class _ItemRow extends StatelessWidget {
   final String subtitle;
   final VoidCallback onOptions;
 
+  /// Opens the exercise's own page. Null for the rare item whose exercise is
+  /// not in the catalog — the name then behaves as plain text.
+  final VoidCallback? onOpenDetail;
+
   const _ItemRow({
     required this.item,
     required this.subtitle,
     required this.onOptions,
+    this.onOpenDetail,
   });
 
   @override
@@ -379,16 +376,39 @@ class _ItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.25,
-                    height: 1.25,
+                // Only the name is the target — the rest of the row belongs
+                // to the options button, and tapping a subtitle that merely
+                // states where the exercise came from should do nothing.
+                Pressable(
+                  onTap: onOpenDetail,
+                  child: Row(
+                    // Hugs the name so the chevron sits against it rather
+                    // than drifting to the far side of the row.
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.25,
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                      if (onOpenDetail != null) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 17,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -428,22 +448,18 @@ class _ItemRow extends StatelessWidget {
   }
 }
 
-enum _ItemAction { howToPerform, history, reorder, replace, remove }
+enum _ItemAction { reorder, replace, remove }
 
-/// The row's options, grouped the way the live workout groups them: what the
-/// exercise is, then what you can do to the workout.
+/// The row's options: what you can do to the workout. What the exercise *is*
+/// belongs to its own page, which the row's name opens.
 class _ItemMenuSheet extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
-  final bool hasExercise;
   final bool canReorder;
 
   const _ItemMenuSheet({
     required this.title,
     required this.subtitle,
-    required this.icon,
-    required this.hasExercise,
     required this.canReorder,
   });
 
@@ -459,25 +475,6 @@ class _ItemMenuSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SurfaceCard(
-              clip: true,
-              child: Column(
-                children: [
-                  _MenuRow(
-                    label: 'How to perform',
-                    enabled: hasExercise,
-                    onTap: () => pick(_ItemAction.howToPerform),
-                  ),
-                  _MenuRow(
-                    label: 'History',
-                    enabled: hasExercise,
-                    withDivider: true,
-                    onTap: () => pick(_ItemAction.history),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
             SurfaceCard(
               clip: true,
               child: Column(

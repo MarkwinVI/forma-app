@@ -4,24 +4,68 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/training_program_service.dart';
+import '../../data/services/training_schedule_service.dart';
+import 'program_balance_advice.dart';
 import 'program_day_items.dart';
 
 /// One training day of the week as the program currently stands.
 class ProgramWeekDay {
   /// Monday-first weekday index.
   final int weekday;
+
+  /// What the split makes this day — which movements it can hold at all.
+  final TrainingSessionType sessionType;
   final List<ProgramDayItem> items;
 
-  const ProgramWeekDay({required this.weekday, required this.items});
+  const ProgramWeekDay({
+    required this.weekday,
+    required this.sessionType,
+    required this.items,
+  });
 }
 
-/// How often a primary category should be trained in a week. Two days is the
-/// floor — below that the pattern holds rather than improves — and much past
-/// three the extra work costs recovery instead of progress.
+/// The program facts the balance copy needs beyond the week itself: what the
+/// split is, what equipment the user has, and which trees they already run.
+class BalanceProgramContext {
+  final TrainingProgramType programType;
+  final int trainingDaysPerWeek;
+  final bool hasGym;
+  final List<SkillTrack> skillTracks;
+  final Map<String, ExerciseStatus> progressMap;
+
+  /// Skill categories behind the goals the user picked at setup. A goal tree
+  /// is never the one we suggest pausing.
+  final Set<String> goalSkillCategoryIds;
+
+  const BalanceProgramContext({
+    required this.programType,
+    required this.trainingDaysPerWeek,
+    this.hasGym = true,
+    this.skillTracks = const [],
+    this.progressMap = const {},
+    this.goalSkillCategoryIds = const {},
+  });
+}
+
+/// One scheduled block: an exercise of the movement on a given day. Two
+/// blocks can land on the same day — that is what makes a movement doubled
+/// up rather than simply frequent.
+class BalanceBlock {
+  final int weekday;
+  final ProgramDayItem item;
+
+  const BalanceBlock({required this.weekday, required this.item});
+}
+
+/// How often a primary category should be trained in a week: one block on
+/// each applicable day, held between these two. Two days is the floor — below
+/// that the pattern holds rather than improves — and past three the extra work
+/// costs recovery instead of progress.
 const int kBalanceTarget = 3;
 const int kBalanceMinDays = 2;
-const int kBalanceMaxDays = 5;
 
 /// One line of the weekly balance: the movement patterns it covers, and
 /// whether it is one of the primary categories the program is judged on.
@@ -111,122 +155,111 @@ extension BalanceVerdictX on BalanceVerdict {
 class BalanceCategory {
   final BalanceGroup group;
 
-  /// Exercise name → the weekdays it runs on.
-  final Map<String, List<int>> exerciseDays;
+  /// Every scheduled block of this movement, in week order.
+  final List<BalanceBlock> blocks;
 
-  const BalanceCategory({required this.group, required this.exerciseDays});
+  /// How many days a week the split could train this movement. Fractional on
+  /// purpose: a three-day upper/lower split runs each session an average of
+  /// 1.5 times a week. Null when the week was read without program context.
+  final double? opportunities;
+
+  const BalanceCategory({
+    required this.group,
+    required this.blocks,
+    this.opportunities,
+  });
 
   String get label => group.label;
-  int get target => kBalanceTarget;
   bool covers(ProgramDayItem item) => group.categories.contains(item.category);
+
+  /// Exercise name → the weekdays it runs on, in the order the week lists it.
+  Map<String, List<int>> get exerciseDays {
+    final days = <String, List<int>>{};
+    for (final block in blocks) {
+      (days[block.item.name] ??= []).add(block.weekday);
+    }
+    return days;
+  }
+
+  /// Every scheduled block, however they fall across the week. Two exercises
+  /// of this movement in one session are two blocks but one day.
+  int get weeklyBlocks => blocks.length;
 
   /// How many training days a week this category comes up on. Two exercises
   /// of the same category in one session are one go at that pattern, not two.
-  int get times => {
-        for (final days in exerciseDays.values) ...days,
-      }.length;
+  int get times => {for (final block in blocks) block.weekday}.length;
 
-  /// Exercise blocks a week — every exercise counted on every day it runs.
-  /// Used for the evenness checks between sides.
-  int get blocks =>
-      exerciseDays.values.fold(0, (sum, days) => sum + days.length);
+  /// One block on each applicable day, held to 2–3 a week. A split that only
+  /// offers the movement 1.5 days a week is aimed at 2, not at 3.
+  int get target {
+    final chances = opportunities;
+    if (chances == null) return kBalanceTarget;
+    final whole = chances.floor();
+    if (whole < kBalanceMinDays) return kBalanceMinDays;
+    if (whole > kBalanceTarget) return kBalanceTarget;
+    return whole;
+  }
 
+  /// Measured against [target] rather than a flat ceiling: short of the days
+  /// the split can give it is underloaded, and more blocks than the target —
+  /// whether spread over extra days or doubled up inside one session — is
+  /// overloaded.
   BalanceVerdict get verdict {
     if (!group.primary) return BalanceVerdict.optional;
-    if (exerciseDays.isEmpty) return BalanceVerdict.missing;
-    if (times < kBalanceMinDays) return BalanceVerdict.underloaded;
-    if (times > kBalanceMaxDays) return BalanceVerdict.overloaded;
+    if (blocks.isEmpty) return BalanceVerdict.missing;
+    if (times < target) return BalanceVerdict.underloaded;
+    if (weeklyBlocks > target) return BalanceVerdict.overloaded;
     return BalanceVerdict.optimal;
   }
 }
 
-/// A pairing that has drifted apart — pushing against pulling, or the
-/// horizontal against the vertical half of both.
-class BalanceEvenness {
-  final String label;
-  final String detail;
-
-  const BalanceEvenness({required this.label, required this.detail});
-}
-
-int _blocksIn(List<ProgramWeekDay> week, Set<ExerciseCategory> categories) {
-  var blocks = 0;
-  for (final day in week) {
-    for (final item in day.items) {
-      if (categories.contains(item.category)) blocks++;
-    }
-  }
-  return blocks;
-}
-
-/// Push and pull should stay within a block of each other, and the two
-/// directions within two.
-List<BalanceEvenness> balanceEvenness(List<ProgramWeekDay> week) {
-  final push = _blocksIn(week, {
-    ExerciseCategory.horizontalPush,
-    ExerciseCategory.verticalPush,
-  });
-  final pull = _blocksIn(week, {
-    ExerciseCategory.horizontalPull,
-    ExerciseCategory.verticalPull,
-  });
-  final horizontal = _blocksIn(week, {
-    ExerciseCategory.horizontalPush,
-    ExerciseCategory.horizontalPull,
-  });
-  final vertical = _blocksIn(week, {
-    ExerciseCategory.verticalPush,
-    ExerciseCategory.verticalPull,
-  });
-
-  return [
-    if ((push - pull).abs() > 1)
-      BalanceEvenness(
-        label: push > pull ? 'More push than pull' : 'More pull than push',
-        detail: '$push push blocks against $pull pull — they should stay '
-            'within one of each other so neither side falls behind.',
-      ),
-    if ((horizontal - vertical).abs() > 2)
-      BalanceEvenness(
-        label: horizontal > vertical
-            ? 'More horizontal than vertical'
-            : 'More vertical than horizontal',
-        detail: '$horizontal horizontal blocks against $vertical vertical — '
-            'more than two apart leaves one plane under-practised.',
-      ),
-  ];
-}
-
-/// Reads the week into one entry per group.
-List<BalanceCategory> balanceFromWeek(List<ProgramWeekDay> week) {
+/// Reads the week into one entry per group. Pass [context] to have each entry
+/// know what the split can offer it — without it the target stays the flat
+/// [kBalanceTarget].
+List<BalanceCategory> balanceFromWeek(
+  List<ProgramWeekDay> week, {
+  BalanceProgramContext? context,
+}) {
   return [
     for (final group in kBalanceGroups)
       BalanceCategory(
         group: group,
-        exerciseDays: () {
-          final days = <String, List<int>>{};
-          for (final day in week) {
-            for (final item in day.items) {
-              if (!group.categories.contains(item.category)) continue;
-              (days[item.name] ??= []).add(day.weekday);
-            }
-          }
-          return days;
-        }(),
+        opportunities:
+            context == null ? null : _opportunitiesFor(group, context),
+        blocks: [
+          for (final day in week)
+            for (final item in day.items)
+              if (group.categories.contains(item.category))
+                BalanceBlock(weekday: day.weekday, item: item),
+        ],
       ),
   ];
 }
 
-/// "Vertical pull underloaded, more push than pull" — or all clear.
-String balanceHeadline(
-  List<BalanceCategory> categories, [
-  List<BalanceEvenness> evenness = const [],
-]) {
+/// Weekly-equivalent chances the split gives a movement: the training days a
+/// week, times the share of the split's rotation that can hold it. Three days
+/// of upper/lower is 1.5 upper days a week, not 2 — the week the Program tab
+/// draws just happens to start on whichever session comes first.
+double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
+  final sequence =
+      TrainingScheduleService().trainingSequenceFor(context.programType);
+  if (sequence.isEmpty) return 0;
+
+  final covering = sequence
+      .where(
+        (session) => TrainingProgramService.patternsForSession(session)
+            .any(group.categories.contains),
+      )
+      .length;
+  return context.trainingDaysPerWeek * covering / sequence.length;
+}
+
+/// "Vertical pull underloaded, Core missing" — or all clear.
+String balanceHeadline(List<BalanceCategory> categories) {
   final off = [
     for (final entry in categories)
       if (entry.group.primary && entry.verdict != BalanceVerdict.optimal)
         '${entry.label} ${entry.verdict.label.toLowerCase()}',
-    for (final warning in evenness) warning.label.toLowerCase(),
   ];
   if (off.isEmpty) return 'Every category optimal';
   return off.join(', ');
@@ -235,13 +268,17 @@ String balanceHeadline(
 /// Full-page read of how often each movement category comes up in the week.
 class ProgramBalanceView extends StatelessWidget {
   final List<ProgramWeekDay> week;
+  final BalanceProgramContext program;
 
-  const ProgramBalanceView({super.key, required this.week});
+  const ProgramBalanceView({
+    super.key,
+    required this.week,
+    required this.program,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final categories = balanceFromWeek(week);
-    final evenness = balanceEvenness(week);
+    final categories = balanceFromWeek(week, context: program);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -263,25 +300,12 @@ class ProgramBalanceView extends StatelessWidget {
                           builder: (_) => _CategoryDetailView(
                             entry: entry,
                             week: week,
+                            categories: categories,
+                            program: program,
                           ),
                         ),
                       ),
                     ),
-                  if (evenness.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 30, bottom: 2),
-                      child: Text(
-                        'EVENNESS',
-                        style: GoogleFonts.robotoMono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                          letterSpacing: 1.65,
-                        ),
-                      ),
-                    ),
-                    for (final warning in evenness) _EvennessRow(warning),
-                  ],
                 ],
               ),
             ),
@@ -297,14 +321,30 @@ class ProgramBalanceView extends StatelessWidget {
 class _CategoryDetailView extends StatelessWidget {
   final BalanceCategory entry;
   final List<ProgramWeekDay> week;
+  final List<BalanceCategory> categories;
+  final BalanceProgramContext program;
 
-  const _CategoryDetailView({required this.entry, required this.week});
+  const _CategoryDetailView({
+    required this.entry,
+    required this.week,
+    required this.categories,
+    required this.program,
+  });
 
   @override
   Widget build(BuildContext context) {
     final verdict = entry.verdict;
     final times = entry.times;
     final over = verdict == BalanceVerdict.overloaded;
+    final report = verdict == BalanceVerdict.optimal ||
+            verdict == BalanceVerdict.optional
+        ? null
+        : balanceReportFor(
+            entry: entry,
+            week: week,
+            allCategories: categories,
+            context: program,
+          );
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -315,11 +355,16 @@ class _CategoryDetailView extends StatelessWidget {
           children: [
             _PageHeader(
               title: entry.label,
+              // The target counts blocks, so the line under the title does
+              // too — a movement can sit on three days and still be doubled
+              // up on one of them.
               sub: verdict == BalanceVerdict.optional
                   ? 'Optional · $times ${times == 1 ? 'day' : 'days'} a week'
                   : over
-                      ? '$times days a week · target ${entry.target}'
-                      : '$times of ${entry.target} days a week',
+                      ? '${entry.weeklyBlocks} times a week · '
+                          'target ${entry.target}'
+                      : '${entry.weeklyBlocks} of ${entry.target} times '
+                          'a week',
               subColor: verdict.color,
               subWeight: FontWeight.w600,
             ),
@@ -353,8 +398,9 @@ class _CategoryDetailView extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 22),
                       child: Text(
-                        '${entry.label} is where it should be: $times days a '
-                        'week against a target of ${entry.target}.',
+                        '${entry.label} is where it should be: it appears '
+                        '${entry.weeklyBlocks} times this week against a '
+                        'target of ${entry.target}.',
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
@@ -362,11 +408,11 @@ class _CategoryDetailView extends StatelessWidget {
                         ),
                       ),
                     )
-                  else ...[
+                  else if (report != null) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 24),
                       child: Text(
-                        _headline,
+                        report.headline,
                         style: const TextStyle(
                           fontSize: 16.5,
                           fontWeight: FontWeight.w700,
@@ -378,7 +424,7 @@ class _CategoryDetailView extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
-                        _explanation,
+                        report.explanation,
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
@@ -389,7 +435,7 @@ class _CategoryDetailView extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 26, bottom: 2),
                       child: Text(
-                        over ? 'WHAT WOULD EVEN IT OUT' : 'WHAT WOULD FIX IT',
+                        report.actionsLabel,
                         style: GoogleFonts.robotoMono(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -398,7 +444,7 @@ class _CategoryDetailView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    for (final fix in _fixes) _FixRow(fix),
+                    for (final fix in report.advice) _FixRow(fix),
                   ],
                 ],
               ),
@@ -409,88 +455,6 @@ class _CategoryDetailView extends StatelessWidget {
     );
   }
 
-  /// The single exercise carrying this category, when there is only one.
-  MapEntry<String, List<int>>? get _onlyExercise =>
-      entry.exerciseDays.length == 1 ? entry.exerciseDays.entries.first : null;
-
-  /// Training days this category never appears on.
-  List<int> get _missingDays => [
-        for (final day in week)
-          if (!day.items.any(entry.covers))
-            day.weekday,
-      ];
-
-  String get _headline {
-    final times = entry.times;
-    switch (entry.verdict) {
-      case BalanceVerdict.missing:
-        return 'Nothing in your week trains this';
-      case BalanceVerdict.overloaded:
-        return '$times days a week, ${times - entry.target} over';
-      case BalanceVerdict.underloaded:
-        final only = _onlyExercise;
-        if (only != null) {
-          return 'One exercise, ${only.value.length}× a week';
-        }
-        return '${entry.target - times} short of ${entry.target} days a week';
-      case BalanceVerdict.optimal:
-      case BalanceVerdict.optional:
-        return '';
-    }
-  }
-
-  String get _explanation {
-    final times = entry.times;
-    final wants = '${entry.label} wants about ${entry.target} training days '
-        'a week.';
-
-    if (entry.verdict == BalanceVerdict.overloaded) {
-      return '$wants You are at $times. Past the target the extra work mostly '
-          'costs you recovery rather than progress — and it crowds out '
-          'whatever else the session needs.';
-    }
-
-    final only = _onlyExercise;
-    final because = only == null
-        ? ''
-        : ', because ${only.key} only runs on '
-            '${_dayList(only.value)}';
-    return '$wants You are at $times$because. Under $kBalanceMinDays days a '
-        'week the pattern barely improves; at ${entry.target} it progresses '
-        'steadily.';
-  }
-
-  List<String> get _fixes {
-    final times = entry.times;
-
-    if (entry.verdict == BalanceVerdict.overloaded) {
-      final last = entry.exerciseDays.entries.last;
-      return [
-        'Take ${last.key} out of some sessions — it currently runs on '
-            '${_dayList(last.value)}',
-        'Or drop the pattern from a day entirely, so it comes up on '
-            '$kBalanceMaxDays days at most',
-        'Or leave it, as long as the sessions still feel manageable',
-      ];
-    }
-
-    final only = _onlyExercise;
-    final missing = _missingDays;
-    return [
-      if (only != null && missing.isNotEmpty)
-        'Run ${only.key} on ${_dayList(missing)} too — that alone gets you '
-            'to ${times + missing.length} days',
-      'Add ${entry.exerciseDays.isEmpty ? 'a' : 'another'} '
-          '${entry.label.toLowerCase()} exercise to your sessions',
-      'Or leave it — as long as the opposite side stays even with it',
-    ];
-  }
-
-  String _dayList(List<int> weekdays) {
-    final names = [for (final day in weekdays) kWeekdayNames[day]];
-    if (names.length < 2) return names.join();
-    return '${names.take(names.length - 1).join(', ')} and ${names.last}';
-  }
 }
 
 /// Back chevron over a display title, shared by both balance pages.
@@ -612,46 +576,6 @@ class _CategoryRow extends StatelessWidget {
   }
 }
 
-class _EvennessRow extends StatelessWidget {
-  final BalanceEvenness warning;
-
-  const _EvennessRow(this.warning);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 15, bottom: 17),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            warning.label,
-            style: const TextStyle(
-              fontSize: 16.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.amber,
-              letterSpacing: -0.25,
-              height: 1.25,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            warning.detail,
-            style: const TextStyle(
-              fontSize: 13.5,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DayRow extends StatelessWidget {
   final int weekday;
   final List<String> names;
@@ -716,15 +640,17 @@ class _DayRow extends StatelessWidget {
   }
 }
 
+/// One suggested action: what to do, then why, so the list reads as choices
+/// rather than a wall of sentences.
 class _FixRow extends StatelessWidget {
-  final String text;
+  final BalanceAdvice advice;
 
-  const _FixRow(this.text);
+  const _FixRow(this.advice);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
@@ -741,13 +667,29 @@ class _FixRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFFC9CAD1),
-                height: 1.5,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  advice.title,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.15,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  advice.detail,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

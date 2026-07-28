@@ -61,8 +61,7 @@ class SkillTreeMap extends StatelessWidget {
       onFoundationTap?.call();
       return;
     }
-    final branch =
-        viz.branches.where((item) => item.id == routeId).firstOrNull;
+    final branch = viz.branches.where((item) => item.id == routeId).firstOrNull;
     if (branch != null) onBranchTap?.call(branch);
   }
 
@@ -104,7 +103,83 @@ class SkillTreeMap extends StatelessWidget {
 
 /// Node states for the map. Same color language as the Skills tab:
 /// green = cleared, blue = working, gray = everything still shut.
-enum TreeNodeState { done, cur, locked }
+/// How one step of a tree reads.
+///
+/// [unlocked] is the state between the two extremes: its prerequisite is
+/// cleared so it could be trained, but it is not the step the tree is
+/// currently on — the first step of a branch you have not aimed at, say.
+enum TreeNodeState { done, cur, unlocked, locked }
+
+/// State for every exercise of a tree, by one rule so the map, the route
+/// lists and the program all read the same.
+///
+/// A tree still behind an unlock requirement reads as locked throughout.
+/// Otherwise mastered steps are done, the step being trained is current, a
+/// step whose predecessor is mastered is unlocked, and the rest are locked.
+Map<String, TreeNodeState> skillTreeNodeStates({
+  required SkillCategory category,
+  required Map<String, ExerciseStatus> progressMap,
+  String? goalBranchId,
+}) {
+  final states = <String, TreeNodeState>{};
+  final foundation = category.pathFor('main');
+  final tails = <String, List<String>>{
+    for (final branch in category.branches)
+      if (branch.id != 'main' &&
+          category.pathFor(branch.id).length > foundation.length)
+        branch.id: category.pathFor(branch.id).sublist(foundation.length),
+  };
+  final spine = tails.isEmpty
+      ? (foundation.isNotEmpty
+          ? foundation
+          : category.pathFor(category.defaultTrainingPathId))
+      : foundation;
+
+  if (category.isLockedFor(progressMap)) {
+    for (final id in [spine, ...tails.values].expand((ids) => ids)) {
+      states[id] = TreeNodeState.locked;
+    }
+    return states;
+  }
+
+  bool mastered(String id) => progressMap[id] == ExerciseStatus.mastered;
+
+  // The step the tree is on: whatever is marked active along the goal route,
+  // else the first thing on it still to clear.
+  final goalPath = [...spine, ...?tails[goalBranchId]];
+  String? current;
+  for (final id in goalPath) {
+    if (progressMap[id] == ExerciseStatus.active) {
+      current = id;
+      break;
+    }
+  }
+  current ??= goalPath.where((id) => !mastered(id)).firstOrNull;
+
+  void walk(List<String> ids, bool openAtStart) {
+    var previousCleared = openAtStart;
+    for (final id in ids) {
+      if (mastered(id)) {
+        states[id] = TreeNodeState.done;
+        previousCleared = true;
+        continue;
+      }
+      states[id] = id == current
+          ? TreeNodeState.cur
+          : previousCleared
+              ? TreeNodeState.unlocked
+              : TreeNodeState.locked;
+      previousCleared = false;
+    }
+  }
+
+  walk(spine, true);
+  final spineCleared = spine.every(mastered);
+  for (final tail in tails.values) {
+    walk(tail, spineCleared);
+  }
+  return states;
+}
 
 class TreeVizBranch {
   final String id;
@@ -138,7 +213,8 @@ class TreeVizModel {
     var done = spine.where((state) => state == TreeNodeState.done).length;
     final active = branches.where((branch) => branch.isActive).firstOrNull;
     if (active != null) {
-      done += active.states.where((state) => state == TreeNodeState.done).length;
+      done +=
+          active.states.where((state) => state == TreeNodeState.done).length;
     }
     return math.min(done + 1, math.max(totalNodes, 1));
   }
@@ -167,24 +243,22 @@ class TreeVizModel {
     for (final branch in category.branches) {
       final ids = category.pathFor(branch.id);
       if (ids.isEmpty) continue;
-      final visible =
-          ids.length > foundation.length ? ids.sublist(foundation.length) : const <String>[];
+      final visible = ids.length > foundation.length
+          ? ids.sublist(foundation.length)
+          : const <String>[];
       if (visible.isEmpty) continue;
       branchIds.add(branch.id);
       branchLabels[branch.id] = branch.label;
       branchPaths[branch.id] = visible;
     }
 
-    TreeNodeState stateFor(String exerciseId) {
-      switch (progressMap[exerciseId] ?? ExerciseStatus.inactive) {
-        case ExerciseStatus.mastered:
-          return TreeNodeState.done;
-        case ExerciseStatus.active:
-          return TreeNodeState.cur;
-        case ExerciseStatus.inactive:
-          return TreeNodeState.locked;
-      }
-    }
+    final nodeStates = skillTreeNodeStates(
+      category: category,
+      progressMap: progressMap,
+      goalBranchId: activeBranchId,
+    );
+    TreeNodeState stateFor(String exerciseId) =>
+        nodeStates[exerciseId] ?? TreeNodeState.locked;
 
     // A tree with one linear path renders as a plain spine, no hub.
     List<String> spineIds;
@@ -376,8 +450,10 @@ class _TreeLayout {
   }
 
   static double _distanceToRect(Rect rect, Offset point) {
-    final dx = math.max(math.max(rect.left - point.dx, 0), point.dx - rect.right);
-    final dy = math.max(math.max(rect.top - point.dy, 0), point.dy - rect.bottom);
+    final dx =
+        math.max(math.max(rect.left - point.dx, 0), point.dx - rect.right);
+    final dy =
+        math.max(math.max(rect.top - point.dy, 0), point.dy - rect.bottom);
     return math.sqrt(dx * dx + dy * dy);
   }
 
@@ -400,8 +476,7 @@ class _TreeLayout {
     }
     return base.copyWith(
       fontWeight: isActiveBranch ? FontWeight.w700 : base.fontWeight,
-      color:
-          isActiveBranch ? AppColors.textSecondary : AppColors.textMuted,
+      color: isActiveBranch ? AppColors.textSecondary : AppColors.textMuted,
     );
   }
 
@@ -560,6 +635,7 @@ class _TreeLayout {
         ));
       }
       tracks[branch.id] = [
+        if (spinePoints.isNotEmpty) ...[spinePoints.first, point(hubX, 0)],
         point(hubX + cos * _stemRadius, sin * _stemRadius),
         nodeAt(states.length - 1),
       ];
@@ -640,19 +716,21 @@ class _TreeMapPainter extends CustomPainter {
     const lockedColor = AppColors.surface3;
     const dot = _TreeLayout.dot;
 
-    final track = selectedRouteId == null
-        ? null
-        : layout.routeTracks[selectedRouteId];
+    final track =
+        selectedRouteId == null ? null : layout.routeTracks[selectedRouteId];
     if (track != null && track.length > 1) {
       final path = Path()..moveTo(track.first.dx, track.first.dy);
       for (final point in track.skip(1)) {
         path.lineTo(point.dx, point.dy);
       }
+      final isGoalRoute = selectedRouteId != SkillTreeMap.foundationRouteId;
       canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..color = Colors.white.withValues(alpha: 0.105)
+          ..color = isGoalRoute
+              ? AppColors.accentBright.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.105)
           ..strokeWidth = 19
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
@@ -708,7 +786,8 @@ class _TreeMapPainter extends CustomPainter {
       final route = node.routeId;
       switch (node.state) {
         case TreeNodeState.done:
-          canvas.drawCircle(center, dot, Paint()..color = _dim(doneColor, route));
+          canvas.drawCircle(
+              center, dot, Paint()..color = _dim(doneColor, route));
         case TreeNodeState.cur:
           // Rep ring: how much of the target this session's volume covers.
           if (progress != null) {
@@ -738,16 +817,25 @@ class _TreeMapPainter extends CustomPainter {
               Paint()..color = _dim(curSoft, route),
             );
           }
-          canvas.drawCircle(center, dot, Paint()..color = _dim(curColor, route));
+          canvas.drawCircle(
+              center, dot, Paint()..color = _dim(curColor, route));
+        case TreeNodeState.unlocked:
+          // Ready to train, but not the step the tree is on.
+          canvas.drawCircle(
+            center,
+            dot,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.8
+              ..color = _dim(curColor, route),
+          );
         case TreeNodeState.locked:
           canvas.drawCircle(
             center,
             node.faint ? dot - 1.3 : dot - 0.8,
             Paint()
               ..color = _dim(
-                node.faint
-                    ? lockedColor.withValues(alpha: 0.75)
-                    : lockedColor,
+                node.faint ? lockedColor.withValues(alpha: 0.75) : lockedColor,
                 route,
               ),
           );

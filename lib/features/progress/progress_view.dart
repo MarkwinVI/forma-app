@@ -171,6 +171,7 @@ class _ProgressViewState extends State<ProgressView> {
       progressMap: _progressMap,
       progressEntries: _progressEntries,
       workouts: _pastWorkouts,
+      skillTracks: _skillTracks,
       goalSkillIds: snapshot.program.goalSkillIds,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
       dayMask: dayMask,
@@ -305,7 +306,9 @@ class _ProgressViewState extends State<ProgressView> {
           for (final tree in active) rowFor(tree, last: tree == active.last),
         ],
         if (inactive.isNotEmpty) ...[
-          const _GroupLabel('Not started'),
+          // Same wording as the Program tab's tree list — both read the same
+          // skill tracks, so both must group the trees the same way.
+          const _GroupLabel('Not active'),
           for (final category in inactive)
             SkillTreeRow(
               key: ValueKey(_categoryKey(category)),

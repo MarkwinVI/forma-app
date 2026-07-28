@@ -301,6 +301,7 @@ class _HomeViewState extends State<HomeView> {
         progressMap: _progressMap,
         progressEntries: _progressEntries,
         workouts: _pastWorkouts,
+        skillTracks: _skillTracks,
         goalSkillIds: snapshot.program.goalSkillIds,
         frequencyPerWeek: snapshot.program.frequencyPerWeek,
         dayMask: dayMask,

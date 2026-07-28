@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
+import 'package:forma_app/data/models/skill_track_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/models/workout_history_model.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
@@ -28,6 +29,68 @@ void main() {
       final categoryIds =
           options.map((option) => option.sourceSkillCategoryId).toList();
       expect(categoryIds.length, categoryIds.toSet().length);
+    });
+
+    test('active path options keep every included track on a shared lane', () {
+      final service = TrainingProgramService();
+      final categoriesById = {
+        for (final category in SkillCategoryCatalog.browsable())
+          category.id: category,
+      };
+
+      // Dips and handstand pushups both sit on the vertical-push lane. The
+      // lane map can only hold one of them, so the tracks have to reach the
+      // dashboard unrouted or the Progress tab calls a tree the Program tab
+      // is training "not active".
+      final options = HomeDashboardMetricsCalculator.resolveActivePathOptions(
+        trainingProgramService: service,
+        programType: TrainingProgramType.fullBody,
+        sessionItemsConfig: const {},
+        branchSelections: service.defaultBranchSelections(),
+        categoriesById: categoriesById,
+        skillTracks: [
+          _track(SkillCategoryCatalog.dipsId, 'weighted'),
+          _track(SkillCategoryCatalog.handstandPushupsId, 'main'),
+        ],
+      );
+
+      final categoryIds =
+          options.map((option) => option.sourceSkillCategoryId).toSet();
+      expect(categoryIds, {
+        SkillCategoryCatalog.dipsId,
+        SkillCategoryCatalog.handstandPushupsId,
+      });
+    });
+
+    test('active path options drop a paused track instead of a lane default',
+        () {
+      final service = TrainingProgramService();
+      final categoriesById = {
+        for (final category in SkillCategoryCatalog.browsable())
+          category.id: category,
+      };
+
+      // Pull-ups are the vertical-pull lane default: taking the track out of
+      // the program must not let that default put the tree back.
+      final options = HomeDashboardMetricsCalculator.resolveActivePathOptions(
+        trainingProgramService: service,
+        programType: TrainingProgramType.fullBody,
+        sessionItemsConfig: const {},
+        branchSelections: service.defaultBranchSelections(),
+        categoriesById: categoriesById,
+        skillTracks: [
+          _track(SkillCategoryCatalog.dipsId, 'weighted'),
+          _track(
+            SkillCategoryCatalog.pullupsId,
+            'weighted',
+            included: false,
+          ),
+        ],
+      );
+
+      final categoryIds =
+          options.map((option) => option.sourceSkillCategoryId).toSet();
+      expect(categoryIds, {SkillCategoryCatalog.dipsId});
     });
 
     test('tree level is zero when a skill tree is untouched', () {
@@ -600,6 +663,19 @@ void main() {
       expect(streak.onTrack, isFalse);
     });
   });
+}
+
+SkillTrack _track(
+  String skillCategoryId,
+  String branchId, {
+  bool included = true,
+}) {
+  return SkillTrack(
+    skillCategoryId: skillCategoryId,
+    branchId: branchId,
+    included: included,
+    updatedAt: DateTime(2026, 6, 19),
+  );
 }
 
 PastWorkout _workout(
