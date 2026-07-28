@@ -60,7 +60,8 @@ void main() {
 
     expect(find.text('UPDATED AFTER TUESDAY'), findsOneWidget);
     expect(find.text('One target raised since Tuesday'), findsOneWidget);
-    expect(find.textContaining('moved the bar'), findsOneWidget);
+    // No explanation paragraph — the raises say it themselves.
+    expect(find.textContaining('moved the bar'), findsNothing);
     expect(find.text('hit 3 × 6'), findsOneWidget);
     expect(find.text('6 → 7'), findsOneWidget);
     expect(find.text('How targets are set'), findsOneWidget);

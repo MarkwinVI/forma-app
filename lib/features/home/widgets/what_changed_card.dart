@@ -187,15 +187,6 @@ class _WhatChangedSheet extends StatelessWidget {
               letterSpacing: -0.81,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            _reasonFor(items),
-            style: const TextStyle(
-              fontSize: 14.5,
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
           for (var i = 0; i < items.length; i++)
             Container(
               margin: EdgeInsets.only(top: i == 0 ? 22 : 0),
@@ -306,19 +297,6 @@ class _WhatChangedSheet extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  /// Why the program moved, said once above the list rather than repeated on
-  /// every line.
-  String _reasonFor(List<_InsightItem> items) {
-    final raised = items.where((item) => item.detail == 'target raised').length;
-    if (raised == items.length && raised > 0) {
-      return 'You met every target in '
-          '${raised == 1 ? 'it' : 'them'}, so Forma moved the bar by one rep. '
-          'Everything else stayed where it was.';
-    }
-    return 'Forma adjusts what it can see: targets rise when you meet them, '
-        'and the next exercise unlocks when you master the one before it.';
   }
 }
 
