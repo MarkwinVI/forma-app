@@ -1633,7 +1633,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
         ),
         // Column heads
         Padding(
-          padding: const EdgeInsets.only(top: 14, bottom: 8),
+          padding: const EdgeInsets.fromLTRB(8, 14, 8, 8),
           child: _SetGridRow(
             leading: Text('SET', style: _columnLabelStyle),
             middle: Text('LAST', style: _columnLabelStyle),
@@ -1672,10 +1672,17 @@ class _WorkoutExerciseCard extends StatelessWidget {
   static final _columnLabelStyle = monoStyle(size: 10, letterSpacing: 1.4);
 
   Widget _buildSetRow(BuildContext context, _WorkoutSetDraft set) {
+    // A logged set is tinted across every column — the whole line is done,
+    // not just the tick at the end of it. The tint replaces the hairline
+    // rather than sitting under it, which a rounded fill cannot share.
     final row = Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.cardHighlight)),
+      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+      decoration: BoxDecoration(
+        color: set.completed ? AppColors.greenSoft : null,
+        borderRadius: set.completed ? BorderRadius.circular(8) : null,
+        border: set.completed
+            ? null
+            : const Border(top: BorderSide(color: AppColors.cardHighlight)),
       ),
       child: _SetGridRow(
         leading: Text(
@@ -1683,7 +1690,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
           style: monoStyle(
             size: 14,
             letterSpacing: 0,
-            color: set.completed ? AppColors.textMuted : AppColors.textPrimary,
+            color: AppColors.textPrimary,
           ),
         ),
         middle: Text(
