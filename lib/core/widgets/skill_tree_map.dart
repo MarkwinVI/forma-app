@@ -323,7 +323,11 @@ class _TreeLayout {
   late final List<_Dot> dots;
   late final List<_Label> labels;
   late final Offset? hub;
-  late final _Segment? fillSegment;
+  /// Points the volume fill traces, in order. It follows the drawn route
+  /// rather than cutting a straight line, so a fill running from the last
+  /// foundation step into an angled branch bends at the fork instead of
+  /// leaving the spine early.
+  late final List<Offset>? fillPath;
 
   /// Whether the foundation is cleared — the fork has been reached, so it
   /// reads as part of the travelled path rather than a dead node.
@@ -550,7 +554,7 @@ class _TreeLayout {
     final builtSegments = <_Segment>[];
     final builtDots = <_Dot>[];
     final builtLabels = <_Label>[];
-    _Segment? fill;
+    List<Offset>? fill;
 
     final spineSpacing = _spineRef * scale;
     final spinePoints = [
@@ -594,11 +598,10 @@ class _TreeLayout {
       final from = spinePoints[curS];
       final to = spinePoints[curS + 1];
       if ((to.dx - from.dx) > 18) {
-        fill = _Segment(
-          a: Offset(from.dx + 11, from.dy),
-          b: Offset(to.dx - 7, to.dy),
-          on: true,
-        );
+        fill = [
+          Offset(from.dx + 11, from.dy),
+          Offset(to.dx - 7, to.dy),
+        ];
       }
     }
 
@@ -652,12 +655,14 @@ class _TreeLayout {
         // unlocks the most has nothing to fill into.
         if (spine.isNotEmpty && curS == spine.length - 1) {
           final from = spinePoints.last;
+          final centre = point(hubX, 0);
           final to = nodeAt(0);
-          final delta = to - from;
-          final length = delta.distance;
-          if (length > 18) {
-            final unit = delta / length;
-            fill = _Segment(a: from + unit * 11, b: to - unit * 7, on: true);
+          final approach = centre - from;
+          final leave = to - centre;
+          if (approach.distance > 12 && leave.distance > 12) {
+            final start = from + approach / approach.distance * 11;
+            final end = to - leave / leave.distance * 7;
+            fill = [start, centre, end];
           }
         }
         final curB = states.indexOf(TreeNodeState.cur);
@@ -668,7 +673,7 @@ class _TreeLayout {
           final length = delta.distance;
           if (length > 18) {
             final unit = delta / length;
-            fill = _Segment(a: from + unit * 11, b: to - unit * 7, on: true);
+            fill = [from + unit * 11, to - unit * 7];
           }
         }
       }
@@ -694,7 +699,7 @@ class _TreeLayout {
     segments = builtSegments;
     dots = builtDots;
     labels = builtLabels;
-    fillSegment = fill;
+    fillPath = fill;
     routeTracks = tracks;
   }
 }
@@ -775,15 +780,36 @@ class _TreeMapPainter extends CustomPainter {
     }
 
     final progress = fillPct;
-    final fill = layout.fillSegment;
-    if (fill != null && progress != null) {
-      canvas.drawLine(
-        fill.a,
-        fill.a + (fill.b - fill.a) * progress.clamp(0.0, 1.0),
+    final fill = layout.fillPath;
+    if (fill != null && progress != null && fill.length > 1) {
+      // Walk the route by length so the fill bends where the route bends.
+      var total = 0.0;
+      for (var index = 1; index < fill.length; index++) {
+        total += (fill[index] - fill[index - 1]).distance;
+      }
+      var remaining = total * progress.clamp(0.0, 1.0);
+      final trail = Path()..moveTo(fill.first.dx, fill.first.dy);
+      for (var index = 1; index < fill.length && remaining > 0; index++) {
+        final leg = fill[index] - fill[index - 1];
+        final length = leg.distance;
+        if (length <= 0) continue;
+        if (remaining >= length) {
+          trail.lineTo(fill[index].dx, fill[index].dy);
+          remaining -= length;
+        } else {
+          final tip = fill[index - 1] + leg * (remaining / length);
+          trail.lineTo(tip.dx, tip.dy);
+          remaining = 0;
+        }
+      }
+      canvas.drawPath(
+        trail,
         Paint()
+          ..style = PaintingStyle.stroke
           ..color = curColor
           ..strokeWidth = 2
-          ..strokeCap = StrokeCap.round,
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
       );
     }
 
