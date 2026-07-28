@@ -27,7 +27,6 @@ const _monthNames = [
 /// example in the Profile tab) rather than as its own page.
 class CalendarPanel extends StatefulWidget {
   final List<PastWorkout> workouts;
-  final int weeklyGoal;
   final DateTime? now;
 
   /// Called when a workout was deleted from within the calendar so the
@@ -40,7 +39,6 @@ class CalendarPanel extends StatefulWidget {
   const CalendarPanel({
     super.key,
     required this.workouts,
-    required this.weeklyGoal,
     this.now,
     this.onDataChanged,
     this.showActivityHeatmap = true,
@@ -68,8 +66,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
   void didUpdateWidget(covariant CalendarPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Keep in sync when the owning screen reloads its workout list.
-    if (!identical(oldWidget.workouts, widget.workouts) ||
-        oldWidget.weeklyGoal != widget.weeklyGoal) {
+    if (!identical(oldWidget.workouts, widget.workouts)) {
       _workouts = List.of(widget.workouts);
       _rebuildMetrics();
     }
@@ -83,7 +80,6 @@ class _CalendarPanelState extends State<CalendarPanel> {
   void _rebuildMetrics() {
     _metrics = WorkoutCalendarMetrics(
       workouts: _workouts,
-      weeklyGoal: widget.weeklyGoal,
       now: widget.now,
     );
   }
@@ -179,7 +175,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const TypeSectionLabel('Streak', top: 30),
-        _StreakStatement(streak: streak, weeklyGoal: widget.weeklyGoal),
+        _StreakStatement(streak: streak),
         const TypeSectionLabel('Training days'),
         _MonthCard(
           month: _month,
@@ -429,9 +425,8 @@ class _DayCell extends StatelessWidget {
 /// weeks is a statement, and no run yet is the instruction for starting one.
 class _StreakStatement extends StatelessWidget {
   final int streak;
-  final int weeklyGoal;
 
-  const _StreakStatement({required this.streak, required this.weeklyGoal});
+  const _StreakStatement({required this.streak});
 
   @override
   Widget build(BuildContext context) {
@@ -440,8 +435,8 @@ class _StreakStatement extends StatelessWidget {
         ? (streak == 1 ? '1 week' : '$streak weeks')
         : 'No streak yet';
     final sub = running
-        ? 'Weeks in a row you hit $weeklyGoal sessions.'
-        : 'Train $weeklyGoal times in a week to start one.';
+        ? 'Weeks in a row with at least one session.'
+        : 'Train once this week to start one.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

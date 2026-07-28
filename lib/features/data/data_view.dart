@@ -4,12 +4,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
-import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
-import '../../data/services/training_program_store_service.dart';
 import '../settings/settings_view.dart';
 import 'calendar_view.dart';
 import 'exercises_browse_view.dart';
@@ -30,12 +28,10 @@ class DataView extends StatefulWidget {
 class _DataViewState extends State<DataView> {
   final _exerciseLogService = ExerciseLogService();
   final _devClockService = DevClockService();
-  final _trainingProgramStoreService = TrainingProgramStoreService();
 
   bool _loading = true;
   String? _error;
   List<PastWorkout> _workouts = const [];
-  int _weeklyGoal = 3;
 
   @override
   void initState() {
@@ -71,17 +67,11 @@ class _DataViewState extends State<DataView> {
 
     try {
       await _devClockService.loadOffset();
-      final results = await Future.wait([
-        _exerciseLogService.fetchPastWorkouts(userId),
-        _trainingProgramStoreService.fetchProgramLogic(userId),
-      ]);
-      final workouts = results[0] as List<PastWorkout>;
-      final logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
+      final workouts = await _exerciseLogService.fetchPastWorkouts(userId);
 
       if (!mounted) return;
       setState(() {
         _workouts = workouts;
-        _weeklyGoal = logicSnapshot?.program.frequencyPerWeek ?? 3;
         _loading = false;
       });
     } catch (error) {
@@ -201,7 +191,6 @@ class _DataViewState extends State<DataView> {
     return [
       CalendarPanel(
         workouts: _workouts,
-        weeklyGoal: _weeklyGoal,
         now: now,
         onDataChanged: _loadData,
         showActivityHeatmap: false,

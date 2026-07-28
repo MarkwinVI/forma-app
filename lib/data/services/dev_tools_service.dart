@@ -60,11 +60,11 @@ class DevToolsService {
   /// the progression (skill tree, "closest to levelling up") visibly moves.
   static const _sessionRamp = [0.6, 0.75, 0.9, 1.0, 1.0];
 
-  /// Seeds five completed workouts onto the days the program actually trains,
-  /// filling whole weeks from the last complete one backwards. Volumes ramp
-  /// toward each exercise's target and the same auto-progression as a real
-  /// workout runs after every session, so exercises master and paths advance
-  /// just like they would from real training.
+  /// Seeds five completed workouts, one in each of the last five complete
+  /// weeks, on days the program actually trains. Volumes ramp toward each
+  /// exercise's target and the same auto-progression as a real workout runs
+  /// after every session, so exercises master and paths advance just like
+  /// they would from real training.
   Future<void> generateSampleWorkouts(String userId) async {
     final logic = await _trainingProgramStoreService.fetchProgramLogic(userId);
     final programType =
@@ -225,36 +225,32 @@ class DevToolsService {
     }
   }
 
-  /// The days the seeded sessions land on, oldest first.
+  /// The days the seeded sessions land on, oldest first: one session in each
+  /// of the last five complete weeks, on a day that week actually trains.
   ///
-  /// Whole weeks are filled from the last complete week backwards rather than
-  /// one session a week across a month: the weekly streak counts weeks that
-  /// met the program's session goal, and a week holding a single workout
-  /// never does — seeded history that reads as "no streak yet" is the bug
-  /// this avoids. The current week is left alone so the newest session is
-  /// always in the past.
+  /// One a week rather than a cluster because that is what the streak counts —
+  /// a week with at least one session — so five sessions seed five weeks of
+  /// it, and the month reads like a month of training rather than a fortnight.
+  /// The current week is left alone so the newest session is always in the
+  /// past.
   @visibleForTesting
   static List<DateTime> seedDaysFor({
     required List<TrainingSessionType> cycle,
     required DateTime today,
   }) {
-    final trainingWeekdays = [
-      for (var i = 0; i < cycle.length; i++)
-        if (cycle[i] != TrainingSessionType.rest) i,
-    ];
-    if (trainingWeekdays.isEmpty) return const [];
+    final lastTrainingWeekday = cycle.lastIndexWhere(
+      (session) => session != TrainingSessionType.rest,
+    );
+    if (lastTrainingWeekday < 0) return const [];
 
     final thisWeek = DateTime(today.year, today.month, today.day)
         .subtract(Duration(days: today.weekday - 1));
-    final days = <DateTime>[];
-    for (var week = 1; days.length < _sessionRamp.length && week <= 12; week++) {
-      final start = thisWeek.subtract(Duration(days: 7 * week));
-      for (final weekday in trainingWeekdays.reversed) {
-        if (days.length >= _sessionRamp.length) break;
-        days.add(start.add(Duration(days: weekday)));
-      }
-    }
-    return days..sort();
+    return [
+      for (var week = _sessionRamp.length; week >= 1; week--)
+        thisWeek
+            .subtract(Duration(days: 7 * week))
+            .add(Duration(days: lastTrainingWeekday)),
+    ];
   }
 
   /// Splits a session volume into three sets whose values sum to [volume].

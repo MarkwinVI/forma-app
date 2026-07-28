@@ -7,15 +7,12 @@ import 'package:forma_app/features/data/workout_calendar_metrics.dart';
 
 void main() {
   group('DevToolsService.seedDaysFor', () {
-    test('fills the last complete week so the weekly streak reads true', () {
-      const frequency = 4;
+    test('seeds one session a week, so the streak reads five weeks', () {
       final cycle = TrainingScheduleService().cycleFor(
         programType: TrainingProgramType.upperLower,
-        frequencyPerWeek: frequency,
+        frequencyPerWeek: 4,
       );
-      // A Wednesday: the current week is half over, which is exactly when
-      // seeding onto "the last five training days" would leave every week
-      // short of the goal.
+      // A Wednesday — the current week is half over and must be left alone.
       final today = DateTime(2026, 7, 29);
 
       final days = DevToolsService.seedDaysFor(cycle: cycle, today: today);
@@ -27,13 +24,17 @@ void main() {
         expect(cycle[day.weekday - 1], isNot(TrainingSessionType.rest));
         expect(day.isBefore(DateTime(2026, 7, 27)), isTrue);
       }
+      // One in each of the five weeks before this one.
+      expect(
+        days.map((day) => WorkoutCalendarMetrics.weekStartOf(day)).toSet(),
+        hasLength(5),
+      );
 
       final metrics = WorkoutCalendarMetrics(
         workouts: [for (final day in days) _workoutOn(day)],
-        weeklyGoal: frequency,
         now: today,
       );
-      expect(metrics.currentStreakWeeks, greaterThanOrEqualTo(1));
+      expect(metrics.currentStreakWeeks, 5);
     });
 
     test('a program with no training day seeds nothing', () {

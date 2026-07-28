@@ -40,7 +40,6 @@ void main() {
                 for (var day = 1; day <= 12; day++)
                   _workout('w$day', DateTime(2026, 7, day * 2)),
               ],
-              weeklyGoal: 4,
               now: DateTime(2026, 7, 29),
               showActivityHeatmap: false,
             ),
@@ -51,8 +50,8 @@ void main() {
 
     expect(find.text('July 2026'), findsOneWidget);
     expect(find.text('STREAK'), findsOneWidget);
-    // Two sessions a week never meets a goal of four.
-    expect(find.text('No streak yet'), findsOneWidget);
+    // A session every other day is a session every week.
+    expect(find.text('4 weeks'), findsOneWidget);
   });
 
   testWidgets('the workout record lists every set of every exercise',
