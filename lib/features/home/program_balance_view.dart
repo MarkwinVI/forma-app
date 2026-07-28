@@ -189,9 +189,9 @@ class BalanceCategory {
   /// of the same category in one session are one go at that pattern, not two.
   int get times => {for (final block in blocks) block.weekday}.length;
 
-  /// One block on each applicable day, held to 2–3 a week. A split that only
-  /// offers the movement 1.5 days a week is aimed at 2, not at 3.
-  int get target {
+  /// Days a week this movement should come up on, held to 2–3. A split that
+  /// only offers it 1.5 days a week is aimed at 2, not at 3.
+  int get dayTarget {
     final chances = opportunities;
     if (chances == null) return kBalanceTarget;
     final whole = chances.floor();
@@ -200,14 +200,21 @@ class BalanceCategory {
     return whole;
   }
 
-  /// Measured against [target] rather than a flat ceiling: short of the days
-  /// the split can give it is underloaded, and more blocks than the target —
-  /// whether spread over extra days or doubled up inside one session — is
+  /// Blocks a week: one per pattern the group holds, on each of its days.
+  /// Legs is squat and hinge on one line, so a leg day that trains both is
+  /// one day but two blocks — its target is the day target twice over.
+  int get target => dayTarget * group.categories.length;
+
+  /// Measured against both targets: fewer days than the split can give it, or
+  /// fewer blocks than its patterns need, is underloaded; more blocks than the
+  /// target — spread over extra days or doubled up inside one session — is
   /// overloaded.
   BalanceVerdict get verdict {
     if (!group.primary) return BalanceVerdict.optional;
     if (blocks.isEmpty) return BalanceVerdict.missing;
-    if (times < target) return BalanceVerdict.underloaded;
+    if (times < dayTarget || weeklyBlocks < target) {
+      return BalanceVerdict.underloaded;
+    }
     if (weeklyBlocks > target) return BalanceVerdict.overloaded;
     return BalanceVerdict.optimal;
   }

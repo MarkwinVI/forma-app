@@ -95,7 +95,7 @@ void main() {
         ),
       );
 
-      expect(report.explanation, contains('Aim for 2 weekly sessions'));
+      expect(report.explanation, contains('Aim for 2 times a week'));
       expect(report.advice.map((a) => a.title), [
         'Add another training day',
         'Change your split',
@@ -146,7 +146,7 @@ void main() {
       expect(report.advice.first.title, 'Add Bench Dips to another workout');
       expect(
         report.advice.first.detail,
-        'Train vertical push on Friday to reach 3 weekly sessions.',
+        'Train vertical push on Friday to reach 3 times a week.',
       );
       expect(report.advice.last.title, 'Add another vertical push exercise');
       // The split gives it three chances a week, so the split is not at fault.
@@ -174,7 +174,7 @@ void main() {
 
       expect(report.headline, 'Too much work');
       expect(report.explanation, contains('appears 4 times this week'));
-      expect(report.explanation, contains('recommends 3 weekly sessions'));
+      expect(report.explanation, contains('recommends 3 times a week'));
       expect(report.actionsLabel, 'WAYS TO REDUCE IT');
       expect(report.advice.first.title, 'Reduce vertical push frequency');
       expect(report.advice.first.detail, contains('Bench Dips'));
@@ -320,6 +320,51 @@ void main() {
       expect(entry.times, 3);
       expect(entry.weeklyBlocks, 4);
       expect(entry.verdict, BalanceVerdict.overloaded);
+    });
+
+    test('Legs wants a block per pattern, so its target is doubled', () {
+      final week = [
+        for (final weekday in [0, 2, 4])
+          _day(weekday, TrainingSessionType.fullBody, [
+            _progression(SkillCategoryCatalog.squatId, 'Box Pistol Squat'),
+          ]),
+      ];
+      final entry = _entryFor(
+        'Legs',
+        week: week,
+        context: _context(
+          programType: TrainingProgramType.fullBody,
+          trainingDaysPerWeek: 3,
+        ),
+      );
+
+      // Three full-body days, each wanting a squat and a hinge — squats on
+      // their own cover the days but only half the blocks.
+      expect(entry.dayTarget, 3);
+      expect(entry.target, 6);
+      expect(entry.times, 3);
+      expect(entry.verdict, BalanceVerdict.underloaded);
+    });
+
+    test('Legs is optimal once both patterns run on every leg day', () {
+      final week = [
+        for (final weekday in [0, 2, 4])
+          _day(weekday, TrainingSessionType.fullBody, [
+            _progression(SkillCategoryCatalog.squatId, 'Box Pistol Squat'),
+            _standalone('Single Leg RDL', 'single_leg_rdl'),
+          ]),
+      ];
+      final entry = _entryFor(
+        'Legs',
+        week: week,
+        context: _context(
+          programType: TrainingProgramType.fullBody,
+          trainingDaysPerWeek: 3,
+        ),
+      );
+
+      expect(entry.weeklyBlocks, 6);
+      expect(entry.verdict, BalanceVerdict.optimal);
     });
   });
 }

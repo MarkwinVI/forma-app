@@ -108,7 +108,7 @@ BalanceReport balanceReportFor({
     return BalanceReport(
       headline: 'Too much work',
       explanation: '$movement appears $blocks times this week. Forma '
-          'recommends ${entry.target} weekly sessions. Extra work may make '
+          'recommends ${entry.target} times a week. Extra work may make '
           'recovery harder.',
       actionsLabel: 'WAYS TO REDUCE IT',
       advice: _tooMuch(
@@ -123,7 +123,7 @@ BalanceReport balanceReportFor({
   return BalanceReport(
     headline: 'Needs more work',
     explanation: '$movement appears $blocks ${blocks == 1 ? 'time' : 'times'} '
-        'this week. Aim for ${entry.target} weekly sessions.',
+        'this week. Aim for ${entry.target} times a week.',
     actionsLabel: 'WAYS TO IMPROVE IT',
     advice: _tooLittle(entry: entry, week: week, context: context),
   );
@@ -184,7 +184,7 @@ List<BalanceAdvice> _tooLittle({
       BalanceAdvice(
         title: 'Add $existing to another workout',
         detail: 'Train $movement on ${kWeekdayNames[open]} to reach '
-            '${entry.target} weekly sessions.',
+            '${entry.target} times a week.',
       ),
     BalanceAdvice(
       title: 'Add another $movement exercise',
@@ -287,7 +287,7 @@ List<BalanceAdvice> _tooMuch({
 
   // Case A — spread over too many days. Thin the movement out of a session
   // rather than dropping a whole training day.
-  if (entry.times > entry.target) {
+  if (entry.times > entry.dayTarget) {
     final busiest = _mostFrequentExercise(entry);
     advice.add(
       BalanceAdvice(
