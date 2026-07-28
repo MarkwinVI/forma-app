@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../data/past_workout_detail_view.dart';
 import 'home_dashboard_metrics.dart';
 
-const _skippedRed = Color(0xFFFF5C45);
-const _skippedRedSoft = Color(0x24FF5C45);
-
-/// What a single day in the list is: drives the marker, meta line and the
-/// trailing action. Rest days are inert; today gets the start CTA; anything
-/// with detail behind it expands in place.
+/// What a single day in the list is: drives the status line, its colour and
+/// the trailing action. Rest days are inert; today gets the start action;
+/// anything with detail behind it expands in place.
 enum _DayKind { done, missed, today, planned, rest, plannedRest }
 
 /// Day list — the 15-day window around today as one flat, scannable list
@@ -77,8 +74,11 @@ class _TrainingCalendarViewState extends State<TrainingCalendarView> {
               child: Stack(
                 children: [
                   ListView(
-                    padding: EdgeInsets.only(
-                      bottom: 32 + MediaQuery.of(context).padding.bottom,
+                    padding: EdgeInsets.fromLTRB(
+                      22,
+                      0,
+                      22,
+                      32 + MediaQuery.of(context).padding.bottom,
                     ),
                     children: [
                       ..._group('Last ${past.length} days', past, today),
@@ -124,7 +124,7 @@ class _TrainingCalendarViewState extends State<TrainingCalendarView> {
     if (days.isEmpty) return const [];
 
     return [
-      _ListGroupLabel(label: label),
+      TypeSectionLabel(label, top: 26),
       for (var i = 0; i < days.length; i++) _row(days[i], today, i == 0),
     ];
   }
@@ -273,11 +273,8 @@ class _CalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 6, 18, 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(19, 8, 22, 4),
       child: Row(
         children: [
           Pressable(
@@ -291,17 +288,17 @@ class _CalendarHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 19,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
-                letterSpacing: -0.44,
+                letterSpacing: -0.38,
               ),
             ),
           ),
@@ -309,36 +306,9 @@ class _CalendarHeader extends StatelessWidget {
             Text(
               range.toUpperCase(),
               maxLines: 1,
-              style: GoogleFonts.robotoMono(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.84,
-                color: AppColors.textMuted,
-              ),
+              style: monoStyle(size: 11, letterSpacing: 1.3),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _ListGroupLabel extends StatelessWidget {
-  final String label;
-
-  const _ListGroupLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 7),
-      child: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.robotoMono(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-          color: AppColors.textMuted,
-        ),
       ),
     );
   }
@@ -372,26 +342,36 @@ class _DayRow extends StatelessWidget {
   bool get _isRest => kind == _DayKind.rest || kind == _DayKind.plannedRest;
   bool get _isToday => kind == _DayKind.today;
 
+  /// The status line's colour is the only status marker: red for a session
+  /// that was skipped, green for one that was done, quiet for anything still
+  /// ahead.
+  Color get _metaColor {
+    switch (kind) {
+      case _DayKind.missed:
+        return AppColors.red;
+      case _DayKind.done:
+        return AppColors.green;
+      case _DayKind.today:
+      case _DayKind.planned:
+      case _DayKind.rest:
+      case _DayKind.plannedRest:
+        return AppColors.textSecondary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Color background;
-    if (_isToday) {
-      background = AppColors.accentPrimary.withValues(alpha: 0.05);
-    } else if (expanded) {
-      background = Colors.white.withValues(alpha: 0.03);
-    } else {
-      background = Colors.transparent;
-    }
-
     final Color dateColor = _isToday
         ? AppColors.accentPrimary
         : _isRest
-            ? AppColors.textMuted
-            : AppColors.textSecondary;
+            ? AppColors.textSecondary
+            : AppColors.textPrimary;
 
     return Container(
       decoration: BoxDecoration(
-        color: background,
+        color: expanded
+            ? Colors.white.withValues(alpha: 0.02)
+            : Colors.transparent,
         border: Border(
           top: first
               ? BorderSide.none
@@ -404,41 +384,37 @@ class _DayRow extends StatelessWidget {
           Pressable(
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              padding: const EdgeInsets.only(top: 15, bottom: 16),
               child: Row(
                 children: [
                   SizedBox(
                     width: 34,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           _weekday(day.date),
-                          style: GoogleFonts.robotoMono(
-                            fontSize: 10.5,
-                            height: 1,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
+                          style: monoStyle(
+                            size: 10,
+                            letterSpacing: 1,
                             color: _isToday
                                 ? AppColors.accentPrimary
                                 : AppColors.textMuted,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           '${day.date.day}',
-                          style: GoogleFonts.robotoMono(
-                            fontSize: 17,
-                            height: 1,
-                            fontWeight: FontWeight.w800,
+                          style: monoStyle(
+                            size: 17,
+                            letterSpacing: 0,
                             color: dateColor,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  _DayMarker(kind: kind),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,35 +424,33 @@ class _DayRow extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 16,
-                            height: 1.2,
+                            fontSize: _isRest ? 18 : 20,
+                            height: 1.15,
+                            letterSpacing: -0.4,
                             fontWeight:
-                                _isRest ? FontWeight.w600 : FontWeight.w700,
+                                _isRest ? FontWeight.w600 : FontWeight.w800,
                             color: _isRest
                                 ? AppColors.textSecondary
                                 : AppColors.textPrimary,
                           ),
                         ),
                         if (meta != null) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             meta!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.robotoMono(
-                              fontSize: 12,
+                            style: TextStyle(
+                              fontSize: 14,
                               height: 1.2,
-                              fontWeight: FontWeight.w600,
-                              color: kind == _DayKind.missed
-                                  ? _skippedRed
-                                  : AppColors.textMuted,
+                              color: _metaColor,
                             ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   _trailing(),
                 ],
               ),
@@ -498,22 +472,17 @@ class _DayRow extends StatelessWidget {
   Widget _trailing() {
     if (_isToday) {
       if (onStart == null) return const SizedBox.shrink();
+      // Today is the one row that acts rather than opens, so it keeps a
+      // written action instead of a chevron.
       return Pressable(
         onTap: onStart,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
+        child: const Text(
+          'Start',
+          style: TextStyle(
+            fontSize: 16,
+            height: 1.2,
+            fontWeight: FontWeight.w700,
             color: AppColors.accentPrimary,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Text(
-            'Start',
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.2,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
           ),
         ),
       );
@@ -524,7 +493,7 @@ class _DayRow extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       child: const Icon(
         Icons.chevron_right_rounded,
-        size: 22,
+        size: 18,
         color: AppColors.textMuted,
       ),
     );
@@ -533,90 +502,6 @@ class _DayRow extends StatelessWidget {
   String _weekday(DateTime date) {
     const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     return days[date.weekday - 1];
-  }
-}
-
-/// 30×30 status chip in front of the session title. Dashed outlines mean
-/// "nothing logged" — planned ahead, or missed behind.
-class _DayMarker extends StatelessWidget {
-  final _DayKind kind;
-
-  const _DayMarker({required this.kind});
-
-  @override
-  Widget build(BuildContext context) {
-    switch (kind) {
-      case _DayKind.done:
-        return _box(
-          background: AppColors.greenSoft,
-          child:
-              const Icon(Icons.check_rounded, size: 17, color: AppColors.green),
-        );
-      case _DayKind.missed:
-        return _box(
-          background: _skippedRedSoft,
-          dashedBorder: _skippedRed.withValues(alpha: 0.6),
-          child: Text(
-            '!',
-            style: GoogleFonts.robotoMono(
-              fontSize: 12.5,
-              height: 1,
-              fontWeight: FontWeight.w800,
-              color: _skippedRed,
-            ),
-          ),
-        );
-      case _DayKind.today:
-        return _box(
-          background: AppColors.accentSoft,
-          solidBorder: AppColors.accentPrimary.withValues(alpha: 0.55),
-          child: const Icon(
-            Icons.fitness_center_rounded,
-            size: 16,
-            color: AppColors.accentPrimary,
-          ),
-        );
-      case _DayKind.planned:
-        return _box(
-          dashedBorder: Colors.white.withValues(alpha: 0.2),
-          child: const Icon(
-            Icons.fitness_center_rounded,
-            size: 16,
-            color: AppColors.textSecondary,
-          ),
-        );
-      case _DayKind.rest:
-      case _DayKind.plannedRest:
-        return _box(
-          child: const Icon(
-            Icons.nightlight_round,
-            size: 16,
-            color: AppColors.textMuted,
-          ),
-        );
-    }
-  }
-
-  Widget _box({
-    required Widget child,
-    Color background = Colors.transparent,
-    Color? solidBorder,
-    Color? dashedBorder,
-  }) {
-    final box = Container(
-      width: 30,
-      height: 30,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(9),
-        border: solidBorder == null ? null : Border.all(color: solidBorder),
-      ),
-      child: child,
-    );
-
-    if (dashedBorder == null) return box;
-    return DashedRoundedBorder(color: dashedBorder, child: box);
   }
 }
 
@@ -630,43 +515,40 @@ class _DayDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(78, 0, 18, 16),
+      padding: const EdgeInsets.fromLTRB(50, 0, 0, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (var i = 0; i < lines.length; i++)
+          for (final line in lines)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(vertical: 9),
+              decoration: const BoxDecoration(
                 border: Border(
-                  top: i == 0
-                      ? BorderSide.none
-                      : const BorderSide(color: AppColors.divider),
+                  top: BorderSide(color: AppColors.cardHighlight),
                 ),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      lines[i].name,
+                      line.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 15.5,
                         height: 1.25,
-                        fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    lines[i].value,
+                    line.value,
                     maxLines: 1,
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 13,
-                      height: 1.25,
-                      fontWeight: FontWeight.w700,
+                    style: monoStyle(
+                      size: 13,
+                      weight: FontWeight.w500,
+                      letterSpacing: 0,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -675,25 +557,15 @@ class _DayDetail extends StatelessWidget {
             ),
           if (onStart != null)
             Padding(
-              padding: const EdgeInsets.only(top: 13),
+              padding: const EdgeInsets.only(top: 14),
               child: Pressable(
                 onTap: onStart,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.18),
-                    ),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: const Text(
-                    'Start',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                child: const Text(
+                  'Start this session',
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accentPrimary,
                   ),
                 ),
               ),
