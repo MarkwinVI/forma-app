@@ -990,7 +990,7 @@ class _NarrativeSlide extends StatelessWidget {
 // ── Step 1: the real skill-tree map, filling in ─────────────────────────────
 
 /// The Pullups tree drawn by the same [SkillTreeMap] the Skills tab uses,
-/// walked forward along one route (Weighted) a step at a time: the working
+/// walked forward along one route (One Arm) a step at a time: the working
 /// node's rep ring fills, rests a beat at full, and only then does the node
 /// clear and the next take over — the rest keeps the hand-off from reading as
 /// a jump.
@@ -1003,7 +1003,7 @@ class _SkillTreeBeat extends StatefulWidget {
 
 class _SkillTreeBeatState extends State<_SkillTreeBeat>
     with SingleTickerProviderStateMixin {
-  static const _branchId = 'weighted';
+  static const _branchId = 'one_arm';
 
   static const _slotMs = 520;
 
@@ -1062,9 +1062,9 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
             spine: full.spine,
             branches: [
               // The whole fan stays drawn — it is what makes this read as a
-              // roadmap — but only Weighted advances. Left alone, clearing the
-              // foundation opens every branch's first step at once, and four
-              // routes appear to progress together.
+              // roadmap — but only the goal route advances. Left alone, clearing
+              // the foundation opens every branch's first step at once, and
+              // four routes appear to progress together.
               for (final branch in full.branches)
                 if (branch.id == _branchId)
                   branch
