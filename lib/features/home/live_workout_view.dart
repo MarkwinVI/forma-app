@@ -1050,15 +1050,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                         if (visibleSections.isEmpty)
                           _EmptyWorkoutState(onAddExercise: _openAddExercise)
                         else
-                          for (final entry in visibleSections) ...[
-                            TypeSectionLabel(
-                              entry.section.label,
-                              top: 30,
-                              right: '${entry.items.length} '
-                                  'exercise${entry.items.length == 1 ? '' : 's'}',
-                            ),
+                          // No section headings: the sets under each name
+                          // already separate one exercise from the next, and
+                          // grouping them said nothing you act on.
+                          for (final entry in visibleSections)
                             for (var i = 0; i < entry.items.length; i++) ...[
-                              if (i > 0)
+                              if (i > 0 || entry != visibleSections.first)
                                 const Padding(
                                   padding: EdgeInsets.only(top: 26),
                                   child: Divider(
@@ -1074,7 +1071,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                 sets: _setsFor(entry.items[i]),
                                 isTimed:
                                     _isTimedExercise(entry.items[i].exercise),
-                                targetLabel: _targetSummary(entry.items[i]),
                                 goalValue: entry.items[i].isProgression
                                     ? _prescribedTargetFor(entry.items[i]).value
                                     : null,
@@ -1097,7 +1093,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                     _openExerciseDetail(entry.items[i]),
                               ),
                             ],
-                          ],
                         if (visibleSections.isNotEmpty) ...[
                           const SizedBox(height: 22),
                           _AddExerciseButton(onTap: _openAddExercise),
@@ -1253,40 +1248,27 @@ class _RepFieldState extends State<_RepField> {
 
   @override
   Widget build(BuildContext context) {
-    // The value you type is the loudest thing in the row: no filled box, just
-    // the number sitting on a rule.
-    return Container(
-      padding: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: widget.completed
-                ? AppColors.accentPrimary
-                : AppColors.divider,
-            width: 1.5,
-          ),
-        ),
+    // The value you type is the loudest thing in the row on its own: no box,
+    // no rule, just the number.
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.right,
+      onChanged: _handleChanged,
+      cursorColor: AppColors.accentPrimary,
+      style: monoStyle(
+        size: 16,
+        letterSpacing: 0,
+        color: AppColors.textPrimary,
       ),
-      child: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.right,
-        onChanged: _handleChanged,
-        cursorColor: AppColors.accentPrimary,
-        style: monoStyle(
-          size: 16,
-          letterSpacing: 0,
-          color: AppColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          isDense: true,
-          isCollapsed: true,
-          contentPadding: EdgeInsets.zero,
-          border: InputBorder.none,
-          hintText: '${widget.value}',
-          hintStyle: monoStyle(size: 16, letterSpacing: 0),
-        ),
+      decoration: InputDecoration(
+        isDense: true,
+        isCollapsed: true,
+        contentPadding: EdgeInsets.zero,
+        border: InputBorder.none,
+        hintText: '${widget.value}',
+        hintStyle: monoStyle(size: 16, letterSpacing: 0),
       ),
     );
   }
@@ -1548,7 +1530,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final TrainingRecommendationItem item;
   final List<_WorkoutSetDraft> sets;
   final bool isTimed;
-  final String targetLabel;
 
   /// Per-set goal from the progression ladder; null for standalone
   /// exercises, whose GOAL cells read as a dash.
@@ -1568,7 +1549,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.item,
     required this.sets,
     required this.isTimed,
-    required this.targetLabel,
     required this.goalValue,
     required this.restSeconds,
     required this.onToggleSet,
@@ -1597,45 +1577,30 @@ class _WorkoutExerciseCard extends StatelessWidget {
             Expanded(
               child: Pressable(
                 onTap: onOpenDetail,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            item.exercise.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.42,
-                              height: 1.15,
-                            ),
-                          ),
+                    Flexible(
+                      child: Text(
+                        item.exercise.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.42,
+                          height: 1.15,
                         ),
-                        if (_allDone) ...[
-                          const SizedBox(width: 9),
-                          const Icon(
-                            Icons.check_rounded,
-                            size: 17,
-                            color: AppColors.green,
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      targetLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        color: AppColors.textSecondary,
                       ),
                     ),
+                    if (_allDone) ...[
+                      const SizedBox(width: 9),
+                      const Icon(
+                        Icons.check_rounded,
+                        size: 17,
+                        color: AppColors.green,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1738,8 +1703,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
           style: monoStyle(
             size: 14,
             letterSpacing: 0,
-            color:
-                set.completed ? AppColors.textMuted : AppColors.textPrimary,
+            color: set.completed ? AppColors.textMuted : AppColors.textPrimary,
           ),
         ),
         middle: Text(
