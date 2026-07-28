@@ -49,9 +49,16 @@ void main() {
     );
 
     expect(find.text('July 2026'), findsOneWidget);
-    expect(find.text('STREAK'), findsOneWidget);
+    expect(find.text('WEEKLY STREAK'), findsOneWidget);
     // A session every other day is a session every week.
     expect(find.text('4 weeks'), findsOneWidget);
+    // The label names the number; nothing explains it underneath.
+    expect(find.textContaining('Train once'), findsNothing);
+    // Stat captions read above their numbers.
+    // Twelve 42-minute sessions.
+    final caption = tester.getTopLeft(find.text('TOTAL TIME'));
+    final value = tester.getTopLeft(find.text('8h 24m'));
+    expect(caption.dy, lessThan(value.dy));
   });
 
   testWidgets('the workout record lists every set of every exercise',

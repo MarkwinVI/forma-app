@@ -174,10 +174,10 @@ class _CalendarPanelState extends State<CalendarPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const TypeSectionLabel('Streak', top: 30),
+        const TypeSectionLabel('Weekly streak', top: 30),
         _StreakStatement(streak: streak),
         const TypeSectionLabel('Training days'),
-        _MonthCard(
+        _MonthGrid(
           month: _month,
           metrics: _metrics,
           onPrev: () => _shiftMonth(-1),
@@ -250,14 +250,14 @@ class _CalendarPanelState extends State<CalendarPanel> {
   }
 }
 
-class _MonthCard extends StatelessWidget {
+class _MonthGrid extends StatelessWidget {
   final DateTime month;
   final WorkoutCalendarMetrics metrics;
   final VoidCallback onPrev;
   final VoidCallback onNext;
   final ValueChanged<int> onDayTap;
 
-  const _MonthCard({
+  const _MonthGrid({
     required this.month,
     required this.metrics,
     required this.onPrev,
@@ -273,66 +273,66 @@ class _MonthCard extends StatelessWidget {
         now.year == month.year && now.month == month.month ? now.day : null;
     final weeks = _monthWeeks(month);
 
-    // The one card left on this screen: the month keeps its own surface so
-    // the grid reads as a single object rather than seven loose columns.
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Pressable(
-                onTap: onPrev,
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.chevron_left_rounded,
-                    size: 20,
-                    color: AppColors.textMuted,
-                  ),
+    // Bare on the page like everything else — the grid is held together by
+    // its own alignment, not by a surface behind it.
+    return Column(
+      children: [
+        Row(
+          children: [
+            Pressable(
+              onTap: onPrev,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.chevron_left_rounded,
+                  size: 20,
+                  color: AppColors.textMuted,
                 ),
               ),
+            ),
+            Expanded(
+              child: Text(
+                '${_monthNames[month.month - 1]} ${month.year}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.32,
+                ),
+              ),
+            ),
+            Pressable(
+              onTap: onNext,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            for (final letter in const ['M', 'T', 'W', 'T', 'F', 'S', 'S'])
               Expanded(
                 child: Text(
-                  '${_monthNames[month.month - 1]} ${month.year}',
+                  letter,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.32,
-                  ),
+                  style: monoStyle(size: 10, letterSpacing: 1),
                 ),
               ),
-              Pressable(
-                onTap: onNext,
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              for (final letter in const ['M', 'T', 'W', 'T', 'F', 'S', 'S'])
-                Expanded(
-                  child: Text(
-                    letter,
-                    textAlign: TextAlign.center,
-                    style: monoStyle(size: 10, letterSpacing: 1),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          for (final week in weeks)
-            Row(
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (final week in weeks)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
               children: [
                 for (final day in week)
                   Expanded(
@@ -347,8 +347,8 @@ class _MonthCard extends StatelessWidget {
                   ),
               ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -397,9 +397,8 @@ class _DayCell extends StatelessWidget {
               style: monoStyle(
                 size: 13.5,
                 weight: isToday ? FontWeight.w700 : FontWeight.w500,
-                color: isToday
-                    ? AppColors.accentPrimary
-                    : AppColors.textSecondary,
+                color:
+                    isToday ? AppColors.accentPrimary : AppColors.textSecondary,
                 letterSpacing: 0,
               ),
             ),
@@ -409,9 +408,8 @@ class _DayCell extends StatelessWidget {
               height: 4,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: hasSession
-                    ? AppColors.accentPrimary
-                    : Colors.transparent,
+                color:
+                    hasSession ? AppColors.accentPrimary : Colors.transparent,
               ),
             ),
           ],
@@ -421,8 +419,8 @@ class _DayCell extends StatelessWidget {
   }
 }
 
-/// The streak said as a sentence rather than shown as a hero card: a run of
-/// weeks is a statement, and no run yet is the instruction for starting one.
+/// The streak said as a sentence rather than shown as a hero card: the run of
+/// weeks, on its own, with the label above it doing the explaining.
 class _StreakStatement extends StatelessWidget {
   final int streak;
 
@@ -431,36 +429,16 @@ class _StreakStatement extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final running = streak > 0;
-    final headline = running
-        ? (streak == 1 ? '1 week' : '$streak weeks')
-        : 'No streak yet';
-    final sub = running
-        ? 'Weeks in a row with at least one session.'
-        : 'Train once this week to start one.';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          headline,
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: running ? AppColors.textPrimary : AppColors.textSecondary,
-            letterSpacing: -0.78,
-            height: 1.05,
-          ),
-        ),
-        const SizedBox(height: 7),
-        Text(
-          sub,
-          style: const TextStyle(
-            fontSize: 14.5,
-            color: AppColors.textMuted,
-            height: 1.4,
-          ),
-        ),
-      ],
+    return Text(
+      running ? (streak == 1 ? '1 week' : '$streak weeks') : 'No streak yet',
+      style: TextStyle(
+        fontSize: 26,
+        fontWeight: FontWeight.w800,
+        color: running ? AppColors.textPrimary : AppColors.textSecondary,
+        letterSpacing: -0.78,
+        height: 1.05,
+      ),
     );
   }
 }

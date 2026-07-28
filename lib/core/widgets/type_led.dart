@@ -350,7 +350,8 @@ class TypeWordTabs extends StatelessWidget {
   }
 }
 
-/// A number said plainly, with a mono caption under it.
+/// A number said plainly, under the mono caption that names it — labels
+/// always precede values.
 class TypeStat extends StatelessWidget {
   final String value;
   final String caption;
@@ -363,6 +364,12 @@ class TypeStat extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
+          caption.toUpperCase(),
+          maxLines: 2,
+          style: monoStyle(size: 10.5, letterSpacing: 1.35),
+        ),
+        const SizedBox(height: 10),
+        Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -373,12 +380,6 @@ class TypeStat extends StatelessWidget {
             letterSpacing: -0.96,
             height: 1,
           ),
-        ),
-        const SizedBox(height: 9),
-        Text(
-          caption.toUpperCase(),
-          maxLines: 2,
-          style: monoStyle(size: 10.5, letterSpacing: 1.35),
         ),
       ],
     );

@@ -9,8 +9,8 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../settings/settings_view.dart';
+import '../exercises/exercise_picker_view.dart';
 import 'calendar_view.dart';
-import 'exercises_browse_view.dart';
 import 'past_workout_detail_view.dart';
 
 class DataView extends StatefulWidget {
@@ -94,10 +94,12 @@ class _DataViewState extends State<DataView> {
     }
   }
 
+  /// The same catalogue people meet when adding an exercise to a day, in
+  /// browse mode — one search, one set of filters, learned once.
   void _openExercises() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ExercisesBrowseView(workouts: _workouts),
+        builder: (_) => const ExercisePickerView.browse(),
       ),
     );
   }
@@ -209,25 +211,44 @@ class _DataViewState extends State<DataView> {
           ),
         )
       else
-        for (final workout in recentWorkouts)
+        for (var i = 0; i < recentWorkouts.length; i++)
           TypeContentRow(
-            name: workout.title,
-            sub: _relativeSessionLabel(workout.loggedAt, now: now),
+            name: recentWorkouts[i].title,
+            sub: _relativeSessionLabel(recentWorkouts[i].loggedAt, now: now),
             right: _formatElapsedShort(
-              workout.loggedAt.difference(workout.startedAt),
+              recentWorkouts[i].loggedAt.difference(
+                    recentWorkouts[i].startedAt,
+                  ),
             ),
-            rightSub: _sessionCountLabel(workout),
-            onTap: () => _openWorkout(workout),
+            rightSub: _sessionCountLabel(recentWorkouts[i]),
+            last: i == recentWorkouts.length - 1,
+            onTap: () => _openWorkout(recentWorkouts[i]),
           ),
-      if (_workouts.length > 3)
-        TypeContentRow(
-          name: 'All sessions',
-          nameSize: 18.5,
-          onTap: _openAllSessions,
+      // More of the same list is a written action, not another row that looks
+      // like a session.
+      if (_workouts.length > recentWorkouts.length)
+        Padding(
+          padding: const EdgeInsets.only(top: 22),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Pressable(
+              onTap: _openAllSessions,
+              child: const Text(
+                'View all sessions  →',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentPrimary,
+                  letterSpacing: -0.15,
+                ),
+              ),
+            ),
+          ),
         ),
+      const TypeSectionLabel('Library'),
       TypeContentRow(
-        name: 'Browse all exercises',
-        nameSize: 18.5,
+        name: 'All exercises',
+        sub: 'Browse by movement pattern',
         last: true,
         onTap: _openExercises,
       ),
