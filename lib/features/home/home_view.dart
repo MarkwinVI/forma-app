@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/progression_event_model.dart';
@@ -28,9 +29,11 @@ import 'program_setup_view.dart';
 import 'session_overview_view.dart';
 import 'training_calendar_view.dart';
 import 'widgets/needs_approval_card.dart';
+import 'train_day_view.dart';
+import 'widgets/day_ribbon.dart';
+import 'widgets/day_state_views.dart';
 import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
-import 'widgets/week_strip.dart';
 import 'widgets/what_changed_card.dart';
 import 'widgets/workout_done_view.dart';
 import '../data/past_workout_detail_view.dart';
@@ -74,6 +77,11 @@ class _HomeViewState extends State<HomeView> {
 
   /// Loaded-lift changes the program has proposed and is waiting on.
   List<ProgressionSuggestion> _needsApproval = const [];
+
+  /// The day the tab is looking at, or null while it is looking at today.
+  /// Selecting a day never leaves the tab: the same screen re-reads itself
+  /// for that day and says plainly what it can and cannot know about it.
+  DateTime? _selectedDate;
   List<SkillTrack> _skillTracks = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
@@ -233,6 +241,23 @@ class _HomeViewState extends State<HomeView> {
       completedSessions: completedSessions,
       now: now,
     );
+    // The ribbon runs well past the current week, and the day it has
+    // selected is what the whole screen reads from — so the window it is
+    // resolved in has to be wide enough to contain that day.
+    final ribbonWindow = _trainingScheduleService.buildWindow(
+      programType: programType,
+      frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      dayMask: dayMask,
+      currentStepIndex: snapshot.state.nextStepIndex,
+      currentSessionType: snapshot.state.nextSessionType,
+      lastPlannedWorkoutAt: anchorDate,
+      lastCompletedSessionType: anchorSessionType,
+      completedSessions: completedSessions,
+      selectedDate: _selectedDate,
+      daysBeforeToday: 14,
+      daysAfterToday: 28,
+      now: now,
+    );
     final calendarWindow = _trainingScheduleService.buildWindow(
       programType: programType,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
@@ -246,7 +271,7 @@ class _HomeViewState extends State<HomeView> {
       daysAfterToday: 7,
       now: now,
     );
-    final selectedDay = scheduleWindow.selectedDay;
+    final selectedDay = ribbonWindow.selectedDay;
     final schedule = HomeScheduleResolution(
       effectiveStepIndex: selectedDay.stepIndex,
       effectiveSessionType: selectedDay.sessionType,
@@ -307,6 +332,11 @@ class _HomeViewState extends State<HomeView> {
 
     return _TrainSnapshot(
       recommendation: recommendation,
+      selectedDay: selectedDay,
+      ribbonDays: _calendarDaysForWindow(ribbonWindow),
+      rescheduledTo: selectedDay.isMissed
+          ? _rescheduledDateFor(ribbonWindow, selectedDay)
+          : null,
       metrics: HomeDashboardMetricsCalculator.build(
         recommendation: recommendation,
         trainingProgramService: _trainingProgramService,
@@ -333,6 +363,22 @@ class _HomeViewState extends State<HomeView> {
       calendarWorkouts: calendarWorkouts,
       now: now,
     );
+  }
+
+  /// Where a missed day's session ended up. The plan does not drop a missed
+  /// session — it stays next in line and everything after it slides — so the
+  /// answer is the next day still carrying that session.
+  DateTime? _rescheduledDateFor(
+    TrainingScheduleWindow window,
+    PlannedScheduleDay missed,
+  ) {
+    for (final day in window.days) {
+      if (!day.date.isAfter(missed.date)) continue;
+      if (day.isRestDay || day.isMissed) continue;
+      if (day.sessionType != missed.sessionType) continue;
+      return day.date;
+    }
+    return null;
   }
 
   List<HomeWeekStripDay> _calendarDaysForWindow(
@@ -491,7 +537,11 @@ class _HomeViewState extends State<HomeView> {
                       onGoToProgram: widget.onGoToProgram ?? _openProgramSetup,
                     ),
                   )
-                : snapshot.metrics.today.isRestDay
+                : !snapshot.isViewingToday
+                    // A day that is not today reads as itself: what it is,
+                    // how far off, and what can honestly be said about it.
+                    ? _buildDayBody(snapshot)
+                    : snapshot.metrics.today.isRestDay
                     // Recovery day fills the viewport and never scrolls — the
                     // illustration flexes so the footer stays above the fold.
                     ? _buildRestBody(snapshot)
@@ -499,6 +549,260 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
+
+  /// A day other than today. The screen keeps its shape — ribbon, title, one
+  /// band of copy, a list, actions pinned above the tab bar — and only what
+  /// it can truthfully say changes.
+  Widget _buildDayBody(_TrainSnapshot snapshot) {
+    final today = TrainingScheduleService.dateOnly(snapshot.now);
+    final day = snapshot.selectedDay;
+    final workout = _workoutForDate(day.date, plannedOnly: true);
+    final presentation = TrainDayViewResolver.resolve(
+      date: day.date,
+      today: today,
+      isCompleted: day.isCompleted || workout != null,
+      isMissed: day.isMissed,
+      isRestDay: day.isRestDay,
+      rescheduledTo: snapshot.rescheduledTo,
+    );
+    final navReserve = MediaQuery.of(context).padding.bottom + 74;
+
+    return Stack(
+      children: [
+        RefreshIndicator(
+          color: AppColors.accentPrimary,
+          backgroundColor: AppColors.surface,
+          onRefresh: _loadHomeData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(22, 18, 22, navReserve + 104),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ribbon(snapshot),
+                  if (presentation.eyebrow != null)
+                    DayEyebrow(
+                      text: presentation.eyebrow!,
+                      color: presentation.view == TrainDayView.missed
+                          ? AppColors.red
+                          : AppColors.textMuted,
+                    ),
+                  ..._dayContent(snapshot, presentation, workout),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: navReserve - 12,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(22, 14, 22, 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.bg.withValues(alpha: 0),
+                  AppColors.bg.withValues(alpha: 0.95),
+                ],
+                stops: const [0, 0.34],
+              ),
+            ),
+            child: _dayActions(snapshot, presentation, workout),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// The body of a day, by what is known about it: real numbers for a day
+  /// close enough to have them, the shape of the day beyond that, bare names
+  /// for a day where nothing was logged and nothing is prescribed.
+  List<Widget> _dayContent(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+    PastWorkout? workout,
+  ) {
+    final summary = snapshot.metrics.today;
+    final note = presentation.note;
+
+    switch (presentation.view) {
+      case TrainDayView.soon:
+        return [
+          TodayWorkoutCard(
+            summary: summary,
+            rows: TodayWorkoutContent.rows(snapshot.metrics),
+            // The note takes the slot the UPDATED line has on today, so a
+            // day only ever carries one band of explanation.
+            updatedLine: note == null ? null : DayNoteBand(note: note),
+          ),
+        ];
+      case TrainDayView.distant:
+        final rows = _patternRowsFor(snapshot.recommendation);
+        return [
+          TypeTitle(
+            summary.sessionTitle,
+            sub: 'Built the morning of · '
+                '${_spelledCount(rows.length)} '
+                '${rows.length == 1 ? 'slot' : 'slots'} from your program',
+          ),
+          if (note != null) DayNoteBand(note: note),
+          const SizedBox(height: 8),
+          DayPatternList(rows: rows),
+        ];
+      case TrainDayView.missed:
+        final names = [
+          for (final item in snapshot.recommendation.items) item.exercise.name,
+        ];
+        return [
+          TypeTitle(
+            summary.sessionTitle,
+            sub: '${_spelledCount(names.length)} '
+                '${names.length == 1 ? 'exercise' : 'exercises'} · '
+                'nothing was logged',
+          ),
+          if (note != null)
+            DayNoteBand(note: note, tagColor: AppColors.accentPrimary),
+          DayNameList(names: names),
+        ];
+      case TrainDayView.logged:
+        final names = [
+          for (final exercise
+              in workout?.exercises ?? const <PastWorkoutExercise>[])
+            exercise.exerciseName,
+        ];
+        return [
+          TypeTitle(
+            workout?.title ?? summary.sessionTitle,
+            sub: '${_spelledCount(names.length)} '
+                '${names.length == 1 ? 'exercise' : 'exercises'} · logged',
+          ),
+          DayNameList(names: names),
+        ];
+      case TrainDayView.rest:
+        return [
+          const TypeTitle(
+            'Rest day',
+            sub: 'Nothing scheduled — the week\'s sessions sit either side '
+                'of it.',
+          ),
+        ];
+      case TrainDayView.today:
+        return const [];
+    }
+  }
+
+  Widget _dayActions(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+    PastWorkout? workout,
+  ) {
+    switch (presentation.view) {
+      case TrainDayView.soon:
+        return DayActions(
+          primaryLabel: 'Start this early',
+          onPrimary: () => _startWorkout(snapshot.recommendation),
+          secondaryLabel: 'Back to today',
+          onSecondary: _backToToday,
+        );
+      case TrainDayView.missed:
+        final moved = snapshot.rescheduledTo;
+        return DayActions(
+          primaryLabel: 'Do this session now',
+          onPrimary: () => _startWorkout(snapshot.recommendation),
+          secondaryLabel: moved == null
+              ? 'Back to today'
+              : 'Leave it on ${TrainDayViewResolver.weekdayName(moved)}',
+          onSecondary: _backToToday,
+        );
+      case TrainDayView.logged:
+        return DayActions(
+          primaryLabel: workout == null ? null : 'View workout',
+          onPrimary: workout == null
+              ? null
+              : () => _openPastWorkout(workout),
+          secondaryLabel: 'Back to today',
+          onSecondary: _backToToday,
+        );
+      case TrainDayView.distant:
+      case TrainDayView.rest:
+      case TrainDayView.today:
+        return DayActions(
+          secondaryLabel: 'Back to today',
+          onSecondary: _backToToday,
+        );
+    }
+  }
+
+  /// What a day trains when which exercises it trains is not settled: the
+  /// movements it covers and how many slots each one gets.
+  List<DayPatternRow> _patternRowsFor(DailyTrainingRecommendation plan) {
+    const order = ['Push', 'Pull', 'Legs', 'Core', 'Skill work'];
+    final counts = <String, int>{};
+
+    for (final item in plan.items) {
+      final group = switch (item.exercise.category) {
+        ExerciseCategory.verticalPush ||
+        ExerciseCategory.horizontalPush =>
+          'Push',
+        ExerciseCategory.verticalPull ||
+        ExerciseCategory.horizontalPull =>
+          'Pull',
+        ExerciseCategory.squat || ExerciseCategory.hinge => 'Legs',
+        ExerciseCategory.core => 'Core',
+        ExerciseCategory.skill => 'Skill work',
+      };
+      counts[group] = (counts[group] ?? 0) + 1;
+    }
+
+    return [
+      for (final group in order)
+        if (counts[group] case final count?)
+          DayPatternRow(
+            movement: group,
+            slots: '${_spelledCount(count)} '
+                '${count == 1 ? 'exercise' : 'exercises'}',
+          ),
+    ];
+  }
+
+  static String _spelledCount(int count) {
+    const words = [
+      'No',
+      'One',
+      'Two',
+      'Three',
+      'Four',
+      'Five',
+      'Six',
+      'Seven',
+      'Eight',
+      'Nine',
+    ];
+    return count >= 0 && count < words.length ? words[count] : '$count';
+  }
+
+  /// The dated ribbon, shared by every state of the tab. Tapping a day never
+  /// leaves the tab — the screen re-reads itself for that day.
+  Widget _ribbon(_TrainSnapshot snapshot) {
+    return DayRibbon(
+      days: snapshot.ribbonDays,
+      selectedDate: snapshot.selectedDay.date,
+      today: TrainingScheduleService.dateOnly(snapshot.now),
+      onDayTap: _selectDay,
+      onBackToToday: _backToToday,
+      onMonthTap: () => _openTrainingCalendar(snapshot),
+    );
+  }
+
+  void _selectDay(HomeWeekStripDay day) {
+    setState(() => _selectedDate = TrainingScheduleService.dateOnly(day.date));
+  }
+
+  void _backToToday() => setState(() => _selectedDate = null);
 
   Widget _buildRestBody(_TrainSnapshot snapshot) {
     final metrics = snapshot.metrics;
@@ -512,10 +816,7 @@ class _HomeViewState extends State<HomeView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          WeekStrip(
-            weekStrip: metrics.weekStrip,
-            onDayTap: (_) => _openTrainingCalendar(snapshot),
-          ),
+          _ribbon(snapshot),
           Expanded(
             child: RestDayView(
               nextTitle: nextTitle,
@@ -593,10 +894,7 @@ class _HomeViewState extends State<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WeekStrip(
-          weekStrip: metrics.weekStrip,
-          onDayTap: (_) => _openTrainingCalendar(snapshot),
-        ),
+        _ribbon(snapshot),
         if (completed != null) ...[
           WorkoutDoneView(
             nextTitle: nextTitle,
@@ -661,6 +959,15 @@ class _HomeViewState extends State<HomeView> {
     await _loadHomeData();
   }
 
+  Future<void> _openPastWorkout(PastWorkout workout) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PastWorkoutDetailView(workout: workout),
+      ),
+    );
+    await _loadHomeData();
+  }
+
   Future<void> _openSelectedWorkoutDetail() async {
     final workout = _workoutForDate(_devClockService.now()) ??
         (_pastWorkouts.isEmpty ? null : _pastWorkouts.first);
@@ -712,6 +1019,16 @@ class _HomeViewState extends State<HomeView> {
 class _TrainSnapshot {
   final DailyTrainingRecommendation recommendation;
   final HomeDashboardMetrics metrics;
+
+  /// The day the tab is reading, resolved in the ribbon's window.
+  final PlannedScheduleDay selectedDay;
+
+  /// The dated run of days across the top.
+  final List<HomeWeekStripDay> ribbonDays;
+
+  /// Where a missed selected day's session now sits, when the plan says.
+  final DateTime? rescheduledTo;
+
   final List<HomeWeekStripDay> calendarDays;
   final Map<DateTime, DailyTrainingRecommendation> calendarRecommendations;
   final Map<DateTime, HomeTodaySummary> calendarSummaries;
@@ -721,10 +1038,15 @@ class _TrainSnapshot {
   const _TrainSnapshot({
     required this.recommendation,
     required this.metrics,
+    required this.selectedDay,
+    required this.ribbonDays,
+    this.rescheduledTo,
     required this.calendarDays,
     required this.calendarRecommendations,
     required this.calendarSummaries,
     required this.calendarWorkouts,
     required this.now,
   });
+
+  bool get isViewingToday => selectedDay.isToday;
 }

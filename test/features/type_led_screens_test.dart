@@ -5,7 +5,7 @@ import 'package:forma_app/data/models/workout_history_model.dart';
 import 'package:forma_app/features/data/calendar_view.dart';
 import 'package:forma_app/features/data/past_workout_detail_view.dart';
 import 'package:forma_app/features/home/home_dashboard_metrics.dart';
-import 'package:forma_app/features/home/widgets/week_strip.dart';
+import 'package:forma_app/features/home/widgets/day_ribbon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -80,7 +80,49 @@ void main() {
     expect(find.text('REPS'), findsNothing);
   });
 
-  testWidgets('the week strip renders one letter per day', (tester) async {
+  testWidgets('the ribbon dates every day and marks what was trained',
+      (tester) async {
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    final today = DateTime(2026, 7, 28);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: DayRibbon(
+              days: [
+                for (var i = 0; i < 7; i++)
+                  HomeWeekStripDay(
+                    date: DateTime(2026, 7, 27).add(Duration(days: i)),
+                    sessionType: i.isEven
+                        ? TrainingSessionType.upper
+                        : TrainingSessionType.rest,
+                    isCurrent: i == 1,
+                    isCompleted: i == 0,
+                  ),
+              ],
+              selectedDate: today,
+              today: today,
+              onDayTap: (_) {},
+              onBackToToday: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // The month names itself, and every day carries its date.
+    expect(find.text('JULY 2026'), findsOneWidget);
+    expect(find.text('27'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    // Nothing offers a way back while today is the day being shown.
+    expect(find.text('← TODAY'), findsNothing);
+  });
+
+  testWidgets('leaving today offers the way back', (tester) async {
     tester.view.physicalSize = const Size(393 * 3, 852 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
@@ -90,35 +132,29 @@ void main() {
         home: Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(16),
-            child: WeekStrip(
-              weekStrip: HomeWeekStripData(
-                days: [
-                  for (var i = 0; i < 7; i++)
-                    HomeWeekStripDay(
-                      date: DateTime(2026, 7, 27).add(Duration(days: i)),
-                      sessionType: i.isEven
-                          ? TrainingSessionType.upper
-                          : TrainingSessionType.rest,
-                      isCurrent: i == 1,
-                      isCompleted: i == 0,
-                    ),
-                ],
-                completedSessions: 1,
-                totalSessions: 4,
-                supportingText: '',
-              ),
+            child: DayRibbon(
+              days: [
+                for (var i = 0; i < 7; i++)
+                  HomeWeekStripDay(
+                    date: DateTime(2026, 7, 27).add(Duration(days: i)),
+                    sessionType: TrainingSessionType.upper,
+                    isCurrent: i == 1,
+                    isCompleted: false,
+                  ),
+              ],
+              selectedDate: DateTime(2026, 7, 31),
+              today: DateTime(2026, 7, 28),
+              onDayTap: (_) {},
+              onBackToToday: () {},
             ),
           ),
         ),
       ),
     );
 
-    expect(find.text('M'), findsOneWidget);
-    expect(find.text('T'), findsNWidgets(2));
-    expect(find.text('S'), findsNWidgets(2));
+    expect(find.text('← TODAY'), findsOneWidget);
   });
 }
-
 PastWorkout _workout(String id, DateTime day) {
   final startedAt = DateTime(day.year, day.month, day.day, 17);
   return PastWorkout(
