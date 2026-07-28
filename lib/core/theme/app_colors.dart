@@ -33,6 +33,7 @@ class AppColors {
   static const Color greenSoft = Color(0x213FD07E); // rgba(63,208,126,0.13)
   static const Color amber = Color(0xFFE9B43D);
   static const Color amberSoft = Color(0x21E9B43D); // rgba(233,180,61,0.13)
+  static const Color red = Color(0xFFFF6B5A); // missed / destructive
 
   // Highlights
   static const Color surface3 = Color(0xFF3A3A40); // muted dots / tracks

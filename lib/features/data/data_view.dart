@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
@@ -144,14 +145,25 @@ class _DataViewState extends State<DataView> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
-                child: ScreenHeader(
-                  title: 'Profile',
-                  actions: [
-                    HeaderCircleButton(
-                      icon: Icons.settings_outlined,
-                      onTap: _openSettings,
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Expanded(child: TypeTitle('Profile')),
+                      Pressable(
+                        onTap: _openSettings,
+                        child: const Padding(
+                          padding: EdgeInsets.only(top: 6, left: 12),
+                          child: Icon(
+                            Icons.settings_outlined,
+                            size: 22,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               if (_loading)
@@ -170,7 +182,7 @@ class _DataViewState extends State<DataView> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 120),
                   sliver: SliverList.list(
                     children: _buildHubContent(),
                   ),
@@ -184,177 +196,67 @@ class _DataViewState extends State<DataView> {
 
   List<Widget> _buildHubContent() {
     final recentWorkouts = _workouts.take(3).toList();
+    final now = _devClockService.now();
 
     return [
       CalendarPanel(
         workouts: _workouts,
         weeklyGoal: _weeklyGoal,
-        now: _devClockService.now(),
+        now: now,
         onDataChanged: _loadData,
         showActivityHeatmap: false,
       ),
-      const SizedBox(height: 12),
-      SectionHeader(
-        title: 'Recent sessions',
-        action: _workouts.length > 3 ? 'View all' : null,
-        onAction: _workouts.length > 3 ? _openAllSessions : null,
-      ),
+      const TypeSectionLabel('Recent sessions'),
       if (recentWorkouts.isEmpty)
-        const SurfaceCard(
-          padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        const Padding(
+          padding: EdgeInsets.only(top: 8),
           child: Text(
             'Saved workouts will appear here with every exercise and set.',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 14.5,
               color: AppColors.textSecondary,
               height: 1.5,
             ),
           ),
         )
       else
-        SurfaceCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              for (var i = 0; i < recentWorkouts.length; i++)
-                _SessionRow(
-                  workout: recentWorkouts[i],
-                  now: _devClockService.now(),
-                  showDivider: i > 0,
-                  onTap: () => _openWorkout(recentWorkouts[i]),
-                ),
-            ],
+        for (final workout in recentWorkouts)
+          TypeContentRow(
+            name: workout.title,
+            sub: _relativeSessionLabel(workout.loggedAt, now: now),
+            right: _formatElapsedShort(
+              workout.loggedAt.difference(workout.startedAt),
+            ),
+            rightSub: _sessionCountLabel(workout),
+            onTap: () => _openWorkout(workout),
           ),
+      if (_workouts.length > 3)
+        TypeContentRow(
+          name: 'All sessions',
+          nameSize: 18.5,
+          onTap: _openAllSessions,
         ),
-      const SizedBox(height: 12),
-      SurfaceCard(
+      TypeContentRow(
+        name: 'Browse all exercises',
+        nameSize: 18.5,
+        last: true,
         onTap: _openExercises,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: const Row(
-          children: [
-            IconTile(
-              icon: Icons.fitness_center_rounded,
-              size: 36,
-              tint: true,
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Browse all exercises',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: AppColors.textMuted,
-            ),
-          ],
-        ),
       ),
     ];
   }
+}
+
+/// The mono caption under a session's duration — what it was made of.
+String _sessionCountLabel(PastWorkout workout) {
+  return [
+    '${workout.totalSets} sets',
+    if (workout.totalReps > 0) '${workout.totalReps} reps',
+    if (workout.totalTimedSeconds > 0)
+      formatWorkoutSeconds(workout.totalTimedSeconds),
+  ].join(' · ');
 }
 
 // ── Sessions ──────────────────────────────────────────────────────────
-
-class _SessionRow extends StatelessWidget {
-  final PastWorkout workout;
-  final DateTime now;
-  final bool showDivider;
-  final VoidCallback onTap;
-
-  const _SessionRow({
-    required this.workout,
-    required this.now,
-    required this.showDivider,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final elapsed = workout.loggedAt.difference(workout.startedAt);
-    final summaryParts = <String>[
-      '${workout.totalSets} sets',
-      if (workout.totalReps > 0) '${workout.totalReps} reps',
-      if (workout.totalTimedSeconds > 0)
-        formatWorkoutSeconds(workout.totalTimedSeconds),
-    ];
-
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          border: showDivider
-              ? const Border(top: BorderSide(color: AppColors.divider))
-              : null,
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        child: Row(
-          children: [
-            IconTile(
-              icon: workoutIconForSessionType(workout.sessionType),
-              size: 40,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    workout.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    _relativeSessionLabel(workout.loggedAt, now: now),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _formatElapsedShort(elapsed),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  summaryParts.join(' · '),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _AllSessionsView extends StatefulWidget {
   final List<PastWorkout> workouts;
@@ -402,37 +304,33 @@ class _AllSessionsViewState extends State<_AllSessionsView> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 44),
+                padding: const EdgeInsets.fromLTRB(22, 4, 22, 44),
                 children: [
                   if (_workouts.isEmpty)
-                    const SurfaceCard(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 16,
-                      ),
-                      child: Text(
-                        'No saved sessions.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
+                    const Text(
+                      'No saved sessions.',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        color: AppColors.textSecondary,
                       ),
                     )
                   else
-                    SurfaceCard(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < _workouts.length; i++)
-                            _SessionRow(
-                              workout: _workouts[i],
-                              now: widget.now,
-                              showDivider: i > 0,
-                              onTap: () => _openWorkout(_workouts[i]),
-                            ),
-                        ],
+                    for (var i = 0; i < _workouts.length; i++)
+                      TypeContentRow(
+                        name: _workouts[i].title,
+                        sub: _relativeSessionLabel(
+                          _workouts[i].loggedAt,
+                          now: widget.now,
+                        ),
+                        right: _formatElapsedShort(
+                          _workouts[i]
+                              .loggedAt
+                              .difference(_workouts[i].startedAt),
+                        ),
+                        rightSub: _sessionCountLabel(_workouts[i]),
+                        last: i == _workouts.length - 1,
+                        onTap: () => _openWorkout(_workouts[i]),
                       ),
-                    ),
                 ],
               ),
             ),

@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/skill_tree_map.dart';
+import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/onboarding_profile_model.dart';
@@ -817,8 +818,8 @@ class _AccentGlow extends StatelessWidget {
 
 // ── Step 0: the swapping headline ───────────────────────────────────────────
 
-/// "From your first <skill> to the <skill>." — the pair cycles a few times and
-/// settles on the last one.
+/// "From your first <skill> to the <skill>" — real moves only, cycling for as
+/// long as the step is up.
 class _WelcomeHeadline extends StatefulWidget {
   const _WelcomeHeadline();
 
@@ -831,7 +832,6 @@ class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
     ('pull-up', 'muscle-up'),
     ('push-up', 'handstand'),
     ('squat', 'l-sit'),
-    ('exercise', 'goal'),
   ];
   static const _style = TextStyle(
     fontSize: 31,
@@ -1005,20 +1005,26 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
     with SingleTickerProviderStateMixin {
   static const _branchId = 'weighted';
 
-  /// Steps walked per loop, plus one slot that holds the finished state.
-  static const _slots = 8;
   static const _slotMs = 520;
 
   /// Fraction of a slot spent filling; the remainder holds the ring at full so
   /// the node clearing lands as a beat rather than a jolt.
   static const _fillPortion = 0.74;
 
+  /// Steps of the list kept on screen at once.
+  static const _visibleRows = 3;
+  static const _rowHeight = 34.0;
+
   static final List<String> _path =
       SkillCategoryCatalog.pullups.trainingPaths[_branchId]!;
 
+  /// Every step of the route gets a slot, plus one that holds the finished
+  /// tree before the loop starts over.
+  static final int _slots = _path.length + 1;
+
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: _slots * _slotMs),
+    duration: Duration(milliseconds: _slots * _slotMs),
   )..repeat();
 
   @override
@@ -1051,7 +1057,7 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
           activeBranchId: _branchId,
         );
 
-        return SkillTreeMap(
+        final map = SkillTreeMap(
           viz: TreeVizModel(
             spine: full.spine,
             branches: [
@@ -1075,9 +1081,154 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
             ],
           ),
           fillPct: fill,
-          maxHeight: 176,
+          maxHeight: 150,
+        );
+
+        return Column(
+          children: [
+            map,
+            const SizedBox(height: 14),
+            const Divider(height: 1, color: AppColors.divider),
+            const SizedBox(height: 6),
+            _buildRouteList(cleared),
+          ],
         );
       },
+    );
+  }
+
+  /// The steps of the route, windowed to three rows and scrolled so the one
+  /// being trained sits in the middle — it tracks the node the map is filling.
+  Widget _buildRouteList(int cleared) {
+    final maxTop = (_path.length - _visibleRows).clamp(0, _path.length);
+    final top = (cleared - 1).clamp(0, maxTop) * _rowHeight;
+
+    return SizedBox(
+      height: _rowHeight * _visibleRows,
+      child: ShaderMask(
+        // Rows dissolve at the window's edges instead of being cut off, so the
+        // list reads as a strip moving past rather than a clipped box.
+        shaderCallback: (bounds) => const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0x00FFFFFF),
+            Color(0xFFFFFFFF),
+            Color(0xFFFFFFFF),
+            Color(0x00FFFFFF),
+          ],
+          stops: [0, 0.16, 0.84, 1],
+        ).createShader(bounds),
+        blendMode: BlendMode.dstIn,
+        child: ClipRect(
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOutCubic,
+                left: 0,
+                right: 0,
+                top: -top,
+                child: Column(
+                  children: [
+                    for (var i = 0; i < _path.length; i++)
+                      _RouteStepRow(
+                        name: ExerciseCatalog.findById(_path[i])?.name ?? '',
+                        state: i < cleared
+                            ? TreeNodeState.done
+                            : i == cleared
+                                ? TreeNodeState.cur
+                                : TreeNodeState.locked,
+                        height: _rowHeight,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One step of the route: a state dot, the exercise, and where it stands.
+/// Everything animates so a step changing hands reads as a change, not a
+/// repaint.
+class _RouteStepRow extends StatelessWidget {
+  final String name;
+  final TreeNodeState state;
+  final double height;
+
+  const _RouteStepRow({
+    required this.name,
+    required this.state,
+    required this.height,
+  });
+
+  Color get _color => switch (state) {
+        TreeNodeState.done => AppColors.green,
+        TreeNodeState.cur => AppColors.accentBright,
+        _ => AppColors.textMuted,
+      };
+
+  String get _label => switch (state) {
+        TreeNodeState.done => 'MASTERED',
+        TreeNodeState.cur => 'ACTIVE',
+        _ => 'LOCKED',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    const duration = Duration(milliseconds: 260);
+    final locked = state == TreeNodeState.locked;
+
+    return SizedBox(
+      height: height,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 16,
+            child: Center(
+              child: AnimatedContainer(
+                duration: duration,
+                width: state == TreeNodeState.cur ? 9 : 7,
+                height: state == TreeNodeState.cur ? 9 : 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: locked ? AppColors.surface3 : _color,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: AnimatedDefaultTextStyle(
+              duration: duration,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: locked ? FontWeight.w600 : FontWeight.w700,
+                letterSpacing: -0.2,
+                color: locked ? AppColors.textMuted : AppColors.textPrimary,
+              ),
+              child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ),
+          const SizedBox(width: 10),
+          AnimatedSwitcher(
+            duration: duration,
+            child: Text(
+              _label,
+              key: ValueKey(_label),
+              style: _mono(
+                color: locked ? AppColors.textMuted : _color,
+                size: 9,
+                spacing: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

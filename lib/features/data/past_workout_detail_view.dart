@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
-import '../../data/models/exercise_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
@@ -186,70 +186,31 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 44),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          workout.title,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '${_formatSessionDate(workout.loggedAt)} · '
-                          '${_formatTime(workout.loggedAt)}',
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                  TypeTitle(
+                    workout.title,
+                    sub: '${_formatSessionDate(workout.loggedAt)} · '
+                        '${_formatTime(workout.loggedAt)}',
+                  ),
+                  TypeStatBand(
+                    stats: [
+                      TypeStat(
+                        value: formatWorkoutDuration(elapsed),
+                        caption: 'duration',
+                      ),
+                      TypeStat(
+                        value: '${workout.exercises.length}',
+                        caption: 'exercises',
+                      ),
+                    ],
+                  ),
+                  const TypeSectionLabel('Exercises'),
+                  for (var i = 0; i < workout.exercises.length; i++)
+                    _ExerciseRow(
+                      exercise: workout.exercises[i],
+                      last: i == workout.exercises.length - 1,
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  SurfaceCard(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _SessionStat(
-                            label: 'DURATION',
-                            value: formatWorkoutDuration(elapsed),
-                          ),
-                        ),
-                        Expanded(
-                          child: _SessionStat(
-                            label: 'EXERCISES',
-                            value: '${workout.exercises.length}',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SectionHeader(
-                    title: 'Exercises',
-                  ),
-                  SurfaceCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < workout.exercises.length; i++)
-                          _ExerciseRow(
-                            exercise: workout.exercises[i],
-                            showDivider: i > 0,
-                          ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -274,22 +235,25 @@ class _HeaderBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(19, 10, 22, 0),
       child: Row(
         children: [
-          _CircleButton(
+          Pressable(
             onTap: onBack,
-            child: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 16,
-              color: AppColors.textPrimary,
+            child: const Padding(
+              padding: EdgeInsets.all(4),
+              child: Icon(
+                Icons.chevron_left_rounded,
+                size: 26,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           const Spacer(),
           if (deleting)
             const SizedBox(
-              width: 34,
-              height: 34,
+              width: 26,
+              height: 26,
               child: Center(
                 child: SizedBox(
                   width: 18,
@@ -302,12 +266,15 @@ class _HeaderBar extends StatelessWidget {
               ),
             )
           else
-            _CircleButton(
+            Pressable(
               onTap: onMore,
-              child: const Icon(
-                Icons.more_horiz_rounded,
-                size: 20,
-                color: AppColors.textPrimary,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.more_horiz_rounded,
+                  size: 22,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
         ],
@@ -316,91 +283,28 @@ class _HeaderBar extends StatelessWidget {
   }
 }
 
-class _CircleButton extends StatelessWidget {
-  final Widget child;
-  final VoidCallback onTap;
-
-  const _CircleButton({
-    required this.child,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: child,
-      ),
-    );
-  }
-}
-
-class _SessionStat extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _SessionStat({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 21,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.3,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 0.9,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
+/// One exercise as it was performed: the name it was logged under, then the
+/// sets themselves as mono lines under it.
 class _ExerciseRow extends StatelessWidget {
   final PastWorkoutExercise exercise;
-  final bool showDivider;
+  final bool last;
 
   const _ExerciseRow({
     required this.exercise,
-    required this.showDivider,
+    required this.last,
   });
 
   @override
   Widget build(BuildContext context) {
     final exerciseModel = ExerciseCatalog.findById(exercise.exerciseId);
-    final subtitle = exerciseModel?.category.label ?? 'Exercise';
 
     return Container(
-      decoration: showDivider
-          ? const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.divider)),
-            )
-          : null,
+      padding: const EdgeInsets.only(top: 18, bottom: 12),
+      decoration: BoxDecoration(
+        border: last
+            ? null
+            : const Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -412,86 +316,61 @@ class _ExerciseRow extends StatelessWidget {
                       exercise: exerciseModel,
                       initialTab: ExerciseDetailTab.summary,
                     ),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 3),
-              child: Row(
-                children: [
-                  IconTile(
-                    icon: _categoryGlyph(exerciseModel?.category),
-                    size: 38,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          exercise.exerciseName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 1.5),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    exercise.exerciseName,
+                    style: const TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.42,
+                      height: 1.15,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                ),
+                if (exerciseModel != null) ...[
+                  const SizedBox(width: 12),
                   const Icon(
                     Icons.chevron_right_rounded,
-                    size: 20,
+                    size: 18,
                     color: AppColors.textMuted,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final set in exercise.sets)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 9),
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColors.cardHighlight),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'SET ${set.number}',
+                      style: monoStyle(size: 12.5, letterSpacing: 1.25),
+                    ),
+                  ),
+                  Text(
+                    _setValueLabel(set),
+                    style: monoStyle(
+                      size: 14,
+                      color: AppColors.textPrimary,
+                      letterSpacing: 0,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(50, 3, 4, 13),
-            child: Column(
-              children: [
-                for (var i = 0; i < exercise.sets.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Set ${exercise.sets[i].number}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textMuted,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        Text(
-                          _setValueLabel(exercise.sets[i]),
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -689,29 +568,6 @@ class _ConfirmDeleteSheet extends StatelessWidget {
 }
 
 // ── Formatting helpers ──────────────────────────────────────────────────
-
-IconData _categoryGlyph(ExerciseCategory? category) {
-  switch (category) {
-    case ExerciseCategory.verticalPull:
-      return Icons.sports_gymnastics_rounded;
-    case ExerciseCategory.verticalPush:
-      return Icons.front_hand_outlined;
-    case ExerciseCategory.horizontalPull:
-      return Icons.swap_horiz_rounded;
-    case ExerciseCategory.horizontalPush:
-      return Icons.push_pin_outlined;
-    case ExerciseCategory.squat:
-      return Icons.accessibility_new_rounded;
-    case ExerciseCategory.hinge:
-      return Icons.keyboard_double_arrow_down_rounded;
-    case ExerciseCategory.core:
-      return Icons.crop_free_rounded;
-    case ExerciseCategory.skill:
-      return Icons.bolt_rounded;
-    case null:
-      return Icons.fitness_center_rounded;
-  }
-}
 
 String _setValueLabel(PastWorkoutSet set) {
   return set.isTimed ? '${set.value}s hold' : '${set.value} reps';

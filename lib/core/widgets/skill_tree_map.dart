@@ -325,6 +325,10 @@ class _TreeLayout {
   late final Offset? hub;
   late final _Segment? fillSegment;
 
+  /// Whether the foundation is cleared — the fork has been reached, so it
+  /// reads as part of the travelled path rather than a dead node.
+  late final bool hubReached;
+
   /// Where the spine ends and the branches fan out — the split between the
   /// foundation's tap target and the branches'.
   late final double forkX;
@@ -564,6 +568,8 @@ class _TreeLayout {
 
     final hubX = _hubXFor(scale);
     hub = _hasHub ? point(hubX, 0) : null;
+    hubReached = _hasHub &&
+        spine.every((state) => state == TreeNodeState.done);
     forkX = hubX - hubR;
     if (spine.isNotEmpty && branches.isNotEmpty) {
       builtSegments.add(_Segment(
@@ -641,6 +647,19 @@ class _TreeLayout {
       ];
 
       if (j == activeIndex) {
+        // The last foundation step is what opens this branch, so its volume
+        // fill has to run across the fork — otherwise the one step that
+        // unlocks the most has nothing to fill into.
+        if (spine.isNotEmpty && curS == spine.length - 1) {
+          final from = spinePoints.last;
+          final to = nodeAt(0);
+          final delta = to - from;
+          final length = delta.distance;
+          if (length > 18) {
+            final unit = delta / length;
+            fill = _Segment(a: from + unit * 11, b: to - unit * 7, on: true);
+          }
+        }
         final curB = states.indexOf(TreeNodeState.cur);
         if (curB >= 0 && curB + 1 < states.length) {
           final from = nodeAt(curB);
@@ -770,15 +789,20 @@ class _TreeMapPainter extends CustomPainter {
 
     final hub = layout.hub;
     if (hub != null) {
+      final reached = layout.hubReached;
       canvas.drawCircle(
         hub,
         _TreeLayout.hubR,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2
-          ..color = lineColor,
+          ..color = reached ? pathColor : lineColor,
       );
-      canvas.drawCircle(hub, 1.9, Paint()..color = lockedColor);
+      canvas.drawCircle(
+        hub,
+        1.9,
+        Paint()..color = reached ? doneColor : lockedColor,
+      );
     }
 
     for (final node in layout.dots) {

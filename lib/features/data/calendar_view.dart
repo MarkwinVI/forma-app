@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/models/workout_history_model.dart';
 import 'past_workout_detail_view.dart';
 import 'workout_calendar_metrics.dart';
@@ -177,9 +178,9 @@ class _CalendarPanelState extends State<CalendarPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Streak — sits above the month content.
-        _StreakHeroCard(streak: streak),
-        const SizedBox(height: 12),
+        const TypeSectionLabel('Streak', top: 30),
+        _StreakStatement(streak: streak, weeklyGoal: widget.weeklyGoal),
+        const TypeSectionLabel('Training days'),
         _MonthCard(
           month: _month,
           metrics: _metrics,
@@ -187,21 +188,15 @@ class _CalendarPanelState extends State<CalendarPanel> {
           onNext: () => _shiftMonth(1),
           onDayTap: _openDay,
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                big: '$sessionsThisMonth',
-                small: 'sessions in ${_monthNames[_month.month - 1]}',
-              ),
+        TypeStatBand(
+          stats: [
+            TypeStat(
+              value: '$sessionsThisMonth',
+              caption: 'sessions in ${_monthNames[_month.month - 1]}',
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatCard(
-                big: _formatTotalTime(monthTime),
-                small: 'total time',
-              ),
+            TypeStat(
+              value: _formatTotalTime(monthTime),
+              caption: 'total time',
             ),
           ],
         ),
@@ -282,12 +277,13 @@ class _MonthCard extends StatelessWidget {
         now.year == month.year && now.month == month.month ? now.day : null;
     final weeks = _monthWeeks(month);
 
+    // The one card left on this screen: the month keeps its own surface so
+    // the grid reads as a single object rather than seven loose columns.
     return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Pressable(
                 onTap: onPrev,
@@ -295,17 +291,21 @@ class _MonthCard extends StatelessWidget {
                   padding: EdgeInsets.all(4),
                   child: Icon(
                     Icons.chevron_left_rounded,
-                    size: 22,
-                    color: AppColors.textSecondary,
+                    size: 20,
+                    color: AppColors.textMuted,
                   ),
                 ),
               ),
-              Text(
-                '${_monthNames[month.month - 1]} ${month.year}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  '${_monthNames[month.month - 1]} ${month.year}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.32,
+                  ),
                 ),
               ),
               Pressable(
@@ -314,8 +314,8 @@ class _MonthCard extends StatelessWidget {
                   padding: EdgeInsets.all(4),
                   child: Icon(
                     Icons.chevron_right_rounded,
-                    size: 22,
-                    color: AppColors.textSecondary,
+                    size: 20,
+                    color: AppColors.textMuted,
                   ),
                 ),
               ),
@@ -329,37 +329,27 @@ class _MonthCard extends StatelessWidget {
                   child: Text(
                     letter,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMuted,
-                    ),
+                    style: monoStyle(size: 10, letterSpacing: 1),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           for (final week in weeks)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
-                children: [
-                  for (final day in week)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: _DayCell(
-                          day: day,
-                          hasSession: day != null && sessionDays.contains(day),
-                          isToday: day != null && day == today,
-                          onTap: day != null && sessionDays.contains(day)
-                              ? () => onDayTap(day)
-                              : null,
-                        ),
-                      ),
+            Row(
+              children: [
+                for (final day in week)
+                  Expanded(
+                    child: _DayCell(
+                      day: day,
+                      hasSession: day != null && sessionDays.contains(day),
+                      isToday: day != null && day == today,
+                      onTap: day != null && sessionDays.contains(day)
+                          ? () => onDayTap(day)
+                          : null,
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
         ],
       ),
@@ -397,90 +387,85 @@ class _DayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isToday
-        ? AppColors.accentPrimary
-        : hasSession
-            ? AppColors.accentSoft
-            : Colors.white.withValues(alpha: 0.03);
-    final textColor = day == null
-        ? Colors.transparent
-        : isToday
-            ? Colors.white
-            : hasSession
-                ? AppColors.textPrimary
-                : AppColors.textMuted;
-
+    // Bare numbers on a grid: today is the only one the colour picks out, and
+    // a trained day is marked by the dot under it rather than a filled tile.
     return Pressable(
       onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Container(
-          decoration: BoxDecoration(
-            color:
-                day == null ? Colors.white.withValues(alpha: 0.03) : background,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            day == null ? '' : '$day',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textColor,
+      child: SizedBox(
+        height: 38,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              day == null ? '' : '$day',
+              style: monoStyle(
+                size: 13.5,
+                weight: isToday ? FontWeight.w700 : FontWeight.w500,
+                color: isToday
+                    ? AppColors.accentPrimary
+                    : AppColors.textSecondary,
+                letterSpacing: 0,
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: hasSession
+                    ? AppColors.accentPrimary
+                    : Colors.transparent,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StreakHeroCard extends StatelessWidget {
+/// The streak said as a sentence rather than shown as a hero card: a run of
+/// weeks is a statement, and no run yet is the instruction for starting one.
+class _StreakStatement extends StatelessWidget {
   final int streak;
+  final int weeklyGoal;
 
-  const _StreakHeroCard({
-    required this.streak,
-  });
+  const _StreakStatement({required this.streak, required this.weeklyGoal});
 
   @override
   Widget build(BuildContext context) {
-    final headline = streak > 0
+    final running = streak > 0;
+    final headline = running
         ? (streak == 1 ? '1 week' : '$streak weeks')
         : 'No streak yet';
+    final sub = running
+        ? 'Weeks in a row you hit $weeklyGoal sessions.'
+        : 'Train $weeklyGoal times in a week to start one.';
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(kCardRadius),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.accentPrimary.withValues(alpha: 0.14),
-            AppColors.surface,
-          ],
-          stops: const [0, 0.6],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x38000000),
-            offset: Offset(0, 10),
-            blurRadius: 28,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          headline,
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: running ? AppColors.textPrimary : AppColors.textSecondary,
+            letterSpacing: -0.78,
+            height: 1.05,
           ),
-        ],
-      ),
-      child: Text(
-        headline,
-        style: TextStyle(
-          fontSize: 36,
-          fontWeight: FontWeight.w800,
-          color: streak > 0 ? AppColors.accentPrimary : AppColors.textMuted,
-          letterSpacing: -0.72,
-          height: 1,
         ),
-      ),
+        const SizedBox(height: 7),
+        Text(
+          sub,
+          style: const TextStyle(
+            fontSize: 14.5,
+            color: AppColors.textMuted,
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -558,51 +543,6 @@ class _DaySessionRow extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String big;
-  final String small;
-
-  const _StatCard({
-    required this.big,
-    required this.small,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SurfaceCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            big,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.44,
-              height: 1,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            small,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
       ),
     );
   }
