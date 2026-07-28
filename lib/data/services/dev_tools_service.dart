@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/exercise_log_model.dart';
 import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
@@ -10,6 +12,7 @@ import 'skill_track_service.dart';
 import 'supabase_service.dart';
 import 'training_program_service.dart';
 import 'training_program_store_service.dart';
+import 'training_schedule_service.dart';
 
 /// Helpers for resetting and seeding account data.
 /// Reachable from the Developer section in Settings (all builds, for now).
@@ -57,11 +60,11 @@ class DevToolsService {
   /// the progression (skill tree, "closest to levelling up") visibly moves.
   static const _sessionRamp = [0.6, 0.75, 0.9, 1.0, 1.0];
 
-  /// Seeds five completed workouts spread across the last 30 days
-  /// (oldest ~29 days ago, newest yesterday). Volumes ramp toward each
-  /// exercise's target and the same auto-progression as a real workout runs
-  /// after every session, so exercises master and paths advance just like
-  /// they would from real training.
+  /// Seeds five completed workouts onto the days the program actually trains,
+  /// filling whole weeks from the last complete one backwards. Volumes ramp
+  /// toward each exercise's target and the same auto-progression as a real
+  /// workout runs after every session, so exercises master and paths advance
+  /// just like they would from real training.
   Future<void> generateSampleWorkouts(String userId) async {
     final logic = await _trainingProgramStoreService.fetchProgramLogic(userId);
     final programType =
@@ -90,18 +93,21 @@ class DevToolsService {
       goalSkillIds: logic?.program.setupGoalIds ?? const [],
     );
 
-    final trainingDays = _trainingProgramStoreService
-        .scheduleCycleFor(
-          programType: programType,
-          frequencyPerWeek: logic?.program.frequencyPerWeek ?? 3,
-        )
-        .where((session) => session != TrainingSessionType.rest)
-        .toList();
+    // The week as the program lays it out, so a seeded session lands on a day
+    // that really trains — and on the session that day runs.
+    final cycle = _trainingProgramStoreService.scheduleCycleFor(
+      programType: programType,
+      frequencyPerWeek: logic?.program.frequencyPerWeek ?? 3,
+      dayMask: TrainingScheduleService.dayMaskFrom(
+        logic?.program.variationRules,
+      ),
+    );
 
     final today = await _devClockService.loadNow();
-    for (var index = 0; index < _sessionRamp.length; index++) {
-      final daysAgo = 29 - index * 7;
-      final sessionType = trainingDays[index % trainingDays.length];
+    final days = seedDaysFor(cycle: cycle, today: today);
+    for (var index = 0; index < days.length; index++) {
+      final day = days[index];
+      final sessionType = cycle[day.weekday - 1];
       final recommendation = _trainingProgramService.buildToday(
         progressMap: progressMap,
         programType: programType,
@@ -112,8 +118,7 @@ class DevToolsService {
       );
       if (recommendation.items.isEmpty) continue;
 
-      final startedAt = DateTime(today.year, today.month, today.day, 17)
-          .subtract(Duration(days: daysAgo));
+      final startedAt = DateTime(day.year, day.month, day.day, 17);
       final finishedAt = startedAt.add(const Duration(minutes: 42));
 
       final results = <SessionExerciseResult>[];
@@ -218,6 +223,38 @@ class DevToolsService {
         );
       }
     }
+  }
+
+  /// The days the seeded sessions land on, oldest first.
+  ///
+  /// Whole weeks are filled from the last complete week backwards rather than
+  /// one session a week across a month: the weekly streak counts weeks that
+  /// met the program's session goal, and a week holding a single workout
+  /// never does — seeded history that reads as "no streak yet" is the bug
+  /// this avoids. The current week is left alone so the newest session is
+  /// always in the past.
+  @visibleForTesting
+  static List<DateTime> seedDaysFor({
+    required List<TrainingSessionType> cycle,
+    required DateTime today,
+  }) {
+    final trainingWeekdays = [
+      for (var i = 0; i < cycle.length; i++)
+        if (cycle[i] != TrainingSessionType.rest) i,
+    ];
+    if (trainingWeekdays.isEmpty) return const [];
+
+    final thisWeek = DateTime(today.year, today.month, today.day)
+        .subtract(Duration(days: today.weekday - 1));
+    final days = <DateTime>[];
+    for (var week = 1; days.length < _sessionRamp.length && week <= 12; week++) {
+      final start = thisWeek.subtract(Duration(days: 7 * week));
+      for (final weekday in trainingWeekdays.reversed) {
+        if (days.length >= _sessionRamp.length) break;
+        days.add(start.add(Duration(days: weekday)));
+      }
+    }
+    return days..sort();
   }
 
   /// Splits a session volume into three sets whose values sum to [volume].
