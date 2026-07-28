@@ -1,7 +1,7 @@
 import '../../data/models/workout_history_model.dart';
 
-/// Calendar-shaped rollups over saved workouts: per-week streaks, month
-/// totals, and per-day activity levels.
+/// Calendar-shaped rollups over saved workouts: per-week streaks, the days a
+/// month was trained, and per-day activity levels.
 class WorkoutCalendarMetrics {
   final List<PastWorkout> workouts;
   final DateTime _now;
@@ -95,26 +95,6 @@ class WorkoutCalendarMetrics {
     return workouts
         .where((workout) => dayOf(workout.loggedAt) == target)
         .toList();
-  }
-
-  int sessionsInMonth(DateTime month) => workouts
-      .where(
-        (workout) =>
-            workout.loggedAt.year == month.year &&
-            workout.loggedAt.month == month.month,
-      )
-      .length;
-
-  Duration totalTimeInMonth(DateTime month) {
-    var total = Duration.zero;
-    for (final workout in workouts) {
-      if (workout.loggedAt.year == month.year &&
-          workout.loggedAt.month == month.month) {
-        final elapsed = workout.loggedAt.difference(workout.startedAt);
-        if (!elapsed.isNegative) total += elapsed;
-      }
-    }
-    return total;
   }
 
   /// Day numbers (1-based) in [month] with at least one saved session.

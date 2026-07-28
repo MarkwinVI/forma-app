@@ -54,11 +54,8 @@ void main() {
     expect(find.text('4 weeks'), findsOneWidget);
     // The label names the number; nothing explains it underneath.
     expect(find.textContaining('Train once'), findsNothing);
-    // Stat captions read above their numbers.
-    // Twelve 42-minute sessions.
-    final caption = tester.getTopLeft(find.text('TOTAL TIME'));
-    final value = tester.getTopLeft(find.text('8h 24m'));
-    expect(caption.dy, lessThan(value.dy));
+    // The panel is the streak and the month, with no totals under them.
+    expect(find.text('TOTAL TIME'), findsNothing);
   });
 
   testWidgets('the workout record lists every set of every exercise',

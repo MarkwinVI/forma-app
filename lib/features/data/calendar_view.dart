@@ -22,9 +22,9 @@ const _monthNames = [
   'December',
 ];
 
-/// Embeddable training calendar: month grid with logged days, month totals,
-/// and the weekly streak breakdown directly underneath. Rendered inline (for
-/// example in the Profile tab) rather than as its own page.
+/// Embeddable training calendar: the weekly streak, then a month grid with
+/// the days that were trained. Rendered inline (for example in the Profile
+/// tab) rather than as its own page.
 class CalendarPanel extends StatefulWidget {
   final List<PastWorkout> workouts;
   final DateTime? now;
@@ -168,8 +168,6 @@ class _CalendarPanelState extends State<CalendarPanel> {
   @override
   Widget build(BuildContext context) {
     final streak = _metrics.currentStreakWeeks;
-    final sessionsThisMonth = _metrics.sessionsInMonth(_month);
-    final monthTime = _metrics.totalTimeInMonth(_month);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -183,18 +181,6 @@ class _CalendarPanelState extends State<CalendarPanel> {
           onPrev: () => _shiftMonth(-1),
           onNext: () => _shiftMonth(1),
           onDayTap: _openDay,
-        ),
-        TypeStatBand(
-          stats: [
-            TypeStat(
-              value: '$sessionsThisMonth',
-              caption: 'sessions in ${_monthNames[_month.month - 1]}',
-            ),
-            TypeStat(
-              value: _formatTotalTime(monthTime),
-              caption: 'total time',
-            ),
-          ],
         ),
         if (widget.showActivityHeatmap) ...[
           const SectionHeader(title: 'Last 13 weeks'),
@@ -570,13 +556,6 @@ class _ActivityHeatmap extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatTotalTime(Duration duration) {
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  if (hours <= 0) return '${minutes}m';
-  return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
 }
 
 String _formatClock(DateTime dateTime) {
