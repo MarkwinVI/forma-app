@@ -475,13 +475,21 @@ class _OnboardingViewState extends State<OnboardingView> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Text(
-                          arch.sub,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            height: 1.45,
-                            color: AppColors.textMuted,
+                        // Two lines are always reserved: the descriptions vary
+                        // in length, and letting the block reflow would shove
+                        // the radar up and down as you drag.
+                        SizedBox(
+                          height: 38,
+                          child: Text(
+                            arch.sub,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              height: 1.45,
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         ),
                       ],
@@ -842,14 +850,15 @@ class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
     _schedule();
   }
 
+  /// Cycles for as long as the step is on screen — it never settles.
   void _schedule() {
-    if (_index >= _pairs.length - 1) return;
     _timer = Timer(
       Duration(milliseconds: _index == 0 ? 1250 : 1450),
-      () => setState(() {
-        _index++;
+      () {
+        if (!mounted) return;
+        setState(() => _index = (_index + 1) % _pairs.length);
         _schedule();
-      }),
+      },
     );
   }
 
@@ -899,7 +908,6 @@ class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
           children: [
             const Text('to the ', style: _style),
             Flexible(child: _slot(pair.$2)),
-            const Text('.', style: _style),
           ],
         ),
       ],
@@ -982,8 +990,10 @@ class _NarrativeSlide extends StatelessWidget {
 // ── Step 1: the real skill-tree map, filling in ─────────────────────────────
 
 /// The Pullups tree drawn by the same [SkillTreeMap] the Skills tab uses,
-/// walked forward one step at a time: the working node's rep ring fills, the
-/// node clears, and the next one takes over.
+/// walked forward along one route (Weighted) a step at a time: the working
+/// node's rep ring fills, rests a beat at full, and only then does the node
+/// clear and the next take over — the rest keeps the hand-off from reading as
+/// a jump.
 class _SkillTreeBeat extends StatefulWidget {
   const _SkillTreeBeat();
 
@@ -997,7 +1007,11 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
 
   /// Steps walked per loop, plus one slot that holds the finished state.
   static const _slots = 8;
-  static const _slotMs = 820;
+  static const _slotMs = 520;
+
+  /// Fraction of a slot spent filling; the remainder holds the ring at full so
+  /// the node clearing lands as a beat rather than a jolt.
+  static const _fillPortion = 0.74;
 
   static final List<String> _path =
       SkillCategoryCatalog.pullups.trainingPaths[_branchId]!;
@@ -1028,13 +1042,37 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
         // The last slot is the hold: the tree simply sits on what it cleared.
         final fill = cleared >= _slots - 1
             ? 0.0
-            : Curves.easeInOut.transform((raw - cleared).clamp(0.0, 1.0));
+            : Curves.easeOutSine
+                .transform(((raw - cleared) / _fillPortion).clamp(0.0, 1.0));
+
+        final full = TreeVizModel.fromCategory(
+          category: SkillCategoryCatalog.pullups,
+          progressMap: _progressAt(cleared),
+          activeBranchId: _branchId,
+        );
 
         return SkillTreeMap(
-          viz: TreeVizModel.fromCategory(
-            category: SkillCategoryCatalog.pullups,
-            progressMap: _progressAt(cleared),
-            activeBranchId: _branchId,
+          viz: TreeVizModel(
+            spine: full.spine,
+            branches: [
+              // The whole fan stays drawn — it is what makes this read as a
+              // roadmap — but only Weighted advances. Left alone, clearing the
+              // foundation opens every branch's first step at once, and four
+              // routes appear to progress together.
+              for (final branch in full.branches)
+                if (branch.id == _branchId)
+                  branch
+                else
+                  TreeVizBranch(
+                    id: branch.id,
+                    label: branch.label,
+                    states: List.filled(
+                      branch.states.length,
+                      TreeNodeState.locked,
+                    ),
+                    isActive: false,
+                  ),
+            ],
           ),
           fillPct: fill,
           maxHeight: 176,
