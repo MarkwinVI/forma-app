@@ -14,31 +14,53 @@ void main() {
     );
   }
 
+  // The narrative beats loop forever, so `pumpAndSettle` would time out on
+  // them — step the clock by hand instead.
   Future<void> next(WidgetTester tester, String label) async {
     await tester.tap(find.text(label));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
   }
 
-  testWidgets('walks through all six steps and reflects the answers',
+  testWidgets('walks through all seven steps and reflects the answers',
       (tester) async {
     await pumpFlow(tester);
 
-    // Step 0: welcome.
-    expect(find.text('Train your body.\nMaster real skills.'), findsOneWidget);
+    // Step 0: welcome — the hook, with no badge above it.
+    expect(find.text('From your first'), findsOneWidget);
+    expect(find.text('pull-up'), findsOneWidget);
+    expect(find.text('WELCOME TO FORMA'), findsNothing);
     await next(tester, 'Get started');
 
-    // Step 1: how it works.
-    expect(find.text('You always know what to train.'), findsOneWidget);
-    expect(find.text('Muscle-up'), findsOneWidget);
+    // Step 1: the skill-tree beat, drawn by the app's own tree map.
+    expect(find.text('A roadmap for every calisthenic skill.'), findsOneWidget);
+    expect(find.text('PULL-UP SKILL TREE'), findsOneWidget);
+    final treeMap = find.byWidgetPredicate(
+      (w) =>
+          w is CustomPaint &&
+          w.painter.runtimeType.toString() == '_TreeMapPainter',
+    );
+    expect(treeMap, findsOneWidget);
     await next(tester, 'Continue');
 
-    // Step 2: what's inside.
-    expect(find.text("What's inside."), findsOneWidget);
-    expect(find.text('Skill trees'), findsOneWidget);
+    // Step 2: the workout beat starts at 3 × 5.
+    expect(
+      find.text('Your exercises adapt to your skill level.'),
+      findsOneWidget,
+    );
+    expect(find.text('3 × '), findsOneWidget);
+    expect(find.text('5'), findsOneWidget);
     await next(tester, 'Continue');
 
-    // Step 3: radar starts balanced; dragging up selects The Technician.
-    expect(find.text('What brings you to Forma?'), findsOneWidget);
+    // Step 3: the data beat.
+    expect(
+      find.text('Your workouts adapt so you never start over.'),
+      findsOneWidget,
+    );
+    await next(tester, 'Continue');
+
+    // Step 4: radar starts balanced; dragging up selects The Technician.
+    expect(find.text('What is your aim?'), findsOneWidget);
     expect(find.text('The Generalist'), findsOneWidget);
     final radar = find.byWidgetPredicate(
       (w) =>
@@ -58,8 +80,8 @@ void main() {
     expect(find.text('The Technician'), findsOneWidget);
     await next(tester, 'Continue');
 
-    // Step 4: about you.
-    expect(find.text('About you.'), findsOneWidget);
+    // Step 5: about you.
+    expect(find.text('Your profile'), findsOneWidget);
     expect(find.text('28'), findsOneWidget); // default age
     await tester.tap(find.text('1–2×'));
     await tester.pump();
@@ -67,35 +89,33 @@ void main() {
     await tester.pump();
     await next(tester, 'Continue');
 
-    // Step 5: summary shows the collected answers.
-    expect(find.text('Your Forma profile.'), findsOneWidget);
-    expect(find.text('The Technician'), findsOneWidget);
-    expect(find.text('28'), findsOneWidget);
-    expect(find.text('1-2 / week'), findsOneWidget);
-    expect(find.text('Male'), findsOneWidget);
-    expect(find.text('Finish'), findsOneWidget);
+    // Step 6: ready.
+    expect(find.text('Welcome to Forma'), findsOneWidget);
+    expect(find.text('Enter Forma'), findsOneWidget);
     // Hidden via Visibility(maintainSize) — still in the tree, not tappable.
     expect(find.text('Skip').hitTestable(), findsNothing);
   });
 
-  testWidgets('skip jumps to the summary', (tester) async {
+  testWidgets('skip jumps to the last step', (tester) async {
     await pumpFlow(tester);
 
     await tester.tap(find.text('Skip'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
 
-    expect(find.text('Your Forma profile.'), findsOneWidget);
-    expect(find.text('The Generalist'), findsOneWidget);
+    expect(find.text('Welcome to Forma'), findsOneWidget);
+    expect(find.text('Enter Forma'), findsOneWidget);
   });
 
   testWidgets('back button steps backwards', (tester) async {
     await pumpFlow(tester);
 
     await next(tester, 'Get started');
-    expect(find.text('You always know what to train.'), findsOneWidget);
+    expect(find.text('A roadmap for every calisthenic skill.'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
-    await tester.pumpAndSettle();
-    expect(find.text('Train your body.\nMaster real skills.'), findsOneWidget);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('From your first'), findsOneWidget);
   });
 }
