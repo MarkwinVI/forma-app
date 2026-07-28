@@ -44,14 +44,12 @@ void main() {
             title: 'Build your training program',
             sub: 'Tell us your goals.',
             onCreateProgram: () {},
-            children: const [GhostConstellation()],
           ),
         ),
       ),
     );
 
     expect(find.text('Build your training program'), findsOneWidget);
-    expect(find.byType(GhostConstellation), findsOneWidget);
     expect(find.text('Create my program'), findsOneWidget);
   });
 }

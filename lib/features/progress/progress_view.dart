@@ -401,14 +401,9 @@ class _ProgressEmptyState extends StatelessWidget {
           'movement path and unlock harder exercises.',
       onCreateProgram: onCreateProgram,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 16),
-          child: GhostConstellation(height: 132),
-        ),
         TypeSectionLabel(
           'Movement paths',
           right: '0 / ${_paths.length} started',
-          top: 12,
         ),
         for (var i = 0; i < _paths.length; i++)
           GhostRow(

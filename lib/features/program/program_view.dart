@@ -183,12 +183,6 @@ class _ProgramViewState extends State<ProgramView> {
                   'equipment. Forma builds a balanced program, tells you what '
                   'to train, and adjusts it as you progress.',
               onCreateProgram: _openProgramSetup,
-              children: const [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 18, 0, 22),
-                  child: GhostConstellation(),
-                ),
-              ],
             ),
           ),
         ),
