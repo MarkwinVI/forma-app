@@ -55,20 +55,22 @@ class ProgramStartPlan {
 ///    for movements the six do not cover.
 ///
 /// 2. **Where it starts.** The reported one-set maximum places the starting
-///    node on the push-up, pull-up, dip and bodyweight-squat trees: nothing
-///    starts at the beginner node, up to nine reps starts two steps before
-///    the last shared foundation step, ten or more starts on that last step.
-///    Everything behind the starting node is marked skipped, not mastered —
-///    it was never trained here. Rows always start at the first step, and
-///    the loaded lifts start from the reported 1RM (70% for 3 × 5) or a
-///    deliberately light 20 kg.
+///    node on the push-up, pull-up, dip and bodyweight-squat trees, read
+///    against the exercise the answer was about — the plain push-up,
+///    pull-up, parallel-bar dip or bodyweight squat, not the last step of
+///    the shared foundation. Nothing starts at the beginner node, ten or
+///    more reps start on that named step, and 1–9 reps start two steps
+///    before it. Everything behind the starting node is marked skipped, not
+///    mastered — it was never trained here. Rows always start at the first
+///    step, and the loaded lifts start from the reported 1RM (70% for
+///    3 × 5) or a deliberately light 20 kg.
 class ProgramStartPlanner {
   ProgramStartPlanner._();
 
-  /// Reps at or above this count start on the last foundation step.
-  static const int foundationRepThreshold = 10;
+  /// Reps at or above this count start on the answer's own exercise.
+  static const int repThreshold = 10;
 
-  /// Steps back from the last foundation step for a 1–9 rep answer.
+  /// Steps back from the answer's own exercise for a 1–9 rep answer.
   static const int partialRepStepBack = 2;
 
   /// Fraction of the reported squat 1RM used as the opening working weight.
@@ -89,12 +91,15 @@ class ProgramStartPlanner {
   /// Barbell weights are rounded to something loadable.
   static const double barbellIncrementKg = 2.5;
 
-  /// The rep answer that places the starting node on each tree.
-  static const Map<String, String> _repAnswerByCategory = {
-    SkillCategoryCatalog.pushupsId: 'pushups',
-    SkillCategoryCatalog.pullupsId: 'pullups',
-    SkillCategoryCatalog.dipsId: 'dips',
-    SkillCategoryCatalog.squatId: 'squat_bw',
+  /// Per tree: the setup answer that places the starting node, and the step
+  /// that answer is about. "Ten push-ups" means ten of the exercise called
+  /// Push-up, so that step — not whatever step happens to end the shared
+  /// foundation — is what the count is measured against.
+  static const Map<String, _RepGate> _repGates = {
+    SkillCategoryCatalog.pushupsId: _RepGate('pushups', 'push_up'),
+    SkillCategoryCatalog.pullupsId: _RepGate('pullups', 'pull_up'),
+    SkillCategoryCatalog.dipsId: _RepGate('dips', 'parallel_bar_dips'),
+    SkillCategoryCatalog.squatId: _RepGate('squat_bw', 'squat'),
   };
 
   static ProgramStartPlan planFor({
@@ -210,12 +215,14 @@ class ProgramStartPlanner {
 
     // Rows have no rep gate: everyone starts at the first step, because the
     // opening steps are about body angle rather than strength.
-    final answerKey = _repAnswerByCategory[category.id];
-    final reps = answerKey == null ? null : startingStrength[answerKey];
-    final startIndex = startIndexFor(
-      foundation: category.pathFor('main'),
-      reps: reps,
-    );
+    final gate = _repGates[category.id];
+    final startIndex = gate == null
+        ? 0
+        : startIndexFor(
+            path: path,
+            referenceExerciseId: gate.referenceExerciseId,
+            reps: startingStrength[gate.answerKey],
+          );
 
     return _StartingPosition(
       statuses: {
@@ -261,18 +268,25 @@ class ProgramStartPlanner {
     }
   }
 
-  /// Index of the starting node along [foundation] for a reported one-set
-  /// maximum. An unknown answer starts at the beginner node — the first
-  /// session finds out where the user actually is.
+  /// Index of the starting node along [path] for a reported one-set maximum
+  /// of [referenceExerciseId]. Ten or more reps start on that exercise, 1–9
+  /// two steps before it, and an unknown answer starts at the beginner node
+  /// — the first session finds out where the user actually is.
+  ///
+  /// The step-back clamps at the start of the path, so on a short run-up
+  /// (push-ups and squats have two steps before their named exercise) 1–9
+  /// reps land on the beginner node, same as no reps at all.
   static int startIndexFor({
-    required List<String> foundation,
+    required List<String> path,
+    required String referenceExerciseId,
     required int? reps,
   }) {
-    if (foundation.isEmpty || reps == null || reps <= 0) return 0;
+    if (reps == null || reps <= 0) return 0;
 
-    final lastIndex = foundation.length - 1;
-    if (reps >= foundationRepThreshold) return lastIndex;
-    return (lastIndex - partialRepStepBack).clamp(0, lastIndex);
+    final referenceIndex = path.indexOf(referenceExerciseId);
+    if (referenceIndex < 0) return 0;
+    if (reps >= repThreshold) return referenceIndex;
+    return (referenceIndex - partialRepStepBack).clamp(0, referenceIndex);
   }
 
   /// Opening barbell squat weight: 70% of the reported 1RM, rounded down to
@@ -285,6 +299,14 @@ class ProgramStartPlanner {
         (working / barbellIncrementKg).floor() * barbellIncrementKg;
     return rounded < barbellIncrementKg ? barbellIncrementKg : rounded;
   }
+}
+
+/// A tree's rep gate: the setup answer, and the step it is an answer about.
+class _RepGate {
+  final String answerKey;
+  final String referenceExerciseId;
+
+  const _RepGate(this.answerKey, this.referenceExerciseId);
 }
 
 class _StartingPosition {

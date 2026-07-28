@@ -94,40 +94,44 @@ void main() {
       expect(plan.statuses['wall_push_up'], ExerciseStatus.active);
     });
 
-    test('1–9 reps start two steps before the last foundation step', () {
+    test('1–9 reps start two steps before the exercise they answer for', () {
       final plan = planFor(
         strength: {'pushups': 5, 'pullups': 3, 'dips': 1, 'squat_bw': 9},
       );
 
-      expect(plan.statuses['elbows_in_push_up'], ExerciseStatus.active);
       expect(plan.statuses['pull_up_negative'], ExerciseStatus.active);
-      // Dips have a three-step foundation, so two steps back is the first.
+      // Dips have two steps before the parallel-bar dip, so two back is the
+      // first one.
       expect(plan.statuses['bench_dips'], ExerciseStatus.active);
-      expect(plan.statuses['squat'], ExerciseStatus.active);
+      // Push-ups and squats have exactly two steps of run-up, so the step
+      // back clamps onto the beginner node.
+      expect(plan.statuses['wall_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['assisted_squat'], ExerciseStatus.active);
     });
 
-    test('10+ reps start on the last foundation step', () {
+    test('10+ reps start on the exercise the answer was about', () {
       final plan = planFor(
         strength: {'pushups': 12, 'pullups': 10, 'dips': 30, 'squat_bw': 40},
       );
 
-      expect(plan.statuses['diamond_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['push_up'], ExerciseStatus.active);
       expect(plan.statuses['pull_up'], ExerciseStatus.active);
       expect(plan.statuses['parallel_bar_dips'], ExerciseStatus.active);
-      expect(plan.statuses['bulgarian_split_squat'], ExerciseStatus.active);
+      expect(plan.statuses['squat'], ExerciseStatus.active);
     });
 
     test('everything behind the starting node is skipped, never mastered', () {
-      final plan = planFor(strength: {'pushups': 12});
+      final plan = planFor(strength: {'pushups': 12, 'pullups': 10});
 
       expect(
         [
           for (final id in const [
             'wall_push_up',
             'incline_push_up',
-            'push_up',
-            'elbows_in_push_up',
-            'decline_push_up',
+            'scapular_pull',
+            'arch_hang',
+            'pull_up_negative',
+            'assisted_pull_up',
           ])
             plan.statuses[id],
         ],
@@ -284,7 +288,7 @@ void main() {
           .map((item) => item.exercise.id)
           .toList();
 
-      expect(items, contains('diamond_push_up'));
+      expect(items, contains('push_up'));
       expect(items, contains('pull_up_negative'));
       expect(items, isNot(contains('wall_push_up')));
     });
