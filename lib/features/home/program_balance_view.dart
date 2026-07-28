@@ -255,14 +255,22 @@ double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
 }
 
 /// "Vertical pull underloaded, Core missing" — or all clear.
-String balanceHeadline(List<BalanceCategory> categories) {
+/// The value the Program tab shows against "Weekly balance" — a settings-row
+/// value, so it counts the patterns that are off rather than naming them.
+String balanceSummary(List<BalanceCategory> categories) {
   final off = [
     for (final entry in categories)
       if (entry.group.primary && entry.verdict != BalanceVerdict.optimal)
-        '${entry.label} ${entry.verdict.label.toLowerCase()}',
+        entry.verdict,
   ];
-  if (off.isEmpty) return 'Every category optimal';
-  return off.join(', ');
+  if (off.isEmpty) return 'Balanced';
+
+  final noun = off.length == 1 ? 'pattern' : 'patterns';
+  final kinds = off.toSet();
+  if (kinds.length == 1) {
+    return '${off.length} $noun ${kinds.first.label.toLowerCase()}';
+  }
+  return '${off.length} $noun off target';
 }
 
 /// Full-page read of how often each movement category comes up in the week.

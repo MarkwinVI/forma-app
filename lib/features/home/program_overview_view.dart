@@ -534,6 +534,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
               clearedFraction: _clearedFraction(
                 [for (final workout in workouts) workout.items],
               ),
+              summary: _programSummary,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -563,13 +564,17 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                         : '$_activeTrackCount trees',
                     onTap: _openSkillTrees,
                   ),
-                  _BalanceRow(
-                    headline: balanceHeadline(balance),
-                    allOptimal: balance.every(
+                  _ProgramRow(
+                    label: 'Weekly balance',
+                    value: balanceSummary(balance),
+                    // The only settings value that can carry a warning — an
+                    // off-target week is the one thing here worth colouring.
+                    warn: balance.any(
                       (entry) =>
-                          !entry.group.primary ||
-                          entry.verdict == BalanceVerdict.optimal,
+                          entry.group.primary &&
+                          entry.verdict != BalanceVerdict.optimal,
                     ),
+                    last: true,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => ProgramBalanceView(
@@ -608,15 +613,16 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                           onTap: () => _openAdjustSheet(track),
                         ),
                   ],
-                  const _ProgramSectionLabel('Workouts'),
-                  for (final workout in workouts)
+                  const _ProgramSectionLabel('Weekly workouts'),
+                  for (var i = 0; i < workouts.length; i++)
                     _SessionRow(
-                      title: kWeekdayNames[workout.weekday],
-                      sessionLabel: programDayTitle(workout.sessionType),
-                      items: workout.items,
+                      title: kWeekdayNames[workouts[i].weekday],
+                      sessionLabel: programDayTitle(workouts[i].sessionType),
+                      items: workouts[i].items,
+                      last: i == workouts.length - 1,
                       onTap: () => _openDayEditor(
-                        workout.sessionType,
-                        weekday: workout.weekday,
+                        workouts[i].sessionType,
+                        weekday: workouts[i].weekday,
                       ),
                     ),
                   const _ProgramSectionLabel('About the program'),
@@ -654,15 +660,58 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   /// The setup wizard defaults to a full gym, so an unanswered program reads
   /// the same way here.
   bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
+
+  /// One sentence under the title: the whole program — its week, its trees and
+  /// what it was built around — before any of the rows below spell it out.
+  String get _programSummary {
+    final split = switch (_logic.program.programType) {
+      TrainingProgramType.fullBody => 'full-body',
+      TrainingProgramType.pushPull => 'push / pull',
+      TrainingProgramType.upperLower => 'upper / lower',
+    };
+    final days = _spelled(_trainingDaysPerWeek);
+    final trees = switch (_activeTrackCount) {
+      0 => 'no trees running yet',
+      1 => 'one tree running',
+      final count => '${_spelled(count)} trees running',
+    };
+    final equipment = _hasGym ? 'a full gym' : 'a bar and bodyweight';
+
+    return '${days[0].toUpperCase()}${days.substring(1)} $split days, '
+        '$trees, built around $equipment.';
+  }
+}
+
+/// Small counts read better spelled out in the summary sentence; anything
+/// past the words falls back to the digit.
+String _spelled(int count) {
+  const words = [
+    'zero',
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'nine',
+    'ten',
+  ];
+  return count >= 0 && count < words.length ? words[count] : '$count';
 }
 
 /// Hero constellation: an abstract read of the program itself — cleared nodes
-/// green, everything still ahead locked — under the display title.
+/// green, everything still ahead locked — with the title and the one-line
+/// summary of the program sitting under it, where the graph has faded out.
 class _ProgramHero extends StatelessWidget {
   /// 0–1 share of the program's exercises already mastered.
   final double clearedFraction;
 
-  const _ProgramHero({required this.clearedFraction});
+  /// The sentence under the title.
+  final String summary;
+
+  const _ProgramHero({required this.clearedFraction, required this.summary});
 
   @override
   Widget build(BuildContext context) {
@@ -702,20 +751,34 @@ class _ProgramHero extends StatelessWidget {
             ),
             child: SizedBox.expand(),
           ),
-          const Positioned(
+          Positioned(
             left: 22,
             right: 22,
-            bottom: 16,
-            child: Text(
-              'Program',
-              style: TextStyle(
-                fontSize: 52,
-                fontWeight: FontWeight.w900,
-                fontStyle: FontStyle.italic,
-                color: Colors.white,
-                letterSpacing: -2.34,
-                height: 0.98,
-              ),
+            bottom: 6,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Program',
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -1.02,
+                    height: 1.05,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  summary,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    color: AppColors.textSecondary,
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -861,7 +924,7 @@ class _ProgramSectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 34, bottom: 4),
+      padding: const EdgeInsets.only(top: 34, bottom: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -912,15 +975,23 @@ class _ProgramSectionLabel extends StatelessWidget {
   }
 }
 
-/// Flat settings row: label · value · chevron, separated by a hairline.
+/// A setting is a value pair, not a headline: one compact line, label left and
+/// the current value right. Deliberately a different shape from the content
+/// rows below, so settings never read as progress.
 class _ProgramRow extends StatelessWidget {
   final String label;
   final String value;
+
+  /// Colours the value amber — the row is telling you something is off.
+  final bool warn;
+  final bool last;
   final VoidCallback onTap;
 
   const _ProgramRow({
     required this.label,
     required this.value,
+    this.warn = false,
+    this.last = false,
     required this.onTap,
   });
 
@@ -929,9 +1000,11 @@ class _ProgramRow extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 17),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.divider)),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : const Border(bottom: BorderSide(color: AppColors.divider)),
         ),
         child: Row(
           children: [
@@ -939,23 +1012,27 @@ class _ProgramRow extends StatelessWidget {
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
-                  letterSpacing: -0.25,
+                  letterSpacing: -0.16,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: warn ? AppColors.amber : AppColors.textSecondary,
+                ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             const Icon(
               Icons.chevron_right_rounded,
               size: 18,
@@ -968,148 +1045,68 @@ class _ProgramRow extends StatelessWidget {
   }
 }
 
+/// One workout. Day and split read as a single statement at one size —
+/// neither labels the other — and the line beneath is what you'll actually
+/// do, not how much of it there is.
 class _SessionRow extends StatelessWidget {
   final String title;
   final String sessionLabel;
   final List<ProgramDayItem> items;
+  final bool last;
   final VoidCallback onTap;
 
   const _SessionRow({
     required this.title,
     required this.sessionLabel,
     required this.items,
+    required this.last,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final meta = [
-      sessionLabel,
-      items.length == 1 ? '1 exercise' : '${items.length} exercises',
-    ].join(' · ');
+    final exercises = items.map((item) => item.name).join(' · ');
 
-    return Pressable(
+    return _ProgramContentRow(
+      last: last,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 17),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.38,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          meta,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                    ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: title),
+                const TextSpan(
+                  text: ' · ',
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    items.map((item) => item.name).join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                TextSpan(text: sessionLabel),
+              ],
             ),
-            const SizedBox(width: 10),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.textMuted,
+            style: const TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.42,
+              height: 1.15,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Weekly balance summary — the verdict plus a way into the full read.
-class _BalanceRow extends StatelessWidget {
-  final String headline;
-  final bool allOptimal;
-  final VoidCallback onTap;
-
-  const _BalanceRow({
-    required this.headline,
-    required this.allOptimal,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 17),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Weekly balance',
-                    style: TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.25,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    headline,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: allOptimal ? AppColors.green : AppColors.amber,
-                    ),
-                  ),
-                ],
-              ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            exercises.isEmpty ? 'No exercises yet' : exercises,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14.5,
+              color: AppColors.textSecondary,
+              height: 1.45,
             ),
-            const SizedBox(width: 10),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.textMuted,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1129,10 +1126,42 @@ class _FaqRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _ProgramContentRow(
+      last: last,
+      onTap: onTap,
+      child: Text(
+        question,
+        style: const TextStyle(
+          fontSize: 18.5,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.37,
+          height: 1.28,
+        ),
+      ),
+    );
+  }
+}
+
+/// The shape real content gets: a big name given room to breathe, a hairline
+/// under it, and a chevron into wherever it leads.
+class _ProgramContentRow extends StatelessWidget {
+  final Widget child;
+  final bool last;
+  final VoidCallback onTap;
+
+  const _ProgramContentRow({
+    required this.child,
+    required this.last,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 17),
+        padding: const EdgeInsets.only(top: 20, bottom: 22),
         decoration: BoxDecoration(
           border: last
               ? null
@@ -1140,19 +1169,8 @@ class _FaqRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                question,
-                style: const TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.25,
-                  height: 1.3,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
+            Expanded(child: child),
+            const SizedBox(width: 12),
             const Icon(
               Icons.chevron_right_rounded,
               size: 18,

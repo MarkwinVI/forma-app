@@ -638,16 +638,15 @@ void main() {
       ),
     );
 
-    // Workouts are listed per training weekday, each carrying its session.
-    expect(find.text('Monday'), findsOneWidget);
-    expect(find.text('Wednesday'), findsOneWidget);
-    expect(find.text('Friday'), findsOneWidget);
-    expect(find.textContaining('Push · '), findsNWidgets(2));
-    expect(find.textContaining('Pull · '), findsOneWidget);
+    // Workouts are listed per training weekday, the day and its session
+    // reading as one statement.
+    expect(find.textContaining('Monday · Push'), findsOneWidget);
+    expect(find.textContaining('Wednesday · Pull'), findsOneWidget);
+    expect(find.textContaining('Friday · Push'), findsOneWidget);
 
     // The hero pushes the session rows below the test surface.
-    await tester.ensureVisible(find.text('Monday'));
-    await tester.tap(find.text('Monday'));
+    await tester.ensureVisible(find.textContaining('Monday · Push'));
+    await tester.tap(find.textContaining('Monday · Push'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ProgramDayEditorView), findsOneWidget);
