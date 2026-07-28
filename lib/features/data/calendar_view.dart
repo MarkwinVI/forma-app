@@ -176,7 +176,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
       children: [
         const TypeSectionLabel('Weekly streak', top: 30),
         _StreakStatement(streak: streak),
-        const TypeSectionLabel('Training days'),
+        const TypeSectionLabel('Calendar'),
         _MonthGrid(
           month: _month,
           metrics: _metrics,

@@ -202,7 +202,7 @@ class _DataViewState extends State<DataView> {
         const Padding(
           padding: EdgeInsets.only(top: 8),
           child: Text(
-            'Saved workouts will appear here with every exercise and set.',
+            'Saved workouts will appear here.',
             style: TextStyle(
               fontSize: 14.5,
               color: AppColors.textSecondary,
