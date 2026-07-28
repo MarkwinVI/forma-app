@@ -90,7 +90,8 @@ class TodayWorkoutContent {
 
 /// Today's session on the Train tab, written as a list rather than boxed in a
 /// card: the day names itself, then every exercise with what it last totalled
-/// and how it moved, then the way in.
+/// and how it moved. The actions live in [TodayWorkoutActions], pinned by the
+/// tab so a long session never pushes Start below the fold.
 class TodayWorkoutCard extends StatelessWidget {
   static const double _previousColWidth = 84;
   static const double _changeColWidth = 58;
@@ -98,27 +99,27 @@ class TodayWorkoutCard extends StatelessWidget {
   final HomeTodaySummary summary;
   final String subtitle;
   final List<TodayWorkoutRow> rows;
-  final VoidCallback onStart;
-  final VoidCallback? onTrainSomethingElse;
+
+  /// The one-line note about what the program changed, if anything has. Sits
+  /// between the title and the table so it never becomes a second list.
+  final Widget? updatedLine;
 
   const TodayWorkoutCard({
     super.key,
     required this.summary,
     required this.subtitle,
     required this.rows,
-    required this.onStart,
-    this.onTrainSomethingElse,
+    this.updatedLine,
   });
 
   @override
   Widget build(BuildContext context) {
-    final completed = summary.completed;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TypeTitle(summary.sessionTitle, sub: subtitle),
+        if (updatedLine != null) updatedLine!,
         if (rows.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 30, 0, 6),
@@ -144,7 +145,36 @@ class TodayWorkoutCard extends StatelessWidget {
           for (var index = 0; index < rows.length; index++)
             _ExerciseRow(row: rows[index], last: index == rows.length - 1),
         ],
-        const SizedBox(height: 34),
+      ],
+    );
+  }
+
+  static final _headStyle = monoStyle(size: 11, letterSpacing: 1.5);
+}
+
+/// The way into today's session. Pinned above the tab bar rather than sitting
+/// under the list — an eight-exercise session would otherwise scroll Start off
+/// the screen.
+class TodayWorkoutActions extends StatelessWidget {
+  final HomeTodaySummary summary;
+  final VoidCallback onStart;
+  final VoidCallback? onTrainSomethingElse;
+
+  const TodayWorkoutActions({
+    super.key,
+    required this.summary,
+    required this.onStart,
+    this.onTrainSomethingElse,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = summary.completed;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         if (completed != null)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -179,7 +209,7 @@ class TodayWorkoutCard extends StatelessWidget {
             onTap: onTrainSomethingElse,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 18, bottom: 4),
+              padding: const EdgeInsets.only(top: 14, bottom: 2),
               alignment: Alignment.center,
               child: Text(
                 summary.isRestDay
@@ -197,8 +227,6 @@ class TodayWorkoutCard extends StatelessWidget {
       ],
     );
   }
-
-  static final _headStyle = monoStyle(size: 11, letterSpacing: 1.5);
 }
 
 class _ExerciseRow extends StatelessWidget {
@@ -216,7 +244,7 @@ class _ExerciseRow extends StatelessWidget {
             : AppColors.textMuted;
 
     return Container(
-      padding: const EdgeInsets.only(top: 17, bottom: 18),
+      padding: const EdgeInsets.only(top: 13, bottom: 14),
       decoration: BoxDecoration(
         border: last
             ? null
@@ -230,11 +258,11 @@ class _ExerciseRow extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 21,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
-                letterSpacing: -0.42,
-                height: 1.15,
+                letterSpacing: -0.36,
+                height: 1.2,
               ),
             ),
           ),

@@ -485,18 +485,7 @@ class _HomeViewState extends State<HomeView> {
                     // Recovery day fills the viewport and never scrolls — the
                     // illustration flexes so the footer stays above the fold.
                     ? _buildRestBody(snapshot)
-                    : RefreshIndicator(
-                        color: AppColors.accentPrimary,
-                        backgroundColor: AppColors.surface,
-                        onRefresh: _loadHomeData,
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
-                            child: _buildContent(snapshot),
-                          ),
-                        ),
-                      ),
+                    : _buildTrainBody(snapshot),
       ),
     );
   }
@@ -530,6 +519,62 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  /// Start stays pinned above the tab bar while the session scrolls behind
+  /// it — an eight-exercise day would otherwise push it below the fold.
+  Widget _buildTrainBody(_TrainSnapshot snapshot) {
+    final metrics = snapshot.metrics;
+    final pinned = metrics.today.completed == null;
+    final navReserve = MediaQuery.of(context).padding.bottom + 74;
+
+    return Stack(
+      children: [
+        RefreshIndicator(
+          color: AppColors.accentPrimary,
+          backgroundColor: AppColors.surface,
+          onRefresh: _loadHomeData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                22,
+                18,
+                22,
+                pinned ? navReserve + 104 : 120,
+              ),
+              child: _buildContent(snapshot),
+            ),
+          ),
+        ),
+        if (pinned)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: navReserve - 12,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(22, 14, 22, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.bg.withValues(alpha: 0),
+                    AppColors.bg.withValues(alpha: 0.95),
+                  ],
+                  stops: const [0, 0.34],
+                ),
+              ),
+              child: TodayWorkoutActions(
+                summary: metrics.today,
+                onStart: () => _startWorkout(snapshot.recommendation),
+                onTrainSomethingElse: () =>
+                    _openAlternateWorkoutOptions(snapshot.recommendation),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildContent(_TrainSnapshot snapshot) {
     final metrics = snapshot.metrics;
     final completed = metrics.today.completed;
@@ -542,27 +587,32 @@ class _HomeViewState extends State<HomeView> {
           weekStrip: metrics.weekStrip,
           onDayTap: (_) => _openTrainingCalendar(snapshot),
         ),
-        if (completed != null)
+        if (completed != null) ...[
           WorkoutDoneView(
             completed: completed,
             nextTitle: nextTitle,
             nextWhen: nextWhen,
             onViewWorkout:
                 _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
-          )
-        else ...[
+          ),
+          // Finished: the changes read as a receipt under the session.
+          if (_whatChanged.isNotEmpty) TrainInsight(events: _whatChanged),
+        ] else ...[
           const SizedBox(height: 30),
           TodayWorkoutCard(
             summary: metrics.today,
             subtitle: TodayWorkoutContent.subtitle(metrics),
             rows: TodayWorkoutContent.rows(metrics),
-            onStart: () => _startWorkout(snapshot.recommendation),
-            onTrainSomethingElse: () =>
-                _openAlternateWorkoutOptions(snapshot.recommendation),
+            // Still to train: the same changes compress to one line, so they
+            // never become a second list beside today's.
+            updatedLine: _whatChanged.isEmpty
+                ? null
+                : WhatChangedLine(
+                    events: _whatChanged,
+                    onTap: () => showWhatChangedSheet(context, _whatChanged),
+                  ),
           ),
         ],
-        if (_whatChanged.isNotEmpty)
-          TrainInsight(events: _whatChanged),
       ],
     );
   }

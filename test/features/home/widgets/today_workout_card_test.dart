@@ -68,12 +68,19 @@ void main() {
     var trainElse = false;
     await tester.pumpWidget(
       host(
-        TodayWorkoutCard(
-          summary: summary(),
-          subtitle: '5 exercises · targets your stalled Pull-up node',
-          rows: rows,
-          onStart: () => started = true,
-          onTrainSomethingElse: () => trainElse = true,
+        Column(
+          children: [
+            TodayWorkoutCard(
+              summary: summary(),
+              subtitle: '5 exercises · targets your stalled Pull-up node',
+              rows: rows,
+            ),
+            TodayWorkoutActions(
+              summary: summary(),
+              onStart: () => started = true,
+              onTrainSomethingElse: () => trainElse = true,
+            ),
+          ],
         ),
       ),
     );
@@ -101,7 +108,7 @@ void main() {
   testWidgets('shows completed state instead of Start', (tester) async {
     await tester.pumpWidget(
       host(
-        TodayWorkoutCard(
+        TodayWorkoutActions(
           summary: summary(
             completed: const HomeCompletedWorkoutSummary(
               title: 'Pull Day',
@@ -111,8 +118,6 @@ void main() {
               nextSessionLabel: 'Push Day',
             ),
           ),
-          subtitle: '5 exercises',
-          rows: rows,
           onStart: () {},
         ),
       ),
@@ -137,6 +142,9 @@ void main() {
                   summary: summary(),
                   subtitle: '5 exercises · targets your stalled Pull-up node',
                   rows: rows,
+                ),
+                TodayWorkoutActions(
+                  summary: summary(),
                   onStart: () {},
                   onTrainSomethingElse: () {},
                 ),
