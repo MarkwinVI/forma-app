@@ -975,23 +975,25 @@ class _SessionRow extends StatelessWidget {
                 TextSpan(text: sessionLabel),
               ],
             ),
+            // Sized like the settings rows above: a workout is something you
+            // open and change, not a headline over the others.
             style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
-              letterSpacing: -0.42,
-              height: 1.15,
+              letterSpacing: -0.16,
+              height: 1.2,
             ),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 6),
           Text(
             exercises.isEmpty ? 'No exercises yet' : exercises,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 14.5,
+              fontSize: 15,
               color: AppColors.textSecondary,
-              height: 1.45,
+              height: 1.4,
             ),
           ),
         ],
