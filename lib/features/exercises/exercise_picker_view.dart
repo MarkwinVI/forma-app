@@ -254,19 +254,6 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
                           height: 1.05,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.browsing
-                            ? 'Every exercise in Forma, by movement pattern — '
-                                'open one to read how it is performed.'
-                            : 'Every exercise is a step of a skill tree — '
-                                'adding one starts or resumes that path.',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.45,
-                        ),
-                      ),
                       const SizedBox(height: 16),
                       _SearchField(
                         controller: _searchController,
