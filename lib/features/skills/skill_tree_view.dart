@@ -233,6 +233,15 @@ class _SkillTreeViewState extends State<SkillTreeView> {
       _sectionKeys.putIfAbsent(route.id, GlobalKey.new);
     }
 
+    // One reading of the tree for the whole screen — the map draws it and
+    // the routes below list it, so they cannot disagree about which step you
+    // are on.
+    final nodeStates = skillTreeNodeStates(
+      category: _skillCategory,
+      progressMap: _localProgress,
+      goalBranchId: _goalBranchId(routes),
+    );
+
     final unlockRequirement = _skillCategory.unlockRequirement;
     final isLocked = unlockRequirement != null &&
         _localProgress[unlockRequirement.exerciseId] != ExerciseStatus.mastered;
@@ -296,7 +305,9 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                               selected: route.id == _selectedRouteId,
                               open: _routeIsOpen(route),
                               masteredCount: _masteredCount(route),
-                              statusOf: _statusOf,
+                              stateOf: (exercise) =>
+                                  nodeStates[exercise.id] ??
+                                  TreeNodeState.locked,
                               onExerciseTap: _showExerciseSheet,
                             ),
                           // Room to scroll the last route up to the line.
@@ -349,12 +360,20 @@ class _SkillTreeViewState extends State<SkillTreeView> {
     );
   }
 
-  Widget _buildMap(List<_TreeRoute> routes) {
+  /// The branch the tree is read against — whichever route you are looking
+  /// at, or the default when that is the shared foundation. The map and the
+  /// list must agree on this or they disagree about which step is current.
+  String _goalBranchId(List<_TreeRoute> routes) {
     final branchRouteIds = {
       for (final route in routes)
         if (!route.isFoundation) route.id,
     };
+    return branchRouteIds.contains(_selectedRouteId)
+        ? _selectedRouteId
+        : _skillCategory.defaultTrainingPathId;
+  }
 
+  Widget _buildMap(List<_TreeRoute> routes) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
       decoration: const BoxDecoration(
@@ -364,9 +383,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
         viz: TreeVizModel.fromCategory(
           category: _skillCategory,
           progressMap: _localProgress,
-          activeBranchId: branchRouteIds.contains(_selectedRouteId)
-              ? _selectedRouteId
-              : _skillCategory.defaultTrainingPathId,
+          activeBranchId: _goalBranchId(routes),
         ),
         maxHeight: 210,
         selectedRouteId: _selectedRouteId,
@@ -399,20 +416,22 @@ class _TreeRoute {
   });
 }
 
-/// Where an exercise stands in its route — the states the list and the map
-/// share: cleared, being trained, or still shut.
-enum _StepState { done, now, locked }
+/// Where an exercise stands in its route — the list's reading of the states
+/// the map draws: cleared, being trained, open to train, or still shut.
+enum _StepState { done, now, unlocked, locked }
 
 extension on _StepState {
   String get label => switch (this) {
         _StepState.done => 'Mastered',
         _StepState.now => 'Active',
+        _StepState.unlocked => 'Unlocked',
         _StepState.locked => 'Locked',
       };
 
   Color get color => switch (this) {
         _StepState.done => AppColors.green,
         _StepState.now => AppColors.accentBright,
+        _StepState.unlocked => AppColors.textSecondary,
         _StepState.locked => AppColors.textMuted,
       };
 }
@@ -425,7 +444,7 @@ class _RouteSection extends StatelessWidget {
   final bool selected;
   final bool open;
   final int masteredCount;
-  final ExerciseStatus Function(Exercise exercise) statusOf;
+  final TreeNodeState Function(Exercise exercise) stateOf;
   final void Function(Exercise exercise) onExerciseTap;
 
   const _RouteSection({
@@ -435,19 +454,17 @@ class _RouteSection extends StatelessWidget {
     required this.selected,
     required this.open,
     required this.masteredCount,
-    required this.statusOf,
+    required this.stateOf,
     required this.onExerciseTap,
   });
 
   _StepState _stateFor(int index) {
-    switch (statusOf(route.exercises[index])) {
-      case ExerciseStatus.mastered:
-        return _StepState.done;
-      case ExerciseStatus.active:
-        return _StepState.now;
-      case ExerciseStatus.inactive:
-        return _StepState.locked;
-    }
+    return switch (stateOf(route.exercises[index])) {
+      TreeNodeState.done => _StepState.done,
+      TreeNodeState.cur => _StepState.now,
+      TreeNodeState.unlocked => _StepState.unlocked,
+      TreeNodeState.locked => _StepState.locked,
+    };
   }
 
   String? get _subtitle {
@@ -562,6 +579,15 @@ class _ExerciseRow extends StatelessWidget {
                 spreadRadius: 4,
               ),
             ],
+          ),
+        );
+      case _StepState.unlocked:
+        return Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.surface3, width: 2),
           ),
         );
       case _StepState.locked:
