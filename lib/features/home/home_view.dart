@@ -589,7 +589,6 @@ class _HomeViewState extends State<HomeView> {
         ),
         if (completed != null) ...[
           WorkoutDoneView(
-            completed: completed,
             nextTitle: nextTitle,
             nextWhen: nextWhen,
             onViewWorkout:

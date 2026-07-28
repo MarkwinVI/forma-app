@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
-import '../home_dashboard_metrics.dart';
 
 /// Post-workout "session complete" state of the Train tab — a celebratory
 /// burst (expanding rings, twinkling sparks, a popping check) over a green
-/// glow, the finished session's stats, a "view workout" action, and the next
-/// session. The insight block is rendered separately by the caller.
+/// glow, a mono status line, a "view workout" action, and the next session.
+/// The insight block is rendered separately by the caller.
 class WorkoutDoneView extends StatefulWidget {
-  final HomeCompletedWorkoutSummary completed;
-
   /// Next training session title (e.g. "Upper Day") and how far away it is
   /// (e.g. "tomorrow"). Both null hides the "next up" row.
   final String? nextTitle;
@@ -19,7 +16,6 @@ class WorkoutDoneView extends StatefulWidget {
 
   const WorkoutDoneView({
     super.key,
-    required this.completed,
     this.nextTitle,
     this.nextWhen,
     this.onViewWorkout,
@@ -62,9 +58,6 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
 
   @override
   Widget build(BuildContext context) {
-    final c = widget.completed;
-    final stats = '${c.durationMinutes} min · ${c.setCount} sets';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -84,30 +77,11 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
           ),
         ),
         const SizedBox(height: 4),
-        // Left-aligned from here down: the finish reads as a statement, not a
-        // certificate.
+        // Left-aligned from here down: the finish reads as a line of the
+        // page, not a certificate.
         Text(
           'SESSION COMPLETE',
           style: monoStyle(size: 11, letterSpacing: 1.65, color: AppColors.green),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          '${c.title}, done',
-          style: const TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -1.4,
-            height: 1.02,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          stats,
-          style: const TextStyle(
-            fontSize: 15.5,
-            color: AppColors.textSecondary,
-          ),
         ),
         const SizedBox(height: 30),
         if (widget.onViewWorkout != null)
