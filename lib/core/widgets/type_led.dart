@@ -290,6 +290,66 @@ class TypeSettingRow extends StatelessWidget {
   }
 }
 
+/// Tabs as a row of words with a rule under the active one — no pill, no
+/// track, so a tab bar reads as type like everything around it.
+class TypeWordTabs extends StatelessWidget {
+  final List<String> labels;
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+
+  const TypeWordTabs({
+    super.key,
+    required this.labels,
+    required this.selectedIndex,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0) const SizedBox(width: 26),
+            Pressable(
+              onTap: () => onChanged(i),
+              child: Container(
+                padding: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: i == selectedIndex
+                          ? AppColors.accentPrimary
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  labels[i],
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: i == selectedIndex
+                        ? FontWeight.w800
+                        : FontWeight.w600,
+                    color: i == selectedIndex
+                        ? AppColors.textPrimary
+                        : AppColors.textMuted,
+                    letterSpacing: -0.16,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// A number said plainly, with a mono caption under it.
 class TypeStat extends StatelessWidget {
   final String value;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_log_model.dart';
@@ -110,16 +111,21 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
       body: SafeArea(
         bottom: false,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _DetailNavBar(
-              title: exercise.name,
-              subtitle: '${skillCategory?.title ?? exercise.category.label} · '
-                  '${_branchLabel(exercise.branchId)}',
-              onBack: () => Navigator.of(context).pop(),
+            _DetailNavBar(onBack: () => Navigator.of(context).pop()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+              child: TypeTitle(
+                exercise.name,
+                size: 30,
+                sub: '${skillCategory?.title ?? exercise.category.label} · '
+                    '${_branchLabel(exercise.branchId)}',
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: SegmentedTabs(
+              padding: const EdgeInsets.fromLTRB(22, 26, 22, 0),
+              child: TypeWordTabs(
                 labels: const ['How to', 'Summary', 'History'],
                 selectedIndex: _tabs.indexOf(_tab),
                 onChanged: (index) => setState(() => _tab = _tabs[index]),
@@ -164,127 +170,78 @@ class _HowToTab extends StatelessWidget {
     final coachData = _coachDataFor(exercise);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 44),
+      padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
       children: [
         _DemoMedia(exercise: exercise),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+        const TypeSectionLabel('How to'),
+        // Numbered lines: the count is the only colour, and the step itself
+        // is read at body size rather than boxed.
+        for (var i = 0; i < coachData.steps.length; i++)
+          Container(
+            padding: const EdgeInsets.only(top: 15, bottom: 16),
+            decoration: BoxDecoration(
+              border: i == coachData.steps.length - 1
+                  ? null
+                  : const Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '${i + 1}',
+                    style: monoStyle(
+                      size: 13,
+                      color: AppColors.accentPrimary,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    coachData.steps[i],
+                    style: const TextStyle(
+                      fontSize: 15.5,
+                      color: AppColors.textPrimary,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const TypeSectionLabel('Form check'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 4),
           child: Text(
-            'Demo · ${exercise.name} shown at working tempo',
-            style: const TextStyle(
-              fontSize: 11.5,
-              color: AppColors.textMuted,
+            'Every rep should pass these.',
+            style: TextStyle(
+              fontSize: 14.5,
+              color: AppColors.textSecondary,
             ),
           ),
         ),
-        const SizedBox(height: 14),
-        const SectionHeader(title: 'How to'),
-        SurfaceCard(
-          clip: true,
-          child: Column(
-            children: [
-              for (var i = 0; i < coachData.steps.length; i++)
-                Container(
-                  decoration: BoxDecoration(
-                    border: i > 0
-                        ? const Border(
-                            top: BorderSide(
-                              color: AppColors.divider,
-                            ),
-                          )
-                        : null,
-                  ),
-                  padding: const EdgeInsets.fromLTRB(18, 13, 16, 13),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 18,
-                        child: Text(
-                          '${i + 1}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.accentPrimary,
-                            height: 1.45,
-                            fontFeatures: [
-                              FontFeature.tabularFigures(),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Text(
-                          coachData.steps[i],
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            color: AppColors.textPrimary,
-                            height: 1.45,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+        for (var i = 0; i < coachData.formChecks.length; i++)
+          Container(
+            padding: const EdgeInsets.only(top: 16, bottom: 17),
+            decoration: BoxDecoration(
+              border: i == coachData.formChecks.length - 1
+                  ? null
+                  : const Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
+            child: Text(
+              coachData.formChecks[i],
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.34,
+                height: 1.35,
+              ),
+            ),
           ),
-        ),
-        const SectionHeader(
-          title: 'Form check',
-          sub: 'Every rep should pass these',
-        ),
-        SurfaceCard(
-          clip: true,
-          child: Column(
-            children: [
-              for (var i = 0; i < coachData.formChecks.length; i++)
-                Container(
-                  decoration: BoxDecoration(
-                    border: i > 0
-                        ? const Border(
-                            top: BorderSide(
-                              color: AppColors.divider,
-                            ),
-                          )
-                        : null,
-                  ),
-                  padding: const EdgeInsets.fromLTRB(18, 12, 16, 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 21,
-                        height: 21,
-                        margin: const EdgeInsets.only(top: 0.5),
-                        decoration: const BoxDecoration(
-                          color: AppColors.greenSoft,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.check_rounded,
-                          size: 12,
-                          color: AppColors.green,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          coachData.formChecks[i],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textPrimary,
-                            height: 1.45,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -403,8 +360,10 @@ class _SummaryTabState extends State<_SummaryTab> {
           ];
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+      padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
       children: [
+        // The chart keeps a surface — a plot needs a field to sit on, the
+        // way the month grid does.
         SurfaceCard(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
           child: Column(
@@ -413,18 +372,13 @@ class _SummaryTabState extends State<_SummaryTab> {
               Text(
                 '${metricLabel.toUpperCase()} · '
                 '${windowLabel.toUpperCase()}',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMuted,
-                  letterSpacing: 1.1,
-                ),
+                style: monoStyle(size: 11, letterSpacing: 1.4),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               Text(
                 metricDef,
                 style: const TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 12,
                   color: AppColors.textMuted,
                 ),
               ),
@@ -463,69 +417,36 @@ class _SummaryTabState extends State<_SummaryTab> {
             ],
           ),
         ),
-        const SectionHeader(title: 'Personal records'),
+        const TypeSectionLabel('Personal records'),
         if (records.isEmpty)
-          const SurfaceCard(
-            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
             child: Text(
               'Personal records appear after your first logged session.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 14.5,
                 color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
           )
         else
-          SurfaceCard(
-            clip: true,
-            child: Column(
-              children: [
-                for (var i = 0; i < records.length; i++)
-                  Container(
-                    decoration: BoxDecoration(
-                      border: i > 0
-                          ? const Border(
-                              top: BorderSide(color: AppColors.divider),
-                            )
-                          : null,
-                    ),
-                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            records[i].$1,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          records[i].$2,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+          for (var i = 0; i < records.length; i++)
+            TypeSettingRow(
+              name: records[i].$1,
+              value: records[i].$2,
+              valueColor: AppColors.textPrimary,
+              chevron: false,
+              last: i == records.length - 1,
             ),
-          ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
           child: Text(
             widget.isTimed
                 ? 'Holds are tracked as time, not volume.'
                 : 'Only completed working sets count toward these numbers.',
             style: const TextStyle(
-              fontSize: 11.5,
+              fontSize: 12.5,
               color: AppColors.textMuted,
               height: 1.5,
             ),
@@ -776,7 +697,7 @@ class _HistoryTab extends StatelessWidget {
               : _HistoryCard(logs: logs, isTimed: isTimed);
         }
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
           children: [child],
         );
       },
@@ -784,71 +705,27 @@ class _HistoryTab extends StatelessWidget {
   }
 }
 
+/// Bare back chevron — the exercise names itself in the title below.
 class _DetailNavBar extends StatelessWidget {
-  final String title;
-  final String subtitle;
   final VoidCallback onBack;
 
-  const _DetailNavBar({
-    required this.title,
-    required this.subtitle,
-    required this.onBack,
-  });
+  const _DetailNavBar({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-      decoration: const BoxDecoration(
-        color: AppColors.bg,
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(19, 10, 22, 0),
       child: Row(
         children: [
           Pressable(
             onTap: onBack,
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
+            child: const Padding(
+              padding: EdgeInsets.all(4),
+              child: Icon(
                 Icons.chevron_left_rounded,
-                size: 22,
-                color: AppColors.textPrimary,
+                size: 26,
+                color: AppColors.textSecondary,
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 17.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -867,9 +744,9 @@ class _DemoMedia extends StatelessWidget {
     final imageUrl = exercise.imageUrl;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(kCardRadius),
+      borderRadius: BorderRadius.circular(14),
       child: SizedBox(
-        height: 208,
+        height: 200,
         width: double.infinity,
         child: imageUrl != null
             ? Image.network(
@@ -883,41 +760,38 @@ class _DemoMedia extends StatelessWidget {
   }
 }
 
+/// What the footage will sit in until there is footage: an outline and a
+/// mono note, rather than a filled panel pretending to be media.
 class _DemoPlaceholder extends StatelessWidget {
   const _DemoPlaceholder();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surface,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: const BoxDecoration(
-              color: AppColors.surface2,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
               Icons.play_arrow_rounded,
-              size: 24,
+              size: 30,
               color: AppColors.textSecondary,
             ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Demo coming soon',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+            const SizedBox(height: 10),
+            Text(
+              'DEMO COMING SOON',
+              style: monoStyle(
+                size: 11,
+                color: AppColors.textSecondary,
+                letterSpacing: 1.55,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -961,60 +835,56 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
-      clip: true,
-      child: Column(
-        children: [
-          for (var i = 0; i < logs.length; i++)
-            Container(
-              decoration: BoxDecoration(
-                border: i > 0
-                    ? const Border(top: BorderSide(color: AppColors.divider))
-                    : null,
-              ),
-              padding: const EdgeInsets.fromLTRB(18, 13, 16, 13),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _formatShortDate(logs[i].loggedAt),
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    _setsLabel(logs[i]),
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < logs.length; i++)
           Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.divider)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              border: i == logs.length - 1
+                  ? null
+                  : const Border(bottom: BorderSide(color: AppColors.divider)),
             ),
-            padding: const EdgeInsets.fromLTRB(18, 10, 16, 12),
-            child: Text(
-              isTimed
-                  ? 'Hold per set · most recent first'
-                  : 'Reps per set · most recent first',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textMuted,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _formatShortDate(logs[i].loggedAt),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  _setsLabel(logs[i]),
+                  style: monoStyle(
+                    size: 14,
+                    weight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Text(
+            isTimed
+                ? 'Hold per set · most recent first'
+                : 'Reps per set · most recent first',
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
