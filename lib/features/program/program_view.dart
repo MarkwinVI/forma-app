@@ -11,6 +11,7 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../home/program_overview_view.dart';
+import '../home/program_setup_completion.dart';
 import '../home/program_setup_view.dart';
 
 /// Program tab — hosts the program overview (training days, split, sessions,
@@ -138,19 +139,11 @@ class _ProgramViewState extends State<ProgramView> {
     final userId = AuthService().currentUser?.id;
     if (userId == null) return;
 
-    await _trainingProgramStoreService.updateProgramLogic(
+    await completeProgramSetup(
       userId: userId,
-      programType: result.split,
-      // Goal skills pick their branch from day one; every other track
-      // starts on its default.
-      branchSelections: {
-        ..._trainingProgramService.defaultBranchSelections(),
-        ..._trainingProgramService.branchSelectionsForGoals(result.skillIds),
-      },
-      repGoalProfile: RepGoalProfile.balanced,
-      sessionItemsConfig: const {},
-      frequencyPerWeek: result.daysPerWeek,
-      setupAnswers: result.toMap(),
+      result: result,
+      trainingProgramService: _trainingProgramService,
+      storeService: _trainingProgramStoreService,
     );
     await _loadData();
   }

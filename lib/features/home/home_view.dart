@@ -21,6 +21,7 @@ import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
 import 'live_workout_view.dart';
+import 'program_setup_completion.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
 import 'training_calendar_view.dart';
@@ -377,19 +378,11 @@ class _HomeViewState extends State<HomeView> {
     final userId = AuthService().currentUser?.id;
     if (userId == null) return;
 
-    await _trainingProgramStoreService.updateProgramLogic(
+    await completeProgramSetup(
       userId: userId,
-      programType: result.split,
-      // Goal skills pick their branch from day one; every other track
-      // starts on its default.
-      branchSelections: {
-        ..._trainingProgramService.defaultBranchSelections(),
-        ..._trainingProgramService.branchSelectionsForGoals(result.skillIds),
-      },
-      repGoalProfile: RepGoalProfile.balanced,
-      sessionItemsConfig: const {},
-      frequencyPerWeek: result.daysPerWeek,
-      setupAnswers: result.toMap(),
+      result: result,
+      trainingProgramService: _trainingProgramService,
+      storeService: _trainingProgramStoreService,
     );
     await _loadHomeData();
   }

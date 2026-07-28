@@ -13,12 +13,17 @@ class ExerciseProgress {
   /// Per-set value of the current target: reps, or seconds when timed.
   final int? currentTargetValue;
 
+  /// Working weight for the loaded lifts (barbell squat, Romanian deadlift).
+  /// Null for everything trained at bodyweight.
+  final double? currentTargetWeightKg;
+
   const ExerciseProgress({
     required this.exerciseId,
     required this.status,
     required this.updatedAt,
     this.currentTargetSets,
     this.currentTargetValue,
+    this.currentTargetWeightKg,
   });
 
   factory ExerciseProgress.fromMap(Map<String, dynamic> map) {
@@ -28,6 +33,8 @@ class ExerciseProgress {
       updatedAt: DateTime.parse(map['updated_at'] as String),
       currentTargetSets: map['current_target_sets'] as int?,
       currentTargetValue: map['current_target_value'] as int?,
+      currentTargetWeightKg:
+          (map['current_target_weight_kg'] as num?)?.toDouble(),
     );
   }
 
@@ -35,6 +42,7 @@ class ExerciseProgress {
     ExerciseStatus? status,
     int? currentTargetSets,
     int? currentTargetValue,
+    double? currentTargetWeightKg,
     DateTime? updatedAt,
   }) {
     return ExerciseProgress(
@@ -43,6 +51,8 @@ class ExerciseProgress {
       updatedAt: updatedAt ?? this.updatedAt,
       currentTargetSets: currentTargetSets ?? this.currentTargetSets,
       currentTargetValue: currentTargetValue ?? this.currentTargetValue,
+      currentTargetWeightKg:
+          currentTargetWeightKg ?? this.currentTargetWeightKg,
     );
   }
 }

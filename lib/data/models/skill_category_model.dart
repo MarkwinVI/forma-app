@@ -39,6 +39,11 @@ class SkillCategory {
   final Map<String, List<String>> trainingPaths;
   final SkillCategoryUnlockRequirement? unlockRequirement;
 
+  /// Whether the tree is offered in the Skills tab. A program can train a
+  /// category that is not a skill to chase — the loaded leg lifts are one
+  /// exercise each, with nothing to browse.
+  final bool isBrowsable;
+
   const SkillCategory({
     required this.id,
     required this.title,
@@ -49,6 +54,7 @@ class SkillCategory {
     required this.branches,
     this.trainingPaths = const {},
     this.unlockRequirement,
+    this.isBrowsable = true,
   });
 
   /// Whether this tree is still behind its unlock requirement — the gating

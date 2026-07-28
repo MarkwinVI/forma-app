@@ -30,6 +30,7 @@ class ExerciseNode extends StatelessWidget {
       case ExerciseStatus.active:
         return _activeColor;
       case ExerciseStatus.mastered:
+      case ExerciseStatus.skipped:
         return _masteredColor;
     }
   }
@@ -41,6 +42,7 @@ class ExerciseNode extends StatelessWidget {
       case ExerciseStatus.active:
         return const Color(0x0DFF8904);
       case ExerciseStatus.mastered:
+      case ExerciseStatus.skipped:
         return const Color(0x0D00FF8C);
     }
   }
@@ -52,6 +54,7 @@ class ExerciseNode extends StatelessWidget {
       case ExerciseStatus.active:
         return _activeColor;
       case ExerciseStatus.mastered:
+      case ExerciseStatus.skipped:
         return _masteredColor;
     }
   }
@@ -63,6 +66,7 @@ class ExerciseNode extends StatelessWidget {
       case ExerciseStatus.active:
         return Icons.play_arrow_rounded;
       case ExerciseStatus.mastered:
+      case ExerciseStatus.skipped:
         return Icons.check_rounded;
     }
   }
@@ -238,7 +242,7 @@ class ExerciseNode extends StatelessWidget {
                   ),
                   child: Icon(
                     _statusIcon,
-                    size: status == ExerciseStatus.mastered ? 14 : 13,
+                    size: status.isCleared ? 14 : 13,
                     color: status == ExerciseStatus.inactive
                         ? Colors.white70
                         : Colors.black,

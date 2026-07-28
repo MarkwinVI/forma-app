@@ -164,6 +164,20 @@ class ExerciseProgressionService {
     );
   }
 
+  /// The working weight to show next to a target, or null for the bodyweight
+  /// exercises that make up almost everything. Only the loaded lifts (barbell
+  /// squat, Romanian deadlift) carry one, set when the program is built.
+  static String? weightLabelFor(ExerciseProgress? progress) {
+    final weightKg = progress?.currentTargetWeightKg;
+    if (weightKg == null || weightKg <= 0) return null;
+
+    final rounded = (weightKg * 10).round() / 10;
+    final value = rounded == rounded.roundToDouble()
+        ? rounded.round().toString()
+        : rounded.toStringAsFixed(1);
+    return '$value kg';
+  }
+
   /// Per-set target for standalone (non-progression) exercises, derived from
   /// the catalog. Progression exercises use [currentTargetForExercise].
   static int targetValueForExercise(Exercise exercise) {

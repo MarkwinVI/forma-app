@@ -53,7 +53,21 @@ extension ExerciseCategoryX on ExerciseCategory {
   }
 }
 
-enum ExerciseStatus { inactive, active, mastered }
+/// Where an exercise stands for a user.
+///
+/// [skipped] is a cleared-but-unproven step: program setup started the user
+/// further up a tree, so the steps behind the starting node were never
+/// trained here. They read as cleared everywhere a mastered step does — the
+/// path is open past them — but they say "Skipped", and logging the mastery
+/// target for one still masters it for real.
+enum ExerciseStatus { inactive, active, mastered, skipped }
+
+extension ExerciseStatusX on ExerciseStatus {
+  /// Whether the step is behind the user: mastered outright, or skipped at
+  /// setup. Everything that asks "is this step done" asks this.
+  bool get isCleared =>
+      this == ExerciseStatus.mastered || this == ExerciseStatus.skipped;
+}
 
 enum ExerciseProgramSection {
   warmup,

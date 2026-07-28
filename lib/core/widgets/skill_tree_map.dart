@@ -142,7 +142,9 @@ Map<String, TreeNodeState> skillTreeNodeStates({
     return states;
   }
 
-  bool mastered(String id) => progressMap[id] == ExerciseStatus.mastered;
+  // Skipped steps read exactly like mastered ones here: the path is open
+  // past them. Only the lists that name a step say which of the two it is.
+  bool cleared(String id) => progressMap[id]?.isCleared ?? false;
 
   // The step the tree is on: whatever is marked active along the goal route,
   // else the first thing on it still to clear.
@@ -154,12 +156,12 @@ Map<String, TreeNodeState> skillTreeNodeStates({
       break;
     }
   }
-  current ??= goalPath.where((id) => !mastered(id)).firstOrNull;
+  current ??= goalPath.where((id) => !cleared(id)).firstOrNull;
 
   void walk(List<String> ids, bool openAtStart) {
     var previousCleared = openAtStart;
     for (final id in ids) {
-      if (mastered(id)) {
+      if (cleared(id)) {
         states[id] = TreeNodeState.done;
         previousCleared = true;
         continue;
@@ -174,7 +176,7 @@ Map<String, TreeNodeState> skillTreeNodeStates({
   }
 
   walk(spine, true);
-  final spineCleared = spine.every(mastered);
+  final spineCleared = spine.every(cleared);
   for (final tail in tails.values) {
     walk(tail, spineCleared);
   }

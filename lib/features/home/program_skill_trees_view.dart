@@ -199,7 +199,7 @@ List<SkillCategoryBranch> goalBranchesOf(SkillCategory category) {
 }
 
 /// The exercise a tree is currently sitting on, by the same rule the program
-/// uses: the active step, else the first unmastered one.
+/// uses: the active step, else the first step still to clear.
 String? currentStepName(
   SkillCategory category,
   SkillTrack? track,
@@ -214,7 +214,7 @@ String? currentStepName(
     }
   }
   for (final id in path) {
-    if (progressMap[id] != ExerciseStatus.mastered) {
+    if (!(progressMap[id]?.isCleared ?? false)) {
       return ExerciseCatalog.findById(id)?.name;
     }
   }
@@ -389,6 +389,8 @@ class _TreeDetailViewState extends State<_TreeDetailView> {
               name: ExerciseCatalog.findById(exerciseIds[i])?.name ??
                   exerciseIds[i],
               state: states[exerciseIds[i]] ?? TreeNodeState.locked,
+              skipped: widget.progressMap[exerciseIds[i]] ==
+                  ExerciseStatus.skipped,
               last: i == exerciseIds.length - 1,
             ),
         ],
@@ -618,18 +620,23 @@ class _SectionTitle extends StatelessWidget {
 class _StepRow extends StatelessWidget {
   final String name;
   final TreeNodeState state;
+
+  /// Cleared by program setup rather than trained — same green, different
+  /// word, because nothing was proven here yet.
+  final bool skipped;
   final bool last;
 
   const _StepRow({
     required this.name,
     required this.state,
+    this.skipped = false,
     required this.last,
   });
 
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (state) {
-      TreeNodeState.done => ('Mastered', AppColors.green),
+      TreeNodeState.done => (skipped ? 'Skipped' : 'Mastered', AppColors.green),
       TreeNodeState.cur => ('Active', AppColors.accentPrimary),
       TreeNodeState.unlocked => ('Unlocked', AppColors.accentPrimary),
       TreeNodeState.locked => ('Locked', AppColors.textMuted),

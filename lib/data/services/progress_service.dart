@@ -38,12 +38,14 @@ class ProgressService {
 
   /// Writes the current incremental target for an exercise. Status is absent
   /// from the payload, so an existing row keeps its status; a fresh row gets
-  /// the database default ('inactive').
+  /// the database default ('inactive'). [targetWeightKg] is only written when
+  /// given, so a bodyweight target never clears a stored working weight.
   Future<void> upsertTarget(
     String userId,
     String exerciseId, {
     required int targetSets,
     required int targetValue,
+    double? targetWeightKg,
   }) async {
     await _client.from('user_exercise_progress').upsert(
       {
@@ -51,6 +53,7 @@ class ProgressService {
         'exercise_id': exerciseId,
         'current_target_sets': targetSets,
         'current_target_value': targetValue,
+        if (targetWeightKg != null) 'current_target_weight_kg': targetWeightKg,
         'updated_at': DateTime.now().toIso8601String(),
       },
       onConflict: 'user_id,exercise_id',

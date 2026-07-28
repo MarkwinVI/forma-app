@@ -25,7 +25,7 @@ class SkillTreePainter extends CustomPainter {
         if (from == null || to == null) continue;
 
         final prereqStatus = progressMap[prereqId] ?? ExerciseStatus.inactive;
-        final color = prereqStatus == ExerciseStatus.mastered
+        final color = prereqStatus.isCleared
             ? _masteredColor.withValues(alpha: 0.6)
             : prereqStatus == ExerciseStatus.active
                 ? AppColors.accentBright.withValues(alpha: 0.4)

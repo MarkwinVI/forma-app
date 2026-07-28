@@ -287,7 +287,7 @@ class ProgramSessionPlan {
       if (progressMap[exercise.id] == ExerciseStatus.active) return exercise;
     }
     for (final exercise in exercises) {
-      if (progressMap[exercise.id] != ExerciseStatus.mastered) return exercise;
+      if (!(progressMap[exercise.id]?.isCleared ?? false)) return exercise;
     }
     return exercises.last;
   }

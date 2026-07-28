@@ -1337,7 +1337,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
       if (widget.progressMap[path[i]] == ExerciseStatus.active) return i;
     }
     for (var i = 0; i < path.length; i++) {
-      if (widget.progressMap[path[i]] != ExerciseStatus.mastered) return i;
+      if (!(widget.progressMap[path[i]]?.isCleared ?? false)) return i;
     }
     return path.isEmpty ? 0 : path.length - 1;
   }
@@ -1359,7 +1359,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
       final path = _path;
       _position = 0;
       for (var i = 0; i < path.length; i++) {
-        if (widget.progressMap[path[i]] != ExerciseStatus.mastered) {
+        if (!(widget.progressMap[path[i]]?.isCleared ?? false)) {
           _position = i;
           return;
         }
@@ -1393,15 +1393,19 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
       }
 
       // Position on the path: everything before the current exercise is
-      // mastered, the current one is active, everything after is inactive.
+      // cleared, the current one is active, everything after is inactive.
+      // A step that was skipped at setup stays skipped — moving the marker
+      // past it is not a claim that it was ever trained.
       final path = _path;
       for (var i = 0; i < path.length; i++) {
+        final existing = widget.progressMap[path[i]] ?? ExerciseStatus.inactive;
         final desired = i < _position
-            ? ExerciseStatus.mastered
+            ? (existing == ExerciseStatus.skipped
+                ? ExerciseStatus.skipped
+                : ExerciseStatus.mastered)
             : i == _position
                 ? ExerciseStatus.active
                 : ExerciseStatus.inactive;
-        final existing = widget.progressMap[path[i]] ?? ExerciseStatus.inactive;
         if (existing != desired) {
           await _progressService.upsert(userId, path[i], desired);
           statusChanges[path[i]] = desired;
@@ -1539,7 +1543,10 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
                       first: i == 0,
                       name: ExerciseCatalog.findById(path[i])?.name ?? path[i],
                       state: i < _position
-                          ? ExerciseStatus.mastered
+                          ? (widget.progressMap[path[i]] ==
+                                  ExerciseStatus.skipped
+                              ? ExerciseStatus.skipped
+                              : ExerciseStatus.mastered)
                           : i == _position
                               ? ExerciseStatus.active
                               : ExerciseStatus.inactive,
@@ -1654,6 +1661,7 @@ class _AdjustPathRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final dotColor = switch (state) {
       ExerciseStatus.mastered => AppColors.green,
+      ExerciseStatus.skipped => AppColors.green,
       ExerciseStatus.active => AppColors.accentPrimary,
       ExerciseStatus.inactive => Colors.white.withValues(alpha: 0.16),
     };
@@ -1706,6 +1714,16 @@ class _AdjustPathRow extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   color: AppColors.accentPrimary,
+                  letterSpacing: 0.8,
+                ),
+              )
+            else if (state == ExerciseStatus.skipped)
+              const Text(
+                'SKIPPED',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.green,
                   letterSpacing: 0.8,
                 ),
               ),

@@ -1244,6 +1244,29 @@ class ExerciseCatalog {
       difficulty: 2,
       treeOrder: 0,
     ),
+    // The two loaded lifts a gym program leans on. They are their own
+    // one-step tracks, not steps of the bodyweight trees: the knee-dominant
+    // and hinge slots pick between these and the bodyweight progressions by
+    // equipment and goals.
+    Exercise(
+      id: 'barbell_squat',
+      category: ExerciseCategory.squat,
+      skillCategoryId: 'barbell_squat',
+      name: 'Barbell Squat',
+      description:
+          'Squat a loaded bar to depth with a braced trunk and controlled tempo.',
+      difficulty: 3,
+      treeOrder: 0,
+    ),
+    Exercise(
+      id: 'romanian_deadlift',
+      category: ExerciseCategory.hinge,
+      name: 'Romanian Deadlift',
+      description:
+          'Hinge at the hips with a loaded bar, keeping the back flat and the bar close.',
+      difficulty: 2,
+      treeOrder: 2,
+    ),
     Exercise(
       id: 'box_pistol_squat_knee_height',
       category: ExerciseCategory.squat,

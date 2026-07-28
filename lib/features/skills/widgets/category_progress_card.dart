@@ -437,8 +437,7 @@ void _drawPreviewSegment(
   ExerciseStatus statusB,
 ) {
   final isCurrent = statusB == ExerciseStatus.active;
-  final isLit =
-      statusA == ExerciseStatus.mastered && statusB == ExerciseStatus.mastered;
+  final isLit = statusA.isCleared && statusB.isCleared;
 
   final Color color;
   final double opacity;
@@ -502,6 +501,7 @@ void _drawPreviewNode(
     ExerciseStatus.inactive => AppColors.textMuted,
     ExerciseStatus.active => AppColors.accentBright,
     ExerciseStatus.mastered => _kMastered,
+    ExerciseStatus.skipped => _kMastered,
   };
   final snappedCenter = _snapOffset(center);
 

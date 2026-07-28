@@ -987,7 +987,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final isTimed = _isTimedExercise(item.exercise);
     final value = sets.first.target;
     final valueLabel = isTimed ? '${value}s hold' : '$value reps';
-    return '${item.track.label} · ${sets.length} × $valueLabel';
+    final weightLabel = ExerciseProgressionService.weightLabelFor(
+      _progressRows[item.exercise.id],
+    );
+    final target = '${sets.length} × $valueLabel'
+        '${weightLabel == null ? '' : ' @ $weightLabel'}';
+    return '${item.track.label} · $target';
   }
 
   List<_SectionEntry> _visibleSections() {
@@ -3286,7 +3291,7 @@ Exercise? _currentExerciseForProgression({
   }
 
   for (final exercise in exercises) {
-    if (progressMap[exercise.id] != ExerciseStatus.mastered) {
+    if (!(progressMap[exercise.id]?.isCleared ?? false)) {
       return _copyExerciseForSection(
         exercise,
         programSection: programSection,

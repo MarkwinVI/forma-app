@@ -609,7 +609,7 @@ class HomeDashboardMetricsCalculator {
           ? <String>[goalId]
           : path.sublist(0, path.indexOf(goalId) + 1);
       final mastered = steps
-          .where((id) => progressMap[id] == ExerciseStatus.mastered)
+          .where((id) => progressMap[id]?.isCleared ?? false)
           .length;
 
       goals.add(
@@ -904,7 +904,7 @@ class HomeDashboardMetricsCalculator {
 
     for (final exerciseId in exerciseIds) {
       final status = progressMap[exerciseId] ?? ExerciseStatus.inactive;
-      if (status == ExerciseStatus.mastered && !firstUnfinishedReached) {
+      if (status.isCleared && !firstUnfinishedReached) {
         earned += 1.0;
         continue;
       }
@@ -1278,9 +1278,15 @@ class HomeDashboardMetricsCalculator {
       progressEntries: progressEntries,
       masterySettings: masterySettings,
     );
-    final targetLabel = _isTimedExercise(item.exercise)
-        ? '${prescribed.sets} × ${prescribed.value}s'
-        : '${prescribed.sets} × ${prescribed.value}';
+    final weightLabel = ExerciseProgressionService.weightLabelFor(
+      progressEntries[item.exercise.id],
+    );
+    final targetLabel = [
+      _isTimedExercise(item.exercise)
+          ? '${prescribed.sets} × ${prescribed.value}s'
+          : '${prescribed.sets} × ${prescribed.value}',
+      if (weightLabel != null) '@ $weightLabel',
+    ].join(' ');
 
     TrainingBranchOption? option;
     for (final candidate in pathOptions) {
@@ -1357,7 +1363,7 @@ class HomeDashboardMetricsCalculator {
       for (final exerciseId in exerciseIds)
         if (exerciseId == workingExerciseId)
           PathNodeState.working
-        else if (progressMap[exerciseId] == ExerciseStatus.mastered)
+        else if (progressMap[exerciseId]?.isCleared ?? false)
           PathNodeState.mastered
         else
           PathNodeState.upcoming,
@@ -1483,7 +1489,7 @@ class HomeDashboardMetricsCalculator {
       (id) => progressMap[id] == ExerciseStatus.active,
     );
     final firstPendingIndex = exerciseIds.indexWhere(
-      (id) => progressMap[id] != ExerciseStatus.mastered,
+      (id) => !(progressMap[id]?.isCleared ?? false),
     );
     final currentIndex = explicitCurrentIndex >= 0
         ? explicitCurrentIndex
@@ -1540,6 +1546,7 @@ class HomeDashboardMetricsCalculator {
     );
     final status = switch (progressMap[exerciseId] ?? ExerciseStatus.inactive) {
       ExerciseStatus.mastered => JourneySkillStageStatus.cleared,
+      ExerciseStatus.skipped => JourneySkillStageStatus.cleared,
       ExerciseStatus.active => JourneySkillStageStatus.inProgress,
       ExerciseStatus.inactive => stageIndex == currentIndex
           ? JourneySkillStageStatus.inProgress

@@ -715,9 +715,21 @@ class TrainingProgramService {
           ),
         );
       }
-      if (pattern == ExerciseCategory.hinge) {
+      // Programs built before the hinge slot became a track of its own have
+      // no hinge row to schedule; they keep the fixed pair they were built
+      // with. A program that does have one is already handled above.
+      if (pattern == ExerciseCategory.hinge &&
+          !skillTracks.any(
+            (track) =>
+                track.included &&
+                track.skillCategoryId == SkillCategoryCatalog.hingeId,
+          )) {
         branches.add(
-          _branchFromOption(branchOptionsForTrack(TrainingTrack.hinge).first),
+          _branchFromOption(
+            branchOptionsForTrack(TrainingTrack.hinge).firstWhere(
+              (option) => option.trainingPathId == 'posterior_chain',
+            ),
+          ),
         );
       }
     }
@@ -1000,20 +1012,36 @@ class TrainingProgramService {
             rationale:
                 'Best when you want knee-flexion strength and a more closed-chain single-leg pattern.',
           ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.barbellSquat,
+            pathId: 'main',
+            rationale:
+                'Best with a gym and no single-leg squat goal: one loaded lift carries the knee-dominant slot.',
+          ),
         ];
       case TrainingTrack.hinge:
-        return const [
-          TrainingBranchOption(
-            id: 'hinge:posterior_chain',
-            track: TrainingTrack.hinge,
-            sourceCategory: ExerciseCategory.hinge,
-            sourceSkillCategoryId: 'hinge',
-            trainingPathId: 'posterior_chain',
-            title: 'Posterior Chain',
-            subtitle: 'Hinge',
+        return [
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.hinge,
+            pathId: 'rdl',
             rationale:
-                'This slot stays fixed for now so the program always keeps a simple hamstring and hinge balance.',
-            exerciseIds: ['single_leg_rdl', 'nordic_curl'],
+                'The hinge slot with a gym: a loaded hip hinge is the simplest way to train the posterior chain.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.hinge,
+            pathId: 'nordic',
+            rationale:
+                'The hinge slot without a gym: hamstring strength from your own bodyweight, assisted as needed.',
+          ),
+          _branchOptionFromCategory(
+            track: track,
+            category: SkillCategoryCatalog.hinge,
+            pathId: 'posterior_chain',
+            rationale:
+                'The original fixed pair, kept so programs built before the hinge slot split keep their work.',
           ),
         ];
     }
@@ -1136,7 +1164,7 @@ class TrainingProgramService {
     }
 
     for (final exercise in exercises) {
-      if (progressMap[exercise.id] != ExerciseStatus.mastered) {
+      if (!(progressMap[exercise.id]?.isCleared ?? false)) {
         return exercise;
       }
     }
@@ -1215,6 +1243,7 @@ class TrainingProgramService {
       final status = progressMap[exercise.id];
       switch (status) {
         case ExerciseStatus.mastered:
+        case ExerciseStatus.skipped:
           score += 2;
         case ExerciseStatus.active:
           score += 1;
@@ -1312,6 +1341,11 @@ class TrainingProgramService {
     final label = _pathLabel(category, pathId);
     if (label.toLowerCase() == 'main') {
       return category.title;
+    }
+    // A slot category's title is the slot ('Hinge'), not a skill — its
+    // branches are already named after the exercise they train.
+    if (!category.isBrowsable) {
+      return label;
     }
     return '$label ${category.title}';
   }

@@ -55,6 +55,7 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
   Color _dotColor(ExerciseStatus s) {
     switch (s) {
       case ExerciseStatus.mastered:
+      case ExerciseStatus.skipped:
         return _masteredColor;
       case ExerciseStatus.active:
         return AppColors.accentPrimary;
@@ -67,6 +68,8 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
     switch (s) {
       case ExerciseStatus.mastered:
         return 'Mastered';
+      case ExerciseStatus.skipped:
+        return 'Skipped';
       case ExerciseStatus.active:
         return 'Active';
       case ExerciseStatus.inactive:

@@ -16,6 +16,8 @@ class SkillCategoryCatalog {
   static const String muscleUpId = 'muscle_up';
   static const String handstandPushupsId = 'handstand_pushups';
   static const String dipsId = 'dips';
+  static const String barbellSquatId = 'barbell_squat';
+  static const String hingeId = 'hinge';
 
   static const SkillCategory pullups = SkillCategory(
     id: pullupsId,
@@ -424,6 +426,54 @@ class SkillCategoryCatalog {
     },
   );
 
+  /// The knee-dominant slot when the user has a gym and no squat-tree goal:
+  /// one loaded lift rather than a progression to climb.
+  static const SkillCategory barbellSquat = SkillCategory(
+    id: barbellSquatId,
+    title: 'Barbell Squat',
+    subtitle: 'Squat',
+    description:
+        'Train the knee-dominant slot with a loaded squat for 3 × 5 working sets.',
+    track: ExerciseCategory.squat,
+    defaultTrainingPathId: 'main',
+    isBrowsable: false,
+    branches: [
+      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+    ],
+    trainingPaths: {
+      'main': ['barbell_squat'],
+    },
+  );
+
+  /// The hinge slot. Which branch a program runs is an equipment question:
+  /// a Romanian deadlift with a gym, a Nordic curl without one.
+  /// `posterior_chain` is the pair programs used before that split, kept so
+  /// existing programs keep training exactly what they were training.
+  static const SkillCategory hinge = SkillCategory(
+    id: hingeId,
+    title: 'Hinge',
+    subtitle: 'Hinge',
+    description:
+        'Balance the knee-dominant work with hamstring and posterior-chain training.',
+    track: ExerciseCategory.hinge,
+    defaultTrainingPathId: 'nordic',
+    isBrowsable: false,
+    branches: [
+      SkillCategoryBranch(id: 'rdl', label: 'Romanian Deadlift', lane: 0),
+      SkillCategoryBranch(id: 'nordic', label: 'Nordic Curl', lane: 1),
+      SkillCategoryBranch(
+        id: 'posterior_chain',
+        label: 'Posterior Chain',
+        lane: -1,
+      ),
+    ],
+    trainingPaths: {
+      'rdl': ['romanian_deadlift'],
+      'nordic': ['nordic_curl'],
+      'posterior_chain': ['single_leg_rdl', 'nordic_curl'],
+    },
+  );
+
   static const List<SkillCategory> _custom = [
     pullups,
     rows,
@@ -434,6 +484,8 @@ class SkillCategoryCatalog {
     muscleUp,
     handstandPushups,
     dips,
+    barbellSquat,
+    hinge,
   ];
 
   // Some tracks can exist for training-program purposes without being exposed
@@ -445,7 +497,8 @@ class SkillCategoryCatalog {
 
   static List<SkillCategory> browsable() {
     final categories = <SkillCategory>[
-      ..._custom,
+      for (final category in _custom)
+        if (category.isBrowsable) category,
       for (final track in ExerciseCategory.values)
         if (!_hiddenSkillTracks.contains(track) &&
             !_custom.any((category) => category.track == track))
