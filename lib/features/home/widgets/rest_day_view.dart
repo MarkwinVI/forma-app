@@ -46,20 +46,18 @@ class _RestDayViewState extends State<RestDayView>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Rings scale with the viewport but keep a fixed gap above (from the
-        // week strip) and below (to the "Recovery" label) — the leftover
-        // height falls between the copy and the pinned footer.
-        final ringSize =
-            (constraints.maxHeight * 0.48).clamp(160.0, 320.0).toDouble();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 32),
-            SizedBox(
-              height: ringSize,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 32),
+        // The rings take whatever the copy and footer leave, capped at
+        // their drawn size. Sizing them by a fraction of the viewport
+        // instead let a short screen overflow by a pixel or two, since
+        // everything under them is fixed height and cannot give.
+        Expanded(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 320),
               child: AnimatedBuilder(
                 animation: _controller,
                 builder: (context, _) {
@@ -75,118 +73,118 @@ class _RestDayViewState extends State<RestDayView>
                 },
               ),
             ),
-            const SizedBox(height: 32),
-            Text(
-              'RECOVERY',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.robotoMono(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.4,
-                color: AppColors.accentPrimary,
-              ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        Text(
+          'RECOVERY',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.robotoMono(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
+            color: AppColors.accentPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Nothing to do today',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.54,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Your last session is still settling in.\n'
+            'The adaptation happens now — not in the gym.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.55,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Nothing to do today',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 27,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.54,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Your last session is still settling in.\n'
-                'The adaptation happens now — not in the gym.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.55,
-                ),
-              ),
-            ),
-            const Spacer(),
-            if (widget.nextTitle != null)
-              SurfaceCard(
-                padding: const EdgeInsets.fromLTRB(18, 15, 16, 15),
-                child: Row(
-                  children: [
-                    Text(
-                      'NEXT UP',
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text.rich(
-                        TextSpan(
-                          text: widget.nextTitle,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                          children: [
-                            if (widget.nextWhen != null)
-                              TextSpan(
-                                text: ' · ${widget.nextWhen}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (widget.onTrainSomethingElse != null) ...[
-              const SizedBox(height: 4),
-              Pressable(
-                onTap: widget.onTrainSomethingElse,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.swap_horiz_rounded,
-                        size: 15,
-                        color: AppColors.textMuted,
-                      ),
-                      SizedBox(width: 7),
-                      Flexible(
-                        child: Text(
-                          'Feeling fresh? Train something else',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        if (widget.nextTitle != null)
+          SurfaceCard(
+            padding: const EdgeInsets.fromLTRB(18, 15, 16, 15),
+            child: Row(
+              children: [
+                Text(
+                  'NEXT UP',
+                  style: GoogleFonts.robotoMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                    color: AppColors.textMuted,
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      text: widget.nextTitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      children: [
+                        if (widget.nextWhen != null)
+                          TextSpan(
+                            text: ' · ${widget.nextWhen}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (widget.onTrainSomethingElse != null) ...[
+          const SizedBox(height: 4),
+          Pressable(
+            onTap: widget.onTrainSomethingElse,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 15,
+                    color: AppColors.textMuted,
+                  ),
+                  SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      'Feeling fresh? Train something else',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ],
-        );
-      },
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
