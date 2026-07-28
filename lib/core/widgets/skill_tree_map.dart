@@ -653,16 +653,19 @@ class _TreeLayout {
         // The last foundation step is what opens this branch, so its volume
         // fill has to run across the fork — otherwise the one step that
         // unlocks the most has nothing to fill into.
+        // The last foundation step fills toward the fork, not past it: the
+        // fork is the next thing on the route, and stopping there keeps every
+        // step's fill the same one-gap length. Running on to the branch's
+        // first node would cover several gaps in the same beat and read as
+        // skipping ahead.
         if (spine.isNotEmpty && curS == spine.length - 1) {
           final from = spinePoints.last;
           final centre = point(hubX, 0);
-          final to = nodeAt(0);
-          final approach = centre - from;
-          final leave = to - centre;
-          if (approach.distance > 12 && leave.distance > 12) {
-            final start = from + approach / approach.distance * 11;
-            final end = to - leave / leave.distance * 7;
-            fill = [start, centre, end];
+          final delta = centre - from;
+          final length = delta.distance;
+          if (length > 18) {
+            final unit = delta / length;
+            fill = [from + unit * 11, centre - unit * (hubR + 2)];
           }
         }
         final curB = states.indexOf(TreeNodeState.cur);
