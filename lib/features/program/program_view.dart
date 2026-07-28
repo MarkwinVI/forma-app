@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
-import '../../core/widgets/polished.dart';
+import '../../core/widgets/no_program_state.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/training_program_model.dart';
@@ -167,6 +167,8 @@ class _ProgramViewState extends State<ProgramView> {
     }
 
     if (snapshot == null) {
+      // The tab that owns setup carries the detail: what it will ask for and
+      // what comes back, over the program that does not exist yet.
       return Scaffold(
         backgroundColor: AppColors.bg,
         body: SafeArea(
@@ -175,72 +177,18 @@ class _ProgramViewState extends State<ProgramView> {
             color: AppColors.accentPrimary,
             backgroundColor: AppColors.surface,
             onRefresh: _loadData,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const ScreenHeader(title: 'Program'),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-                    child: SurfaceCard(
-                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Set up your training program',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.48,
-                              height: 1.15,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Tell Forma your goals and schedule. We’ll build a '
-                            'balanced program across every movement pattern — '
-                            'and adapt it as you progress.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          PillButton(
-                            label: 'Build my program',
-                            icon: Icons.chevron_right_rounded,
-                            trailingIcon: true,
-                            onTap: _openProgramSetup,
-                          ),
-                          const SizedBox(height: 12),
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.schedule_rounded,
-                                size: 13,
-                                color: AppColors.textMuted,
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                'Takes about 2 minutes',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: NoProgramState(
+              title: 'Build your training program',
+              sub: 'Tell us your goals, training days and available '
+                  'equipment. Forma builds a balanced program, tells you what '
+                  'to train, and adjusts it as you progress.',
+              onCreateProgram: _openProgramSetup,
+              children: const [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 18, 0, 22),
+                  child: GhostConstellation(),
+                ),
+              ],
             ),
           ),
         ),

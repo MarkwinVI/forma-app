@@ -17,7 +17,6 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
-import '../settings/settings_view.dart';
 import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
@@ -430,13 +429,6 @@ class _HomeViewState extends State<HomeView> {
     await _startWorkout(recommendation);
   }
 
-  Future<void> _openSettings() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SettingsView()),
-    );
-    await _loadHomeData();
-  }
-
   Future<void> _openAlternateWorkoutOptions(
     DailyTrainingRecommendation recommendation,
   ) async {
@@ -487,7 +479,6 @@ class _HomeViewState extends State<HomeView> {
                     onRefresh: _loadHomeData,
                     child: HomeEmptyState(
                       onGoToProgram: widget.onGoToProgram ?? _openProgramSetup,
-                      onOpenSettings: _openSettings,
                     ),
                   )
                 : snapshot.metrics.today.isRestDay

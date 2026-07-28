@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
-import '../../core/widgets/polished.dart';
+import '../../core/widgets/no_program_state.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
@@ -19,7 +19,9 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
+import '../../core/widgets/type_led.dart';
 import '../home/home_dashboard_metrics.dart';
+import '../home/program_day_items.dart';
 import '../skills/skill_tree_view.dart';
 import 'widgets/skill_tree_row.dart';
 
@@ -28,9 +30,14 @@ import 'widgets/skill_tree_row.dart';
 class ProgressView extends StatefulWidget {
   final bool isActive;
 
+  /// Sends the user to the Program tab, where setup lives — the empty state
+  /// offers the same action the other tabs do.
+  final VoidCallback? onGoToProgram;
+
   const ProgressView({
     super.key,
     this.isActive = false,
+    this.onGoToProgram,
   });
 
   @override
@@ -210,6 +217,8 @@ class _ProgressViewState extends State<ProgressView> {
   Widget build(BuildContext context) {
     final metrics = _loading ? null : _buildMetrics();
 
+    final empty = !_hasProgram || metrics == null;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
@@ -220,33 +229,38 @@ class _ProgressViewState extends State<ProgressView> {
                 color: AppColors.accentPrimary,
                 backgroundColor: AppColors.surface,
                 onRefresh: _loadData,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(22, 38, 22, 0),
-                        child: Text(
-                          'Skill trees',
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -1.02,
-                            height: 1.05,
-                          ),
+                // Nothing has been trained yet, so the tab states what these
+                // trees are for rather than titling an empty list.
+                child: empty
+                    ? _ProgressEmptyState(
+                        onCreateProgram: widget.onGoToProgram ?? () {},
+                      )
+                    : SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(22, 38, 22, 0),
+                              child: Text(
+                                'Skill trees',
+                                style: TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -1.02,
+                                  height: 1.05,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(22, 0, 22, 130),
+                              child: _buildSections(metrics),
+                            ),
+                          ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 0, 22, 130),
-                        child: !_hasProgram || metrics == null
-                            ? const _NoProgramCard()
-                            : _buildSections(metrics),
-                      ),
-                    ],
-                  ),
-                ),
               ),
       ),
     );
@@ -337,7 +351,6 @@ class _ProgressViewState extends State<ProgressView> {
       if (!_expandedTrees.remove(key)) _expandedTrees.add(key);
     });
   }
-
 }
 
 /// Splits the list into the tree closest to levelling up, the rest of the
@@ -364,26 +377,47 @@ class _GroupLabel extends StatelessWidget {
   }
 }
 
-class _NoProgramCard extends StatelessWidget {
-  const _NoProgramCard();
+/// Progress before any training: the six movement paths named, none of them
+/// started, framed as what the tab will show rather than what it lacks.
+class _ProgressEmptyState extends StatelessWidget {
+  final VoidCallback onCreateProgram;
+
+  const _ProgressEmptyState({required this.onCreateProgram});
+
+  static const _paths = [
+    ExerciseCategory.horizontalPush,
+    ExerciseCategory.verticalPush,
+    ExerciseCategory.horizontalPull,
+    ExerciseCategory.verticalPull,
+    ExerciseCategory.squat,
+    ExerciseCategory.core,
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(top: 16),
-      child: SurfaceCard(
-        padding: EdgeInsets.all(18),
-        child: Text(
-          'Set up your training program on the Train tab to start '
-          'tracking performance and growing your skill trees.',
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
+    return NoProgramState(
+      title: 'See how your strength develops',
+      sub: 'As you train and hit your rep targets, you’ll move along each '
+          'movement path and unlock harder exercises.',
+      onCreateProgram: onCreateProgram,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: GhostConstellation(height: 132),
         ),
-      ),
+        TypeSectionLabel(
+          'Movement paths',
+          right: '0 / ${_paths.length} started',
+          top: 12,
+        ),
+        for (var i = 0; i < _paths.length; i++)
+          GhostRow(
+            name: programPatternLabel(_paths[i]),
+            note: 'NOT STARTED',
+            nameSize: 19,
+            last: i == _paths.length - 1,
+          ),
+      ],
     );
   }
 }

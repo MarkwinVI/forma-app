@@ -320,6 +320,10 @@ class PillButton extends StatelessWidget {
   /// Overrides the accent background (ignored for tonal/disabled buttons).
   final Color? color;
 
+  /// Corner radius — the default is a full pill; the type-led screens square
+  /// it off so the button sits with their type rather than floating over it.
+  final double radius;
+
   const PillButton({
     super.key,
     required this.label,
@@ -328,6 +332,7 @@ class PillButton extends StatelessWidget {
     this.trailingIcon = false,
     this.tonal = false,
     this.color,
+    this.radius = 26,
   });
 
   @override
@@ -354,7 +359,7 @@ class PillButton extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(radius),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
