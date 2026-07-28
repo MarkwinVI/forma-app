@@ -62,9 +62,38 @@ void main() {
     expect(find.text('One target raised since Tuesday'), findsOneWidget);
     // No explanation paragraph — the raises say it themselves.
     expect(find.textContaining('moved the bar'), findsNothing);
-    expect(find.text('hit 3 × 6'), findsOneWidget);
-    expect(find.text('6 → 7'), findsOneWidget);
+    // The same words the finish receipt uses, and the target in full.
+    expect(find.text('target raised'), findsOneWidget);
+    expect(find.text('3×6 → 3×7'), findsOneWidget);
     expect(find.text('How targets are set'), findsOneWidget);
+  });
+
+  testWidgets('an unlock is counted in its own words', (tester) async {
+    final events = [
+      raise('pull_up', on: DateTime(2026, 7, 21, 18)),
+      ProgressionEvent(
+        id: 'e-unlock',
+        exerciseId: 'close_grip_pull_up',
+        kind: ProgressionEventKind.activated,
+        relatedExerciseId: 'pull_up',
+        valueTo: 5,
+        targetSets: 3,
+        createdAt: DateTime(2026, 7, 21, 18),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WhatChangedLine(events: events, onTap: () {}),
+        ),
+      ),
+    );
+
+    expect(
+      find.text('One target raised and one exercise unlocked since Tuesday'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the finish receipt lists what moved', (tester) async {
@@ -78,6 +107,6 @@ void main() {
 
     expect(find.text('WHAT THE PROGRAM CHANGED'), findsOneWidget);
     expect(find.text('target raised'), findsOneWidget);
-    expect(find.text('6 → 7'), findsOneWidget);
+    expect(find.text('3×6 → 3×7'), findsOneWidget);
   });
 }

@@ -18,25 +18,32 @@ const _weekdayNames = [
   'Sunday',
 ];
 
-/// One rendered change: the exercise, what the program did to it, what earned
-/// it, and the value that moved.
+/// One rendered change, in the only words the app uses for these: the
+/// exercise, what the program did to it, and the number that moved.
+///
+/// Every surface that reports a change — the receipt on the finish screen,
+/// the line above today's session, the sheet behind it — reads from this, so
+/// a raised target is called the same thing wherever it is mentioned.
 class _InsightItem {
   final Color color;
   final String name;
   final String detail;
-
-  /// What the last session did to deserve this — only the sheet has room.
-  final String? reason;
   final String value;
+
+  /// How this kind of change is counted in a summary line: "two targets
+  /// raised", "one exercise unlocked".
+  final String Function(int count) noun;
 
   const _InsightItem({
     required this.color,
     required this.name,
     required this.detail,
     required this.value,
-    this.reason,
+    required this.noun,
   });
 }
+
+String _plural(int count, String one, String many) => count == 1 ? one : many;
 
 /// The Train tab's one-line note that the program moved: a mono flag, what
 /// changed and when, and a way into the detail.
@@ -99,21 +106,33 @@ class WhatChangedLine extends StatelessWidget {
     );
   }
 
-  /// "Two targets raised since Tuesday" — or null when nothing shows here.
+  /// "Two targets raised since Tuesday", counted in the same words the list
+  /// uses — or null when there is nothing to report.
   static String? summaryFor(List<ProgressionEvent> events) {
     final items = _itemsFor(events);
     if (items.isEmpty) return null;
 
-    final raises = events
-        .where((event) => event.kind == ProgressionEventKind.targetIncrease)
-        .length;
-    final when = _lastDayName(events);
-    final noun = raises == items.length
-        ? 'target${raises == 1 ? '' : 's'} raised'
-        : 'update${items.length == 1 ? '' : 's'}';
-    final count = _spelled(items.length);
+    // Group by what happened, so each kind is counted in its own noun rather
+    // than everything collapsing into "updates".
+    final counts = <String, int>{};
+    for (final item in items) {
+      final key = item.noun(2);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    final clauses = [
+      for (final entry in counts.entries)
+        '${_spelled(entry.value)} '
+            '${items.firstWhere((item) => item.noun(2) == entry.key).noun(entry.value)}',
+    ];
 
-    return when == null ? '$count $noun' : '$count $noun since $when';
+    final said = switch (clauses.length) {
+      1 => clauses.first,
+      2 => '${clauses.first} and ${clauses.last.toLowerCase()}',
+      _ => '${clauses.first} and ${clauses.length - 1} more changes',
+    };
+    final when = _lastDayName(events);
+
+    return when == null ? said : '$said since $when';
   }
 }
 
@@ -217,7 +236,7 @@ class _WhatChangedSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          items[i].reason ?? items[i].detail,
+                          items[i].detail,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -406,11 +425,18 @@ List<_InsightItem> _itemsFor(List<ProgressionEvent> events) {
 
 /// Maps a progression event to one rendered change, or null when it has no
 /// catalog exercise (or is a personal best, which lives on Progress).
+///
+/// The wording here is the app's whole vocabulary for program changes — every
+/// surface that reports one renders from this.
 _InsightItem? _itemFor(ProgressionEvent event) {
   final exercise = ExerciseCatalog.findById(event.exerciseId);
   if (exercise == null) return null;
   final unit = exercise.isTimed ? 's' : '';
   final sets = event.targetSets ?? 3;
+
+  /// Targets are written in full — "3×7", not "7" — so a raise reads as the
+  /// work it actually asks for.
+  String target(int? value) => value == null ? '—' : '$sets×$value$unit';
 
   switch (event.kind) {
     case ProgressionEventKind.targetIncrease:
@@ -418,20 +444,19 @@ _InsightItem? _itemFor(ProgressionEvent event) {
         color: AppColors.green,
         name: exercise.name,
         detail: 'target raised',
-        reason: event.valueFrom == null
-            ? 'met its target'
-            : 'hit $sets × ${event.valueFrom}$unit',
         value: event.valueFrom == null
-            ? '→ ${event.valueTo}$unit'
-            : '${event.valueFrom}$unit → ${event.valueTo}$unit',
+            ? '→ ${target(event.valueTo)}'
+            : '${target(event.valueFrom)} → ${target(event.valueTo)}',
+        noun: (count) => _plural(count, 'target raised', 'targets raised'),
       );
     case ProgressionEventKind.mastered:
       return _InsightItem(
         color: AppColors.green,
         name: exercise.name,
         detail: 'mastered',
-        reason: 'cleared $sets × ${event.valueTo}$unit',
-        value: '$sets × ${event.valueTo}$unit',
+        value: target(event.valueTo),
+        noun: (count) =>
+            _plural(count, 'exercise mastered', 'exercises mastered'),
       );
     case ProgressionEventKind.activated:
       final related = event.relatedExerciseId == null
@@ -440,9 +465,10 @@ _InsightItem? _itemFor(ProgressionEvent event) {
       return _InsightItem(
         color: AppColors.accentPrimary,
         name: exercise.name,
-        detail:
-            related == null ? 'is your next move' : 'replaces ${related.name}',
-        value: related == null ? 'new' : 'unlocked',
+        detail: related == null ? 'unlocked' : 'unlocked after ${related.name}',
+        value: '→ ${target(event.valueTo)}',
+        noun: (count) =>
+            _plural(count, 'exercise unlocked', 'exercises unlocked'),
       );
     case ProgressionEventKind.personalBest:
       return null; // Shown as an achievement on the Progress tab.
@@ -452,6 +478,7 @@ _InsightItem? _itemFor(ProgressionEvent event) {
         name: exercise.name,
         detail: 'path forks here',
         value: 'choose',
+        noun: (count) => _plural(count, 'path to choose', 'paths to choose'),
       );
   }
 }
