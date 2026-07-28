@@ -367,11 +367,11 @@ class _DayRow extends StatelessWidget {
             ? AppColors.textSecondary
             : AppColors.textPrimary;
 
+    // No fill behind an opened row: the list is inset from the screen edges,
+    // so a tint would read as a band that stops short of them. The exercises
+    // appearing and the chevron turning already say the row is open.
     return Container(
       decoration: BoxDecoration(
-        color: expanded
-            ? Colors.white.withValues(alpha: 0.02)
-            : Colors.transparent,
         border: Border(
           top: first
               ? BorderSide.none
