@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
+import '../../../core/widgets/type_led.dart';
 import '../home_dashboard_metrics.dart';
 
 /// Post-workout "session complete" state of the Train tab — a celebratory
@@ -85,54 +84,50 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
           ),
         ),
         const SizedBox(height: 4),
+        // Left-aligned from here down: the finish reads as a statement, not a
+        // certificate.
         Text(
           'SESSION COMPLETE',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.robotoMono(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.3,
-            color: AppColors.green,
-          ),
+          style: monoStyle(size: 11, letterSpacing: 1.65, color: AppColors.green),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 12),
         Text(
           '${c.title}, done',
-          textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 28,
+            fontSize: 40,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
-            letterSpacing: -0.56,
+            letterSpacing: -1.4,
+            height: 1.02,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
         Text(
           stats,
-          textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 13.5,
+            fontSize: 15.5,
             color: AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 30),
         if (widget.onViewWorkout != null)
           Pressable(
             onTap: widget.onViewWorkout,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               decoration: BoxDecoration(
-                color: AppColors.surface2,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.divider),
               ),
               alignment: Alignment.center,
               child: const Text(
                 'View workout',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16.5,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
+                  letterSpacing: -0.17,
                 ),
               ),
             ),
@@ -146,35 +141,30 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
   /// not somewhere to go from here.
   Widget _nextUpRow() {
     return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 2),
+      padding: const EdgeInsets.only(top: 22, bottom: 2),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
         children: [
-          Text(
-            'NEXT UP',
-            style: GoogleFonts.robotoMono(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(width: 12),
+          Text('NEXT UP', style: monoStyle(size: 10.5, letterSpacing: 1.5)),
+          const SizedBox(width: 10),
           Flexible(
             child: Text.rich(
               TextSpan(
                 text: widget.nextTitle,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
+                  letterSpacing: -0.32,
                 ),
                 children: [
                   if (widget.nextWhen != null)
                     TextSpan(
                       text: ' · ${widget.nextWhen}',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
                         color: AppColors.textSecondary,
                       ),
                     ),

@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
+import '../../../core/widgets/type_led.dart';
 import '../home_dashboard_metrics.dart';
 
-/// One planned exercise in today's session, with the result of the last
-/// session it was trained and the change vs the session before that.
+/// One planned exercise in today's session: what it totalled in the session
+/// before last, and how the last session moved against that.
 class TodayWorkoutRow {
   final String name;
-  final String setsLabel;
-  final bool stalled;
-  final String lastLabel;
+
+  /// The session-before-last total, written with its unit ("15 reps", "18s").
+  final String previousLabel;
+
+  /// How the last session moved against it ("+3", "−2", "—").
   final String changeLabel;
   final int changeDir;
 
   const TodayWorkoutRow({
     required this.name,
-    required this.setsLabel,
-    required this.stalled,
-    required this.lastLabel,
+    required this.previousLabel,
     required this.changeLabel,
     required this.changeDir,
   });
 }
 
-/// Derives the Today card's rows, subtitle, and tip from the dashboard
-/// metrics, so any screen hosting the card renders the same story.
+/// Derives the session list's rows, subtitle, and tip from the dashboard
+/// metrics, so any screen hosting it renders the same story.
 class TodayWorkoutContent {
   TodayWorkoutContent._();
 
@@ -34,43 +34,39 @@ class TodayWorkoutContent {
     final perfByName = {
       for (final perf in metrics.exercisePerformance) perf.exerciseName: perf,
     };
-    final stalledNames = {
-      for (final path in metrics.activeSkillPaths)
-        if (path.momentum == HomeSkillMomentum.stalled)
-          path.currentExerciseName,
-    };
 
     return [
       for (final planned in metrics.today.plannedExercises)
-        _rowFor(
-          planned,
-          perfByName[planned.name],
-          stalledNames.contains(planned.name),
-        ),
+        _rowFor(planned, perfByName[planned.name]),
     ];
   }
 
   static TodayWorkoutRow _rowFor(
     HomePlannedExerciseSummary planned,
     HomeExercisePerformance? perf,
-    bool stalled,
   ) {
     final history = perf?.history ?? const <int>[];
-    final unit = (perf?.isTimed ?? false) ? 's' : '';
+    final isTimed = perf?.isTimed ?? false;
+    // The change is measured against the session before last, so that is the
+    // total worth showing beside it — the last session is the two added up.
+    final previous =
+        history.length >= 2 ? history[history.length - 2] : null;
     final delta = perf?.sessionDelta;
 
     return TodayWorkoutRow(
       name: planned.name,
-      setsLabel: planned.targetLabel,
-      stalled: stalled,
-      lastLabel: history.isEmpty ? '—' : '${history.last}$unit',
+      previousLabel: previous == null
+          ? '—'
+          : isTimed
+              ? '${previous}s'
+              : '$previous reps',
       changeLabel: delta == null
           ? '—'
           : delta == 0
               ? '±0'
               : delta > 0
-                  ? '+$delta$unit'
-                  : '−${delta.abs()}$unit',
+                  ? '+$delta'
+                  : '−${delta.abs()}',
       changeDir: delta == null ? 0 : delta.sign,
     );
   }
@@ -92,13 +88,12 @@ class TodayWorkoutContent {
   }
 }
 
-/// "Today's workout" card on the Train tab — the planned exercises as a
-/// performance list: EXERCISE / LAST / CHANGE columns and a Start CTA. Last is
-/// the total reps of the most recent logged session; Change is the difference
-/// in total reps versus the session before it.
+/// Today's session on the Train tab, written as a list rather than boxed in a
+/// card: the day names itself, then every exercise with what it last totalled
+/// and how it moved, then the way in.
 class TodayWorkoutCard extends StatelessWidget {
-  static const double _lastColWidth = 66;
-  static const double _changeColWidth = 60;
+  static const double _previousColWidth = 84;
+  static const double _changeColWidth = 58;
 
   final HomeTodaySummary summary;
   final String subtitle;
@@ -119,239 +114,147 @@ class TodayWorkoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final completed = summary.completed;
 
-    return SurfaceCard(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            summary.sessionTitle,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.48,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TypeTitle(summary.sessionTitle, sub: subtitle),
+        if (rows.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 30, 0, 6),
+            child: Row(
+              children: [
+                Expanded(child: Text('THE SESSION', style: _headStyle)),
+                SizedBox(
+                  width: _previousColWidth,
+                  child: Text('PREVIOUS', style: _headStyle),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: _changeColWidth,
+                  child: Text(
+                    'LAST',
+                    textAlign: TextAlign.right,
+                    style: _headStyle,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
+          for (var index = 0; index < rows.length; index++)
+            _ExerciseRow(row: rows[index], last: index == rows.length - 1),
+        ],
+        const SizedBox(height: 34),
+        if (completed != null)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.greenSoft,
+              borderRadius: BorderRadius.circular(14),
             ),
-          ),
-          if (rows.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.only(bottom: 8),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.divider)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(child: _columnLabel('EXERCISE')),
-                  SizedBox(
-                    width: _lastColWidth,
-                    child: _columnLabel('PREVIOUS', alignRight: true),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: _changeColWidth,
-                    child: _columnLabel('LAST', alignRight: true),
-                  ),
-                ],
-              ),
-            ),
-            for (var index = 0; index < rows.length; index++)
-              _ExerciseRow(
-                row: rows[index],
-                showDivider: index < rows.length - 1,
-              ),
-          ],
-          const SizedBox(height: 14),
-          if (completed != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              decoration: BoxDecoration(
-                color: AppColors.greenSoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.check_rounded,
-                    size: 18,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_rounded, size: 18, color: AppColors.green),
+                SizedBox(width: 7),
+                Text(
+                  'Workout complete',
+                  style: TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.green,
                   ),
-                  SizedBox(width: 7),
-                  Text(
-                    'Workout complete',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.green,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Pressable(
-              onTap: onStart,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                decoration: BoxDecoration(
+                ),
+              ],
+            ),
+          )
+        else
+          PillButton(
+            label: summary.isRestDay ? 'View plan' : 'Start',
+            radius: 14,
+            onTap: onStart,
+          ),
+        if (onTrainSomethingElse != null)
+          Pressable(
+            onTap: onTrainSomethingElse,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 18, bottom: 4),
+              alignment: Alignment.center,
+              child: Text(
+                summary.isRestDay
+                    ? 'Feeling fresh? Train something else'
+                    : 'Train something else',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.accentPrimary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  summary.isRestDay ? 'View plan' : 'Start',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+                  letterSpacing: -0.15,
                 ),
               ),
             ),
-          if (onTrainSomethingElse != null)
-            Pressable(
-              onTap: onTrainSomethingElse,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(top: 14, bottom: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.swap_horiz_rounded,
-                      size: 15,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      summary.isRestDay
-                          ? 'Feeling fresh? Train something else'
-                          : 'Train something else',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
-  Widget _columnLabel(String label, {bool alignRight = false}) {
-    return Text(
-      label,
-      textAlign: alignRight ? TextAlign.right : TextAlign.left,
-      maxLines: 1,
-      softWrap: false,
-      overflow: TextOverflow.visible,
-      style: GoogleFonts.robotoMono(
-        fontSize: 9,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1,
-        color: AppColors.textMuted,
-      ),
-    );
-  }
+  static final _headStyle = monoStyle(size: 11, letterSpacing: 1.5);
 }
 
 class _ExerciseRow extends StatelessWidget {
   final TodayWorkoutRow row;
-  final bool showDivider;
+  final bool last;
 
-  const _ExerciseRow({required this.row, required this.showDivider});
+  const _ExerciseRow({required this.row, required this.last});
 
   @override
   Widget build(BuildContext context) {
     final changeColor = row.changeDir > 0
         ? AppColors.green
         : row.changeDir < 0
-            ? AppColors.amber
+            ? AppColors.red
             : AppColors.textMuted;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
+      padding: const EdgeInsets.only(top: 17, bottom: 18),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: showDivider
-              ? const BorderSide(color: AppColors.divider)
-              : BorderSide.none,
-        ),
+        border: last
+            ? null
+            : const Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  row.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text.rich(
-                  TextSpan(
-                    text: row.setsLabel,
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                    ),
-                    children: [
-                      if (row.stalled)
-                        TextSpan(
-                          text: ' · stalled',
-                          style: GoogleFonts.robotoMono(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.amber,
-                          ),
-                        ),
-                    ],
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: TodayWorkoutCard._lastColWidth,
             child: Text(
-              row.lastLabel,
-              textAlign: TextAlign.right,
-              style: GoogleFonts.robotoMono(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: row.lastLabel == '—'
-                    ? AppColors.textMuted
-                    : AppColors.textPrimary,
+              row.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.42,
+                height: 1.15,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(
+            width: TodayWorkoutCard._previousColWidth,
+            child: Text(
+              row.previousLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: monoStyle(
+                size: 14,
+                weight: FontWeight.w500,
+                letterSpacing: 0,
+                color: row.previousLabel == '—'
+                    ? AppColors.textMuted
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           SizedBox(
             width: TodayWorkoutCard._changeColWidth,
             // The signed number carries the direction on its own — an arrow
@@ -359,11 +262,7 @@ class _ExerciseRow extends StatelessWidget {
             child: Text(
               row.changeLabel,
               textAlign: TextAlign.right,
-              style: GoogleFonts.robotoMono(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: changeColor,
-              ),
+              style: monoStyle(size: 14, letterSpacing: 0, color: changeColor),
             ),
           ),
         ],
@@ -371,4 +270,3 @@ class _ExerciseRow extends StatelessWidget {
     );
   }
 }
-

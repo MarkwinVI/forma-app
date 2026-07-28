@@ -33,25 +33,19 @@ void main() {
   const rows = [
     TodayWorkoutRow(
       name: 'Wall Handstand',
-      setsLabel: '3 × 30s',
-      stalled: false,
-      lastLabel: '20s',
-      changeLabel: '+2s',
+      previousLabel: '18s',
+      changeLabel: '+2',
       changeDir: 1,
     ),
     TodayWorkoutRow(
       name: 'Pull-ups',
-      setsLabel: '4 × 8',
-      stalled: true,
-      lastLabel: '6',
+      previousLabel: '24 reps',
       changeLabel: '±0',
       changeDir: 0,
     ),
     TodayWorkoutRow(
       name: 'Romanian Deadlift',
-      setsLabel: '4 × 6',
-      stalled: false,
-      lastLabel: '—',
+      previousLabel: '—',
       changeLabel: '−1',
       changeDir: -1,
     ),
@@ -84,19 +78,18 @@ void main() {
       ),
     );
 
-    // No eyebrow row — the title leads the card.
+    // The day names itself, then every exercise with what it last totalled.
     expect(find.text('Pull Day'), findsOneWidget);
-    expect(find.textContaining('SESSION'), findsNothing);
-    expect(find.textContaining('min'), findsNothing);
-    expect(find.text('EXERCISE'), findsOneWidget);
+    expect(find.text('THE SESSION'), findsOneWidget);
     expect(find.text('PREVIOUS'), findsOneWidget);
     expect(find.text('LAST'), findsOneWidget);
     expect(find.text('CHANGE'), findsNothing);
     expect(find.text('Wall Handstand'), findsOneWidget);
-    expect(find.text('20s'), findsOneWidget);
-    expect(find.text('+2s'), findsOneWidget);
+    expect(find.text('18s'), findsOneWidget);
+    expect(find.text('+2'), findsOneWidget);
     expect(find.text('±0'), findsOneWidget);
-    expect(find.textContaining('stalled', findRichText: true), findsWidgets);
+    // The per-row target line is gone; the subtitle carries the stall note.
+    expect(find.textContaining('3 × 30s'), findsNothing);
 
     await tester.tap(find.text('Train something else'));
     expect(trainElse, isTrue);

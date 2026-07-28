@@ -492,7 +492,7 @@ class _HomeViewState extends State<HomeView> {
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 120),
+                            padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
                             child: _buildContent(snapshot),
                           ),
                         ),
@@ -509,7 +509,7 @@ class _HomeViewState extends State<HomeView> {
     final navReserve = MediaQuery.of(context).padding.bottom + 74;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 18, 16, navReserve),
+      padding: EdgeInsets.fromLTRB(22, 18, 22, navReserve),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -551,7 +551,7 @@ class _HomeViewState extends State<HomeView> {
                 _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
           )
         else ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 30),
           TodayWorkoutCard(
             summary: metrics.today,
             subtitle: TodayWorkoutContent.subtitle(metrics),
@@ -562,10 +562,7 @@ class _HomeViewState extends State<HomeView> {
           ),
         ],
         if (_whatChanged.isNotEmpty)
-          TrainInsight(
-            events: _whatChanged,
-            volumeTrend: _volumeTrend(metrics.exercisePerformance),
-          ),
+          TrainInsight(events: _whatChanged),
       ],
     );
   }
@@ -615,27 +612,6 @@ class _HomeViewState extends State<HomeView> {
       case TrainingSessionType.rest:
         return 'Recovery';
     }
-  }
-
-  /// Total training volume per recent session (oldest → newest), summed across
-  /// today's exercises and right-aligned to the most recent session, for the
-  /// insight sparkline.
-  List<int> _volumeTrend(List<HomeExercisePerformance> performance) {
-    var maxLen = 0;
-    for (final perf in performance) {
-      if (perf.history.length > maxLen) maxLen = perf.history.length;
-    }
-    if (maxLen < 2) return const [];
-
-    final totals = List<int>.filled(maxLen, 0);
-    for (final perf in performance) {
-      final history = perf.history;
-      final offset = maxLen - history.length;
-      for (var i = 0; i < history.length; i++) {
-        totals[offset + i] += history[i];
-      }
-    }
-    return totals;
   }
 }
 

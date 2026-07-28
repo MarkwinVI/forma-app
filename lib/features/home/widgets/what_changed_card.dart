@@ -1,23 +1,19 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/type_led.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/models/progression_event_model.dart';
 
-/// One rendered change line in the insight block: a leading glyph, a short
-/// description with the exercise name emphasized, and a value on the right.
+/// One rendered change line: the exercise, what the program did to it, and
+/// the value that changed.
 class _InsightItem {
-  final String glyph;
   final Color color;
   final String name;
   final String detail;
   final String value;
 
   const _InsightItem({
-    required this.glyph,
     required this.color,
     required this.name,
     required this.detail,
@@ -25,24 +21,14 @@ class _InsightItem {
   });
 }
 
-/// Editorial "Insight" block on the Train tab — an unbordered section under the
-/// Today card, separated by a hairline, that combines both design variants: a
-/// coaching lead line with a volume-trend sparkline on top, and a compact
-/// glyph / text / value change list underneath. Driven by the unseen
-/// progression events from recent workouts (target raises, masteries, exercise
-/// swaps). Personal bests live on Progress.
+/// "What the program changed" on the Train tab — the target raises, masteries
+/// and swaps the last workout earned, listed under a mono label. Driven by the
+/// unseen progression events from recent workouts. Personal bests live on
+/// Progress.
 class TrainInsight extends StatelessWidget {
   final List<ProgressionEvent> events;
 
-  /// Chronological total-volume per recent session (oldest → newest) used to
-  /// draw the sparkline. Fewer than two points hides the bars.
-  final List<int> volumeTrend;
-
-  const TrainInsight({
-    super.key,
-    required this.events,
-    this.volumeTrend = const [],
-  });
+  const TrainInsight({super.key, required this.events});
 
   @override
   Widget build(BuildContext context) {
@@ -52,113 +38,64 @@ class TrainInsight extends StatelessWidget {
     ];
     if (items.isEmpty) return const SizedBox.shrink();
 
-    final count = items.length;
-    const kicker = 'INSIGHT';
-    final lead = count == 1
-        ? 'The program adjusted one thing to keep you moving.'
-        : 'The program adjusted $count things to keep you moving.';
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(8, 28, 8, 0),
-      padding: const EdgeInsets.only(top: 20),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            kicker,
-            style: GoogleFonts.robotoMono(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.3,
-              color: AppColors.accentPrimary,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const TypeSectionLabel('What the program changed'),
+        for (var i = 0; i < items.length; i++)
+          Container(
+            padding: const EdgeInsets.only(top: 16, bottom: 17),
+            decoration: BoxDecoration(
+              border: i == items.length - 1
+                  ? null
+                  : const Border(
+                      bottom: BorderSide(color: AppColors.divider),
+                    ),
             ),
-          ),
-          const SizedBox(height: 7),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  lead,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    height: 1.5,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        items[i].name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 17.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.35,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        items[i].detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              if (volumeTrend.length >= 2) ...[
-                const SizedBox(width: 18),
-                _TrendBars(values: volumeTrend),
+                const SizedBox(width: 12),
+                Text(
+                  items[i].value,
+                  style: monoStyle(
+                    size: 14,
+                    letterSpacing: 0.2,
+                    color: items[i].color,
+                  ),
+                ),
               ],
-            ],
-          ),
-          const SizedBox(height: 6),
-          for (var i = 0; i < items.length; i++)
-            Container(
-              decoration: i < items.length - 1
-                  ? const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: AppColors.divider),
-                      ),
-                    )
-                  : null,
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    child: Text(
-                      items[i].glyph,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.robotoMono(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: items[i].color,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        text: items[i].name,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: ' ${items[i].detail}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    items[i].value,
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: items[i].color,
-                    ),
-                  ),
-                ],
-              ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -173,7 +110,6 @@ class TrainInsight extends StatelessWidget {
     switch (event.kind) {
       case ProgressionEventKind.targetIncrease:
         return _InsightItem(
-          glyph: '↑',
           color: AppColors.green,
           name: exercise.name,
           detail: 'target raised',
@@ -183,7 +119,6 @@ class TrainInsight extends StatelessWidget {
         );
       case ProgressionEventKind.mastered:
         return _InsightItem(
-          glyph: '★',
           color: AppColors.green,
           name: exercise.name,
           detail: 'mastered',
@@ -194,7 +129,6 @@ class TrainInsight extends StatelessWidget {
             ? null
             : ExerciseCatalog.findById(event.relatedExerciseId!);
         return _InsightItem(
-          glyph: '⇄',
           color: AppColors.accentPrimary,
           name: exercise.name,
           detail:
@@ -205,49 +139,11 @@ class TrainInsight extends StatelessWidget {
         return null; // Shown as an achievement on the Progress tab.
       case ProgressionEventKind.branchChoice:
         return _InsightItem(
-          glyph: '⇄',
           color: AppColors.accentPrimary,
           name: exercise.name,
           detail: 'path forks here',
           value: 'choose',
         );
     }
-  }
-}
-
-/// Small volume-trend sparkline — the most recent bar is accented.
-class _TrendBars extends StatelessWidget {
-  static const double _height = 46;
-
-  final List<int> values;
-
-  const _TrendBars({required this.values});
-
-  @override
-  Widget build(BuildContext context) {
-    final maxValue = values.reduce(math.max);
-    if (maxValue <= 0) return const SizedBox.shrink();
-
-    return SizedBox(
-      height: _height,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          for (var i = 0; i < values.length; i++) ...[
-            if (i > 0) const SizedBox(width: 5),
-            Container(
-              width: 8,
-              height: _height * (0.16 + 0.84 * (values[i] / maxValue)),
-              decoration: BoxDecoration(
-                color: i == values.length - 1
-                    ? AppColors.accentPrimary
-                    : AppColors.surface2,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
   }
 }
