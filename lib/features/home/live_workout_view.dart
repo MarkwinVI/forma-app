@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/reorder_exercises_page.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
@@ -1040,9 +1041,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                   Expanded(
                     child: ListView(
                       padding: EdgeInsets.fromLTRB(
-                        16,
+                        22,
                         0,
-                        16,
+                        22,
                         _hasActiveRestTimer ? 110 + bottomSafePadding : 40,
                       ),
                       children: [
@@ -1050,13 +1051,23 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                           _EmptyWorkoutState(onAddExercise: _openAddExercise)
                         else
                           for (final entry in visibleSections) ...[
-                            SectionHeader(
-                              title: entry.section.label,
-                              sub: '${entry.items.length} '
+                            TypeSectionLabel(
+                              entry.section.label,
+                              top: 30,
+                              right: '${entry.items.length} '
                                   'exercise${entry.items.length == 1 ? '' : 's'}',
                             ),
                             for (var i = 0; i < entry.items.length; i++) ...[
-                              if (i > 0) const SizedBox(height: 14),
+                              if (i > 0)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 26),
+                                  child: Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    color: AppColors.divider,
+                                  ),
+                                ),
+                              const SizedBox(height: 24),
                               _WorkoutExerciseCard(
                                 key: ValueKey(entry.items[i].exercise.id),
                                 item: entry.items[i],
@@ -1242,25 +1253,31 @@ class _RepFieldState extends State<_RepField> {
 
   @override
   Widget build(BuildContext context) {
+    // The value you type is the loudest thing in the row: no filled box, just
+    // the number sitting on a rule.
     return Container(
-      height: 32,
+      padding: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: widget.completed ? AppColors.accentSoft : AppColors.surface2,
-        borderRadius: BorderRadius.circular(9),
+        border: Border(
+          bottom: BorderSide(
+            color: widget.completed
+                ? AppColors.accentPrimary
+                : AppColors.divider,
+            width: 1.5,
+          ),
+        ),
       ),
-      alignment: Alignment.center,
       child: TextField(
         controller: _controller,
         focusNode: _focusNode,
         keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.right,
         onChanged: _handleChanged,
         cursorColor: AppColors.accentPrimary,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
+        style: monoStyle(
+          size: 16,
+          letterSpacing: 0,
           color: AppColors.textPrimary,
-          fontFeatures: [FontFeature.tabularFigures()],
         ),
         decoration: InputDecoration(
           isDense: true,
@@ -1268,12 +1285,7 @@ class _RepFieldState extends State<_RepField> {
           contentPadding: EdgeInsets.zero,
           border: InputBorder.none,
           hintText: '${widget.value}',
-          hintStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
+          hintStyle: monoStyle(size: 16, letterSpacing: 0),
         ),
       ),
     );
@@ -1539,7 +1551,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final String targetLabel;
 
   /// Per-set goal from the progression ladder; null for standalone
-  /// exercises, whose GOAL cells stay blank.
+  /// exercises, whose GOAL cells read as a dash.
   final int? goalValue;
   final int restSeconds;
   final void Function(int number) onToggleSet;
@@ -1574,257 +1586,184 @@ class _WorkoutExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SurfaceCard(
-      clip: true,
-      child: Column(
-        children: [
-          Pressable(
-            onTap: onOpenDetail,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 15, 14, 13),
-              child: Row(
-                children: [
-                  IconTile(
-                    icon: programPatternIcon(item.exercise.category),
-                    size: 42,
-                    tint: _doneCount > 0,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    // No card: the exercise is its name, the sets are a table of numbers, and
+    // nothing is drawn around either.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Pressable(
+                onTap: onOpenDetail,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                item.exercise.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -0.16,
-                                ),
-                              ),
+                        Flexible(
+                          child: Text(
+                            item.exercise.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.42,
+                              height: 1.15,
                             ),
-                            if (_allDone) ...[
-                              const SizedBox(width: 7),
-                              Container(
-                                width: 17,
-                                height: 17,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.greenSoft,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: const Icon(
-                                  Icons.check_rounded,
-                                  size: 11,
-                                  color: AppColors.green,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          targetLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
                           ),
                         ),
+                        if (_allDone) ...[
+                          const SizedBox(width: 9),
+                          const Icon(
+                            Icons.check_rounded,
+                            size: 17,
+                            color: AppColors.green,
+                          ),
+                        ],
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Pressable(
-                    onTap: onMenu,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        color: AppColors.surface2,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.more_horiz_rounded,
-                        size: 17,
+                    const SizedBox(height: 6),
+                    Text(
+                      targetLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14.5,
                         color: AppColors.textSecondary,
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Pressable(
+              onTap: onMenu,
+              child: const Padding(
+                padding: EdgeInsets.only(top: 3, left: 4),
+                child: Icon(
+                  Icons.more_horiz_rounded,
+                  size: 20,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Rest stays a line of its own — it is the one thing here you set
+        // rather than log.
+        Pressable(
+          onTap: onRestTap,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              children: [
+                Text(
+                  'Rest timer',
+                  style: monoStyle(size: 11, letterSpacing: 1.5),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  _formatRestLabel(restSeconds).toUpperCase(),
+                  style: monoStyle(
+                    size: 11,
+                    letterSpacing: 1.5,
+                    color: restSeconds > 0
+                        ? AppColors.accentPrimary
+                        : AppColors.textSecondary,
                   ),
-                ],
-              ),
-            ),
-          ),
-          // Rest timer row
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.divider)),
-            ),
-            child: Pressable(
-              onTap: onRestTap,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 11, 14, 11),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      size: 15,
-                      color: restSeconds > 0
-                          ? AppColors.accentPrimary
-                          : AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 9),
-                    const Expanded(
-                      child: Text(
-                        'Rest timer',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      _formatRestLabel(restSeconds),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: restSeconds > 0
-                            ? AppColors.accentPrimary
-                            : AppColors.textMuted,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 17,
-                      color: AppColors.textMuted,
-                    ),
-                  ],
                 ),
-              ),
-            ),
-          ),
-          // Column labels
-          Container(
-            height: 32,
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.divider)),
-            ),
-            child: _SetGridRow(
-              leading: const Text('SET', style: _columnLabelStyle),
-              middle: const Text('LAST', style: _columnLabelStyle),
-              goal: const Center(
-                child: Text('GOAL', style: _columnLabelStyle),
-              ),
-              value: Center(
-                child: Text(
-                  isTimed ? 'TIME' : 'REPS',
-                  style: _columnLabelStyle,
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 15,
+                  color: AppColors.textMuted,
                 ),
-              ),
-              trailing: const SizedBox.shrink(),
+              ],
             ),
           ),
-          // Set rows
-          for (final set in sets) _buildSetRow(context, set),
-          // Add set
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.divider)),
+        ),
+        // Column heads
+        Padding(
+          padding: const EdgeInsets.only(top: 14, bottom: 8),
+          child: _SetGridRow(
+            leading: Text('SET', style: _columnLabelStyle),
+            middle: Text('LAST', style: _columnLabelStyle),
+            goal: Text(
+              'GOAL',
+              textAlign: TextAlign.right,
+              style: _columnLabelStyle,
             ),
-            child: Pressable(
-              onTap: onAddSet,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 19,
-                      height: 19,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accentSoft,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.add_rounded,
-                        size: 13,
-                        color: AppColors.accentPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Add set',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.accentPrimary,
-                      ),
-                    ),
-                  ],
-                ),
+            value: Text(
+              isTimed ? 'TIME' : 'REPS',
+              textAlign: TextAlign.right,
+              style: _columnLabelStyle,
+            ),
+            trailing: const SizedBox.shrink(),
+          ),
+        ),
+        for (final set in sets) _buildSetRow(context, set),
+        Pressable(
+          onTap: onAddSet,
+          child: const Padding(
+            padding: EdgeInsets.only(top: 14, bottom: 2),
+            child: Text(
+              '+  Add set',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accentPrimary,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  static const _columnLabelStyle = TextStyle(
-    fontSize: 10.5,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textMuted,
-    letterSpacing: 1.1,
-  );
+  static final _columnLabelStyle = monoStyle(size: 10, letterSpacing: 1.4);
 
   Widget _buildSetRow(BuildContext context, _WorkoutSetDraft set) {
     final row = Container(
-      height: 52,
+      padding: const EdgeInsets.symmetric(vertical: 9),
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
+        border: Border(top: BorderSide(color: AppColors.cardHighlight)),
       ),
       child: _SetGridRow(
         leading: Text(
           '${set.number}',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+          style: monoStyle(
+            size: 14,
+            letterSpacing: 0,
             color:
-                set.completed ? AppColors.textMuted : AppColors.textSecondary,
-            fontFeatures: const [FontFeature.tabularFigures()],
+                set.completed ? AppColors.textMuted : AppColors.textPrimary,
           ),
         ),
         middle: Text(
           set.previousLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textMuted,
-            fontFeatures: [FontFeature.tabularFigures()],
+          style: monoStyle(
+            size: 14,
+            weight: FontWeight.w500,
+            letterSpacing: 0,
+            color: set.previousLabel == '—'
+                ? AppColors.textMuted
+                : AppColors.textSecondary,
           ),
         ),
-        goal: Center(
-          child: Text(
-            goalValue == null ? '' : '$goalValue${isTimed ? 's' : ''}',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
+        goal: Text(
+          goalValue == null ? '—' : '$goalValue${isTimed ? 's' : ''}',
+          textAlign: TextAlign.right,
+          style: monoStyle(
+            size: 14,
+            letterSpacing: 0,
+            color: goalValue == null
+                ? AppColors.textMuted
+                : AppColors.textSecondary,
           ),
         ),
         value: _RepField(
@@ -1840,8 +1779,8 @@ class _WorkoutExerciseCard extends StatelessWidget {
           child: Pressable(
             onTap: () => onToggleSet(set.number),
             child: Container(
-              width: 30,
-              height: 30,
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
                 color: set.completed
                     ? AppColors.accentPrimary
@@ -1849,16 +1788,13 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: set.completed
                     ? null
-                    : Border.all(
-                        color: Colors.white.withValues(alpha: 0.16),
-                        width: 2,
-                      ),
+                    : Border.all(color: AppColors.surface3, width: 1.5),
               ),
               alignment: Alignment.center,
               child: set.completed
                   ? const Icon(
                       Icons.check_rounded,
-                      size: 15,
+                      size: 14,
                       color: Colors.white,
                     )
                   : null,
@@ -1908,21 +1844,18 @@ class _SetGridRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 0, 16, 0),
-      child: Row(
-        children: [
-          SizedBox(width: 30, child: leading),
-          const SizedBox(width: 10),
-          Expanded(child: middle),
-          const SizedBox(width: 10),
-          SizedBox(width: 44, child: goal),
-          const SizedBox(width: 10),
-          SizedBox(width: 64, child: value),
-          const SizedBox(width: 10),
-          SizedBox(width: 32, child: trailing),
-        ],
-      ),
+    return Row(
+      children: [
+        SizedBox(width: 30, child: leading),
+        const SizedBox(width: 10),
+        Expanded(child: middle),
+        const SizedBox(width: 10),
+        SizedBox(width: 52, child: goal),
+        const SizedBox(width: 10),
+        SizedBox(width: 70, child: value),
+        const SizedBox(width: 10),
+        SizedBox(width: 26, child: trailing),
+      ],
     );
   }
 }

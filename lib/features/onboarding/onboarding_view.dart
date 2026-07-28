@@ -1100,8 +1100,10 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
   /// The steps of the route, windowed to three rows and scrolled so the one
   /// being trained sits in the middle — it tracks the node the map is filling.
   Widget _buildRouteList(int cleared) {
-    final maxTop = (_path.length - _visibleRows).clamp(0, _path.length);
-    final top = (cleared - 1).clamp(0, maxTop) * _rowHeight;
+    // A blank row leads the strip so the step being trained can sit in the
+    // middle slot from the very first one, rather than starting at the top.
+    final maxTop = (_path.length + 1 - _visibleRows).clamp(0, _path.length);
+    final top = cleared.clamp(0, maxTop) * _rowHeight;
 
     return SizedBox(
       height: _rowHeight * _visibleRows,
@@ -1124,13 +1126,18 @@ class _SkillTreeBeatState extends State<_SkillTreeBeat>
           child: Stack(
             children: [
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 420),
+                // The loop restarting is a cut, not a step: gliding all the
+                // way back would read as a rewind.
+                duration: cleared == 0
+                    ? Duration.zero
+                    : const Duration(milliseconds: 420),
                 curve: Curves.easeOutCubic,
                 left: 0,
                 right: 0,
                 top: -top,
                 child: Column(
                   children: [
+                    const SizedBox(height: _rowHeight),
                     for (var i = 0; i < _path.length; i++)
                       _RouteStepRow(
                         name: ExerciseCatalog.findById(_path[i])?.name ?? '',
@@ -1215,17 +1222,16 @@ class _RouteStepRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          AnimatedSwitcher(
+          // The colour eases, the word itself cuts. Cross-fading the two
+          // labels stacks them and renders as garbled text mid-swap.
+          AnimatedDefaultTextStyle(
             duration: duration,
-            child: Text(
-              _label,
-              key: ValueKey(_label),
-              style: _mono(
-                color: locked ? AppColors.textMuted : _color,
-                size: 9,
-                spacing: 1,
-              ),
+            style: _mono(
+              color: locked ? AppColors.textMuted : _color,
+              size: 9,
+              spacing: 1,
             ),
+            child: Text(_label),
           ),
         ],
       ),
