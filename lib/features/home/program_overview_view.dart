@@ -530,11 +530,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ProgramHero(
-              clearedFraction: _clearedFraction(
-                [for (final workout in workouts) workout.items],
-              ),
-            ),
+            const _ProgramHero(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
               child: Column(
@@ -640,48 +636,26 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     );
   }
 
-  /// Share of the exercises the program currently trains that are mastered —
-  /// drives how much of the hero constellation is lit.
-  double _clearedFraction(Iterable<List<ProgramDayItem>> plans) {
-    final ids = <String>{
-      for (final items in plans)
-        for (final item in items)
-          if (item.exerciseId != null) item.exerciseId!,
-    };
-    if (ids.isEmpty) return 0;
-    final progress = _progress;
-    final cleared = ids
-        .where((id) => progress[id] == ExerciseStatus.mastered)
-        .length;
-    return cleared / ids.length;
-  }
-
   /// The setup wizard defaults to a full gym, so an unanswered program reads
   /// the same way here.
   bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
 }
 
-/// Hero constellation: an abstract read of the program itself — cleared nodes
-/// green, everything still ahead locked — with the title sitting under it,
-/// where the graph has faded out.
+/// Hero constellation: an abstract read of the program itself, drawn as a
+/// graph that never fills in — it sets the tone rather than reporting
+/// progress — with the title sitting under it, where the graph has faded out.
 class _ProgramHero extends StatelessWidget {
-  /// 0–1 share of the program's exercises already mastered.
-  final double clearedFraction;
-
-  const _ProgramHero({required this.clearedFraction});
+  const _ProgramHero();
 
   @override
   Widget build(BuildContext context) {
-    // The spine holds seven nodes; the cleared share decides how many are lit.
-    final cleared = (clearedFraction.clamp(0.0, 1.0) * 7).floor();
-
-    return SizedBox(
+    return const SizedBox(
       height: 318,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const DecoratedBox(
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -692,8 +666,8 @@ class _ProgramHero extends StatelessWidget {
             ),
             child: SizedBox.expand(),
           ),
-          CustomPaint(painter: _ConstellationPainter(cleared: cleared)),
-          const DecoratedBox(
+          CustomPaint(painter: _ConstellationPainter()),
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -708,7 +682,7 @@ class _ProgramHero extends StatelessWidget {
             ),
             child: SizedBox.expand(),
           ),
-          const Positioned(
+          Positioned(
             left: 22,
             right: 22,
             bottom: 16,
@@ -729,13 +703,10 @@ class _ProgramHero extends StatelessWidget {
   }
 }
 
-/// Paints the hero's node graph — a spine with two locked branches, laid out
-/// on the 402 × 318 grid the design uses and scaled to the screen width.
+/// Paints the hero's node graph — a spine with two branches, laid out on the
+/// 402 × 318 grid the design uses and scaled to the screen width.
 class _ConstellationPainter extends CustomPainter {
-  /// How many spine nodes are cleared; the rest stay locked.
-  final int cleared;
-
-  const _ConstellationPainter({required this.cleared});
+  const _ConstellationPainter();
 
   static const _spine = [
     Offset(26, 208),
@@ -770,45 +741,29 @@ class _ConstellationPainter extends CustomPainter {
       Paint()..color = AppColors.accentPrimary.withValues(alpha: 0.05),
     );
 
-    // Green links only ever join two cleared nodes.
     for (var i = 1; i < _spine.length; i++) {
-      _segment(canvas, at(_spine[i - 1]), at(_spine[i]), i < cleared);
+      _segment(canvas, at(_spine[i - 1]), at(_spine[i]));
     }
-    _segment(canvas, at(_spine[3]), at(_upperBranch[0]), false);
-    _segment(canvas, at(_upperBranch[0]), at(_upperBranch[1]), false);
-    _segment(canvas, at(_upperBranch[1]), at(_upperBranch[2]), false);
-    _segment(canvas, at(_spine[4]), at(_lowerBranch[0]), false);
-    _segment(canvas, at(_lowerBranch[0]), at(_lowerBranch[1]), false);
+    _segment(canvas, at(_spine[3]), at(_upperBranch[0]));
+    _segment(canvas, at(_upperBranch[0]), at(_upperBranch[1]));
+    _segment(canvas, at(_upperBranch[1]), at(_upperBranch[2]));
+    _segment(canvas, at(_spine[4]), at(_lowerBranch[0]));
+    _segment(canvas, at(_lowerBranch[0]), at(_lowerBranch[1]));
 
-    for (var i = 0; i < _spine.length; i++) {
-      _node(
-        canvas,
-        at(_spine[i]),
-        scale,
-        i < cleared ? _NodeState.cleared : _NodeState.locked,
-      );
-    }
-    for (final point in [..._upperBranch, ..._lowerBranch]) {
-      _node(canvas, at(point), scale, _NodeState.locked);
+    for (final point in [..._spine, ..._upperBranch, ..._lowerBranch]) {
+      _node(canvas, at(point), scale);
     }
   }
 
-  void _segment(Canvas canvas, Offset a, Offset b, bool cleared) {
+  void _segment(Canvas canvas, Offset a, Offset b) {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round
-      ..color = cleared
-          ? AppColors.green.withValues(alpha: 0.55)
-          : Colors.white.withValues(alpha: 0.14);
+      ..color = Colors.white.withValues(alpha: 0.14);
 
-    if (cleared) {
-      canvas.drawLine(a, b, paint);
-      return;
-    }
-
-    // Locked links are dashed — the same "nothing here yet" language the rest
-    // of the app uses.
+    // Every link is dashed — the same "nothing here yet" language the rest of
+    // the app uses.
     const dash = 4.0, gap = 5.0;
     final total = (b - a).distance;
     final step = (b - a) / total;
@@ -818,35 +773,26 @@ class _ConstellationPainter extends CustomPainter {
     }
   }
 
-  void _node(Canvas canvas, Offset center, double scale, _NodeState state) {
+  void _node(Canvas canvas, Offset center, double scale) {
     final radius = 6.5 * scale;
     canvas.drawCircle(
       center,
       radius,
-      Paint()
-        ..color = switch (state) {
-          _NodeState.cleared => AppColors.green,
-          _NodeState.locked => Colors.white.withValues(alpha: 0.10),
-        },
+      Paint()..color = Colors.white.withValues(alpha: 0.10),
     );
-    if (state == _NodeState.locked) {
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.3
-          ..color = Colors.white.withValues(alpha: 0.22),
-      );
-    }
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.3
+        ..color = Colors.white.withValues(alpha: 0.22),
+    );
   }
 
   @override
-  bool shouldRepaint(_ConstellationPainter oldDelegate) =>
-      oldDelegate.cleared != cleared;
+  bool shouldRepaint(_ConstellationPainter oldDelegate) => false;
 }
-
-enum _NodeState { cleared, locked }
 
 /// Mono, uppercase section eyebrow — the type-led alternative to a card
 /// header, with an optional subtitle and trailing action.
@@ -1073,11 +1019,14 @@ class _FaqRow extends StatelessWidget {
       onTap: onTap,
       child: Text(
         question,
+        // The same type the question takes as the sheet's title once it is
+        // open, so opening one reads as the row growing rather than a new
+        // headline replacing it.
         style: const TextStyle(
-          fontSize: 18.5,
-          fontWeight: FontWeight.w800,
+          fontSize: 17.5,
+          fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
-          letterSpacing: -0.37,
+          letterSpacing: -0.2,
           height: 1.28,
         ),
       ),
