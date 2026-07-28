@@ -1733,9 +1733,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: set.completed
-                    ? AppColors.accentPrimary
-                    : Colors.transparent,
+                color: set.completed ? AppColors.green : Colors.transparent,
                 shape: BoxShape.circle,
                 border: set.completed
                     ? null
@@ -1743,10 +1741,12 @@ class _WorkoutExerciseCard extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: set.completed
+                  // Dark on green, the way every other done-state tick in the
+                  // app is drawn — white on this green is thin.
                   ? const Icon(
                       Icons.check_rounded,
                       size: 14,
-                      color: Colors.white,
+                      color: AppColors.bg,
                     )
                   : null,
             ),
