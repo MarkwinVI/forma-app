@@ -78,6 +78,10 @@ class _HomeViewState extends State<HomeView> {
   /// Loaded-lift changes the program has proposed and is waiting on.
   List<ProgressionSuggestion> _needsApproval = const [];
 
+  /// What each past session changed, once a logged day has been opened —
+  /// the newest session's changes already live in [_whatChanged].
+  final Map<String, List<ProgressionEvent>> _eventsBySession = {};
+
   /// The day the tab is looking at, or null while it is looking at today.
   /// Selecting a day never leaves the tab: the same screen re-reads itself
   /// for that day and says plainly what it can and cannot know about it.
@@ -617,7 +621,7 @@ class _HomeViewState extends State<HomeView> {
                 stops: const [0, 0.34],
               ),
             ),
-            child: _dayActions(snapshot, presentation, workout),
+            child: _dayActions(snapshot, presentation),
           ),
         ),
       ],
@@ -735,18 +739,25 @@ class _HomeViewState extends State<HomeView> {
           DayNameList(names: names),
         ];
       case TrainDayView.logged:
-        final names = [
-          for (final exercise
-              in workout?.exercises ?? const <PastWorkoutExercise>[])
-            exercise.exerciseName,
-        ];
+        if (workout == null) {
+          return [
+            TypeTitle(summary.sessionTitle, sub: 'Logged'),
+          ];
+        }
+        final (nextTitle, nextWhen) = _nextSessionAfter(
+          snapshot.selectedDay.date,
+          snapshot.ribbonDays,
+        );
+        final changes = _changesFor(workout);
+        // The same screen the day itself ended on: the burst, the way into
+        // the record, and what the session moved.
         return [
-          TypeTitle(
-            workout?.title ?? summary.sessionTitle,
-            sub: '${_spelledCount(names.length)} '
-                '${names.length == 1 ? 'exercise' : 'exercises'} · logged',
+          WorkoutDoneView(
+            nextTitle: nextTitle,
+            nextWhen: nextWhen,
+            onViewWorkout: () => _openPastWorkout(workout),
           ),
-          DayNameList(names: names),
+          if (changes.isNotEmpty) TrainInsight(events: changes),
         ];
       case TrainDayView.rest:
       case TrainDayView.today:
@@ -758,7 +769,6 @@ class _HomeViewState extends State<HomeView> {
   Widget _dayActions(
     _TrainSnapshot snapshot,
     TrainDayPresentation presentation,
-    PastWorkout? workout,
   ) {
     switch (presentation.view) {
       case TrainDayView.soon:
@@ -768,15 +778,9 @@ class _HomeViewState extends State<HomeView> {
           secondaryLabel: 'Back to today',
           onSecondary: _backToToday,
         );
+      // The finished screen carries its own way into the record, so the only
+      // thing pinned under it is the way back.
       case TrainDayView.logged:
-        return DayActions(
-          primaryLabel: workout == null ? null : 'View workout',
-          onPrimary: workout == null
-              ? null
-              : () => _openPastWorkout(workout),
-          secondaryLabel: 'Back to today',
-          onSecondary: _backToToday,
-        );
       // A missed day is read, not acted on: the band already says where its
       // session went, so the only thing left to do here is leave.
       case TrainDayView.missed:
@@ -851,8 +855,38 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  void _selectDay(HomeWeekStripDay day) {
-    setState(() => _selectedDate = TrainingScheduleService.dateOnly(day.date));
+  Future<void> _selectDay(HomeWeekStripDay day) async {
+    final date = TrainingScheduleService.dateOnly(day.date);
+    setState(() => _selectedDate = date);
+
+    // A logged day reads back as the session-complete screen, receipt and
+    // all — which means fetching what that session changed, unless it is the
+    // newest one (already loaded) or has been opened before.
+    final workout = _workoutForDate(date, plannedOnly: true);
+    if (workout == null || _eventsBySession.containsKey(workout.id)) return;
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final events = (await _progressionEventService.fetchForSession(
+        userId,
+        workout.id,
+      ))
+          .where((event) => event.kind != ProgressionEventKind.personalBest)
+          .toList();
+      if (!mounted) return;
+      setState(() => _eventsBySession[workout.id] = events);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load session changes: $error\n$stackTrace');
+    }
+  }
+
+  /// What a finished session changed, from whichever source already has it.
+  List<ProgressionEvent> _changesFor(PastWorkout workout) {
+    if (_pastWorkouts.isNotEmpty && _pastWorkouts.first.id == workout.id) {
+      return _whatChanged;
+    }
+    return _eventsBySession[workout.id] ?? const [];
   }
 
   void _backToToday() => setState(() => _selectedDate = null);
