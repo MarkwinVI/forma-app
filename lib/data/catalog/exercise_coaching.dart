@@ -25,4 +25,11 @@ class ExerciseCoaching {
     required this.videoUrl,
     required this.imageUrl,
   });
+
+  /// The eleven-character YouTube id inside [videoUrl], or null if the link
+  /// is not one the player can take.
+  String? get videoId {
+    final match = RegExp(r'[?&]v=([\w-]{11})').firstMatch(videoUrl);
+    return match?.group(1);
+  }
 }

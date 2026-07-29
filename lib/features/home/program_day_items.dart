@@ -479,6 +479,45 @@ String programPatternLabel(ExerciseCategory category) {
   }
 }
 
+/// Lowercase and drop separators so "pullup" matches "Pull-Up" / "Pull Up".
+String normalizeExerciseSearch(String value) =>
+    value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+/// Orders the exercise lists people search: browse, adding to a day, and
+/// swapping a movement mid-workout.
+///
+/// Untouched — nothing typed, nothing filtered — the general library leads.
+/// The skill trees already have a screen of their own that shows them in the
+/// order they are meant to be climbed, so an alphabetical run of tree steps
+/// is the least useful thing this list can open on; the library has nowhere
+/// else to be seen. Type or filter and that stops: then the list is about
+/// what was asked for, best match first.
+void sortExerciseResults(
+  List<Exercise> exercises, {
+  required String query,
+  required bool isFiltered,
+}) {
+  final queryNorm = normalizeExerciseSearch(query);
+  final libraryFirst = queryNorm.isEmpty && !isFiltered;
+
+  int rank(Exercise exercise) =>
+      queryNorm.isNotEmpty &&
+              normalizeExerciseSearch(exercise.name).startsWith(queryNorm)
+          ? 0
+          : 1;
+  int origin(Exercise exercise) => exercise.isLibrary ? 0 : 1;
+
+  exercises.sort((a, b) {
+    if (libraryFirst) {
+      final byOrigin = origin(a).compareTo(origin(b));
+      if (byOrigin != 0) return byOrigin;
+    }
+    final byRank = rank(a).compareTo(rank(b));
+    if (byRank != 0) return byRank;
+    return a.name.compareTo(b.name);
+  });
+}
+
 IconData programPatternIcon(ExerciseCategory category) {
   switch (category) {
     case ExerciseCategory.verticalPull:

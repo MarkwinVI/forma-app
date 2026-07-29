@@ -1910,16 +1910,7 @@ class _ExercisePickerPageState extends State<_ExercisePickerPage> {
       return tokens.every(haystack.contains);
     }).toList();
 
-    final queryNorm = _normalize(_query);
-    int rank(Exercise exercise) =>
-        queryNorm.isNotEmpty && _normalize(exercise.name).startsWith(queryNorm)
-            ? 0
-            : 1;
-    exercises.sort((a, b) {
-      final byRank = rank(a).compareTo(rank(b));
-      if (byRank != 0) return byRank;
-      return a.name.compareTo(b.name);
-    });
+    sortExerciseResults(exercises, query: _query, isFiltered: false);
     return exercises;
   }
 

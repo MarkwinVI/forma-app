@@ -90,16 +90,11 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
       return tokens.every(haystack.contains);
     }).toList();
 
-    final queryNorm = _normalize(_query);
-    int rank(Exercise exercise) =>
-        queryNorm.isNotEmpty && _normalize(exercise.name).startsWith(queryNorm)
-            ? 0
-            : 1;
-    matches.sort((a, b) {
-      final byRank = rank(a).compareTo(rank(b));
-      if (byRank != 0) return byRank;
-      return a.name.compareTo(b.name);
-    });
+    sortExerciseResults(
+      matches,
+      query: _query,
+      isFiltered: _patterns.isNotEmpty || _muscles.isNotEmpty,
+    );
     return matches;
   }
 

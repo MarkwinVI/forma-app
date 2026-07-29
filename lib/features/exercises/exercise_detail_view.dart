@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -735,17 +737,65 @@ class _DetailNavBar extends StatelessWidget {
   }
 }
 
-class _DemoMedia extends StatelessWidget {
+/// The demo at the top of "How to": the exercise's YouTube clip, playing in
+/// place.
+///
+/// The player shows the clip's own poster frame and play button until it is
+/// started, so nothing autoplays and nothing costs data until asked. Where
+/// there is no player to build — no clip, or a platform with no web view,
+/// which is every widget test — the still stands in.
+class _DemoMedia extends StatefulWidget {
   final Exercise exercise;
 
   const _DemoMedia({required this.exercise});
 
   @override
+  State<_DemoMedia> createState() => _DemoMediaState();
+}
+
+class _DemoMediaState extends State<_DemoMedia> {
+  YoutubePlayerController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoId = ExerciseCoachingCatalog.findById(widget.exercise.id)?.videoId;
+    if (videoId == null || !_playerIsAvailable) return;
+    _controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: false,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showFullscreenButton: true,
+        // Keep the follow-on suggestions to the same channel: a form demo
+        // should not end on whatever YouTube feels like next.
+        strictRelatedVideos: true,
+      ),
+    );
+  }
+
+  /// The player is a web view, and there is no web view in a widget test.
+  bool get _playerIsAvailable => WebViewPlatform.instance != null;
+
+  @override
+  void dispose() {
+    _controller?.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // The exercise's own still, then anything the catalog entry carried, then
-    // the outline. The video that replaces this sits in the same entry.
-    final imageUrl = ExerciseCoachingCatalog.findById(exercise.id)?.imageUrl ??
-        exercise.imageUrl;
+    final controller = _controller;
+    if (controller != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: YoutubePlayer(controller: controller, aspectRatio: 16 / 9),
+      );
+    }
+
+    final imageUrl = ExerciseCoachingCatalog.findById(widget.exercise.id)
+            ?.imageUrl ??
+        widget.exercise.imageUrl;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
