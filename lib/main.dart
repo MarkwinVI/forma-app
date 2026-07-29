@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
@@ -12,6 +13,13 @@ import 'features/shell/shell_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Every screen is designed portrait. The platform has to allow landscape so
+  // a video can turn sideways for fullscreen, so the lock lives here instead
+  // of in the manifests, and the player lifts it for as long as it needs it.
+  await SystemChrome.setPreferredOrientations(const [
+    DeviceOrientation.portraitUp,
+  ]);
 
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,

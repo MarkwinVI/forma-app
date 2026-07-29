@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
@@ -771,14 +772,42 @@ class _DemoMediaState extends State<_DemoMedia> {
         // should not end on whatever YouTube feels like next.
         strictRelatedVideos: true,
       ),
-    );
+    )..setFullScreenListener(_onFullScreenChanged);
   }
 
   /// The player is a web view, and there is no web view in a widget test.
   bool get _playerIsAvailable => WebViewPlatform.instance != null;
 
+  /// Fullscreen has to turn the phone sideways to be worth anything: the
+  /// player fills the screen either way, but a 16:9 clip in a portrait window
+  /// is the same small picture on a black page. The player itself no longer
+  /// touches orientation, so the app does it here — and puts it back on the
+  /// way out, including when the page is left mid-video.
+  void _onFullScreenChanged(bool isFullScreen) {
+    if (isFullScreen) {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      _returnToPortrait();
+    }
+  }
+
+  void _returnToPortrait() {
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+  }
+
   @override
   void dispose() {
+    if (_controller?.value.fullScreenOption.enabled ?? false) {
+      _returnToPortrait();
+    }
     _controller?.close();
     super.dispose();
   }
