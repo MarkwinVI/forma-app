@@ -284,6 +284,10 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
                           ),
                         ],
                       ),
+                      // Breathing room the list scrolls under rather than
+                      // into: without it a row's name sits against the
+                      // filters the moment you scroll.
+                      const SizedBox(height: 14),
                     ],
                   ),
                 ),
