@@ -241,9 +241,9 @@ class _HomeViewState extends State<HomeView> {
       completedSessions: completedSessions,
       now: now,
     );
-    // The ribbon runs well past the current week, and the day it has
-    // selected is what the whole screen reads from — so the window it is
-    // resolved in has to be wide enough to contain that day.
+    // The ribbon carries a fortnight around today — a week back for what was
+    // missed or logged, a week ahead for what is coming — and the day it has
+    // selected is what the whole screen reads from.
     final ribbonWindow = _trainingScheduleService.buildWindow(
       programType: programType,
       frequencyPerWeek: snapshot.program.frequencyPerWeek,
@@ -254,8 +254,8 @@ class _HomeViewState extends State<HomeView> {
       lastCompletedSessionType: anchorSessionType,
       completedSessions: completedSessions,
       selectedDate: _selectedDate,
-      daysBeforeToday: 14,
-      daysAfterToday: 28,
+      daysBeforeToday: 7,
+      daysAfterToday: 7,
       now: now,
     );
     final calendarWindow = _trainingScheduleService.buildWindow(
