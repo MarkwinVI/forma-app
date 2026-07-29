@@ -91,6 +91,46 @@ extension ExerciseProgramSectionX on ExerciseProgramSection {
   }
 }
 
+/// Name fragments that mean "this is a hold" — the exercise is measured in
+/// seconds rather than counted in reps.
+const _holdWords = [
+  'hang',
+  'hold',
+  'lean',
+  'plank',
+  'l-sit',
+  'v-sit',
+  'lever',
+  'handstand',
+  'headstand',
+];
+
+/// Name fragments that mean "this is counted", and so outrank [_holdWords]:
+/// a front lever *row* is reps even though it is held throughout.
+const _repWords = [
+  'pull-up',
+  'pull up',
+  'pullup',
+  'push-up',
+  'push up',
+  'pushup',
+  'row',
+  'dip',
+  'raise',
+  'curl',
+  'squat',
+  'deadlift',
+  'crunch',
+  'sit-up',
+  'rollout',
+  'extension',
+  'press',
+];
+
+/// Name fragments that mark a unilateral bodyweight step, which is never one
+/// of the open-ended loaded lifts.
+const _singleSideWords = ['one-leg', 'one leg', 'single leg', 'single-leg'];
+
 class Exercise {
   final String id;
   final ExerciseCategory category;
@@ -106,13 +146,31 @@ class Exercise {
 
   /// True for isometric/hold exercises measured in seconds (L-sits, planks,
   /// hangs, planche leans); false for rep-based movements.
-  final bool isTimed;
+  ///
+  /// Read from the name rather than stored: the exercise sheet the catalog is
+  /// built from has no such column, and the name already says it. A name that
+  /// carries a hold word is timed unless it also names a rep — "L-Sit" holds,
+  /// "L-Sit Pull-Up" counts.
+  bool get isTimed {
+    final lower = name.toLowerCase();
+    if (_repWords.any(lower.contains)) return false;
+    return _holdWords.any(lower.contains);
+  }
 
   /// True for exercises trained by adding weight rather than by climbing a
   /// progression (barbell squat, Romanian deadlift). They have no harder
   /// variation to unlock, so they are never mastered: the program suggests
   /// the next step — more reps, then more load — and the user approves it.
-  final bool isLoaded;
+  ///
+  /// Read from the name, like [isTimed]. The bodyweight ladders add weight in
+  /// named steps ("1.5x Bodyweight") and stay progressions; only the barbell
+  /// lifts are open-ended. Single-leg hinges are bodyweight steps of the
+  /// squat tree, so they are excluded however they end up being named.
+  bool get isLoaded {
+    final lower = name.toLowerCase();
+    if (_singleSideWords.any(lower.contains)) return false;
+    return lower.contains('barbell') || lower.contains('deadlift');
+  }
 
   const Exercise({
     required this.id,
@@ -126,7 +184,5 @@ class Exercise {
     this.prerequisiteIds = const [],
     this.programSection = ExerciseProgramSection.mainExercises,
     this.imageUrl,
-    this.isTimed = false,
-    this.isLoaded = false,
   });
 }

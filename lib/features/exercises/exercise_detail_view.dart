@@ -5,6 +5,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/exercise_coaching_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_model.dart';
@@ -741,7 +742,10 @@ class _DemoMedia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = exercise.imageUrl;
+    // The exercise's own still, then anything the catalog entry carried, then
+    // the outline. The video that replaces this sits in the same entry.
+    final imageUrl = ExerciseCoachingCatalog.findById(exercise.id)?.imageUrl ??
+        exercise.imageUrl;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
@@ -901,7 +905,20 @@ class _ExerciseCoachData {
   });
 }
 
+/// Coaching for this exact movement where the exercise sheet has it, and the
+/// movement pattern's generic advice where it does not.
 _ExerciseCoachData _coachDataFor(Exercise exercise) {
+  final coaching = ExerciseCoachingCatalog.findById(exercise.id);
+  if (coaching != null) {
+    return _ExerciseCoachData(
+      steps: coaching.howTo,
+      formChecks: coaching.formChecks,
+    );
+  }
+  return _patternCoachDataFor(exercise);
+}
+
+_ExerciseCoachData _patternCoachDataFor(Exercise exercise) {
   switch (exercise.category) {
     case ExerciseCategory.verticalPull:
       return const _ExerciseCoachData(

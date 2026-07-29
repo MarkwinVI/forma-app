@@ -11,7 +11,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'main',
-      name: 'Scapular Pulls',
+      name: 'Scapular Pull',
       description:
           'From a dead hang, retract and depress the shoulder blades without bending the elbows.',
       difficulty: 1,
@@ -19,11 +19,10 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'arch_hang',
-      isTimed: true,
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'main',
-      name: 'Arch Hangs',
+      name: 'Arch Hang',
       description:
           'Alternate between a hollow and arched hanging position to build bar control and pulling mechanics.',
       difficulty: 2,
@@ -47,7 +46,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'main',
-      name: 'Assisted Pull Ups',
+      name: 'Assisted Pull-Up',
       description:
           'Use bands or light foot assistance to complete full-range pull ups with solid technique.',
       difficulty: 3,
@@ -59,7 +58,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'main',
-      name: 'Pull Ups',
+      name: 'Pull-Up',
       description:
           'Full pull ups from a dead hang to chin over the bar with control throughout.',
       difficulty: 4,
@@ -71,7 +70,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Close Grip Pull Ups',
+      name: 'Close-Grip Pull-Up',
       description:
           'Pull ups with a narrower grip to emphasize upper-back control and elbow flexors.',
       difficulty: 4,
@@ -83,7 +82,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Wide Grip Pull Ups',
+      name: 'Wide-Grip Pull-Up',
       description:
           'Use a wider grip to challenge lat strength and upper-back tension through a longer range.',
       difficulty: 4,
@@ -95,7 +94,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Type Writer Pull Ups',
+      name: 'Typewriter Pull-Up',
       description:
           'Move side to side at the top of the pull up to load one arm at a time.',
       difficulty: 5,
@@ -107,7 +106,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Archer Pull Ups',
+      name: 'Archer Pull-Up',
       description:
           'Shift most of the load to one arm while the opposite arm extends for assistance.',
       difficulty: 5,
@@ -119,7 +118,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Chest to Bar Pull Ups',
+      name: 'Chest-to-Bar Pull-Up',
       description:
           'Pull explosively toward the lower chest while leaning back at the top.',
       difficulty: 5,
@@ -221,7 +220,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'l_sit',
-      name: 'L-Sit Pull Ups',
+      name: 'L-Sit Pull-Up',
       description:
           'Perform pull ups while holding an L-sit to add core demand and body-line control.',
       difficulty: 4,
@@ -257,7 +256,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'one_arm',
-      name: 'One Arm Pull-up Eccentrics',
+      name: 'One-Arm Pull-Up Eccentric',
       description:
           'Start at the top with one arm and lower as slowly as possible through the full range.',
       difficulty: 5,
@@ -378,7 +377,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'main',
-      name: 'Bench Dips',
+      name: 'Bench Dip',
       description:
           'Start with hands behind you and feet on the floor to learn the dip pattern with lighter loading.',
       difficulty: 1,
@@ -401,7 +400,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'main',
-      name: 'Parallel Bar Dips',
+      name: 'Parallel Bar Dip',
       description:
           'Perform strict full-range dips on parallel bars with stable shoulders and control.',
       difficulty: 3,
@@ -473,7 +472,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'rings',
-      name: 'Ring Dips',
+      name: 'Ring Dip',
       description:
           'Transfer dip strength to rings and stabilize the shoulders through a deeper, less stable setup.',
       difficulty: 4,
@@ -485,7 +484,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'rings',
-      name: 'Ring Dips RTO',
+      name: 'RTO Ring Dip',
       description:
           'Finish the ring branch with rings turned out at the top and strong elbow-in support control.',
       difficulty: 5,
@@ -499,7 +498,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'main',
-      name: 'Vertical Rows',
+      name: 'Incline Row',
       description:
           'Begin with a near-upright body angle and row your chest toward the bar or rings with control.',
       difficulty: 1,
@@ -510,7 +509,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'main',
-      name: 'Inverted Rows (legs bent)',
+      name: 'Inverted Row (Bent Legs)',
       description:
           'Use bent knees to shorten the lever while rowing at roughly a 60-degree body angle.',
       difficulty: 1,
@@ -522,7 +521,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'main',
-      name: 'Inverted Rows (straight legs)',
+      name: 'Inverted Row (Straight Legs)',
       description:
           'Straighten the legs to increase the load while holding about a 45-degree body angle.',
       difficulty: 2,
@@ -534,7 +533,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'main',
-      name: 'Feet Elevated Rows',
+      name: 'Feet-Elevated Row',
       description:
           'Elevate the feet to bring the body close to horizontal while keeping full-range rowing mechanics.',
       difficulty: 3,
@@ -557,7 +556,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'main',
-      name: 'Horizontal Wide Rows',
+      name: 'Wide Inverted Row',
       description:
           'Widen the grip while staying parallel to the floor to build stronger upper-back pulling.',
       difficulty: 4,
@@ -569,7 +568,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'one_arm',
-      name: 'Archer Rows',
+      name: 'Archer Row',
       description:
           'Shift most of the load to one side at a time while holding a horizontal body position.',
       difficulty: 4,
@@ -593,7 +592,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'one_arm',
-      name: 'One-arm Rows',
+      name: 'One-Arm Row',
       description:
           'Complete full horizontal rows with a single arm and a rigid body line.',
       difficulty: 5,
@@ -602,7 +601,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'tuck_front_lever_rows_hold',
-      isTimed: true,
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
@@ -642,7 +640,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'One Leg Tuck, One Extended FL Rows',
+      name: 'One-Leg Front Lever Row',
       description:
           'Extend one leg to approach a longer front lever position while still rowing cleanly.',
       difficulty: 5,
@@ -666,7 +664,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'Front Lever Rows',
+      name: 'Front Lever Row',
       description: 'Perform rows while holding a full front lever body line.',
       difficulty: 5,
       treeOrder: 11,
@@ -929,7 +927,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'RTO Pseudo Planche Pushups (Hands at lower chest)',
+      name: 'RTO Pseudo Planche Push-Up (Lower Chest)',
       description: 'Lean forward on rings with the hands near the lower chest.',
       difficulty: 5,
       treeOrder: 10,
@@ -940,7 +938,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'RTO Pseudo Planche Pushups (Hands at belly button)',
+      name: 'RTO Pseudo Planche Push-Up (Belly Button)',
       description:
           'Move the hands farther back to increase leverage on the shoulders and wrists.',
       difficulty: 5,
@@ -952,7 +950,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'RTO Pseudo Planche Pushups (Hands at hips)',
+      name: 'RTO Pseudo Planche Push-Up (Hips)',
       description:
           'The most advanced ring pseudo planche pushup position in this branch.',
       difficulty: 5,
@@ -964,7 +962,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Pseudo Planche Pushups (Hands at lower chest)',
+      name: 'Pseudo Planche Push-Up (Lower Chest)',
       description:
           'Lean forward with the hands near the lower chest to begin planche-specific pressing.',
       difficulty: 4,
@@ -976,7 +974,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Pseudo Planche Pushups (Hands at belly button)',
+      name: 'Pseudo Planche Push-Up (Belly Button)',
       description:
           'Increase forward lean by moving the hands farther back along the torso line.',
       difficulty: 4,
@@ -988,7 +986,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Pseudo Planche Pushups (Hands at hips)',
+      name: 'Pseudo Planche Push-Up (Hips)',
       description:
           'A deeper planche lean with the hands positioned close to the hips.',
       difficulty: 5,
@@ -1045,11 +1043,10 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'planche_lean_just_past',
-      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
-      name: 'Planche Lean (Just Past)',
+      name: 'Planche Lean (Slight)',
       description:
           'Hold a planche lean with the shoulders just past the wrists for short controlled sets.',
       difficulty: 3,
@@ -1058,7 +1055,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'planche_lean_moderate',
-      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
@@ -1072,11 +1068,10 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'planche_lean_far_past',
-      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
-      name: 'Planche Lean (Far Past)',
+      name: 'Planche Lean (Deep)',
       description:
           'Reach a deep forward lean with the shoulders far past the wrists while maintaining straight arms.',
       difficulty: 4,
@@ -1086,7 +1081,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'tuck_planche_lean',
-      isTimed: true,
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
@@ -1229,7 +1223,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'main',
-      name: 'Bulgarian Split Squats',
+      name: 'Bulgarian Split Squat',
       description:
           'Build unilateral leg strength and control with rear-foot-elevated split squats.',
       difficulty: 2,
@@ -1250,7 +1244,6 @@ class ExerciseCatalog {
     // equipment and goals.
     Exercise(
       id: 'barbell_squat',
-      isLoaded: true,
       category: ExerciseCategory.squat,
       skillCategoryId: 'barbell_squat',
       name: 'Barbell Squat',
@@ -1261,7 +1254,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'romanian_deadlift',
-      isLoaded: true,
       category: ExerciseCategory.hinge,
       name: 'Romanian Deadlift',
       description:
@@ -1308,7 +1300,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'shrimp',
-      name: 'Beginner Shrimp Squats',
+      name: 'Beginner Shrimp Squat',
       description:
           'Start the shrimp path with light balance support and a manageable single-leg range.',
       difficulty: 3,
@@ -1332,7 +1324,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'shrimp',
-      name: 'Intermediate Shrimp Squats',
+      name: 'Intermediate Shrimp Squat',
       description:
           'Increase depth and reduce assistance as you strengthen the shrimp squat pattern.',
       difficulty: 4,
@@ -1344,7 +1336,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'pistol',
-      name: 'Counter-weighted Pistol Squat',
+      name: 'Counterweighted Pistol Squat',
       description:
           'Hold a light counterweight to help balance while refining a clean unsupported pistol pattern.',
       difficulty: 5,
@@ -1356,7 +1348,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'shrimp',
-      name: 'Advanced Shrimp Squats',
+      name: 'Advanced Shrimp Squat',
       description:
           'Finish the shrimp branch with strong balance, depth, and clean single-leg control.',
       difficulty: 5,
@@ -1382,7 +1374,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'leg_raises',
       branchId: 'main',
-      name: 'Lying Knee Raises',
+      name: 'Lying Knee Raise',
       description:
           'Start on the floor by drawing the knees toward the chest with lower-back control.',
       difficulty: 1,
@@ -1390,7 +1382,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'foot_supported_l_sit',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1403,7 +1394,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'plank',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'ab_wheel',
       branchId: 'main',
@@ -1418,7 +1408,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'leg_raises',
       branchId: 'main',
-      name: 'Bent Leg Lying Leg Raises',
+      name: 'Lying Bent-Leg Raise',
       description:
           'Lengthen the lever slightly by extending the shins more while staying in a lying raise pattern.',
       difficulty: 1,
@@ -1427,7 +1417,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'l_sit_tuck',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1441,7 +1430,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'plank_60s',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'ab_wheel',
       branchId: 'main',
@@ -1457,7 +1445,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'leg_raises',
       branchId: 'main',
-      name: 'Straight Leg Lying Leg Raises',
+      name: 'Lying Straight-Leg Raise',
       description:
           'Raise straight legs from the floor while keeping the low back braced and controlled.',
       difficulty: 2,
@@ -1466,7 +1454,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'advanced_tuck_l_sit',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1480,7 +1467,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'one_arm_one_leg_plank',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'ab_wheel',
       branchId: 'main',
@@ -1496,7 +1482,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'leg_raises',
       branchId: 'main',
-      name: 'Hanging Knee Raises',
+      name: 'Hanging Knee Raise',
       description:
           'Move from the floor to the bar and lift the knees with controlled swing management.',
       difficulty: 3,
@@ -1505,7 +1491,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'l_sit',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1534,7 +1519,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'leg_raises',
       branchId: 'main',
-      name: 'Bent Leg Hanging Leg Raises',
+      name: 'Hanging Bent-Leg Raise',
       description:
           'Increase hanging core demand by straightening the hips more and lifting the thighs higher.',
       difficulty: 4,
@@ -1543,7 +1528,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'straddle_l_sit',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1572,7 +1556,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'leg_raises',
       branchId: 'main',
-      name: 'Straight Leg Hanging Leg Raises',
+      name: 'Hanging Straight-Leg Raise',
       description:
           'Lift straight legs from a hang with clean pelvic control and minimal swing.',
       difficulty: 5,
@@ -1581,7 +1565,6 @@ class ExerciseCatalog {
     ),
     Exercise(
       id: 'v_sit',
-      isTimed: true,
       category: ExerciseCategory.core,
       skillCategoryId: 'l_sit_v_sit',
       branchId: 'main',
@@ -1612,7 +1595,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.skill,
       skillCategoryId: 'muscle_up',
       branchId: 'main',
-      name: 'False Grip Pull-ups',
+      name: 'False Grip Pull-Up',
       description:
           'Build a strong false grip and pull high enough to prepare for the muscle-up transition.',
       difficulty: 3,

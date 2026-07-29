@@ -9,7 +9,6 @@ import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../exercises/exercise_detail_view.dart';
-import 'widgets/exercise_preview_sheet.dart';
 
 /// One tree, one map, one list. The map is pinned at the top and is the only
 /// navigation: tapping a route scrolls the list to it, and scrolling the list
@@ -203,27 +202,15 @@ class _SkillTreeViewState extends State<SkillTreeView> {
 
   // ── Progress ──────────────────────────────────────────────────────────────
 
-  void _showExerciseSheet(Exercise exercise) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.bgTertiary,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      isScrollControlled: true,
-      builder: (sheetContext) => ExercisePreviewSheet(
-        exercise: exercise,
-        skillCategoryId: _skillCategory.id,
-        onLearnMore: () {
-          Navigator.of(sheetContext).pop();
-          openExerciseDetailView<void>(
-            context,
-            exercise: exercise,
-            accentColor: AppColors.accentBright,
-            skillCategoryId: _skillCategory.id,
-          );
-        },
-      ),
+  /// Tapping a step opens the exercise itself. The preview sheet used to sit
+  /// in between, but everything it showed the detail view shows too, so it
+  /// only cost a tap.
+  void _openExercise(Exercise exercise) {
+    openExerciseDetailView<void>(
+      context,
+      exercise: exercise,
+      accentColor: AppColors.accentBright,
+      skillCategoryId: _skillCategory.id,
     );
   }
 
@@ -310,7 +297,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                                   nodeStates[exercise.id] ??
                                   TreeNodeState.locked,
                               statusOf: _statusOf,
-                              onExerciseTap: _showExerciseSheet,
+                              onExerciseTap: _openExercise,
                             ),
                           // Room to scroll the last route up to the line.
                           const SizedBox(height: 320),
