@@ -496,13 +496,13 @@ class _HomeViewState extends State<HomeView> {
           child: Padding(
             // With nothing pinned under it, the body itself has to clear the
             // tab bar.
-            padding: EdgeInsets.only(bottom: actions == null ? _navBarHeight : 0),
+            padding: EdgeInsets.only(bottom: actions == null ? _tabBarInset : 0),
             child: _bodyFor(snapshot, presentation, workout),
           ),
         ),
         if (actions != null)
           Padding(
-            padding: EdgeInsets.fromLTRB(22, 10, 22, _navBarHeight + 8),
+            padding: EdgeInsets.fromLTRB(22, 10, 22, _tabBarInset + 10),
             child: actions,
           ),
       ],
@@ -523,8 +523,14 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  /// The height the floating tab bar occupies, so nothing sits behind it.
-  double get _navBarHeight => MediaQuery.of(context).padding.bottom + 62;
+  /// What the page has to keep clear at the bottom.
+  ///
+  /// The shell's body extends behind the floating tab bar, and Flutter
+  /// already reports that bar's height as this page's bottom padding — so
+  /// this is the tab bar, home indicator and all. Adding a nav-bar height on
+  /// top of it (as this did) counts the bar twice and floats whatever is
+  /// pinned a bar's height above where it belongs.
+  double get _tabBarInset => MediaQuery.of(context).padding.bottom;
 
   Widget _bodyFor(
     _TrainSnapshot snapshot,
