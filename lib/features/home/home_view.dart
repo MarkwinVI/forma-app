@@ -567,6 +567,12 @@ class _HomeViewState extends State<HomeView> {
     );
     final navReserve = MediaQuery.of(context).padding.bottom + 74;
 
+    // A rest day is a rest day whichever one you are looking at: it keeps the
+    // breathing illustration rather than being reduced to a line of type.
+    if (presentation.view == TrainDayView.rest) {
+      return _buildSelectedRestBody(snapshot, presentation, navReserve);
+    }
+
     return Stack(
       children: [
         RefreshIndicator(
@@ -616,6 +622,66 @@ class _HomeViewState extends State<HomeView> {
         ),
       ],
     );
+  }
+
+  /// A rest day other than today: the same illustration, with the day named
+  /// above it. Nothing is offered to start — a rest day ahead is not a
+  /// session you can pull forward, and one behind is simply gone.
+  Widget _buildSelectedRestBody(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+    double navReserve,
+  ) {
+    final (nextTitle, nextWhen) = _nextSessionAfter(
+      snapshot.selectedDay.date,
+      snapshot.ribbonDays,
+    );
+    final isPast = TrainDayViewResolver.isPast(
+      snapshot.selectedDay.date,
+      TrainingScheduleService.dateOnly(snapshot.now),
+    );
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(22, 18, 22, navReserve),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ribbon(snapshot),
+          if (presentation.eyebrow != null)
+            DayEyebrow(text: presentation.eyebrow!),
+          Expanded(
+            child: RestDayView(
+              // A rest day already behind you has no next session to point
+              // at — that reading belongs to today.
+              nextTitle: isPast ? null : nextTitle,
+              nextWhen: isPast ? null : nextWhen,
+            ),
+          ),
+          DayActions(
+            secondaryLabel: 'Back to today',
+            onSecondary: _backToToday,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The next training day after [date], and how far past it that falls —
+  /// read from the day being looked at, not from today.
+  (String?, String?) _nextSessionAfter(
+    DateTime date,
+    List<HomeWeekStripDay> days,
+  ) {
+    for (final day in days) {
+      final distance = TrainDayViewResolver.daysBetween(date, day.date);
+      if (distance <= 0) continue;
+      if (day.sessionType == TrainingSessionType.rest) continue;
+      return (
+        _sessionTitle(day.sessionType),
+        distance == 1 ? 'the next day' : 'in $distance days',
+      );
+    }
+    return (null, null);
   }
 
   /// The body of a day, by what is known about it: real numbers for a day
@@ -683,14 +749,8 @@ class _HomeViewState extends State<HomeView> {
           DayNameList(names: names),
         ];
       case TrainDayView.rest:
-        return [
-          const TypeTitle(
-            'Rest day',
-            sub: 'Nothing scheduled — the week\'s sessions sit either side '
-                'of it.',
-          ),
-        ];
       case TrainDayView.today:
+        // Both are rendered by their own body, not by this list.
         return const [];
     }
   }
