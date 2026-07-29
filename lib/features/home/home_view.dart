@@ -496,13 +496,15 @@ class _HomeViewState extends State<HomeView> {
           child: Padding(
             // With nothing pinned under it, the body itself has to clear the
             // tab bar.
-            padding: EdgeInsets.only(bottom: actions == null ? _tabBarInset : 0),
+            padding: EdgeInsets.only(
+              bottom: actions == null ? _tabBarInset + _tabBarGap : 0,
+            ),
             child: _bodyFor(snapshot, presentation, workout),
           ),
         ),
         if (actions != null)
           Padding(
-            padding: EdgeInsets.fromLTRB(22, 10, 22, _tabBarInset + 10),
+            padding: EdgeInsets.fromLTRB(22, 10, 22, _tabBarInset + _tabBarGap),
             child: actions,
           ),
       ],
@@ -531,6 +533,11 @@ class _HomeViewState extends State<HomeView> {
   /// top of it (as this did) counts the bar twice and floats whatever is
   /// pinned a bar's height above where it belongs.
   double get _tabBarInset => MediaQuery.of(context).padding.bottom;
+
+  /// Breathing room between the last thing on the page and the tab bar. The
+  /// quiet text actions sit right at the bottom edge of their block, so
+  /// without it they read as part of the bar rather than of the page.
+  static const double _tabBarGap = 20;
 
   Widget _bodyFor(
     _TrainSnapshot snapshot,
