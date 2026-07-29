@@ -27,7 +27,6 @@ import 'live_workout_view.dart';
 import 'program_setup_completion.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
-import 'training_calendar_view.dart';
 import 'widgets/needs_approval_card.dart';
 import 'train_day_view.dart';
 import 'widgets/day_ribbon.dart';
@@ -261,20 +260,8 @@ class _HomeViewState extends State<HomeView> {
       completedSessions: completedSessions,
       selectedDate: _selectedDate,
       daysBeforeToday: 0,
-      daysAfterToday: 7,
-      now: now,
-    );
-    final calendarWindow = _trainingScheduleService.buildWindow(
-      programType: programType,
-      frequencyPerWeek: snapshot.program.frequencyPerWeek,
-      dayMask: dayMask,
-      currentStepIndex: snapshot.state.nextStepIndex,
-      currentSessionType: snapshot.state.nextSessionType,
-      lastPlannedWorkoutAt: anchorDate,
-      lastCompletedSessionType: anchorSessionType,
-      completedSessions: completedSessions,
-      daysBeforeToday: 7,
-      daysAfterToday: 7,
+      // Two weeks exactly: the row you land on, and the one a scroll brings.
+      daysAfterToday: DayRibbon.daysPerPage * 2 - 1,
       now: now,
     );
     final selectedDay = ribbonWindow.selectedDay;
@@ -295,47 +282,12 @@ class _HomeViewState extends State<HomeView> {
       plannedStepIndex: selectedDay.stepIndex,
       affectsSchedule: !selectedDay.isRestDay,
     );
-    final calendarRecommendations = {
-      for (final day in calendarWindow.days)
-        TrainingScheduleService.dateOnly(day.date):
-            _trainingProgramService.buildToday(
-          progressMap: _progressMap,
-          programType: programType,
-          sessionType: day.sessionType,
-          branchSelections: branchSelections,
-          sessionItemsConfig: sessionItemsConfig,
-          skillTracks: _skillTracks,
-          plannedDate: day.date,
-          plannedStepIndex: day.stepIndex,
-          affectsSchedule: !day.isRestDay,
-        ),
-    };
     final completedWorkout = selectedDay.isCompleted
         ? _workoutForDate(selectedDay.date, plannedOnly: true)
         : null;
     final masterySettings = MasteryTargetSettings.fromVariationRules(
       snapshot.program.variationRules,
     );
-    // Per-day workouts already logged in the window — the day list shows what
-    // was actually done on those days, not what was planned.
-    final calendarWorkouts = <DateTime, PastWorkout>{};
-    for (final day in calendarWindow.days) {
-      final workout = _workoutForDate(day.date, plannedOnly: true);
-      if (workout != null) {
-        calendarWorkouts[TrainingScheduleService.dateOnly(day.date)] = workout;
-      }
-    }
-    final calendarSummaries = {
-      for (final entry in calendarRecommendations.entries)
-        entry.key: HomeDashboardMetricsCalculator.buildTodaySummary(
-          entry.value,
-          completedWorkout: calendarWorkouts[entry.key],
-          progressMap: _progressMap,
-          progressEntries: _progressEntries,
-          masterySettings: masterySettings,
-        ),
-    };
-
     return _TrainSnapshot(
       recommendation: recommendation,
       selectedDay: selectedDay,
@@ -363,10 +315,6 @@ class _HomeViewState extends State<HomeView> {
         now: now,
         masterySettings: masterySettings,
       ),
-      calendarDays: _calendarDaysForWindow(calendarWindow),
-      calendarRecommendations: calendarRecommendations,
-      calendarSummaries: calendarSummaries,
-      calendarWorkouts: calendarWorkouts,
       now: now,
     );
   }
@@ -466,29 +414,6 @@ class _HomeViewState extends State<HomeView> {
     );
     // A finished workout changes today's card — re-fetch.
     await _loadHomeData();
-  }
-
-  Future<void> _openTrainingCalendar(_TrainSnapshot snapshot) async {
-    final recommendation =
-        await Navigator.of(context).push<DailyTrainingRecommendation>(
-      MaterialPageRoute(
-        builder: (_) => TrainingCalendarView(
-          days: snapshot.calendarDays,
-          recommendations: snapshot.calendarRecommendations,
-          summaries: snapshot.calendarSummaries,
-          completedWorkouts: snapshot.calendarWorkouts,
-          now: snapshot.now,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    if (recommendation == null) {
-      // The schedule can open (and delete) past sessions — re-fetch on the way
-      // back so the tab never renders against a stale window.
-      await _loadHomeData();
-      return;
-    }
-    await _startWorkout(recommendation);
   }
 
   Future<void> _openAlternateWorkoutOptions(
@@ -853,7 +778,6 @@ class _HomeViewState extends State<HomeView> {
       today: TrainingScheduleService.dateOnly(snapshot.now),
       onDayTap: _selectDay,
       onBackToToday: _backToToday,
-      onMonthTap: () => _openTrainingCalendar(snapshot),
     );
   }
 
@@ -1118,10 +1042,6 @@ class _TrainSnapshot {
   /// Where a missed selected day's session now sits, when the plan says.
   final DateTime? rescheduledTo;
 
-  final List<HomeWeekStripDay> calendarDays;
-  final Map<DateTime, DailyTrainingRecommendation> calendarRecommendations;
-  final Map<DateTime, HomeTodaySummary> calendarSummaries;
-  final Map<DateTime, PastWorkout> calendarWorkouts;
   final DateTime now;
 
   const _TrainSnapshot({
@@ -1130,10 +1050,6 @@ class _TrainSnapshot {
     required this.selectedDay,
     required this.ribbonDays,
     this.rescheduledTo,
-    required this.calendarDays,
-    required this.calendarRecommendations,
-    required this.calendarSummaries,
-    required this.calendarWorkouts,
     required this.now,
   });
 

@@ -16,7 +16,8 @@ import '../train_day_view.dart';
 /// solid for today, dashed for a day ahead (nothing about it is settled yet),
 /// red for one you missed.
 class DayRibbon extends StatefulWidget {
-  static const double _cellWidth = 51;
+  /// A page of the ribbon is a week: seven days, filling the row.
+  static const int daysPerPage = 7;
 
   final List<HomeWeekStripDay> days;
 
@@ -27,10 +28,6 @@ class DayRibbon extends StatefulWidget {
   final ValueChanged<HomeWeekStripDay> onDayTap;
   final VoidCallback onBackToToday;
 
-  /// The month opens the full schedule — the one place that still lists the
-  /// weeks as a page rather than a ribbon.
-  final VoidCallback? onMonthTap;
-
   const DayRibbon({
     super.key,
     required this.days,
@@ -38,7 +35,6 @@ class DayRibbon extends StatefulWidget {
     required this.today,
     required this.onDayTap,
     required this.onBackToToday,
-    this.onMonthTap,
   });
 
   @override
@@ -46,13 +42,7 @@ class DayRibbon extends StatefulWidget {
 }
 
 class _DayRibbonState extends State<DayRibbon> {
-  final _controller = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelected());
-  }
+  final _controller = PageController();
 
   @override
   void didUpdateWidget(DayRibbon oldWidget) {
@@ -68,8 +58,8 @@ class _DayRibbonState extends State<DayRibbon> {
     super.dispose();
   }
 
-  /// Keeps the day you are looking at on screen — tapping "back to today"
-  /// from two weeks out has to actually show today.
+  /// Brings the week holding the selected day into view — coming back to
+  /// today from next week has to actually show today.
   void _revealSelected() {
     if (!_controller.hasClients) return;
     final index = widget.days.indexWhere(
@@ -77,11 +67,10 @@ class _DayRibbonState extends State<DayRibbon> {
     );
     if (index < 0) return;
 
-    final viewport = _controller.position.viewportDimension;
-    final target = index * DayRibbon._cellWidth -
-        (viewport - DayRibbon._cellWidth) / 2;
-    _controller.animateTo(
-      target.clamp(0, _controller.position.maxScrollExtent),
+    final page = index ~/ DayRibbon.daysPerPage;
+    if ((_controller.page ?? 0).round() == page) return;
+    _controller.animateToPage(
+      page,
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
     );
@@ -90,88 +79,92 @@ class _DayRibbonState extends State<DayRibbon> {
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
+  List<List<HomeWeekStripDay>> get _weeks {
+    final weeks = <List<HomeWeekStripDay>>[];
+    for (var start = 0;
+        start < widget.days.length;
+        start += DayRibbon.daysPerPage) {
+      weeks.add(
+        widget.days.sublist(
+          start,
+          (start + DayRibbon.daysPerPage).clamp(0, widget.days.length),
+        ),
+      );
+    }
+    return weeks;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.days.isEmpty) return const SizedBox.shrink();
 
     final away = !_sameDay(widget.selectedDate, widget.today);
-    final ahead = widget.selectedDate.isAfter(widget.today);
+    final weeks = _weeks;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              Pressable(
-                onTap: widget.onMonthTap,
-                child: Text(
-                  _monthLabel(widget.selectedDate),
-                  style: monoStyle(size: 10.5, letterSpacing: 1.7),
-                ),
-              ),
-              const Spacer(),
-              if (away)
-                Pressable(
-                  onTap: widget.onBackToToday,
-                  child: Text(
-                    ahead ? '← TODAY' : 'TODAY →',
-                    style: monoStyle(
-                      size: 10.5,
-                      letterSpacing: 1.7,
-                      color: AppColors.accentPrimary,
+        // Held at a fixed height whether or not the way back is showing, so
+        // the ribbon never jumps as you move off today.
+        SizedBox(
+          height: 22,
+          child: away
+              ? Align(
+                  alignment: Alignment.centerRight,
+                  child: Pressable(
+                    onTap: widget.onBackToToday,
+                    child: Text(
+                      widget.selectedDate.isAfter(widget.today)
+                          ? '← TODAY'
+                          : 'TODAY →',
+                      style: monoStyle(
+                        size: 10.5,
+                        letterSpacing: 1.7,
+                        color: AppColors.accentPrimary,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
+                )
+              : null,
         ),
         SizedBox(
           height: 68,
-          // Bleeds into the page margin so the run of days reads as a ribbon
-          // that continues past the screen, not a boxed row.
-          child: ListView.builder(
+          // A week at a time: the row holds seven days and the next swipe
+          // brings the seven behind them, so the days never half-scroll into
+          // a reading that spans two weeks.
+          child: PageView.builder(
             controller: _controller,
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            itemCount: widget.days.length,
+            itemCount: weeks.length,
             itemBuilder: (context, index) {
-              final day = widget.days[index];
-              return SizedBox(
-                width: DayRibbon._cellWidth,
-                child: Pressable(
-                  onTap: () => widget.onDayTap(day),
-                  child: _RibbonDay(
-                    day: day,
-                    selected: _sameDay(day.date, widget.selectedDate),
-                    isToday: _sameDay(day.date, widget.today),
-                  ),
-                ),
+              final week = weeks[index];
+              return Row(
+                children: [
+                  for (var slot = 0; slot < DayRibbon.daysPerPage; slot++)
+                    Expanded(
+                      child: slot < week.length
+                          ? Pressable(
+                              onTap: () => widget.onDayTap(week[slot]),
+                              child: _RibbonDay(
+                                day: week[slot],
+                                selected: _sameDay(
+                                  week[slot].date,
+                                  widget.selectedDate,
+                                ),
+                                isToday: _sameDay(
+                                  week[slot].date,
+                                  widget.today,
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                ],
               );
             },
           ),
         ),
       ],
     );
-  }
-
-  String _monthLabel(DateTime date) {
-    const months = [
-      'JANUARY',
-      'FEBRUARY',
-      'MARCH',
-      'APRIL',
-      'MAY',
-      'JUNE',
-      'JULY',
-      'AUGUST',
-      'SEPTEMBER',
-      'OCTOBER',
-      'NOVEMBER',
-      'DECEMBER',
-    ];
-    return '${months[date.month - 1]} ${date.year}';
   }
 }
 

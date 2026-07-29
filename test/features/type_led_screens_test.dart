@@ -114,8 +114,7 @@ void main() {
       ),
     );
 
-    // The month names itself, and every day carries its date.
-    expect(find.text('JULY 2026'), findsOneWidget);
+    // Every day carries its date, and the seven of them fill the row.
     expect(find.text('27'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
     // Nothing offers a way back while today is the day being shown.
