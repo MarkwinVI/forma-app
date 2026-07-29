@@ -708,16 +708,6 @@ class _HomeViewState extends State<HomeView> {
           secondaryLabel: 'Back to today',
           onSecondary: _backToToday,
         );
-      case TrainDayView.missed:
-        final moved = snapshot.rescheduledTo;
-        return DayActions(
-          primaryLabel: 'Do this session now',
-          onPrimary: () => _startWorkout(snapshot.recommendation),
-          secondaryLabel: moved == null
-              ? 'Back to today'
-              : 'Leave it on ${TrainDayViewResolver.weekdayName(moved)}',
-          onSecondary: _backToToday,
-        );
       case TrainDayView.logged:
         return DayActions(
           primaryLabel: workout == null ? null : 'View workout',
@@ -727,6 +717,9 @@ class _HomeViewState extends State<HomeView> {
           secondaryLabel: 'Back to today',
           onSecondary: _backToToday,
         );
+      // A missed day is read, not acted on: the band already says where its
+      // session went, so the only thing left to do here is leave.
+      case TrainDayView.missed:
       case TrainDayView.distant:
       case TrainDayView.rest:
       case TrainDayView.today:
