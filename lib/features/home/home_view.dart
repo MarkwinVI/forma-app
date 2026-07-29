@@ -871,7 +871,8 @@ class _HomeViewState extends State<HomeView> {
             ),
           if (_whatChanged.isNotEmpty) TrainInsight(events: _whatChanged),
         ] else ...[
-          const SizedBox(height: 14),
+          // No spacer: the eyebrow sets the gap above the title, the same
+          // gap every other day of the week gets.
           TodayWorkoutCard(
             summary: metrics.today,
             rows: TodayWorkoutContent.rows(metrics),
