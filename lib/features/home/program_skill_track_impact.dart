@@ -28,11 +28,12 @@ class SkillTrackImpact {
   /// lets the copy say "all four full-body workouts" rather than listing days.
   final bool coversEverySession;
 
-  /// The weekly-balance line this tree feeds, and where it moves.
+  /// The weekly-balance line this tree feeds, and where it moves. Stated as a
+  /// before and after rather than against the target, so no benchmark to
+  /// carry here.
   final String balanceLabel;
   final int before;
   final int after;
-  final int target;
 
   const SkillTrackImpact({
     required this.exerciseName,
@@ -40,7 +41,6 @@ class SkillTrackImpact {
     required this.balanceLabel,
     required this.before,
     required this.after,
-    required this.target,
     this.sessionType,
     this.coversEverySession = false,
   });
@@ -140,9 +140,13 @@ String _removedBalance(SkillTrackImpact impact) {
 }
 
 /// "Horizontal pull" reads as a compound adjective in front of "training", so
-/// it is hyphenated: horizontal-pull training.
-String _movement(String balanceLabel) =>
-    balanceLabel.toLowerCase().replaceAll(' ', '-');
+/// it is hyphenated: horizontal-pull training. A label that is already two
+/// things — glutes & hamstrings — is a list, not a compound, and stays as it is.
+String _movement(String balanceLabel) {
+  final lower = balanceLabel.toLowerCase();
+  if (lower.contains('&')) return lower;
+  return lower.replaceAll(' ', '-');
+}
 
 /// "none", "one time", "four times" — an absence is worth saying as one.
 String _amount(int value) {

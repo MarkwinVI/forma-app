@@ -60,12 +60,23 @@ class BalanceBlock {
   const BalanceBlock({required this.weekday, required this.item});
 }
 
-/// How often a primary category should be trained in a week: one block on
-/// each applicable day, held between these two. Two days is the floor — below
-/// that the pattern holds rather than improves — and past three the extra work
-/// costs recovery instead of progress.
-const int kBalanceTarget = 3;
+/// How much of a primary category a week should hold: 0–2 blocks is short of
+/// what the pattern needs, 3–4 is where it should be, and past 4 the extra
+/// work costs recovery instead of progress.
+///
+/// The same benchmark whatever the split. A split that only reaches horizontal
+/// pull twice a week does not lower what horizontal pull needs — it is the
+/// split that has to give.
+const int kBalanceMinBlocks = 3;
+const int kBalanceMaxBlocks = 4;
+
+/// Volume on its own would let three blocks stacked into one session pass, so
+/// how the week spreads them is checked separately: at least two training
+/// days, and only ever as a soft note.
 const int kBalanceMinDays = 2;
+
+/// The target as copy reads it: "3–4 blocks a week".
+const String kBalanceTargetLabel = '$kBalanceMinBlocks–$kBalanceMaxBlocks';
 
 /// One line of the weekly balance: the movement patterns it covers, and
 /// whether it is one of the primary categories the program is judged on.
@@ -84,7 +95,9 @@ class BalanceGroup {
   });
 }
 
-/// The five primary categories, then the two optional ones.
+/// The six primary categories, then the two optional ones. Knee-dominant and
+/// hip-dominant leg work are judged apart: squats cannot stand in for a week
+/// with no hinge in it.
 const List<BalanceGroup> kBalanceGroups = [
   BalanceGroup(
     label: 'Horizontal push',
@@ -103,8 +116,12 @@ const List<BalanceGroup> kBalanceGroups = [
     categories: {ExerciseCategory.verticalPull},
   ),
   BalanceGroup(
-    label: 'Legs',
-    categories: {ExerciseCategory.squat, ExerciseCategory.hinge},
+    label: 'Squats & lunges',
+    categories: {ExerciseCategory.squat},
+  ),
+  BalanceGroup(
+    label: 'Glutes & hamstrings',
+    categories: {ExerciseCategory.hinge},
   ),
   BalanceGroup(
     label: 'Core',
@@ -118,33 +135,66 @@ const List<BalanceGroup> kBalanceGroups = [
   ),
 ];
 
-enum BalanceVerdict { missing, underloaded, optimal, overloaded, optional }
+/// Where a category sits. The first three are the volume read; [concentrated]
+/// is the frequency one — enough work, all of it in the same session.
+enum BalanceVerdict {
+  missing,
+  needsWork,
+  balanced,
+  concentrated,
+  tooMuch,
+  optional,
+}
 
 extension BalanceVerdictX on BalanceVerdict {
   String get label {
     switch (this) {
       case BalanceVerdict.missing:
         return 'Missing';
-      case BalanceVerdict.underloaded:
-        return 'Underloaded';
-      case BalanceVerdict.optimal:
-        return 'Optimal';
-      case BalanceVerdict.overloaded:
-        return 'Overloaded';
+      case BalanceVerdict.needsWork:
+        return 'Needs work';
+      case BalanceVerdict.balanced:
+        return 'Balanced';
+      case BalanceVerdict.concentrated:
+        return 'One day';
+      case BalanceVerdict.tooMuch:
+        return 'Too much';
       case BalanceVerdict.optional:
         return 'Optional';
     }
   }
 
+  /// How the settings row counts this verdict: "2 patterns short", where
+  /// "Needs work" would read as one pattern speaking for two.
+  String get summaryWord {
+    switch (this) {
+      case BalanceVerdict.missing:
+        return 'missing';
+      case BalanceVerdict.needsWork:
+        return 'short';
+      case BalanceVerdict.balanced:
+        return 'balanced';
+      case BalanceVerdict.concentrated:
+        return 'on one day';
+      case BalanceVerdict.tooMuch:
+        return 'over';
+      case BalanceVerdict.optional:
+        return 'optional';
+    }
+  }
+
   Color get color {
     switch (this) {
-      case BalanceVerdict.optimal:
+      case BalanceVerdict.balanced:
         return AppColors.green;
       case BalanceVerdict.optional:
         return AppColors.textMuted;
+      // A week with the work in it but bunched up is a note, not a fault.
+      case BalanceVerdict.concentrated:
+        return AppColors.textSecondary;
       case BalanceVerdict.missing:
-      case BalanceVerdict.underloaded:
-      case BalanceVerdict.overloaded:
+      case BalanceVerdict.needsWork:
+      case BalanceVerdict.tooMuch:
         return AppColors.amber;
     }
   }
@@ -189,40 +239,21 @@ class BalanceCategory {
   /// of the same category in one session are one go at that pattern, not two.
   int get times => {for (final block in blocks) block.weekday}.length;
 
-  /// Days a week this movement should come up on, held to 2–3. A split that
-  /// only offers it 1.5 days a week is aimed at 2, not at 3.
-  int get dayTarget {
-    final chances = opportunities;
-    if (chances == null) return kBalanceTarget;
-    final whole = chances.floor();
-    if (whole < kBalanceMinDays) return kBalanceMinDays;
-    if (whole > kBalanceTarget) return kBalanceTarget;
-    return whole;
-  }
-
-  /// Blocks a week: one per pattern the group holds, on each of its days.
-  /// Legs is squat and hinge on one line, so a leg day that trains both is
-  /// one day but two blocks — its target is the day target twice over.
-  int get target => dayTarget * group.categories.length;
-
-  /// Measured against both targets: fewer days than the split can give it, or
-  /// fewer blocks than its patterns need, is underloaded; more blocks than the
-  /// target — spread over extra days or doubled up inside one session — is
-  /// overloaded.
+  /// Volume first, on the same 3–4 blocks every category is held to, then —
+  /// only once the volume is there — how the week spreads it.
   BalanceVerdict get verdict {
     if (!group.primary) return BalanceVerdict.optional;
     if (blocks.isEmpty) return BalanceVerdict.missing;
-    if (times < dayTarget || weeklyBlocks < target) {
-      return BalanceVerdict.underloaded;
-    }
-    if (weeklyBlocks > target) return BalanceVerdict.overloaded;
-    return BalanceVerdict.optimal;
+    if (weeklyBlocks < kBalanceMinBlocks) return BalanceVerdict.needsWork;
+    if (weeklyBlocks > kBalanceMaxBlocks) return BalanceVerdict.tooMuch;
+    if (times < kBalanceMinDays) return BalanceVerdict.concentrated;
+    return BalanceVerdict.balanced;
   }
 }
 
-/// Reads the week into one entry per group. Pass [context] to have each entry
-/// know what the split can offer it — without it the target stays the flat
-/// [kBalanceTarget].
+/// Reads the week into one entry per group. The verdict is the same either
+/// way — pass [context] so the advice knows how many chances the split gives
+/// a movement, which is what decides whether the split is the thing to change.
 List<BalanceCategory> balanceFromWeek(
   List<ProgramWeekDay> week, {
   BalanceProgramContext? context,
@@ -261,13 +292,13 @@ double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
   return context.trainingDaysPerWeek * covering / sequence.length;
 }
 
-/// "Vertical pull underloaded, Core missing" — or all clear.
+/// "2 patterns short", "1 pattern over" — or all clear.
 /// The value the Program tab shows against "Weekly balance" — a settings-row
 /// value, so it counts the patterns that are off rather than naming them.
 String balanceSummary(List<BalanceCategory> categories) {
   final off = [
     for (final entry in categories)
-      if (entry.group.primary && entry.verdict != BalanceVerdict.optimal)
+      if (entry.group.primary && entry.verdict != BalanceVerdict.balanced)
         entry.verdict,
   ];
   if (off.isEmpty) return 'Balanced';
@@ -275,7 +306,7 @@ String balanceSummary(List<BalanceCategory> categories) {
   final noun = off.length == 1 ? 'pattern' : 'patterns';
   final kinds = off.toSet();
   if (kinds.length == 1) {
-    return '${off.length} $noun ${kinds.first.label.toLowerCase()}';
+    return '${off.length} $noun ${kinds.first.summaryWord}';
   }
   return '${off.length} $noun off target';
 }
@@ -350,8 +381,8 @@ class _CategoryDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final verdict = entry.verdict;
     final times = entry.times;
-    final over = verdict == BalanceVerdict.overloaded;
-    final report = verdict == BalanceVerdict.optimal ||
+    final blocks = entry.weeklyBlocks;
+    final report = verdict == BalanceVerdict.balanced ||
             verdict == BalanceVerdict.optional
         ? null
         : balanceReportFor(
@@ -375,11 +406,8 @@ class _CategoryDetailView extends StatelessWidget {
               // up on one of them.
               sub: verdict == BalanceVerdict.optional
                   ? 'Optional · $times ${times == 1 ? 'day' : 'days'} a week'
-                  : over
-                      ? '${entry.weeklyBlocks} times a week · '
-                          'target ${entry.target}'
-                      : '${entry.weeklyBlocks} of ${entry.target} times '
-                          'a week',
+                  : '$blocks ${blocks == 1 ? 'block' : 'blocks'} a week · '
+                      'target $kBalanceTargetLabel',
               subColor: verdict.color,
               subWeight: FontWeight.w600,
             ),
@@ -409,13 +437,13 @@ class _CategoryDetailView extends StatelessWidget {
                         ),
                       ),
                     )
-                  else if (verdict == BalanceVerdict.optimal)
+                  else if (verdict == BalanceVerdict.balanced)
                     Padding(
                       padding: const EdgeInsets.only(top: 22),
                       child: Text(
-                        '${entry.label} is where it should be: it appears '
-                        '${entry.weeklyBlocks} times this week against a '
-                        'target of ${entry.target}.',
+                        '${entry.label} is where it should be: $blocks blocks '
+                        'across $times ${times == 1 ? 'day' : 'days'} this '
+                        'week, against a target of $kBalanceTargetLabel.',
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,

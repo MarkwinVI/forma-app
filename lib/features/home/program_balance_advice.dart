@@ -103,13 +103,14 @@ BalanceReport balanceReportFor({
 }) {
   final movement = entry.label;
   final blocks = entry.weeklyBlocks;
+  final unit = blocks == 1 ? 'block' : 'blocks';
 
-  if (entry.verdict == BalanceVerdict.overloaded) {
+  if (entry.verdict == BalanceVerdict.tooMuch) {
     return BalanceReport(
       headline: 'Too much work',
-      explanation: '$movement appears $blocks times this week. Forma '
-          'recommends ${entry.target} times a week. Extra work may make '
-          'recovery harder.',
+      explanation: '$movement has $blocks $unit this week. Forma recommends '
+          '$kBalanceTargetLabel blocks a week. Extra work may make recovery '
+          'harder.',
       actionsLabel: 'WAYS TO REDUCE IT',
       advice: _tooMuch(
         entry: entry,
@@ -120,10 +121,23 @@ BalanceReport balanceReportFor({
     );
   }
 
+  // Enough work, all of it in one session. A note rather than a fault, so it
+  // reads as one: nothing is missing, the week just sits it all in one place.
+  if (entry.verdict == BalanceVerdict.concentrated) {
+    return BalanceReport(
+      headline: 'Concentrated in one workout',
+      explanation: '$movement has enough weekly work, but most of it is '
+          'concentrated in one workout. Spread across at least two training '
+          'days it recovers better and holds its quality.',
+      actionsLabel: 'WAYS TO SPREAD IT',
+      advice: _tooBunched(entry: entry, week: week, context: context),
+    );
+  }
+
   return BalanceReport(
     headline: 'Needs more work',
-    explanation: '$movement appears $blocks ${blocks == 1 ? 'time' : 'times'} '
-        'this week. Aim for ${entry.target} times a week.',
+    explanation: '$movement has $blocks $unit this week. Aim for '
+        '$kBalanceTargetLabel blocks a week.',
     actionsLabel: 'WAYS TO IMPROVE IT',
     advice: _tooLittle(entry: entry, week: week, context: context),
   );
@@ -150,46 +164,96 @@ List<BalanceAdvice> _tooLittle({
     ];
   }
 
-  final chances = entry.opportunities ?? kBalanceTarget.toDouble();
+  final chances = entry.opportunities ?? kBalanceMinBlocks.toDouble();
 
   // Case B — the movement is there, but the split barely comes back to it.
-  // This is the one case where the schedule really is the problem.
+  // This is the one case where the schedule is the whole problem.
   if (chances < kBalanceMinDays) {
-    if (context.programType == TrainingProgramType.fullBody) {
-      return const [
-        BalanceAdvice(
-          title: 'Add another training day',
-          detail: 'Train your full-body program more frequently.',
-        ),
-      ];
-    }
-    return [
-      const BalanceAdvice(
-        title: 'Add another training day',
-        detail: 'Increase the frequency of your current split.',
-      ),
-      BalanceAdvice(
-        title: 'Change your split',
-        detail: 'Choose a split that trains $movement at least twice per week.',
-      ),
-    ];
+    return _scheduleAdvice(
+      context,
+      splitDetail: 'Choose a split that trains $movement at least twice '
+          'per week.',
+    );
   }
 
-  // Case C — the week offers the movement often enough; some of those days
-  // are simply empty. Schedule what is already there before adding anything.
+  // Case C — the split comes back often enough, so the volume is what is
+  // short. Schedule what is already there, then add to it; only when every
+  // applicable day already trains the movement is the schedule worth touching.
   final open = _openDayFor(entry, week);
   final existing = _mostFrequentExercise(entry);
   return [
     if (open != null && existing != null)
       BalanceAdvice(
         title: 'Add $existing to another workout',
-        detail: 'Train $movement on ${kWeekdayNames[open]} to reach '
-            '${entry.target} times a week.',
+        detail: 'Train $movement on ${kWeekdayNames[open]} to move towards '
+            '$kBalanceTargetLabel blocks a week.',
       ),
     BalanceAdvice(
       title: 'Add another $movement exercise',
       detail: 'Add a supporting exercise to one of your applicable workouts.',
     ),
+    if (open == null)
+      ..._scheduleAdvice(
+        context,
+        splitDetail: 'Choose a split that comes back to $movement more often.',
+      ),
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Enough work, all in one session
+// ---------------------------------------------------------------------------
+
+/// The volume is there, so nothing here adds work — it only moves some of it
+/// onto a second day, or makes room for a second day to exist.
+List<BalanceAdvice> _tooBunched({
+  required BalanceCategory entry,
+  required List<ProgramWeekDay> week,
+  required BalanceProgramContext context,
+}) {
+  final movement = entry.label.toLowerCase();
+  final open = _openDayFor(entry, week);
+  final movable = _mostFrequentExercise(entry);
+
+  if (open != null && movable != null) {
+    return [
+      BalanceAdvice(
+        title: 'Move $movable to ${kWeekdayNames[open]}',
+        detail: 'Splitting the work across two days trains $movement just as '
+            'much with better recovery between sessions.',
+      ),
+    ];
+  }
+
+  // Nowhere to move it to — the split gives the movement one day and no more.
+  return _scheduleAdvice(
+    context,
+    splitDetail: 'Choose a split that trains $movement on at least two days '
+        'per week.',
+  );
+}
+
+/// The schedule-level moves, for when the split itself is what holds the
+/// movement back: more days of it, or a different split. A full-body program
+/// has nothing to re-split — every day of it already trains everything.
+List<BalanceAdvice> _scheduleAdvice(
+  BalanceProgramContext context, {
+  required String splitDetail,
+}) {
+  if (context.programType == TrainingProgramType.fullBody) {
+    return const [
+      BalanceAdvice(
+        title: 'Add another training day',
+        detail: 'Train your full-body program more frequently.',
+      ),
+    ];
+  }
+  return [
+    const BalanceAdvice(
+      title: 'Add another training day',
+      detail: 'Increase the frequency of your current split.',
+    ),
+    BalanceAdvice(title: 'Change your split', detail: splitDetail),
   ];
 }
 
@@ -240,9 +304,9 @@ BalanceAdvice _standaloneAdvice(
   );
 }
 
-/// Up to three suggestions for the group, drawn a pattern at a time so the
-/// Legs group offers both a knee-dominant and a hip-dominant option, with
-/// anything already in the week filtered out.
+/// Up to three suggestions for the group, drawn a pattern at a time so a group
+/// covering more than one still offers something from each, with anything
+/// already in the week filtered out.
 List<String> _suggestionsFor(
   BalanceGroup group,
   List<ProgramWeekDay> week,
@@ -285,9 +349,10 @@ List<BalanceAdvice> _tooMuch({
   final movement = entry.label.toLowerCase();
   final advice = <BalanceAdvice>[];
 
-  // Case A — spread over too many days. Thin the movement out of a session
-  // rather than dropping a whole training day.
-  if (entry.times > entry.dayTarget) {
+  // Case A — on more days than the weekly ceiling allows, so no amount of
+  // tidying inside a session brings it back. Thin the movement out of a
+  // workout rather than dropping a whole training day.
+  if (entry.times > kBalanceMaxBlocks) {
     final busiest = _mostFrequentExercise(entry);
     advice.add(
       BalanceAdvice(
@@ -300,7 +365,7 @@ List<BalanceAdvice> _tooMuch({
     // Only when the schedule is what overtrains the user — several movements
     // over at once — is the schedule itself worth touching.
     final overloaded = allCategories
-        .where((other) => other.verdict == BalanceVerdict.overloaded)
+        .where((other) => other.verdict == BalanceVerdict.tooMuch)
         .length;
     if (overloaded > 1) {
       advice.addAll(const [
@@ -346,7 +411,7 @@ List<BalanceAdvice> _tooMuch({
     final progressionBlocks = entry.blocks
         .where((block) => block.item.kind == ProgramDayItemKind.progression)
         .length;
-    if (progressionBlocks > entry.target) {
+    if (progressionBlocks > kBalanceMaxBlocks) {
       advice.add(
         BalanceAdvice(
           title: 'Pause ${pausable.title}',

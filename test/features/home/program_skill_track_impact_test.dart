@@ -179,6 +179,5 @@ SkillTrackImpact _impact({
     balanceLabel: balanceLabel,
     before: before,
     after: after,
-    target: 3,
   );
 }

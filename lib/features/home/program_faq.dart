@@ -26,7 +26,7 @@ const List<FaqItem> kProgramFaq = [
     question: 'Why does my program include different movement categories?',
     answer: [
       FaqBlock(
-        'Forma builds balanced strength programs around five primary '
+        'Forma builds balanced strength programs around six primary '
         'categories:',
       ),
       FaqBlock.bullets([
@@ -34,7 +34,8 @@ const List<FaqItem> kProgramFaq = [
         'Vertical push',
         'Horizontal pull',
         'Vertical pull',
-        'Legs',
+        'Squats & lunges',
+        'Glutes & hamstrings',
       ]),
       FaqBlock(
         'Training every category helps you develop balanced strength and '
@@ -62,11 +63,15 @@ const List<FaqItem> kProgramFaq = [
     answer: [
       FaqBlock('Forma generally recommends:'),
       FaqBlock.bullets([
-        'At least two sessions per week involving each category',
-        'At least four blocks per category each week',
-        'Around six blocks per category in a standard three-day full-body '
-            'program',
+        'Three to four blocks per category each week',
+        'Spread across at least two training days',
       ]),
+      FaqBlock(
+        'The same benchmark applies whatever split you train. If your split '
+        'only reaches a category twice a week, that category is still short — '
+        'Forma will suggest another block, another training day, or a '
+        'different split.',
+      ),
       FaqBlock(
         'These are guidelines rather than strict requirements. Your program '
         'may differ based on your schedule, goals and current ability.',

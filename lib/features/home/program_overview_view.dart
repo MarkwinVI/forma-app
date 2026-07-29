@@ -428,7 +428,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       balanceLabel: balanceBefore[index].label,
       before: balanceBefore[index].weeklyBlocks,
       after: balanceAfter[index].weeklyBlocks,
-      target: balanceBefore[index].target,
     );
   }
 
@@ -567,7 +566,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                     warn: balance.any(
                       (entry) =>
                           entry.group.primary &&
-                          entry.verdict != BalanceVerdict.optimal,
+                          entry.verdict != BalanceVerdict.balanced,
                     ),
                     last: true,
                     onTap: () => Navigator.of(context).push(
