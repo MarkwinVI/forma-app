@@ -165,7 +165,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
         title: 'Muscle group',
         sub: 'Filter by what the exercise trains',
         options: [
-          for (final group in kProgramMuscleGroups)
+          for (final group in kExerciseMuscleGroups)
             (value: group, label: group),
         ],
         selected: _muscles,
@@ -552,7 +552,10 @@ class _ExerciseResultRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muscles = ProgramSessionPlan.musclesForCategory(exercise.category);
+    // The exercise's own groups, not its pattern's — the pattern reads
+    // "Other" for half the library, and a hammer curl trains biceps whatever
+    // it is filed under.
+    final muscles = ProgramSessionPlan.musclesForExercise(exercise);
     final subtitle = [
       programPatternLabel(exercise.category),
       if (muscles.isNotEmpty) muscles.join(', '),

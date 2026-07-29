@@ -19,4075 +19,4125 @@ class ExerciseLibraryCatalog {
     Exercise(
       id: 'Farmers_Walk',
       category: ExerciseCategory.other,
+      muscles: ['Forearms', 'Traps', 'Core', 'Glutes'],
       name: 'Farmer\'s Walk',
       description:
           'Grip a heavy implement or a dumbbell in each hand at your sides, brace, and stand tall by driving through the heels.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Farmers_Walk/0.jpg',
     ),
     Exercise(
       id: 'Rickshaw_Carry',
       category: ExerciseCategory.other,
+      muscles: ['Forearms', 'Traps', 'Core', 'Glutes'],
       name: 'Rickshaw Carry',
       description:
           'Stand centered inside the frame and grip the handles at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rickshaw_Carry/0.jpg',
     ),
     Exercise(
       id: 'Yoke_Walk',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Forearms', 'Traps', 'Core', 'Glutes'],
       name: 'Yoke Walk',
       description:
           'Duck under the yoke and rack the crossbar across the back of your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Yoke_Walk/0.jpg',
     ),
     Exercise(
       id: 'Dead_Bug',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Dead Bug',
       description:
           'Lie on your back with arms reaching toward the ceiling and knees bent over your hips at 90 degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dead_Bug/0.jpg',
     ),
     Exercise(
       id: 'Pallof_Press',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Pallof Press',
       description:
           'Set a cable handle to shoulder height and stand side-on, holding it at your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Pallof_Press/0.jpg',
     ),
     Exercise(
       id: 'Plank',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Plank',
       description:
           'Rest on the forearms and toes with the elbows directly under the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Plank/0.jpg',
     ),
     Exercise(
       id: 'Ab_Crunch_Machine',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Ab Crunch Machine',
       description:
           'Sit on the machine with your feet hooked under the pads and grab the top handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Ab_Crunch_Machine/0.jpg',
     ),
     Exercise(
       id: 'Air_Bike',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Air Bike',
       description:
           'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Air_Bike/0.jpg',
     ),
     Exercise(
       id: 'Alternate_Heel_Touchers',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Alternate Heel Touchers',
       description:
           'Lie on your back with knees bent, feet flat and shoulder-width apart, and arms extended at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternate_Heel_Touchers/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Rollout_from_Bench',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Barbell Rollout from Bench',
       description:
           'Kneel on a bench and take a narrow grip on a loaded barbell resting on the floor at the bench\'s end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Rollout_from_Bench/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Side_Bend',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Barbell Side Bend',
       description:
           'Stand with a barbell resting across the back of your shoulders and feet shoulder-width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Side_Bend/0.jpg',
     ),
     Exercise(
       id: 'Bent_Press',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Bent Press',
       description:
           'Clean a kettlebell to your shoulder and turn the wrist in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Press/0.jpg',
     ),
     Exercise(
       id: 'Bent-Knee_Hip_Raise',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Bent-Knee Hip Raise',
       description:
           'Lie flat with arms at your sides and knees bent to about 75 degrees, feet hovering off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent-Knee_Hip_Raise/0.jpg',
     ),
     Exercise(
       id: 'Bosu_Ball_Cable_Crunch_With_Side_Bends',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Bosu Ball Cable Crunch With Side Bends',
       description:
           'Set two low cable handles and lie back over a Bosu ball centered in front of the machine, holding a handle by each side of your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bosu_Ball_Cable_Crunch_With_Side_Bends/0.jpg',
     ),
     Exercise(
       id: 'Bottoms_Up',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Bottoms Up',
       description:
           'Lie on your back with legs straight and arms at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bottoms_Up/0.jpg',
     ),
     Exercise(
       id: 'Butt-Ups',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Butt-Ups',
       description:
           'Set up in a forearm plank with elbows under your shoulders and your back slightly arched.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Butt-Ups/0.jpg',
     ),
     Exercise(
       id: 'Cable_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cable Crunch',
       description:
           'Kneel below a high pulley holding the rope by the head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Cable_Judo_Flip',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cable Judo Flip',
       description:
           'Set a rope on the lowest pulley and stand side-on with a wide stance, gripping it with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Judo_Flip/0.jpg',
     ),
     Exercise(
       id: 'Cable_Reverse_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cable Reverse Crunch',
       description:
           'Attach an ankle strap to a low pulley and lie on a mat with your feet toward the machine, knees bent to 90 degrees and legs lifted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Reverse_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Cable_Seated_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cable Seated Crunch',
       description:
           'Sit on a bench with your back to a high pulley and hold the rope with both hands beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Seated_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Cocoons',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cocoons',
       description:
           'Lie on your back with your legs straight and arms extended overhead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cocoons/0.jpg',
     ),
     Exercise(
       id: 'Cross-Body_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cross-Body Crunch',
       description:
           'Lie on your back with your knees bent and feet flat, hands loose behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cross-Body_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Crunch_-_Hands_Overhead',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Crunch - Hands Overhead',
       description:
           'Lie on your back with your knees bent and feet flat, arms stretched overhead with palms crossed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Crunch_-_Hands_Overhead/0.jpg',
     ),
     Exercise(
       id: 'Crunch_-_Legs_On_Exercise_Ball',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Crunch - Legs On Exercise Ball',
       description:
           'Lie on your back with your feet resting on an exercise ball, knees bent to 90 degrees and hands beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Crunch_-_Legs_On_Exercise_Ball/0.jpg',
     ),
     Exercise(
       id: 'Crunches',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Crunches',
       description:
           'Lie on your back with your knees bent and feet flat, holding a medicine ball against your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Crunches/0.jpg',
     ),
     Exercise(
       id: 'Decline_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Decline Crunch',
       description:
           'Hook your legs at the top of a decline bench and lie back with your hands beside your head, elbows in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Decline_Oblique_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Decline Oblique Crunch',
       description:
           'Hook your legs on a decline bench and lie back with one hand beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Oblique_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Decline_Reverse_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Decline Reverse Crunch',
       description:
           'Lie head-up on a decline bench and grip the top behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Reverse_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Elbow_to_Knee',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Elbow to Knee',
       description:
           'Lie on your back and cross one ankle over the opposite bent knee, hands behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Elbow_to_Knee/0.jpg',
     ),
     Exercise(
       id: 'Exercise_Ball_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Exercise Ball Crunch',
       description:
           'Lie back over an exercise ball with your lower back on the curve and feet flat on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Exercise_Ball_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Exercise_Ball_Pull-In',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Exercise Ball Pull-In',
       description:
           'Get into a push-up position with your hands on the floor and shins on top of an exercise ball, body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Exercise_Ball_Pull-In/0.jpg',
     ),
     Exercise(
       id: 'Flat_Bench_Leg_Pull-In',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Flat Bench Leg Pull-In',
       description:
           'Lie back on a flat bench with your legs extended off the end, hands under your glutes or gripping the bench.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Flat_Bench_Leg_Pull-In/0.jpg',
     ),
     Exercise(
       id: 'Flat_Bench_Lying_Leg_Raise',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Flat Bench Lying Leg Raise',
       description:
           'Lie flat on a bench with your legs extended off the end and grip the bench beside your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Flat_Bench_Lying_Leg_Raise/0.jpg',
     ),
     Exercise(
       id: 'Frog_Sit-Ups',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Frog Sit-Ups',
       description:
           'Lie on your back with knees dropped out to the sides and the soles of your feet together.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Frog_Sit-Ups/0.jpg',
     ),
     Exercise(
       id: 'Gorilla_Chin_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Gorilla Chin/Crunch',
       description:
           'Hang from a chin-up bar with an underhand grip slightly wider than your shoulders and knees bent to 90 degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Gorilla_Chin_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Hanging_Pike',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Hanging Pike',
       description:
           'Hang from a chin-up bar with an overhand grip slightly wider than your shoulders and legs together.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hanging_Pike/0.jpg',
     ),
     Exercise(
       id: 'Jackknife_Sit-Up',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Jackknife Sit-Up',
       description:
           'Lie flat with your arms extended overhead and legs straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Jackknife_Sit-Up/0.jpg',
     ),
     Exercise(
       id: 'Janda_Sit-Up',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Janda Sit-Up',
       description:
           'Lie on your back with knees bent 90 degrees, feet flat, and arms crossed over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Janda_Sit-Up/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Figure_8',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Kettlebell Figure 8',
       description:
           'Take a wider than shoulder-width stance and hinge at the hips with a flat back, holding a kettlebell in one hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Figure_8/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Pass_Between_The_Legs',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Kettlebell Pass Between The Legs',
       description:
           'Take a comfortable stance and hinge at the hips with your back flat, holding a kettlebell between your legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Pass_Between_The_Legs/0.jpg',
     ),
     Exercise(
       id: 'Knee_Hip_Raise_On_Parallel_Bars',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Knee/Hip Raise On Parallel Bars',
       description:
           'Support yourself on the raise station with your forearms on the pads and back against the rest, legs hanging straight down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Knee_Hip_Raise_On_Parallel_Bars/0.jpg',
     ),
     Exercise(
       id: 'Landmine_180s',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Landmine 180\'s',
       description:
           'Anchor a barbell in a landmine and raise the loaded end to shoulder height with both hands, arms extended, in a wide stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Landmine_180s/0.jpg',
     ),
     Exercise(
       id: 'Leg_Pull-In',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Leg Pull-In',
       description:
           'Lie on a mat with legs extended and hands beside your hips or under your glutes.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg_Pull-In/0.jpg',
     ),
     Exercise(
       id: 'Oblique_Crunches',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Oblique Crunches',
       description:
           'Lie on your back with feet elevated on a bench, one hand beside your head and the other out on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Oblique_Crunches/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_High-Pulley_Cable_Side_Bends',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'One-Arm High-Pulley Cable Side Bends',
       description:
           'Set a handle to the highest pulley and stand side-on to the machine.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_High-Pulley_Cable_Side_Bends/0.jpg',
     ),
     Exercise(
       id: 'Otis-Up',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Otis-Up',
       description:
           'Secure your feet and lie back with your knees bent, holding a weight at your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Otis-Up/0.jpg',
     ),
     Exercise(
       id: 'Press_Sit-Up',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Press Sit-Up',
       description:
           'Lie back with your legs secured and a barbell resting on your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Press_Sit-Up/0.jpg',
     ),
     Exercise(
       id: 'Rope_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Rope Crunch',
       description:
           'Kneel facing a high cable, grasp the rope overhead with both hands, and hold it beside your head with your torso upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rope_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Seated_Flat_Bench_Leg_Pull-In',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Seated Flat Bench Leg Pull-In',
       description:
           'Sit on the end of a bench, grip the sides, and lean your torso back about 45 degrees with your legs extended straight and slightly below parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Flat_Bench_Leg_Pull-In/0.jpg',
     ),
     Exercise(
       id: 'Seated_Leg_Tucks',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Seated Leg Tucks',
       description:
           'Sit on a bench gripping the edges, torso leaning back near 45 degrees with legs stretched out below parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Leg_Tucks/0.jpg',
     ),
     Exercise(
       id: 'Side_Bridge',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Side Bridge',
       description:
           'Lie on one side with the forearm under the shoulder and legs stacked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Bridge/0.jpg',
     ),
     Exercise(
       id: 'Side_Jackknife',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Side Jackknife',
       description:
           'Lie on one side with legs extended and the top hand behind the head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Jackknife/0.jpg',
     ),
     Exercise(
       id: 'Sit-Up',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Sit-Up',
       description:
           'Lie on your back with knees bent, feet anchored, and hands behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sit-Up/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Hip_Raise',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Smith Machine Hip Raise',
       description:
           'Lie on a bench set in a Smith machine and rest the bar against the soles of your feet with your legs extended up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Hip_Raise/0.jpg',
     ),
     Exercise(
       id: 'Spell_Caster',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Spell Caster',
       description:
           'Stand with feet wide, holding a dumbbell in each hand with a palms-down grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Spell_Caster/0.jpg',
     ),
     Exercise(
       id: 'Spider_Crawl',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Spider Crawl',
       description:
           'Get into a low push-up plank with your arms bent and body straight from head to heels.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Spider_Crawl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Cable_Lift',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Standing Cable Lift',
       description:
           'Set the cable to the lowest pulley and stand side-on, gripping the handle with both hands by your outside hip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Cable_Lift/0.jpg',
     ),
     Exercise(
       id: 'Standing_Rope_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Standing Rope Crunch',
       description:
           'Set a rope on a high pulley and stand with your back to the tower, holding the rope over your shoulders with the ends at your upper chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Rope_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Suspended_Fallout',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Suspended Fallout',
       description:
           'Set suspension straps below waist height, grab a handle in each hand, and lean forward into an incline plank with arms extended in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Suspended_Fallout/0.jpg',
     ),
     Exercise(
       id: 'Suspended_Reverse_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Suspended Reverse Crunch',
       description:
           'Place your feet in suspension handles set about a foot off the floor and get into a push-up plank facing away from the rack.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Suspended_Reverse_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Tuck_Crunch',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Tuck Crunch',
       description:
           'Lie on your back with your knees bent up and ankles crossed, arms resting at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Tuck_Crunch/0.jpg',
     ),
     Exercise(
       id: 'Weighted_Ball_Side_Bend',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Weighted Ball Side Bend',
       description:
           'Drape one side of your torso over an exercise ball with your feet planted for support, holding a weight plate against the side of your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Weighted_Ball_Side_Bend/0.jpg',
     ),
     Exercise(
       id: 'Weighted_Sit-Ups_-_With_Bands',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Weighted Sit-Ups - With Bands',
       description:
           'Anchor bands at the base of a decline bench, hook your legs under the pads, and lie back holding a handle at each shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Weighted_Sit-Ups_-_With_Bands/0.jpg',
     ),
     Exercise(
       id: 'Wind_Sprints',
       category: ExerciseCategory.core,
+      muscles: ['Core', 'Cardio'],
       name: 'Wind Sprints',
       description:
           'Hang from a pull-up bar with an overhand grip and arms and legs fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wind_Sprints/0.jpg',
     ),
     Exercise(
       id: 'Advanced_Kettlebell_Windmill',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Advanced Kettlebell Windmill',
       description:
           'Clean and press a kettlebell overhead and lock it out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Advanced_Kettlebell_Windmill/0.jpg',
     ),
     Exercise(
       id: 'Cable_Russian_Twists',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Cable Russian Twists',
       description:
           'Set a handle to a middle pulley and lie back on a stability ball with your side to the cable.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Russian_Twists/0.jpg',
     ),
     Exercise(
       id: 'Double_Kettlebell_Windmill',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Double Kettlebell Windmill',
       description:
           'Press one kettlebell overhead and lock it out, with a second bell resting by your front foot.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Double_Kettlebell_Windmill/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Windmill',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Kettlebell Windmill',
       description:
           'Clean and press a kettlebell overhead and lock the arm out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Windmill/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Kneeling Cable Crunch With Alternating Oblique Twists',
       description:
           'Attach a rope to a high pulley and kneel a couple of feet back, holding the rope beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists/0.jpg',
     ),
     Exercise(
       id: 'Pallof_Press_With_Rotation',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Pallof Press With Rotation',
       description:
           'Set a handle to shoulder height and stand side-on, holding it at your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Pallof_Press_With_Rotation/0.jpg',
     ),
     Exercise(
       id: 'Plate_Twist',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Plate Twist',
       description:
           'Sit on the floor with your torso upright and hold a plate by its sides in front of your stomach.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Plate_Twist/0.jpg',
     ),
     Exercise(
       id: 'Russian_Twist',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Russian Twist',
       description:
           'Sit with the knees bent and torso leaned back, feet up or down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Russian_Twist/0.jpg',
     ),
     Exercise(
       id: 'Seated_Barbell_Twist',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Seated Barbell Twist',
       description:
           'Sit on the end of a flat bench with your feet shoulder-width apart and a barbell resting across the back of your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Barbell_Twist/0.jpg',
     ),
     Exercise(
       id: 'Standing_Cable_Wood_Chop',
       category: ExerciseCategory.core,
+      muscles: ['Core'],
       name: 'Standing Cable Wood Chop',
       description:
           'Set a handle to the top pulley and stand side-on, gripping it with both hands and arms extended up toward the tower.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Cable_Wood_Chop/0.jpg',
     ),
     Exercise(
       id: 'Atlas_Stone_Trainer',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Atlas Stone Trainer',
       description:
           'Load the trainer and straddle it with feet hip-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Atlas_Stone_Trainer/0.jpg',
     ),
     Exercise(
       id: 'Atlas_Stones',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Atlas Stones',
       description:
           'Stand over the stone with it between your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Atlas_Stones/0.jpg',
     ),
     Exercise(
       id: 'Axle_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Axle Deadlift',
       description:
           'Set your feet hip-width with the axle over your midfoot.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Axle_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Band_Good_Morning_Pull_Through',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Band Good Morning ',
       description:
           'Loop a band around a sturdy post and hook the other end behind your neck.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Band_Good_Morning_Pull_Through/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Barbell Deadlift',
       description:
           'Set the bar over the mid-foot, hip-width stance, and grip just outside the knees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Glute_Bridge',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Barbell Glute Bridge',
       description:
           'Lie on the floor with the bar across the hips and knees bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Glute_Bridge/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Hip_Thrust',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Barbell Hip Thrust',
       description:
           'Sit with the upper back on a bench and the bar across the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Hip_Thrust/0.jpg',
     ),
     Exercise(
       id: 'Cable_Deadlifts',
       category: ExerciseCategory.hinge,
+      muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Cable Deadlifts',
       description:
           'Set both cables to the lowest pulleys and stand between the towers.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Deadlifts/0.jpg',
     ),
     Exercise(
       id: 'Car_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Car Deadlift',
       description:
           'Center yourself in the frame and take the neutral-grip handles at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Car_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Clean_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Clean Deadlift',
       description:
           'Set your feet hip-width under the bar with toes turned out slightly, and take a shoulder-width overhand or hook grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Deadlift_with_Chains',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Deadlift with Chains',
       description:
           'Drape chains over the bar or clip them to the sleeves so the load builds as you rise.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Deadlift_with_Chains/0.jpg',
     ),
     Exercise(
       id: 'Deficit_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Deficit Deadlift',
       description:
           'Stand on a platform one to three inches high with the bar over your midfoot and feet hip-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Deficit_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Flutter_Kicks',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Flutter Kicks',
       description:
           'Lie facedown on a bench with your hips at the edge and hold the front for support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Flutter_Kicks/0.jpg',
     ),
     Exercise(
       id: 'Glute_Ham_Raise',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Glute Ham Raise',
       description:
           'Set your feet against the footplate between the rollers and lie facedown with your knees just behind the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Glute_Ham_Raise/0.jpg',
     ),
     Exercise(
       id: 'Good_Morning',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Good Morning',
       description:
           'With the bar on the upper back and knees soft, push the hips back and hinge the torso toward parallel with a flat back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Good_Morning/0.jpg',
     ),
     Exercise(
       id: 'Good_Morning_off_Pins',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Good Morning off Pins',
       description:
           'Set the bar on pins at stomach height and rack it across the rear of your shoulders with a hip-width stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Good_Morning_off_Pins/0.jpg',
     ),
     Exercise(
       id: 'Hanging_Bar_Good_Morning',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Hanging Bar Good Morning',
       description:
           'Suspend the bar from chains or straps at stomach height and rack it across the rear of your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hanging_Bar_Good_Morning/0.jpg',
     ),
     Exercise(
       id: 'Hip_Extension_with_Bands',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Hip Extension with Bands',
       description:
           'Attach a band to a low post and secure the other end to one ankle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hip_Extension_with_Bands/0.jpg',
     ),
     Exercise(
       id: 'Hip_Lift_with_Band',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Hip Lift with Band',
       description:
           'Lie on your back in the middle of the rack with a band anchored on both sides running across your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hip_Lift_with_Band/0.jpg',
     ),
     Exercise(
       id: 'Hyperextensions_Back_Extensions',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Hyperextensions (Back Extensions)',
       description:
           'Lie facedown on a hyperextension bench with your ankles secured under the footpads and thighs flat across the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hyperextensions_Back_Extensions/0.jpg',
     ),
     Exercise(
       id: 'Hyperextensions_With_No_Hyperextension_Bench',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Hyperextensions With No Hyperextension Bench',
       description:
           'Lie facedown on a flat bench with your hips at the edge and a partner holding your legs down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hyperextensions_With_No_Hyperextension_Bench/0.jpg',
     ),
     Exercise(
       id: 'Keg_Load',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Keg Load',
       description:
           'Set the keg on its side and grip the near edge of the base, tilting it toward you to grab the far bottom edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Keg_Load/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_One-Legged_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Kettlebell One-Legged Deadlift',
       description:
           'Hold a kettlebell in one hand and stand on the same-side leg with a soft knee.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_One-Legged_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Leverage Deadlift',
       description:
           'Load the machine and stand between the handles with feet hip-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Natural_Glute_Ham_Raise',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Natural Glute Ham Raise',
       description:
           'Anchor your ankles under the pads of a lat pulldown or preacher bench, knees on the seat, facing away and upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Natural_Glute_Ham_Raise/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Swings',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'One-Arm Kettlebell Swings',
       description:
           'Stand with the kettlebell an arm\'s length in front, hinge at the hips and hike it back between the legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Swings/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Side_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'One-Arm Side Deadlift',
       description:
           'Stand alongside a loaded barbell with your feet next to its center.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Side_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Physioball_Hip_Bridge',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Physioball Hip Bridge',
       description:
           'Lie with your upper back on an exercise ball and feet flat on the floor, hip width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Physioball_Hip_Bridge/0.jpg',
     ),
     Exercise(
       id: 'Power_Stairs',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core', 'Cardio'],
       name: 'Power Stairs',
       description:
           'Set your feet wide and grip the implement with both hands, head and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Stairs/0.jpg',
     ),
     Exercise(
       id: 'Prowler_Sprint',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core', 'Cardio'],
       name: 'Prowler Sprint',
       description:
           'Load the sled and grip the upright or low handles with your arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Prowler_Sprint/0.jpg',
     ),
     Exercise(
       id: 'Pull_Through',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Pull Through',
       description:
           'Straddle a low cable with a rope attachment, facing away a few feet from the machine with your feet set wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Pull_Through/0.jpg',
     ),
     Exercise(
       id: 'Rack_Pull_with_Bands',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Rack Pull with Bands',
       description:
           'Set the bar on pins just below or above the knees in a power rack and anchor bands from the bar to the rack base.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rack_Pull_with_Bands/0.jpg',
     ),
     Exercise(
       id: 'Rack_Pulls',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Rack Pulls',
       description:
           'Set the bar on pins just below or above the knees in a power rack.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rack_Pulls/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Band_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Reverse Band Deadlift',
       description:
           'Attach bands from the top of the rack to the bar so they take tension off the bottom of the lift.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Band_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Band_Sumo_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Reverse Band Sumo Deadlift',
       description:
           'Anchor bands from the top of the rack to the barbell so they unload the bottom.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Band_Sumo_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Rickshaw_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Rickshaw Deadlift',
       description:
           'Stand centered inside a loaded rickshaw frame with your feet hip width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rickshaw_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Romanian_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Romanian Deadlift',
       description:
           'Hold the bar at hip height with an overhand grip just wider than the shoulders, knees soft and shins vertical.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Romanian_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Romanian_Deadlift_from_Deficit',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Romanian Deadlift from Deficit',
       description:
           'Stand on a raised platform holding a barbell at your thighs with knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Romanian_Deadlift_from_Deficit/0.jpg',
     ),
     Exercise(
       id: 'Seated_Good_Mornings',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Seated Good Mornings',
       description:
           'Sit on a box set in a power rack with the bar across your rear delts, not your neck.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Good_Mornings/0.jpg',
     ),
     Exercise(
       id: 'Single_Leg_Glute_Bridge',
       category: ExerciseCategory.hinge,
+      muscles: ['Glutes', 'Hamstrings', 'Lower back', 'Core'],
       name: 'Single Leg Glute Bridge',
       description:
           'Lie on your back with feet flat and knees bent, then lift one knee toward your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single_Leg_Glute_Bridge/0.jpg',
     ),
     Exercise(
       id: 'Snatch_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Snatch Deadlift',
       description:
           'Take a wide snatch grip on a barbell with your feet under your hips, toes turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Snatch_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Stiff_Leg_Barbell_Good_Morning',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Stiff Leg Barbell Good Morning',
       description:
           'Set the bar across the back of your shoulders in a squat rack and step out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Stiff_Leg_Barbell_Good_Morning/0.jpg',
     ),
     Exercise(
       id: 'Stiff-Legged_Barbell_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Stiff-Legged Barbell Deadlift',
       description:
           'With soft knees, hinge at the hips and lower the bar down the front of the legs, keeping the back flat until you feel a hamstring stretch.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Stiff-Legged_Barbell_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Sumo_Deadlift_with_Bands',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Sumo Deadlift with Bands',
       description:
           'Loop bands over the bar and stand on them with a wide sumo stance, toes turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sumo_Deadlift_with_Bands/0.jpg',
     ),
     Exercise(
       id: 'Sumo_Deadlift_with_Chains',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Sumo Deadlift with Chains',
       description:
           'Drape chains over the barbell so more links lift off the floor as you rise.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sumo_Deadlift_with_Chains/0.jpg',
     ),
     Exercise(
       id: 'Trap_Bar_Deadlift',
       category: ExerciseCategory.hinge,
+      muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Trap Bar Deadlift',
       description:
           'Stand in the center of a loaded trap bar and grip both handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Trap_Bar_Deadlift/0.jpg',
     ),
     Exercise(
       id: 'Weighted_Ball_Hyperextension',
       category: ExerciseCategory.hinge,
+      muscles: ['Lower back', 'Hamstrings', 'Glutes', 'Core'],
       name: 'Weighted Ball Hyperextension',
       description:
           'Lie face down over an exercise ball with your torso parallel to the floor and the balls of your feet planted for balance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Weighted_Ball_Hyperextension/0.jpg',
     ),
     Exercise(
       id: 'Wide_Stance_Stiff_Legs',
       category: ExerciseCategory.hinge,
+      muscles: ['Hamstrings', 'Glutes', 'Lower back', 'Core'],
       name: 'Wide Stance Stiff Legs',
       description:
           'Set a wide stance over a loaded barbell and hinge at the hips to grip it, legs nearly straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide_Stance_Stiff_Legs/0.jpg',
     ),
     Exercise(
       id: 'Alternating_Kettlebell_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Alternating Kettlebell Row',
       description:
           'Set two kettlebells in front of your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternating_Kettlebell_Row/0.jpg',
     ),
     Exercise(
       id: 'Alternating_Renegade_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Alternating Renegade Row',
       description:
           'Grip two kettlebells on the floor at shoulder width and set up in a pushup plank on the handles, body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternating_Renegade_Row/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Rear_Delt_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Shoulders',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Barbell Rear Delt Row',
       description:
           'Hold a barbell with a wide overhand grip and hinge forward, keeping the natural arch in your back and knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Rear_Delt_Row/0.jpg',
     ),
     Exercise(
       id: 'Bent_Over_One-Arm_Long_Bar_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Bent Over One-Arm Long Bar Row',
       description:
           'Wedge one end of a barbell into a corner and load the other end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Over_One-Arm_Long_Bar_Row/0.jpg',
     ),
     Exercise(
       id: 'Bent_Over_Two-Arm_Long_Bar_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Bent Over Two-Arm Long Bar Row',
       description:
           'Wedge one end of a barbell into a corner and load the other end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Over_Two-Arm_Long_Bar_Row/0.jpg',
     ),
     Exercise(
       id: 'Bent_Over_Two-Dumbbell_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Bent Over Two-Dumbbell Row',
       description:
           'Hold a dumbbell in each hand and hinge forward at the waist, knees slightly bent, back flat until your torso is almost parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Over_Two-Dumbbell_Row/0.jpg',
     ),
     Exercise(
       id: 'Bent_Over_Two-Dumbbell_Row_With_Palms_In',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Bent Over Two-Dumbbell Row With Palms In',
       description:
           'Hold a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Over_Two-Dumbbell_Row_With_Palms_In/0.jpg',
     ),
     Exercise(
       id: 'Bodyweight_Mid_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Bodyweight Mid Row',
       description:
           'Take a medium to wide overhand grip on a pull-up bar and hang.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bodyweight_Mid_Row/0.jpg',
     ),
     Exercise(
       id: 'Cable_Rope_Rear-Delt_Rows',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Shoulders',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Cable Rope Rear-Delt Rows',
       description:
           'Sit at a low pulley row station and attach a rope, gripping it overhand with arms extended parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Rope_Rear-Delt_Rows/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Incline_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Dumbbell Incline Row',
       description:
           'Set an incline bench and lie chest-down against it with a dumbbell in each hand, neutral grip, arms hanging straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Incline_Row/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_One-Arm_Upright_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Shoulders',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Dumbbell One-Arm Upright Row',
       description:
           'Stand tall holding a dumbbell in front of your thigh with your arm straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_One-Arm_Upright_Row/0.jpg',
     ),
     Exercise(
       id: 'Elevated_Cable_Rows',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Elevated Cable Rows',
       description:
           'Place a low platform on the seat of a cable row machine and sit on it so you are elevated, feet on the front crossbar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Elevated_Cable_Rows/0.jpg',
     ),
     Exercise(
       id: 'Face_Pull',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Shoulders',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Face Pull',
       description:
           'Set a rope on a high pulley and grab both ends with palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Face_Pull/0.jpg',
     ),
     Exercise(
       id: 'Gironda_Sternum_Chins',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Gironda Sternum Chins',
       description:
           'Grip the bar with a shoulder-width underhand hold and hang with your chest up and body leaning back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Gironda_Sternum_Chins/0.jpg',
     ),
     Exercise(
       id: 'Inverted_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Inverted Row',
       description:
           'Set a bar in a rack at about waist height and hang underneath it with a wider than shoulder-width grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Inverted_Row/0.jpg',
     ),
     Exercise(
       id: 'Inverted_Row_with_Straps',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Inverted Row with Straps',
       description:
           'Hang suspension straps from a rack and grab a handle in each hand, positioning yourself face-up with arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Inverted_Row_with_Straps/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Sumo_High_Pull',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Traps', 'Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Kettlebell Sumo High Pull',
       description:
           'Stand in a wide sumo stance with a kettlebell between your feet and grip it with both hands, hips set back and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Sumo_High_Pull/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_High_Pulley_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Kneeling High Pulley Row',
       description:
           'Attach a rope to a high pulley and kneel a couple of feet back, holding both ends with your arms extended toward the pulley.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_High_Pulley_Row/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_Single-Arm_High_Pulley_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Kneeling Single-Arm High Pulley Row',
       description:
           'Attach a single handle to a high pulley and kneel in front of it, taking the handle in one hand with your arm extended overhead and palm facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_Single-Arm_High_Pulley_Row/0.jpg',
     ),
     Exercise(
       id: 'Leverage_High_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Leverage High Row',
       description:
           'Adjust the seat so you can just reach the overhead handles and lock your knees under the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_High_Row/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Iso_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Leverage Iso Row',
       description:
           'Adjust the seat so the handles sit at chest level and grip them with a neutral or overhand hold, chest against the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Iso_Row/0.jpg',
     ),
     Exercise(
       id: 'London_Bridges',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'London Bridges',
       description:
           'Anchor a climbing rope overhead and stand on a locked bar or box, gripping the rope with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/London_Bridges/0.jpg',
     ),
     Exercise(
       id: 'Low_Pulley_Row_To_Neck',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Shoulders',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Low Pulley Row To Neck',
       description:
           'Sit at a low pulley with a rope attachment and hold the ends with a palms-down grip, back upright and arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Low_Pulley_Row_To_Neck/0.jpg',
     ),
     Exercise(
       id: 'Lying_Cambered_Barbell_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Lying Cambered Barbell Row',
       description:
           'Lie face down on a bench with a cambered barbell on the floor beneath you and grab it with a wide overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Cambered_Barbell_Row/0.jpg',
     ),
     Exercise(
       id: 'Lying_T-Bar_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Lying T-Bar Row',
       description:
           'Set the machine so your upper chest rests at the top of the pad, then grab the handles and let your arms hang extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_T-Bar_Row/0.jpg',
     ),
     Exercise(
       id: 'Mixed_Grip_Chin',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Mixed Grip Chin',
       description:
           'Grab a pull-up bar just wider than shoulder width with one palm facing you and one facing away, hanging with arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Mixed_Grip_Chin/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Dumbbell_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'One-Arm Dumbbell Row',
       description:
           'With one hand and knee on a bench and a flat back, let the dumbbell hang.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Dumbbell_Row/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Long_Bar_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'One-Arm Long Bar Row',
       description:
           'Wedge a barbell into a landmine and load the working end, then stand beside the bar and grab it just behind the collar with one hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Long_Bar_Row/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Grip_Bent-Over_Rows',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Reverse Grip Bent-Over Rows',
       description:
           'Hinge to near-parallel with an underhand grip and flat back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Grip_Bent-Over_Rows/0.jpg',
     ),
     Exercise(
       id: 'Rope_Climb',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Rope Climb',
       description:
           'Grip the rope overhead with both hands, then pull down hard as you jump and wrap the rope around one leg, pinching it between your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rope_Climb/0.jpg',
     ),
     Exercise(
       id: 'Rowing_Stationary',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Quadriceps',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Rowing, Stationary',
       description:
           'Sit on the rower, strap in your feet with your heels on the pedals, and slide forward into the catch with knees bent and shins vertical.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rowing_Stationary/0.jpg',
     ),
     Exercise(
       id: 'Seated_Cable_Rows',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Seated Cable Rows',
       description:
           'Sit tall with a slight knee bend and grip the handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Cable_Rows/0.jpg',
     ),
     Exercise(
       id: 'Seated_One-arm_Cable_Pulley_Rows',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Seated One-arm Cable Pulley Rows',
       description:
           'Sit at a low cable station with your feet braced and knees slightly bent, then take a single handle in one hand and reach forward so your shoulder stretches.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_One-arm_Cable_Pulley_Rows/0.jpg',
     ),
     Exercise(
       id: 'Shotgun_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Shotgun Row',
       description:
           'Attach a single handle to a low cable and grab it with one hand, then step back into a split stance until the cable is tight, arm extended and shoulder forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Shotgun_Row/0.jpg',
     ),
     Exercise(
       id: 'Side_To_Side_Chins',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Side To Side Chins',
       description:
           'Grab a pull-up bar with a wide overhand grip and hang with arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_To_Side_Chins/0.jpg',
     ),
     Exercise(
       id: 'Sled_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Sled Row',
       description:
           'Attach two handles to a loaded sled and face it, backing up until the rope pulls tight with a handle in each hand and knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sled_Row/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Bent_Over_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Smith Machine Bent Over Row',
       description:
           'Hold the bar with an overhand grip, soften the knees and hinge at the hips until the torso is near parallel with a flat back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Bent_Over_Row/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Upright_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Traps', 'Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Smith Machine Upright Row',
       description:
           'Set the Smith bar at mid-thigh height and grip it shoulder width with an overhand grip, then unrack and stand tall with arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Upright_Row/0.jpg',
     ),
     Exercise(
       id: 'Standing_Dumbbell_Upright_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Traps', 'Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Standing Dumbbell Upright Row',
       description:
           'Hold the dumbbells in front of the thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Dumbbell_Upright_Row/0.jpg',
     ),
     Exercise(
       id: 'Straight_Bar_Bench_Mid_Rows',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Straight Bar Bench Mid Rows',
       description:
           'Place a loaded barbell on the end of a bench and stand on the bench behind it, hinging down to take a medium overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Straight_Bar_Bench_Mid_Rows/0.jpg',
     ),
     Exercise(
       id: 'Suspended_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Suspended Row',
       description:
           'Set suspension straps at chest height, take a handle in each hand, and lean back with arms extended, body straight from head to heels.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Suspended_Row/0.jpg',
     ),
     Exercise(
       id: 'T-Bar_Row_with_Handle',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'T-Bar Row with Handle',
       description:
           'Wedge a barbell into a landmine and load the working end, then straddle the bar and loop a double-D handle around it near the collar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/T-Bar_Row_with_Handle/0.jpg',
     ),
     Exercise(
       id: 'Two-Arm_Kettlebell_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: ['Upper back', 'Lats', 'Biceps', 'Forearms', 'Core'],
       name: 'Two-Arm Kettlebell Row',
       description:
           'Set two kettlebells just in front of your feet, then bend your knees slightly and push your hips back to hinge over with a flat back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Two-Arm_Kettlebell_Row/0.jpg',
     ),
     Exercise(
       id: 'Upright_Barbell_Row',
       category: ExerciseCategory.horizontalPull,
+      muscles: [
+        'Shoulders',
+        'Upper back',
+        'Lats',
+        'Biceps',
+        'Forearms',
+        'Core',
+      ],
       name: 'Upright Barbell Row',
       description:
           'Grip a barbell with an overhand grip slightly narrower than shoulder width, arms hanging so the bar rests on your thighs and your back straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Upright_Barbell_Row/0.jpg',
     ),
     Exercise(
       id: 'Alternating_Floor_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Alternating Floor Press',
       description:
           'Lie on your back with a kettlebell racked at each shoulder, palms facing forward and elbows on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternating_Floor_Press/0.jpg',
     ),
     Exercise(
       id: 'Around_The_Worlds',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Around The Worlds',
       description:
           'Lie flat on a bench holding a dumbbell in each hand at your thighs, palms up and elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Around_The_Worlds/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Bench_Press_-_Medium_Grip',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Barbell Bench Press',
       description:
           'Lie on a flat bench and take a grip that puts the forearms vertical at the bottom.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Guillotine_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Barbell Guillotine Bench Press',
       description:
           'Lie on a flat bench and take a medium-wide grip on the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Guillotine_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Incline_Bench_Press_-_Medium_Grip',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Barbell Incline Bench Press',
       description:
           'Lie back on an incline bench and grip the bar at medium width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg',
     ),
     Exercise(
       id: 'Bench_Press_-_Powerlifting',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Bench Press - Powerlifting',
       description:
           'Lie on the bench with your eyes under the bar, plant your feet, and arch your back with shoulder blades squeezed together.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bench_Press_-_Powerlifting/0.jpg',
     ),
     Exercise(
       id: 'Bench_Press_with_Chains',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Bench Press with Chains',
       description:
           'Drape the chains over the bar sleeves and lie on the bench with your eyes under the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bench_Press_with_Chains/0.jpg',
     ),
     Exercise(
       id: 'Board_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Board Press',
       description:
           'Have a partner hold a stack of boards on your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Board_Press/0.jpg',
     ),
     Exercise(
       id: 'Cable_Chest_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Cable Chest Press',
       description:
           'Sit at the cable station and grab a handle in each hand with your upper arms about 45 degrees from your body and elbows bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Chest_Press/0.jpg',
     ),
     Exercise(
       id: 'Chain_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Chain Press',
       description:
           'Attach handles to the chains and lie back on a flat bench holding one in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chain_Press/0.jpg',
     ),
     Exercise(
       id: 'Close-Grip_Barbell_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Close-Grip Barbell Bench Press',
       description:
           'Lie back on a flat bench and grip the bar at about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Close-Grip_Barbell_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Cross_Over_-_With_Bands',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Cross Over - With Bands',
       description:
           'Anchor a band to a post and face away, holding a handle in each hand with arms out to your sides at shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cross_Over_-_With_Bands/0.jpg',
     ),
     Exercise(
       id: 'Decline_Barbell_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Decline Barbell Bench Press',
       description:
           'On a decline bench with feet secured, unrack and hold the bar over the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Barbell_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Decline_Dumbbell_Flyes',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Decline Dumbbell Flyes',
       description:
           'Secure your legs on a decline bench and lie back with a dumbbell in each hand over your chest, palms facing each other and elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Dumbbell_Flyes/0.jpg',
     ),
     Exercise(
       id: 'Decline_Smith_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Decline Smith Press',
       description:
           'Set a decline bench in a Smith machine and lie back so the bar sits over your lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Smith_Press/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Bench_Press_with_Neutral_Grip',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Dumbbell Bench Press with Neutral Grip',
       description:
           'Lie flat holding the dumbbells over the chest with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Bench_Press_with_Neutral_Grip/0.jpg',
     ),
     Exercise(
       id: 'Extended_Range_One-Arm_Kettlebell_Floor_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Extended Range One-Arm Kettlebell Floor Press',
       description:
           'Lie on the floor holding a kettlebell by the handle in one hand at your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Extended_Range_One-Arm_Kettlebell_Floor_Press/0.jpg',
     ),
     Exercise(
       id: 'Floor_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Floor Press',
       description:
           'Lie on the floor under a power rack with the bar set on the j-hooks above your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Floor_Press/0.jpg',
     ),
     Exercise(
       id: 'Floor_Press_with_Chains',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Floor Press with Chains',
       description:
           'Drape the chains over the ends of the bar and lie on the floor under a power rack.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Floor_Press_with_Chains/0.jpg',
     ),
     Exercise(
       id: 'Forward_Drag_with_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Forward Drag with Press',
       description:
           'Attach two rope handles to a sled and face away with a handle at each side of your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Forward_Drag_with_Press/0.jpg',
     ),
     Exercise(
       id: 'Hammer_Grip_Incline_DB_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Hammer Grip Incline DB Bench Press',
       description:
           'Lie back on an incline bench holding a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hammer_Grip_Incline_DB_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Incline_Cable_Chest_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Incline Cable Chest Press',
       description:
           'Sit at the cable station and grasp a handle in each hand with elbows bent about 90 degrees and upper arms at 45 degrees to your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Cable_Chest_Press/0.jpg',
     ),
     Exercise(
       id: 'Incline_Dumbbell_Bench_With_Palms_Facing_In',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Incline Dumbbell Bench With Palms Facing In',
       description:
           'Lie back on an incline bench with a dumbbell in each hand resting at the sides of your chest, palms facing in toward each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Dumbbell_Bench_With_Palms_Facing_In/0.jpg',
     ),
     Exercise(
       id: 'Incline_Dumbbell_Flyes',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Incline Dumbbell Flyes',
       description:
           'On an incline with the dumbbells above the chest and a slight elbow bend, open the arms out to the sides until you feel a chest stretch, then bring them back together in an arc.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Dumbbell_Flyes/0.jpg',
     ),
     Exercise(
       id: 'Incline_Dumbbell_Flyes_-_With_A_Twist',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Incline Dumbbell Flyes - With A Twist',
       description:
           'Lie on an incline bench set no higher than 30 degrees, holding a dumbbell in each hand extended above your chest with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Dumbbell_Flyes_-_With_A_Twist/0.jpg',
     ),
     Exercise(
       id: 'Incline_Dumbbell_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Incline Dumbbell Press',
       description:
           'On a 30-45 degree incline, start with the dumbbells at the upper chest, palms forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'Isometric_Wipers',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Isometric Wipers',
       description:
           'Set up in a push-up position with your body straight and hands just outside shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Isometric_Wipers/0.jpg',
     ),
     Exercise(
       id: 'Leg-Over_Floor_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Leg-Over Floor Press',
       description:
           'Lie on the floor holding a kettlebell at your chest by the handle, with your free arm out to the side for support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg-Over_Floor_Press/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Chest_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Leverage Chest Press',
       description:
           'Adjust the seat so the handles sit at the middle of your chest and grasp them with your chest up and shoulder blades pulled back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Chest_Press/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Decline_Chest_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Leverage Decline Chest Press',
       description:
           'Adjust the seat so the handles line up with the lower edge of your chest and grip them with your chest up and shoulder blades squeezed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Decline_Chest_Press/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Incline_Chest_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Leverage Incline Chest Press',
       description:
           'Adjust the seat so the handles align with the top of your chest and grasp them with your chest up and shoulder blades pulled back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Incline_Chest_Press/0.jpg',
     ),
     Exercise(
       id: 'Machine_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Machine Bench Press',
       description:
           'Set the seat so the handles line up with the mid-chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Machine_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Neck_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Neck Press',
       description:
           'Lie on a flat bench and take a medium grip on the bar, then lift it from the rack and hold it above your upper chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Neck_Press/0.jpg',
     ),
     Exercise(
       id: 'One_Arm_Dumbbell_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'One Arm Dumbbell Bench Press',
       description:
           'Lie on a flat bench holding a single dumbbell at shoulder level with one hand, palm facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Arm_Dumbbell_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'One_Arm_Floor_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'One Arm Floor Press',
       description:
           'Lie on your back on the floor with your knees bent and take the bar in one hand with your arm extended above your shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Arm_Floor_Press/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Floor_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'One-Arm Kettlebell Floor Press',
       description:
           'Lie on the floor holding a kettlebell in one hand with your upper arm resting on the floor and palm facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Floor_Press/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Band_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Reverse Band Bench Press',
       description:
           'Set a bench in a power rack and loop bands from the top of the rack down to each end of the bar so they help lift at the bottom.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Band_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Triceps_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Triceps', 'Chest', 'Shoulders', 'Core'],
       name: 'Reverse Triceps Bench Press',
       description:
           'Lie on a flat bench and take a close, underhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Triceps_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Incline_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Smith Machine Incline Bench Press',
       description:
           'Set an incline bench under the Smith machine, with the bar set where your arms are almost fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Incline_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Standing_Cable_Chest_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Standing Cable Chest Press',
       description:
           'Set both pulleys to chest height and grab a handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Cable_Chest_Press/0.jpg',
     ),
     Exercise(
       id: 'Svend_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Svend Press',
       description:
           'Stand tall and press two light plates flat together at chest height, fingers pointing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Svend_Press/0.jpg',
     ),
     Exercise(
       id: 'Wide-Grip_Barbell_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Wide-Grip Barbell Bench Press',
       description:
           'Lie on a flat bench with feet planted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide-Grip_Barbell_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Wide-Grip_Decline_Barbell_Bench_Press',
       category: ExerciseCategory.horizontalPush,
+      muscles: ['Chest', 'Triceps', 'Shoulders', 'Core'],
       name: 'Wide-Grip Decline Barbell Bench Press',
       description:
           'Lie on a decline bench with your feet locked in at the front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide-Grip_Decline_Barbell_Bench_Press/0.jpg',
     ),
     Exercise(
       id: 'Bent-Arm_Barbell_Pullover',
       category: ExerciseCategory.other,
+      muscles: ['Lats'],
       name: 'Bent-Arm Barbell Pullover',
       description:
           'Lie on a flat bench holding a barbell over your chest with a shoulder-width grip and a bend in your elbows.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent-Arm_Barbell_Pullover/0.jpg',
     ),
     Exercise(
       id: 'Bent-Arm_Dumbbell_Pullover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Bent-Arm Dumbbell Pullover',
       description:
           'Lie across a bench holding one dumbbell over the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent-Arm_Dumbbell_Pullover/0.jpg',
     ),
     Exercise(
       id: 'Cable_Incline_Pushdown',
       category: ExerciseCategory.other,
+      muscles: ['Lats'],
       name: 'Cable Incline Pushdown',
       description:
           'Lie on an incline bench facing away from a high pulley, holding a straight bar overhead with a shoulder-width overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Incline_Pushdown/0.jpg',
     ),
     Exercise(
       id: 'Front_Raise_And_Pullover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Front Raise And Pullover',
       description:
           'Lie on a flat bench holding a barbell over your thighs, palms down and hands about 15 inches apart with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Raise_And_Pullover/0.jpg',
     ),
     Exercise(
       id: 'Incline_Bench_Pull',
       category: ExerciseCategory.other,
+      muscles: ['Upper back'],
       name: 'Incline Bench Pull',
       description:
           'Set an incline bench near 30 degrees and lie chest-down on it holding a barbell with an overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Bench_Pull/0.jpg',
     ),
     Exercise(
       id: 'Straight-Arm_Dumbbell_Pullover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Straight-Arm Dumbbell Pullover',
       description:
           'Lie across or along a bench holding one dumbbell over the chest with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Straight-Arm_Dumbbell_Pullover/0.jpg',
     ),
     Exercise(
       id: 'Wide-Grip_Decline_Barbell_Pullover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Wide-Grip Decline Barbell Pullover',
       description:
           'Lie on a decline bench with your legs locked in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide-Grip_Decline_Barbell_Pullover/0.jpg',
     ),
     Exercise(
       id: 'Alternate_Hammer_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Alternate Hammer Curl',
       description:
           'Stand tall with a dumbbell in each hand at arm\'s length, palms facing your torso and elbows close to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternate_Hammer_Curl/0.jpg',
     ),
     Exercise(
       id: 'Alternate_Incline_Dumbbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Alternate Incline Dumbbell Curl',
       description:
           'Sit back on an incline bench with a dumbbell in each hand hanging at arm\'s length, palms forward and elbows close to your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternate_Incline_Dumbbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Barbell Curl',
       description:
           'Stand tall holding the bar with an underhand shoulder-width grip and elbows pinned to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Curls_Lying_Against_An_Incline',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Barbell Curls Lying Against An Incline',
       description:
           'Lie chest-down against an incline bench holding a barbell with your arms hanging straight down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Curls_Lying_Against_An_Incline/0.jpg',
     ),
     Exercise(
       id: 'Cable_Hammer_Curls_-_Rope_Attachment',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Cable Hammer Curls - Rope Attachment',
       description:
           'Attach a rope to a low pulley and stand facing it with a neutral grip on both ends.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Hammer_Curls_-_Rope_Attachment/0.jpg',
     ),
     Exercise(
       id: 'Cable_Preacher_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Cable Preacher Curl',
       description:
           'With the upper arms flat on the preacher pad, curl the bar or dumbbell up, then lower under control to a near-full extension.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Preacher_Curl/0.jpg',
     ),
     Exercise(
       id: 'Close-Grip_EZ_Bar_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Close-Grip EZ Bar Curl',
       description:
           'Stand tall and grip the EZ bar at the inner handles with palms facing forward and elbows pinned to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Close-Grip_EZ_Bar_Curl/0.jpg',
     ),
     Exercise(
       id: 'Close-Grip_Standing_Barbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Close-Grip Standing Barbell Curl',
       description:
           'Stand with feet shoulder-width, holding a straight barbell palms-up with your hands a few inches apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Close-Grip_Standing_Barbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Concentration_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Concentration Curls',
       description:
           'Seated, brace the working elbow against the inner thigh with the dumbbell hanging.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Concentration_Curls/0.jpg',
     ),
     Exercise(
       id: 'Cross_Body_Hammer_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Cross Body Hammer Curl',
       description:
           'Stand tall with a dumbbell in each hand and palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cross_Body_Hammer_Curl/0.jpg',
     ),
     Exercise(
       id: 'Drag_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Drag Curl',
       description:
           'Hold a barbell with a palms-up grip and elbows drawn back behind your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Drag_Curl/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Alternate_Bicep_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Dumbbell Alternate Bicep Curl',
       description:
           'Stand upright with a dumbbell in each hand, arms at your sides and palms facing your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Alternate_Bicep_Curl/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Prone_Incline_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Dumbbell Prone Incline Curl',
       description:
           'Lie face down on an incline bench with your chest supported and shoulders near the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Prone_Incline_Curl/0.jpg',
     ),
     Exercise(
       id: 'EZ-Bar_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'EZ-Bar Curl',
       description:
           'Stand tall holding an EZ bar at the wide outer handles with palms facing forward and elbows close to your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/EZ-Bar_Curl/0.jpg',
     ),
     Exercise(
       id: 'Flexor_Incline_Dumbbell_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Flexor Incline Dumbbell Curls',
       description:
           'Sit back on an incline bench with a dumbbell in each hand, gripping toward the far end so the near side is heavier.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Flexor_Incline_Dumbbell_Curls/0.jpg',
     ),
     Exercise(
       id: 'Hammer_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Hammer Curls',
       description:
           'Stand holding the dumbbells with a neutral (palms-in) grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hammer_Curls/0.jpg',
     ),
     Exercise(
       id: 'High_Cable_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'High Cable Curls',
       description:
           'Stand between two high pulleys and grab a handle in each hand with your upper arms raised parallel to the floor and palms facing you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/High_Cable_Curls/0.jpg',
     ),
     Exercise(
       id: 'Incline_Hammer_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Incline Hammer Curls',
       description:
           'Sit back against an incline bench with a dumbbell in each hand hanging straight down and palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Hammer_Curls/0.jpg',
     ),
     Exercise(
       id: 'Incline_Inner_Biceps_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Incline Inner Biceps Curl',
       description:
           'Lie back on an incline bench with a dumbbell in each hand at arm\'s length and palms facing outward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Inner_Biceps_Curl/0.jpg',
     ),
     Exercise(
       id: 'Lying_Cable_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Lying Cable Curl',
       description:
           'Attach a bar to a low pulley and lie on your back on the floor facing the stack.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Cable_Curl/0.jpg',
     ),
     Exercise(
       id: 'Lying_Close-Grip_Bar_Curl_On_High_Pulley',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Lying Close-Grip Bar Curl On High Pulley',
       description:
           'Set a flat bench in front of a high pulley and grab the straight bar underhand at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Close-Grip_Bar_Curl_On_High_Pulley/0.jpg',
     ),
     Exercise(
       id: 'Lying_High_Bench_Barbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Lying High Bench Barbell Curl',
       description:
           'Lie face down on a tall flat bench holding a barbell with a palms-up, shoulder-width grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_High_Bench_Barbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Lying_Supine_Dumbbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Lying Supine Dumbbell Curl',
       description:
           'Lie face up on a flat bench with a dumbbell in each hand and your arms hanging down toward the floor at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Supine_Dumbbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Machine_Preacher_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Machine Preacher Curls',
       description:
           'Sit at the machine and rest the back of your upper arms flat on the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Machine_Preacher_Curls/0.jpg',
     ),
     Exercise(
       id: 'One_Arm_Dumbbell_Preacher_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'One Arm Dumbbell Preacher Curl',
       description:
           'Rest the back of one upper arm on a preacher bench and hold a dumbbell with an underhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Arm_Dumbbell_Preacher_Curl/0.jpg',
     ),
     Exercise(
       id: 'Overhead_Cable_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Overhead Cable Curl',
       description:
           'Set both pulleys high and grab a handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Overhead_Cable_Curl/0.jpg',
     ),
     Exercise(
       id: 'Preacher_Hammer_Dumbbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Preacher Hammer Dumbbell Curl',
       description:
           'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Preacher_Hammer_Dumbbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Barbell_Preacher_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Reverse Barbell Preacher Curls',
       description:
           'Grip an EZ-bar at shoulder width with your palms facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Barbell_Preacher_Curls/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Cable_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Reverse Cable Curl',
       description:
           'Attach a straight bar to a low pulley and grip it at shoulder width with palms facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Cable_Curl/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Plate_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Reverse Plate Curls',
       description:
           'Stand tall holding a weight plate in both hands with your arms hanging straight and palms facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Plate_Curls/0.jpg',
     ),
     Exercise(
       id: 'Seated_Close-Grip_Concentration_Barbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Seated Close-Grip Concentration Barbell Curl',
       description:
           'Sit on a flat bench with your legs spread and hold a barbell with a close, underhand grip between your knees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Close-Grip_Concentration_Barbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Seated_Dumbbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Seated Dumbbell Curl',
       description:
           'Sit on a flat bench holding a dumbbell in each hand at arm\'s length with elbows close to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Dumbbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Seated_Dumbbell_Inner_Biceps_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Seated Dumbbell Inner Biceps Curl',
       description:
           'Sit on the end of a flat bench holding a dumbbell in each hand at arm\'s length, elbows close and palms facing inward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Dumbbell_Inner_Biceps_Curl/0.jpg',
     ),
     Exercise(
       id: 'Spider_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Spider Curl',
       description:
           'Lean your chest against the steep side of a preacher bench and let your arms hang straight down holding an EZ-bar underhand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Spider_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Biceps_Cable_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Standing Biceps Cable Curl',
       description:
           'Stand tall holding a cable curl bar on a low pulley with a shoulder-width, palms-up grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Biceps_Cable_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Concentration_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Standing Concentration Curl',
       description:
           'Hold a dumbbell in your working hand and lean forward at the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Concentration_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Dumbbell_Reverse_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Standing Dumbbell Reverse Curl',
       description:
           'Stand tall with a dumbbell in each hand and your palms facing down, arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Dumbbell_Reverse_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Inner-Biceps_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Standing Inner-Biceps Curl',
       description:
           'Stand with a dumbbell in each hand at arm\'s length, elbows close to your sides and palms facing inward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Inner-Biceps_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_One-Arm_Cable_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Standing One-Arm Cable Curl',
       description:
           'Grab a single handle at the low pulley and step back so the cable stays taut.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_One-Arm_Cable_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Standing One-Arm Dumbbell Curl Over Incline Bench',
       description:
           'Stand behind an incline bench and drape your working arm over the top of the pad, palm up, dumbbell hanging.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench/0.jpg',
     ),
     Exercise(
       id: 'Two-Arm_Dumbbell_Preacher_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Two-Arm Dumbbell Preacher Curl',
       description:
           'Sit at a preacher bench and set both upper arms flat on the pad, a dumbbell in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Two-Arm_Dumbbell_Preacher_Curl/0.jpg',
     ),
     Exercise(
       id: 'Wide-Grip_Standing_Barbell_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Wide-Grip Standing Barbell Curl',
       description:
           'Stand tall holding a barbell with a wide grip, palms forward and elbows tucked to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide-Grip_Standing_Barbell_Curl/0.jpg',
     ),
     Exercise(
       id: 'Zottman_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Zottman Curl',
       description:
           'Stand tall with a dumbbell in each hand, palms facing in and elbows tucked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Zottman_Curl/0.jpg',
     ),
     Exercise(
       id: 'Zottman_Preacher_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Biceps'],
       name: 'Zottman Preacher Curl',
       description:
           'Rest your upper arms on the preacher pad holding a dumbbell in each hand at the top with palms facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Zottman_Preacher_Curl/0.jpg',
     ),
     Exercise(
       id: 'Balance_Board',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Balance Board',
       description:
           'Set a balance board on the floor and step onto it with both feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Balance_Board/0.jpg',
     ),
     Exercise(
       id: 'Calf_Press',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Calf Press',
       description:
           'Set the balls of your feet on the platform with heels hanging off and legs only slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Calf_Press/0.jpg',
     ),
     Exercise(
       id: 'Calf_Raise_On_A_Dumbbell',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Calf Raise On A Dumbbell',
       description:
           'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Calf_Raise_On_A_Dumbbell/0.jpg',
     ),
     Exercise(
       id: 'Calf_Raises_-_With_Bands',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Calf Raises - With Bands',
       description:
           'Stand on the middle of an exercise band with the balls of both feet, splitting the length evenly.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Calf_Raises_-_With_Bands/0.jpg',
     ),
     Exercise(
       id: 'Donkey_Calf_Raises',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Donkey Calf Raises',
       description:
           'Set the balls of your feet on the platform and bend forward at the hips, resting the pad across your lower back and hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Donkey_Calf_Raises/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Seated_One-Leg_Calf_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Dumbbell Seated One-Leg Calf Raise',
       description:
           'Sit on a bench and rest a dumbbell on your thigh just above the knee.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Seated_One-Leg_Calf_Raise/0.jpg',
     ),
     Exercise(
       id: 'Rocking_Standing_Calf_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Rocking Standing Calf Raise',
       description:
           'Set a loaded barbell across your upper back inside a squat rack and step out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rocking_Standing_Calf_Raise/0.jpg',
     ),
     Exercise(
       id: 'Seated_Calf_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Seated Calf Raise',
       description:
           'Sit with the pad on the lower thighs and the balls of the feet on the block.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Calf_Raise/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Reverse_Calf_Raises',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Smith Machine Reverse Calf Raises',
       description:
           'Rest the Smith bar across your upper back and stand on a platform with your heels on it and the balls of your feet off the front edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Reverse_Calf_Raises/0.jpg',
     ),
     Exercise(
       id: 'Standing_Barbell_Calf_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Standing Barbell Calf Raise',
       description:
           'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Barbell_Calf_Raise/0.jpg',
     ),
     Exercise(
       id: 'Standing_Calf_Raises',
       category: ExerciseCategory.other,
+      muscles: ['Calves'],
       name: 'Standing Calf Raises',
       description:
           'Set the shoulder pads to your height and stand with the balls of your feet on the platform edge, toes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Calf_Raises/0.jpg',
     ),
     Exercise(
       id: 'Bodyweight_Flyes',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Bodyweight Flyes',
       description:
           'Set two loaded EZ bars parallel on the floor and take a push-up position with a hand on each bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bodyweight_Flyes/0.jpg',
     ),
     Exercise(
       id: 'Butterfly',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Butterfly',
       description:
           'Sit with your back flat against the pad and grip the handles with your upper arms parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Butterfly/0.jpg',
     ),
     Exercise(
       id: 'Cable_Crossover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Cable Crossover',
       description:
           'Set the pulleys high, take a handle in each hand and stagger your stance with a slight forward lean.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Crossover/0.jpg',
     ),
     Exercise(
       id: 'Cable_Iron_Cross',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Cable Iron Cross',
       description:
           'Set both pulleys high and take a handle in each hand, standing between them with your arms out to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Iron_Cross/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Flyes',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Dumbbell Flyes',
       description:
           'Lie flat on a bench holding a dumbbell in each hand over your chest, palms facing and elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Flyes/0.jpg',
     ),
     Exercise(
       id: 'Flat_Bench_Cable_Flyes',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Flat Bench Cable Flyes',
       description:
           'Set a flat bench between two low pulleys and lie back with a handle in each hand, arms out to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Flat_Bench_Cable_Flyes/0.jpg',
     ),
     Exercise(
       id: 'Incline_Cable_Flye',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Incline Cable Flye',
       description:
           'Set both pulleys at floor level and place a 45-degree incline bench between them.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Cable_Flye/0.jpg',
     ),
     Exercise(
       id: 'Low_Cable_Crossover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Low Cable Crossover',
       description:
           'Set both pulleys low and grab a handle in each hand with palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Low_Cable_Crossover/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Flat_Bench_Dumbbell_Flye',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'One-Arm Flat Bench Dumbbell Flye',
       description:
           'Lie flat on a bench holding one dumbbell over your chest with a neutral grip and a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Flat_Bench_Dumbbell_Flye/0.jpg',
     ),
     Exercise(
       id: 'Single-Arm_Cable_Crossover',
       category: ExerciseCategory.other,
+      muscles: ['Chest'],
       name: 'Single-Arm Cable Crossover',
       description:
           'Set the pulley high and take the handle in one hand, stepping forward so the arm is extended out and back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Arm_Cable_Crossover/0.jpg',
     ),
     Exercise(
       id: 'Cable_Wrist_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Cable Wrist Curl',
       description:
           'Kneel or sit at a flat bench in front of a low pulley with a straight bar, gripping it palms-up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Wrist_Curl/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Lying_Pronation',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Dumbbell Lying Pronation',
       description:
           'Lie face down on a flat bench with one arm hanging off the side, elbow bent to 90 degrees and a dumbbell in that hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Lying_Pronation/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Lying_Supination',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Dumbbell Lying Supination',
       description:
           'Lie on your side on a flat bench with your top arm bent to 90 degrees, holding a dumbbell with the palm facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Lying_Supination/0.jpg',
     ),
     Exercise(
       id: 'Finger_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Finger Curls',
       description:
           'Hold a barbell with a shoulder-width, palms-up grip and let your arms hang at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Finger_Curls/0.jpg',
     ),
     Exercise(
       id: 'Palms-Down_Wrist_Curl_Over_A_Bench',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Palms-Down Wrist Curl Over A Bench',
       description:
           'Kneel at a flat bench and rest your forearms flat on it, gripping a barbell palms-down with your wrists just past the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Palms-Down_Wrist_Curl_Over_A_Bench/0.jpg',
     ),
     Exercise(
       id: 'Plate_Pinch',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Plate Pinch',
       description:
           'Put two wide-rimmed plates together with the smooth sides facing out, then pinch them between your fingers and thumb.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Plate_Pinch/0.jpg',
     ),
     Exercise(
       id: 'Seated_Dumbbell_Palms-Up_Wrist_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Seated Dumbbell Palms-Up Wrist Curl',
       description:
           'Sit on a flat bench holding a dumbbell in each hand with your palms facing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Dumbbell_Palms-Up_Wrist_Curl/0.jpg',
     ),
     Exercise(
       id: 'Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Seated One-Arm Dumbbell Palms-Up Wrist Curl',
       description:
           'Sit on a flat bench with a dumbbell in your right hand, palm up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl/0.jpg',
     ),
     Exercise(
       id: 'Seated_Palm-Up_Barbell_Wrist_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Seated Palm-Up Barbell Wrist Curl',
       description:
           'Sit on a flat bench and hold a barbell with an underhand, shoulder-width grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Palm-Up_Barbell_Wrist_Curl/0.jpg',
     ),
     Exercise(
       id: 'Seated_Two-Arm_Palms-Up_Low-Pulley_Wrist_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Seated Two-Arm Palms-Up Low-Pulley Wrist Curl',
       description:
           'Set a bench in front of a low pulley fitted with a straight bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Two-Arm_Palms-Up_Low-Pulley_Wrist_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Olympic_Plate_Hand_Squeeze',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Standing Olympic Plate Hand Squeeze',
       description:
           'Stand tall holding a weight plate by its ridge in each hand, arms at your sides with palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Olympic_Plate_Hand_Squeeze/0.jpg',
     ),
     Exercise(
       id: 'Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Standing Palms-Up Barbell Behind The Back Wrist Curl',
       description:
           'Stand upright and hold a barbell behind your glutes at arm\'s length, hands shoulder-width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl/0.jpg',
     ),
     Exercise(
       id: 'Wrist_Roller',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Wrist Roller',
       description:
           'Stand tall gripping a loaded wrist roller with both hands, palms down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wrist_Roller/0.jpg',
     ),
     Exercise(
       id: 'Wrist_Rotations_with_Straight_Bar',
       category: ExerciseCategory.other,
+      muscles: ['Forearms'],
       name: 'Wrist Rotations with Straight Bar',
       description:
           'Hold a barbell with both hands, palms facing down and hands shoulder-width apart, out in front of your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wrist_Rotations_with_Straight_Bar/0.jpg',
     ),
     Exercise(
       id: 'Band_Hip_Adductions',
       category: ExerciseCategory.other,
+      muscles: ['Adductors'],
       name: 'Band Hip Adductions',
       description:
           'Anchor a band to a low post and loop it around the ankle of the leg nearest the post.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Band_Hip_Adductions/0.jpg',
     ),
     Exercise(
       id: 'Butt_Lift_Bridge',
       category: ExerciseCategory.other,
+      muscles: ['Glutes'],
       name: 'Butt Lift (Bridge)',
       description:
           'Lie on your back with your knees bent and feet flat about shoulder-width apart, arms resting at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Butt_Lift_Bridge/0.jpg',
     ),
     Exercise(
       id: 'Downward_Facing_Balance',
       category: ExerciseCategory.other,
+      muscles: ['Glutes'],
       name: 'Downward Facing Balance',
       description:
           'Lie facedown over an exercise ball and walk your hands forward along the floor until the ball sits under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Downward_Facing_Balance/0.jpg',
     ),
     Exercise(
       id: 'Glute_Kickback',
       category: ExerciseCategory.other,
+      muscles: ['Glutes'],
       name: 'Glute Kickback',
       description:
           'Get on your hands and knees with your arms under your shoulders and your back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Glute_Kickback/0.jpg',
     ),
     Exercise(
       id: 'Leg_Lift',
       category: ExerciseCategory.other,
+      muscles: ['Glutes'],
       name: 'Leg Lift',
       description:
           'Stand tall beside a squat rack or chair and hold on for balance, feet close together.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg_Lift/0.jpg',
     ),
     Exercise(
       id: 'Monster_Walk',
       category: ExerciseCategory.other,
+      muscles: ['Abductors'],
       name: 'Monster Walk',
       description:
           'Loop one band around your ankles and another around your knees, then set your feet shoulder-width so both bands pull taut.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Monster_Walk/0.jpg',
     ),
     Exercise(
       id: 'One-Legged_Cable_Kickback',
       category: ExerciseCategory.other,
+      muscles: ['Glutes'],
       name: 'One-Legged Cable Kickback',
       description:
           'Strap a low cable cuff to your ankle and face the stack, holding the frame for support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Legged_Cable_Kickback/0.jpg',
     ),
     Exercise(
       id: 'Thigh_Abductor',
       category: ExerciseCategory.other,
+      muscles: ['Abductors'],
       name: 'Thigh Abductor',
       description:
           'Sit on the abductor machine with the pads against your outer thighs and grip the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Thigh_Abductor/0.jpg',
     ),
     Exercise(
       id: 'Thigh_Adductor',
       category: ExerciseCategory.other,
+      muscles: ['Adductors'],
       name: 'Thigh Adductor',
       description:
           'Sit on the inner thighs machine with the pads against your inner thighs and your legs spread apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Thigh_Adductor/0.jpg',
     ),
     Exercise(
       id: 'Tricep_Dumbbell_Kickback',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Tricep Dumbbell Kickback',
       description:
           'Hold a dumbbell in each hand and hinge forward at the waist until your torso is near parallel to the floor, back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Tricep_Dumbbell_Kickback/0.jpg',
     ),
     Exercise(
       id: 'Ball_Leg_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Ball Leg Curl',
       description:
           'Lie on your back with your heels on top of an exercise ball and legs extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Ball_Leg_Curl/0.jpg',
     ),
     Exercise(
       id: 'Floor_Glute-Ham_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Floor Glute-Ham Raise',
       description:
           'Kneel upright with your feet anchored under something stable and your body straight from knees to head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Floor_Glute-Ham_Raise/0.jpg',
     ),
     Exercise(
       id: 'Lying_Leg_Curls',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Lying Leg Curls',
       description:
           'Lie face down with the pad on the lower calves.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Leg_Curls/0.jpg',
     ),
     Exercise(
       id: 'Platform_Hamstring_Slides',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Platform Hamstring Slides',
       description:
           'Lie on your back with legs extended and a towel or slider under one heel on a smooth floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Platform_Hamstring_Slides/0.jpg',
     ),
     Exercise(
       id: 'Prone_Manual_Hamstring',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Prone Manual Hamstring',
       description:
           'Lie face down with your legs straight and a partner\'s hand pressed against your heel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Prone_Manual_Hamstring/0.jpg',
     ),
     Exercise(
       id: 'Seated_Band_Hamstring_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Seated Band Hamstring Curl',
       description:
           'Anchor a band low and sit on a bench placed a couple of feet away.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Band_Hamstring_Curl/0.jpg',
     ),
     Exercise(
       id: 'Seated_Leg_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Seated Leg Curl',
       description:
           'Sit with the pad on the lower calves and thighs secured.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Leg_Curl/0.jpg',
     ),
     Exercise(
       id: 'Standing_Leg_Curl',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings'],
       name: 'Standing Leg Curl',
       description:
           'Stand at the leg curl machine and hook one ankle behind the padded lever, keeping a slight bend in the working knee.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Leg_Curl/0.jpg',
     ),
     Exercise(
       id: 'Isometric_Neck_Exercise_-_Front_And_Back',
       category: ExerciseCategory.other,
+      muscles: ['Neck'],
       name: 'Isometric Neck Exercise - Front And Back',
       description:
           'Sit or stand with your head in a neutral position and place both hands on your forehead.',
@@ -4100,6 +4150,7 @@ class ExerciseLibraryCatalog {
     Exercise(
       id: 'Isometric_Neck_Exercise_-_Sides',
       category: ExerciseCategory.other,
+      muscles: ['Neck'],
       name: 'Isometric Neck Exercise - Sides',
       description:
           'Hold your head in a neutral position and place your left hand against the left side of your head.',
@@ -4112,6 +4163,7 @@ class ExerciseLibraryCatalog {
     Exercise(
       id: 'Lying_Face_Up_Plate_Neck_Resistance',
       category: ExerciseCategory.other,
+      muscles: ['Neck'],
       name: 'Lying Face Up Plate Neck Resistance',
       description:
           'Lie face up on a flat bench with your shoulders just past the end so your head hangs free.',
@@ -4124,6 +4176,7 @@ class ExerciseLibraryCatalog {
     Exercise(
       id: 'Seated_Head_Harness_Neck_Resistance',
       category: ExerciseCategory.other,
+      muscles: ['Neck'],
       name: 'Seated Head Harness Neck Resistance',
       description:
           'Fit a loaded head harness and sit at the end of a flat bench with your feet wider than shoulder width.',
@@ -4136,4160 +4189,4441 @@ class ExerciseLibraryCatalog {
     Exercise(
       id: 'Cable_Hip_Adduction',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps'],
       name: 'Cable Hip Adduction',
       description:
           'Attach an ankle cuff to a low pulley and fix it to the leg nearest the stack.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Hip_Adduction/0.jpg',
     ),
     Exercise(
       id: 'Leg_Extensions',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps'],
       name: 'Leg Extensions',
       description:
           'Sit with the pad on the lower shins and knees at the seat\'s pivot.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg_Extensions/0.jpg',
     ),
     Exercise(
       id: 'Single-Leg_Leg_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps'],
       name: 'Single-Leg Leg Extension',
       description:
           'Sit in the machine with the pad against your lower shin just above the ankle and your knee lined up with the pivot.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Leg_Leg_Extension/0.jpg',
     ),
     Exercise(
       id: 'Alternating_Deltoid_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Alternating Deltoid Raise',
       description:
           'Stand holding a dumbbell in each hand with elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternating_Deltoid_Raise/0.jpg',
     ),
     Exercise(
       id: 'Back_Flyes_-_With_Bands',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Back Flyes - With Bands',
       description:
           'Anchor a band around a squat rack post at chest height and hold a handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Back_Flyes_-_With_Bands/0.jpg',
     ),
     Exercise(
       id: 'Band_Pull_Apart',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Band Pull Apart',
       description:
           'Hold a band with both hands, arms extended straight out in front at shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Band_Pull_Apart/0.jpg',
     ),
     Exercise(
       id: 'Battling_Ropes',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Battling Ropes',
       description:
           'Anchor a heavy rope at its center and hold one end in each hand with arms at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Battling_Ropes/0.jpg',
     ),
     Exercise(
       id: 'Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Bent Over Dumbbell Rear Delt Raise With Head On Bench',
       description:
           'Set an incline bench and stand holding a dumbbell in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/0.jpg',
     ),
     Exercise(
       id: 'Bent_Over_Low-Pulley_Side_Lateral',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Bent Over Low-Pulley Side Lateral',
       description:
           'Grab a low pulley handle with one hand and hinge at the waist until your torso is near parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bent_Over_Low-Pulley_Side_Lateral/0.jpg',
     ),
     Exercise(
       id: 'Cable_Internal_Rotation',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Cable Internal Rotation',
       description:
           'Sit or stand side-on to a low pulley and grab the handle with the arm closest to the machine.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Internal_Rotation/0.jpg',
     ),
     Exercise(
       id: 'Cable_Rear_Delt_Fly',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Cable Rear Delt Fly',
       description:
           'Set both pulleys above head height and grab the left handle with your right hand and the right handle with your left so the cables cross in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Rear_Delt_Fly/0.jpg',
     ),
     Exercise(
       id: 'Cable_Seated_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Cable Seated Lateral Raise',
       description:
           'Place a flat bench between two opposing low pulleys and sit on it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Seated_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'Car_Drivers',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Car Drivers',
       description:
           'Stand tall holding a weight plate at the 3 and 9 o\'clock positions, palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Car_Drivers/0.jpg',
     ),
     Exercise(
       id: 'Circus_Bell',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Circus Bell',
       description:
           'Stand over the circus bell with it between your feet and grip the thick handle with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Circus_Bell/0.jpg',
     ),
     Exercise(
       id: 'Crucifix',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Crucifix',
       description:
           'Hold a weight in each hand and raise both arms straight out to your sides until they are level with your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Crucifix/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Lying_One-Arm_Rear_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Dumbbell Lying One-Arm Rear Lateral Raise',
       description:
           'Set a bench to a low incline and lie chest-down on it holding a dumbbell in one hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Lying_One-Arm_Rear_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Lying_Rear_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Dumbbell Lying Rear Lateral Raise',
       description:
           'Lie chest-down on a low-incline bench holding a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Lying_Rear_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Dumbbell Raise',
       description:
           'Stand tall holding a dumbbell in each hand at your sides, palms facing your thighs, elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Raise/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Scaption',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Dumbbell Scaption',
       description:
           'Stand holding a light dumbbell in each hand at your sides with thumbs pointing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Scaption/0.jpg',
     ),
     Exercise(
       id: 'External_Rotation',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'External Rotation',
       description:
           'Lie on your side on a bench holding a dumbbell in the top hand, elbow tucked to your ribs and bent 90 degrees so the weight rests near your belly.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/External_Rotation/0.jpg',
     ),
     Exercise(
       id: 'Front_Cable_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Front Cable Raise',
       description:
           'Face away from a low pulley gripping the single handle with one hand, arm hanging straight in front of your thigh.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Cable_Raise/0.jpg',
     ),
     Exercise(
       id: 'Front_Incline_Dumbbell_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Front Incline Dumbbell Raise',
       description:
           'Sit against an incline bench set to 30 to 60 degrees, holding a dumbbell in each hand with arms straight down and palms facing back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Incline_Dumbbell_Raise/0.jpg',
     ),
     Exercise(
       id: 'Front_Plate_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Front Plate Raise',
       description:
           'Stand tall gripping a weight plate at the 3 and 9 o\'clock edges, palms facing each other, arms extended down with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Plate_Raise/0.jpg',
     ),
     Exercise(
       id: 'Front_Two-Dumbbell_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Front Two-Dumbbell Raise',
       description:
           'Stand with a straight torso holding a dumbbell in each hand in front of your thighs, palms facing you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Two-Dumbbell_Raise/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Pirate_Ships',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Kettlebell Pirate Ships',
       description:
           'Take a wide stance and hold one kettlebell with both hands, arms hanging at waist level.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Pirate_Ships/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Thruster',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Kettlebell Thruster',
       description:
           'Hold two kettlebells racked at your shoulders, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Thruster/0.jpg',
     ),
     Exercise(
       id: 'Landmine_Linear_Jammer',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Landmine Linear Jammer',
       description:
           'Anchor a landmine bar and hold the handles at your shoulders in an athletic, even stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Landmine_Linear_Jammer/0.jpg',
     ),
     Exercise(
       id: 'Lateral_Raise_-_With_Bands',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Lateral Raise - With Bands',
       description:
           'Stand on an exercise band with a handle in each hand, palms facing your thighs, hands just inside shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lateral_Raise_-_With_Bands/0.jpg',
     ),
     Exercise(
       id: 'Log_Lift',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Log Lift',
       description:
           'Stand over the log and grip the handles, hips back and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Log_Lift/0.jpg',
     ),
     Exercise(
       id: 'Lying_One-Arm_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Lying One-Arm Lateral Raise',
       description:
           'Lie chest-down on a flat bench holding a dumbbell in one hand, palm neutral, arm hanging toward the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_One-Arm_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'Lying_Rear_Delt_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Lying Rear Delt Raise',
       description:
           'Lie chest-down on a flat bench holding a dumbbell in each hand, palms facing your torso and elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Rear_Delt_Raise/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Incline_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'One-Arm Incline Lateral Raise',
       description:
           'Lie on your side on an incline bench with your lower shoulder against the pad, holding a dumbbell in your top hand across your body near your navel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Incline_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Side_Laterals',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'One-Arm Side Laterals',
       description:
           'Hold a dumbbell in one hand and grip a steady upright like an incline bench with your other hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Side_Laterals/0.jpg',
     ),
     Exercise(
       id: 'Power_Partials',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Power Partials',
       description:
           'Stand tall with a dumbbell in each hand at arms length, palms facing your body and elbows close to your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Partials/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Flyes',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Reverse Flyes',
       description:
           'Lie chest-down on an incline bench holding a dumbbell in each hand with a neutral grip, arms hanging with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Flyes/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Flyes_With_External_Rotation',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Reverse Flyes With External Rotation',
       description:
           'Lie chest-down on an incline bench set to 30 degrees with a dumbbell in each hand hanging below you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Flyes_With_External_Rotation/0.jpg',
     ),
     Exercise(
       id: 'Seated_Bent-Over_Rear_Delt_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Seated Bent-Over Rear Delt Raise',
       description:
           'Sit on the end of a flat bench with your feet together and a dumbbell beside each calf.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Bent-Over_Rear_Delt_Raise/0.jpg',
     ),
     Exercise(
       id: 'Seated_Side_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Seated Side Lateral Raise',
       description:
           'Seated with dumbbells at the sides and a slight elbow bend, raise the arms out to about shoulder height leading with the elbows, then lower under control.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Side_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'Side_Lateral_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Side Lateral Raise',
       description:
           'Stand tall with a dumbbell in each hand by your sides, palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Lateral_Raise/0.jpg',
     ),
     Exercise(
       id: 'Side_Laterals_to_Front_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Side Laterals to Front Raise',
       description:
           'Stand holding a dumbbell in each hand with your elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Laterals_to_Front_Raise/0.jpg',
     ),
     Exercise(
       id: 'Single_Dumbbell_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Single Dumbbell Raise',
       description:
           'Take a wide stance and hold one dumbbell with both hands, cupping the top head of the bell.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single_Dumbbell_Raise/0.jpg',
     ),
     Exercise(
       id: 'Single-Arm_Linear_Jammer',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Single-Arm Linear Jammer',
       description:
           'Anchor a barbell in a landmine and bring the loaded end up to one shoulder, taking a wide stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Arm_Linear_Jammer/0.jpg',
     ),
     Exercise(
       id: 'Sled_Reverse_Flye',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Sled Reverse Flye',
       description:
           'Attach two handles to a sled and face it, backing up until the line has tension.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sled_Reverse_Flye/0.jpg',
     ),
     Exercise(
       id: 'Smith_Incline_Shoulder_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Smith Incline Shoulder Raise',
       description:
           'Set an incline bench under a Smith machine and lie back with the bar at nearly full arm extension.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Incline_Shoulder_Raise/0.jpg',
     ),
     Exercise(
       id: 'Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Standing Dumbbell Straight-Arm Front Delt Raise Above Head',
       description:
           'Stand holding a dumbbell in front of each thigh, palms facing in and arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head/0.jpg',
     ),
     Exercise(
       id: 'Standing_Front_Barbell_Raise_Over_Head',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Standing Front Barbell Raise Over Head',
       description:
           'Stand tall holding a barbell against your thighs with an overhand grip slightly narrower than shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Front_Barbell_Raise_Over_Head/0.jpg',
     ),
     Exercise(
       id: 'Standing_Low-Pulley_Deltoid_Raise',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Standing Low-Pulley Deltoid Raise',
       description:
           'Stand to one side of a low pulley and grip the single handle with an overhand grip, letting that arm rest across the front of your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Low-Pulley_Deltoid_Raise/0.jpg',
     ),
     Exercise(
       id: 'Straight_Raises_on_Incline_Bench',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders'],
       name: 'Straight Raises on Incline Bench',
       description:
           'Lie face down on an incline bench and grip a barbell on the floor with an overhand grip, arms straight and hanging below you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Straight_Raises_on_Incline_Bench/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Barbell Shrug',
       description:
           'Hold the bar in front of the thighs with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Cable_Shrugs',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Cable Shrugs',
       description:
           'Grip a bar attached to a low pulley with an overhand, shoulder-width grip and stand tall close to the machine.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Shrugs/0.jpg',
     ),
     Exercise(
       id: 'Calf-Machine_Shoulder_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Calf-Machine Shoulder Shrug',
       description:
           'Step onto the calf machine and settle the shoulder pads on top of your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Calf-Machine_Shoulder_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Clean_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Clean Shrug',
       description:
           'Hold a barbell at mid-thigh with a shoulder-width overhand or hook grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Leverage Shrug',
       description:
           'Load the machine and stand directly between the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Middle_Back_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Upper back'],
       name: 'Middle Back Shrug',
       description:
           'Lie chest-down on an incline bench with a dumbbell in each hand, arms hanging straight down and palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Middle_Back_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Behind_the_Back_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Smith Machine Behind the Back Shrug',
       description:
           'Set the Smith bar at thigh height and stand in front of it so the bar rests behind your legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Behind_the_Back_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Snatch_Shrug',
       category: ExerciseCategory.other,
+      muscles: ['Traps'],
       name: 'Snatch Shrug',
       description:
           'Hold a barbell at mid-thigh with a wide snatch-width overhand or hook grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Snatch_Shrug/0.jpg',
     ),
     Exercise(
       id: 'Band_Skull_Crusher',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Band Skull Crusher',
       description:
           'Anchor a band low behind a bench and lie down with the band running past your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Band_Skull_Crusher/0.jpg',
     ),
     Exercise(
       id: 'Bench_Dips',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Bench Dips',
       description:
           'Sit on the edge of a bench and grip the edge beside your hips, then walk your feet out and lift your hips off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bench_Dips/0.jpg',
     ),
     Exercise(
       id: 'Body_Tricep_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Body Tricep Press',
       description:
           'Set a bar in a rack at chest height and take a shoulder-width grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Body_Tricep_Press/0.jpg',
     ),
     Exercise(
       id: 'Body-Up',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Body-Up',
       description:
           'Start in a forearm plank on your toes with a straight torso and forearms shoulder-width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Body-Up/0.jpg',
     ),
     Exercise(
       id: 'Cable_Lying_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Cable Lying Triceps Extension',
       description:
           'Lie on a flat bench at the end of a low pulley and hold the straight bar with a narrow overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Lying_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Cable_One_Arm_Tricep_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Cable One Arm Tricep Extension',
       description:
           'Stand facing a high pulley and hold the single handle in one hand with an underhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_One_Arm_Tricep_Extension/0.jpg',
     ),
     Exercise(
       id: 'Cable_Rope_Overhead_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Cable Rope Overhead Triceps Extension',
       description:
           'Facing away from the pulley with the rope overhead and elbows by the ears, extend the arms forward and up, then return to a stretch behind the head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Chain_Handle_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Chain Handle Extension',
       description:
           'Clip chains to two cable handles and lie back on a flat bench holding one in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chain_Handle_Extension/0.jpg',
     ),
     Exercise(
       id: 'Close-Grip_Dumbbell_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Close-Grip Dumbbell Press',
       description:
           'Stand a dumbbell upright on a flat bench, then lie perpendicular across it so only your shoulders are supported with your hips dropped below.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Close-Grip_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'Close-Grip_EZ-Bar_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Close-Grip EZ-Bar Press',
       description:
           'Lie on a flat bench and take a narrow grip on an EZ bar, holding it over your chest with arms straight and elbows tucked in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Close-Grip_EZ-Bar_Press/0.jpg',
     ),
     Exercise(
       id: 'Decline_Close-Grip_Bench_To_Skull_Crusher',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Decline Close-Grip Bench To Skull Crusher',
       description:
           'Secure your legs at the end of a decline bench and lie back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Close-Grip_Bench_To_Skull_Crusher/0.jpg',
     ),
     Exercise(
       id: 'Decline_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Decline Dumbbell Triceps Extension',
       description:
           'Secure your legs on a decline bench and lie back with a dumbbell in each hand, palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Decline_EZ_Bar_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Decline EZ Bar Triceps Extension',
       description:
           'Secure your legs at the end of a decline bench and lie back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Decline_EZ_Bar_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Dip_Machine',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Dip Machine',
       description:
           'Sit securely in the dip machine and grasp the handles with elbows bent about 90 degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dip_Machine/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_One-Arm_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Dumbbell One-Arm Triceps Extension',
       description:
           'Sit or stand tall and raise a dumbbell overhead in one hand with the arm fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_One-Arm_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Tricep_Extension_-Pronated_Grip',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Dumbbell Tricep Extension -Pronated Grip',
       description:
           'Lie flat on a bench with two dumbbells pressed above your shoulders, arms extended and palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Tricep_Extension_-Pronated_Grip/0.jpg',
     ),
     Exercise(
       id: 'EZ-Bar_Skullcrusher',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'EZ-Bar Skullcrusher',
       description:
           'Lie on a bench holding the EZ-bar over the forehead with elbows fixed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/EZ-Bar_Skullcrusher/0.jpg',
     ),
     Exercise(
       id: 'Incline_Barbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Incline Barbell Triceps Extension',
       description:
           'Lie back on an incline bench set between 45 and 75 degrees, holding a barbell with an overhand grip just inside shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Incline_Barbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'JM_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'JM Press',
       description:
           'Lie on a flat bench and hold a barbell at arm\'s length with a close grip and elbows tucked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/JM_Press/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_Cable_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Kneeling Cable Triceps Extension',
       description:
           'Set a straight bar on a high pulley and kneel facing away from the machine, gripping the bar overhead with palms down and hands about six inches apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_Cable_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Low_Cable_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Low Cable Triceps Extension',
       description:
           'Lie face up on the bench of a low cable row with your head pointing toward the rope attachment.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Low_Cable_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Lying_Close-Grip_Barbell_Triceps_Extension_Behind_The_Head',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Lying Close-Grip Barbell Triceps Extension Behind The Head',
       description:
           'Lie on a flat bench with your head near the end, holding a barbell with a overhand shoulder-width grip and arms extended over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Close-Grip_Barbell_Triceps_Extension_Behind_The_Head/0.jpg',
     ),
     Exercise(
       id: 'Lying_Close-Grip_Barbell_Triceps_Press_To_Chin',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Lying Close-Grip Barbell Triceps Press To Chin',
       description:
           'Lie on a flat bench with your head off the end, holding an EZ bar with a overhand grip and arms extended over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Close-Grip_Barbell_Triceps_Press_To_Chin/0.jpg',
     ),
     Exercise(
       id: 'Lying_Dumbbell_Tricep_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Lying Dumbbell Tricep Extension',
       description:
           'Lie flat on a bench holding two dumbbells over your chest with arms extended and palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Dumbbell_Tricep_Extension/0.jpg',
     ),
     Exercise(
       id: 'Lying_Triceps_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Lying Triceps Press',
       description:
           'Lie on a bench holding the bar over the chest with a close grip and elbows fixed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Triceps_Press/0.jpg',
     ),
     Exercise(
       id: 'Machine_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Machine Triceps Extension',
       description:
           'Adjust the seat and set your upper arms against the pads, grasping the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Machine_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'One_Arm_Pronated_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'One Arm Pronated Dumbbell Triceps Extension',
       description:
           'Lie flat on a bench holding a dumbbell in one hand at arm\'s length, the arm perpendicular to your body and palm facing your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Arm_Pronated_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'One_Arm_Supinated_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'One Arm Supinated Dumbbell Triceps Extension',
       description:
           'Lie flat on a bench and press a dumbbell straight up in one hand, palm facing your face.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Arm_Supinated_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Pin_Presses',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Pin Presses',
       description:
           'Set a bench in a power rack with the safety pins at your chosen height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Pin_Presses/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Grip_Triceps_Pushdown',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Reverse Grip Triceps Pushdown',
       description:
           'Set a straight bar on a high pulley and grip it palms-up at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Grip_Triceps_Pushdown/0.jpg',
     ),
     Exercise(
       id: 'Seated_Bent-Over_One-Arm_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Seated Bent-Over One-Arm Dumbbell Triceps Extension',
       description:
           'Sit at the end of a flat bench with a dumbbell in one hand, palm facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Bent-Over_One-Arm_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Seated_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Seated Bent-Over Two-Arm Dumbbell Triceps Extension',
       description:
           'Sit at the end of a flat bench with a dumbbell in each hand, palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Seated_Triceps_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Seated Triceps Press',
       description:
           'Sit on a bench with back support and hold one dumbbell overhead with both hands, arms locked out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Triceps_Press/0.jpg',
     ),
     Exercise(
       id: 'Sled_Overhead_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Sled Overhead Triceps Extension',
       description:
           'Attach dual handles to a loaded sled and face away from it, stepping out until the line is tight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sled_Overhead_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Speed_Band_Overhead_Triceps',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Speed Band Overhead Triceps',
       description:
           'Anchor a band at floor level and face away from it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Speed_Band_Overhead_Triceps/0.jpg',
     ),
     Exercise(
       id: 'Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing Bent-Over One-Arm Dumbbell Triceps Extension',
       description:
           'Stand holding a dumbbell in one hand with your palm facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing Bent-Over Two-Arm Dumbbell Triceps Extension',
       description:
           'Stand holding a dumbbell in each hand with palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Standing_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing Dumbbell Triceps Extension',
       description:
           'Stand with feet shoulder width and hold one dumbbell overhead with both hands, arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Standing_Low-Pulley_One-Arm_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing Low-Pulley One-Arm Triceps Extension',
       description:
           'Stand with your back to a low pulley and grab the single handle in one hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Low-Pulley_One-Arm_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Standing_One-Arm_Dumbbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing One-Arm Dumbbell Triceps Extension',
       description:
           'Stand with feet shoulder width and press a dumbbell overhead in one hand, arm fully extended with the pinky up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_One-Arm_Dumbbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Standing_Overhead_Barbell_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing Overhead Barbell Triceps Extension',
       description:
           'Stand with feet shoulder width and hold a barbell overhead with a overhand grip, hands closer than shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Overhead_Barbell_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Standing_Towel_Triceps_Extension',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Standing Towel Triceps Extension',
       description:
           'Stand tall and hold one end of a towel with both hands, arms fully extended overhead and palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Towel_Triceps_Extension/0.jpg',
     ),
     Exercise(
       id: 'Tate_Press',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Tate Press',
       description:
           'Lie on a flat bench and press two dumbbells above your chest with palms facing forward and elbows flared out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Tate_Press/0.jpg',
     ),
     Exercise(
       id: 'Triceps_Pushdown',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Triceps Pushdown',
       description:
           'Stand at a high pulley with the elbows pinned to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Triceps_Pushdown/0.jpg',
     ),
     Exercise(
       id: 'Triceps_Pushdown_-_Rope_Attachment',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Triceps Pushdown - Rope Attachment',
       description:
           'Attach a rope to a high pulley and grip it with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Triceps_Pushdown_-_Rope_Attachment/0.jpg',
     ),
     Exercise(
       id: 'Triceps_Pushdown_-_V-Bar_Attachment',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Triceps Pushdown - V-Bar Attachment',
       description:
           'Attach a V-bar to a high pulley and take an overhand grip at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Triceps_Pushdown_-_V-Bar_Attachment/0.jpg',
     ),
     Exercise(
       id: 'Weighted_Bench_Dip',
       category: ExerciseCategory.other,
+      muscles: ['Triceps'],
       name: 'Weighted Bench Dip',
       description:
           'Grip the edge of a bench behind you with hands shoulder width and rest your heels on a second bench ahead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Weighted_Bench_Dip/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Lunge',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Barbell Lunge',
       description:
           'With the bar on the upper back, step forward and lower until the back knee is just off the floor and the front thigh is parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Lunge/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Walking_Lunge',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Barbell Walking Lunge',
       description:
           'With the bar on the upper back, step forward into a lunge, then drive through the front heel and step straight into the next lunge, alternating legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Walking_Lunge/0.jpg',
     ),
     Exercise(
       id: 'Bodyweight_Walking_Lunge',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Bodyweight Walking Lunge',
       description:
           'Stand tall with feet shoulder width and hands on your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bodyweight_Walking_Lunge/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Lunges',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Dumbbell Lunges',
       description:
           'Stand tall holding a dumbbell in each hand at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Lunges/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Rear_Lunge',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Dumbbell Rear Lunge',
       description:
           'Stand tall holding a dumbbell in each hand at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Rear_Lunge/0.jpg',
     ),
     Exercise(
       id: 'Elevated_Back_Lunge',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Elevated Back Lunge',
       description:
           'Rack a barbell across your upper back and stand on a low raised platform with both feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Elevated_Back_Lunge/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Turkish_Get-Up_Lunge_style',
       category: ExerciseCategory.squat,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
       name: 'Kettlebell Turkish Get-Up (Lunge style)',
       description:
           'Lie on your back and press a kettlebell straight up with one arm, locking the elbow.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Turkish_Get-Up_Lunge_style/0.jpg',
     ),
     Exercise(
       id: 'Lunge_Pass_Through',
       category: ExerciseCategory.squat,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Core'],
       name: 'Lunge Pass Through',
       description:
           'Stand holding a kettlebell in one hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lunge_Pass_Through/0.jpg',
     ),
     Exercise(
       id: 'Lunge_Sprint',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core', 'Cardio'],
       name: 'Lunge Sprint',
       description:
           'Rack a Smith machine bar across your upper back and split your stance with one foot forward and one back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lunge_Sprint/0.jpg',
     ),
     Exercise(
       id: 'Step-up_with_Knee_Raise',
       category: ExerciseCategory.squat,
+      muscles: ['Glutes', 'Quadriceps', 'Hamstrings', 'Core'],
       name: 'Step-up with Knee Raise',
       description:
           'Place one full foot on a box, drive through that heel to stand up onto it, and raise the opposite knee.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Step-up_with_Knee_Raise/0.jpg',
     ),
     Exercise(
       id: 'Bottoms-Up_Clean_From_The_Hang_Position',
       category: ExerciseCategory.other,
+      muscles: [
+        'Forearms',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Bottoms-Up Clean From The Hang Position',
       description:
           'Stand holding a kettlebell in one hand at hang position between your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bottoms-Up_Clean_From_The_Hang_Position/0.jpg',
     ),
     Exercise(
       id: 'Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Clean',
       description:
           'Set up over a barbell with an overhand grip just outside your legs, hips down, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean/0.jpg',
     ),
     Exercise(
       id: 'Clean_Pull',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Clean Pull',
       description:
           'Set up over a barbell with an overhand or hook grip just outside your legs, hips down, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean_Pull/0.jpg',
     ),
     Exercise(
       id: 'Clean_and_Jerk',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'Clean and Jerk',
       description:
           'Clean the bar to the shoulders, then dip slightly and drive it overhead with the legs, splitting or squatting under to catch it locked out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean_and_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Clean_and_Press',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'Clean and Press',
       description:
           'Set up over a barbell with a overhand grip slightly wider than shoulder width, hips down and back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean_and_Press/0.jpg',
     ),
     Exercise(
       id: 'Clean_from_Blocks',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Clean from Blocks',
       description:
           'Set the barbell on blocks at the desired height and grip just outside your legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Clean_from_Blocks/0.jpg',
     ),
     Exercise(
       id: 'Double_Kettlebell_Alternating_Hang_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Double Kettlebell Alternating Hang Clean',
       description:
           'Set two kettlebells between your feet, push your hips back, and clean one to your shoulder while the other hangs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Double_Kettlebell_Alternating_Hang_Clean/0.jpg',
     ),
     Exercise(
       id: 'Double_Kettlebell_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'Double Kettlebell Snatch',
       description:
           'Set two kettlebells behind your feet, bend the knees, and sit back to grip them.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Double_Kettlebell_Snatch/0.jpg',
     ),
     Exercise(
       id: 'Hang_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Hang Clean',
       description:
           'Hold the bar at mid-thigh with a shoulder-width overhand or hook grip, back flat and torso leaning slightly forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hang_Clean/0.jpg',
     ),
     Exercise(
       id: 'Hang_Clean_-_Below_the_Knees',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Hang Clean - Below the Knees',
       description:
           'Hold the bar just below the knees with a shoulder-width overhand or hook grip, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hang_Clean_-_Below_the_Knees/0.jpg',
     ),
     Exercise(
       id: 'Hang_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Hang Snatch',
       description:
           'Take a wide overhand or hook grip with the bar at the hips, feet under the hips and turned out, spine extended and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hang_Snatch/0.jpg',
     ),
     Exercise(
       id: 'Hang_Snatch_-_Below_Knees',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Hang Snatch - Below Knees',
       description:
           'Take a wide overhand or hook grip with the bar just below the knees, feet under the hips and torso leaning forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hang_Snatch_-_Below_Knees/0.jpg',
     ),
     Exercise(
       id: 'Heaving_Snatch_Balance',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Heaving Snatch Balance',
       description:
           'Rest a light bar across the back of your shoulders with a wide snatch grip, feet just wider than hips and turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Heaving_Snatch_Balance/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Dead_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Kettlebell Dead Clean',
       description:
           'Set a kettlebell between your feet, push your hips back, and grip it with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Dead_Clean/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Hang_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Kettlebell Hang Clean',
       description:
           'Hold a kettlebell at a hang with your hips pushed back and eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Hang_Clean/0.jpg',
     ),
     Exercise(
       id: 'Muscle_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Muscle Snatch',
       description:
           'Hold the loaded bar at mid-thigh with a wide grip, hips low, chest up, and head forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Muscle_Snatch/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'One-Arm Kettlebell Clean',
       description:
           'Place a kettlebell between your feet, push your hips back, and grip it one-handed with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Clean/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Clean_and_Jerk',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'One-Arm Kettlebell Clean and Jerk',
       description:
           'Clean the kettlebell to your shoulder by extending through the legs and hips, rotating the palm to face forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Clean_and_Jerk/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'One-Arm Kettlebell Snatch',
       description:
           'Set a kettlebell between your feet, bend the knees, and sit the hips back with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Snatch/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Split_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'One-Arm Kettlebell Split Snatch',
       description:
           'Hold a kettlebell in one hand and squat toward the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Split_Snatch/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Open_Palm_Kettlebell_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'One-Arm Open Palm Kettlebell Clean',
       description:
           'Set one kettlebell between your feet and hinge down to grip the handle with one hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Open_Palm_Kettlebell_Clean/0.jpg',
     ),
     Exercise(
       id: 'Open_Palm_Kettlebell_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Open Palm Kettlebell Clean',
       description:
           'Straddle one kettlebell and hinge down to grasp the handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Open_Palm_Kettlebell_Clean/0.jpg',
     ),
     Exercise(
       id: 'Power_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Power Clean',
       description:
           'From a deadlift setup, pull the bar explosively past the knees, extend the hips, ankles and knees, then whip the elbows through to catch the bar on the front of the shoulders in a partial squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Clean/0.jpg',
     ),
     Exercise(
       id: 'Power_Clean_from_Blocks',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Power Clean from Blocks',
       description:
           'Set the bar on blocks and take a grip just outside your legs, hips down, back flat, shoulders over the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Clean_from_Blocks/0.jpg',
     ),
     Exercise(
       id: 'Power_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Power Snatch',
       description:
           'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Snatch/0.jpg',
     ),
     Exercise(
       id: 'Power_Snatch_from_Blocks',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Power Snatch from Blocks',
       description:
           'Set the bar on blocks and take a wide grip, feet under your hips, hips down with chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Snatch_from_Blocks/0.jpg',
     ),
     Exercise(
       id: 'Rack_Delivery',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'Rack Delivery',
       description:
           'Hold the bar in the scarecrow position with your upper arms parallel to the floor and forearms hanging down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rack_Delivery/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Hang_Power_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Smith Machine Hang Power Clean',
       description:
           'Unhook the loaded Smith bar at knee height with a overhand grip just outside your shoulders, arms straight, chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Hang_Power_Clean/0.jpg',
     ),
     Exercise(
       id: 'Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Snatch',
       description:
           'From a wide grip, pull the bar explosively from the floor, extend the hips and pull under to catch it overhead in a full squat, then stand to lockout.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Snatch/0.jpg',
     ),
     Exercise(
       id: 'Snatch_Balance',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Snatch Balance',
       description:
           'Rack the bar across your back with a wide snatch grip and feet in the pulling position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Snatch_Balance/0.jpg',
     ),
     Exercise(
       id: 'Snatch_Pull',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Snatch Pull',
       description:
           'Set up over the bar with a wide snatch grip, hips down, back flat, shoulders just ahead of the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Snatch_Pull/0.jpg',
     ),
     Exercise(
       id: 'Snatch_from_Blocks',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Snatch from Blocks',
       description:
           'Set the bar on blocks and take a wide grip, feet under your hips, hips down and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Snatch_from_Blocks/0.jpg',
     ),
     Exercise(
       id: 'Split_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Split Clean',
       description:
           'Set up over the bar with an overhand grip just outside your legs, hips down and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Split_Clean/0.jpg',
     ),
     Exercise(
       id: 'Split_Snatch',
       category: ExerciseCategory.other,
+      muscles: [
+        'Hamstrings',
+        'Quadriceps',
+        'Glutes',
+        'Lower back',
+        'Traps',
+        'Shoulders',
+        'Core',
+      ],
       name: 'Split Snatch',
       description:
           'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Split_Snatch/0.jpg',
     ),
     Exercise(
       id: 'Two-Arm_Kettlebell_Clean',
       category: ExerciseCategory.other,
+      muscles: [
+        'Shoulders',
+        'Quadriceps',
+        'Glutes',
+        'Hamstrings',
+        'Lower back',
+        'Traps',
+        'Core',
+      ],
       name: 'Two-Arm Kettlebell Clean',
       description:
           'Set two kettlebells between your feet and hinge back with your chest up, one handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Two-Arm_Kettlebell_Clean/0.jpg',
     ),
     Exercise(
       id: 'Alternate_Leg_Diagonal_Bound',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Alternate Leg Diagonal Bound',
       description:
           'Stand with one foot slightly ahead of the other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternate_Leg_Diagonal_Bound/0.jpg',
     ),
     Exercise(
       id: 'Backward_Medicine_Ball_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Backward Medicine Ball Throw',
       description:
           'Stand holding a medicine ball down in front of you with both hands, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Backward_Medicine_Ball_Throw/0.jpg',
     ),
     Exercise(
       id: 'Bench_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Bench Jump',
       description:
           'Stand a foot or two from a low bench, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bench_Jump/0.jpg',
     ),
     Exercise(
       id: 'Bench_Sprint',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core', 'Cardio'],
       name: 'Bench Sprint',
       description:
           'Stand tall with one foot planted on top of a bench, heel near the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bench_Sprint/0.jpg',
     ),
     Exercise(
       id: 'Box_Jump_Multiple_Response',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Box Jum',
       description:
           'Face the box about an arm\'s length away with knees slightly bent and arms low.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Box_Jump_Multiple_Response/0.jpg',
     ),
     Exercise(
       id: 'Box_Skip',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Box Skip',
       description:
           'Set boxes in a line and face the first with one leg slightly back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Box_Skip/0.jpg',
     ),
     Exercise(
       id: 'Carioca_Quick_Step',
       category: ExerciseCategory.other,
+      muscles: ['Adductors', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Carioca Quick Step',
       description:
           'Stand tall with your feet a few inches apart and move to the side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Carioca_Quick_Step/0.jpg',
     ),
     Exercise(
       id: 'Catch_and_Overhead_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Lats', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Catch and Overhead Throw',
       description:
           'Stand facing a wall or partner holding a medicine ball.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Catch_and_Overhead_Throw/0.jpg',
     ),
     Exercise(
       id: 'Chest_Push_multiple_response',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Chest Push (multiple response)',
       description:
           'Kneel tall facing a wall or partner with a medicine ball held tight to your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chest_Push_multiple_response/0.jpg',
     ),
     Exercise(
       id: 'Chest_Push_single_response',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Chest Push (single response)',
       description:
           'Kneel with a medicine ball pressed tight to your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chest_Push_single_response/0.jpg',
     ),
     Exercise(
       id: 'Chest_Push_from_3_point_stance',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Chest Push from 3 point stance',
       description:
           'Set up in a three-point stance, squatted low with a flat back and one hand down beside the ball.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chest_Push_from_3_point_stance/0.jpg',
     ),
     Exercise(
       id: 'Chest_Push_with_Run_Release',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Chest Push with Run Release',
       description:
           'Start in an athletic stance with knees bent, hips back, and the medicine ball held low by your legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chest_Push_with_Run_Release/0.jpg',
     ),
     Exercise(
       id: 'Depth_Jump_Leap',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Depth Jump Leap',
       description:
           'Stand on the lower box with feet together near the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Depth_Jump_Leap/0.jpg',
     ),
     Exercise(
       id: 'Double_Leg_Butt_Kick',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Double Leg Butt Kick',
       description:
           'Stand with knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Double_Leg_Butt_Kick/0.jpg',
     ),
     Exercise(
       id: 'Drop_Push',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Drop Push',
       description:
           'Set two low boxes or platforms two to three feet apart and take a pushup position between them, a hand on each box.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Drop_Push/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Seated_Box_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Dumbbell Seated Box Jump',
       description:
           'Sit on a bench facing a box with a dumbbell held to your chest in both hands and feet planted firmly.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Seated_Box_Jump/0.jpg',
     ),
     Exercise(
       id: 'Fast_Skipping',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core', 'Cardio'],
       name: 'Fast Skipping',
       description:
           'Start relaxed with one leg slightly forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Fast_Skipping/0.jpg',
     ),
     Exercise(
       id: 'Freehand_Jump_Squat',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Freehand Jump Squat',
       description:
           'Cross your arms over your chest and set your feet shoulder-width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Freehand_Jump_Squat/0.jpg',
     ),
     Exercise(
       id: 'Front_Box_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Front Box Jump',
       description:
           'Set a box one to two feet in front of you and stand with feet shoulder-width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Box_Jump/0.jpg',
     ),
     Exercise(
       id: 'Front_Cone_Hops_or_hurdle_hops',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Front Cone Hops (or hurdle hops)',
       description:
           'Line up several cones a few feet apart and stand facing the first with feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Cone_Hops_or_hurdle_hops/0.jpg',
     ),
     Exercise(
       id: 'Heavy_Bag_Thrust',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Heavy Bag Thrust',
       description:
           'Stand tall beside the heavy bag with your feet staggered and wide, and place your hand on the bag at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Heavy_Bag_Thrust/0.jpg',
     ),
     Exercise(
       id: 'Hurdle_Hops',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Hurdle Hops',
       description:
           'Set up a row of hurdles a few feet apart and stand facing the first with feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hurdle_Hops/0.jpg',
     ),
     Exercise(
       id: 'Isometric_Chest_Squeezes',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Isometric Chest Squeezes',
       description:
           'Stand or sit tall and bend both arms to ninety degrees, pressing your palms together in front of your chest with fingers pointing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Isometric_Chest_Squeezes/0.jpg',
     ),
     Exercise(
       id: 'Knee_Tuck_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Knee Tuck Jump',
       description:
           'Stand with knees slightly bent and hold your palms down at chest height as a target.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Knee_Tuck_Jump/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_Arm_Drill',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Kneeling Arm Drill',
       description:
           'Kneel with your left foot forward and right knee down, pressing through the front heel to keep your glutes tight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_Arm_Drill/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_Jump_Squat',
       category: ExerciseCategory.other,
+      muscles: ['Glutes', 'Quadriceps', 'Calves', 'Core'],
       name: 'Kneeling Jump Squat',
       description:
           'Kneel tall with a barbell racked across your shoulders and toes tucked under.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_Jump_Squat/0.jpg',
     ),
     Exercise(
       id: 'Lateral_Bound',
       category: ExerciseCategory.other,
+      muscles: ['Adductors', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Lateral Bound',
       description:
           'Stand in a half squat with your body facing ninety degrees from your travel direction.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lateral_Bound/0.jpg',
     ),
     Exercise(
       id: 'Lateral_Box_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Adductors', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Lateral Box Jump',
       description:
           'Stand tall beside a short box with feet hip-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lateral_Box_Jump/0.jpg',
     ),
     Exercise(
       id: 'Lateral_Cone_Hops',
       category: ExerciseCategory.other,
+      muscles: ['Adductors', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Lateral Cone Hops',
       description:
           'Line up cones a few feet apart and stand at one end facing ninety degrees to the line.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lateral_Cone_Hops/0.jpg',
     ),
     Exercise(
       id: 'Linear_3-Part_Start_Technique',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Linear 3-Part Start Technique',
       description:
           'Start with both feet on a line, then step your left toe back level with your right ankle to stagger your stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Linear_3-Part_Start_Technique/0.jpg',
     ),
     Exercise(
       id: 'Linear_Acceleration_Wall_Drill',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Linear Acceleration Wall Drill',
       description:
           'Lean into a wall at about forty-five degrees with your feet together and glutes squeezed tight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Linear_Acceleration_Wall_Drill/0.jpg',
     ),
     Exercise(
       id: 'Linear_Depth_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Linear Depth Jump',
       description:
           'Stand on top of one box facing the second platform a few feet away.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Linear_Depth_Jump/0.jpg',
     ),
     Exercise(
       id: 'Medicine_Ball_Chest_Pass',
       category: ExerciseCategory.other,
+      muscles: ['Chest', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Medicine Ball Chest Pass',
       description:
           'Face a partner or wall holding a medicine ball at your chest, elbows tucked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Chest'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Medicine_Ball_Chest_Pass/0.jpg',
     ),
     Exercise(
       id: 'Medicine_Ball_Full_Twist',
       category: ExerciseCategory.other,
+      muscles: ['Core', 'Quadriceps', 'Glutes', 'Calves'],
       name: 'Medicine Ball Full Twist',
       description:
           'Stand back to back with a partner a couple feet apart, holding the ball at your trunk.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Medicine_Ball_Full_Twist/0.jpg',
     ),
     Exercise(
       id: 'Medicine_Ball_Scoop_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Medicine Ball Scoop Throw',
       description:
           'Stand in a semisquat with a medicine ball hanging between your legs near your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Medicine_Ball_Scoop_Throw/0.jpg',
     ),
     Exercise(
       id: 'Mountain_Climbers',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Mountain Climbers',
       description:
           'Start in a pushup position with hands under shoulders and one knee drawn up under your hip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Mountain_Climbers/0.jpg',
     ),
     Exercise(
       id: 'Moving_Claw_Series',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Moving Claw Series',
       description:
           'Move forward with a running action, flexing the knee to kick your heel toward your glutes as the hip extends.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Moving_Claw_Series/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Medicine_Ball_Slam',
       category: ExerciseCategory.other,
+      muscles: ['Core', 'Quadriceps', 'Glutes', 'Calves'],
       name: 'One-Arm Medicine Ball Slam',
       description:
           'Stand in a staggered stance holding a medicine ball in one hand on your back-leg side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Medicine_Ball_Slam/0.jpg',
     ),
     Exercise(
       id: 'Overhead_Slam',
       category: ExerciseCategory.other,
+      muscles: ['Lats', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Overhead Slam',
       description:
           'Stand with feet shoulder-width holding a medicine ball in both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Overhead_Slam/0.jpg',
     ),
     Exercise(
       id: 'Quick_Leap',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Quick Leap',
       description:
           'Stand facing a box a foot or two from its edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Quick_Leap/0.jpg',
     ),
     Exercise(
       id: 'Return_Push_from_Stance',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Return Push from Stance',
       description:
           'Set up in an athletic two- or three-point stance facing a partner.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Return_Push_from_Stance/0.jpg',
     ),
     Exercise(
       id: 'Rocket_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Rocket Jump',
       description:
           'Stand relaxed with feet shoulder-width and arms held close to your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rocket_Jump/0.jpg',
     ),
     Exercise(
       id: 'Rope_Jumping',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core', 'Cardio'],
       name: 'Rope Jumping',
       description:
           'Hold a rope handle in each hand with the rope behind your heels.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rope_Jumping/0.jpg',
     ),
     Exercise(
       id: 'Scissors_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Scissors Jump',
       description:
           'Drop into a lunge with one foot forward, front knee bent over the midfoot and the rear knee near the ground.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Scissors_Jump/0.jpg',
     ),
     Exercise(
       id: 'Side_Hop-Sprint',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core', 'Cardio'],
       name: 'Side Hop-Sprint',
       description:
           'Stand to one side of a cone or low hurdle with feet together.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Hop-Sprint/0.jpg',
     ),
     Exercise(
       id: 'Side_Standing_Long_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Side Standing Long Jump',
       description:
           'Stand in an athletic stance with feet hip-width, chest up and knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Standing_Long_Jump/0.jpg',
     ),
     Exercise(
       id: 'Side_to_Side_Box_Shuffle',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Side to Side Box Shuffle',
       description:
           'Stand to one side of a box with your left foot resting on top of it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_to_Side_Box_Shuffle/0.jpg',
     ),
     Exercise(
       id: 'Single_Leg_Butt_Kick',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Single Leg Butt Kick',
       description:
           'Balance on one leg with the opposite knee lifted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single_Leg_Butt_Kick/0.jpg',
     ),
     Exercise(
       id: 'Single_Leg_Push-off',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Single Leg Push-off',
       description:
           'Set one foot flat on a low box with the heel near the edge and the other foot on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single_Leg_Push-off/0.jpg',
     ),
     Exercise(
       id: 'Single-Cone_Sprint_Drill',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core', 'Cardio'],
       name: 'Single-Cone Sprint Drill',
       description:
           'Stand beside a single cone with one arm forward and one back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Cone_Sprint_Drill/0.jpg',
     ),
     Exercise(
       id: 'Single-Leg_Hop_Progression',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Single-Leg Hop Progression',
       description:
           'Line up several low cones ahead of you and balance on one leg with the opposite knee raised.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Leg_Hop_Progression/0.jpg',
     ),
     Exercise(
       id: 'Single-Leg_Lateral_Hop',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Single-Leg Lateral Hop',
       description:
           'Stand to one side of a low cone, balanced on one leg with the knee slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Leg_Lateral_Hop/0.jpg',
     ),
     Exercise(
       id: 'Single-Leg_Stride_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Single-Leg Stride Jump',
       description:
           'Stand beside a box with your inside foot on top near the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Leg_Stride_Jump/0.jpg',
     ),
     Exercise(
       id: 'Sledgehammer_Swings',
       category: ExerciseCategory.other,
+      muscles: ['Core', 'Quadriceps', 'Glutes', 'Calves'],
       name: 'Sledgehammer Swings',
       description:
           'Stand about two feet from a tire in a staggered stance, gripping a sledgehammer with your bottom hand at the base of the handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sledgehammer_Swings/0.jpg',
     ),
     Exercise(
       id: 'Split_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Split Jump',
       description:
           'Drop into a lunge with the front knee bent over your foot and the rear knee nearly touching the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Split_Jump/0.jpg',
     ),
     Exercise(
       id: 'Standing_Long_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Standing Long Jump',
       description:
           'Stand in a partial squat with feet shoulder width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Long_Jump/0.jpg',
     ),
     Exercise(
       id: 'Standing_Two-Arm_Overhead_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Standing Two-Arm Overhead Throw',
       description:
           'Stand with feet shoulder width apart holding a medicine ball in both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Two-Arm_Overhead_Throw/0.jpg',
     ),
     Exercise(
       id: 'Star_Jump',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Star Jump',
       description:
           'Stand with feet shoulder width apart and arms held close to your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Star_Jump/0.jpg',
     ),
     Exercise(
       id: 'Stride_Jump_Crossover',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Stride Jump Crossover',
       description:
           'Stand beside a box with your inside foot on top near the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Stride_Jump_Crossover/0.jpg',
     ),
     Exercise(
       id: 'Supine_Chest_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Triceps', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Supine Chest Throw',
       description:
           'Lie on your back with knees bent and hold a medicine ball on your chest, hands on the bottom of the ball.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Arms'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Supine_Chest_Throw/0.jpg',
     ),
     Exercise(
       id: 'Supine_One-Arm_Overhead_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Core', 'Quadriceps', 'Glutes', 'Calves'],
       name: 'Supine One-Arm Overhead Throw',
       description:
           'Lie on your back with knees bent, holding a medicine ball in one hand with the arm extended fully behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Supine_One-Arm_Overhead_Throw/0.jpg',
     ),
     Exercise(
       id: 'Supine_Two-Arm_Overhead_Throw',
       category: ExerciseCategory.other,
+      muscles: ['Core', 'Quadriceps', 'Glutes', 'Calves'],
       name: 'Supine Two-Arm Overhead Throw',
       description:
           'Lie on your back with knees bent, holding a medicine ball in both hands with the arms extended fully behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Core'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Supine_Two-Arm_Overhead_Throw/0.jpg',
     ),
     Exercise(
       id: 'Vertical_Swing',
       category: ExerciseCategory.other,
+      muscles: ['Hamstrings', 'Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Vertical Swing',
       description:
           'Grip one dumbbell with both hands, arms hanging between your legs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Vertical_Swing/0.jpg',
     ),
     Exercise(
       id: 'Weighted_Jump_Squat',
       category: ExerciseCategory.other,
+      muscles: ['Quadriceps', 'Glutes', 'Calves', 'Core'],
       name: 'Weighted Jump Squat',
       description:
           'Set a lightly loaded barbell across your upper back and stand with feet shoulder-width apart.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Weighted_Jump_Squat/0.jpg',
     ),
     Exercise(
       id: 'Backward_Drag',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Backward Drag',
       description:
           'Load a sled and hold the rope or straps with arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Backward_Drag/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Side_Split_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Barbell Side Split Squat',
       description:
           'Rest a barbell across your upper back and stand with feet wide, lead foot angled out to the side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Side_Split_Squat/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Barbell Squat',
       description:
           'Set the bar just below shoulder height, step under it and rest it across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Squat/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Squat_To_A_Bench',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Barbell Squat To A Bench',
       description:
           'Set a flat bench or box behind you and unrack a barbell across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Squat_To_A_Bench/0.jpg',
     ),
     Exercise(
       id: 'Barbell_Step_Ups',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Barbell Step Ups',
       description:
           'Hold a barbell across your upper back and stand facing an elevated platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Step_Ups/0.jpg',
     ),
     Exercise(
       id: 'Bear_Crawl_Sled_Drags',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Bear Crawl Sled Drags',
       description:
           'Strap a harness around your waist with the sled chained behind you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bear_Crawl_Sled_Drags/0.jpg',
     ),
     Exercise(
       id: 'Bicycling',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Bicycling',
       description:
           'Set the saddle so your leg is almost straight at the bottom of the pedal stroke.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bicycling/0.jpg',
     ),
     Exercise(
       id: 'Bicycling_Stationary',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Bicycling, Stationary',
       description:
           'Adjust the seat so your knee stays slightly bent at the bottom of each stroke.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bicycling_Stationary/0.jpg',
     ),
     Exercise(
       id: 'Bodyweight_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Bodyweight Squat',
       description:
           'Stand with feet shoulder-width apart and hands behind your head or out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bodyweight_Squat/0.jpg',
     ),
     Exercise(
       id: 'Box_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Box Squat',
       description:
           'Set a box at about parallel height behind you and unrack a barbell across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Box_Squat/0.jpg',
     ),
     Exercise(
       id: 'Box_Squat_with_Chains',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Box Squat with Chains',
       description:
           'Drape chains over the barbell sleeves, unrack it across your upper back, and set a box behind you at parallel height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Box_Squat_with_Chains/0.jpg',
     ),
     Exercise(
       id: 'Calf_Press_On_The_Leg_Press_Machine',
       category: ExerciseCategory.squat,
+      muscles: ['Calves', 'Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Calf Press On The Leg Press Machine',
       description:
           'Sit in the leg press and place just the balls of your feet on the lower edge of the platform, heels off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Calf_Press_On_The_Leg_Press_Machine/0.jpg',
     ),
     Exercise(
       id: 'Chair_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Chair Squat',
       description:
           'Set the machine bar to your height and load it, then step under and position it across the back of your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Chair_Squat/0.jpg',
     ),
     Exercise(
       id: 'Conans_Wheel',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Conan\'s Wheel',
       description:
           'Load the implement and cradle its end in the crooks of your elbows, gripping your own wrists.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Conans_Wheel/0.jpg',
     ),
     Exercise(
       id: 'Elliptical_Trainer',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Elliptical Trainer',
       description:
           'Step onto the pedals and take hold of the moving handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Elliptical_Trainer/0.jpg',
     ),
     Exercise(
       id: 'Frankenstein_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Frankenstein Squat',
       description:
           'Rest the barbell across the front of your shoulders and extend both arms straight out, releasing your grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Frankenstein_Squat/0.jpg',
     ),
     Exercise(
       id: 'Front_Barbell_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Front Barbell Squat',
       description:
           'Rack the bar across the front of the shoulders with the elbows high, take a shoulder-width stance and brace.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Barbell_Squat/0.jpg',
     ),
     Exercise(
       id: 'Front_Barbell_Squat_To_A_Bench',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Front Barbell Squat To A Bench',
       description:
           'Set a flat bench behind you and rack the bar across the front of your shoulders with elbows high.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Barbell_Squat_To_A_Bench/0.jpg',
     ),
     Exercise(
       id: 'Front_Squat_Clean_Grip',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Front Squat',
       description:
           'Rack the bar on your front delts with a clean grip, fingers under the bar and elbows pointed high.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Squat_Clean_Grip/0.jpg',
     ),
     Exercise(
       id: 'Front_Squats_With_Two_Kettlebells',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Front Squats With Two Kettlebells',
       description:
           'Clean two kettlebells to your shoulders and rest them in the front rack with elbows tucked in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Front_Squats_With_Two_Kettlebells/0.jpg',
     ),
     Exercise(
       id: 'Goblet_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Goblet Squat',
       description:
           'Hold a dumbbell or kettlebell vertically against the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Goblet_Squat/0.jpg',
     ),
     Exercise(
       id: 'Hack_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Hack Squat',
       description:
           'Set your shoulders and back against the pad with feet shoulder-width on the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hack_Squat/0.jpg',
     ),
     Exercise(
       id: 'Hip_Flexion_with_Band',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Hip Flexion with Band',
       description:
           'Attach a band to a low post and secure the other end around one ankle, then face away from the anchor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Hip_Flexion_with_Band/0.jpg',
     ),
     Exercise(
       id: 'Jefferson_Squats',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Jefferson Squats',
       description:
           'Straddle the barbell so it runs between your legs, then grip it with one hand in front and one behind, palms neutral.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Jefferson_Squats/0.jpg',
     ),
     Exercise(
       id: 'Jogging_Treadmill',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Jogging, Treadmill',
       description:
           'Step onto the treadmill deck and set a comfortable jogging speed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Jogging_Treadmill/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Turkish_Get-Up_Squat_style',
       category: ExerciseCategory.squat,
+      muscles: ['Shoulders', 'Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Kettlebell Turkish Get-Up',
       description:
           'Lie on your back and press one kettlebell to a locked-out arm above your shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Turkish_Get-Up_Squat_style/0.jpg',
     ),
     Exercise(
       id: 'Kneeling_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Glutes', 'Quadriceps', 'Adductors', 'Core'],
       name: 'Kneeling Squat',
       description:
           'Rack a barbell across your upper back and kneel upright on a padded surface with knees hip-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kneeling_Squat/0.jpg',
     ),
     Exercise(
       id: 'Leg_Press',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Leg Press',
       description:
           'Sit with the back flat against the pad and feet shoulder-width on the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg_Press/0.jpg',
     ),
     Exercise(
       id: 'Lying_Machine_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Lying Machine Squat',
       description:
           'Lie face up in the machine with your feet on the platform and knees bent so the thighs sit just below parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Lying_Machine_Squat/0.jpg',
     ),
     Exercise(
       id: 'Narrow_Stance_Hack_Squats',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Narrow Stance Hack Squats',
       description:
           'Set your back against the pad and hook your shoulders under the pads.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Narrow_Stance_Hack_Squats/0.jpg',
     ),
     Exercise(
       id: 'Narrow_Stance_Leg_Press',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Narrow Stance Leg Press',
       description:
           'Sit in the leg press and place your feet on the platform close together, a few inches apart, with toes slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Narrow_Stance_Leg_Press/0.jpg',
     ),
     Exercise(
       id: 'Narrow_Stance_Squats',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Narrow Stance Squats',
       description:
           'Rack the bar across your upper back and step out with a narrow, closer-than-shoulder-width stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Narrow_Stance_Squats/0.jpg',
     ),
     Exercise(
       id: 'Olympic_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Olympic Squat',
       description:
           'Support the bar high on your traps with chest up and a hip-width stance, toes turned slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Olympic_Squat/0.jpg',
     ),
     Exercise(
       id: 'One_Leg_Barbell_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'One Leg Barbell Squat',
       description:
           'Set a loaded barbell across your upper back and stand a couple feet in front of a bench, back facing it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Leg_Barbell_Squat/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Overhead_Kettlebell_Squats',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'One-Arm Overhead Kettlebell Squats',
       description:
           'Clean and press one kettlebell to a locked-out position overhead, arm by your ear.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Overhead_Kettlebell_Squats/0.jpg',
     ),
     Exercise(
       id: 'Overhead_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Overhead Squat',
       description:
           'Take a wide snatch grip and press the barbell to full lockout overhead, feet slightly wider than the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Overhead_Squat/0.jpg',
     ),
     Exercise(
       id: 'Plie_Dumbbell_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Plie Dumbbell Squat',
       description:
           'Hold a single dumbbell vertically by one end with both hands, arms hanging straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Plie_Dumbbell_Squat/0.jpg',
     ),
     Exercise(
       id: 'Recumbent_Bike',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Recumbent Bike',
       description:
           'Sit down on the recumbent bike and adjust the seat to your height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Recumbent_Bike/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Band_Box_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Reverse Band Box Squat',
       description:
           'Set bands from the top of the rack down to the bar so they pull upward, and place a box behind you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Band_Box_Squat/0.jpg',
     ),
     Exercise(
       id: 'Reverse_Band_Power_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Reverse Band Power Squat',
       description:
           'Attach bands from the top of the rack to each end of the bar so they pull up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Band_Power_Squat/0.jpg',
     ),
     Exercise(
       id: 'Running_Treadmill',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Running, Treadmill',
       description:
           'Step onto the treadmill deck and select a program or manual speed from the menu.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Running_Treadmill/0.jpg',
     ),
     Exercise(
       id: 'Sandbag_Load',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Sandbag Load',
       description:
           'Straddle the sandbag and squat down, wrapping both arms fully underneath it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sandbag_Load/0.jpg',
     ),
     Exercise(
       id: 'Single-Leg_High_Box_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Single-Leg High Box Squat',
       description:
           'Set a high box in a rack with a band or rope hanging above for balance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Single-Leg_High_Box_Squat/0.jpg',
     ),
     Exercise(
       id: 'Skating',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Skating',
       description:
           'Stand with skates hip width and knees soft, weight centered over the wheels.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Skating/0.jpg',
     ),
     Exercise(
       id: 'Sled_Drag_-_Harness',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Sled Drag',
       description:
           'Load the sled and buckle the harness around your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sled_Drag_-_Harness/0.jpg',
     ),
     Exercise(
       id: 'Sled_Push',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Sled Push',
       description:
           'Load the sled and grip the handles with your arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sled_Push/0.jpg',
     ),
     Exercise(
       id: 'Smith_Single-Leg_Split_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Smith Single-Leg Split Squat',
       description:
           'Set a bench a couple feet behind the Smith machine and position the bar across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Single-Leg_Split_Squat/0.jpg',
     ),
     Exercise(
       id: 'Speed_Box_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Speed Box Squat',
       description:
           'Anchor bands from the floor to each end of the loaded bar and set a box behind you at about parallel height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Speed_Box_Squat/0.jpg',
     ),
     Exercise(
       id: 'Speed_Squats',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Speed Squats',
       description:
           'Set the bar across your upper back in a squat rack and step out with feet shoulder-width, toes slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Speed_Squats/0.jpg',
     ),
     Exercise(
       id: 'Split_Squat_with_Dumbbells',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Split Squat with Dumbbells',
       description:
           'Hold a dumbbell in each hand and set up in a staggered stance with the top of your rear foot resting on a bench behind you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Split_Squat_with_Dumbbells/0.jpg',
     ),
     Exercise(
       id: 'Squat_with_Chains',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Squat with Chains',
       description:
           'Drape a chain over each sleeve of the bar so a few links rest on the floor at the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Squat_with_Chains/0.jpg',
     ),
     Exercise(
       id: 'Squat_with_Plate_Movers',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Squat with Plate Movers',
       description:
           'Set the bar just below shoulder height and place a weight plate on the floor a couple of feet behind the rack.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Squat_with_Plate_Movers/0.jpg',
     ),
     Exercise(
       id: 'Squats_-_With_Bands',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Squats - With Bands',
       description:
           'Stand on the middle of the band with feet shoulder-width, then pull the ends up to rest on top of your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Squats_-_With_Bands/0.jpg',
     ),
     Exercise(
       id: 'Stairmaster',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Stairmaster',
       description:
           'Step onto the stairmaster and select a manual setting or program, then start at an easy pace.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Stairmaster/0.jpg',
     ),
     Exercise(
       id: 'Step_Mill',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Step Mill',
       description:
           'Step onto the stepmill and pick a manual setting or program at a comfortable pace.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Step_Mill/0.jpg',
     ),
     Exercise(
       id: 'Suspended_Split_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Suspended Split Squat',
       description:
           'Set the strap handles 18 to 30 inches off the floor and face away from the anchor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Suspended_Split_Squat/0.jpg',
     ),
     Exercise(
       id: 'Tire_Flip',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Tire Flip',
       description:
           'Squat down to the tire with your chest driving into it and grip under the tread.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Tire_Flip/0.jpg',
     ),
     Exercise(
       id: 'Trail_Running_Walking',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Trail Running/Walking',
       description:
           'Head out on a trail in supportive shoes and start at an easy pace to warm up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Trail_Running_Walking/0.jpg',
     ),
     Exercise(
       id: 'Walking_Treadmill',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core', 'Cardio'],
       name: 'Treadmill Walking',
       description:
           'Step onto the treadmill and select a manual setting or program, then start the belt at a walking pace.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Walking_Treadmill/0.jpg',
     ),
     Exercise(
       id: 'Weighted_Sissy_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Weighted Sissy Squat',
       description:
           'Grip a squat rack upright with one hand and hold a weight plate against your chest with the other, feet shoulder-width and up on your toes.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Weighted_Sissy_Squat/0.jpg',
     ),
     Exercise(
       id: 'Wide_Stance_Barbell_Squat',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Wide Stance Barbell Squat',
       description:
           'Set the bar across your upper back in a squat rack and unrack it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide_Stance_Barbell_Squat/0.jpg',
     ),
     Exercise(
       id: 'Zercher_Squats',
       category: ExerciseCategory.squat,
+      muscles: ['Quadriceps', 'Glutes', 'Adductors', 'Core'],
       name: 'Zercher Squats',
       description:
           'Set the bar on a rack between waist and chest height and hook it into the crooks of your elbows.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Zercher_Squats/0.jpg',
     ),
     Exercise(
       id: 'Close-Grip_Front_Lat_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Close-Grip Front Lat Pulldown',
       description:
           'Sit with the thighs under the pads and take a close grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Close-Grip_Front_Lat_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'Full_Range-Of-Motion_Lat_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Full Range-Of-Motion Lat Pulldown',
       description:
           'Attach a stirrup handle to each high pulley and grab them with arms crossed, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Full_Range-Of-Motion_Lat_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'One_Arm_Lat_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'One Arm Lat Pulldown',
       description:
           'Attach a single handle to a high pulley and sit with the knee pad snug against your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One_Arm_Lat_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'Rope_Straight-Arm_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Rope Straight-Arm Pulldown',
       description:
           'Attach a rope to a high pulley and stand a couple feet back with a staggered stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Rope_Straight-Arm_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'Straight-Arm_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Straight-Arm Pulldown',
       description:
           'Grab a wide bar on a high pulley with an overhand grip wider than shoulder width and step back about two feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Straight-Arm_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'Underhand_Cable_Pulldowns',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Underhand Cable Pulldowns',
       description:
           'Sit at a pulldown station and lock your thighs under the knee pads.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Underhand_Cable_Pulldowns/0.jpg',
     ),
     Exercise(
       id: 'V-Bar_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'V-Bar Pulldown',
       description:
           'With the thighs anchored and a neutral V-bar grip, lean back slightly and pull the bar to the upper chest, driving the elbows down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/V-Bar_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'Wide-Grip_Lat_Pulldown',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Wide-Grip Lat Pulldown',
       description:
           'Sit at the pulldown machine and secure your thighs under the pads.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide-Grip_Lat_Pulldown/0.jpg',
     ),
     Exercise(
       id: 'Wide-Grip_Pulldown_Behind_The_Neck',
       category: ExerciseCategory.verticalPull,
+      muscles: ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       name: 'Wide-Grip Pulldown Behind The Neck',
       description:
           'Sit at the pulldown machine with your thighs under the pads and take the wide bar with a broad overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Back'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Wide-Grip_Pulldown_Behind_The_Neck/0.jpg',
     ),
     Exercise(
       id: 'Alternating_Kettlebell_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Alternating Kettlebell Press',
       description:
           'Clean two kettlebells to your shoulders in the rack position with palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Alternating_Kettlebell_Press/0.jpg',
     ),
     Exercise(
       id: 'Anti-Gravity_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Anti-Gravity Press',
       description:
           'Set a barbell on the floor behind an incline bench and lie face down on the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Anti-Gravity_Press/0.jpg',
     ),
     Exercise(
       id: 'Arnold_Dumbbell_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Arnold Dumbbell Press',
       description:
           'Start with the dumbbells in front of the shoulders, palms facing you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Arnold_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'Bradford_Rocky_Presses',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Bradford/Rocky Presses',
       description:
           'Sit on a press bench and hold the barbell at front shoulder level with an overhand grip just wider than your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Bradford_Rocky_Presses/0.jpg',
     ),
     Exercise(
       id: 'Cuban_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Cuban Press',
       description:
           'Stand holding a dumbbell in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cuban_Press/0.jpg',
     ),
     Exercise(
       id: 'Double_Kettlebell_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Double Kettlebell Jerk',
       description:
           'Clean two kettlebells to your shoulders in the rack position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Double_Kettlebell_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Double_Kettlebell_Push_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Double Kettlebell Push Press',
       description:
           'Clean two kettlebells to your shoulders in the rack position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Double_Kettlebell_Push_Press/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_One-Arm_Shoulder_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Dumbbell One-Arm Shoulder Press',
       description:
           'Sit on a bench with back support and clean one dumbbell to shoulder height with your palm facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_One-Arm_Shoulder_Press/0.jpg',
     ),
     Exercise(
       id: 'Dumbbell_Shoulder_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Dumbbell Shoulder Press',
       description:
           'Seated or standing, start with the dumbbells at shoulder height, palms forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Dumbbell_Shoulder_Press/0.jpg',
     ),
     Exercise(
       id: 'Jerk_Balance',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Jerk Balance',
       description:
           'Rack the barbell on your shoulders in the jerk position with your torso upright and feet split short.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Jerk_Balance/0.jpg',
     ),
     Exercise(
       id: 'Kettlebell_Seesaw_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Kettlebell Seesaw Press',
       description:
           'Clean two kettlebells to your shoulders in the rack position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Kettlebell_Seesaw_Press/0.jpg',
     ),
     Exercise(
       id: 'Leverage_Shoulder_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Leverage Shoulder Press',
       description:
           'Set the seat so the handles rest near the top of your shoulders and load the pins.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Shoulder_Press/0.jpg',
     ),
     Exercise(
       id: 'Machine_Shoulder_Military_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Machine Shoulder (Military) Press',
       description:
           'Sit tall, select the weight, and grab the handles at shoulder height with elbows bent in line with your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Machine_Shoulder_Military_Press/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'One-Arm Kettlebell Jerk',
       description:
           'Clean a kettlebell to your shoulder with your palm facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Jerk/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Military_Press_To_The_Side',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'One-Arm Kettlebell Military Press To The Side',
       description:
           'Clean a kettlebell to your shoulder with your palm facing inward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Military_Press_To_The_Side/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Para_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'One-Arm Kettlebell Para Press',
       description:
           'Clean a kettlebell to your shoulder with your palm facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Para_Press/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Push_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'One-Arm Kettlebell Push Press',
       description:
           'Clean a kettlebell to your shoulder with your palm facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Push_Press/0.jpg',
     ),
     Exercise(
       id: 'One-Arm_Kettlebell_Split_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'One-Arm Kettlebell Split Jerk',
       description:
           'Clean a kettlebell to your shoulder with your palm forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/One-Arm_Kettlebell_Split_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Power_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Quadriceps', 'Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Power Jerk',
       description:
           'Start with the barbell racked across your front shoulders and feet under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Power_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Push_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Push Press',
       description:
           'Hold the bar on the front of the shoulders with a shoulder-width grip and elbows up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Push_Press/0.jpg',
     ),
     Exercise(
       id: 'Push_Press_-_Behind_the_Neck',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Push Press - Behind the Neck',
       description:
           'Rack the barbell across your upper back behind your neck with feet under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Push_Press_-_Behind_the_Neck/0.jpg',
     ),
     Exercise(
       id: 'Seated_Barbell_Military_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Seated Barbell Military Press',
       description:
           'Sit on a press bench and take a barbell at shoulder height with a overhand grip just wider than your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Barbell_Military_Press/0.jpg',
     ),
     Exercise(
       id: 'Seated_Cable_Shoulder_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Seated Cable Shoulder Press',
       description:
           'Sit at the cable station and grasp a handle in each hand at shoulder height, elbows bent about ninety degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Cable_Shoulder_Press/0.jpg',
     ),
     Exercise(
       id: 'Seated_Dumbbell_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Seated Dumbbell Press',
       description:
           'Sit on a bench with back support and bring a dumbbell to each shoulder, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'See-Saw_Press_Alternating_Side_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'See-Saw Press (Alternating Side Press)',
       description:
           'Stand tall with a dumbbell at each shoulder, palms facing you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/See-Saw_Press_Alternating_Side_Press/0.jpg',
     ),
     Exercise(
       id: 'Sled_Overhead_Backward_Walk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Sled Overhead Backward Walk',
       description:
           'Attach two handles to a lightly loaded sled and face it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Sled_Overhead_Backward_Walk/0.jpg',
     ),
     Exercise(
       id: 'Smith_Machine_Overhead_Shoulder_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Smith Machine Overhead Shoulder Press',
       description:
           'Set a bench with back support under the Smith bar and sit so the bar sits just above your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Smith_Machine_Overhead_Shoulder_Press/0.jpg',
     ),
     Exercise(
       id: 'Split_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Quadriceps', 'Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Split Jerk',
       description:
           'Rack the bar across your front delts, feet under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Split_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Squat_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Quadriceps', 'Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Squat Jerk',
       description:
           'Rack the bar across your front delts, feet under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Legs / glutes'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Squat_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Standing_Alternating_Dumbbell_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Standing Alternating Dumbbell Press',
       description:
           'Stand with a dumbbell at each shoulder, palms facing forward and elbows out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Alternating_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'Standing_Barbell_Press_Behind_Neck',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Standing Barbell Press Behind Neck',
       description:
           'Set the bar in a rack at shoulder height and take a wide overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Barbell_Press_Behind_Neck/0.jpg',
     ),
     Exercise(
       id: 'Standing_Bradford_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Standing Bradford Press',
       description:
           'Rack the bar across your front shoulders with a shoulder-width overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Bradford_Press/0.jpg',
     ),
     Exercise(
       id: 'Standing_Military_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Standing Military Press',
       description:
           'Hold the bar at the front of the shoulders, feet hip-width, glutes and abs braced.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Military_Press/0.jpg',
     ),
     Exercise(
       id: 'Standing_Palm-In_One-Arm_Dumbbell_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Standing Palm-In One-Arm Dumbbell Press',
       description:
           'Hold a dumbbell at one shoulder with a neutral grip, palm facing in, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Palm-In_One-Arm_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'Standing_Palms-In_Dumbbell_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Standing Palms-In Dumbbell Press',
       description:
           'Stand with a dumbbell at each shoulder using a neutral grip, palms facing each other, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Palms-In_Dumbbell_Press/0.jpg',
     ),
     Exercise(
       id: 'Two-Arm_Kettlebell_Jerk',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Two-Arm Kettlebell Jerk',
       description:
           'Clean two kettlebells to your shoulders in the rack position, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Two-Arm_Kettlebell_Jerk/0.jpg',
     ),
     Exercise(
       id: 'Two-Arm_Kettlebell_Military_Press',
       category: ExerciseCategory.verticalPush,
+      muscles: ['Shoulders', 'Triceps', 'Upper back', 'Core'],
       name: 'Two-Arm Kettlebell Military Press',
       description:
           'Clean two kettlebells to your shoulders in the rack position, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
-      muscles: ['Shoulders'],
       imageUrl:
           'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Two-Arm_Kettlebell_Military_Press/0.jpg',
     ),

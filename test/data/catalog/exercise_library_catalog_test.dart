@@ -93,18 +93,32 @@ void main() {
   });
 
   group('muscles', () {
-    test('a curl reports arms, not the pattern it was filed under', () {
+    test('an isolation lift names the one muscle it isolates', () {
       final curl = ExerciseCatalog.findById('Barbell_Curl');
       expect(curl, isNotNull);
-      expect(ProgramSessionPlan.musclesForExercise(curl!), contains('Arms'));
+      expect(ProgramSessionPlan.musclesForExercise(curl!), ['Biceps']);
     });
 
-    test('a tree step still reports its pattern\'s muscles', () {
+    test('a compound lift names everything it recruits', () {
+      final bench =
+          ExerciseCatalog.findById('Barbell_Bench_Press_-_Medium_Grip')!;
+      expect(
+        ProgramSessionPlan.musclesForExercise(bench),
+        containsAll(['Chest', 'Triceps', 'Shoulders']),
+      );
+    });
+
+    test('a tree step names its own muscles, not its pattern\'s', () {
       final pullUp = ExerciseCatalog.findById('pull_up')!;
       expect(
         ProgramSessionPlan.musclesForExercise(pullUp),
-        ProgramSessionPlan.musclesForCategory(ExerciseCategory.verticalPull),
+        ['Lats', 'Upper back', 'Biceps', 'Forearms', 'Core'],
       );
+    });
+
+    test('steady-state work reads as cardio', () {
+      final bike = ExerciseCatalog.findById('Bicycling')!;
+      expect(ProgramSessionPlan.musclesForExercise(bike), contains('Cardio'));
     });
   });
 }

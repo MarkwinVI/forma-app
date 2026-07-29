@@ -99,6 +99,36 @@ extension ExerciseProgramSectionX on ExerciseProgramSection {
   }
 }
 
+/// The muscle groups an exercise can name, in the order a filter lists them:
+/// down the front and back of the upper body, then the core, then the legs,
+/// then the two that are not muscles at all.
+///
+/// Finer than the six groups the program's weekly volume is read in — those
+/// are still six, in [kProgramMuscleGroups] — because picking an exercise is
+/// a different question from balancing a week. Here you want the biceps, not
+/// "arms".
+const List<String> kExerciseMuscleGroups = [
+  'Chest',
+  'Lats',
+  'Upper back',
+  'Lower back',
+  'Traps',
+  'Neck',
+  'Shoulders',
+  'Biceps',
+  'Triceps',
+  'Forearms',
+  'Core',
+  'Glutes',
+  'Quadriceps',
+  'Hamstrings',
+  'Calves',
+  'Adductors',
+  'Abductors',
+  'Cardio',
+  'Other',
+];
+
 /// Name fragments that mean "this is a hold" — the exercise is measured in
 /// seconds rather than counted in reps.
 const _holdWords = [

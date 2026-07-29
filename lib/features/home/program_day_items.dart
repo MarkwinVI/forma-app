@@ -80,14 +80,18 @@ class ProgramDayItem {
     return ExerciseCategory.skill;
   }
 
-  /// The muscle groups this item's work lands on. A library movement names
-  /// its own; everything else reports its movement pattern's.
+  /// The muscle groups this item's work lands on, in the detailed terms the
+  /// picker filters by.
   List<String> get muscles {
     final exercise =
         exerciseId == null ? null : ExerciseCatalog.findById(exerciseId!);
     if (exercise != null) return ProgramSessionPlan.musclesForExercise(exercise);
     return ProgramSessionPlan.musclesForCategory(category);
   }
+
+  /// The same, folded to the six groups the weekly volume chart reads.
+  List<String> get coarseMuscles =>
+      ProgramSessionPlan.coarseMusclesFor(muscles);
 }
 
 /// Loads, serializes, and summarizes the per-day plans stored under the
@@ -252,7 +256,7 @@ class ProgramSessionPlan {
         progressMap: progressMap,
       );
       for (final item in items) {
-        for (final group in item.muscles) {
+        for (final group in item.coarseMuscles) {
           if (sets.containsKey(group)) sets[group] = sets[group]! + item.sets;
         }
       }
@@ -267,13 +271,47 @@ class ProgramSessionPlan {
   static List<String> musclesForCategory(ExerciseCategory category) =>
       _musclesForCategory[category] ?? const [];
 
-  /// The groups an exercise trains. Library movements name their own, because
-  /// a pattern says nothing useful about a biceps curl; tree steps fall back
-  /// to their pattern's.
+  /// The groups an exercise trains, in [kExerciseMuscleGroups] terms — what
+  /// the picker filters on. Every exercise names its own; the pattern is only
+  /// a fallback for one that somehow does not.
   static List<String> musclesForExercise(Exercise exercise) =>
       exercise.muscles.isNotEmpty
           ? exercise.muscles
           : musclesForCategory(exercise.category);
+
+  /// The same work read in the six groups the weekly volume chart is built
+  /// on. Balancing a week is a coarser question than picking an exercise, so
+  /// the detailed groups fold up rather than crowding that chart with
+  /// seventeen bars. Cardio and Other fold to nothing: they are not volume
+  /// for any muscle.
+  static List<String> coarseMusclesFor(Iterable<String> detailed) {
+    final coarse = <String>[];
+    for (final group in detailed) {
+      final folded = _coarseByDetailed[group];
+      if (folded != null && !coarse.contains(folded)) coarse.add(folded);
+    }
+    return coarse;
+  }
+
+  static const Map<String, String> _coarseByDetailed = {
+    'Chest': 'Chest',
+    'Lats': 'Back',
+    'Upper back': 'Back',
+    'Lower back': 'Back',
+    'Traps': 'Back',
+    'Neck': 'Shoulders',
+    'Shoulders': 'Shoulders',
+    'Biceps': 'Arms',
+    'Triceps': 'Arms',
+    'Forearms': 'Arms',
+    'Core': 'Core',
+    'Glutes': 'Legs / glutes',
+    'Quadriceps': 'Legs / glutes',
+    'Hamstrings': 'Legs / glutes',
+    'Calves': 'Legs / glutes',
+    'Adductors': 'Legs / glutes',
+    'Abductors': 'Legs / glutes',
+  };
 
   static const Map<ExerciseCategory, List<String>> _musclesForCategory = {
     ExerciseCategory.verticalPull: ['Back', 'Arms'],
