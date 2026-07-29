@@ -240,7 +240,9 @@ class _RibbonDay extends StatelessWidget {
       day.isMissed ? AppColors.red : AppColors.accentPrimary;
 }
 
-/// Filled = trained, ring = planned, nothing = rest.
+/// Filled = trained, ring = planned, nothing = rest. Colour separates the
+/// three things a filled day can mean: green for work that was done, red for
+/// work that was not, accent for the day you are on.
 class _Marker extends StatelessWidget {
   final HomeWeekStripDay day;
   final bool isToday;
@@ -253,7 +255,7 @@ class _Marker extends StatelessWidget {
       return const SizedBox(width: 5, height: 5);
     }
     if (day.isCompleted) {
-      return _dot(AppColors.accentPrimary);
+      return _dot(AppColors.green);
     }
     if (day.isMissed) {
       return _dot(AppColors.red);
