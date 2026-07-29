@@ -468,133 +468,157 @@ class _HomeViewState extends State<HomeView> {
                       onGoToProgram: widget.onGoToProgram ?? _openProgramSetup,
                     ),
                   )
-                : !snapshot.isViewingToday
-                    // A day that is not today reads as itself: what it is,
-                    // how far off, and what can honestly be said about it.
-                    ? _buildDayBody(snapshot)
-                    : snapshot.metrics.today.isRestDay
-                    // Recovery day fills the viewport and never scrolls — the
-                    // illustration flexes so the footer stays above the fold.
-                    ? _buildRestBody(snapshot)
-                    : _buildTrainBody(snapshot),
+                : _buildTab(snapshot),
       ),
     );
   }
 
-  /// A day other than today. The screen keeps its shape — ribbon, title, one
-  /// band of copy, a list, actions pinned above the tab bar — and only what
-  /// it can truthfully say changes.
-  Widget _buildDayBody(_TrainSnapshot snapshot) {
-    final today = TrainingScheduleService.dateOnly(snapshot.now);
+  /// The tab, whichever day it is reading: the ribbon fixed at the top, the
+  /// day under it, and the actions sitting directly on the tab bar. Only the
+  /// middle changes as you move across the week, so the screen never
+  /// re-shuffles itself under your thumb.
+  Widget _buildTab(_TrainSnapshot snapshot) {
+    final presentation = _presentationFor(snapshot);
+    final workout = _workoutForDate(
+      snapshot.selectedDay.date,
+      plannedOnly: true,
+    );
+    final actions = _actionsFor(snapshot, presentation);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+          child: _ribbon(snapshot),
+        ),
+        Expanded(
+          child: Padding(
+            // With nothing pinned under it, the body itself has to clear the
+            // tab bar.
+            padding: EdgeInsets.only(bottom: actions == null ? _navBarHeight : 0),
+            child: _bodyFor(snapshot, presentation, workout),
+          ),
+        ),
+        if (actions != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(22, 10, 22, _navBarHeight + 8),
+            child: actions,
+          ),
+      ],
+    );
+  }
+
+  /// How the selected day reads.
+  TrainDayPresentation _presentationFor(_TrainSnapshot snapshot) {
     final day = snapshot.selectedDay;
     final workout = _workoutForDate(day.date, plannedOnly: true);
-    final presentation = TrainDayViewResolver.resolve(
+    return TrainDayViewResolver.resolve(
       date: day.date,
-      today: today,
+      today: TrainingScheduleService.dateOnly(snapshot.now),
       isCompleted: day.isCompleted || workout != null,
       isMissed: day.isMissed,
       isRestDay: day.isRestDay,
       rescheduledTo: snapshot.rescheduledTo,
     );
-    final navReserve = MediaQuery.of(context).padding.bottom + 74;
+  }
 
-    // A rest day is a rest day whichever one you are looking at: it keeps the
-    // breathing illustration rather than being reduced to a line of type.
-    if (presentation.view == TrainDayView.rest) {
-      return _buildSelectedRestBody(snapshot, presentation, navReserve);
+  /// The height the floating tab bar occupies, so nothing sits behind it.
+  double get _navBarHeight => MediaQuery.of(context).padding.bottom + 62;
+
+  Widget _bodyFor(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+    PastWorkout? workout,
+  ) {
+    // A rest day never scrolls: the illustration flexes so the copy under it
+    // stays above the fold.
+    if (presentation.view == TrainDayView.rest ||
+        (presentation.isToday && snapshot.metrics.today.isRestDay)) {
+      return _restBody(snapshot, presentation);
     }
 
-    return Stack(
-      children: [
-        RefreshIndicator(
-          color: AppColors.accentPrimary,
-          backgroundColor: AppColors.surface,
-          onRefresh: _loadHomeData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(22, 18, 22, navReserve + 104),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _ribbon(snapshot),
-                  if (presentation.eyebrow != null)
-                    DayEyebrow(
-                      text: presentation.eyebrow!,
-                      color: presentation.view == TrainDayView.missed
-                          ? AppColors.red
-                          : AppColors.textMuted,
-                    ),
-                  ..._dayContent(snapshot, presentation, workout),
-                ],
-              ),
-            ),
+    return RefreshIndicator(
+      color: AppColors.accentPrimary,
+      backgroundColor: AppColors.surface,
+      onRefresh: _loadHomeData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (presentation.eyebrow != null)
+                DayEyebrow(
+                  text: presentation.eyebrow!,
+                  color: presentation.view == TrainDayView.missed
+                      ? AppColors.red
+                      : AppColors.textMuted,
+                ),
+              if (presentation.isToday)
+                _buildContent(snapshot)
+              else
+                ..._dayContent(snapshot, presentation, workout),
+            ],
           ),
         ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: navReserve - 12,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(22, 14, 22, 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.bg.withValues(alpha: 0),
-                  AppColors.bg.withValues(alpha: 0.95),
-                ],
-                stops: const [0, 0.34],
-              ),
-            ),
-            child: _dayActions(snapshot, presentation),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  /// A rest day other than today: the same illustration, with the day named
-  /// above it. Nothing is offered to start — a rest day ahead is not a
-  /// session you can pull forward, and one behind is simply gone.
-  Widget _buildSelectedRestBody(
+  /// Recovery, on today or on a day you are looking ahead to. What differs is
+  /// only what can be said around it: today explains why it is resting and
+  /// offers a way to train anyway; a day ahead simply says one is planned.
+  Widget _restBody(
     _TrainSnapshot snapshot,
     TrainDayPresentation presentation,
-    double navReserve,
   ) {
-    final (nextTitle, nextWhen) = _nextSessionAfter(
-      snapshot.selectedDay.date,
-      snapshot.ribbonDays,
-    );
-    final isPast = TrainDayViewResolver.isPast(
-      snapshot.selectedDay.date,
-      TrainingScheduleService.dateOnly(snapshot.now),
-    );
+    final isToday = presentation.isToday;
+    final (nextTitle, nextWhen) = isToday
+        ? _nextSession(snapshot.metrics.weekStrip)
+        : _nextSessionAfter(snapshot.selectedDay.date, snapshot.ribbonDays);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(22, 18, 22, navReserve),
+      padding: const EdgeInsets.symmetric(horizontal: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _ribbon(snapshot),
           if (presentation.eyebrow != null)
             DayEyebrow(text: presentation.eyebrow!),
           Expanded(
             child: RestDayView(
-              // A rest day already behind you has no next session to point
-              // at — that reading belongs to today.
-              nextTitle: isPast ? null : nextTitle,
-              nextWhen: isPast ? null : nextWhen,
+              title: isToday ? 'Nothing to do today' : 'Rest day planned',
+              showReason: isToday,
+              nextTitle: nextTitle,
+              nextWhen: nextWhen,
+              onTrainSomethingElse: isToday
+                  ? () => _openAlternateWorkoutOptions(snapshot.recommendation)
+                  : null,
             ),
-          ),
-          DayActions(
-            secondaryLabel: 'Back to today',
-            onSecondary: _backToToday,
           ),
         ],
       ),
     );
+  }
+
+  /// What the tab pins on the tab bar for this day, or null when the day
+  /// asks nothing of you.
+  Widget? _actionsFor(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+  ) {
+    if (presentation.isToday) {
+      if (snapshot.metrics.today.isRestDay) return null;
+      if (snapshot.metrics.today.completed != null) return null;
+      return TodayWorkoutActions(
+        summary: snapshot.metrics.today,
+        onStart: () => _startWorkout(snapshot.recommendation),
+        onTrainSomethingElse: () =>
+            _openAlternateWorkoutOptions(snapshot.recommendation),
+      );
+    }
+    return _dayActions(snapshot, presentation);
   }
 
   /// The next training day after [date], and how far past it that falls —
@@ -817,88 +841,6 @@ class _HomeViewState extends State<HomeView> {
 
   void _backToToday() => setState(() => _selectedDate = null);
 
-  Widget _buildRestBody(_TrainSnapshot snapshot) {
-    final metrics = snapshot.metrics;
-    final (nextTitle, nextWhen) = _nextSession(metrics.weekStrip);
-    // Reserve room for the shell's floating nav bar (it extends behind the
-    // body), so the "train something else" link isn't hidden by it.
-    final navReserve = MediaQuery.of(context).padding.bottom + 74;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(22, 18, 22, navReserve),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ribbon(snapshot),
-          Expanded(
-            child: RestDayView(
-              nextTitle: nextTitle,
-              nextWhen: nextWhen,
-              onTrainSomethingElse: () =>
-                  _openAlternateWorkoutOptions(snapshot.recommendation),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Start stays pinned above the tab bar while the session scrolls behind
-  /// it — an eight-exercise day would otherwise push it below the fold.
-  Widget _buildTrainBody(_TrainSnapshot snapshot) {
-    final metrics = snapshot.metrics;
-    final pinned = metrics.today.completed == null;
-    final navReserve = MediaQuery.of(context).padding.bottom + 74;
-
-    return Stack(
-      children: [
-        RefreshIndicator(
-          color: AppColors.accentPrimary,
-          backgroundColor: AppColors.surface,
-          onRefresh: _loadHomeData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                22,
-                18,
-                22,
-                pinned ? navReserve + 104 : 120,
-              ),
-              child: _buildContent(snapshot),
-            ),
-          ),
-        ),
-        if (pinned)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: navReserve - 12,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(22, 14, 22, 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.bg.withValues(alpha: 0),
-                    AppColors.bg.withValues(alpha: 0.95),
-                  ],
-                  stops: const [0, 0.34],
-                ),
-              ),
-              child: TodayWorkoutActions(
-                summary: metrics.today,
-                onStart: () => _startWorkout(snapshot.recommendation),
-                onTrainSomethingElse: () =>
-                    _openAlternateWorkoutOptions(snapshot.recommendation),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildContent(_TrainSnapshot snapshot) {
     final metrics = snapshot.metrics;
     final completed = metrics.today.completed;
@@ -907,7 +849,6 @@ class _HomeViewState extends State<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ribbon(snapshot),
         if (completed != null) ...[
           WorkoutDoneView(
             nextTitle: nextTitle,
@@ -924,7 +865,7 @@ class _HomeViewState extends State<HomeView> {
             ),
           if (_whatChanged.isNotEmpty) TrainInsight(events: _whatChanged),
         ] else ...[
-          const SizedBox(height: 30),
+          const SizedBox(height: 14),
           TodayWorkoutCard(
             summary: metrics.today,
             rows: TodayWorkoutContent.rows(metrics),

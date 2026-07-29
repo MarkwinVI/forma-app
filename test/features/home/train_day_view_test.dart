@@ -22,21 +22,21 @@ void main() {
   }
 
   group('which day the tab is looking at', () {
-    test('today needs no explaining', () {
+    test('today names itself like every other day', () {
       final presentation = resolve(today);
 
       expect(presentation.view, TrainDayView.today);
-      expect(presentation.eyebrow, isNull);
+      expect(presentation.eyebrow, 'TODAY · WED 29 JUL');
       expect(presentation.note, isNull);
     });
 
-    test('a day inside the horizon is real but provisional', () {
+    test('a day inside the horizon carries its exercises and no band', () {
       final presentation = resolve(DateTime(2026, 7, 31));
 
       expect(presentation.view, TrainDayView.soon);
       expect(presentation.eyebrow, 'IN 2 DAYS · FRI 31 JUL');
-      expect(presentation.note!.tag, 'PROVISIONAL');
-      expect(presentation.note!.body, contains('can still move'));
+      // The dashed underline and the distance already say it is ahead.
+      expect(presentation.note, isNull);
     });
 
     test('tomorrow says tomorrow', () {

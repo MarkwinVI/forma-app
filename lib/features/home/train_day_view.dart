@@ -15,8 +15,8 @@ enum TrainDayView {
   /// A past training day with nothing logged. Its session slid forward.
   missed,
 
-  /// A training day inside the built horizon: real exercises, provisional
-  /// targets, because sessions before it can still move them.
+  /// A training day inside the built horizon: real exercises, though the
+  /// sessions before it can still move their targets.
   soon,
 
   /// A training day past the horizon. Only the shape of the day exists.
@@ -40,8 +40,9 @@ class TrainDayNote {
 class TrainDayPresentation {
   final TrainDayView view;
 
-  /// Mono line above the title — "IN 2 DAYS · FRI 31 JUL". Null for today,
-  /// which needs no explaining.
+  /// Mono line above the title — "IN 2 DAYS · FRI 31 JUL", or
+  /// "TODAY · WED 29 JUL". Every day names itself, so moving across the week
+  /// never leaves you guessing which one you are reading.
   final String? eyebrow;
 
   /// The band under the title, or null when the day speaks for itself.
@@ -152,7 +153,10 @@ class TrainDayViewResolver {
     final distance = daysBetween(today, date);
 
     if (distance == 0) {
-      return const TrainDayPresentation(view: TrainDayView.today);
+      return TrainDayPresentation(
+        view: TrainDayView.today,
+        eyebrow: 'TODAY · ${dateLabel(date)}',
+      );
     }
 
     if (distance < 0) {
@@ -208,14 +212,12 @@ class TrainDayViewResolver {
       );
     }
 
+    // No band: the dashed underline in the ribbon and the distance in the
+    // eyebrow already say this day is ahead. Saying it a third time in a
+    // sentence made every future day read as a disclaimer.
     return TrainDayPresentation(
       view: TrainDayView.soon,
       eyebrow: eyebrow,
-      note: TrainDayNote(
-        tag: 'PROVISIONAL',
-        body: "${weekdayName(date)}'s targets are set by the sessions you "
-            'train before it, so these numbers can still move.',
-      ),
     );
   }
 

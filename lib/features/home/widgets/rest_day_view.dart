@@ -8,6 +8,13 @@ import '../../../core/widgets/polished.dart';
 /// with recovery copy, the next session and how far off it is, and a quiet
 /// "train something else" escape hatch. No workout list, no insight block.
 class RestDayView extends StatefulWidget {
+  /// What the day is called. Today is resting; a day ahead has one planned.
+  final String title;
+
+  /// Whether to explain the rest. Today can say why it is not training; a
+  /// day next week has nothing to reason about yet.
+  final bool showReason;
+
   /// Title of the next training session (e.g. "Lower Day") and how far away it
   /// is (e.g. "tomorrow", "in 2 days"). Both null hides the "next up" row.
   final String? nextTitle;
@@ -16,6 +23,8 @@ class RestDayView extends StatefulWidget {
 
   const RestDayView({
     super.key,
+    this.title = 'Nothing to do today',
+    this.showReason = true,
     this.nextTitle,
     this.nextWhen,
     this.onTrainSomethingElse,
@@ -87,30 +96,32 @@ class _RestDayViewState extends State<RestDayView>
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Nothing to do today',
+        Text(
+          widget.title,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 27,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
             letterSpacing: -0.54,
           ),
         ),
-        const SizedBox(height: 8),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Your last session is still settling in.\n'
-            'The adaptation happens now — not in the gym.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.55,
+        if (widget.showReason) ...[
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Your last session is still settling in.\n'
+              'The adaptation happens now — not in the gym.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.55,
+              ),
             ),
           ),
-        ),
+        ],
         const SizedBox(height: 24),
         if (widget.nextTitle != null)
           SurfaceCard(
