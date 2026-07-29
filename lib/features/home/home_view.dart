@@ -581,9 +581,11 @@ class _HomeViewState extends State<HomeView> {
     TrainDayPresentation presentation,
   ) {
     final isToday = presentation.isToday;
-    final (nextTitle, nextWhen) = isToday
-        ? _nextSession(snapshot.metrics.weekStrip)
-        : _nextSessionAfter(snapshot.selectedDay.date, snapshot.ribbonDays);
+    // What comes after a rest day only matters on the rest day itself. Read
+    // from next week it is a second date on a screen whose whole point is
+    // that there is nothing to do on the one you are looking at.
+    final (nextTitle, nextWhen) =
+        isToday ? _nextSession(snapshot.metrics.weekStrip) : (null, null);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22),
