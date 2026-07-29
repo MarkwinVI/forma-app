@@ -1,32 +1,8 @@
-/// What the exercise detail view says about a movement: how to do it, what
-/// every rep has to pass, and the demo that shows it.
-///
-/// Kept apart from [ExerciseCatalog], which says where a movement sits in a
-/// tree. Both are generated from the same exercise sheet, but this is the
-/// half a reader looks at and that half changes on its own schedule.
-class ExerciseCoaching {
-  /// Ordered steps, read as a numbered list. Three for most movements, four
-  /// where the barbell lifts need a separate setup step.
-  final List<String> howTo;
+import 'exercise_coaching.dart';
+import 'exercise_library_catalog.dart';
 
-  /// The short lines every rep is judged against.
-  final List<String> formChecks;
-
-  /// YouTube demo for the movement. Some steps of a weighted ladder share
-  /// one clip — there is a single demo of a weighted pull-up, not seven.
-  final String videoUrl;
-
-  /// Still frame, used until the video is ready and whenever it cannot load.
-  final String imageUrl;
-
-  const ExerciseCoaching({
-    required this.howTo,
-    required this.formChecks,
-    required this.videoUrl,
-    required this.imageUrl,
-  });
-}
-
+/// Coaching for the skill-tree steps. The general library keeps its own in
+/// [ExerciseLibraryCatalog]; [ExerciseCoachingCatalog.findById] reads both.
 class ExerciseCoachingCatalog {
   ExerciseCoachingCatalog._();
 
@@ -2215,10 +2191,12 @@ class ExerciseCoachingCatalog {
     ),
   };
 
-  /// Coaching for an exercise, or null for one the sheet does not cover yet.
-  /// Callers fall back to the movement pattern's generic advice.
-  static ExerciseCoaching? findById(String id) => _byId[id];
+  /// Coaching for any exercise the sheet covers, tree step or library
+  /// movement, or null for one it does not. Callers fall back to the movement
+  /// pattern's generic advice.
+  static ExerciseCoaching? findById(String id) =>
+      _byId[id] ?? ExerciseLibraryCatalog.coachingFor(id);
 
-  /// Every exercise the sheet has coaching for.
+  /// Every skill-tree step the sheet has coaching for.
   static Iterable<String> get coveredIds => _byId.keys;
 }

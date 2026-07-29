@@ -409,6 +409,9 @@ class TrainingProgramService {
       case ExerciseCategory.hinge:
         return TrainingTrack.hinge;
       case ExerciseCategory.skill:
+      // Accessory work shares the lane warmups and cooldowns already use:
+      // it is trained, but it is not one of the six patterns.
+      case ExerciseCategory.other:
         return TrainingTrack.skillWork;
     }
   }
@@ -681,6 +684,7 @@ class TrainingProgramService {
       case ExerciseCategory.hinge:
         return TrainingTrack.hinge;
       case ExerciseCategory.skill:
+      case ExerciseCategory.other:
         return TrainingTrack.skillWork;
     }
   }

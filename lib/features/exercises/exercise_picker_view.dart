@@ -72,14 +72,14 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
         .where((token) => token.isNotEmpty)
         .toList();
 
-    final matches = ExerciseCatalog.all().where((exercise) {
+    final matches = ExerciseCatalog.everything().where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (_isLocked(exercise)) return false;
       if (_patterns.isNotEmpty && !_patterns.contains(exercise.category)) {
         return false;
       }
       if (_muscles.isNotEmpty &&
-          !ProgramSessionPlan.musclesForCategory(exercise.category)
+          !ProgramSessionPlan.musclesForExercise(exercise)
               .any(_muscles.contains)) {
         return false;
       }
@@ -188,14 +188,14 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   }) {
     final byPattern = patterns ?? _patterns;
     final byMuscle = muscles ?? _muscles;
-    return ExerciseCatalog.all().where((exercise) {
+    return ExerciseCatalog.everything().where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (_isLocked(exercise)) return false;
       if (byPattern.isNotEmpty && !byPattern.contains(exercise.category)) {
         return false;
       }
       if (byMuscle.isNotEmpty &&
-          !ProgramSessionPlan.musclesForCategory(exercise.category)
+          !ProgramSessionPlan.musclesForExercise(exercise)
               .any(byMuscle.contains)) {
         return false;
       }

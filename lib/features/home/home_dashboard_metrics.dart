@@ -1213,6 +1213,7 @@ class HomeDashboardMetricsCalculator {
       case ExerciseCategory.core:
         return TrainingTrack.core;
       case ExerciseCategory.skill:
+      case ExerciseCategory.other:
         return TrainingTrack.skillWork;
     }
   }

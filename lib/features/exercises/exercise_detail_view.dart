@@ -1032,6 +1032,20 @@ _ExerciseCoachData _patternCoachDataFor(Exercise exercise) {
           'You can pause important positions without losing control.',
         ],
       );
+    case ExerciseCategory.other:
+      return const _ExerciseCoachData(
+        steps: [
+          'Set the load and the position before the first rep, not during it.',
+          'Move through the range you can control, and own both ends of it.',
+          'Keep the tempo the same from the first rep to the last.',
+          'End the set while the technique still looks like the first rep.',
+        ],
+        formChecks: [
+          'The setup is the same every set.',
+          'Nothing swings or shortens to finish a rep.',
+          'The last rep looks like the first.',
+        ],
+      );
   }
 }
 

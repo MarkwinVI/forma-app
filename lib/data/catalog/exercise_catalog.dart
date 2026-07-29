@@ -1,3 +1,4 @@
+import 'exercise_library_catalog.dart';
 import 'skill_category_catalog.dart';
 import '../models/exercise_model.dart';
 
@@ -1639,7 +1640,15 @@ class ExerciseCatalog {
     ),
   ];
 
+  /// The skill-tree steps, and only those. Everything that reasons about
+  /// progressions — program generation, balance, the trees themselves —
+  /// asks this, so the general library can never leak into a program.
   static List<Exercise> all() => _all;
+
+  /// Tree steps and the general library together: what a person searching
+  /// for an exercise expects to be searching.
+  static List<Exercise> everything() =>
+      [..._all, ...ExerciseLibraryCatalog.all()];
 
   static List<Exercise> browsable() => _all
       .where((exercise) => SkillCategoryCatalog.isBrowsableId(
@@ -1661,11 +1670,13 @@ class ExerciseCatalog {
   static int totalForSkillCategory(String skillCategoryId) =>
       _all.where((e) => _resolveSkillCategoryId(e) == skillCategoryId).length;
 
+  /// Any exercise by id, tree step or library movement. A logged set has to
+  /// resolve back to something whichever half it came from.
   static Exercise? findById(String id) {
     for (final exercise in _all) {
       if (exercise.id == id) return exercise;
     }
-    return null;
+    return ExerciseLibraryCatalog.findById(id);
   }
 
   static String skillCategoryIdForExercise(Exercise exercise) =>

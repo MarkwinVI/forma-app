@@ -41,6 +41,7 @@ class ExercisePreviewSheet extends StatelessWidget {
       case ExerciseCategory.core:
         return const [Color(0xFF214658), Color(0xFF10171F)];
       case ExerciseCategory.skill:
+      case ExerciseCategory.other:
         return const [Color(0xFF4A2C4F), Color(0xFF181018)];
     }
   }
@@ -62,6 +63,7 @@ class ExercisePreviewSheet extends StatelessWidget {
       case ExerciseCategory.core:
         return Icons.crop_free_rounded;
       case ExerciseCategory.skill:
+      case ExerciseCategory.other:
         return Icons.bolt_rounded;
     }
   }

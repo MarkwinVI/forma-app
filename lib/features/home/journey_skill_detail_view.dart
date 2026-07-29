@@ -649,5 +649,7 @@ Color _accentForExerciseCategory(ExerciseCategory category) {
       return const Color(0xFF4CC9F0);
     case ExerciseCategory.skill:
       return const Color(0xFFA66CFF);
+    case ExerciseCategory.other:
+      return const Color(0xFF9AA0AA);
   }
 }

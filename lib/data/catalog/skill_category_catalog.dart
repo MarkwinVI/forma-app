@@ -493,6 +493,9 @@ class SkillCategoryCatalog {
   static const Set<ExerciseCategory> _hiddenSkillTracks = {
     ExerciseCategory.hinge,
     ExerciseCategory.skill,
+    // Accessory work from the general library is not a tree: there is nothing
+    // to climb, so it has no level to show on Progress.
+    ExerciseCategory.other,
   };
 
   static List<SkillCategory> browsable() {

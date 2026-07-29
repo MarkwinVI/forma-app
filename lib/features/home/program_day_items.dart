@@ -79,6 +79,15 @@ class ProgramDayItem {
     }
     return ExerciseCategory.skill;
   }
+
+  /// The muscle groups this item's work lands on. A library movement names
+  /// its own; everything else reports its movement pattern's.
+  List<String> get muscles {
+    final exercise =
+        exerciseId == null ? null : ExerciseCatalog.findById(exerciseId!);
+    if (exercise != null) return ProgramSessionPlan.musclesForExercise(exercise);
+    return ProgramSessionPlan.musclesForCategory(category);
+  }
 }
 
 /// Loads, serializes, and summarizes the per-day plans stored under the
@@ -211,7 +220,9 @@ class ProgramSessionPlan {
         weekday: day.weekday,
       );
       for (final item in items) {
-        coverage[item.category]!.add(item);
+        // Accessory work has no pattern to cover, so it is simply not part
+        // of the balance reading.
+        coverage[item.category]?.add(item);
       }
     }
 
@@ -241,8 +252,8 @@ class ProgramSessionPlan {
         progressMap: progressMap,
       );
       for (final item in items) {
-        for (final group in _musclesForCategory[item.category]!) {
-          sets[group] = sets[group]! + item.sets;
+        for (final group in item.muscles) {
+          if (sets.containsKey(group)) sets[group] = sets[group]! + item.sets;
         }
       }
     }
@@ -255,6 +266,14 @@ class ProgramSessionPlan {
   /// reports the same groups.
   static List<String> musclesForCategory(ExerciseCategory category) =>
       _musclesForCategory[category] ?? const [];
+
+  /// The groups an exercise trains. Library movements name their own, because
+  /// a pattern says nothing useful about a biceps curl; tree steps fall back
+  /// to their pattern's.
+  static List<String> musclesForExercise(Exercise exercise) =>
+      exercise.muscles.isNotEmpty
+          ? exercise.muscles
+          : musclesForCategory(exercise.category);
 
   static const Map<ExerciseCategory, List<String>> _musclesForCategory = {
     ExerciseCategory.verticalPull: ['Back', 'Arms'],
@@ -455,6 +474,8 @@ String programPatternLabel(ExerciseCategory category) {
       return 'Core';
     case ExerciseCategory.skill:
       return 'Skill';
+    case ExerciseCategory.other:
+      return 'Other';
   }
 }
 
@@ -476,6 +497,8 @@ IconData programPatternIcon(ExerciseCategory category) {
       return Icons.adjust_rounded;
     case ExerciseCategory.skill:
       return Icons.auto_awesome_rounded;
+    case ExerciseCategory.other:
+      return Icons.more_horiz_rounded;
   }
 }
 

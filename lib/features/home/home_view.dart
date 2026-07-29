@@ -763,7 +763,7 @@ class _HomeViewState extends State<HomeView> {
   /// What a day trains when which exercises it trains is not settled: the
   /// movements it covers and how many slots each one gets.
   List<DayPatternRow> _patternRowsFor(DailyTrainingRecommendation plan) {
-    const order = ['Push', 'Pull', 'Legs', 'Core', 'Skill work'];
+    const order = ['Push', 'Pull', 'Legs', 'Core', 'Skill work', 'Other'];
     final counts = <String, int>{};
 
     for (final item in plan.items) {
@@ -777,6 +777,7 @@ class _HomeViewState extends State<HomeView> {
         ExerciseCategory.squat || ExerciseCategory.hinge => 'Legs',
         ExerciseCategory.core => 'Core',
         ExerciseCategory.skill => 'Skill work',
+        ExerciseCategory.other => 'Other',
       };
       counts[group] = (counts[group] ?? 0) + 1;
     }

@@ -7,6 +7,10 @@ enum ExerciseCategory {
   hinge,
   core,
   skill,
+
+  /// Isolation, power and carry work from the general exercise library —
+  /// real training, but not one of the patterns a tree is built on.
+  other,
 }
 
 extension ExerciseCategoryX on ExerciseCategory {
@@ -28,6 +32,8 @@ extension ExerciseCategoryX on ExerciseCategory {
         return 'core';
       case ExerciseCategory.skill:
         return 'skill';
+      case ExerciseCategory.other:
+        return 'other';
     }
   }
 
@@ -49,6 +55,8 @@ extension ExerciseCategoryX on ExerciseCategory {
         return 'Core';
       case ExerciseCategory.skill:
         return 'Skill';
+      case ExerciseCategory.other:
+        return 'Other';
     }
   }
 }
@@ -144,6 +152,15 @@ class Exercise {
   final ExerciseProgramSection programSection;
   final String? imageUrl;
 
+  /// True for a movement from the general exercise library rather than a step
+  /// of a skill tree. It can be added to a day and logged like anything else,
+  /// but it is in no progression: nothing unlocks it and it unlocks nothing.
+  final bool isLibrary;
+
+  /// Muscle groups this movement trains, for the picker's filters. Empty for
+  /// tree steps, which report the muscles of their movement pattern instead.
+  final List<String> muscles;
+
   /// True for isometric/hold exercises measured in seconds (L-sits, planks,
   /// hangs, planche leans); false for rep-based movements.
   ///
@@ -166,7 +183,12 @@ class Exercise {
   /// named steps ("1.5x Bodyweight") and stay progressions; only the barbell
   /// lifts are open-ended. Single-leg hinges are bodyweight steps of the
   /// squat tree, so they are excluded however they end up being named.
+  ///
+  /// Every library movement is loaded too, for the same reason the barbell
+  /// lifts are: there is no harder variation waiting, so the only way it can
+  /// go forward is to ask for more.
   bool get isLoaded {
+    if (isLibrary) return true;
     final lower = name.toLowerCase();
     if (_singleSideWords.any(lower.contains)) return false;
     return lower.contains('barbell') || lower.contains('deadlift');
@@ -184,5 +206,7 @@ class Exercise {
     this.prerequisiteIds = const [],
     this.programSection = ExerciseProgramSection.mainExercises,
     this.imageUrl,
+    this.isLibrary = false,
+    this.muscles = const [],
   });
 }

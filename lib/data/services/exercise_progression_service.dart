@@ -349,6 +349,24 @@ class ExerciseProgressionService {
     final topReps = masteryValueForExercise(exercise, masterySettings);
     final weightKg = progress?.currentTargetWeightKg;
 
+    // A hold has nowhere to put a plate: it goes forward on seconds, and once
+    // it is at the top of its seconds there is nothing to suggest.
+    if (isTimedExercise(exercise)) {
+      if (current.value >= topReps) return null;
+      return ProgressionSuggestion(
+        exerciseId: exercise.id,
+        kind: ProgressionSuggestionKind.repIncrease,
+        sets: current.sets,
+        fromValue: current.value,
+        toValue: math.min(
+          current.value + targetIncrementForExercise(exercise),
+          topReps,
+        ),
+        fromWeightKg: weightKg,
+        toWeightKg: weightKg,
+      );
+    }
+
     if (current.value >= topReps) {
       return ProgressionSuggestion(
         exerciseId: exercise.id,

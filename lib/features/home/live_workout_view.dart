@@ -1901,7 +1901,7 @@ class _ExercisePickerPageState extends State<_ExercisePickerPage> {
         .where((token) => token.isNotEmpty)
         .toList();
 
-    final exercises = ExerciseCatalog.all().where((exercise) {
+    final exercises = ExerciseCatalog.everything().where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (tokens.isEmpty) return true;
       final haystack = _normalize(
@@ -3223,6 +3223,7 @@ String _difficultyLabel(int difficulty) {
 TrainingTrack _trackForExercise(Exercise exercise) {
   switch (exercise.category) {
     case ExerciseCategory.skill:
+    case ExerciseCategory.other:
       return TrainingTrack.skillWork;
     case ExerciseCategory.verticalPush:
       return TrainingTrack.verticalPush;
