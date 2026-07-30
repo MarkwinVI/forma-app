@@ -7,11 +7,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/reorder_exercises_page.dart';
 import '../../core/widgets/type_led.dart';
-import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
-import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
@@ -21,8 +19,8 @@ import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
+import '../exercises/exercise_picker_view.dart';
 import 'completed_workout_model.dart';
-import 'exercise_switch_selector.dart';
 import 'finished_workout_view.dart';
 import 'program_day_items.dart';
 
@@ -886,65 +884,48 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     });
   }
 
+  /// Replacing goes straight to the search — the same page adding uses, and
+  /// the same one the program editor and the library open. There is no
+  /// progression-or-exercise question first: the results already mark the
+  /// steps that continue a path you're on.
   Future<void> _openReplaceExercise(TrainingRecommendationItem item) async {
-    final selection = await Navigator.of(context).push<ExerciseSwitchChoice>(
+    final replacement = await Navigator.of(context).push<List<Exercise>>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => const ExerciseSwitchChooserPage(
-          title: 'Switch Item',
-          description:
-              'Replace this item with a progression path or a standalone exercise.',
-        ),
-      ),
-    );
-    if (!mounted || selection == null) return;
-
-    if (selection == ExerciseSwitchChoice.progression) {
-      final replacement =
-          await Navigator.of(context).push<TrainingRecommendationItem>(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (_) => _ReplaceProgressionView(
-            currentItem: item,
-            progressMap: _progressMap,
-          ),
-        ),
-      );
-      if (replacement == null || !mounted) return;
-      _replaceItemInSession(item, replacement);
-      return;
-    }
-
-    if (selection != ExerciseSwitchChoice.exercise) return;
-
-    final replacement = await Navigator.of(context).push<Exercise>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _ExercisePickerPage(
+        builder: (_) => ExercisePickerView(
+          excludedIds: {item.exercise.id},
+          progressMap: _progressMap,
+          singlePick: true,
           title: 'Switch exercise',
           subtitle: 'Replaces ${item.exercise.name}',
-          excludedIds: {item.exercise.id},
         ),
       ),
     );
-    if (replacement == null || !mounted) return;
-    _replaceExerciseInSession(item, replacement);
+    if (replacement == null || replacement.isEmpty || !mounted) return;
+    _replaceExerciseInSession(item, replacement.first);
   }
 
   Future<void> _openAddExercise() async {
     final existingIds = _sessionItems.map((item) => item.exercise.id).toSet();
-    final addition = await Navigator.of(context).push<Exercise>(
+    final picked = await Navigator.of(context).push<List<Exercise>>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _ExercisePickerPage(
-          title: 'Add exercise',
-          subtitle: 'Added to the end of today’s session',
+        builder: (_) => ExercisePickerView(
           excludedIds: existingIds,
+          progressMap: _progressMap,
+          subtitle: 'Added to the end of today’s session',
         ),
       ),
     );
-    if (addition == null || !mounted) return;
-    _addExerciseToSession(addition);
+    if (picked == null || picked.isEmpty || !mounted) return;
+    for (final exercise in picked) {
+      _addExerciseToSession(exercise);
+    }
+    // Each add toasts its own name; a multi-pick would only leave the last
+    // one standing, so say how many landed instead.
+    if (picked.length > 1) {
+      _showToast('${picked.length} exercises added');
+    }
   }
 
   Future<void> _openExerciseActions(TrainingRecommendationItem item) async {
@@ -1869,237 +1850,6 @@ class _AddExerciseButton extends StatelessWidget {
   }
 }
 
-/// Full-page single-exercise picker — same pattern as the program day
-/// editor's lift picker. Pops with the chosen [Exercise].
-class _ExercisePickerPage extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final Set<String> excludedIds;
-
-  const _ExercisePickerPage({
-    required this.title,
-    required this.subtitle,
-    required this.excludedIds,
-  });
-
-  @override
-  State<_ExercisePickerPage> createState() => _ExercisePickerPageState();
-}
-
-class _ExercisePickerPageState extends State<_ExercisePickerPage> {
-  String _query = '';
-
-  /// Lowercase and drop separators so "pullup" matches "Pull-Up" / "Pull Up".
-  static String _normalize(String value) =>
-      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-
-  List<Exercise> get _results {
-    final tokens = _query
-        .toLowerCase()
-        .split(RegExp(r'\s+'))
-        .map(_normalize)
-        .where((token) => token.isNotEmpty)
-        .toList();
-
-    final exercises = ExerciseCatalog.everything().where((exercise) {
-      if (widget.excludedIds.contains(exercise.id)) return false;
-      if (tokens.isEmpty) return true;
-      final haystack = _normalize(
-        '${exercise.name} ${programPatternLabel(exercise.category)}',
-      );
-      return tokens.every(haystack.contains);
-    }).toList();
-
-    sortExerciseResults(exercises, query: _query, isFiltered: false);
-    return exercises;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final results = _results;
-
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: AppColors.bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.chevron_left_rounded,
-            size: 30,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.title,
-              style: const TextStyle(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              widget.subtitle,
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        titleSpacing: 0,
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.search_rounded,
-                      size: 17,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (value) => setState(() => _query = value),
-                        autofocus: false,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                        cursorColor: AppColors.accentPrimary,
-                        decoration: const InputDecoration(
-                          hintText: 'Search exercises…',
-                          hintStyle: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textMuted,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 11),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: results.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          _query.trim().isEmpty
-                              ? 'Everything from the library is already in '
-                                  'this workout.'
-                              : 'No exercises match “${_query.trim()}”.',
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 30),
-                      itemCount: results.length,
-                      itemBuilder: (context, index) {
-                        final exercise = results[index];
-                        return Pressable(
-                          onTap: () => Navigator.of(context).pop(exercise),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Row(
-                              children: [
-                                IconTile(
-                                  icon: programPatternIcon(exercise.category),
-                                  size: 40,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        exercise.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                          letterSpacing: -0.15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 1),
-                                      Text(
-                                        '${programPatternLabel(exercise.category)}'
-                                        ' · ${_difficultyLabel(exercise.difficulty)}',
-                                        style: const TextStyle(
-                                          fontSize: 12.5,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 26,
-                                  height: 26,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.accentSoft,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons.add_rounded,
-                                    size: 15,
-                                    color: AppColors.accentPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Sheets ────────────────────────────────────────────────────────────
 
 class _SheetShell extends StatelessWidget {
@@ -2865,289 +2615,6 @@ class _EmptyWorkoutState extends StatelessWidget {
   }
 }
 
-// ── Replace with progression (two-step picker) ────────────────────────
-
-class _ReplaceProgressionView extends StatefulWidget {
-  final TrainingRecommendationItem currentItem;
-  final Map<String, ExerciseStatus> progressMap;
-
-  const _ReplaceProgressionView({
-    required this.currentItem,
-    required this.progressMap,
-  });
-
-  @override
-  State<_ReplaceProgressionView> createState() =>
-      _ReplaceProgressionViewState();
-}
-
-class _ReplaceProgressionViewState extends State<_ReplaceProgressionView> {
-  late final List<SkillCategory> _categories;
-  late String _selectedCategoryId;
-  String? _selectedBranchId;
-  bool _showBranches = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final currentCategory = SkillCategoryCatalog.findById(
-      widget.currentItem.sourceSkillCategoryId,
-    );
-    final trackCategories = SkillCategoryCatalog.forTrack(
-      widget.currentItem.sourceCategory,
-    );
-    _categories = _orderedCategories(trackCategories, currentCategory);
-    _selectedCategoryId = _categories.first.id;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final category = _categories.firstWhere(
-      (item) => item.id == _selectedCategoryId,
-      orElse: () => _categories.first,
-    );
-
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: AppColors.bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.chevron_left_rounded,
-            size: 30,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: () {
-            if (_showBranches) {
-              setState(() {
-                _showBranches = false;
-                _selectedBranchId = null;
-              });
-              return;
-            }
-            Navigator.of(context).pop();
-          },
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _showBranches ? 'Pick a branch' : 'Pick a progression',
-              style: const TextStyle(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              _showBranches ? '${category.title} · step 2 of 2' : 'Step 1 of 2',
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        titleSpacing: 0,
-      ),
-      body: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _showBranches
-                    ? 'Each branch is a different path through the '
-                        '${category.title.toLowerCase()} tree.'
-                    : 'Choose the skill tree you want this item to follow.',
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  height: 1.5,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Expanded(
-                child: _showBranches
-                    ? _buildBranchList(category)
-                    : _buildCategoryList(),
-              ),
-              if (_showBranches) ...[
-                const SizedBox(height: 12),
-                PillButton(
-                  label: 'Set progression',
-                  onTap: _selectedBranchId == null
-                      ? null
-                      : () => Navigator.of(context).pop(
-                            _progressionReplacement(
-                              widget.currentItem,
-                              category,
-                              _selectedBranchId!,
-                              widget.progressMap,
-                            ),
-                          ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryList() {
-    return ListView.builder(
-      itemCount: _categories.length,
-      itemBuilder: (context, index) {
-        final item = _categories[index];
-        return Pressable(
-          onTap: () {
-            setState(() {
-              _selectedCategoryId = item.id;
-              _selectedBranchId = null;
-              _showBranches = true;
-            });
-          },
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${_selectableBranches(item).length} branches · '
-                        '${item.track.label}',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: AppColors.textMuted,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBranchList(SkillCategory category) {
-    final branches = _selectableBranches(category);
-
-    return ListView.builder(
-      itemCount: branches.length,
-      itemBuilder: (context, index) {
-        final branch = branches[index];
-        final selected = _selectedBranchId == branch.id;
-        return Pressable(
-          onTap: () => setState(() => _selectedBranchId = branch.id),
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.accentSoft : AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? AppColors.accentPrimary : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _branchTitle(category, branch.id),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _branchRange(category, branch.id),
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  size: 20,
-                  color:
-                      selected ? AppColors.accentPrimary : AppColors.textMuted,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  List<SkillCategory> _orderedCategories(
-    List<SkillCategory> trackCategories,
-    SkillCategory? currentCategory,
-  ) {
-    final categories = <SkillCategory>[
-      if (currentCategory != null) currentCategory,
-      ...trackCategories.where((item) => item.id != currentCategory?.id),
-    ];
-
-    if (categories.isNotEmpty) return categories;
-
-    return [
-      currentCategory ??
-          SkillCategoryCatalog.defaultForTrack(
-              widget.currentItem.sourceCategory),
-    ];
-  }
-
-  List<SkillCategoryBranch> _selectableBranches(SkillCategory category) {
-    return category.branches
-        .where(
-          (branch) => category.pathFor(branch.id).isNotEmpty,
-        )
-        .toList();
-  }
-}
-
 // ── Drafts & helpers ──────────────────────────────────────────────────
 
 class _WorkoutSetDraft {
@@ -3205,12 +2672,6 @@ String _formatCountdownLabel(int seconds) {
 bool _isTimedExercise(Exercise exercise) =>
     ExerciseProgressionService.isTimedExercise(exercise);
 
-String _difficultyLabel(int difficulty) {
-  if (difficulty <= 1) return 'Beginner';
-  if (difficulty <= 3) return 'Intermediate';
-  return 'Advanced';
-}
-
 TrainingTrack _trackForExercise(Exercise exercise) {
   switch (exercise.category) {
     case ExerciseCategory.skill:
@@ -3231,125 +2692,6 @@ TrainingTrack _trackForExercise(Exercise exercise) {
     case ExerciseCategory.hinge:
       return TrainingTrack.hinge;
   }
-}
-
-TrainingRecommendationItem _progressionReplacement(
-  TrainingRecommendationItem currentItem,
-  SkillCategory category,
-  String branchId,
-  Map<String, ExerciseStatus> progressMap,
-) {
-  final exercise = _currentExerciseForProgression(
-        skillCategoryId: category.id,
-        branchId: branchId,
-        progressMap: progressMap,
-        programSection: currentItem.exercise.programSection,
-      ) ??
-      _copyExerciseForSection(
-        _firstExerciseForBranch(category, branchId) ?? currentItem.exercise,
-        programSection: currentItem.exercise.programSection,
-      );
-
-  return TrainingRecommendationItem(
-    track: _trackForExercise(exercise),
-    exercise: exercise,
-    status: progressMap[exercise.id] ?? ExerciseStatus.inactive,
-    sourceCategory: category.track,
-    sourceSkillCategoryId: category.id,
-    progressionExerciseIds: category.pathFor(branchId),
-  );
-}
-
-Exercise? _currentExerciseForProgression({
-  required String skillCategoryId,
-  required String branchId,
-  required Map<String, ExerciseStatus> progressMap,
-  required ExerciseProgramSection programSection,
-}) {
-  final category = SkillCategoryCatalog.findById(skillCategoryId);
-  final exerciseIds = category?.pathFor(branchId) ?? const <String>[];
-  final exercises =
-      exerciseIds.map(ExerciseCatalog.findById).whereType<Exercise>().toList();
-
-  if (exercises.isEmpty) return null;
-
-  for (final exercise in exercises) {
-    if (progressMap[exercise.id] == ExerciseStatus.active) {
-      return _copyExerciseForSection(
-        exercise,
-        programSection: programSection,
-      );
-    }
-  }
-
-  for (final exercise in exercises) {
-    if (!(progressMap[exercise.id]?.isCleared ?? false)) {
-      return _copyExerciseForSection(
-        exercise,
-        programSection: programSection,
-      );
-    }
-  }
-
-  return _copyExerciseForSection(
-    exercises.last,
-    programSection: programSection,
-  );
-}
-
-Exercise? _firstExerciseForBranch(SkillCategory category, String branchId) {
-  final exerciseIds = category.pathFor(branchId);
-  for (final exerciseId in exerciseIds) {
-    final exercise = ExerciseCatalog.findById(exerciseId);
-    if (exercise != null) return exercise;
-  }
-  return null;
-}
-
-Exercise _copyExerciseForSection(
-  Exercise exercise, {
-  required ExerciseProgramSection programSection,
-}) {
-  return Exercise(
-    id: exercise.id,
-    category: exercise.category,
-    skillCategoryId: exercise.skillCategoryId,
-    branchId: exercise.branchId,
-    name: exercise.name,
-    description: exercise.description,
-    difficulty: exercise.difficulty,
-    treeOrder: exercise.treeOrder,
-    prerequisiteIds: exercise.prerequisiteIds,
-    programSection: programSection,
-    imageUrl: exercise.imageUrl,
-  );
-}
-
-String _branchTitle(SkillCategory category, String pathId) {
-  final label = _pathLabel(category, pathId);
-  if (label.toLowerCase() == 'main') {
-    return category.title;
-  }
-  return '$label ${category.title}';
-}
-
-String _pathLabel(SkillCategory category, String pathId) {
-  for (final branch in category.branches) {
-    if (branch.id == pathId) return branch.label;
-  }
-
-  return pathId
-      .split('_')
-      .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
-      .join(' ');
-}
-
-String _branchRange(SkillCategory category, String branchId) {
-  final steps = category.pathFor(branchId);
-  if (steps.isEmpty) return 'No steps';
-  final first = ExerciseCatalog.findById(steps.first)?.name ?? steps.first;
-  final last = ExerciseCatalog.findById(steps.last)?.name ?? steps.last;
-  return '$first → $last';
 }
 
 enum _ExerciseAction {

@@ -29,18 +29,28 @@ class ExercisePickerView extends StatefulWidget {
   /// whole catalogue is shown, and nothing is returned.
   final bool browsing;
 
+  /// Overrides the heading when the picker is opened for something other than
+  /// adding to a day — replacing a lift mid-workout, say. [subtitle] names
+  /// what the pick affects and is left off when there is nothing to say.
+  final String? title;
+  final String? subtitle;
+
   const ExercisePickerView({
     super.key,
     required this.excludedIds,
     required this.progressMap,
     this.singlePick = false,
+    this.title,
+    this.subtitle,
   }) : browsing = false;
 
   const ExercisePickerView.browse({super.key})
       : excludedIds = const {},
         progressMap = const {},
         singlePick = false,
-        browsing = true;
+        browsing = true,
+        title = null,
+        subtitle = null;
 
   @override
   State<ExercisePickerView> createState() => ExercisePickerViewState();
@@ -240,7 +250,10 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        widget.browsing ? 'All exercises' : 'Add exercise',
+                        widget.title ??
+                            (widget.browsing
+                                ? 'All exercises'
+                                : 'Add exercise'),
                         style: const TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w800,
@@ -249,6 +262,17 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
                           height: 1.05,
                         ),
                       ),
+                      if (widget.subtitle != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.subtitle!,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            color: AppColors.textSecondary,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       _SearchField(
                         controller: _searchController,
