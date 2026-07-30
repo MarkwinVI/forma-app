@@ -609,6 +609,7 @@ IconData programMuscleIcon(String group) {
 String programBranchLabel(SkillCategory category, SkillCategoryBranch branch) {
   switch (branch.id) {
     case 'main':
+    case 'foundation':
       return 'Foundation';
     case 'one_arm':
       return 'One-arm';

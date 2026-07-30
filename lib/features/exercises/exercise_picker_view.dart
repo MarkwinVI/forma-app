@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/exercise_library_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../home/program_day_items.dart';
@@ -74,6 +75,32 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   static String _normalize(String value) =>
       value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
+  /// What a result is searched by. A step also answers to the name of the
+  /// movement it is performed with — the tree calls one "Horizontal Rows"
+  /// where the library calls it "Inverted Row" — because when picking, the
+  /// movement is not listed separately for the other name to find.
+  static String _haystackFor(Exercise exercise) {
+    final movement = exercise.libraryId.isEmpty
+        ? null
+        : ExerciseLibraryCatalog.findById(exercise.libraryId);
+    return _normalize(
+      '${exercise.name} ${movement?.name ?? ''} '
+      '${programPatternLabel(exercise.category)}',
+    );
+  }
+
+  /// Browsing is the library, and only the library. A tree step is a rung —
+  /// it is performed with a library movement and adds nothing to read that
+  /// the movement does not already say — so nothing is lost by leaving the
+  /// steps out, and every exercise appears exactly once.
+  ///
+  /// Picking is a choice rather than a read, and there the step is the point:
+  /// it puts the work on its skill tree. So it stands for the movement it is
+  /// performed with, and that movement is the one left out.
+  List<Exercise> get _catalogue => widget.browsing
+      ? ExerciseLibraryCatalog.all()
+      : ExerciseCatalog.searchable();
+
   List<Exercise> get _matches {
     final tokens = _query
         .toLowerCase()
@@ -82,7 +109,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
         .where((token) => token.isNotEmpty)
         .toList();
 
-    final matches = ExerciseCatalog.everything().where((exercise) {
+    final matches = _catalogue.where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (_isLocked(exercise)) return false;
       if (_patterns.isNotEmpty && !_patterns.contains(exercise.category)) {
@@ -94,10 +121,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
         return false;
       }
       if (tokens.isEmpty) return true;
-      final haystack = _normalize(
-        '${exercise.name} ${programPatternLabel(exercise.category)}',
-      );
-      return tokens.every(haystack.contains);
+      return tokens.every(_haystackFor(exercise).contains);
     }).toList();
 
     sortExerciseResults(
@@ -193,7 +217,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   }) {
     final byPattern = patterns ?? _patterns;
     final byMuscle = muscles ?? _muscles;
-    return ExerciseCatalog.everything().where((exercise) {
+    return _catalogue.where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (_isLocked(exercise)) return false;
       if (byPattern.isNotEmpty && !byPattern.contains(exercise.category)) {

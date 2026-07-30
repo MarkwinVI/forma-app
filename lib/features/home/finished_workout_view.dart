@@ -106,6 +106,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                 (set) => ExerciseSet(
                   reps: set.isTimed ? 0 : set.value,
                   durationSeconds: set.isTimed ? set.value : 0,
+                  weightKg: set.weightKg,
                 ),
               )
               .toList();

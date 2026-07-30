@@ -88,9 +88,14 @@ class CompletedWorkoutSet {
   final int value;
   final bool isTimed;
 
+  /// Load the set was performed with, on a reps-and-weight lift. 0 everywhere
+  /// else, which is what the log has always stored for them.
+  final double weightKg;
+
   const CompletedWorkoutSet({
     required this.number,
     required this.value,
     required this.isTimed,
+    this.weightKg = 0,
   });
 }

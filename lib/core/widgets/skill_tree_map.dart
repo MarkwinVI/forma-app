@@ -122,10 +122,10 @@ Map<String, TreeNodeState> skillTreeNodeStates({
   String? goalBranchId,
 }) {
   final states = <String, TreeNodeState>{};
-  final foundation = category.pathFor('main');
+  final foundation = category.pathFor(category.foundationBranchId);
   final tails = <String, List<String>>{
     for (final branch in category.branches)
-      if (branch.id != 'main' &&
+      if (!SkillCategory.isFoundationBranchId(branch.id) &&
           category.pathFor(branch.id).length > foundation.length)
         branch.id: category.pathFor(branch.id).sublist(foundation.length),
   };

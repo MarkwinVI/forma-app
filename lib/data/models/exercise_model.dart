@@ -164,6 +164,13 @@ class Exercise {
   /// from the sheet's exercise-type column, not guessed from the name.
   final bool isTimed;
 
+  /// True for a movement carrying external load: the workout row takes a kg
+  /// field of its own and its history reads "60kg x 8". Read from the same
+  /// exercise-type column as [isTimed] — the sheet's four types are reps,
+  /// reps x weight, timed and timed x weight, so the two flags are
+  /// independent and a loaded hold sets both.
+  final bool isWeighted;
+
   /// True for a movement with no harder variation waiting: it is never
   /// mastered, and the only way forward is to ask for more reps and then more
   /// load, which the user approves. The barbell lifts, and every library
@@ -195,6 +202,7 @@ class Exercise {
     this.isLibrary = false,
     this.muscles = const [],
     this.isTimed = false,
+    this.isWeighted = false,
     this.isLoaded = false,
     this.libraryId = '',
     this.weightFormula,

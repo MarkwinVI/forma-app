@@ -1,4 +1,5 @@
 import '../catalog/exercise_catalog.dart';
+import '../catalog/exercise_id_migration.dart';
 import '../models/exercise_log_model.dart';
 import '../models/workout_history_model.dart';
 import 'supabase_service.dart';
@@ -90,6 +91,49 @@ class ExerciseLogService {
       ..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
 
     return logs;
+  }
+
+  /// The sets logged the last time each of [exerciseIds] was trained, keyed by
+  /// exercise id. One query for the whole session rather than one per row:
+  /// a live workout asks for all of its exercises at once so the reps and kg
+  /// fields can pre-fill with what was done last time.
+  Future<Map<String, List<ExerciseSet>>> lastSetsForExercises(
+    String userId,
+    List<String> exerciseIds,
+  ) async {
+    if (exerciseIds.isEmpty) return {};
+
+    final data = await _client
+        .from('workout_exercise_logs')
+        .select('''
+          exercise_id,
+          sets,
+          workout_sessions!inner(finished_at)
+        ''')
+        .eq('user_id', userId)
+        .inFilter('exercise_id', exerciseIds);
+
+    // Newest first, then the first row seen per exercise is its last session.
+    final rows = (data as List).cast<Map<String, dynamic>>().toList()
+      ..sort((a, b) => _finishedAt(b).compareTo(_finishedAt(a)));
+
+    final byExercise = <String, List<ExerciseSet>>{};
+    for (final row in rows) {
+      final id = ExerciseIdMigration.resolve(row['exercise_id'] as String);
+      if (byExercise.containsKey(id)) continue;
+      byExercise[id] = (row['sets'] as List<dynamic>? ?? [])
+          .map((s) => ExerciseSet.fromJson(s as Map<String, dynamic>))
+          .toList();
+    }
+    return byExercise;
+  }
+
+  static DateTime _finishedAt(Map<String, dynamic> row) {
+    final session = row['workout_sessions'] as Map<String, dynamic>?;
+    final finishedAt = session?['finished_at'] as String?;
+    return finishedAt == null
+        ? DateTime.fromMillisecondsSinceEpoch(0)
+        : DateTime.parse(finishedAt);
   }
 
   Future<List<PastWorkout>> fetchPastWorkouts(String userId) async {

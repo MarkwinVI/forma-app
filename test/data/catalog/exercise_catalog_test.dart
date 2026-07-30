@@ -19,6 +19,31 @@ void main() {
       expect(ExerciseCatalog.everything(), hasLength(137 + 489));
     });
 
+    test('picking lists a movement once, as the step performed with it', () {
+      final searchable = ExerciseCatalog.searchable();
+      final performedWith = steps.map((step) => step.libraryId).toSet();
+
+      expect(performedWith, hasLength(110));
+      expect(searchable, hasLength(137 + 489 - 110));
+      expect(
+        searchable.where((e) => e.isLibrary && performedWith.contains(e.id)),
+        isEmpty,
+        reason: 'the step stands for the movement it is performed with',
+      );
+    });
+
+    test('a bench dip is one result, not the step and its movement', () {
+      expect(
+        ExerciseCatalog.searchable().where((e) => e.name == 'Bench Dip'),
+        hasLength(1),
+      );
+      expect(
+        ExerciseCatalog.everything().where((e) => e.name == 'Bench Dip'),
+        hasLength(2),
+        reason: 'both still exist — the step and the movement behind it',
+      );
+    });
+
     test('a step is a step and a movement is a movement', () {
       expect(steps.any((exercise) => exercise.isLibrary), isFalse);
       expect(library.every((exercise) => exercise.isLibrary), isTrue);
@@ -48,6 +73,33 @@ void main() {
   });
 
   group('the trees hold together', () {
+    // The steps are generated from the skill-tree sheet; the categories are
+    // written by hand. A branch renamed in one and not the other would leave
+    // steps on a branch the tree has never heard of.
+    test('every step sits on a branch its tree declares', () {
+      for (final step in steps) {
+        final category = SkillCategoryCatalog.findById(step.skillCategoryId);
+        if (category == null) continue;
+        expect(
+          category.branches.map((branch) => branch.id),
+          contains(step.branchId),
+          reason: step.id,
+        );
+      }
+    });
+
+    test('a forked tree has a foundation with steps on it', () {
+      for (final id in ['pullups', 'rows', 'pushups', 'squat', 'dips']) {
+        final category = SkillCategoryCatalog.findById(id)!;
+        expect(category.foundationBranchId, 'foundation', reason: id);
+        expect(category.pathFor('foundation'), isNotEmpty, reason: id);
+        // A selection stored before the rename still resolves to the same
+        // steps, so nobody's saved program points at nothing.
+        expect(category.pathFor('main'), category.pathFor('foundation'),
+            reason: id);
+      }
+    });
+
     test('every step names the step before it, and it exists', () {
       final ids = steps.map((exercise) => exercise.id).toSet();
       for (final step in steps) {
@@ -118,6 +170,46 @@ void main() {
     test('every library movement is loaded, being outside the progressions',
         () {
       expect(library.every((exercise) => exercise.isLoaded), isTrue);
+    });
+  });
+
+  group('what a movement is measured in', () {
+    test('a barbell lift carries weight and a bodyweight movement does not',
+        () {
+      expect(ExerciseCatalog.findById('bench_press_barbell')!.isWeighted,
+          isTrue);
+      expect(ExerciseCatalog.findById('squat_barbell')!.isWeighted, isTrue);
+      expect(ExerciseCatalog.findById('ab_scissors')!.isWeighted, isFalse);
+      expect(ExerciseCatalog.findById('core_plank')!.isWeighted, isFalse);
+    });
+
+    test('a weighted rung is weighted, and the step below it is not', () {
+      expect(
+        ExerciseCatalog.findById('pullups_weighted_pull_up_150')!.isWeighted,
+        isTrue,
+      );
+      expect(ExerciseCatalog.findById('pullups_pull_up')!.isWeighted, isFalse);
+    });
+
+    // The sheet's fourth type: a hold that is also loaded, so it sets both
+    // flags and its row shows TIME and KG together.
+    test('a loaded hold is timed and weighted at once', () {
+      final sled = ExerciseCatalog.findById('sled_push')!;
+      expect(sled.isTimed, isTrue);
+      expect(sled.isWeighted, isTrue);
+    });
+
+    test('a step is measured the way the movement it is performed with is',
+        () {
+      for (final step in steps) {
+        final movement = ExerciseCatalog.findById(step.libraryId);
+        if (movement == null) continue;
+        expect(
+          step.isWeighted,
+          movement.isWeighted,
+          reason: '${step.id} vs ${movement.id}',
+        );
+      }
     });
   });
 

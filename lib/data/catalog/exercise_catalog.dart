@@ -16,8 +16,8 @@ class ExerciseCatalog {
       id: 'pullups_scapular_pull',
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
-      branchId: 'main',
-      name: 'Scapular Pull',
+      branchId: 'foundation',
+      name: 'Scapular Pull Ups',
       description: 'Hang from the bar with straight arms.',
       difficulty: 1,
       treeOrder: 0,
@@ -28,7 +28,7 @@ class ExerciseCatalog {
       id: 'pullups_arch_hang',
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
-      branchId: 'main',
+      branchId: 'foundation',
       name: 'Arch Hang',
       description:
           'Hang from the bar and pull the shoulder blades down, then arch the chest toward the bar while looking up.',
@@ -43,8 +43,8 @@ class ExerciseCatalog {
       id: 'pullups_pull_up_negative',
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
-      branchId: 'main',
-      name: 'Pull Up Negatives',
+      branchId: 'foundation',
+      name: 'Negative Pull Up',
       description: 'Jump or step so your chin starts above the bar.',
       difficulty: 2,
       treeOrder: 2,
@@ -56,9 +56,9 @@ class ExerciseCatalog {
       id: 'pullups_assisted_pull_up',
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
-      branchId: 'main',
-      name: 'Assisted Pull-Up',
-      description: 'Assisted Pull-Up',
+      branchId: 'foundation',
+      name: 'Pull Up (Assisted)',
+      description: 'Pull Up (Assisted)',
       difficulty: 3,
       treeOrder: 3,
       prerequisiteIds: ['pullups_pull_up_negative'],
@@ -69,10 +69,9 @@ class ExerciseCatalog {
       id: 'pullups_pull_up',
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
-      branchId: 'main',
-      name: 'Pull-Up',
-      description:
-          'Hang from the bar with an overhand grip at shoulder width.',
+      branchId: 'foundation',
+      name: 'Pull Up',
+      description: 'Hang from the bar with an overhand grip at shoulder width.',
       difficulty: 4,
       treeOrder: 4,
       prerequisiteIds: ['pullups_assisted_pull_up'],
@@ -84,13 +83,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '1.15x Bodyweight',
+      name: 'Pull Up (Weighted - 1.15x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 4,
       treeOrder: 5,
       prerequisiteIds: ['pullups_pull_up'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.15',
     ),
     Exercise(
@@ -98,13 +98,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '1.35x Bodyweight',
+      name: 'Pull Up (Weighted - 1.35x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 4,
       treeOrder: 6,
       prerequisiteIds: ['pullups_weighted_pull_up_115'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.35',
     ),
     Exercise(
@@ -112,13 +113,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '1.5x Bodyweight',
+      name: 'Pull Up (Weighted - 1.5x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 5,
       treeOrder: 7,
       prerequisiteIds: ['pullups_weighted_pull_up_135'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.50',
     ),
     Exercise(
@@ -126,13 +128,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '1.65x Bodyweight',
+      name: 'Pull Up (Weighted - 1.65x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 5,
       treeOrder: 8,
       prerequisiteIds: ['pullups_weighted_pull_up_150'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.65',
     ),
     Exercise(
@@ -140,13 +143,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '1.8x Bodyweight',
+      name: 'Pull Up (Weighted - 1.8x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 5,
       treeOrder: 9,
       prerequisiteIds: ['pullups_weighted_pull_up_165'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.80',
     ),
     Exercise(
@@ -154,13 +158,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '1.9x Bodyweight',
+      name: 'Pull Up (Weighted - 1.9x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 5,
       treeOrder: 10,
       prerequisiteIds: ['pullups_weighted_pull_up_180'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.90',
     ),
     Exercise(
@@ -168,13 +173,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'weighted',
-      name: '2x Bodyweight',
+      name: 'Pull Up (Weighted - 2x Bodyweight)',
       description: 'Attach additional load with a belt or vest.',
       difficulty: 5,
       treeOrder: 11,
       prerequisiteIds: ['pullups_weighted_pull_up_190'],
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       libraryId: 'pull_up_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 1.00',
     ),
     Exercise(
@@ -182,7 +188,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Close-Grip Pull-Up',
+      name: 'Pull Up (Close Grip)',
       description: 'Take an overhand grip narrower than shoulder width.',
       difficulty: 4,
       treeOrder: 5,
@@ -195,7 +201,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Wide-Grip Pull-Up',
+      name: 'Wide Pull Up',
       description: 'Take an overhand grip wider than shoulder width.',
       difficulty: 4,
       treeOrder: 6,
@@ -208,7 +214,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Typewriter Pull-Up',
+      name: 'Pull Up (Typewriter)',
       description:
           'Pull to the top with a wide grip, then shift sideways over one hand while the other arm straightens.',
       difficulty: 5,
@@ -222,7 +228,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Archer Pull-Up',
+      name: 'Pull Up (Archer)',
       description:
           'Pull up with a wide grip and travel toward one hand while the opposite arm stays straight along the bar.',
       difficulty: 5,
@@ -236,7 +242,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Chest-to-Bar Pull-Up',
+      name: 'Pull Up (Chest to Bar)',
       description:
           'Pull explosively while leaning back so the bar meets the lower chest.',
       difficulty: 5,
@@ -250,7 +256,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'close_grip',
-      name: 'Belly Button Pullups',
+      name: 'Pull Up (Belly Button)',
       description:
           'Pull as high as you can while leaning back hard so the bar travels toward the navel.',
       difficulty: 5,
@@ -264,7 +270,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'l_sit',
-      name: 'L-Sit Pull-Up',
+      name: 'Pull Up (L-Sit)',
       description:
           'Hold both legs straight out in front at hip height, then perform full pull ups without letting the legs drop.',
       difficulty: 4,
@@ -279,7 +285,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'l_sit',
-      name: 'Pull Over',
+      name: 'Bar Pullover',
       description:
           'Pull hard until the bar reaches the waist, then lean the shoulders forward and rotate over the bar into a straight arm support.',
       difficulty: 5,
@@ -293,7 +299,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'one_arm',
-      name: 'One-arm Towel Assisted Chin-up',
+      name: 'Chin Up (One Arm, Towel Assisted)',
       description: 'Hang a towel over the bar next to your working hand.',
       difficulty: 5,
       treeOrder: 5,
@@ -306,7 +312,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'one_arm',
-      name: 'One-Arm Pull-Up Eccentric',
+      name: 'Pull Up (One Arm, Eccentric)',
       description: 'Start at the top with one arm and the chin over the bar.',
       difficulty: 5,
       treeOrder: 6,
@@ -319,7 +325,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'one_arm',
-      name: 'Half-one Arm Chin-up',
+      name: 'Chin Up (One Arm, Half Range)',
       description:
           'Grip the bar with one hand in a supinated grip and pull through the top half of the range only.',
       difficulty: 5,
@@ -333,7 +339,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'pullups',
       branchId: 'one_arm',
-      name: 'One Arm Chin-up',
+      name: 'Chin Up (One Arm)',
       description:
           'Hang from one hand with a supinated grip and pull until the chin clears the bar.',
       difficulty: 5,
@@ -346,8 +352,8 @@ class ExerciseCatalog {
       id: 'rows_vertical_rows',
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
-      branchId: 'main',
-      name: 'Incline Row',
+      branchId: 'foundation',
+      name: 'Inverted Row (Incline)',
       description:
           'Set a bar or rings at chest height and hold on with the body almost upright.',
       difficulty: 1,
@@ -359,7 +365,7 @@ class ExerciseCatalog {
       id: 'rows_inverted_rows_bent_legs',
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
-      branchId: 'main',
+      branchId: 'foundation',
       name: 'Inverted Row (Bent Legs)',
       description:
           'Hang under a bar with the knees bent and the feet flat on the floor.',
@@ -373,7 +379,7 @@ class ExerciseCatalog {
       id: 'rows_inverted_rows_straight_legs',
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
-      branchId: 'main',
+      branchId: 'foundation',
       name: 'Inverted Row (Straight Legs)',
       description:
           'Hang under the bar with straight legs and the heels on the floor at roughly forty five degrees.',
@@ -387,8 +393,8 @@ class ExerciseCatalog {
       id: 'rows_feet_elevated_rows',
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
-      branchId: 'main',
-      name: 'Feet-Elevated Row',
+      branchId: 'foundation',
+      name: 'Inverted Row (Feet Elevated)',
       description:
           'Put the feet on a box so the body sits close to horizontal under the bar.',
       difficulty: 3,
@@ -401,8 +407,8 @@ class ExerciseCatalog {
       id: 'rows_horizontal_rows',
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
-      branchId: 'main',
-      name: 'Horizontal Rows',
+      branchId: 'foundation',
+      name: 'Inverted Row',
       description:
           'Set up with the body fully parallel to the floor under the bar or rings.',
       difficulty: 3,
@@ -415,8 +421,8 @@ class ExerciseCatalog {
       id: 'rows_horizontal_wide_rows',
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
-      branchId: 'main',
-      name: 'Wide Inverted Row',
+      branchId: 'foundation',
+      name: 'Inverted Row (Wide Grip)',
       description:
           'Row from the horizontal position with the hands set wider than shoulder width.',
       difficulty: 4,
@@ -430,7 +436,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'Tuck Front Lever',
+      name: 'Front Lever Hold (Tuck)',
       description:
           'Hang from a bar and pull the knees to the chest while rotating back so the back faces the floor and the shins point forward.',
       difficulty: 4,
@@ -445,7 +451,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'Tuck FL Rows',
+      name: 'Front Lever Row (Tuck)',
       description:
           'Hold a tuck front lever and pull the chest toward the bar while keeping the knees tucked and the back flat.',
       difficulty: 4,
@@ -459,7 +465,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'Advanced Tuck FL Rows',
+      name: 'Front Lever Row (Advanced Tuck)',
       description:
           'Row while holding an advanced tuck front lever with the knees opened away from the chest and the hips high.',
       difficulty: 4,
@@ -473,7 +479,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'One-Leg Front Lever Row',
+      name: 'Front Lever Row (One Leg)',
       description:
           'Row from a front lever with one leg extended and the other tucked.',
       difficulty: 5,
@@ -487,7 +493,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'front_lever',
-      name: 'Straddle FL Rows',
+      name: 'Front Lever Row (Straddle)',
       description:
           'Hold a straddle front lever with the legs wide and row the chest toward the bar.',
       difficulty: 5,
@@ -515,7 +521,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'one_arm',
-      name: 'Archer Row',
+      name: 'Inverted Row (Archer)',
       description:
           'From a horizontal row position, pull toward one hand while the other arm straightens out to the side.',
       difficulty: 4,
@@ -529,7 +535,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'one_arm',
-      name: 'Bulgarian Rows',
+      name: 'Inverted Row (One Arm, Assisted)',
       description:
           'Row horizontally with most of the load on one arm while the other hand gives light support on the bar or a strap.',
       difficulty: 5,
@@ -543,7 +549,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'one_arm',
-      name: 'One-Arm Row',
+      name: 'Inverted Row (One Arm)',
       description:
           'Set up horizontally under the bar and row with a single arm while the body stays rigid and square.',
       difficulty: 5,
@@ -565,6 +571,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_horizontal_wide_rows'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: '0',
     ),
     Exercise(
@@ -572,7 +579,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: '+10% Bodyweight',
+      name: 'Inverted Row (Weighted - 1.1x Bodyweight)',
       description:
           'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 4,
@@ -580,6 +587,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_weighted_rows_bodyweight_3x10'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.10',
     ),
     Exercise(
@@ -587,7 +595,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: '+20% Bodyweight',
+      name: 'Inverted Row (Weighted - 1.2x Bodyweight)',
       description:
           'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 4,
@@ -595,6 +603,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_weighted_rows_plus_10'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.20',
     ),
     Exercise(
@@ -602,7 +611,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: '+35% Bodyweight',
+      name: 'Inverted Row (Weighted - 1.3x Bodyweight)',
       description:
           'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 5,
@@ -610,6 +619,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_weighted_rows_plus_20'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.35',
     ),
     Exercise(
@@ -617,7 +627,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: '+50% Bodyweight',
+      name: 'Inverted Row (Weighted - 1.5x Bodyweight)',
       description:
           'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 5,
@@ -625,6 +635,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_weighted_rows_plus_35'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.50',
     ),
     Exercise(
@@ -632,7 +643,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: '+75% Bodyweight',
+      name: 'Inverted Row (Weighted - 1.75x Bodyweight)',
       description:
           'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 5,
@@ -640,6 +651,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_weighted_rows_plus_50'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.75',
     ),
     Exercise(
@@ -647,7 +659,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: '+Bodyweight (2x total load)',
+      name: 'Inverted Row (Weighted - 2x Bodyweight)',
       description:
           'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 5,
@@ -655,14 +667,15 @@ class ExerciseCatalog {
       prerequisiteIds: ['rows_weighted_rows_plus_75'],
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       libraryId: 'inverted_row_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 1.00',
     ),
     Exercise(
       id: 'pushups_wall_push_up',
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
-      branchId: 'main',
-      name: 'Wall Pushups',
+      branchId: 'foundation',
+      name: 'Push-Up (Wall)',
       description:
           'Stand an arm length from a wall and place the hands on it at chest height.',
       difficulty: 1,
@@ -674,8 +687,8 @@ class ExerciseCatalog {
       id: 'pushups_incline_push_up',
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
-      branchId: 'main',
-      name: 'Incline Pushups',
+      branchId: 'foundation',
+      name: 'Incline Push Ups',
       description:
           'Put the hands on a bench, box or bar with the body in a straight line.',
       difficulty: 1,
@@ -688,8 +701,8 @@ class ExerciseCatalog {
       id: 'pushups_push_up',
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
-      branchId: 'main',
-      name: 'Pushup',
+      branchId: 'foundation',
+      name: 'Push Up',
       description:
           'Set the hands slightly wider than the shoulders with the body in a straight line.',
       difficulty: 2,
@@ -702,8 +715,8 @@ class ExerciseCatalog {
       id: 'pushups_elbows_in_push_up',
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
-      branchId: 'main',
-      name: 'Elbows in Pushup',
+      branchId: 'foundation',
+      name: 'Push Up - Close Grip',
       description:
           'Perform pushups keeping the elbows tucked close to the ribs the whole way down.',
       difficulty: 3,
@@ -716,8 +729,8 @@ class ExerciseCatalog {
       id: 'pushups_decline_push_up',
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
-      branchId: 'main',
-      name: 'Decline Pushup',
+      branchId: 'foundation',
+      name: 'Decline Push Up',
       description:
           'Place the feet on a box or bench with the hands on the floor.',
       difficulty: 3,
@@ -730,8 +743,8 @@ class ExerciseCatalog {
       id: 'pushups_diamond_push_up',
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
-      branchId: 'main',
-      name: 'Diamond Pushup',
+      branchId: 'foundation',
+      name: 'Diamond Push Up',
       description:
           'Place the hands together under the chest so the thumbs and index fingers form a triangle.',
       difficulty: 4,
@@ -745,7 +758,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'one_arm',
-      name: 'Uneven Pushup',
+      name: 'Push-Up (Uneven)',
       description:
           'Put one hand on a low block or ball and the other on the floor.',
       difficulty: 4,
@@ -759,7 +772,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'one_arm',
-      name: 'Archer Pushups',
+      name: 'Push-Up (Archer)',
       description:
           'Take a wide hand position and lower toward one hand while the other arm straightens out to the side.',
       difficulty: 4,
@@ -773,7 +786,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'one_arm',
-      name: 'Incline One Arm Pushups',
+      name: 'Push-Up (One Arm, Incline)',
       description:
           'Place one hand on a bench or box with the other behind the back and the feet wide.',
       difficulty: 5,
@@ -787,7 +800,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'one_arm',
-      name: 'One-arm Pushup',
+      name: 'One Arm Push Up',
       description:
           'Set the feet wide and put one hand under the chest with the other behind the back.',
       difficulty: 5,
@@ -801,7 +814,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'Ring Wide Pushups',
+      name: 'Push-Up (Rings, Wide)',
       description:
           'Set the rings a few inches off the floor and take a wide hand position.',
       difficulty: 4,
@@ -815,7 +828,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'Ring Pushup',
+      name: 'Push-Up (Rings)',
       description:
           'Set the rings just off the floor and hold them at shoulder width.',
       difficulty: 4,
@@ -829,7 +842,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'RTO Pushup',
+      name: 'Push-Up (Rings Turned Out)',
       description:
           'Set the rings just off the floor and turn them out so the palms face forward at the top.',
       difficulty: 4,
@@ -843,7 +856,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'rings',
-      name: 'RTO Archer Pushups',
+      name: 'Push-Up (Rings Turned Out, Archer)',
       description: 'Perform archer pushups on rings turned out at the top.',
       difficulty: 5,
       treeOrder: 9,
@@ -940,7 +953,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Tuck Planche Pushups',
+      name: 'Planche Push-Up (Tuck)',
       description:
           'Hold a tuck planche with the knees at the chest and the hips high.',
       difficulty: 5,
@@ -954,7 +967,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Advanced Tuck Planche Pushups',
+      name: 'Planche Push-Up (Advanced Tuck)',
       description:
           'Hold an advanced tuck planche with the back flat and the knees away from the chest.',
       difficulty: 5,
@@ -968,7 +981,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Straddle Planche Pushups',
+      name: 'Planche Push-Up (Straddle)',
       description:
           'Hold a straddle planche with the legs wide and the body horizontal.',
       difficulty: 5,
@@ -982,7 +995,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'pushups',
       branchId: 'planche',
-      name: 'Planche Pushups',
+      name: 'Planche Push-Up',
       description:
           'Hold a full planche with the legs together and the body horizontal.',
       difficulty: 5,
@@ -1043,7 +1056,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
-      name: 'Tuck Planche Lean',
+      name: 'Planche Lean (Tuck)',
       description:
           'Hold a deep planche lean and lift one knee at a time toward the chest so both feet leave the floor briefly.',
       difficulty: 4,
@@ -1059,7 +1072,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
-      name: 'Tuck Planche',
+      name: 'Planche (Tuck)',
       description:
           'Support on the floor or parallettes with straight arms, lean forward, and pull both knees to the chest with the hips lifted to shoulder height.',
       difficulty: 4,
@@ -1075,7 +1088,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
-      name: 'Advanced Tuck Planche',
+      name: 'Planche (Advanced Tuck)',
       description:
           'From the tuck planche, open the knees so the thighs move away from the chest and flatten the back.',
       difficulty: 5,
@@ -1139,7 +1152,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPush,
       skillCategoryId: 'planche',
       branchId: 'main',
-      name: 'Full Planche',
+      name: 'Planche',
       description:
           'Hold the body horizontal with the legs together and the arms locked straight.',
       difficulty: 5,
@@ -1154,8 +1167,8 @@ class ExerciseCatalog {
       id: 'squat_assisted_squat',
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
-      branchId: 'main',
-      name: 'Assisted Squat',
+      branchId: 'foundation',
+      name: 'Squat (Assisted)',
       description:
           'Hold a doorframe, pole or suspension strap and sit back into a squat.',
       difficulty: 1,
@@ -1167,8 +1180,8 @@ class ExerciseCatalog {
       id: 'squat_deep_assisted_squat',
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
-      branchId: 'main',
-      name: 'Deep Assisted Squat',
+      branchId: 'foundation',
+      name: 'Squat (Assisted, Deep)',
       description:
           'Using the same light support, lower all the way until the hamstrings meet the calves.',
       difficulty: 1,
@@ -1181,8 +1194,8 @@ class ExerciseCatalog {
       id: 'squat_squat',
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
-      branchId: 'main',
-      name: 'Squat',
+      branchId: 'foundation',
+      name: 'Squat (Bodyweight)',
       description:
           'Stand with the feet about shoulder width and the toes turned slightly out.',
       difficulty: 1,
@@ -1195,8 +1208,8 @@ class ExerciseCatalog {
       id: 'squat_deep_squat',
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
-      branchId: 'main',
-      name: 'Deep Squat',
+      branchId: 'foundation',
+      name: 'Squat (Deep)',
       description:
           'Squat all the way to the bottom so the hamstrings rest on the calves and hold there comfortably.',
       difficulty: 2,
@@ -1209,7 +1222,7 @@ class ExerciseCatalog {
       id: 'squat_bulgarian_split_squat',
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
-      branchId: 'main',
+      branchId: 'foundation',
       name: 'Bulgarian Split Squat',
       description:
           'Stand a stride in front of a bench and rest the top of the rear foot on it.',
@@ -1252,7 +1265,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'pistol',
-      name: 'Assisted Pistol Squat',
+      name: 'Assisted Pistol Squats',
       description:
           'Hold a doorframe or strap for light assistance and lower on one leg with the other held out in front.',
       difficulty: 4,
@@ -1266,7 +1279,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'pistol',
-      name: 'Counterweighted Pistol Squat',
+      name: 'Pistol Squat (Counterweighted)',
       description:
           'Hold a light plate or dumbbell out in front of the chest to balance the load.',
       difficulty: 5,
@@ -1274,6 +1287,7 @@ class ExerciseCatalog {
       prerequisiteIds: ['squat_assisted_pistol_squat'],
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       libraryId: 'pistol_squat_counterweighted',
+      isWeighted: true,
     ),
     Exercise(
       id: 'squat_pistol_squat',
@@ -1294,7 +1308,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'shrimp',
-      name: 'Beginner Shrimp Squat',
+      name: 'Shrimp Squat (Beginner)',
       description:
           'Hold one foot behind you with the same side hand and lower on the other leg until the back knee touches a pad.',
       difficulty: 3,
@@ -1308,7 +1322,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'shrimp',
-      name: 'Intermediate Shrimp Squat',
+      name: 'Shrimp Squat (Intermediate)',
       description:
           'Hold the rear foot with the same side hand and lower to the back knee without any hand support.',
       difficulty: 4,
@@ -1322,7 +1336,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'squat',
       branchId: 'shrimp',
-      name: 'Advanced Shrimp Squat',
+      name: 'Shrimp Squat (Advanced)',
       description:
           'Hold the rear foot behind you and lower until the back knee touches, keeping the torso upright and the balance steady with no assistance.',
       difficulty: 5,
@@ -1336,7 +1350,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'l_sit',
-      name: 'Foot Supported L-sit',
+      name: 'L-Sit Hold (Foot-Supported)',
       description:
           'Sit with straight legs and press your hands into the floor or parallettes beside the hips.',
       difficulty: 1,
@@ -1351,7 +1365,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'l_sit',
-      name: 'Tuck L-sit',
+      name: 'L-Sit Hold (Tuck)',
       description:
           'Support yourself on parallettes or bars with straight arms and pull both knees tightly to the chest.',
       difficulty: 2,
@@ -1367,7 +1381,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'l_sit',
-      name: 'Advanced Tuck L-sit',
+      name: 'L-Sit Hold (Advanced Tuck)',
       description:
           'From the tuck position, open the knees to roughly a right angle so the thighs move away from the chest.',
       difficulty: 3,
@@ -1383,7 +1397,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'l_sit',
-      name: 'L-sit',
+      name: 'L-Sit Hold',
       description:
           'Support on parallettes or bars with straight arms, then lift straight legs until they are parallel to the floor.',
       difficulty: 3,
@@ -1399,7 +1413,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'l_sit',
-      name: 'Straddle L-sit',
+      name: 'L-Sit Hold (Straddle)',
       description: 'Hold an L-sit and open the legs into a wide straddle.',
       difficulty: 4,
       treeOrder: 4,
@@ -1414,7 +1428,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'l_sit',
-      name: 'V-sit',
+      name: 'V-Sit Hold',
       description:
           'From an L-sit, compress the hips and lift the straight legs above horizontal into a V shape.',
       difficulty: 5,
@@ -1459,7 +1473,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'ab_wheel',
-      name: '1 Arm 1 Leg Plank',
+      name: 'One-Arm One-Leg Plank',
       description:
           'From a forearm plank, lift one arm and the opposite leg a few inches off the floor.',
       difficulty: 3,
@@ -1474,7 +1488,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'ab_wheel',
-      name: 'Knees Ab Wheel',
+      name: 'Ab Wheel (Kneeling)',
       description:
           'Kneel with the wheel under your shoulders and grip the handles.',
       difficulty: 3,
@@ -1488,7 +1502,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'ab_wheel',
-      name: 'Ab Wheel Eccentric',
+      name: 'Ab Wheel (Eccentric)',
       description:
           'Roll out from the knees through a longer range than you can return from, taking three to five seconds on the way out.',
       difficulty: 4,
@@ -1502,7 +1516,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.core,
       skillCategoryId: 'core',
       branchId: 'ab_wheel',
-      name: 'Full Ab Wheel',
+      name: 'Ab Wheel (Standing)',
       description:
           'Start standing with the wheel on the floor in front of your feet.',
       difficulty: 4,
@@ -1598,7 +1612,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'muscle_up',
       branchId: 'main',
-      name: 'False Grip Pull-Up',
+      name: 'Pull Up (False Grip)',
       description:
           'Hook the wrists over the rings or bar so the heel of the hand sits on top of the grip.',
       difficulty: 3,
@@ -1611,7 +1625,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'muscle_up',
       branchId: 'main',
-      name: 'Muscle Up Negatives',
+      name: 'Muscle Up (Eccentric)',
       description:
           'Start at the top in a straight arm support and lower slowly through the transition until you finish in a hang.',
       difficulty: 4,
@@ -1625,7 +1639,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'muscle_up',
       branchId: 'main',
-      name: 'Kipping Muscle Up',
+      name: 'Muscle Up (Kipping)',
       description:
           'From a hang, swing the legs forward and drive the hips up while pulling the bar toward the waist.',
       difficulty: 4,
@@ -1639,7 +1653,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPull,
       skillCategoryId: 'muscle_up',
       branchId: 'main',
-      name: 'Muscle-up',
+      name: 'Muscle Up',
       description:
           'Pull explosively until the bar or rings reach the lower chest.',
       difficulty: 5,
@@ -1666,7 +1680,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'handstand_pushups',
       branchId: 'main',
-      name: 'Box Pushup',
+      name: 'Pike Push-Up (Feet Elevated)',
       description:
           'Put the feet on a box so the hips stack higher over the shoulders.',
       difficulty: 3,
@@ -1680,7 +1694,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'handstand_pushups',
       branchId: 'main',
-      name: 'Wall Headstand Pushup Eccentrics',
+      name: 'Headstand Push-Up (Wall, Eccentric)',
       description: 'Kick up to a handstand with the heels on the wall.',
       difficulty: 3,
       treeOrder: 2,
@@ -1693,7 +1707,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'handstand_pushups',
       branchId: 'main',
-      name: 'Wall Headstand Pushup',
+      name: 'Headstand Push-Up (Wall)',
       description:
           'Set up in a wall handstand and lower until the head touches the floor between the hands.',
       difficulty: 4,
@@ -1707,7 +1721,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'handstand_pushups',
       branchId: 'main',
-      name: 'Wall Handstand Pushup',
+      name: 'Handstand Push Up',
       description:
           'Kick up to a wall handstand with the hands on parallettes or blocks.',
       difficulty: 4,
@@ -1721,7 +1735,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'handstand_pushups',
       branchId: 'main',
-      name: 'Free Headstand Pushup',
+      name: 'Headstand Push-Up (Freestanding)',
       description:
           'Kick up to a freestanding handstand and lower under control until the head touches the floor.',
       difficulty: 5,
@@ -1735,7 +1749,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'handstand_pushups',
       branchId: 'main',
-      name: 'Free Handstand Pushup',
+      name: 'Handstand Push-Up (Freestanding)',
       description:
           'Hold a freestanding handstand, lower to full depth, and press back to straight arms with no wall support.',
       difficulty: 5,
@@ -1748,7 +1762,7 @@ class ExerciseCatalog {
       id: 'dips_bench_dips',
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
-      branchId: 'main',
+      branchId: 'foundation',
       name: 'Bench Dip',
       description:
           'Sit on a bench with the hands beside the hips and the feet on the floor in front of you.',
@@ -1761,8 +1775,8 @@ class ExerciseCatalog {
       id: 'dips_dip_negatives',
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
-      branchId: 'main',
-      name: 'Dip Negatives',
+      branchId: 'foundation',
+      name: 'Chest Dip (Eccentric)',
       description:
           'Jump or step to the top of the parallel bars with straight arms.',
       difficulty: 2,
@@ -1775,8 +1789,8 @@ class ExerciseCatalog {
       id: 'dips_parallel_bar_dips',
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
-      branchId: 'main',
-      name: 'Parallel Bar Dip',
+      branchId: 'foundation',
+      name: 'Chest Dip',
       description:
           'Support yourself on parallel bars with straight arms and a tall chest.',
       difficulty: 3,
@@ -1790,13 +1804,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'weighted',
-      name: '1.2x Bodyweight Dips',
+      name: 'Chest Dip (Weighted -1.2x Bodyweight)',
       description: 'Attach additional load with a dip belt or vest.',
       difficulty: 4,
       treeOrder: 3,
       prerequisiteIds: ['dips_parallel_bar_dips'],
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       libraryId: 'chest_dip_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.20',
     ),
     Exercise(
@@ -1804,13 +1819,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'weighted',
-      name: '1.4x Bodyweight Dips',
+      name: 'Chest Dip (Weighted -1.4x Bodyweight)',
       description: 'Attach additional load with a dip belt or vest.',
       difficulty: 4,
       treeOrder: 4,
       prerequisiteIds: ['dips_weighted_dips_120'],
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       libraryId: 'chest_dip_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.40',
     ),
     Exercise(
@@ -1818,13 +1834,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'weighted',
-      name: '1.6x Bodyweight Dips',
+      name: 'Chest Dip (Weighted -1.6x Bodyweight)',
       description: 'Attach additional load with a dip belt or vest.',
       difficulty: 4,
       treeOrder: 5,
       prerequisiteIds: ['dips_weighted_dips_140'],
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       libraryId: 'chest_dip_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.60',
     ),
     Exercise(
@@ -1832,13 +1849,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'weighted',
-      name: '1.8x Bodyweight Dips',
+      name: 'Chest Dip (Weighted -1.8x Bodyweight)',
       description: 'Attach additional load with a dip belt or vest.',
       difficulty: 5,
       treeOrder: 6,
       prerequisiteIds: ['dips_weighted_dips_160'],
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       libraryId: 'chest_dip_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 0.80',
     ),
     Exercise(
@@ -1846,13 +1864,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'weighted',
-      name: '2.0x Bodyweight Dips',
+      name: 'Chest Dip (Weighted -2x Bodyweight)',
       description: 'Attach additional load with a dip belt or vest.',
       difficulty: 5,
       treeOrder: 7,
       prerequisiteIds: ['dips_weighted_dips_180'],
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       libraryId: 'chest_dip_weighted',
+      isWeighted: true,
       weightFormula: 'user_bodyweight + user_bodyweight * 1.00',
     ),
     Exercise(
@@ -1860,7 +1879,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'rings',
-      name: 'Ring Dip',
+      name: 'Ring Dips',
       description:
           'Support on rings with straight arms and the rings held close to the hips.',
       difficulty: 4,
@@ -1874,7 +1893,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.verticalPush,
       skillCategoryId: 'dips',
       branchId: 'rings',
-      name: 'RTO Ring Dip',
+      name: 'Ring Dip (Rings Turned Out)',
       description:
           'Perform ring dips and finish each press by turning the rings out so the palms face forward at the top.',
       difficulty: 5,
@@ -1888,13 +1907,14 @@ class ExerciseCatalog {
       category: ExerciseCategory.squat,
       skillCategoryId: 'barbell_squat',
       branchId: 'main',
-      name: 'Barbell Squat',
+      name: 'Squat (Barbell)',
       description:
           'Set the bar just below shoulder height, step under it and rest it across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       libraryId: 'squat_barbell',
+      isWeighted: true,
       isLoaded: true,
     ),
     Exercise(
@@ -1902,12 +1922,13 @@ class ExerciseCatalog {
       category: ExerciseCategory.hinge,
       skillCategoryId: 'hinge',
       branchId: 'rdl',
-      name: 'Romanian Deadlift',
-      description: 'Romanian Deadlift',
+      name: 'Romanian Deadlift (Barbell)',
+      description: 'Romanian Deadlift (Barbell)',
       difficulty: 2,
       treeOrder: 0,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       libraryId: 'romanian_deadlift_barbell',
+      isWeighted: true,
       isLoaded: true,
     ),
     Exercise(
@@ -1915,7 +1936,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.hinge,
       skillCategoryId: 'hinge',
       branchId: 'nordic',
-      name: 'Nordic Curl',
+      name: 'Nordic Hamstrings Curls',
       description: 'Anchor the heels under a bar or have a partner hold them.',
       difficulty: 3,
       treeOrder: 0,
@@ -1927,7 +1948,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.hinge,
       skillCategoryId: 'hinge',
       branchId: 'posterior_chain',
-      name: 'Single Leg RDL',
+      name: 'Single Leg Romanian Deadlift (Bodyweight)',
       description:
           'Stand on one leg with a soft knee and hinge at the hips, letting the free leg travel back as the chest lowers.',
       difficulty: 2,
@@ -1940,7 +1961,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.hinge,
       skillCategoryId: 'hinge',
       branchId: 'posterior_chain',
-      name: 'Nordic Curl',
+      name: 'Nordic Hamstrings Curls',
       description: 'Anchor the heels under a bar or have a partner hold them.',
       difficulty: 3,
       treeOrder: 1,
@@ -1956,6 +1977,23 @@ class ExerciseCatalog {
   /// for an exercise expects to be searching.
   static List<Exercise> everything() =>
       [..._all, ...ExerciseLibraryCatalog.all()];
+
+  /// Everything you can *pick*, each movement listed once. A step is performed
+  /// with a library movement — a bench dip is both the `dips` step and the
+  /// movement `bench_dip` — so the movement is left out and the step stands
+  /// for it. Picking the step puts the work on its skill tree; picking the
+  /// twin would be the same exercise off the path.
+  ///
+  /// Browsing uses [everything] instead: a library that quietly drops entries
+  /// is not a library.
+  static List<Exercise> searchable() {
+    final performedWith = _all.map((step) => step.libraryId).toSet();
+    return [
+      ..._all,
+      ...ExerciseLibraryCatalog.all()
+          .where((movement) => !performedWith.contains(movement.id)),
+    ];
+  }
 
   static List<Exercise> browsable() => _all
       .where((exercise) => SkillCategoryCatalog.isBrowsableId(

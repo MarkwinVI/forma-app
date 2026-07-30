@@ -66,14 +66,28 @@ class SkillCategory {
     return progressMap[requirement.exerciseId] != ExerciseStatus.mastered;
   }
 
-  /// Exercise ids for a branch. The `main` (Foundation) branch of some
-  /// categories has no explicit path — every specialised branch shares the
-  /// same opening steps instead — so it falls back to the longest common
-  /// prefix of all branch paths.
+  /// The trunk every specialised branch of this category grows out of, by the
+  /// id the sheet gives it. A tree with one path calls it `main`; a tree that
+  /// forks calls it `foundation`, which is the word the app has always shown
+  /// the user. Both are accepted wherever a branch id is read, so a selection
+  /// stored before the rename still resolves.
+  static bool isFoundationBranchId(String branchId) =>
+      branchId == 'foundation' || branchId == 'main';
+
+  String get foundationBranchId => branches
+      .map((branch) => branch.id)
+      .firstWhere(isFoundationBranchId, orElse: () => 'main');
+
+  /// Exercise ids for a branch. The foundation branch of some categories has
+  /// no explicit path — every specialised branch shares the same opening
+  /// steps instead — so it falls back to the longest common prefix of all
+  /// branch paths.
   List<String> pathFor(String branchId) {
     final direct = trainingPaths[branchId];
     if (direct != null) return direct;
-    if (branchId != 'main' || trainingPaths.isEmpty) return const [];
+    if (!isFoundationBranchId(branchId) || trainingPaths.isEmpty) {
+      return const [];
+    }
 
     final paths = trainingPaths.values.toList();
     final prefix = <String>[];

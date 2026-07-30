@@ -35,7 +35,7 @@ void main() {
   group('once something is asked for', () {
     test('a query puts the best match first, library or not', () {
       final list = ordered(query: 'scapular');
-      expect(list.first.name, 'Scapular Pull');
+      expect(list.first.name, 'Scapular Pull Ups');
       expect(list.first.isLibrary, isFalse);
     });
 

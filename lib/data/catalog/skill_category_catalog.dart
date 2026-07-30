@@ -28,7 +28,7 @@ class SkillCategoryCatalog {
     track: ExerciseCategory.verticalPull,
     defaultTrainingPathId: 'weighted',
     branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(id: 'close_grip', label: 'Close Grip', lane: -1),
       SkillCategoryBranch(
         id: 'weighted',
@@ -99,7 +99,7 @@ class SkillCategoryCatalog {
     track: ExerciseCategory.horizontalPull,
     defaultTrainingPathId: 'front_lever',
     branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(id: 'one_arm', label: 'One Arm', lane: -1),
       SkillCategoryBranch(id: 'front_lever', label: 'Front Lever', lane: 0),
       SkillCategoryBranch(id: 'weighted', label: 'Weighted', lane: 1),
@@ -157,7 +157,7 @@ class SkillCategoryCatalog {
     track: ExerciseCategory.horizontalPush,
     defaultTrainingPathId: 'planche',
     branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(
         id: 'one_arm',
         label: 'One Arm',
@@ -256,7 +256,7 @@ class SkillCategoryCatalog {
     track: ExerciseCategory.squat,
     defaultTrainingPathId: 'pistol',
     branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(id: 'pistol', label: 'Pistol', lane: -1),
       SkillCategoryBranch(id: 'shrimp', label: 'Shrimp', lane: 1),
     ],
@@ -400,7 +400,7 @@ class SkillCategoryCatalog {
     track: ExerciseCategory.verticalPush,
     defaultTrainingPathId: 'weighted',
     branches: [
-      SkillCategoryBranch(id: 'main', label: 'Main', lane: 0),
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(id: 'route_a', label: 'Route A', lane: -1),
       SkillCategoryBranch(id: 'weighted', label: 'Weighted', lane: -1),
       SkillCategoryBranch(id: 'rings', label: 'Rings', lane: 1),

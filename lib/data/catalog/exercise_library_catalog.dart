@@ -109,6 +109,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'around_the_world',
@@ -154,6 +155,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lower back', 'Glutes', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'back_extension_weighted_hyperextension',
@@ -165,6 +167,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lower back', 'Glutes', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'ball_slams',
@@ -225,6 +228,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Forearms', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bench_dip',
@@ -249,6 +253,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bench_press_cable',
@@ -260,6 +265,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bench_press_dumbbell',
@@ -271,6 +277,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bench_press_smith_machine',
@@ -282,6 +289,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bench_press_close_grip_barbell',
@@ -294,6 +302,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bench_press_wide_grip_barbell',
@@ -305,6 +314,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bent_over_row_band',
@@ -327,6 +337,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bent_over_row_dumbbell',
@@ -339,6 +350,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bicep_curl_barbell',
@@ -351,6 +363,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bicep_curl_cable',
@@ -362,6 +375,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bicep_curl_dumbbell',
@@ -374,6 +388,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bicep_curl_machine',
@@ -385,6 +400,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'bicep_curl_suspension',
@@ -453,6 +469,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'boxing',
@@ -522,6 +539,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'cable_crunch',
@@ -533,6 +551,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'cable_fly_crossovers',
@@ -544,6 +563,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'cable_pull_through',
@@ -555,6 +575,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'cable_twist_down_to_up',
@@ -566,6 +587,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'obliques', 'Lower back'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'cable_twist_up_to_down',
@@ -577,6 +599,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'obliques', 'Lower back'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'calf_extension_machine',
@@ -588,6 +611,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'calf_press_machine',
@@ -600,6 +624,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_dip',
@@ -646,6 +671,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_fly_band',
@@ -668,6 +694,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_fly_machine',
@@ -679,6 +706,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_fly_suspension',
@@ -712,6 +740,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_supported_incline_row_dumbbell',
@@ -724,6 +753,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_supported_reverse_fly_dumbbell',
@@ -735,6 +765,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chest_supported_y_raise_dumbbell',
@@ -746,6 +777,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'chin_up',
@@ -814,6 +846,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'clamshell',
@@ -855,6 +888,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'clean_and_jerk',
@@ -874,6 +908,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'clean_and_press',
@@ -886,6 +921,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'clean_pull',
@@ -905,6 +941,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'climbing',
@@ -941,6 +978,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'crunch',
@@ -963,6 +1001,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'crunch_weighted',
@@ -974,6 +1013,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'curtsy_lunge_dumbbell',
@@ -985,6 +1025,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'cycling',
@@ -1045,6 +1086,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'deadlift_dumbbell',
@@ -1056,6 +1098,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'deadlift_smith_machine',
@@ -1067,6 +1110,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'deadlift_trap_bar',
@@ -1079,6 +1123,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'deadlift_high_pull',
@@ -1102,6 +1147,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'decline_bench_press_dumbbell',
@@ -1113,6 +1159,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'decline_bench_press_machine',
@@ -1124,6 +1171,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'decline_bench_press_smith_machine',
@@ -1136,6 +1184,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'decline_chest_fly_dumbbell',
@@ -1147,6 +1196,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'decline_crunch',
@@ -1170,6 +1220,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'decline_push_up',
@@ -1218,6 +1269,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'dragon_flag',
@@ -1252,6 +1304,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'dumbbell_snatch',
@@ -1270,6 +1323,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'dumbbell_squeeze_press',
@@ -1281,6 +1335,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'dumbbell_step_up',
@@ -1292,6 +1347,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'elbow_to_knee',
@@ -1329,6 +1385,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'face_pull',
@@ -1341,6 +1398,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'farmers_walk',
@@ -1375,6 +1433,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'floor_press_dumbbell',
@@ -1386,6 +1445,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'floor_triceps_dip',
@@ -1431,6 +1491,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'front_lever_hold',
@@ -1549,6 +1610,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'front_raise_cable',
@@ -1561,6 +1623,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'front_raise_dumbbell',
@@ -1573,6 +1636,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'front_raise_suspension',
@@ -1596,6 +1660,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'full_squat',
@@ -1630,6 +1695,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'glute_kickback_machine',
@@ -1641,6 +1707,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Hip abductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'glute_kickback_on_floor',
@@ -1664,6 +1731,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'good_morning_barbell',
@@ -1675,6 +1743,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'gorilla_row_kettlebell',
@@ -1686,6 +1755,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hack_squat',
@@ -1698,6 +1768,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hack_squat_machine',
@@ -1709,6 +1780,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hammer_curl_band',
@@ -1731,6 +1803,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hammer_curl_dumbbell',
@@ -1743,6 +1816,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'handstand_hold',
@@ -1799,6 +1873,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hang_snatch',
@@ -1818,6 +1893,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hanging_bent_leg_raise',
@@ -1923,6 +1999,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'high_knee_skips',
@@ -1984,6 +2061,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hip abductors', 'Hamstrings'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hip_adduction_machine',
@@ -1995,6 +2073,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hip adductors', 'Hamstrings', 'Hip abductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hip_thrust',
@@ -2018,6 +2097,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hip_thrust_machine',
@@ -2029,6 +2109,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hollow_rock',
@@ -2052,6 +2133,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'incline_bench_press_dumbbell',
@@ -2064,6 +2146,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'incline_bench_press_smith_machine',
@@ -2076,6 +2159,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'incline_chest_fly_dumbbell',
@@ -2087,6 +2171,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'incline_chest_press_machine',
@@ -2098,6 +2183,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'incline_push_ups',
@@ -2218,6 +2304,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Middle Back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'inverted_row_wide_grip',
@@ -2241,6 +2328,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'iso_lateral_high_row_machine',
@@ -2252,6 +2340,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'iso_lateral_low_row',
@@ -2274,6 +2363,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'jack_knife_suspension',
@@ -2308,6 +2398,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'jump_rope',
@@ -2386,6 +2477,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_curl',
@@ -2397,6 +2489,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_goblet_squat',
@@ -2408,6 +2501,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_high_pull',
@@ -2420,6 +2514,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_shoulder_press',
@@ -2431,6 +2526,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_snatch',
@@ -2450,6 +2546,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_swing',
@@ -2461,6 +2558,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kettlebell_turkish_get_up',
@@ -2473,6 +2571,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'kipping_pull_up',
@@ -2598,6 +2697,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'landmine_row',
@@ -2609,6 +2709,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'landmine_squat_and_press',
@@ -2620,6 +2721,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lat_pulldown_band',
@@ -2642,6 +2744,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lat_pulldown_machine',
@@ -2653,6 +2756,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lat_pulldown_close_grip_cable',
@@ -2664,6 +2768,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lateral_band_walks',
@@ -2731,6 +2836,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lateral_raise_dumbbell',
@@ -2742,6 +2848,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lateral_raise_machine',
@@ -2753,6 +2860,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lateral_squat',
@@ -2775,6 +2883,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Hip flexors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'leg_press_machine',
@@ -2786,6 +2895,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'leg_press_horizontal_machine',
@@ -2797,6 +2907,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'leg_raise_parallel_bars',
@@ -2819,6 +2930,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'low_row_suspension',
@@ -2853,6 +2965,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lunge_dumbbell',
@@ -2864,6 +2977,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lying_bent_leg_raise',
@@ -2899,6 +3013,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lying_leg_raise',
@@ -2932,6 +3047,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Neck'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lying_neck_extension',
@@ -2954,6 +3070,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Neck'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'lying_straight_leg_raise',
@@ -2976,6 +3093,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'mountain_climber',
@@ -3092,6 +3210,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'overhead_dumbbell_lunge',
@@ -3103,6 +3222,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'overhead_press_barbell',
@@ -3114,6 +3234,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'overhead_press_dumbbell',
@@ -3125,6 +3246,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'overhead_press_smith_machine',
@@ -3137,6 +3259,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'overhead_squat',
@@ -3149,6 +3272,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pause_squat_barbell',
@@ -3160,6 +3284,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pendlay_row_barbell',
@@ -3171,6 +3296,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pendulum_squat_machine',
@@ -3182,6 +3308,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pike_push_up_feet_elevated',
@@ -3230,6 +3357,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pistol_squat',
@@ -3266,6 +3394,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'planche',
@@ -3434,6 +3563,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'plate_front_raise',
@@ -3446,6 +3576,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'plate_press',
@@ -3457,6 +3588,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'plate_squeeze_svend_press',
@@ -3468,6 +3600,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'power_clean',
@@ -3487,6 +3620,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'power_snatch',
@@ -3506,6 +3640,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'preacher_curl_barbell',
@@ -3517,6 +3652,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'preacher_curl_dumbbell',
@@ -3529,6 +3665,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'preacher_curl_machine',
@@ -3540,6 +3677,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'press_under',
@@ -3692,6 +3830,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pullover_dumbbell',
@@ -3703,6 +3842,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'pullover_machine',
@@ -3714,6 +3854,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'push_press',
@@ -3726,6 +3867,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'push_up',
@@ -3749,6 +3891,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'push_up_close_grip',
@@ -3903,6 +4046,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'rear_delt_reverse_fly_dumbbell',
@@ -3914,6 +4058,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'rear_delt_reverse_fly_machine',
@@ -3925,6 +4070,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'renegade_row_dumbbell',
@@ -3936,6 +4082,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_crunch',
@@ -3958,6 +4105,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_curl_cable',
@@ -3970,6 +4118,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_curl_dumbbell',
@@ -3982,6 +4131,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_fly_single_arm_cable',
@@ -3993,6 +4143,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_grip_concentration_curl',
@@ -4015,6 +4166,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_hyperextension',
@@ -4048,6 +4200,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_lunge_dumbbell',
@@ -4059,6 +4212,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'reverse_plank',
@@ -4106,6 +4260,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'romanian_deadlift_dumbbell',
@@ -4117,6 +4272,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'rope_cable_curl',
@@ -4128,6 +4284,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'rope_straight_arm_pulldown',
@@ -4140,6 +4297,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'rowing_machine',
@@ -4189,6 +4347,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'obliques', 'Lower back'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'scapular_pull_ups',
@@ -4211,6 +4370,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_cable_row_bar_wide_grip',
@@ -4222,6 +4382,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_cable_row_v_grip_cable',
@@ -4233,6 +4394,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_calf_raise',
@@ -4245,6 +4407,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_chest_flys_cable',
@@ -4256,6 +4419,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_dip_machine',
@@ -4267,6 +4431,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'Chest', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_incline_curl_dumbbell',
@@ -4279,6 +4444,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_lateral_raise_dumbbell',
@@ -4290,6 +4456,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_leg_curl_machine',
@@ -4301,6 +4468,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_overhead_press_barbell',
@@ -4312,6 +4480,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_overhead_press_dumbbell',
@@ -4324,6 +4493,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_palms_up_wrist_curl',
@@ -4336,6 +4506,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Forearms', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_row_machine',
@@ -4347,6 +4518,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_shoulder_press_machine',
@@ -4358,6 +4530,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_triceps_press',
@@ -4370,6 +4543,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'seated_wrist_extension_barbell',
@@ -4381,6 +4555,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Forearms', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shoulder_press_dumbbell',
@@ -4393,6 +4568,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shoulder_press_machine_plates',
@@ -4404,6 +4580,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shoulder_taps',
@@ -4462,6 +4639,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Traps', 'Forearms', 'Shoulders'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shrug_cable',
@@ -4473,6 +4651,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Traps', 'Forearms', 'Shoulders'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shrug_dumbbell',
@@ -4484,6 +4663,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Traps', 'Forearms', 'Shoulders'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shrug_machine',
@@ -4495,6 +4675,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Traps', 'Forearms', 'Shoulders'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'shrug_smith_machine',
@@ -4506,6 +4687,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Traps', 'Forearms', 'Shoulders'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'side_bend',
@@ -4528,6 +4710,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'obliques', 'Lower back'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'side_plank',
@@ -4552,6 +4735,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Chest', 'front deltoids', 'Biceps'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_cable_row',
@@ -4563,6 +4747,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Upper back', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_curl_cable',
@@ -4575,6 +4760,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_landmine_press_barbell',
@@ -4586,6 +4772,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_lat_pulldown',
@@ -4598,6 +4785,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_lateral_raise_cable',
@@ -4609,6 +4797,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Traps', 'rotator cuff'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_tricep_extension_dumbbell',
@@ -4621,6 +4810,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_arm_triceps_pushdown_cable',
@@ -4632,6 +4822,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_extensions',
@@ -4677,6 +4868,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_press_machine',
@@ -4688,6 +4880,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_romanian_deadlift_barbell',
@@ -4699,6 +4892,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_romanian_deadlift_bodyweight',
@@ -4722,6 +4916,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise',
@@ -4745,6 +4940,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise_dumbbell',
@@ -4757,6 +4953,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise_machine',
@@ -4768,6 +4965,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'sissy_squat_weighted',
@@ -4780,6 +4978,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'sit_up',
@@ -4803,6 +5002,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Abdominals', 'Hip flexors', 'obliques'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'skullcrusher_barbell',
@@ -4814,6 +5014,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'skullcrusher_dumbbell',
@@ -4825,6 +5026,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'sled_push',
@@ -4838,6 +5040,7 @@ class ExerciseLibraryCatalog {
       muscles: ['Full body', 'Glutes', 'Hamstrings', 'Calves'],
       isTimed: true,
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'snatch',
@@ -4857,6 +5060,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'snowboarding',
@@ -4881,6 +5085,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'spider_curl_dumbbell',
@@ -4893,6 +5098,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'spiderman',
@@ -4936,6 +5142,7 @@ class ExerciseLibraryCatalog {
         'Traps',
       ],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'split_squat_dumbbell',
@@ -4947,6 +5154,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'sprints',
@@ -5007,6 +5215,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'squat_bodyweight',
@@ -5042,6 +5251,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'squat_machine',
@@ -5053,6 +5263,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'squat_smith_machine',
@@ -5064,6 +5275,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'squat_suspension',
@@ -5123,6 +5335,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Glutes', 'Hamstrings', 'Hip abductors'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'standing_calf_raise',
@@ -5135,6 +5348,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'standing_calf_raise_barbell',
@@ -5147,6 +5361,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'standing_calf_raise_dumbbell',
@@ -5159,6 +5374,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'standing_calf_raise_machine',
@@ -5170,6 +5386,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'standing_calf_raise_smith',
@@ -5204,6 +5421,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Triceps', 'upper chest'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'step_up',
@@ -5238,6 +5456,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Lats', 'Biceps', 'Upper back', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'straight_leg_deadlift',
@@ -5295,6 +5514,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'sumo_squat_dumbbell',
@@ -5306,6 +5526,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'sumo_squat_kettlebell',
@@ -5317,6 +5538,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'superman',
@@ -5363,6 +5585,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'thruster_kettlebell',
@@ -5375,6 +5598,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Full body'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'toe_touch',
@@ -5454,6 +5678,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'Chest', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_extension_barbell',
@@ -5466,6 +5691,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_extension_cable',
@@ -5478,6 +5704,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_extension_dumbbell',
@@ -5490,6 +5717,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_extension_machine',
@@ -5502,6 +5730,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_extension_suspension',
@@ -5524,6 +5753,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_kickback_dumbbell',
@@ -5535,6 +5765,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_pressdown',
@@ -5558,6 +5789,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'triceps_rope_pushdown',
@@ -5570,6 +5802,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Triceps', 'front deltoids'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'upright_row_barbell',
@@ -5582,6 +5815,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'upright_row_cable',
@@ -5593,6 +5827,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'upright_row_dumbbell',
@@ -5604,6 +5839,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Shoulders', 'Biceps', 'rear deltoids', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'v_up',
@@ -5760,6 +5996,7 @@ class ExerciseLibraryCatalog {
       isLibrary: true,
       muscles: ['Biceps', 'Forearms'],
       isLoaded: true,
+      isWeighted: true,
     ),
   ];
 

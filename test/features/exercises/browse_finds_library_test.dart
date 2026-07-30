@@ -27,11 +27,10 @@ void main() {
   Future<void> expectFound(
     WidgetTester tester,
     String query,
-    String expected,
-  ) async {
-    await tester.pumpWidget(
-      const MaterialApp(home: ExercisePickerView.browse()),
-    );
+    String expected, {
+    Widget page = const ExercisePickerView.browse(),
+  }) async {
+    await tester.pumpWidget(MaterialApp(home: page));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, query);
     await tester.pumpAndSettle();
@@ -55,12 +54,55 @@ void main() {
     await expectFound(tester, 'bench', 'Bench Press (Barbell)');
   });
 
-  testWidgets('browsing still finds a skill-tree step', (tester) async {
-    await expectFound(tester, 'scapular', 'Scapular Pull');
+  // Browsing is the library only: a scapular pull turns up as the movement
+  // `scapular_pull_ups`, not as the pullups tree's step performed with it.
+  // One entry per exercise, and the step adds nothing a reader wants.
+  testWidgets('browsing finds a movement a tree is stepped through',
+      (tester) async {
+    await expectFound(tester, 'scapular', 'Scapular Pull Ups');
+  });
+
+  // Checked with a rung, because a rung is the one kind of step whose name is
+  // its own rather than the movement's — so finding it could only mean the
+  // steps had leaked into the library.
+  testWidgets('browsing shows no skill-tree steps at all', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: ExercisePickerView.browse()),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'bodyweight 3x10');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bodyweight (3x10)'), findsNothing);
   });
 
   testWidgets('browsing finds accessory work with no tree at all',
       (tester) async {
     await expectFound(tester, 'curl', 'Bicep Curl (Barbell)');
+  });
+
+  // Picking shows the step rather than the movement, and a rung is named for
+  // the load it asks for rather than the movement — "Bodyweight (3x10)" is a
+  // rung of the weighted inverted row — so it answers to the movement's name
+  // as well, which is the name most people would type.
+  const picking = ExercisePickerView(excludedIds: {}, progressMap: {});
+
+  testWidgets('picking finds a rung by the movement behind it',
+      (tester) async {
+    await expectFound(
+      tester,
+      'inverted row weighted',
+      'Bodyweight (3x10)',
+      page: picking,
+    );
+  });
+
+  testWidgets('picking finds that rung by its own name too', (tester) async {
+    await expectFound(
+      tester,
+      'bodyweight 3x10',
+      'Bodyweight (3x10)',
+      page: picking,
+    );
   });
 }

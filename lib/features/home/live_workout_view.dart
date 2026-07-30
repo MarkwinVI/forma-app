@@ -9,10 +9,12 @@ import '../../core/widgets/reorder_exercises_page.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
+import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
@@ -25,6 +27,13 @@ import 'finished_workout_view.dart';
 import 'program_day_items.dart';
 
 const _workoutDanger = Color(0xFFF2564A);
+
+/// Side padding of the workout list. A logged set's tint bleeds back out by
+/// exactly this much so it reaches the edge of the screen.
+const _workoutSidePadding = 22.0;
+
+/// Shown in the LAST column when the exercise has never been logged.
+const _noPreviousLabel = '–';
 
 /// Rest presets offered by the rest sheet (seconds). "0" means off.
 const _restOptions = <int>[0, 30, 60, 90, 120, 150, 180];
@@ -54,6 +63,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   final _restPreferencesService = WorkoutRestPreferencesService();
   final _programService = TrainingProgramService();
   final _programStoreService = TrainingProgramStoreService();
+  final _exerciseLogService = ExerciseLogService();
 
   late final DateTime _startedAt;
   late List<TrainingRecommendationItem> _sessionItems;
@@ -61,6 +71,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   late Map<String, int> _restSecondsByExercise;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressRows = {};
+
+  /// Sets logged the last time each exercise was trained, keyed by exercise
+  /// id. Fills the LAST column and pre-fills the kg field.
+  Map<String, List<ExerciseSet>> _lastSets = {};
   MasteryTargetSettings _masterySettings = MasteryTargetSettings.defaults;
   _ActiveRestTimer? _activeRestTimer;
   Timer? _ticker;
@@ -101,6 +115,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     };
     _loadProgressMap();
     _loadRestPreferences();
+    _loadLastSessions();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       final shouldClearRest = _isRunning &&
@@ -144,6 +159,39 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           item.exercise.id: stored[item.exercise.id] ?? 0,
       };
     });
+  }
+
+  /// What each exercise was last done with. Arrives after the first frame, so
+  /// any row the user has not touched yet is rebuilt with its history: the
+  /// LAST column fills in and a loaded lift's kg field takes last session's
+  /// weight the way reps take the prescribed target.
+  Future<void> _loadLastSessions() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final lastSets = await _exerciseLogService.lastSetsForExercises(
+        userId,
+        _sessionItems.map((item) => item.exercise.id).toList(),
+      );
+      if (!mounted || lastSets.isEmpty) return;
+
+      setState(() {
+        _lastSets = lastSets;
+        _setDrafts = {
+          for (final item in _sessionItems)
+            item.exercise.id:
+                (_setDrafts[item.exercise.id]?.any((set) => set.hasData) ??
+                        false)
+                    ? _setDrafts[item.exercise.id]!
+                    : _initialSetDrafts(item),
+        };
+      });
+    } catch (error, stackTrace) {
+      // The workout is still perfectly loggable without last session's
+      // numbers — the LAST column simply keeps its dash.
+      debugPrint('Failed to load last sessions: $error\n$stackTrace');
+    }
   }
 
   Future<void> _loadProgressMap() async {
@@ -287,17 +335,30 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
+  /// Last session's set at [index], or its final set once this session has run
+  /// longer than that one did — an extra set carries the load you finished on
+  /// rather than dropping back to nothing.
+  ExerciseSet? _lastSetFor(TrainingRecommendationItem item, int index) {
+    final sets = _lastSets[item.exercise.id];
+    if (sets == null || sets.isEmpty) return null;
+    return sets[index.clamp(0, sets.length - 1)];
+  }
+
   List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
     final target = _prescribedTargetFor(item);
     // The set count the user last saved for this exercise on this day wins;
     // reps still come from where they are on the progression.
     return List.generate(
       item.plannedSets ?? target.sets,
-      (index) => _WorkoutSetDraft(
-        number: index + 1,
-        target: target.value,
-        previousLabel: '–',
-      ),
+      (index) {
+        final last = _lastSetFor(item, index);
+        return _WorkoutSetDraft(
+          number: index + 1,
+          target: target.value,
+          weightKg: item.exercise.isWeighted ? (last?.weightKg ?? 0) : 0,
+          previousLabel: previousSetLabel(item.exercise, last),
+        );
+      },
     );
   }
 
@@ -344,6 +405,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   }
 
   void _toggleSet(TrainingRecommendationItem item, int number) {
+    // Ticking a set is the end of typing it: drop the keyboard so the row you
+    // just logged is visible instead of sitting behind it.
+    FocusManager.instance.primaryFocus?.unfocus();
+
     final currentSet = _setsFor(item).firstWhere((set) => set.number == number);
     final shouldComplete = !currentSet.completed;
     final sets = _setsFor(item)
@@ -393,6 +458,26 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _replaceSets(item, sets);
   }
 
+  /// Applies a load typed into a set's kg field. Like reps, typing marks the
+  /// set edited so it counts toward the logged session.
+  void _setSetWeight(
+    TrainingRecommendationItem item,
+    int number,
+    double weightKg,
+  ) {
+    final clamped = weightKg.clamp(0.0, 999.0);
+
+    final sets = _setsFor(item)
+        .map(
+          (set) => set.number == number
+              ? set.copyWith(weightKg: clamped, isEdited: true)
+              : set,
+        )
+        .toList();
+
+    _replaceSets(item, sets);
+  }
+
   void _addSet(TrainingRecommendationItem item) {
     final sets = _setsFor(item);
     final target =
@@ -406,7 +491,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         _WorkoutSetDraft(
           number: sets.length + 1,
           target: target,
-          previousLabel: '–',
+          // A set added mid-workout keeps the load you are already lifting.
+          weightKg: sets.isEmpty ? 0 : sets.last.weightKg,
+          previousLabel: previousSetLabel(
+            item.exercise,
+            _lastSetFor(item, sets.length),
+          ),
         ),
       ],
     );
@@ -606,6 +696,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
               number: set.number,
               value: set.target,
               isTimed: isTimed,
+              weightKg: item.exercise.isWeighted ? set.weightKg : 0,
             ),
           )
           .toList();
@@ -1025,9 +1116,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                   Expanded(
                     child: ListView(
                       padding: EdgeInsets.fromLTRB(
-                        22,
+                        _workoutSidePadding,
                         0,
-                        22,
+                        _workoutSidePadding,
                         _hasActiveRestTimer ? 110 + bottomSafePadding : 40,
                       ),
                       children: [
@@ -1058,6 +1149,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                 goalValue: entry.items[i].isProgression
                                     ? _prescribedTargetFor(entry.items[i]).value
                                     : null,
+                                goalWeightKg: _progressRows[
+                                        entry.items[i].exercise.id]
+                                    ?.currentTargetWeightKg,
                                 restSeconds: _restSecondsByExercise[
                                         entry.items[i].exercise.id] ??
                                     0,
@@ -1065,6 +1159,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                     _toggleSet(entry.items[i], number),
                                 onValueChanged: (number, value) =>
                                     _setSetValue(entry.items[i], number, value),
+                                onWeightChanged: (number, weightKg) =>
+                                    _setSetWeight(
+                                  entry.items[i],
+                                  number,
+                                  weightKg,
+                                ),
                                 onRemoveSet: (number) =>
                                     _removeSet(entry.items[i], number),
                                 onRepFocusChanged: _onRepFocusChanged,
@@ -1238,7 +1338,7 @@ class _RepFieldState extends State<_RepField> {
       controller: _controller,
       focusNode: _focusNode,
       keyboardType: TextInputType.number,
-      textAlign: TextAlign.right,
+      textAlign: TextAlign.center,
       onChanged: _handleChanged,
       cursorColor: AppColors.accentPrimary,
       style: monoStyle(
@@ -1252,6 +1352,117 @@ class _RepFieldState extends State<_RepField> {
         contentPadding: EdgeInsets.zero,
         border: InputBorder.none,
         hintText: '${widget.value}',
+        hintStyle: monoStyle(size: 16, letterSpacing: 0),
+      ),
+    );
+  }
+}
+
+/// The kg cell of a reps-and-weight row. Behaves exactly like [_RepField] —
+/// its own controller so the workout timer's rebuilds cannot clobber what is
+/// being typed, and the value shows as a faded placeholder until the set is
+/// logged. What it starts on is last session's load for the same set, so the
+/// common case is checking the set off without touching the field at all.
+class _WeightField extends StatefulWidget {
+  final double weightKg;
+  final bool completed;
+  final bool isEdited;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<bool> onFocusChanged;
+
+  const _WeightField({
+    super.key,
+    required this.weightKg,
+    required this.completed,
+    required this.isEdited,
+    required this.onChanged,
+    required this.onFocusChanged,
+  });
+
+  @override
+  State<_WeightField> createState() => _WeightFieldState();
+}
+
+class _WeightFieldState extends State<_WeightField> {
+  late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
+
+  bool get _showsValue => widget.completed || widget.isEdited;
+
+  /// With nothing logged before, the field rests on zero rather than a dash —
+  /// a load is a number you adjust up from, not a blank.
+  String get _hintText => widget.weightKg > 0 ? _kgText(widget.weightKg) : '0';
+
+  String get _desiredText =>
+      _showsValue && widget.weightKg > 0 ? _kgText(widget.weightKg) : '';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _desiredText);
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(_WeightField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus) _syncText();
+  }
+
+  void _syncText() {
+    if (_controller.text != _desiredText) {
+      _controller.value = TextEditingValue(
+        text: _desiredText,
+        selection: TextSelection.collapsed(offset: _desiredText.length),
+      );
+    }
+  }
+
+  void _onFocusChange() {
+    widget.onFocusChanged(_focusNode.hasFocus);
+    if (_focusNode.hasFocus) {
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    } else {
+      _syncText();
+    }
+  }
+
+  void _handleChanged(String text) {
+    final parsed = double.tryParse(text.trim().replaceAll(',', '.'));
+    if (parsed != null) widget.onChanged(parsed);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      textAlign: TextAlign.center,
+      onChanged: _handleChanged,
+      cursorColor: AppColors.accentPrimary,
+      style: monoStyle(
+        size: 16,
+        letterSpacing: 0,
+        color: AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        isDense: true,
+        isCollapsed: true,
+        contentPadding: EdgeInsets.zero,
+        border: InputBorder.none,
+        hintText: _hintText,
         hintStyle: monoStyle(size: 16, letterSpacing: 0),
       ),
     );
@@ -1498,11 +1709,15 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final bool isTimed;
 
   /// Per-set goal from the progression ladder; null for standalone
-  /// exercises, whose GOAL cells read as a dash.
+  /// exercises, which drop the GOAL column altogether.
   final int? goalValue;
+
+  /// Load the ladder prescribes alongside [goalValue] on a weighted lift.
+  final double? goalWeightKg;
   final int restSeconds;
   final void Function(int number) onToggleSet;
   final void Function(int number, int value) onValueChanged;
+  final void Function(int number, double weightKg) onWeightChanged;
   final void Function(int number) onRemoveSet;
   final ValueChanged<bool> onRepFocusChanged;
   final VoidCallback onAddSet;
@@ -1516,9 +1731,11 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.sets,
     required this.isTimed,
     required this.goalValue,
+    required this.goalWeightKg,
     required this.restSeconds,
     required this.onToggleSet,
     required this.onValueChanged,
+    required this.onWeightChanged,
     required this.onRemoveSet,
     required this.onRepFocusChanged,
     required this.onAddSet,
@@ -1526,6 +1743,28 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.onMenu,
     required this.onOpenDetail,
   });
+
+  /// A reps-and-weight lift logs a load alongside its reps, so the grid takes
+  /// its kg column and the LAST column reads "60kg x 8".
+  bool get isWeighted => item.exercise.isWeighted;
+
+  /// The prescribed set, written the way the set itself is: a loaded lift
+  /// carries its weight — "60kg x 8" — where an unloaded one is a count.
+  /// Null when there is no ladder behind this exercise, and the column goes.
+  String? get _goalLabel {
+    if (goalValue == null) return null;
+    final value = '$goalValue${isTimed ? 's' : ''}';
+    return isWeighted ? '${_kgText(goalWeightKg ?? 0)}kg x $value' : value;
+  }
+
+  /// LAST and GOAL both spell out a load on a weighted row, and two of those
+  /// beside a kg field is more than a phone's width — so they set smaller.
+  TextStyle get _historyStyle => monoStyle(
+        size: isWeighted ? 11.5 : 14,
+        weight: FontWeight.w500,
+        letterSpacing: 0,
+        color: AppColors.textSecondary,
+      );
 
   int get _doneCount => sets.where((set) => set.completed).length;
   bool get _allDone => sets.isNotEmpty && _doneCount == sets.length;
@@ -1621,16 +1860,33 @@ class _WorkoutExerciseCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 14, 8, 8),
           child: _SetGridRow(
-            leading: Text('SET', style: _columnLabelStyle),
-            middle: Text('LAST', style: _columnLabelStyle),
-            goal: Text(
-              'GOAL',
-              textAlign: TextAlign.right,
+            leading: Text(
+              'SET',
+              textAlign: TextAlign.center,
               style: _columnLabelStyle,
             ),
+            middle: Text(
+              'LAST',
+              textAlign: TextAlign.center,
+              style: _columnLabelStyle,
+            ),
+            goal: _goalLabel == null
+                ? null
+                : Text(
+                    'GOAL',
+                    textAlign: TextAlign.center,
+                    style: _columnLabelStyle,
+                  ),
+            weight: isWeighted
+                ? Text(
+                    'KG',
+                    textAlign: TextAlign.center,
+                    style: _columnLabelStyle,
+                  )
+                : null,
             value: Text(
               isTimed ? 'TIME' : 'REPS',
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.center,
               style: _columnLabelStyle,
             ),
             trailing: const SizedBox.shrink(),
@@ -1658,21 +1914,12 @@ class _WorkoutExerciseCard extends StatelessWidget {
   static final _columnLabelStyle = monoStyle(size: 10, letterSpacing: 1.4);
 
   Widget _buildSetRow(BuildContext context, _WorkoutSetDraft set) {
-    // A logged set is tinted across every column — the whole line is done,
-    // not just the tick at the end of it. The tint replaces the hairline
-    // rather than sitting under it, which a rounded fill cannot share.
-    final row = Container(
+    final content = Padding(
       padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
-      decoration: BoxDecoration(
-        color: set.completed ? AppColors.greenSoft : null,
-        borderRadius: set.completed ? BorderRadius.circular(8) : null,
-        border: set.completed
-            ? null
-            : const Border(top: BorderSide(color: AppColors.cardHighlight)),
-      ),
       child: _SetGridRow(
         leading: Text(
           '${set.number}',
+          textAlign: TextAlign.center,
           style: monoStyle(
             size: 14,
             letterSpacing: 0,
@@ -1683,26 +1930,30 @@ class _WorkoutExerciseCard extends StatelessWidget {
           set.previousLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: monoStyle(
-            size: 14,
-            weight: FontWeight.w500,
-            letterSpacing: 0,
-            color: set.previousLabel == '—'
-                ? AppColors.textMuted
-                : AppColors.textSecondary,
-          ),
+          textAlign: TextAlign.center,
+          style: set.previousLabel == _noPreviousLabel
+              ? _historyStyle.copyWith(color: AppColors.textMuted)
+              : _historyStyle,
         ),
-        goal: Text(
-          goalValue == null ? '—' : '$goalValue${isTimed ? 's' : ''}',
-          textAlign: TextAlign.right,
-          style: monoStyle(
-            size: 14,
-            letterSpacing: 0,
-            color: goalValue == null
-                ? AppColors.textMuted
-                : AppColors.textSecondary,
-          ),
-        ),
+        goal: _goalLabel == null
+            ? null
+            : Text(
+                _goalLabel!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: _historyStyle,
+              ),
+        weight: isWeighted
+            ? _WeightField(
+                key: ValueKey('kg-${item.exercise.id}-${set.number}'),
+                weightKg: set.weightKg,
+                completed: set.completed,
+                isEdited: set.isEdited,
+                onChanged: (value) => onWeightChanged(set.number, value),
+                onFocusChanged: onRepFocusChanged,
+              )
+            : null,
         value: _RepField(
           key: ValueKey('rep-${item.exercise.id}-${set.number}'),
           value: set.target,
@@ -1741,6 +1992,33 @@ class _WorkoutExerciseCard extends StatelessWidget {
       ),
     );
 
+    // A logged set is tinted across every column — the whole line is done,
+    // not just the tick at the end of it. The tint bleeds back out over the
+    // list's side padding so it runs edge to edge, and squares off: a fill
+    // that reaches the screen has no corners to round. It replaces the
+    // hairline rather than sitting under it.
+    final row = set.completed
+        ? Stack(
+            fit: StackFit.passthrough,
+            clipBehavior: Clip.none,
+            children: [
+              const Positioned(
+                top: 0,
+                bottom: 0,
+                left: -_workoutSidePadding,
+                right: -_workoutSidePadding,
+                child: ColoredBox(color: AppColors.greenSoft),
+              ),
+              content,
+            ],
+          )
+        : DecoratedBox(
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.cardHighlight)),
+            ),
+            child: content,
+          );
+
     if (sets.length <= 1) return row;
 
     return Dismissible(
@@ -1762,35 +2040,53 @@ class _WorkoutExerciseCard extends StatelessWidget {
   }
 }
 
-/// Shared 5-column grid used by the set header and set rows:
-/// set number · last session · goal · value · check.
+/// Shared grid used by the set header and set rows:
+/// set number · last session · [goal] · [kg] · value · check.
+///
+/// Both middle columns are optional. A lift with no prescribed target drops
+/// GOAL rather than filling it with a dash, and a loaded lift takes a KG
+/// column — where every column tightens to make room, since the row still
+/// has to fit a phone.
 class _SetGridRow extends StatelessWidget {
   final Widget leading;
   final Widget middle;
-  final Widget goal;
+  final Widget? goal;
+  final Widget? weight;
   final Widget value;
   final Widget trailing;
 
   const _SetGridRow({
     required this.leading,
     required this.middle,
-    required this.goal,
+    this.goal,
+    this.weight,
     required this.value,
     required this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
+    final loaded = weight != null;
+    final gap = SizedBox(width: loaded ? 6 : 10);
+
     return Row(
       children: [
-        SizedBox(width: 30, child: leading),
-        const SizedBox(width: 10),
+        SizedBox(width: loaded ? 22 : 30, child: leading),
+        gap,
         Expanded(child: middle),
-        const SizedBox(width: 10),
-        SizedBox(width: 52, child: goal),
-        const SizedBox(width: 10),
-        SizedBox(width: 70, child: value),
-        const SizedBox(width: 10),
+        if (goal != null) ...[
+          gap,
+          // A loaded goal reads "60kg x 8", so it needs the room a bare rep
+          // count does not.
+          SizedBox(width: loaded ? 70 : 52, child: goal),
+        ],
+        if (loaded) ...[
+          gap,
+          SizedBox(width: 50, child: weight),
+        ],
+        gap,
+        SizedBox(width: loaded ? 42 : 70, child: value),
+        gap,
         SizedBox(width: 26, child: trailing),
       ],
     );
@@ -2620,6 +2916,11 @@ class _EmptyWorkoutState extends StatelessWidget {
 class _WorkoutSetDraft {
   final int number;
   final int target;
+
+  /// Load for this set, on a reps-and-weight lift. Seeded from the last
+  /// session's matching set, the way [target] is seeded from the prescribed
+  /// progression, and 0 on everything that isn't loaded.
+  final double weightKg;
   final String previousLabel;
   final bool completed;
   final bool isEdited;
@@ -2627,6 +2928,7 @@ class _WorkoutSetDraft {
   const _WorkoutSetDraft({
     required this.number,
     required this.target,
+    this.weightKg = 0,
     required this.previousLabel,
     this.completed = false,
     this.isEdited = false,
@@ -2637,6 +2939,7 @@ class _WorkoutSetDraft {
   _WorkoutSetDraft copyWith({
     int? number,
     int? target,
+    double? weightKg,
     String? previousLabel,
     bool? completed,
     bool? isEdited,
@@ -2644,11 +2947,36 @@ class _WorkoutSetDraft {
     return _WorkoutSetDraft(
       number: number ?? this.number,
       target: target ?? this.target,
+      weightKg: weightKg ?? this.weightKg,
       previousLabel: previousLabel ?? this.previousLabel,
       completed: completed ?? this.completed,
       isEdited: isEdited ?? this.isEdited,
     );
   }
+}
+
+/// A load as the app writes it inside a row: whole numbers stay whole, halves
+/// keep their decimal. No unit — the column is already headed KG.
+String _kgText(double weightKg) {
+  final rounded = (weightKg * 10).round() / 10;
+  return rounded == rounded.roundToDouble()
+      ? '${rounded.round()}'
+      : '$rounded';
+}
+
+/// What the last session's matching set read as, for the LAST column. Reps
+/// are a count and holds are seconds; anything carrying load leads with it —
+/// "60kg x 8", or "20kg x 30s" for a loaded hold.
+String previousSetLabel(Exercise exercise, ExerciseSet? set) {
+  if (set == null) return _noPreviousLabel;
+  final load = exercise.isWeighted ? '${_kgText(set.weightKg)}kg x ' : '';
+
+  if (exercise.isTimed) {
+    return set.durationSeconds > 0
+        ? '$load${set.durationSeconds}s'
+        : _noPreviousLabel;
+  }
+  return set.reps > 0 ? '$load${set.reps}' : _noPreviousLabel;
 }
 
 String _formatRestLabel(int seconds) {
