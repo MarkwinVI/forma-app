@@ -1914,8 +1914,8 @@ class ExerciseCatalog {
       treeOrder: 0,
       muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Calves'],
       libraryId: 'squat_barbell',
-      isWeighted: true,
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hinge_romanian_deadlift',
@@ -1928,8 +1928,8 @@ class ExerciseCatalog {
       treeOrder: 0,
       muscles: ['Hamstrings', 'Glutes', 'Lower back', 'adductors'],
       libraryId: 'romanian_deadlift_barbell',
-      isWeighted: true,
       isLoaded: true,
+      isWeighted: true,
     ),
     Exercise(
       id: 'hinge_nordic_nordic_curl',

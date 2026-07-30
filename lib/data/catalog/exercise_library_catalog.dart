@@ -885,7 +885,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -905,7 +905,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -938,7 +938,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -1320,7 +1320,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -1870,7 +1870,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -1890,7 +1890,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -2474,7 +2474,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -2543,7 +2543,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -3617,7 +3617,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -3637,7 +3637,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -3694,8 +3694,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up',
-      description:
-          'Hang from the bar with an overhand grip at shoulder width.',
+      description: 'Hang from the bar with an overhand grip at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5057,7 +5056,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
@@ -5139,7 +5138,7 @@ class ExerciseLibraryCatalog {
         'Glutes',
         'Hamstrings',
         'Shoulders',
-        'Traps',
+        'Traps'
       ],
       isLoaded: true,
       isWeighted: true,
