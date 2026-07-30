@@ -35,6 +35,12 @@ const _workoutSidePadding = 22.0;
 /// Shown in the LAST column when the exercise has never been logged.
 const _noPreviousLabel = '–';
 
+/// Set fields take a number off the keypad and nothing else. Left to itself
+/// iOS offers Paste and Scan Text on a tap, and pointing a camera at a rep
+/// count is not a thing anybody is doing mid-set.
+Widget _noContextMenu(BuildContext context, EditableTextState state) =>
+    const SizedBox.shrink();
+
 /// Rest presets offered by the rest sheet (seconds). "0" means off.
 const _restOptions = <int>[0, 30, 60, 90, 120, 150, 180];
 
@@ -411,6 +417,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     final currentSet = _setsFor(item).firstWhere((set) => set.number == number);
     final shouldComplete = !currentSet.completed;
+
+    // A set landing is the one moment in a workout worth feeling — you are
+    // often not looking at the phone when you tick it.
+    if (shouldComplete) HapticFeedback.lightImpact();
     final sets = _setsFor(item)
         .map(
           (set) => set.number == number
@@ -1340,6 +1350,7 @@ class _RepFieldState extends State<_RepField> {
       keyboardType: TextInputType.number,
       textAlign: TextAlign.center,
       onChanged: _handleChanged,
+      contextMenuBuilder: _noContextMenu,
       cursorColor: AppColors.accentPrimary,
       style: monoStyle(
         size: 16,
@@ -1451,6 +1462,7 @@ class _WeightFieldState extends State<_WeightField> {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textAlign: TextAlign.center,
       onChanged: _handleChanged,
+      contextMenuBuilder: _noContextMenu,
       cursorColor: AppColors.accentPrimary,
       style: monoStyle(
         size: 16,
@@ -1860,35 +1872,11 @@ class _WorkoutExerciseCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 14, 8, 8),
           child: _SetGridRow(
-            leading: Text(
-              'SET',
-              textAlign: TextAlign.center,
-              style: _columnLabelStyle,
-            ),
-            middle: Text(
-              'LAST',
-              textAlign: TextAlign.center,
-              style: _columnLabelStyle,
-            ),
-            goal: _goalLabel == null
-                ? null
-                : Text(
-                    'GOAL',
-                    textAlign: TextAlign.center,
-                    style: _columnLabelStyle,
-                  ),
-            weight: isWeighted
-                ? Text(
-                    'KG',
-                    textAlign: TextAlign.center,
-                    style: _columnLabelStyle,
-                  )
-                : null,
-            value: Text(
-              isTimed ? 'TIME' : 'REPS',
-              textAlign: TextAlign.center,
-              style: _columnLabelStyle,
-            ),
+            leading: _columnHead('SET'),
+            middle: _columnHead('LAST'),
+            goal: _goalLabel == null ? null : _columnHead('GOAL'),
+            weight: isWeighted ? _columnHead('KG') : null,
+            value: _columnHead(isTimed ? 'TIME' : 'REPS'),
             trailing: const SizedBox.shrink(),
           ),
         ),
@@ -1912,6 +1900,17 @@ class _WorkoutExerciseCard extends StatelessWidget {
   }
 
   static final _columnLabelStyle = monoStyle(size: 10, letterSpacing: 1.4);
+
+  /// A column head, kept to one line. Tracked-out mono is wider than it looks
+  /// — SET alone is 22.2pt — and a head that wraps reads as a broken row
+  /// rather than a narrow column.
+  static Widget _columnHead(String label) => Text(
+        label,
+        maxLines: 1,
+        softWrap: false,
+        textAlign: TextAlign.center,
+        style: _columnLabelStyle,
+      );
 
   Widget _buildSetRow(BuildContext context, _WorkoutSetDraft set) {
     final content = Padding(
@@ -2071,7 +2070,9 @@ class _SetGridRow extends StatelessWidget {
 
     return Row(
       children: [
-        SizedBox(width: loaded ? 22 : 30, child: leading),
+        // Wide enough for the word SET, which at this tracking is 22.2pt and
+        // wraps its T onto a second line in anything narrower.
+        SizedBox(width: loaded ? 26 : 30, child: leading),
         gap,
         Expanded(child: middle),
         if (goal != null) ...[
