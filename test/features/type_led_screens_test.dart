@@ -164,7 +164,7 @@ PastWorkout _workout(String id, DateTime day) {
     loggedAt: startedAt.add(const Duration(minutes: 42)),
     exercises: const [
       PastWorkoutExercise(
-        exerciseId: 'bench_dips',
+        exerciseId: 'dips_bench_dips',
         exerciseName: 'Bench Dips',
         setCount: 2,
         totalReps: 12,
@@ -175,7 +175,7 @@ PastWorkout _workout(String id, DateTime day) {
         ],
       ),
       PastWorkoutExercise(
-        exerciseId: 'wall_push_up',
+        exerciseId: 'pushups_wall_push_up',
         exerciseName: 'Wall Pushups',
         setCount: 1,
         totalReps: 6,

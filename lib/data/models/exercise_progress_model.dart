@@ -1,4 +1,5 @@
 import 'exercise_model.dart';
+import '../catalog/exercise_id_migration.dart';
 
 class ExerciseProgress {
   final String exerciseId;
@@ -28,7 +29,7 @@ class ExerciseProgress {
 
   factory ExerciseProgress.fromMap(Map<String, dynamic> map) {
     return ExerciseProgress(
-      exerciseId: map['exercise_id'] as String,
+      exerciseId: ExerciseIdMigration.resolve(map['exercise_id'] as String),
       status: ExerciseStatus.values.byName(map['status'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
       currentTargetSets: map['current_target_sets'] as int?,

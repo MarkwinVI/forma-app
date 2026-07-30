@@ -84,14 +84,14 @@ void main() {
     test('no reps starts at the beginner node', () {
       final plan = planFor(strength: {'pushups': 0});
 
-      expect(plan.statuses['wall_push_up'], ExerciseStatus.active);
-      expect(plan.statuses.containsKey('incline_push_up'), isFalse);
+      expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
+      expect(plan.statuses.containsKey('pushups_incline_push_up'), isFalse);
     });
 
     test('an unknown answer also starts at the beginner node', () {
       final plan = planFor(strength: {'pushups': null});
 
-      expect(plan.statuses['wall_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
     });
 
     test('1–9 reps start two steps before the exercise they answer for', () {
@@ -99,14 +99,14 @@ void main() {
         strength: {'pushups': 5, 'pullups': 3, 'dips': 1, 'squat_bw': 9},
       );
 
-      expect(plan.statuses['pull_up_negative'], ExerciseStatus.active);
+      expect(plan.statuses['pullups_pull_up_negative'], ExerciseStatus.active);
       // Dips have two steps before the parallel-bar dip, so two back is the
       // first one.
-      expect(plan.statuses['bench_dips'], ExerciseStatus.active);
+      expect(plan.statuses['dips_bench_dips'], ExerciseStatus.active);
       // Push-ups and squats have exactly two steps of run-up, so the step
       // back clamps onto the beginner node.
-      expect(plan.statuses['wall_push_up'], ExerciseStatus.active);
-      expect(plan.statuses['assisted_squat'], ExerciseStatus.active);
+      expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['squat_assisted_squat'], ExerciseStatus.active);
     });
 
     test('10+ reps start on the exercise the answer was about', () {
@@ -114,10 +114,10 @@ void main() {
         strength: {'pushups': 12, 'pullups': 10, 'dips': 30, 'squat_bw': 40},
       );
 
-      expect(plan.statuses['push_up'], ExerciseStatus.active);
-      expect(plan.statuses['pull_up'], ExerciseStatus.active);
-      expect(plan.statuses['parallel_bar_dips'], ExerciseStatus.active);
-      expect(plan.statuses['squat'], ExerciseStatus.active);
+      expect(plan.statuses['pushups_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['pullups_pull_up'], ExerciseStatus.active);
+      expect(plan.statuses['dips_parallel_bar_dips'], ExerciseStatus.active);
+      expect(plan.statuses['squat_squat'], ExerciseStatus.active);
     });
 
     test('everything behind the starting node is skipped, never mastered', () {
@@ -126,12 +126,12 @@ void main() {
       expect(
         [
           for (final id in const [
-            'wall_push_up',
-            'incline_push_up',
-            'scapular_pull',
-            'arch_hang',
-            'pull_up_negative',
-            'assisted_pull_up',
+            'pushups_wall_push_up',
+            'pushups_incline_push_up',
+            'pullups_scapular_pull',
+            'pullups_arch_hang',
+            'pullups_pull_up_negative',
+            'pullups_assisted_pull_up',
           ])
             plan.statuses[id],
         ],
@@ -146,7 +146,7 @@ void main() {
     test('rows always start at the first step', () {
       final plan = planFor(strength: {'pushups': 30, 'pullups': 20});
 
-      expect(plan.statuses['vertical_rows'], ExerciseStatus.active);
+      expect(plan.statuses['rows_vertical_rows'], ExerciseStatus.active);
       expect(
         plan.statuses.keys.where((id) => id.contains('rows')).length,
         1,
@@ -155,7 +155,7 @@ void main() {
 
     test('the barbell squat opens at 3 × 5 on 70% of the reported 1RM', () {
       final plan = planFor(hasGym: true, strength: {'squat': 100});
-      final target = plan.targets['barbell_squat']!;
+      final target = plan.targets['barbell_squat_barbell_squat']!;
 
       expect(target.sets, 3);
       expect(target.value, 5);
@@ -169,13 +169,13 @@ void main() {
     });
 
     test('the Romanian deadlift opens light and the Nordic curl at 3 × 5', () {
-      final rdl = planFor(hasGym: true).targets['romanian_deadlift']!;
+      final rdl = planFor(hasGym: true).targets['hinge_romanian_deadlift']!;
       expect(
         (rdl.sets, rdl.value, rdl.weightKg),
         (3, 5, ProgramStartPlanner.romanianDeadliftStartKg),
       );
 
-      final nordic = planFor().targets['nordic_curl']!;
+      final nordic = planFor().targets['hinge_nordic_nordic_curl']!;
       expect((nordic.sets, nordic.value, nordic.weightKg), (3, 5, null));
     });
   });
@@ -289,9 +289,9 @@ void main() {
           .map((item) => item.exercise.id)
           .toList();
 
-      expect(items, contains('push_up'));
-      expect(items, contains('pull_up_negative'));
-      expect(items, isNot(contains('wall_push_up')));
+      expect(items, contains('pushups_push_up'));
+      expect(items, contains('pullups_pull_up_negative'));
+      expect(items, isNot(contains('pushups_wall_push_up')));
     });
   });
 
@@ -300,33 +300,33 @@ void main() {
       final outcome = ExerciseProgressionService.computeSessionOutcome(
         results: [
           SessionExerciseResult(
-            exercise: ExerciseCatalog.findById('push_up')!,
+            exercise: ExerciseCatalog.findById('pushups_push_up')!,
             volume: 24, // 3 × 8, the default mastery target.
           ),
         ],
         progressRows: {
-          'push_up': ExerciseProgress(
-            exerciseId: 'push_up',
+          'pushups_push_up': ExerciseProgress(
+            exerciseId: 'pushups_push_up',
             status: ExerciseStatus.skipped,
             updatedAt: DateTime(2026, 7, 28),
           ),
         },
       );
 
-      expect(outcome.statusChanges['push_up'], ExerciseStatus.mastered);
+      expect(outcome.statusChanges['pushups_push_up'], ExerciseStatus.mastered);
     });
 
     test('falling short of the target leaves it skipped', () {
       final outcome = ExerciseProgressionService.computeSessionOutcome(
         results: [
           SessionExerciseResult(
-            exercise: ExerciseCatalog.findById('push_up')!,
+            exercise: ExerciseCatalog.findById('pushups_push_up')!,
             volume: 9,
           ),
         ],
         progressRows: {
-          'push_up': ExerciseProgress(
-            exerciseId: 'push_up',
+          'pushups_push_up': ExerciseProgress(
+            exerciseId: 'pushups_push_up',
             status: ExerciseStatus.skipped,
             updatedAt: DateTime(2026, 7, 28),
           ),

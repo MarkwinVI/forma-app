@@ -3,8 +3,9 @@ import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/features/home/program_day_items.dart';
 
-/// Muscle groups are per exercise and cover the whole sheet — both the skill
-/// trees and the general library.
+/// Muscle groups are the sheet's own words, on every exercise in it. Nothing
+/// is renamed or merged on the way in, so a term that reads wrong is a change
+/// to the sheet rather than to a mapping table nobody can see.
 void main() {
   final everything = ExerciseCatalog.everything();
 
@@ -17,20 +18,22 @@ void main() {
     });
 
     test('both halves are covered, not just one', () {
-      expect(everything.where((e) => e.isLibrary), hasLength(637));
-      expect(everything.where((e) => !e.isLibrary), hasLength(136));
-      for (final exercise in everything) {
-        expect(exercise.muscles, isNotEmpty, reason: exercise.id);
-      }
+      expect(everything.where((e) => e.isLibrary), hasLength(489));
+      expect(everything.where((e) => !e.isLibrary), hasLength(137));
     });
 
-    test('no exercise invents a group outside the list', () {
+    test('no exercise invents a group the sheet does not use', () {
       const known = {...kExerciseMuscleGroups};
       for (final exercise in everything) {
         for (final group in exercise.muscles) {
           expect(known, contains(group), reason: '${exercise.id}: $group');
         }
       }
+    });
+
+    test('every group the filter offers is used by something', () {
+      final used = {for (final e in everything) ...e.muscles};
+      expect(kExerciseMuscleGroups.where((g) => !used.contains(g)), isEmpty);
     });
 
     test('no group is listed twice for one exercise', () {
@@ -40,17 +43,19 @@ void main() {
       }
     });
 
-    test("'Other' is a last resort, not a dumping ground", () {
-      final other =
-          everything.where((exercise) => exercise.muscles.contains('Other'));
-      expect(other, isEmpty);
+    test('the sheet is quoted, not paraphrased', () {
+      expect(
+        ExerciseCatalog.findById('bench_press_barbell')!.muscles,
+        ['Chest', 'Triceps', 'front deltoids'],
+      );
+      expect(
+        ExerciseCatalog.findById('core_plank')!.muscles,
+        ['Abdominals', 'Glutes', 'Lower back'],
+      );
     });
 
-    test('every group in the list is actually used by something', () {
-      final used = {for (final e in everything) ...e.muscles};
-      final unused = kExerciseMuscleGroups
-          .where((group) => group != 'Other' && !used.contains(group));
-      expect(unused, isEmpty);
+    test('the primary muscle leads', () {
+      expect(ExerciseCatalog.findById('pullups_pull_up')!.muscles.first, 'Lats');
     });
   });
 
@@ -65,22 +70,37 @@ void main() {
       }
     });
 
-    test('lats, traps and both backs all count as back', () {
+    test('every back muscle counts as back', () {
       expect(
         ProgramSessionPlan.coarseMusclesFor(
-          ['Lats', 'Upper back', 'Lower back', 'Traps'],
+          ['Lats', 'Upper back', 'Middle Back', 'Lower back', 'Traps'],
         ),
         ['Back'],
       );
     });
 
-    test('cardio is not volume for any muscle', () {
-      expect(ProgramSessionPlan.coarseMusclesFor(['Cardio']), isEmpty);
+    test('the deltoids count as shoulders', () {
+      expect(
+        ProgramSessionPlan.coarseMusclesFor(
+          ['front deltoids', 'rear deltoids', 'rotator cuff'],
+        ),
+        ['Shoulders'],
+      );
     });
 
-    test('a lifting exercise always folds to something', () {
+    test('what is not one muscle folds to nothing', () {
+      expect(
+        ProgramSessionPlan.coarseMusclesFor(
+          ['Full body', 'Cardiovascular system', 'Other'],
+        ),
+        isEmpty,
+      );
+    });
+
+    test('a lift that names a real muscle always folds to something', () {
+      const notAMuscle = {'Full body', 'Cardiovascular system', 'Other'};
       final liftable =
-          everything.where((e) => !e.muscles.every((g) => g == 'Cardio'));
+          everything.where((e) => !e.muscles.every(notAMuscle.contains));
       for (final exercise in liftable) {
         expect(ProgramSessionPlan.coarseMusclesFor(exercise.muscles), isNotEmpty,
             reason: exercise.id);

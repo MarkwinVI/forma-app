@@ -104,9 +104,9 @@ void main() {
 
     test('tree level awards mastered steps and the current active step', () {
       final progressMap = {
-        'scapular_pull': ExerciseStatus.mastered,
-        'arch_hang': ExerciseStatus.mastered,
-        'pull_up_negative': ExerciseStatus.active,
+        'pullups_scapular_pull': ExerciseStatus.mastered,
+        'pullups_arch_hang': ExerciseStatus.mastered,
+        'pullups_pull_up_negative': ExerciseStatus.active,
       };
 
       final level = HomeDashboardMetricsCalculator.treeLevelForCategory(
@@ -129,12 +129,12 @@ void main() {
 
     test('tree level uses the strongest branch in a multi-branch tree', () {
       final progressMap = {
-        'scapular_pull': ExerciseStatus.mastered,
-        'arch_hang': ExerciseStatus.mastered,
-        'pull_up_negative': ExerciseStatus.mastered,
-        'assisted_pull_up': ExerciseStatus.mastered,
-        'pull_up': ExerciseStatus.mastered,
-        'weighted_pull_up_115': ExerciseStatus.active,
+        'pullups_scapular_pull': ExerciseStatus.mastered,
+        'pullups_arch_hang': ExerciseStatus.mastered,
+        'pullups_pull_up_negative': ExerciseStatus.mastered,
+        'pullups_assisted_pull_up': ExerciseStatus.mastered,
+        'pullups_pull_up': ExerciseStatus.mastered,
+        'pullups_weighted_pull_up_115': ExerciseStatus.active,
       };
 
       final level = HomeDashboardMetricsCalculator.treeLevelForCategory(
@@ -163,7 +163,7 @@ void main() {
         branchSelections: service.defaultBranchSelections(),
         sessionItemsConfig: const {},
         progressMap: const {
-          'scapular_pull': ExerciseStatus.active,
+          'pullups_scapular_pull': ExerciseStatus.active,
         },
         workouts: const [],
       );
@@ -211,13 +211,13 @@ void main() {
         workouts: [
           _workout(
             'pull',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [6, 6, 6],
             loggedAt: DateTime(2026, 6, 18),
           ),
           _workout(
             'core',
-            'foot_supported_l_sit',
+            'core_foot_supported_l_sit',
             [12, 12, 12],
             loggedAt: DateTime(2026, 6, 17),
             isTimed: true,
@@ -311,7 +311,7 @@ void main() {
                 'id': 'strength-2',
                 'kind': 'exercise',
                 'name': 'Romanian Deadlift',
-                'exercise_id': 'single_leg_rdl',
+                'exercise_id': 'hinge_single_leg_rdl',
               },
             ],
           },
@@ -349,13 +349,13 @@ void main() {
         workouts: [
           _workout(
             'w1',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [6],
             loggedAt: DateTime(2026, 6, 1),
           ),
           _workout(
             'w2',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [8],
             loggedAt: DateTime(2026, 6, 15),
           ),
@@ -386,13 +386,13 @@ void main() {
         workouts: [
           _workout(
             'w1',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [8],
             loggedAt: DateTime(2026, 6, 1),
           ),
           _workout(
             'w2',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [5],
             loggedAt: DateTime(2026, 6, 15),
           ),
@@ -422,13 +422,13 @@ void main() {
         workouts: [
           _workout(
             'w1',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [6],
             loggedAt: DateTime(2026, 6, 1),
           ),
           _workout(
             'w2',
-            'scapular_pull',
+            'pullups_scapular_pull',
             [6],
             loggedAt: DateTime(2026, 6, 15),
           ),
@@ -605,19 +605,19 @@ void main() {
         workouts: [
           _workout(
             'last-week-1',
-            'pull_up',
+            'pullups_pull_up',
             [5],
             loggedAt: DateTime(2026, 6, 8),
           ),
           _workout(
             'this-week-1',
-            'pull_up',
+            'pullups_pull_up',
             [5],
             loggedAt: DateTime(2026, 6, 15),
           ),
           _workout(
             'this-week-2',
-            'pull_up',
+            'pullups_pull_up',
             [5],
             loggedAt: DateTime(2026, 6, 17),
           ),
@@ -637,19 +637,19 @@ void main() {
         workouts: [
           _workout(
             'last-week-1',
-            'pull_up',
+            'pullups_pull_up',
             [5],
             loggedAt: DateTime(2026, 6, 8),
           ),
           _workout(
             'last-week-2',
-            'pull_up',
+            'pullups_pull_up',
             [5],
             loggedAt: DateTime(2026, 6, 10),
           ),
           _workout(
             'this-week-1',
-            'pull_up',
+            'pullups_pull_up',
             [5],
             loggedAt: DateTime(2026, 6, 15),
           ),

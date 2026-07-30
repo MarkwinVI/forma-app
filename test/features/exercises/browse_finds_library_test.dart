@@ -52,7 +52,7 @@ void main() {
   // field renders its own text and `find.text` would match that instead of a
   // result — a check that passes whether or not anything was found.
   testWidgets('browsing finds a barbell bench press', (tester) async {
-    await expectFound(tester, 'bench', 'Barbell Bench Press');
+    await expectFound(tester, 'bench', 'Bench Press (Barbell)');
   });
 
   testWidgets('browsing still finds a skill-tree step', (tester) async {
@@ -61,6 +61,6 @@ void main() {
 
   testWidgets('browsing finds accessory work with no tree at all',
       (tester) async {
-    await expectFound(tester, 'curl', 'Barbell Curl');
+    await expectFound(tester, 'curl', 'Bicep Curl (Barbell)');
   });
 }

@@ -96,10 +96,10 @@ class ProgramStartPlanner {
   /// Push-up, so that step — not whatever step happens to end the shared
   /// foundation — is what the count is measured against.
   static const Map<String, _RepGate> _repGates = {
-    SkillCategoryCatalog.pushupsId: _RepGate('pushups', 'push_up'),
-    SkillCategoryCatalog.pullupsId: _RepGate('pullups', 'pull_up'),
-    SkillCategoryCatalog.dipsId: _RepGate('dips', 'parallel_bar_dips'),
-    SkillCategoryCatalog.squatId: _RepGate('squat_bw', 'squat'),
+    SkillCategoryCatalog.pushupsId: _RepGate('pushups', 'pushups_push_up'),
+    SkillCategoryCatalog.pullupsId: _RepGate('pullups', 'pullups_pull_up'),
+    SkillCategoryCatalog.dipsId: _RepGate('dips', 'dips_parallel_bar_dips'),
+    SkillCategoryCatalog.squatId: _RepGate('squat_bw', 'squat_squat'),
   };
 
   static ProgramStartPlan planFor({
@@ -197,9 +197,9 @@ class ProgramStartPlanner {
     switch (category.id) {
       case SkillCategoryCatalog.barbellSquatId:
         return _StartingPosition(
-          statuses: const {'barbell_squat': ExerciseStatus.active},
+          statuses: const {'barbell_squat_barbell_squat': ExerciseStatus.active},
           targets: {
-            'barbell_squat': ProgramStartTarget(
+            'barbell_squat_barbell_squat': ProgramStartTarget(
               sets: loadedLiftSets,
               value: loadedLiftStartReps,
               weightKg: barbellSquatStartKg(startingStrength['squat']),
@@ -238,11 +238,11 @@ class ProgramStartPlanner {
     switch (branchId) {
       case 'rdl':
         return const _StartingPosition(
-          statuses: {'romanian_deadlift': ExerciseStatus.active},
+          statuses: {'hinge_romanian_deadlift': ExerciseStatus.active},
           targets: {
             // Same 3 × 5 the barbell squat opens on, so both loaded lifts
             // run the same climb; the load is what is set low here.
-            'romanian_deadlift': ProgramStartTarget(
+            'hinge_romanian_deadlift': ProgramStartTarget(
               sets: loadedLiftSets,
               value: loadedLiftStartReps,
               weightKg: romanianDeadliftStartKg,
@@ -251,9 +251,9 @@ class ProgramStartPlanner {
         );
       case 'nordic':
         return const _StartingPosition(
-          statuses: {'nordic_curl': ExerciseStatus.active},
+          statuses: {'hinge_nordic_nordic_curl': ExerciseStatus.active},
           targets: {
-            'nordic_curl': ProgramStartTarget(
+            'hinge_nordic_nordic_curl': ProgramStartTarget(
               sets: nordicCurlSets,
               value: nordicCurlReps,
             ),

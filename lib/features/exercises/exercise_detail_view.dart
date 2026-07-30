@@ -760,7 +760,8 @@ class _DemoMediaState extends State<_DemoMedia> {
   @override
   void initState() {
     super.initState();
-    final videoId = ExerciseCoachingCatalog.findById(widget.exercise.id)?.videoId;
+    final videoId =
+        ExerciseCoachingCatalog.forExercise(widget.exercise)?.videoId;
     if (videoId == null || !_playerIsAvailable) return;
     _controller = YoutubePlayerController.fromVideoId(
       videoId: videoId,
@@ -822,9 +823,10 @@ class _DemoMediaState extends State<_DemoMedia> {
       );
     }
 
-    final imageUrl = ExerciseCoachingCatalog.findById(widget.exercise.id)
-            ?.imageUrl ??
-        widget.exercise.imageUrl;
+    final still = ExerciseCoachingCatalog.forExercise(widget.exercise)?.imageUrl;
+    final imageUrl = (still == null || still.isEmpty)
+        ? widget.exercise.imageUrl
+        : still;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
@@ -987,7 +989,7 @@ class _ExerciseCoachData {
 /// Coaching for this exact movement where the exercise sheet has it, and the
 /// movement pattern's generic advice where it does not.
 _ExerciseCoachData _coachDataFor(Exercise exercise) {
-  final coaching = ExerciseCoachingCatalog.findById(exercise.id);
+  final coaching = ExerciseCoachingCatalog.forExercise(exercise);
   if (coaching != null) {
     return _ExerciseCoachData(
       steps: coaching.howTo,

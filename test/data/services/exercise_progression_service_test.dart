@@ -259,7 +259,7 @@ void main() {
       // pull_up has different successors per branch (weighted, close grip,
       // l-sit, one arm); with no active branch or goal, the pullups
       // category's default branch (weighted) decides.
-      final pullUp = ExerciseCatalog.findById('pull_up')!;
+      final pullUp = ExerciseCatalog.findById('pullups_pull_up')!;
       final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
         pullUp,
       ).volume;
@@ -296,7 +296,7 @@ void main() {
       }
 
       setUpAll(() {
-        pullUp = ExerciseCatalog.findById('pull_up')!;
+        pullUp = ExerciseCatalog.findById('pullups_pull_up')!;
         masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
           pullUp,
         ).volume;

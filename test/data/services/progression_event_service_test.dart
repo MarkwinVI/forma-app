@@ -156,7 +156,7 @@ void main() {
 
     test('events in a blocked track are preserved, others reverse', () {
       final blockedIncrease = event(
-        exerciseId: 'pull_up',
+        exerciseId: 'pullups_pull_up',
         kind: ProgressionEventKind.targetIncrease,
         trackId: 'vertical_pull',
         valueFrom: 6,
@@ -183,7 +183,7 @@ void main() {
         () {
       final actions = ExerciseProgressionService.rollbackActionsFor([
         event(
-          exerciseId: 'push_up',
+          exerciseId: 'pushups_push_up',
           kind: ProgressionEventKind.targetIncrease,
           valueFrom: 6,
           valueTo: 7,
@@ -192,7 +192,7 @@ void main() {
         event(exerciseId: 'chin_up', kind: ProgressionEventKind.mastered),
         event(exerciseId: 'muscle_up', kind: ProgressionEventKind.activated),
         event(exerciseId: 'row', kind: ProgressionEventKind.personalBest),
-        event(exerciseId: 'pull_up', kind: ProgressionEventKind.branchChoice),
+        event(exerciseId: 'pullups_pull_up', kind: ProgressionEventKind.branchChoice),
         // A legacy increase without a before-value can't be restored.
         event(
           exerciseId: 'dip',
@@ -204,7 +204,7 @@ void main() {
       expect(actions, hasLength(3));
 
       final target = actions[0];
-      expect(target.exerciseId, 'push_up');
+      expect(target.exerciseId, 'pushups_push_up');
       expect(target.targetSets, 3);
       expect(target.targetValue, 6);
       expect(target.status, isNull);
@@ -224,12 +224,12 @@ void main() {
       final events = ProgressionEventService.computePersonalBests(
         candidates: const [
           PersonalBestCandidate(
-            exerciseId: 'pull_up',
+            exerciseId: 'pullups_pull_up',
             trackId: 'vertical_pull',
             bestSetValue: 9,
           ),
         ],
-        previousBests: const {'pull_up': 8},
+        previousBests: const {'pullups_pull_up': 8},
       );
 
       expect(events, hasLength(1));
@@ -241,7 +241,7 @@ void main() {
     test('no history means no personal best on a first-ever log', () {
       final events = ProgressionEventService.computePersonalBests(
         candidates: const [
-          PersonalBestCandidate(exerciseId: 'pull_up', bestSetValue: 9),
+          PersonalBestCandidate(exerciseId: 'pullups_pull_up', bestSetValue: 9),
         ],
         previousBests: const {},
       );
@@ -252,9 +252,9 @@ void main() {
     test('matching the previous best is not a personal best', () {
       final events = ProgressionEventService.computePersonalBests(
         candidates: const [
-          PersonalBestCandidate(exerciseId: 'pull_up', bestSetValue: 8),
+          PersonalBestCandidate(exerciseId: 'pullups_pull_up', bestSetValue: 8),
         ],
-        previousBests: const {'pull_up': 8},
+        previousBests: const {'pullups_pull_up': 8},
       );
 
       expect(events, isEmpty);

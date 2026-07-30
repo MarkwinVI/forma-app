@@ -99,75 +99,44 @@ extension ExerciseProgramSectionX on ExerciseProgramSection {
   }
 }
 
-/// The muscle groups an exercise can name, in the order a filter lists them:
-/// down the front and back of the upper body, then the core, then the legs,
-/// then the two that are not muscles at all.
+/// The muscle groups an exercise can name, exactly as the exercise sheet
+/// spells them. The app does not rename or merge them: what the sheet says is
+/// what the filter offers, so a term that reads wrong is fixed in the sheet
+/// rather than translated somewhere you cannot see.
 ///
-/// Finer than the six groups the program's weekly volume is read in — those
-/// are still six, in [kProgramMuscleGroups] — because picking an exercise is
-/// a different question from balancing a week. Here you want the biceps, not
-/// "arms".
+/// The one liberty taken is case: the sheet writes some muscles in title case
+/// in the primary column and lower case in the secondary one, and the same
+/// muscle spelled twice would be two filters.
 const List<String> kExerciseMuscleGroups = [
-  'Chest',
-  'Lats',
-  'Upper back',
-  'Lower back',
-  'Traps',
-  'Neck',
-  'Shoulders',
   'Biceps',
-  'Triceps',
-  'Forearms',
-  'Core',
   'Glutes',
-  'Quadriceps',
+  'Forearms',
   'Hamstrings',
+  'Triceps',
+  'front deltoids',
   'Calves',
-  'Adductors',
-  'Abductors',
-  'Cardio',
+  'Shoulders',
+  'Quadriceps',
+  'Chest',
+  'Upper back',
+  'Abdominals',
+  'Lower back',
+  'obliques',
+  'Lats',
+  'rear deltoids',
+  'Full body',
+  'Hip flexors',
+  'Traps',
+  'adductors',
+  'Cardiovascular system',
+  'rotator cuff',
+  'upper chest',
+  'Middle Back',
+  'Hip abductors',
+  'Neck',
+  'Hip adductors',
   'Other',
 ];
-
-/// Name fragments that mean "this is a hold" — the exercise is measured in
-/// seconds rather than counted in reps.
-const _holdWords = [
-  'hang',
-  'hold',
-  'lean',
-  'plank',
-  'l-sit',
-  'v-sit',
-  'lever',
-  'handstand',
-  'headstand',
-];
-
-/// Name fragments that mean "this is counted", and so outrank [_holdWords]:
-/// a front lever *row* is reps even though it is held throughout.
-const _repWords = [
-  'pull-up',
-  'pull up',
-  'pullup',
-  'push-up',
-  'push up',
-  'pushup',
-  'row',
-  'dip',
-  'raise',
-  'curl',
-  'squat',
-  'deadlift',
-  'crunch',
-  'sit-up',
-  'rollout',
-  'extension',
-  'press',
-];
-
-/// Name fragments that mark a unilateral bodyweight step, which is never one
-/// of the open-ended loaded lifts.
-const _singleSideWords = ['one-leg', 'one leg', 'single leg', 'single-leg'];
 
 class Exercise {
   final String id;
@@ -187,42 +156,29 @@ class Exercise {
   /// but it is in no progression: nothing unlocks it and it unlocks nothing.
   final bool isLibrary;
 
-  /// Muscle groups this movement trains, for the picker's filters. Empty for
-  /// tree steps, which report the muscles of their movement pattern instead.
+  /// Muscle groups this movement trains, in the sheet's own words. Primary
+  /// first, then secondary.
   final List<String> muscles;
 
-  /// True for isometric/hold exercises measured in seconds (L-sits, planks,
-  /// hangs, planche leans); false for rep-based movements.
-  ///
-  /// Read from the name rather than stored: the exercise sheet the catalog is
-  /// built from has no such column, and the name already says it. A name that
-  /// carries a hold word is timed unless it also names a rep — "L-Sit" holds,
-  /// "L-Sit Pull-Up" counts.
-  bool get isTimed {
-    final lower = name.toLowerCase();
-    if (_repWords.any(lower.contains)) return false;
-    return _holdWords.any(lower.contains);
-  }
+  /// True for a hold, measured in seconds rather than counted in reps. Read
+  /// from the sheet's exercise-type column, not guessed from the name.
+  final bool isTimed;
 
-  /// True for exercises trained by adding weight rather than by climbing a
-  /// progression (barbell squat, Romanian deadlift). They have no harder
-  /// variation to unlock, so they are never mastered: the program suggests
-  /// the next step — more reps, then more load — and the user approves it.
-  ///
-  /// Read from the name, like [isTimed]. The bodyweight ladders add weight in
-  /// named steps ("1.5x Bodyweight") and stay progressions; only the barbell
-  /// lifts are open-ended. Single-leg hinges are bodyweight steps of the
-  /// squat tree, so they are excluded however they end up being named.
-  ///
-  /// Every library movement is loaded too, for the same reason the barbell
-  /// lifts are: there is no harder variation waiting, so the only way it can
-  /// go forward is to ask for more.
-  bool get isLoaded {
-    if (isLibrary) return true;
-    final lower = name.toLowerCase();
-    if (_singleSideWords.any(lower.contains)) return false;
-    return lower.contains('barbell') || lower.contains('deadlift');
-  }
+  /// True for a movement with no harder variation waiting: it is never
+  /// mastered, and the only way forward is to ask for more reps and then more
+  /// load, which the user approves. The barbell lifts, and every library
+  /// movement, since the library is outside the progressions.
+  final bool isLoaded;
+
+  /// The library movement this step is performed with. Several steps share
+  /// one: the seven weighted pull-up rungs are all a weighted pull-up, and
+  /// they read their how-to, form checks and demo from it.
+  final String libraryId;
+
+  /// How much to load the bar for this step, where the step is a rung of a
+  /// weighted ladder. Written as the sheet writes it, in terms of
+  /// `user_bodyweight`.
+  final String? weightFormula;
 
   const Exercise({
     required this.id,
@@ -238,5 +194,9 @@ class Exercise {
     this.imageUrl,
     this.isLibrary = false,
     this.muscles = const [],
+    this.isTimed = false,
+    this.isLoaded = false,
+    this.libraryId = '',
+    this.weightFormula,
   });
 }

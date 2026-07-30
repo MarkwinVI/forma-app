@@ -295,22 +295,32 @@ class ProgramSessionPlan {
 
   static const Map<String, String> _coarseByDetailed = {
     'Chest': 'Chest',
+    'upper chest': 'Chest',
     'Lats': 'Back',
     'Upper back': 'Back',
+    'Middle Back': 'Back',
     'Lower back': 'Back',
     'Traps': 'Back',
-    'Neck': 'Shoulders',
     'Shoulders': 'Shoulders',
+    'front deltoids': 'Shoulders',
+    'rear deltoids': 'Shoulders',
+    'rotator cuff': 'Shoulders',
+    'Neck': 'Shoulders',
     'Biceps': 'Arms',
     'Triceps': 'Arms',
     'Forearms': 'Arms',
-    'Core': 'Core',
+    'Abdominals': 'Core',
+    'obliques': 'Core',
+    'Hip flexors': 'Core',
     'Glutes': 'Legs / glutes',
     'Quadriceps': 'Legs / glutes',
     'Hamstrings': 'Legs / glutes',
     'Calves': 'Legs / glutes',
-    'Adductors': 'Legs / glutes',
-    'Abductors': 'Legs / glutes',
+    'adductors': 'Legs / glutes',
+    'Hip adductors': 'Legs / glutes',
+    'Hip abductors': 'Legs / glutes',
+    // 'Full body', 'Cardiovascular system' and 'Other' fold to nothing: they
+    // are not volume for any one group.
   };
 
   static const Map<ExerciseCategory, List<String>> _musclesForCategory = {

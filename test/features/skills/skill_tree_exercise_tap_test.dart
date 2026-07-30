@@ -59,7 +59,7 @@ void main() {
     await tester.tap(find.text(firstStep.name).first);
     await tester.pumpAndSettle();
 
-    final coaching = ExerciseCoachingCatalog.findById(firstStep.id)!;
+    final coaching = ExerciseCoachingCatalog.forExercise(firstStep)!;
     expect(find.text(coaching.howTo.first), findsOneWidget);
 
     // The form checks sit below the fold of a lazily built list.

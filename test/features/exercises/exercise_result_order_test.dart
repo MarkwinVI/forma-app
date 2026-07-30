@@ -20,7 +20,7 @@ void main() {
     test('runs the whole library before the first tree step', () {
       final list = ordered();
       final firstTreeStep = list.indexWhere((exercise) => !exercise.isLibrary);
-      expect(firstTreeStep, ExerciseCatalog.everything().length - 136);
+      expect(firstTreeStep, ExerciseCatalog.everything().length - 137);
     });
 
     test('is alphabetical inside each half', () {

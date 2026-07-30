@@ -20,8 +20,8 @@ void main() {
       (tester) async {
     // A Tuesday, a week back — not today, so the line can name the day.
     final events = [
-      raise('pull_up', on: DateTime(2026, 7, 21, 18)),
-      raise('scapular_pull', on: DateTime(2026, 7, 21, 18)),
+      raise('pullups_pull_up', on: DateTime(2026, 7, 21, 18)),
+      raise('pullups_scapular_pull', on: DateTime(2026, 7, 21, 18)),
     ];
 
     await tester.pumpWidget(
@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('the sheet gives the reason and what earned each raise',
       (tester) async {
-    final events = [raise('pull_up', on: DateTime(2026, 7, 21, 18))];
+    final events = [raise('pullups_pull_up', on: DateTime(2026, 7, 21, 18))];
 
     await tester.pumpWidget(
       MaterialApp(
@@ -70,12 +70,12 @@ void main() {
 
   testWidgets('an unlock is counted in its own words', (tester) async {
     final events = [
-      raise('pull_up', on: DateTime(2026, 7, 21, 18)),
+      raise('pullups_pull_up', on: DateTime(2026, 7, 21, 18)),
       ProgressionEvent(
         id: 'e-unlock',
-        exerciseId: 'close_grip_pull_up',
+        exerciseId: 'pullups_close_grip_pull_up',
         kind: ProgressionEventKind.activated,
-        relatedExerciseId: 'pull_up',
+        relatedExerciseId: 'pullups_pull_up',
         valueTo: 5,
         targetSets: 3,
         createdAt: DateTime(2026, 7, 21, 18),
@@ -97,7 +97,7 @@ void main() {
   });
 
   testWidgets('the finish receipt lists what moved', (tester) async {
-    final events = [raise('pull_up', on: DateTime(2026, 7, 21, 18))];
+    final events = [raise('pullups_pull_up', on: DateTime(2026, 7, 21, 18))];
 
     await tester.pumpWidget(
       MaterialApp(

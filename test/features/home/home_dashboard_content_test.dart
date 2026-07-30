@@ -409,7 +409,7 @@ void main() {
       progressPercent: 1,
       stages: [
         JourneySkillStageData(
-          exerciseId: 'scapular_pull',
+          exerciseId: 'pullups_scapular_pull',
           exerciseName: 'Scapular Pulls',
           status: JourneySkillStageStatus.inProgress,
           targetVolume: 24,
@@ -760,7 +760,7 @@ JourneySnapshotData _journeySnapshot() {
         progressPercent: 0.75,
         stages: [
           JourneySkillStageData(
-            exerciseId: 'scapular_pull',
+            exerciseId: 'pullups_scapular_pull',
             exerciseName: 'Scapular Pulls',
             status: JourneySkillStageStatus.inProgress,
             targetVolume: 24,
@@ -778,7 +778,7 @@ JourneySnapshotData _journeySnapshot() {
             unlockRequirementName: null,
           ),
           const JourneySkillStageData(
-            exerciseId: 'arch_hang',
+            exerciseId: 'pullups_arch_hang',
             exerciseName: 'Arch Hangs',
             status: JourneySkillStageStatus.locked,
             targetVolume: 36,
@@ -883,7 +883,7 @@ ActiveSkillPathData _activeSkillPath() {
 }
 
 DailyTrainingRecommendation _recommendation() {
-  final exercise = ExerciseCatalog.findById('scapular_pull')!;
+  final exercise = ExerciseCatalog.findById('pullups_scapular_pull')!;
   return DailyTrainingRecommendation(
     programType: TrainingProgramType.pushPull,
     sessionType: TrainingSessionType.pull,

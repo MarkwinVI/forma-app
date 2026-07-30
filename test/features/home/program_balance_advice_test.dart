@@ -215,7 +215,7 @@ void main() {
       final week = [
         _day(0, TrainingSessionType.fullBody, [
           _progression('dips', 'Bench Dips'),
-          _standalone('Barbell overhead press', 'parallel_bar_dips'),
+          _standalone('Barbell overhead press', 'dips_parallel_bar_dips'),
         ]),
         for (final weekday in [2, 4, 6])
           _day(weekday, TrainingSessionType.fullBody,
@@ -340,8 +340,8 @@ void main() {
       final week = [
         _day(0, TrainingSessionType.fullBody, [
           _progression('dips', 'Bench Dips'),
-          _standalone('Barbell overhead press', 'parallel_bar_dips'),
-          _standalone('Dumbbell shoulder press', 'pike_push_up'),
+          _standalone('Barbell overhead press', 'dips_parallel_bar_dips'),
+          _standalone('Dumbbell shoulder press', 'handstand_pushups_pike_push_up'),
         ]),
         _day(2, TrainingSessionType.fullBody, const []),
       ];
@@ -405,7 +405,7 @@ void main() {
         for (final weekday in [0, 2, 4])
           _day(weekday, TrainingSessionType.fullBody, [
             _progression(SkillCategoryCatalog.squatId, 'Box Pistol Squat'),
-            _standalone('Single Leg RDL', 'single_leg_rdl'),
+            _standalone('Single Leg RDL', 'hinge_single_leg_rdl'),
           ]),
       ];
       final categories = balanceFromWeek(

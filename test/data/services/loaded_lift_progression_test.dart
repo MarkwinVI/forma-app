@@ -6,8 +6,8 @@ import 'package:forma_app/data/models/progression_suggestion_model.dart';
 import 'package:forma_app/data/services/exercise_progression_service.dart';
 
 void main() {
-  final barbellSquat = ExerciseCatalog.findById('barbell_squat')!;
-  final pushUp = ExerciseCatalog.findById('push_up')!;
+  final barbellSquat = ExerciseCatalog.findById('barbell_squat_barbell_squat')!;
+  final pushUp = ExerciseCatalog.findById('pushups_push_up')!;
 
   ExerciseProgress progressAt({
     required int value,
@@ -16,7 +16,7 @@ void main() {
     ExerciseStatus status = ExerciseStatus.active,
   }) {
     return ExerciseProgress(
-      exerciseId: 'barbell_squat',
+      exerciseId: 'barbell_squat_barbell_squat',
       status: status,
       updatedAt: DateTime(2026, 7, 29),
       currentTargetSets: sets,
@@ -116,7 +116,7 @@ void main() {
       final outcome = outcomeFor(exercise: pushUp, volume: 24);
 
       expect(outcome.suggestions, isEmpty);
-      expect(outcome.statusChanges['push_up'], ExerciseStatus.mastered);
+      expect(outcome.statusChanges['pushups_push_up'], ExerciseStatus.mastered);
     });
   });
 

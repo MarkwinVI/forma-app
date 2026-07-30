@@ -168,7 +168,7 @@ void main() {
             'strength': [
               {
                 'kind': 'exercise',
-                'exercise_id': 'push_up',
+                'exercise_id': 'pushups_push_up',
               },
               {
                 'kind': 'exercise',
