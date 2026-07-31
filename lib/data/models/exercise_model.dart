@@ -156,9 +156,18 @@ class Exercise {
   /// but it is in no progression: nothing unlocks it and it unlocks nothing.
   final bool isLibrary;
 
-  /// Muscle groups this movement trains, in the sheet's own words. Primary
-  /// first, then secondary.
-  final List<String> muscles;
+  /// Muscle groups this movement is for, in the sheet's own words — what it
+  /// is chosen to train.
+  final List<String> primaryMuscles;
+
+  /// Muscle groups it also works along the way. Never repeats a primary one:
+  /// a muscle named in both columns of the sheet is a primary muscle.
+  final List<String> secondaryMuscles;
+
+  /// Everything the movement touches, primary first. What a filter matches on
+  /// and what balance advice is weighed against — both want the whole picture,
+  /// where a list row wants only [primaryMuscles].
+  List<String> get muscles => [...primaryMuscles, ...secondaryMuscles];
 
   /// True for a hold, measured in seconds rather than counted in reps. Read
   /// from the sheet's exercise-type column, not guessed from the name.
@@ -200,7 +209,8 @@ class Exercise {
     this.programSection = ExerciseProgramSection.mainExercises,
     this.imageUrl,
     this.isLibrary = false,
-    this.muscles = const [],
+    this.primaryMuscles = const [],
+    this.secondaryMuscles = const [],
     this.isTimed = false,
     this.isWeighted = false,
     this.isLoaded = false,

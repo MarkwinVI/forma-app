@@ -173,6 +173,33 @@ void main() {
     });
   });
 
+  group('what a movement works', () {
+    test('the two muscle columns stay apart', () {
+      final bench = ExerciseCatalog.findById('bench_press_barbell')!;
+      expect(bench.primaryMuscles, ['Chest']);
+      expect(bench.secondaryMuscles, contains('Triceps'));
+    });
+
+    test('a muscle is never both primary and secondary', () {
+      for (final exercise in ExerciseCatalog.everything()) {
+        for (final muscle in exercise.secondaryMuscles) {
+          expect(exercise.primaryMuscles, isNot(contains(muscle)),
+              reason: '${exercise.id} lists $muscle twice');
+        }
+      }
+    });
+
+    test('muscles reads as primary first, then secondary', () {
+      for (final exercise in ExerciseCatalog.everything()) {
+        expect(
+          exercise.muscles,
+          [...exercise.primaryMuscles, ...exercise.secondaryMuscles],
+          reason: exercise.id,
+        );
+      }
+    });
+  });
+
   group('what a movement is measured in', () {
     test('a barbell lift carries weight and a bodyweight movement does not',
         () {

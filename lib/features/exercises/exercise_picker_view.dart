@@ -606,8 +606,9 @@ class _ExerciseResultRow extends StatelessWidget {
   Widget build(BuildContext context) {
     // The exercise's own groups, not its pattern's — the pattern reads
     // "Other" for half the library, and a hammer curl trains biceps whatever
-    // it is filed under.
-    final muscles = ProgramSessionPlan.musclesForExercise(exercise);
+    // it is filed under. Only what it is chosen for: a row listing everything
+    // a movement touches is a row nobody reads to the end.
+    final muscles = ProgramSessionPlan.primaryMusclesForExercise(exercise);
     final subtitle = [
       programPatternLabel(exercise.category),
       if (muscles.isNotEmpty) muscles.join(', '),

@@ -37,7 +37,8 @@ class ExerciseIdMigration {
     'one_arm_chin_up': 'pullups_one_arm_chin_up',
     'pike_push_up': 'handstand_pushups_pike_push_up',
     'box_push_up': 'handstand_pushups_box_push_up',
-    'wall_headstand_push_up_eccentrics': 'handstand_pushups_wall_headstand_push_up_eccentrics',
+    'wall_headstand_push_up_eccentrics':
+        'handstand_pushups_wall_headstand_push_up_eccentrics',
     'wall_headstand_push_up': 'handstand_pushups_wall_headstand_push_up',
     'wall_handstand_push_up': 'handstand_pushups_wall_handstand_push_up',
     'free_headstand_push_up': 'handstand_pushups_free_headstand_push_up',
@@ -64,7 +65,8 @@ class ExerciseIdMigration {
     'tuck_front_lever_rows_hold': 'rows_tuck_front_lever_rows_hold',
     'tuck_front_lever_rows': 'rows_tuck_front_lever_rows',
     'advanced_tuck_front_lever_rows': 'rows_advanced_tuck_front_lever_rows',
-    'one_leg_tuck_one_extended_front_lever_rows': 'rows_one_leg_tuck_one_extended_front_lever_rows',
+    'one_leg_tuck_one_extended_front_lever_rows':
+        'rows_one_leg_tuck_one_extended_front_lever_rows',
     'straddle_front_lever_rows': 'rows_straddle_front_lever_rows',
     'front_lever_rows': 'rows_front_lever_rows',
     'weighted_rows_bodyweight_3x10': 'rows_weighted_rows_bodyweight_3x10',
@@ -88,11 +90,16 @@ class ExerciseIdMigration {
     'ring_push_up': 'pushups_ring_push_up',
     'rto_push_up': 'pushups_rto_push_up',
     'rto_archer_push_up': 'pushups_rto_archer_push_up',
-    'rto_pseudo_planche_push_up_lower_chest': 'pushups_rto_pseudo_planche_push_up_lower_chest',
-    'rto_pseudo_planche_push_up_belly_button': 'pushups_rto_pseudo_planche_push_up_belly_button',
-    'rto_pseudo_planche_push_up_hips': 'pushups_rto_pseudo_planche_push_up_hips',
-    'pseudo_planche_push_up_lower_chest': 'pushups_pseudo_planche_push_up_lower_chest',
-    'pseudo_planche_push_up_belly_button': 'pushups_pseudo_planche_push_up_belly_button',
+    'rto_pseudo_planche_push_up_lower_chest':
+        'pushups_rto_pseudo_planche_push_up_lower_chest',
+    'rto_pseudo_planche_push_up_belly_button':
+        'pushups_rto_pseudo_planche_push_up_belly_button',
+    'rto_pseudo_planche_push_up_hips':
+        'pushups_rto_pseudo_planche_push_up_hips',
+    'pseudo_planche_push_up_lower_chest':
+        'pushups_pseudo_planche_push_up_lower_chest',
+    'pseudo_planche_push_up_belly_button':
+        'pushups_pseudo_planche_push_up_belly_button',
     'pseudo_planche_push_up_hips': 'pushups_pseudo_planche_push_up_hips',
     'tuck_planche_push_up': 'pushups_tuck_planche_push_up',
     'advanced_tuck_planche_push_up': 'pushups_advanced_tuck_planche_push_up',
@@ -118,7 +125,8 @@ class ExerciseIdMigration {
     'romanian_deadlift': 'hinge_romanian_deadlift',
     'box_pistol_squat_knee_height': 'squat_box_pistol_squat_knee_height',
     'nordic_curl': 'hinge_nordic_nordic_curl',
-    'box_pistol_squat_mid_calf_height': 'squat_box_pistol_squat_mid_calf_height',
+    'box_pistol_squat_mid_calf_height':
+        'squat_box_pistol_squat_mid_calf_height',
     'beginner_shrimp_squat': 'squat_beginner_shrimp_squat',
     'assisted_pistol_squat': 'squat_assisted_pistol_squat',
     'intermediate_shrimp_squat': 'squat_intermediate_shrimp_squat',

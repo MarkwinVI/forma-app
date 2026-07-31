@@ -139,7 +139,7 @@ String _steps(
       buffer.writeln('      programSection: ExerciseProgramSection.$section,');
     }
     buffer
-      ..writeln('      muscles: ${_muscleList(movement)},')
+      ..write(_muscleLists(movement))
       ..writeln("      libraryId: '$movementId',");
     if (type.startsWith('timed')) buffer.writeln('      isTimed: true,');
     if (_openEndedNodes.contains(id)) buffer.writeln('      isLoaded: true,');
@@ -170,7 +170,7 @@ String _movements(Iterable<Map<String, String>> rows) {
     if (section != null) {
       buffer.writeln('      programSection: ExerciseProgramSection.$section,');
     }
-    buffer.writeln('      muscles: ${_muscleList(row)},');
+    buffer.write(_muscleLists(row));
     if (type.startsWith('timed')) buffer.writeln('      isTimed: true,');
     buffer.writeln('      isLoaded: true,');
     if (type.contains('weight')) buffer.writeln('      isWeighted: true,');
@@ -249,28 +249,45 @@ List<String> _formChecks(String text) => text
     .map((check) => check[0].toUpperCase() + check.substring(1))
     .toList();
 
-/// Primary muscles then secondary, spelled the one way
-/// [kExerciseMuscleGroups] spells them — the sheet writes some in title case
-/// in one column and lower case in the other, and the same muscle spelled
-/// twice would be two filters.
-String _muscleList(Map<String, String> row) {
+/// The two muscle columns, each spelled the one way [kExerciseMuscleGroups]
+/// spells them — the sheet writes some in title case in one column and lower
+/// case in the other, and the same muscle spelled twice would be two filters.
+///
+/// A muscle named in both columns is primary and is dropped from secondary:
+/// the sheet says of a hyperextension that it works the lower back and also
+/// the lower back, which is one fact.
+String _muscleLists(Map<String, String> row) {
+  final primary = _muscles(row['Muscles worked (primary)']!);
+  final secondary = _muscles(row['Muscles worked (secondary)']!)
+      .where((muscle) => !primary.contains(muscle))
+      .toList();
+
+  final buffer = StringBuffer();
+  if (primary.isNotEmpty) {
+    buffer.writeln('      primaryMuscles: ${_dartList(primary)},');
+  }
+  if (secondary.isNotEmpty) {
+    buffer.writeln('      secondaryMuscles: ${_dartList(secondary)},');
+  }
+  return buffer.toString();
+}
+
+List<String> _muscles(String column) {
   final canonical = {
     for (final group in kExerciseMuscleGroups) group.toLowerCase(): group,
   };
   final muscles = <String>[];
-  for (final column in [
-    'Muscles worked (primary)',
-    'Muscles worked (secondary)',
-  ]) {
-    for (final raw in row[column]!.split(';')) {
-      final muscle = raw.trim();
-      if (muscle.isEmpty) continue;
-      final spelling = canonical[muscle.toLowerCase()] ?? muscle;
-      if (!muscles.contains(spelling)) muscles.add(spelling);
-    }
+  for (final raw in column.split(';')) {
+    final muscle = raw.trim();
+    if (muscle.isEmpty) continue;
+    final spelling = canonical[muscle.toLowerCase()] ?? muscle;
+    if (!muscles.contains(spelling)) muscles.add(spelling);
   }
-  return '[${muscles.map(dartString).join(', ')}]';
+  return muscles;
 }
+
+String _dartList(List<String> values) =>
+    '[${values.map(dartString).join(', ')}]';
 
 /// How many steps deep a node sits — the row it is drawn on, and the order a
 /// path is walked in.

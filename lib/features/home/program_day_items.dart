@@ -279,6 +279,14 @@ class ProgramSessionPlan {
           ? exercise.muscles
           : musclesForCategory(exercise.category);
 
+  /// What the exercise is chosen for, as a result row says it. A row has one
+  /// line to spend, and the muscles a movement merely touches along the way
+  /// are the ones worth losing.
+  static List<String> primaryMusclesForExercise(Exercise exercise) =>
+      exercise.primaryMuscles.isNotEmpty
+          ? exercise.primaryMuscles
+          : musclesForCategory(exercise.category);
+
   /// The same work read in the six groups the weekly volume chart is built
   /// on. Balancing a week is a coarser question than picking an exercise, so
   /// the detailed groups fold up rather than crowding that chart with
