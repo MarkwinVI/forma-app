@@ -336,4 +336,49 @@ void main() {
       expect(outcome.statusChanges, isEmpty);
     });
   });
+
+  group('the rows applyPlan writes', () {
+    test('status and target arrive joined, as one position per exercise', () {
+      final plan = ProgramStartPlanner.planFor(
+        hasGym: true,
+        goalSkillIds: const [],
+        // Ten push-ups: starts on the push-up itself, skipping the steps
+        // behind it — so the plan carries both targets and skipped statuses.
+        startingStrength: const {'squat': 100, 'pushups': 10},
+      );
+
+      final positions = ProgramStartService.startingPositionsFor(
+        plan,
+        existing: const {},
+      );
+
+      final squat = positions['barbell_squat_barbell_squat']!;
+      expect(squat.status, ExerciseStatus.active);
+      expect(squat.targetSets, ProgramStartPlanner.loadedLiftSets);
+      expect(squat.targetValue, ProgramStartPlanner.loadedLiftStartReps);
+      expect(squat.targetWeightKg, 70);
+
+      // A step with no special opening target still carries its status —
+      // null target means the standard ladder target.
+      final skipped = positions.entries
+          .firstWhere((entry) => entry.value.status == ExerciseStatus.skipped);
+      expect(skipped.value.targetSets, isNull);
+    });
+
+    test('an exercise the user already has a row for is left alone', () {
+      final plan = ProgramStartPlanner.planFor(
+        hasGym: true,
+        goalSkillIds: const [],
+        startingStrength: const {'squat': 100},
+      );
+
+      final positions = ProgramStartService.startingPositionsFor(
+        plan,
+        existing: {'barbell_squat_barbell_squat'},
+      );
+
+      expect(positions.containsKey('barbell_squat_barbell_squat'), isFalse);
+      expect(positions, isNotEmpty, reason: 'the rest is still written');
+    });
+  });
 }

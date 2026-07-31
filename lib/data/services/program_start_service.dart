@@ -346,25 +346,53 @@ class ProgramStartService {
       );
     }
 
+    // Exercises the user already has a row for are left alone: setup places
+    // a starting position, it does not stomp progress that exists.
     final existing = {
       for (final progress in await _progressService.fetchAll(userId))
         progress.exerciseId,
     };
 
+    await _progressService.upsertStartingPositions(
+      userId,
+      startingPositionsFor(plan, existing: existing),
+    );
+  }
+
+  /// The rows [applyPlan] writes: each new exercise's status joined with its
+  /// target, everything the user already has a row for left out.
+  ///
+  /// Status and target go together in a single write on purpose. Written as
+  /// two passes, a failure between them stranded half a starting position —
+  /// and the retry, seeing rows exist, skipped the rest of it for good.
+  static Map<String, StartingPosition> startingPositionsFor(
+    ProgramStartPlan plan, {
+    required Set<String> existing,
+  }) {
+    final positions = <String, StartingPosition>{};
     for (final entry in plan.statuses.entries) {
       if (existing.contains(entry.key)) continue;
-      await _progressService.upsert(userId, entry.key, entry.value);
+      final target = plan.targets[entry.key];
+      positions[entry.key] = (
+        status: entry.value,
+        targetSets: target?.sets,
+        targetValue: target?.value,
+        targetWeightKg: target?.weightKg,
+      );
     }
-
     for (final entry in plan.targets.entries) {
-      if (existing.contains(entry.key)) continue;
-      await _progressService.upsertTarget(
-        userId,
-        entry.key,
+      if (existing.contains(entry.key) || positions.containsKey(entry.key)) {
+        continue;
+      }
+      // A target with no planned status starts inactive, as a fresh row
+      // would have defaulted to anyway.
+      positions[entry.key] = (
+        status: ExerciseStatus.inactive,
         targetSets: entry.value.sets,
         targetValue: entry.value.value,
         targetWeightKg: entry.value.weightKg,
       );
     }
+    return positions;
   }
 }

@@ -2,6 +2,15 @@ import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
 import 'supabase_service.dart';
 
+/// One exercise's opening position, as program setup writes it: a status,
+/// and the target it opens on where the standard ladder target is not it.
+typedef StartingPosition = ({
+  ExerciseStatus status,
+  int? targetSets,
+  int? targetValue,
+  double? targetWeightKg,
+});
+
 class ProgressService {
   final _client = SupabaseService.client;
 
@@ -32,6 +41,39 @@ class ProgressService {
         'status': status.name,
         'updated_at': DateTime.now().toIso8601String(),
       },
+      onConflict: 'user_id,exercise_id',
+    );
+  }
+
+  /// Writes several exercises' starting positions — status and target
+  /// together, in one statement.
+  ///
+  /// One statement on purpose: a program's starting position is written as a
+  /// whole or not at all. When it was written row by row, a failure partway
+  /// left the written rows behind, and the retry — which skips exercises that
+  /// already have a row — silently dropped everything after the failure.
+  Future<void> upsertStartingPositions(
+    String userId,
+    Map<String, StartingPosition> positions,
+  ) async {
+    if (positions.isEmpty) return;
+
+    final now = DateTime.now().toIso8601String();
+    await _client.from('user_exercise_progress').upsert(
+      [
+        // Every row carries every column — a bulk write must be uniform, and
+        // these are fresh rows, so a null target is simply "not set yet".
+        for (final entry in positions.entries)
+          {
+            'user_id': userId,
+            'exercise_id': entry.key,
+            'status': entry.value.status.name,
+            'current_target_sets': entry.value.targetSets,
+            'current_target_value': entry.value.targetValue,
+            'current_target_weight_kg': entry.value.targetWeightKg,
+            'updated_at': now,
+          },
+      ],
       onConflict: 'user_id,exercise_id',
     );
   }
