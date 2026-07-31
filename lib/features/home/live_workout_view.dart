@@ -35,6 +35,13 @@ const _workoutSidePadding = 22.0;
 /// Shown in the LAST column when the exercise has never been logged.
 const _noPreviousLabel = '–';
 
+/// The rest bar's own height, above the safe area: its progress track, its
+/// padding and the controls. The list keeps this much clear at its foot so
+/// the last set is never parked underneath it.
+const _restBarProgressHeight = 3.0;
+const _restBarControlHeight = 40.0;
+const _restBarHeight = _restBarProgressHeight + 20 + _restBarControlHeight;
+
 /// Set fields take a number off the keypad and nothing else. Left to itself
 /// iOS offers Paste and Scan Text on a tap, and pointing a camera at a rep
 /// count is not a thing anybody is doing mid-set.
@@ -281,6 +288,40 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   bool get _hasActiveRestTimer =>
       _activeRestTimer != null && _activeRestRemainingSeconds() > 0;
+
+  /// How much of the rest is left, 0–1, for the bar's own progress track.
+  double _restProgress() {
+    final timer = _activeRestTimer;
+    if (timer == null || timer.totalSeconds <= 0) return 0;
+    final fraction = _activeRestRemainingSeconds() / timer.totalSeconds;
+    return fraction.clamp(0.0, 1.0);
+  }
+
+  /// Adds or takes back [deltaSeconds] of rest. Taking back more than is left
+  /// ends the rest rather than running it negative — the point of −15 with
+  /// ten seconds on the clock is to get on with the set.
+  void _adjustRestTimer(int deltaSeconds) {
+    final timer = _activeRestTimer;
+    if (timer == null) return;
+
+    final remaining = _activeRestRemainingSeconds() + deltaSeconds;
+    if (remaining <= 0) {
+      _clearActiveRestTimer();
+      return;
+    }
+
+    // The total has to cover what is left, or the track would read past full.
+    final total = timer.totalSeconds + deltaSeconds;
+    setState(() {
+      _activeRestTimer = timer.copyWith(
+        endsAt: DateTime.now().add(Duration(seconds: remaining)),
+        totalSeconds: total < remaining ? remaining : total,
+      );
+      if (_pausedRestRemaining != null) {
+        _pausedRestRemaining = Duration(seconds: remaining);
+      }
+    });
+  }
 
   int get _totalSetCount => _sessionItems.fold(
         0,
@@ -1129,7 +1170,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                         _workoutSidePadding,
                         0,
                         _workoutSidePadding,
-                        _hasActiveRestTimer ? 110 + bottomSafePadding : 40,
+                        _hasActiveRestTimer
+                            ? _restBarHeight + 24 + bottomSafePadding
+                            : 40,
                       ),
                       children: [
                         if (visibleSections.isEmpty)
@@ -1200,12 +1243,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 24 + bottomSafePadding,
-                  child: Center(
-                    child: _RestCountdownPill(
-                      label: _formatCountdownLabel(restRemaining),
-                      onSkip: _clearActiveRestTimer,
-                    ),
+                  bottom: 0,
+                  child: _RestTimerBar(
+                    label: _formatCountdownLabel(restRemaining),
+                    progress: _restProgress(),
+                    onAdjust: _adjustRestTimer,
+                    onSkip: _clearActiveRestTimer,
                   ),
                 ),
               Positioned(
@@ -1231,7 +1274,11 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
               if (_repFocusCount > 0)
                 Positioned(
                   right: 16,
-                  bottom: 12,
+                  // Clears the rest bar when one is up, rather than sitting
+                  // on top of the skip button.
+                  bottom: _hasActiveRestTimer
+                      ? _restBarHeight + 12 + bottomSafePadding
+                      : 12,
                   child: _HideKeyboardButton(
                     onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                   ),
@@ -2758,69 +2805,138 @@ class _ConfirmSheet extends StatelessWidget {
 
 // ── Rest countdown & toast ────────────────────────────────────────────
 
-class _RestCountdownPill extends StatelessWidget {
+/// Rest, across the foot of the workout. It sits over the list rather than
+/// floating above it because rest is the state the screen is in, not a
+/// notice about it — and while it is up, the two things you might want are
+/// more rest or less, so they are a thumb's reach from the clock.
+class _RestTimerBar extends StatelessWidget {
   final String label;
+
+  /// Rest still to run, 0–1. Drains left to right along the top edge.
+  final double progress;
+  final ValueChanged<int> onAdjust;
   final VoidCallback onSkip;
 
-  const _RestCountdownPill({
+  const _RestTimerBar({
     required this.label,
+    required this.progress,
+    required this.onAdjust,
     required this.onSkip,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 9, 10, 9),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface2,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        boxShadow: const [
+        border: Border(top: BorderSide(color: AppColors.cardHighlight)),
+        boxShadow: [
           BoxShadow(
             color: Color(0x8C000000),
-            offset: Offset(0, 12),
-            blurRadius: 32,
+            offset: Offset(0, -8),
+            blurRadius: 28,
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.timer_outlined,
-            size: 15,
-            color: AppColors.accentPrimary,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'Rest · $label',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-              fontFeatures: [FontFeature.tabularFigures()],
+          // The clock read as a line: how much rest is left, without doing
+          // arithmetic on the digits.
+          SizedBox(
+            height: _restBarProgressHeight,
+            width: double.infinity,
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progress.clamp(0.0, 1.0),
+              child: const ColoredBox(color: AppColors.accentPrimary),
             ),
           ),
-          const SizedBox(width: 10),
-          Pressable(
-            onTap: onSkip,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: const Text(
-                'Skip',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
-                ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              child: Row(
+                children: [
+                  _RestAdjustButton(
+                    label: '−15',
+                    onTap: () => onAdjust(-15),
+                  ),
+                  Expanded(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                  _RestAdjustButton(
+                    label: '+15',
+                    onTap: () => onAdjust(15),
+                  ),
+                  const SizedBox(width: 10),
+                  Pressable(
+                    onTap: onSkip,
+                    child: Container(
+                      height: _restBarControlHeight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentPrimary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.bg,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RestAdjustButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _RestAdjustButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: _restBarControlHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
       ),
     );
   }
@@ -2989,11 +3105,14 @@ String _formatRestLabel(int seconds) {
   return '$minutes:${remainder.toString().padLeft(2, '0')}';
 }
 
+/// The rest clock, always mm:ss — the minutes are padded too, so the digits
+/// do not shift under the eye as the count passes a minute.
 String _formatCountdownLabel(int seconds) {
   final safeSeconds = seconds.clamp(0, 59 * 60 + 59);
   final minutes = safeSeconds ~/ 60;
   final remainder = safeSeconds % 60;
-  return '$minutes:${remainder.toString().padLeft(2, '0')}';
+  return '${minutes.toString().padLeft(2, '0')}:'
+      '${remainder.toString().padLeft(2, '0')}';
 }
 
 // Timed detection lives in ExerciseProgressionService so the targets shown
