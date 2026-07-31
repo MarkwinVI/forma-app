@@ -523,6 +523,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SingleChildScrollView(
+        // Attached to the shell's per-tab controller, so re-tapping the tab
+        // scrolls back to the top.
+        primary: true,
         // No top SafeArea — the hero runs full-bleed under the status bar.
         // The bottom padding clears the floating tab bar.
         padding: const EdgeInsets.only(bottom: 120),

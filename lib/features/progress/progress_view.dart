@@ -236,6 +236,9 @@ class _ProgressViewState extends State<ProgressView> {
                         onCreateProgram: widget.onGoToProgram ?? () {},
                       )
                     : SingleChildScrollView(
+                        // Attached to the shell's per-tab controller, so
+                        // re-tapping the tab scrolls back to the top.
+                        primary: true,
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

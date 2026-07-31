@@ -556,6 +556,9 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: AppColors.surface,
       onRefresh: _loadHomeData,
       child: SingleChildScrollView(
+        // Attached to the shell's per-tab controller, so re-tapping the tab
+        // scrolls back to the top.
+        primary: true,
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),

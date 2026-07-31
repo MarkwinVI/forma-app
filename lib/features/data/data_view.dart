@@ -134,6 +134,9 @@ class _DataViewState extends State<DataView> {
           backgroundColor: AppColors.surface,
           onRefresh: _loadData,
           child: CustomScrollView(
+            // Attached to the shell's per-tab controller, so re-tapping the
+            // tab scrolls back to the top.
+            primary: true,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(

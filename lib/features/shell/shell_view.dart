@@ -27,10 +27,44 @@ class _ShellViewState extends State<ShellView> {
   /// would show one tab and then jump to another, so the shell waits.
   int? _currentIndex;
 
+  /// One scroll controller per tab, handed down as each tab's
+  /// [PrimaryScrollController] so a tap on the tab you are already on can
+  /// send it back to the top. The tab's own scroll view opts in with
+  /// `primary: true`.
+  final _tabScrollControllers = [
+    for (var i = 0; i < 4; i++) ScrollController(),
+  ];
+
   @override
   void initState() {
     super.initState();
     _resolveLandingTab();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _tabScrollControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    if (index != _currentIndex) {
+      setState(() => _currentIndex = index);
+      return;
+    }
+
+    // Re-tapping the tab you are on means "take me back to the top". The
+    // positions are animated one by one because a tab can host more than one
+    // attached scrollable across its states.
+    for (final position in _tabScrollControllers[index].positions) {
+      position.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   /// Without a program every other tab is an empty state pointing at the
@@ -82,11 +116,17 @@ class _ShellViewState extends State<ShellView> {
       extendBody: true,
       body: IndexedStack(
         index: currentIndex,
-        children: pages,
+        children: [
+          for (var i = 0; i < pages.length; i++)
+            PrimaryScrollController(
+              controller: _tabScrollControllers[i],
+              child: pages[i],
+            ),
+        ],
       ),
       bottomNavigationBar: AppNavBar(
         currentIndex: currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _onTabTapped,
       ),
     );
   }
