@@ -60,9 +60,17 @@ void main() {
     await tester.pumpAndSettle();
 
     final coaching = ExerciseCoachingCatalog.forExercise(firstStep)!;
+
+    // The demo takes the clip's own 16:9, so on a wide test window the steps
+    // start below the fold — as do the form checks, further down again. The
+    // list is built lazily, so both have to be scrolled to before they exist.
+    await tester.scrollUntilVisible(
+      find.text(coaching.howTo.first),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text(coaching.howTo.first), findsOneWidget);
 
-    // The form checks sit below the fold of a lazily built list.
     await tester.scrollUntilVisible(
       find.text(coaching.formChecks.first),
       200,
