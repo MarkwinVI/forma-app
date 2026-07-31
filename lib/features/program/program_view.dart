@@ -74,12 +74,18 @@ class _ProgramViewState extends State<ProgramView> {
 
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
+      final fetched = results[1] as TrainingProgramLogicSnapshot?;
       setState(() {
         _progressMap = {
           for (final item in progress) item.exerciseId: item.status,
         };
-        _logicSnapshot = results[1] as TrainingProgramLogicSnapshot?;
-        _generation++;
+        // Re-key the hosted overview only when the program actually changed
+        // elsewhere — the key change resets all of its state, scroll
+        // position included, and coming back to the tab is not a change.
+        if (!sameProgramLogic(_logicSnapshot, fetched)) {
+          _generation++;
+        }
+        _logicSnapshot = fetched;
         _loading = false;
       });
     } catch (error, stackTrace) {
@@ -189,4 +195,55 @@ class _ProgramViewState extends State<ProgramView> {
       onSave: _saveProgramLogic,
     );
   }
+}
+
+/// Whether two fetches describe the same program, by content — the models
+/// carry no timestamps, so the fields the overview seeds itself from are the
+/// comparison. Progress is deliberately not part of it: the overview reads
+/// that live from its widget, so it needs no re-seed to pick it up.
+///
+/// Public for its tests.
+bool sameProgramLogic(
+  TrainingProgramLogicSnapshot? a,
+  TrainingProgramLogicSnapshot? b,
+) {
+  if (identical(a, b)) return true;
+  if (a == null || b == null) return false;
+
+  return a.program.id == b.program.id &&
+      a.program.programType == b.program.programType &&
+      a.program.scheduleVariant == b.program.scheduleVariant &&
+      a.program.frequencyPerWeek == b.program.frequencyPerWeek &&
+      a.program.isActive == b.program.isActive &&
+      _sameJson(a.program.variationRules, b.program.variationRules) &&
+      _sameJson(a.program.goalSkillIds, b.program.goalSkillIds) &&
+      a.state.nextStepIndex == b.state.nextStepIndex &&
+      a.state.nextSessionType == b.state.nextSessionType &&
+      a.state.lastSessionType == b.state.lastSessionType &&
+      a.state.lastCompletedAt == b.state.lastCompletedAt &&
+      a.repGoalProfile == b.repGoalProfile &&
+      _sameJson(
+        a.branchSelections.map((track, branch) => MapEntry(track.name, branch)),
+        b.branchSelections.map((track, branch) => MapEntry(track.name, branch)),
+      );
+}
+
+/// Deep equality for the JSON-shaped parts, immune to map key order — jsonb
+/// comes back with sorted keys where locally built maps keep insertion order.
+bool _sameJson(Object? a, Object? b) {
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key) || !_sameJson(a[key], b[key])) return false;
+    }
+    return true;
+  }
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!_sameJson(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  return a == b;
 }
