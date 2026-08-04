@@ -239,7 +239,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   static const _stepCount = 5;
 
   int _step = 0;
-  int _days = 4;
+  int _days = 3;
   TrainingProgramType? _split; // null = follow recommendation
   bool _hasGym = true;
   final Map<String, _StrengthAnswer> _strength = {
