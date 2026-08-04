@@ -19,12 +19,11 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import 'program_balance_view.dart';
-import 'program_day_editor_view.dart';
 import 'program_day_items.dart';
 import 'program_faq.dart';
 import 'program_skill_trees_view.dart';
-
-const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+import 'program_week_strip.dart';
+import 'program_workout_editor_view.dart';
 
 class ProgramOverviewView extends StatefulWidget {
   final TrainingProgramLogicSnapshot initialLogic;
@@ -156,22 +155,22 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text(toast)));
   }
 
-  Future<void> _openDayEditor(
+  Future<void> _openWorkoutEditor(
     TrainingSessionType sessionType, {
-    required int weekday,
+    required List<int> weekdays,
   }) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ProgramDayEditorView(
+        builder: (_) => ProgramWorkoutEditorView(
           sessionType: sessionType,
-          weekday: weekday,
+          weekdays: weekdays,
           programType: _logic.program.programType,
           branchSelections: _branchSelections,
           progressMap: widget.progressMap,
           sessionItemsConfig: _sessionItemsConfig,
           onSave: (config) => _saveLogic(
             sessionItemsConfig: config,
-            toast: '${kWeekdayNames[weekday]} updated',
+            toast: '${programWorkoutTypeName(sessionType)} updated',
           ),
         ),
       ),
@@ -342,26 +341,31 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         },
       );
 
-  /// The week the program would run with [tracks].
+  /// The week the program would run with [tracks]. One plan per workout
+  /// type — every day running the same session shares its list.
   List<ProgramWeekDay> _weekFor(List<SkillTrack> tracks) {
     final programType = _logic.program.programType;
     final cycle = _weekPlan(_dayMask, programType);
+    final itemsByType = <TrainingSessionType, List<ProgramDayItem>>{
+      for (final sessionType in cycle.toSet())
+        if (sessionType != TrainingSessionType.rest)
+          sessionType: ProgramSessionPlan.loadDay(
+            service: _programService,
+            sessionItemsConfig: _sessionItemsConfig,
+            programType: programType,
+            sessionType: sessionType,
+            branchSelections: _branchSelections,
+            progressMap: _progress,
+            skillTracks: tracks,
+          ),
+    };
     return [
       for (var i = 0; i < cycle.length; i++)
         if (cycle[i] != TrainingSessionType.rest)
           ProgramWeekDay(
             weekday: i,
             sessionType: cycle[i],
-            items: ProgramSessionPlan.loadDay(
-              service: _programService,
-              sessionItemsConfig: _sessionItemsConfig,
-              programType: programType,
-              sessionType: cycle[i],
-              branchSelections: _branchSelections,
-              progressMap: _progress,
-              skillTracks: tracks,
-              weekday: i,
-            ),
+            items: itemsByType[cycle[i]]!,
           ),
     ];
   }
@@ -490,33 +494,45 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     final programType = _logic.program.programType;
     final weekCycle = _weekPlan(_dayMask, programType);
 
-    // One workout per training weekday — Thursday's Upper is its own plan,
-    // separate from Monday's.
+    // One workout per TYPE, not per day: the exercise list stays with the
+    // workout, and the strip above says which days run it.
+    final typeOrder = <TrainingSessionType>[];
+    final daysByType = <TrainingSessionType, List<int>>{};
+    for (var i = 0; i < weekCycle.length; i++) {
+      final sessionType = weekCycle[i];
+      if (sessionType == TrainingSessionType.rest) continue;
+      daysByType.putIfAbsent(sessionType, () {
+        typeOrder.add(sessionType);
+        return [];
+      }).add(i);
+    }
     final workouts = [
+      for (final sessionType in typeOrder)
+        (
+          sessionType: sessionType,
+          weekdays: daysByType[sessionType]!,
+          items: ProgramSessionPlan.loadDay(
+            service: _programService,
+            sessionItemsConfig: _sessionItemsConfig,
+            programType: programType,
+            sessionType: sessionType,
+            branchSelections: _branchSelections,
+            progressMap: _progress,
+            skillTracks: _skillTracks,
+          ),
+        ),
+    ];
+    final itemsByType = {
+      for (final workout in workouts) workout.sessionType: workout.items,
+    };
+    final week = [
       for (var i = 0; i < weekCycle.length; i++)
         if (weekCycle[i] != TrainingSessionType.rest)
-          (
+          ProgramWeekDay(
             weekday: i,
             sessionType: weekCycle[i],
-            items: ProgramSessionPlan.loadDay(
-              service: _programService,
-              sessionItemsConfig: _sessionItemsConfig,
-              programType: programType,
-              sessionType: weekCycle[i],
-              branchSelections: _branchSelections,
-              progressMap: _progress,
-              skillTracks: _skillTracks,
-              weekday: i,
-            ),
+            items: itemsByType[weekCycle[i]]!,
           ),
-    ];
-    final week = [
-      for (final workout in workouts)
-        ProgramWeekDay(
-          weekday: workout.weekday,
-          sessionType: workout.sessionType,
-          items: workout.items,
-        ),
     ];
     final balance = balanceFromWeek(week, context: _balanceContext);
 
@@ -610,16 +626,22 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                           onTap: () => _openAdjustSheet(track),
                         ),
                   ],
-                  const _ProgramSectionLabel('Weekly workouts'),
+                  const _ProgramSectionLabel('Workouts'),
+                  // The overview a day-led list would give: seven columns,
+                  // each training day carrying its type's marker. Tapping it
+                  // opens the schedule.
+                  ProgramWeekStrip(
+                    weekCycle: weekCycle,
+                    onTap: _openDaysSheet,
+                  ),
                   for (var i = 0; i < workouts.length; i++)
-                    _SessionRow(
-                      title: kWeekdayNames[workouts[i].weekday],
-                      sessionLabel: programDayTitle(workouts[i].sessionType),
-                      items: workouts[i].items,
+                    _WorkoutTypeRow(
+                      sessionType: workouts[i].sessionType,
+                      weekdays: workouts[i].weekdays,
                       last: i == workouts.length - 1,
-                      onTap: () => _openDayEditor(
+                      onTap: () => _openWorkoutEditor(
                         workouts[i].sessionType,
-                        weekday: workouts[i].weekday,
+                        weekdays: workouts[i].weekdays,
                       ),
                     ),
                   const _ProgramSectionLabel('About the program'),
@@ -935,67 +957,55 @@ class _ProgramRow extends StatelessWidget {
   }
 }
 
-/// One workout. Day and split read as a single statement at one size —
-/// neither labels the other — and the line beneath is what you'll actually
-/// do, not how much of it there is.
-class _SessionRow extends StatelessWidget {
-  final String title;
-  final String sessionLabel;
-  final List<ProgramDayItem> items;
+/// One row per workout TYPE. Tapping it edits the single exercise list that
+/// every scheduled day shares — no remembering which day you're editing.
+class _WorkoutTypeRow extends StatelessWidget {
+  final TrainingSessionType sessionType;
+  final List<int> weekdays;
   final bool last;
   final VoidCallback onTap;
 
-  const _SessionRow({
-    required this.title,
-    required this.sessionLabel,
-    required this.items,
+  const _WorkoutTypeRow({
+    required this.sessionType,
+    required this.weekdays,
     required this.last,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final exercises = items.map((item) => item.name).join(' · ');
+    final dayNames = [
+      for (final day in weekdays) kWeekdayShortNames[day],
+    ].join(' · ');
 
     return _ProgramContentRow(
       last: last,
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: title),
-                const TextSpan(
-                  text: ' · ',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                TextSpan(text: sessionLabel),
-              ],
-            ),
-            // Sized like the settings rows above: a workout is something you
-            // open and change, not a headline over the others.
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.16,
-              height: 1.2,
+          ProgramTypeNode(sessionType: sessionType),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              programWorkoutTypeName(sessionType),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.4,
+                height: 1.15,
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(width: 10),
           Text(
-            exercises.isEmpty ? 'No exercises yet' : exercises,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 15,
+            '${weekdays.length}× · $dayNames',
+            style: GoogleFonts.robotoMono(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
               color: AppColors.textSecondary,
-              height: 1.4,
             ),
           ),
         ],
@@ -1887,59 +1897,15 @@ class _DaysSheetState extends State<_DaysSheet> {
               ),
             ),
             const SizedBox(height: 14),
+            // The same week strip the Workouts section shows, made editable:
+            // tapping a day toggles it between training and rest.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  for (var i = 0; i < plan.length; i++)
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: i == plan.length - 1 ? 0 : 5,
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              _weekdayLetters[i],
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Pressable(
-                              onTap: () => _toggleDay(i),
-                              child: Container(
-                                width: double.infinity,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: plan[i] == TrainingSessionType.rest
-                                      ? AppColors.surface2
-                                      : AppColors.accentSoft,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    _dayAbbr(plan[i]),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color:
-                                          plan[i] == TrainingSessionType.rest
-                                              ? AppColors.textMuted
-                                              : AppColors.accentPrimary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
+              child: ProgramWeekStrip(
+                weekCycle: plan,
+                onDayTap: _toggleDay,
+                nodeSize: 24,
+                withDivider: false,
               ),
             ),
             const Padding(
@@ -1960,22 +1926,6 @@ class _DaysSheetState extends State<_DaysSheet> {
     );
   }
 
-  String _dayAbbr(TrainingSessionType type) {
-    switch (type) {
-      case TrainingSessionType.fullBody:
-        return 'FB';
-      case TrainingSessionType.push:
-        return 'PU';
-      case TrainingSessionType.pull:
-        return 'PL';
-      case TrainingSessionType.upper:
-        return 'UP';
-      case TrainingSessionType.lower:
-        return 'LO';
-      case TrainingSessionType.rest:
-        return 'RE';
-    }
-  }
 }
 
 class _SplitSheet extends StatefulWidget {

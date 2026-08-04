@@ -118,13 +118,8 @@ class ProgramSessionPlan {
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
     List<SkillTrack> skillTracks = const [],
-    int? weekday,
   }) {
-    final sessionMap = programDayConfig(
-      sessionItemsConfig,
-      sessionType,
-      weekday: weekday,
-    );
+    final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
     if (sessionMap != null) {
       final items = <ProgramDayItem>[];
       for (final component
@@ -200,28 +195,23 @@ class ProgramSessionPlan {
     };
 
     // With a week cycle, coverage is read off the days actually trained, so
-    // days edited on their own count for what they really hold.
-    final days = <({TrainingSessionType sessionType, int? weekday})>[
+    // a session running twice a week counts twice.
+    final days = <TrainingSessionType>[
       if (weekCycle == null)
-        for (final sessionType in service.trainingDaysForProgramType(
-          programType,
-        ))
-          (sessionType: sessionType, weekday: null)
+        ...service.trainingDaysForProgramType(programType)
       else
-        for (var i = 0; i < weekCycle.length; i++)
-          if (weekCycle[i] != TrainingSessionType.rest)
-            (sessionType: weekCycle[i], weekday: i),
+        for (final sessionType in weekCycle)
+          if (sessionType != TrainingSessionType.rest) sessionType,
     ];
 
-    for (final day in days) {
+    for (final sessionType in days) {
       final items = loadDay(
         service: service,
         sessionItemsConfig: sessionItemsConfig,
         programType: programType,
-        sessionType: day.sessionType,
+        sessionType: sessionType,
         branchSelections: branchSelections,
         progressMap: progressMap,
-        weekday: day.weekday,
       );
       for (final item in items) {
         // Accessory work has no pattern to cover, so it is simply not part
@@ -494,6 +484,25 @@ class ProgramSessionPlan {
 
 String newProgramItemId() =>
     DateTime.now().microsecondsSinceEpoch.toString();
+
+/// The workout type as its row and editor name it — the full-word version of
+/// [programDayTitle], for where the type is the headline rather than a tag.
+String programWorkoutTypeName(TrainingSessionType sessionType) {
+  switch (sessionType) {
+    case TrainingSessionType.fullBody:
+      return 'Full Body';
+    case TrainingSessionType.push:
+      return 'Push';
+    case TrainingSessionType.pull:
+      return 'Pull';
+    case TrainingSessionType.upper:
+      return 'Upper Body';
+    case TrainingSessionType.lower:
+      return 'Lower Body';
+    case TrainingSessionType.rest:
+      return 'Rest';
+  }
+}
 
 String programDayTitle(TrainingSessionType sessionType) {
   switch (sessionType) {

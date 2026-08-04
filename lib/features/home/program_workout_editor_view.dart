@@ -14,19 +14,21 @@ import '../../data/services/training_program_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import '../exercises/exercise_picker_view.dart';
 import 'program_day_items.dart';
+import 'program_week_strip.dart';
 
 /// Destructive action colour, matching the design's red.
 const _dangerRed = Color(0xFFFF6B57);
 
-/// Full-page editor for one training day: a flat exercise list where each
-/// row opens its own options — reorder, replace, remove — and Add exercise
-/// goes straight to the exercise search.
-class ProgramDayEditorView extends StatefulWidget {
+/// Full-page editor for one workout type: the schedule is stated once at the
+/// top, then it's just the exercise list every scheduled day shares. Each row
+/// opens its own options — reorder, replace, remove — and Add exercise goes
+/// straight to the exercise search.
+class ProgramWorkoutEditorView extends StatefulWidget {
   final TrainingSessionType sessionType;
 
-  /// Which weekday is being edited, Monday first. Edits are saved against
-  /// this day alone, so two days running the same session can differ.
-  final int weekday;
+  /// Which weekdays run this workout, Monday-first indexes — stated in the
+  /// header so there is nothing to remember.
+  final List<int> weekdays;
 
   final TrainingProgramType programType;
   final Map<TrainingTrack, String> branchSelections;
@@ -34,10 +36,10 @@ class ProgramDayEditorView extends StatefulWidget {
   final Map<String, dynamic> sessionItemsConfig;
   final Future<void> Function(Map<String, dynamic> sessionItemsConfig) onSave;
 
-  const ProgramDayEditorView({
+  const ProgramWorkoutEditorView({
     super.key,
     required this.sessionType,
-    required this.weekday,
+    required this.weekdays,
     required this.programType,
     required this.branchSelections,
     required this.progressMap,
@@ -46,17 +48,38 @@ class ProgramDayEditorView extends StatefulWidget {
   });
 
   @override
-  State<ProgramDayEditorView> createState() => _ProgramDayEditorViewState();
+  State<ProgramWorkoutEditorView> createState() =>
+      _ProgramWorkoutEditorViewState();
 }
 
-class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
+class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   final _programService = TrainingProgramService();
 
   late List<ProgramDayItem> _items;
   late String _initialSerialized;
   bool _saving = false;
 
-  String get _dayTitle => kWeekdayNames[widget.weekday];
+  String get _typeName => programWorkoutTypeName(widget.sessionType);
+
+  /// "Monday & Thursday — one list, both days. Change anything here and the
+  /// whole week follows."
+  String get _scheduleSentence {
+    final names = [for (final day in widget.weekdays) kWeekdayNames[day]];
+    if (names.isEmpty) {
+      return 'Not on the schedule this week — edits are kept for when it '
+          'comes back.';
+    }
+    if (names.length == 1) {
+      return '${names.single} — change anything here and the whole week '
+          'follows.';
+    }
+    final joined = names.length == 2
+        ? '${names.first} & ${names.last}'
+        : '${names.sublist(0, names.length - 1).join(', ')} & ${names.last}';
+    final every = names.length == 2 ? 'both days' : 'all ${names.length} days';
+    return '$joined — one list, $every. Change anything here and the whole '
+        'week follows.';
+  }
 
   @override
   void initState() {
@@ -68,7 +91,6 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
       sessionType: widget.sessionType,
       branchSelections: widget.branchSelections,
       progressMap: widget.progressMap,
-      weekday: widget.weekday,
     );
     _initialSerialized = _serialized();
   }
@@ -81,11 +103,13 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     if (_saving) return;
     setState(() => _saving = true);
 
-    // Written against this weekday only — the other days running the same
-    // session keep whatever they had.
+    // One list per workout type: every day running this session shares it.
     final config = Map<String, dynamic>.from(widget.sessionItemsConfig);
-    config[programDayConfigKey(widget.sessionType, weekday: widget.weekday)] =
-        ProgramSessionPlan.serializeDay(_items);
+    writeProgramDayConfig(
+      config,
+      widget.sessionType,
+      ProgramSessionPlan.serializeDay(_items),
+    );
 
     try {
       await widget.onSave(config);
@@ -94,7 +118,7 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save $_dayTitle: $error')),
+        SnackBar(content: Text('Failed to save $_typeName: $error')),
       );
       setState(() => _saving = false);
     }
@@ -248,14 +272,34 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
                         ),
                       ),
                       const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          ProgramTypeNode(
+                            sessionType: widget.sessionType,
+                            size: 26,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _typeName,
+                              style: const TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.9,
+                                height: 1.05,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
                       Text(
-                        _dayTitle,
+                        _scheduleSentence,
                         style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.9,
-                          height: 1.05,
+                          fontSize: 14.5,
+                          color: AppColors.textSecondary,
+                          height: 1.45,
                         ),
                       ),
                     ],
@@ -271,7 +315,7 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             child: Text(
-                              'Nothing planned for $_dayTitle yet — add your '
+                              'Nothing planned for $_typeName yet — add your '
                               'first exercise below.',
                               style: const TextStyle(
                                 fontSize: 14,
@@ -321,7 +365,7 @@ class _ProgramDayEditorViewState extends State<ProgramDayEditorView> {
                           ],
                         ),
                         child: PillButton(
-                          label: 'Save $_dayTitle',
+                          label: 'Save $_typeName',
                           onTap: _save,
                         ),
                       ),

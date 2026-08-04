@@ -50,33 +50,45 @@ const List<String> kWeekdayNames = [
   'Sunday',
 ];
 
-/// Where one training day's exercise list lives in `session_items_v1`.
+/// Where a workout type's exercise list lives in `session_items_v1`.
 ///
-/// Editing a single day writes a weekday-scoped entry ("3:upper"), so
-/// Thursday's Upper can differ from Monday's. Days that have never been
-/// edited on their own share the session-type entry ("upper"), which is also
-/// what every program written before per-day plans existed uses. The session
-/// type is part of the key so a stale override cannot leak onto a weekday
-/// that later changes session.
-String programDayConfigKey(TrainingSessionType sessionType, {int? weekday}) =>
-    weekday == null ? sessionType.dbValue : '$weekday:${sessionType.dbValue}';
+/// The unit of editing is the workout type, not the day: every day running
+/// the same session shares one entry ("upper"), so there is no remembering
+/// which day you're editing.
+String programDayConfigKey(TrainingSessionType sessionType) =>
+    sessionType.dbValue;
 
-/// The stored plan for a day: its own if it has one, else the shared plan for
-/// its session type, else null when the day still runs on generated defaults.
+/// The stored plan for a workout type, or null when it still runs on
+/// generated defaults.
 Map<String, dynamic>? programDayConfig(
   Map<String, dynamic> sessionItemsConfig,
-  TrainingSessionType sessionType, {
-  int? weekday,
-}) {
-  if (weekday != null) {
-    final own = sessionItemsConfig[programDayConfigKey(
-      sessionType,
-      weekday: weekday,
-    )];
-    if (own is Map) return Map<String, dynamic>.from(own);
-  }
+  TrainingSessionType sessionType,
+) {
   final shared = sessionItemsConfig[sessionType.dbValue];
-  return shared is Map ? Map<String, dynamic>.from(shared) : null;
+  if (shared is Map) return Map<String, dynamic>.from(shared);
+
+  // Days used to carry plans of their own, keyed "3:upper". The earliest
+  // weekday's plan stands in for the whole type until a type-level save
+  // replaces it — see [writeProgramDayConfig].
+  for (var weekday = 0; weekday < 7; weekday++) {
+    final legacy = sessionItemsConfig['$weekday:${sessionType.dbValue}'];
+    if (legacy is Map) return Map<String, dynamic>.from(legacy);
+  }
+  return null;
+}
+
+/// Writes [dayMap] as the type's shared plan, clearing any retired per-day
+/// ("3:upper") entries for the type — left in place they would only shadow
+/// the plan being saved for readers still on the old format.
+void writeProgramDayConfig(
+  Map<String, dynamic> sessionItemsConfig,
+  TrainingSessionType sessionType,
+  Map<String, dynamic> dayMap,
+) {
+  sessionItemsConfig.removeWhere(
+    (key, _) => key.endsWith(':${sessionType.dbValue}'),
+  );
+  sessionItemsConfig[sessionType.dbValue] = dayMap;
 }
 
 enum TrainingSessionType { fullBody, push, pull, upper, lower, rest }

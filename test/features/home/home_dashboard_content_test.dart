@@ -9,7 +9,7 @@ import 'package:forma_app/features/home/alternate_workout_options_view.dart';
 import 'package:forma_app/features/home/journey_skill_detail_view.dart';
 import 'package:forma_app/features/home/live_workout_view.dart';
 import 'package:forma_app/features/home/program_overview_view.dart';
-import 'package:forma_app/features/home/program_day_editor_view.dart';
+import 'package:forma_app/features/home/program_workout_editor_view.dart';
 import 'package:forma_app/features/settings/settings_view.dart';
 import 'package:forma_app/features/skills/skill_tree_view.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
@@ -577,7 +577,7 @@ void main() {
     expect(find.byType(SettingsView), findsOneWidget);
   });
 
-  testWidgets('tapping a session day opens ProgramDayEditorView',
+  testWidgets('tapping a workout type opens ProgramWorkoutEditorView',
       (tester) async {
     final service = TrainingProgramService();
 
@@ -638,18 +638,19 @@ void main() {
       ),
     );
 
-    // Workouts are listed per training weekday, the day and its session
-    // reading as one statement.
-    expect(find.textContaining('Monday · Push'), findsOneWidget);
-    expect(find.textContaining('Wednesday · Pull'), findsOneWidget);
-    expect(find.textContaining('Friday · Push'), findsOneWidget);
+    // Workouts are listed per type — one row per session, its days read off
+    // the strip above: Mon/Wed/Fri alternating push · pull · push.
+    expect(find.text('Push'), findsOneWidget);
+    expect(find.text('Pull'), findsOneWidget);
+    expect(find.text('2× · Mon · Fri'), findsOneWidget);
+    expect(find.text('1× · Wed'), findsOneWidget);
 
-    // The hero pushes the session rows below the test surface.
-    await tester.ensureVisible(find.textContaining('Monday · Push'));
-    await tester.tap(find.textContaining('Monday · Push'));
+    // The hero pushes the workout rows below the test surface.
+    await tester.ensureVisible(find.text('Push'));
+    await tester.tap(find.text('Push'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ProgramDayEditorView), findsOneWidget);
+    expect(find.byType(ProgramWorkoutEditorView), findsOneWidget);
   });
 
   testWidgets('tapping an active skill path can open SkillTreeView',

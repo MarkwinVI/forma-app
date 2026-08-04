@@ -859,10 +859,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     TrainingProgramLogicSnapshot logic,
   ) async {
     final sessionType = widget.recommendation.sessionType;
-    // Plans belong to a weekday, so the changes land on the day that was
-    // actually trained rather than every day running this session.
-    final plannedDate = widget.recommendation.plannedDate;
-    final weekday = plannedDate == null ? null : plannedDate.weekday - 1;
+    // Plans belong to the workout type, so the changes land on every day
+    // running this session — one list, however many days share it.
     final config = Map<String, dynamic>.from(
       logic.program.variationRules['session_items_v1'] as Map? ?? const {},
     );
@@ -873,7 +871,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       sessionType: sessionType,
       branchSelections: logic.branchSelections,
       progressMap: _progressMap,
-      weekday: weekday,
     );
 
     final unmatched = List.of(planItems);
@@ -919,8 +916,11 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       );
     }
 
-    config[programDayConfigKey(sessionType, weekday: weekday)] =
-        ProgramSessionPlan.serializeDay(updated);
+    writeProgramDayConfig(
+      config,
+      sessionType,
+      ProgramSessionPlan.serializeDay(updated),
+    );
 
     await _programStoreService.updateProgramLogic(
       userId: userId,

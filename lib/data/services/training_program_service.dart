@@ -98,12 +98,7 @@ class TrainingProgramService {
     DateTime? plannedDate,
     int? plannedStepIndex,
     bool affectsSchedule = true,
-    int? weekday,
   }) {
-    // A day edited on its own runs its own plan; the date it is planned for
-    // is what says which day that is.
-    weekday ??= plannedDate == null ? null : plannedDate.weekday - 1;
-
     // Skills-as-tracks: when the user has skill tracks and no custom day
     // plan, sessions are built from the included tracks (any number per
     // movement pattern) instead of the 8 fixed lanes.
@@ -116,7 +111,6 @@ class TrainingProgramService {
               sessionType: currentSessionType,
               progressMap: progressMap,
               sessionItemsConfig: sessionItemsConfig,
-              weekday: weekday,
             );
       return DailyTrainingRecommendation(
         programType: programType,
@@ -147,7 +141,6 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
-                weekday: weekday,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -173,7 +166,6 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
-                weekday: weekday,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -198,7 +190,6 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
-                weekday: weekday,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -222,12 +213,10 @@ class TrainingProgramService {
     required TrainingSessionType sessionType,
     required Map<String, ExerciseStatus> progressMap,
     required Map<String, dynamic> sessionItemsConfig,
-    int? weekday,
   }) {
     final sessionMap = programDayConfig(
       sessionItemsConfig,
       sessionType,
-      weekday: weekday,
     );
     if (sessionMap == null) return null;
     final items = <TrainingRecommendationItem>[];
