@@ -1,0 +1,179 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
+/// Snapshot of the workout shown on the iOS Live Activity. Timers travel as
+/// timestamps: the lock screen counts the workout clock up and the rest
+/// clock down natively, so the app only pushes an update when something
+/// discrete changes (set ticked, rest started, pause, …).
+class LiveWorkoutActivityState {
+  final String exerciseName;
+  final int setNumber;
+  final int totalSets;
+  final String repGoalLabel;
+  final DateTime workoutStartedAt;
+  final bool isPaused;
+  final String? pausedElapsedLabel;
+  final DateTime? restStartedAt;
+  final DateTime? restEndsAt;
+  final String? imageFileName;
+
+  const LiveWorkoutActivityState({
+    required this.exerciseName,
+    required this.setNumber,
+    required this.totalSets,
+    required this.repGoalLabel,
+    required this.workoutStartedAt,
+    required this.isPaused,
+    this.pausedElapsedLabel,
+    this.restStartedAt,
+    this.restEndsAt,
+    this.imageFileName,
+  });
+
+  Map<String, Object?> toMap() => {
+        'exerciseName': exerciseName,
+        'setNumber': setNumber,
+        'totalSets': totalSets,
+        'repGoalLabel': repGoalLabel,
+        'workoutStartedAtMs': workoutStartedAt.millisecondsSinceEpoch,
+        'isPaused': isPaused,
+        'pausedElapsedLabel': pausedElapsedLabel,
+        'restStartedAtMs': restStartedAt?.millisecondsSinceEpoch,
+        'restEndsAtMs': restEndsAt?.millisecondsSinceEpoch,
+        'imageFileName': imageFileName,
+      };
+}
+
+/// Talks to the native Live Activity (iOS 16.2+) over a method channel.
+/// Everything is fire-and-forget and failure-tolerant: a workout must never
+/// notice that the lock screen could not be updated.
+class LiveActivityService {
+  LiveActivityService._() {
+    _channel.setMethodCallHandler(_onMethodCall);
+  }
+
+  static final LiveActivityService instance = LiveActivityService._();
+
+  static const _channel = MethodChannel('forma/live_activity');
+
+  /// Called with the action id when a lock-screen button is tapped
+  /// (completeSet, restPlus15, restMinus15, skipRest).
+  void Function(String action)? onAction;
+
+  bool _started = false;
+  String? _containerPath;
+
+  /// Thumbnails already written to the shared container, by exercise id.
+  final Map<String, String> _imageFiles = {};
+  final Set<String> _imageDownloadsInFlight = {};
+
+  bool get _isIOS => !kIsWeb && Platform.isIOS;
+
+  Future<dynamic> _onMethodCall(MethodCall call) async {
+    if (call.method == 'onAction') {
+      final action = call.arguments;
+      if (action is String) onAction?.call(action);
+    }
+    return null;
+  }
+
+  Future<bool> isSupported() async {
+    if (!_isIOS) return false;
+    try {
+      return await _channel.invokeMethod<bool>('isSupported') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> start(
+    String sessionLabel,
+    LiveWorkoutActivityState state,
+  ) async {
+    if (!await isSupported()) return;
+    try {
+      await _channel.invokeMethod('start', {
+        'sessionLabel': sessionLabel,
+        ...state.toMap(),
+      });
+      _started = true;
+    } catch (error) {
+      debugPrint('Live Activity start failed: $error');
+    }
+  }
+
+  Future<void> update(LiveWorkoutActivityState state) async {
+    if (!_started) return;
+    try {
+      await _channel.invokeMethod('update', state.toMap());
+    } catch (error) {
+      debugPrint('Live Activity update failed: $error');
+    }
+  }
+
+  Future<void> end() async {
+    if (!_started) return;
+    _started = false;
+    try {
+      await _channel.invokeMethod('end');
+    } catch (error) {
+      debugPrint('Live Activity end failed: $error');
+    }
+  }
+
+  /// Name of the thumbnail for [exerciseId] inside the shared container, if
+  /// it has already been fetched this session.
+  String? imageFileFor(String exerciseId) => _imageFiles[exerciseId];
+
+  /// Downloads the exercise thumbnail into the app-group container so the
+  /// widget extension can render it. Calls [onReady] once the file exists —
+  /// the caller then pushes a fresh activity update carrying the file name.
+  Future<void> prepareImage({
+    required String exerciseId,
+    required String? imageUrl,
+    required void Function() onReady,
+  }) async {
+    if (!_isIOS ||
+        imageUrl == null ||
+        imageUrl.isEmpty ||
+        _imageFiles.containsKey(exerciseId) ||
+        !_imageDownloadsInFlight.add(exerciseId)) {
+      return;
+    }
+
+    try {
+      _containerPath ??=
+          await _channel.invokeMethod<String>('containerPath');
+      final containerPath = _containerPath;
+      if (containerPath == null) return;
+
+      final directory = Directory('$containerPath/exercise_images');
+      await directory.create(recursive: true);
+      final fileName = 'exercise_images/$exerciseId.img';
+      final file = File('$containerPath/$fileName');
+
+      if (!await file.exists()) {
+        final client = HttpClient();
+        try {
+          final request = await client.getUrl(Uri.parse(imageUrl));
+          final response = await request.close();
+          if (response.statusCode != HttpStatus.ok) return;
+          await file.writeAsBytes(
+            await consolidateHttpClientResponseBytes(response),
+          );
+        } finally {
+          client.close();
+        }
+      }
+
+      _imageFiles[exerciseId] = fileName;
+      onReady();
+    } catch (error) {
+      debugPrint('Exercise thumbnail fetch failed: $error');
+    } finally {
+      _imageDownloadsInFlight.remove(exerciseId);
+    }
+  }
+}

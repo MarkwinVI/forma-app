@@ -16,9 +16,11 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/live_activity_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/workout_notification_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import '../exercises/exercise_picker_view.dart';
@@ -74,6 +76,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   final _progressService = ProgressService();
   final _devClockService = DevClockService();
   final _restPreferencesService = WorkoutRestPreferencesService();
+  final _liveActivityService = LiveActivityService.instance;
   final _programService = TrainingProgramService();
   final _programStoreService = TrainingProgramStoreService();
   final _exerciseLogService = ExerciseLogService();
@@ -129,6 +132,17 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _loadProgressMap();
     _loadRestPreferences();
     _loadLastSessions();
+    // Ask once, up front — the first background rest alert must not be the
+    // moment we discover notifications were never allowed.
+    WorkoutNotificationService.instance.requestPermission();
+    _liveActivityService.onAction = _handleLiveActivityAction;
+    _liveActivityService
+        .start(widget.recommendation.sessionLabel, _liveActivityState())
+        .then((_) {
+      // Re-sync once started: picks up rest preferences and progression
+      // targets that load async, and kicks off the first thumbnail fetch.
+      if (mounted) _syncLiveActivity();
+    });
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       final shouldClearRest = _isRunning &&
@@ -144,6 +158,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           _pausedRestRemaining = null;
         }
       });
+      if (shouldClearRest) _syncWorkoutPresence();
     });
   }
 
@@ -152,6 +167,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     _toastTimer?.cancel();
+    WorkoutNotificationService.instance.cancelRestOver();
+    _liveActivityService.onAction = null;
+    _liveActivityService.end();
     super.dispose();
   }
 
@@ -321,6 +339,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         _pausedRestRemaining = Duration(seconds: remaining);
       }
     });
+    _syncWorkoutPresence();
   }
 
   int get _totalSetCount => _sessionItems.fold(
@@ -423,6 +442,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         item.exercise.id: sets,
       };
     });
+    // Every set edit funnels through here, so the Live Activity's set count
+    // and rep goal stay honest without per-call-site plumbing.
+    _syncLiveActivity();
   }
 
   void _toggleSessionRunning() {
@@ -449,6 +471,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       _pausedAt = null;
       _isRunning = true;
     });
+    _syncWorkoutPresence();
   }
 
   void _toggleSet(TrainingRecommendationItem item, int number) {
@@ -574,6 +597,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     setState(() {
       _sessionItems = items;
     });
+    _syncLiveActivity();
   }
 
   void _addExerciseToSession(Exercise exercise) {
@@ -599,6 +623,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         nextItem.exercise.id: _restSecondsByExercise[nextItem.exercise.id] ?? 0,
       };
     });
+    _syncLiveActivity();
     _showToast('${exercise.name} added');
   }
 
@@ -640,6 +665,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         _pausedRestRemaining = null;
       }
     });
+    _syncWorkoutPresence();
   }
 
   void _replaceExerciseInSession(
@@ -684,6 +710,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       );
       _pausedRestRemaining = null;
     });
+    _syncWorkoutPresence();
   }
 
   void _clearActiveRestTimer() {
@@ -691,6 +718,139 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       _activeRestTimer = null;
       _pausedRestRemaining = null;
     });
+    _syncWorkoutPresence();
+  }
+
+  /// Everything the phone shows about this workout outside the app — the
+  /// scheduled rest-over notification and the Live Activity — refreshed
+  /// together after any state change that affects either.
+  void _syncWorkoutPresence() {
+    _syncRestNotification();
+    _syncLiveActivity();
+  }
+
+  /// Keeps the scheduled rest-over notification in step with the rest timer:
+  /// one pending notification while rest is running, none otherwise. Uses a
+  /// fixed id, so rescheduling simply replaces the previous one.
+  void _syncRestNotification() {
+    final timer = _activeRestTimer;
+    if (_isRunning && timer != null && _activeRestRemainingSeconds() > 0) {
+      WorkoutNotificationService.instance.scheduleRestOver(
+        endsAt: timer.endsAt,
+        exerciseName: _exerciseNameById(timer.exerciseId) ?? 'your exercise',
+      );
+    } else {
+      WorkoutNotificationService.instance.cancelRestOver();
+    }
+  }
+
+  String? _exerciseNameById(String id) {
+    for (final item in _sessionItems) {
+      if (item.exercise.id == id) return item.exercise.name;
+    }
+    return null;
+  }
+
+  // ── Live Activity ─────────────────────────────────────────────────
+
+  void _syncLiveActivity() {
+    final item = _currentItemForActivity();
+    if (item != null) {
+      // Fetch the thumbnail in the background; once it lands in the shared
+      // container, push another update so the lock screen picks it up.
+      _liveActivityService.prepareImage(
+        exerciseId: item.exercise.id,
+        imageUrl: item.exercise.imageUrl,
+        onReady: () {
+          if (mounted) _liveActivityService.update(_liveActivityState());
+        },
+      );
+    }
+    _liveActivityService.update(_liveActivityState());
+  }
+
+  /// The exercise the Live Activity is about: the one being rested from
+  /// while its sets are unfinished, otherwise the first exercise (in the
+  /// order the list shows) with a set still open, otherwise the final one.
+  TrainingRecommendationItem? _currentItemForActivity() {
+    final restId = _activeRestTimer?.exerciseId;
+    if (restId != null) {
+      for (final item in _sessionItems) {
+        if (item.exercise.id == restId &&
+            _setsFor(item).any((set) => !set.completed)) {
+          return item;
+        }
+      }
+    }
+    for (final section in _sectionOrder) {
+      for (final item in _itemsForSection(section)) {
+        if (_setsFor(item).any((set) => !set.completed)) return item;
+      }
+    }
+    for (final section in _sectionOrder.reversed) {
+      final items = _itemsForSection(section);
+      if (items.isNotEmpty) return items.last;
+    }
+    return null;
+  }
+
+  LiveWorkoutActivityState _liveActivityState() {
+    final item = _currentItemForActivity();
+    final sets =
+        item == null ? const <_WorkoutSetDraft>[] : _setsFor(item);
+    _WorkoutSetDraft? openSet;
+    for (final set in sets) {
+      if (!set.completed) {
+        openSet = set;
+        break;
+      }
+    }
+    final setNumber = openSet?.number ?? (sets.isEmpty ? 1 : sets.length);
+    final target = openSet?.target ?? (sets.isEmpty ? 0 : sets.last.target);
+    final isTimed = item != null && _isTimedExercise(item.exercise);
+
+    // While paused the rest countdown cannot tick honestly on the lock
+    // screen, so rest is simply not shown until the session resumes.
+    final restTimer = _activeRestTimer;
+    final resting = _isRunning && _hasActiveRestTimer;
+
+    return LiveWorkoutActivityState(
+      exerciseName: item?.exercise.name ?? widget.recommendation.sessionLabel,
+      setNumber: setNumber,
+      totalSets: sets.length,
+      repGoalLabel: isTimed ? '${target}s' : '$target reps',
+      workoutStartedAt: DateTime.now().subtract(_elapsedDuration()),
+      isPaused: !_isRunning,
+      pausedElapsedLabel: _isRunning ? null : _formatElapsed(),
+      restStartedAt: resting
+          ? restTimer!.endsAt
+              .subtract(Duration(seconds: restTimer.totalSeconds))
+          : null,
+      restEndsAt: resting ? restTimer!.endsAt : null,
+      imageFileName:
+          item == null ? null : _liveActivityService.imageFileFor(item.exercise.id),
+    );
+  }
+
+  void _handleLiveActivityAction(String action) {
+    if (!mounted) return;
+    switch (action) {
+      case 'completeSet':
+        final item = _currentItemForActivity();
+        if (item == null) return;
+        for (final set in _setsFor(item)) {
+          if (!set.completed) {
+            _toggleSet(item, set.number);
+            return;
+          }
+        }
+      case 'restPlus15':
+        _adjustRestTimer(15);
+      case 'restMinus15':
+        _adjustRestTimer(-15);
+      case 'skipRest':
+        _clearActiveRestTimer();
+    }
   }
 
   Future<void> _pickRestInterval(TrainingRecommendationItem item) async {
@@ -716,6 +876,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         _pausedRestRemaining = null;
       }
     });
+    _syncWorkoutPresence();
     // Persist the rest duration for this exercise right away — it sticks
     // regardless of whether the workout is ever saved, and it never marks the
     // session as plan-edited, so it won't trigger the "update your plan" prompt.
@@ -799,6 +960,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       ),
     );
     if (save != true || !mounted) return;
+
+    // The workout is over as far as the lock screen is concerned.
+    _liveActivityService.end();
+    WorkoutNotificationService.instance.cancelRestOver();
 
     await _maybeUpdateDayPlan();
     if (!mounted) return;

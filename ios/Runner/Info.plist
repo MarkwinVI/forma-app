@@ -28,6 +28,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_dartVmService._tcp</string>
