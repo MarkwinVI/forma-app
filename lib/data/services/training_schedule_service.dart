@@ -237,15 +237,12 @@ class TrainingScheduleService {
     final int originSlot;
     final DateTime origin;
     if (anchorDate == null) {
+      // Nothing completed yet: there is no run of trained days to pin the
+      // pattern to, so the week reads exactly as the program lays it out,
+      // Monday first — the Program tab is the source of truth until the
+      // first session gives the plan an anchor.
       origin = today;
-      originSlot = _snapToTrainingSlot(
-        cycle,
-        _resolveIndex(
-          cycle: cycle,
-          stepIndex: currentStepIndex,
-          sessionType: currentSessionType,
-        ),
-      );
+      originSlot = (today.weekday - 1) % cycle.length;
     } else {
       origin = anchorDate;
       originSlot =
@@ -305,12 +302,16 @@ class TrainingScheduleService {
       } else if (!isPatternTraining) {
         sessionType = TrainingSessionType.rest;
       } else {
-        sessionType = sequence[pending];
+        // Unanchored, each day carries the session the weekly layout gives
+        // it. Anchored, the A/B order resumes from the last completion.
+        sessionType = anchorDate == null ? cycle[index] : sequence[pending];
         if (cursor.isBefore(today)) {
-          // Nothing was logged: the session stays next in line and the rest of
-          // the plan slides a day rather than dropping it.
+          // Nothing was logged: the session stays next in line and — once
+          // the plan has an anchor — everything after it slides a day
+          // rather than dropping it. An untouched program has nothing to
+          // slide; its week keeps reading as laid out.
           status = PlannedScheduleStatus.missed;
-          advanceIndex = false;
+          advanceIndex = anchorDate == null;
         } else {
           // Today and beyond are projected as if they get done.
           pending = (pending + 1) % sequence.length;
@@ -361,21 +362,6 @@ class TrainingScheduleService {
 
   static DateTime _latest(DateTime a, DateTime b) => a.isAfter(b) ? a : b;
 
-  static int _resolveIndex({
-    required List<TrainingSessionType> cycle,
-    required int stepIndex,
-    required TrainingSessionType sessionType,
-  }) {
-    if (stepIndex >= 0 &&
-        stepIndex < cycle.length &&
-        cycle[stepIndex] == sessionType) {
-      return stepIndex;
-    }
-
-    final matchedIndex = cycle.indexOf(sessionType);
-    return matchedIndex >= 0 ? matchedIndex : 0;
-  }
-
   /// Position of [sessionType] in the program's A/B order; 0 when it is not
   /// part of this program (a stale pointer after a program change).
   static int _sequencePosition(
@@ -418,15 +404,6 @@ class TrainingScheduleService {
       }
     }
     return fallback;
-  }
-
-  static int _snapToTrainingSlot(List<TrainingSessionType> cycle, int index) {
-    if (cycle[index] != TrainingSessionType.rest) return index;
-    for (var offset = 1; offset < cycle.length; offset++) {
-      final candidate = (index + offset) % cycle.length;
-      if (cycle[candidate] != TrainingSessionType.rest) return candidate;
-    }
-    return index;
   }
 
   static int _indexOnDateBeforeBase({

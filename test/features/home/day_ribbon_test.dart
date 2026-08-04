@@ -18,10 +18,14 @@ void main() {
             padding: const EdgeInsets.all(22),
             child: DayRibbon(
               days: [
+                // Week one runs Upper, week two Lower, so each page is
+                // recognisable by the letter its markers carry.
                 for (var i = 0; i < 14; i++)
                   HomeWeekStripDay(
                     date: today.add(Duration(days: i)),
-                    sessionType: TrainingSessionType.upper,
+                    sessionType: i < 7
+                        ? TrainingSessionType.upper
+                        : TrainingSessionType.lower,
                     isCurrent: i == 0,
                     isCompleted: false,
                   ),
@@ -37,16 +41,14 @@ void main() {
     );
 
     // The first week fills the row; the second is a swipe away.
-    expect(find.text('29'), findsOneWidget);
-    expect(find.text('4'), findsOneWidget);
-    expect(find.text('5'), findsNothing);
+    expect(find.text('U'), findsNWidgets(7));
+    expect(find.text('L'), findsNothing);
 
     await tester.drag(find.byType(PageView), const Offset(-400, 0));
     await tester.pumpAndSettle();
 
-    expect(find.text('29'), findsNothing);
-    expect(find.text('5'), findsOneWidget);
-    expect(find.text('11'), findsOneWidget);
+    expect(find.text('U'), findsNothing);
+    expect(find.text('L'), findsNWidgets(7));
   });
 
   testWidgets('the week survives the day below it changing', (tester) async {
@@ -70,7 +72,9 @@ void main() {
                       for (var i = 0; i < 14; i++)
                         HomeWeekStripDay(
                           date: today.add(Duration(days: i)),
-                          sessionType: TrainingSessionType.upper,
+                          sessionType: i < 7
+                              ? TrainingSessionType.upper
+                              : TrainingSessionType.lower,
                           isCurrent: i == 0,
                           isCompleted: false,
                         ),
@@ -97,12 +101,12 @@ void main() {
 
     await tester.drag(find.byType(PageView), const Offset(-400, 0));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('7'));
+    await tester.tap(find.text('L').at(2));
     await tester.pumpAndSettle();
 
     // Still on the second week: tapping a day must not throw the ribbon back
     // to the week today sits in.
-    expect(find.text('5'), findsOneWidget);
-    expect(find.text('29'), findsNothing);
+    expect(find.text('L'), findsNWidgets(7));
+    expect(find.text('U'), findsNothing);
   });
 }

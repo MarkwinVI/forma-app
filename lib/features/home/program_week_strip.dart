@@ -65,16 +65,21 @@ class ProgramTypeNode extends StatelessWidget {
   final TrainingSessionType sessionType;
   final double size;
 
+  /// Overrides the type's own tint — the Train ribbon colours a marker by
+  /// what happened to its day (green for trained, red for missed).
+  final Color? color;
+
   const ProgramTypeNode({
     super.key,
     required this.sessionType,
     this.size = 20,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final letter = programTypeLetter(sessionType);
-    final base = programTypeColor(sessionType);
+    final base = color ?? programTypeColor(sessionType);
     // The neutral tone runs dimmer than the accent so white never outshouts
     // the blue it alternates with.
     final dim = base == Colors.white ? 0.62 : 1.0;

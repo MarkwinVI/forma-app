@@ -4,17 +4,19 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
 import '../home_dashboard_metrics.dart';
+import '../program_week_strip.dart';
 import '../train_day_view.dart';
 
-/// The dated ribbon at the top of the Train tab: the month, a way back to
-/// today once you leave it, and a scrolling run of days.
+/// The week ribbon at the top of the Train tab: a way back to today once you
+/// leave it, and a scrolling run of days.
 ///
-/// State is carried by the marker's SHAPE rather than its colour — filled for
-/// a day that was trained, a hollow ring for one that is planned, nothing at
-/// all for a rest day — so the row reads at a glance without a legend. The
-/// underline under the day you are looking at says which kind of day it is:
-/// solid for today, dashed for a day ahead (nothing about it is settled yet),
-/// red for one you missed.
+/// Each day speaks the Program tab's marker language: its weekday letter over
+/// its workout type's circled initial — a faint dot for a rest day — so the
+/// two tabs read as one schedule. Colour carries what happened to the day:
+/// green for work that was done, red for work that was not. The underline
+/// under the day you are looking at says which kind of day it is: solid for
+/// today, dashed for a day ahead (nothing about it is settled yet), red for
+/// one you missed.
 class DayRibbon extends StatefulWidget {
   /// A page of the ribbon is a week: seven days, filling the row.
   static const int daysPerPage = 7;
@@ -128,7 +130,7 @@ class _DayRibbonState extends State<DayRibbon> {
               : null,
         ),
         SizedBox(
-          height: 68,
+          height: 58,
           // A week at a time: the row holds seven days and the next swipe
           // brings the seven behind them, so the days never half-scroll into
           // a reading that spans two weeks.
@@ -183,14 +185,6 @@ class _RibbonDay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final numberColor = selected
-        ? AppColors.textPrimary
-        : isToday
-            ? AppColors.accentPrimary
-            : day.isRestDay
-                ? AppColors.textMuted
-                : AppColors.textSecondary;
-
     return Container(
       padding: const EdgeInsets.only(bottom: 9),
       decoration: BoxDecoration(
@@ -206,15 +200,26 @@ class _RibbonDay extends StatelessWidget {
         children: [
           Text(
             _letters[day.date.weekday - 1],
-            style: monoStyle(size: 10, letterSpacing: 1),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${day.date.day}',
-            style: monoStyle(size: 15.5, color: numberColor, letterSpacing: 0),
+            style: monoStyle(
+              size: 10,
+              letterSpacing: 1,
+              // The letter is what says "you are here" — the marker below
+              // stays free to carry the day's type and outcome.
+              color: isToday ? AppColors.accentPrimary : AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: 8),
-          _Marker(day: day, isToday: isToday),
+          day.isRestDay
+              ? const ProgramRestDot(size: 22)
+              : ProgramTypeNode(
+                  sessionType: day.sessionType,
+                  size: 22,
+                  color: day.isCompleted
+                      ? AppColors.green
+                      : day.isMissed
+                          ? AppColors.red
+                          : null,
+                ),
         ],
       ),
     );
@@ -231,46 +236,6 @@ class _RibbonDay extends StatelessWidget {
 
   Color get _ruleColor =>
       day.isMissed ? AppColors.red : AppColors.accentPrimary;
-}
-
-/// Filled = trained, ring = planned, nothing = rest. Colour separates the
-/// three things a filled day can mean: green for work that was done, red for
-/// work that was not, accent for the day you are on.
-class _Marker extends StatelessWidget {
-  final HomeWeekStripDay day;
-  final bool isToday;
-
-  const _Marker({required this.day, required this.isToday});
-
-  @override
-  Widget build(BuildContext context) {
-    if (day.isRestDay) {
-      return const SizedBox(width: 5, height: 5);
-    }
-    if (day.isCompleted) {
-      return _dot(AppColors.green);
-    }
-    if (day.isMissed) {
-      return _dot(AppColors.red);
-    }
-    if (isToday) {
-      return _dot(AppColors.accentPrimary);
-    }
-    return Container(
-      width: 5,
-      height: 5,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
-      ),
-    );
-  }
-
-  Widget _dot(Color color) => Container(
-        width: 5,
-        height: 5,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-      );
 }
 
 /// A dashed 2px rule under the cell, painted rather than composed of boxes so

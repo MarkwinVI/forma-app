@@ -80,7 +80,7 @@ void main() {
     expect(find.text('REPS'), findsNothing);
   });
 
-  testWidgets('the ribbon dates every day and marks what was trained',
+  testWidgets('the ribbon marks each day with its workout type',
       (tester) async {
     tester.view.physicalSize = const Size(393 * 3, 852 * 3);
     tester.view.devicePixelRatio = 3;
@@ -114,9 +114,10 @@ void main() {
       ),
     );
 
-    // Every day carries its date, and the seven of them fill the row.
-    expect(find.text('27'), findsOneWidget);
-    expect(find.text('2'), findsOneWidget);
+    // Training days carry their type's initial; rest days only hold a dot,
+    // and no day shows a date.
+    expect(find.text('U'), findsNWidgets(4));
+    expect(find.text('27'), findsNothing);
     // Nothing offers a way back while today is the day being shown.
     expect(find.text('← TODAY'), findsNothing);
   });

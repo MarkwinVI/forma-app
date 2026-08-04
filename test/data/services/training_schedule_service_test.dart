@@ -41,6 +41,37 @@ void main() {
       );
     });
 
+    test('an untouched program reads the week exactly as laid out', () {
+      // Upper/Lower, four days on the default template: Mon U, Tue L,
+      // Thu U, Fri L. Nothing completed yet, and today is Tuesday — the
+      // window must mirror the Program tab, not pin today to the next
+      // pending session.
+      final window = service.buildWindow(
+        programType: TrainingProgramType.upperLower,
+        frequencyPerWeek: 4,
+        currentStepIndex: 0,
+        currentSessionType: TrainingSessionType.upper,
+        now: DateTime(2026, 8, 4, 9), // a Tuesday
+      );
+
+      expect(window.today.sessionType, TrainingSessionType.lower);
+      expect(
+        [for (final day in window.days) day.sessionType],
+        const [
+          TrainingSessionType.upper, // Mon
+          TrainingSessionType.lower, // Tue
+          TrainingSessionType.rest, // Wed
+          TrainingSessionType.upper, // Thu
+          TrainingSessionType.lower, // Fri
+          TrainingSessionType.rest, // Sat
+          TrainingSessionType.rest, // Sun
+        ],
+      );
+      // Monday passed without a log, but an untouched program blames no one:
+      // the program may only have been created today.
+      expect(window.days.first.isMissed, isFalse);
+    });
+
     test('keeps the completed workout selected for the rest of today', () {
       final window = service.buildWindow(
         programType: TrainingProgramType.pushPull,
