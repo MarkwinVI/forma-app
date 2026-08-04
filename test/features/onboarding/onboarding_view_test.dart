@@ -92,19 +92,12 @@ void main() {
     // Step 6: ready.
     expect(find.text('Welcome to Forma'), findsOneWidget);
     expect(find.text('Enter Forma'), findsOneWidget);
-    // Hidden via Visibility(maintainSize) — still in the tree, not tappable.
-    expect(find.text('Skip').hitTestable(), findsNothing);
   });
 
-  testWidgets('skip jumps to the last step', (tester) async {
+  testWidgets('there is no way to skip the flow', (tester) async {
     await pumpFlow(tester);
 
-    await tester.tap(find.text('Skip'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 900));
-
-    expect(find.text('Welcome to Forma'), findsOneWidget);
-    expect(find.text('Enter Forma'), findsOneWidget);
+    expect(find.text('Skip'), findsNothing);
   });
 
   testWidgets('back button steps backwards', (tester) async {

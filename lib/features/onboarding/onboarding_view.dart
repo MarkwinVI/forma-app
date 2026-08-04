@@ -324,24 +324,9 @@ class _OnboardingViewState extends State<OnboardingView> {
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Visibility(
-            visible: !_isLast,
-            maintainSize: true,
-            maintainAnimation: true,
-            maintainState: true,
-            child: Pressable(
-              onTap: () => _go(_stepCount - 1),
-              child: const Text(
-                'Skip',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-          ),
+          // Mirror the back button's footprint so the progress bar stays
+          // centred now that there is no Skip on this side.
+          const SizedBox(width: 12 + 32),
         ],
       ),
     );
