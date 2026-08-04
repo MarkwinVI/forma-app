@@ -108,7 +108,12 @@ class _ShellViewState extends State<ShellView> {
         isActive: currentIndex == _trainTab,
         onGoToProgram: () => setState(() => _currentIndex = _programTab),
       ),
-      ProgramView(isActive: currentIndex == _programTab),
+      ProgramView(
+        isActive: currentIndex == _programTab,
+        // A freshly built program lands the user on Progress, the tab the
+        // app treats as home once a program exists.
+        onProgramCreated: () => setState(() => _currentIndex = _progressTab),
+      ),
       DataView(isActive: currentIndex == _profileTab),
     ];
 

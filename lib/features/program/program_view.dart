@@ -19,9 +19,14 @@ import '../home/program_setup_view.dart';
 class ProgramView extends StatefulWidget {
   final bool isActive;
 
+  /// Fired after the setup wizard has written a program and been dismissed,
+  /// so the shell can move the user on to Progress, their new home tab.
+  final VoidCallback? onProgramCreated;
+
   const ProgramView({
     super.key,
     this.isActive = false,
+    this.onProgramCreated,
   });
 
   @override
@@ -129,13 +134,20 @@ class _ProgramViewState extends State<ProgramView> {
   }
 
   Future<void> _openProgramSetup() async {
+    var created = false;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
-          onComplete: _completeProgramSetup,
+          onComplete: (result) async {
+            await _completeProgramSetup(result);
+            created = true;
+          },
         ),
       ),
     );
+    // Abandoning the wizard midway must not move the user, so the redirect
+    // only fires once a program was actually written and the wizard closed.
+    if (created) widget.onProgramCreated?.call();
     // Re-fetch so the tab reflects the freshly created program even if the
     // user abandoned the wizard midway on a stale state.
     await _loadData();
