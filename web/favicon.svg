@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Forma">
+  <rect width="512" height="512" fill="#111016"></rect>
+  <g transform="translate(56.32 185.6) scale(0.293647)">
+    <rect x="374" y="175" width="582" height="130" fill="#3C7DFF"></rect>
+    <circle cx="1118" cy="240" r="199" fill="none" stroke="#3C7DFF" stroke-width="75"></circle>
+    <circle cx="234" cy="240" r="232" fill="#3C7DFF"></circle>
+  </g>
+</svg>

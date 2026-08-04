@@ -1,0 +1,384 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/data/catalog/exercise_catalog.dart';
+import 'package:forma_app/data/catalog/skill_category_catalog.dart';
+import 'package:forma_app/data/models/exercise_model.dart';
+import 'package:forma_app/data/models/exercise_progress_model.dart';
+import 'package:forma_app/data/models/skill_track_model.dart';
+import 'package:forma_app/data/models/training_program_model.dart';
+import 'package:forma_app/data/services/exercise_progression_service.dart';
+import 'package:forma_app/data/services/program_start_service.dart';
+import 'package:forma_app/data/services/training_program_service.dart';
+
+void main() {
+  ProgramStartPlan planFor({
+    bool hasGym = false,
+    List<String> goals = const [],
+    Map<String, int?> strength = const {},
+  }) {
+    return ProgramStartPlanner.planFor(
+      hasGym: hasGym,
+      goalSkillIds: goals,
+      startingStrength: strength,
+    );
+  }
+
+  List<SkillTrack> tracksOf(ProgramStartPlan plan) => [
+        for (final entry in plan.tracks.entries)
+          SkillTrack(
+            skillCategoryId: entry.key,
+            branchId: entry.value,
+            included: true,
+            updatedAt: DateTime(2026, 7, 28),
+          ),
+      ];
+
+  group('what a new program trains', () {
+    test('without a gym: four upper trees, the squat tree and Nordic curls',
+        () {
+      expect(planFor().tracks, {
+        SkillCategoryCatalog.pushupsId: 'planche',
+        SkillCategoryCatalog.dipsId: 'weighted',
+        SkillCategoryCatalog.rowsId: 'front_lever',
+        SkillCategoryCatalog.pullupsId: 'weighted',
+        SkillCategoryCatalog.squatId: 'pistol',
+        SkillCategoryCatalog.hingeId: 'nordic',
+      });
+    });
+
+    test('with a gym: the barbell squat and the Romanian deadlift', () {
+      final tracks = planFor(hasGym: true).tracks;
+
+      expect(tracks[SkillCategoryCatalog.barbellSquatId], 'main');
+      expect(tracks.containsKey(SkillCategoryCatalog.squatId), isFalse);
+      expect(tracks[SkillCategoryCatalog.hingeId], 'rdl');
+    });
+
+    test('a squat goal takes the knee-dominant slot back from the barbell',
+        () {
+      final tracks = planFor(hasGym: true, goals: ['pistol']).tracks;
+
+      expect(tracks[SkillCategoryCatalog.squatId], 'pistol');
+      expect(tracks.containsKey(SkillCategoryCatalog.barbellSquatId), isFalse);
+    });
+
+    test('a goal replaces the default branch of its own tree', () {
+      final tracks = planFor(goals: ['oapu', 'oarow']).tracks;
+
+      expect(tracks[SkillCategoryCatalog.pushupsId], 'one_arm');
+      expect(tracks[SkillCategoryCatalog.rowsId], 'one_arm');
+    });
+
+    test('a goal for a movement the six do not cover adds its own track', () {
+      final tracks = planFor(goals: ['lsit', 'hspu']).tracks;
+
+      expect(tracks[SkillCategoryCatalog.coreId], 'l_sit');
+      expect(tracks[SkillCategoryCatalog.handstandPushupsId], 'main');
+    });
+
+    test('no core track unless a goal asks for one', () {
+      expect(planFor().tracks.containsKey(SkillCategoryCatalog.coreId), isFalse);
+    });
+  });
+
+  group('where the program starts', () {
+    test('no reps starts at the beginner node', () {
+      final plan = planFor(strength: {'pushups': 0});
+
+      expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
+      expect(plan.statuses.containsKey('pushups_incline_push_up'), isFalse);
+    });
+
+    test('an unknown answer also starts at the beginner node', () {
+      final plan = planFor(strength: {'pushups': null});
+
+      expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
+    });
+
+    test('1–9 reps start two steps before the exercise they answer for', () {
+      final plan = planFor(
+        strength: {'pushups': 5, 'pullups': 3, 'dips': 1, 'squat_bw': 9},
+      );
+
+      expect(plan.statuses['pullups_pull_up_negative'], ExerciseStatus.active);
+      // Dips have two steps before the parallel-bar dip, so two back is the
+      // first one.
+      expect(plan.statuses['dips_bench_dips'], ExerciseStatus.active);
+      // Push-ups and squats have exactly two steps of run-up, so the step
+      // back clamps onto the beginner node.
+      expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['squat_assisted_squat'], ExerciseStatus.active);
+    });
+
+    test('10+ reps start on the exercise the answer was about', () {
+      final plan = planFor(
+        strength: {'pushups': 12, 'pullups': 10, 'dips': 30, 'squat_bw': 40},
+      );
+
+      expect(plan.statuses['pushups_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['pullups_pull_up'], ExerciseStatus.active);
+      expect(plan.statuses['dips_parallel_bar_dips'], ExerciseStatus.active);
+      expect(plan.statuses['squat_squat'], ExerciseStatus.active);
+    });
+
+    test('everything behind the starting node is skipped, never mastered', () {
+      final plan = planFor(strength: {'pushups': 12, 'pullups': 10});
+
+      expect(
+        [
+          for (final id in const [
+            'pushups_wall_push_up',
+            'pushups_incline_push_up',
+            'pullups_scapular_pull',
+            'pullups_arch_hang',
+            'pullups_pull_up_negative',
+            'pullups_assisted_pull_up',
+          ])
+            plan.statuses[id],
+        ],
+        everyElement(ExerciseStatus.skipped),
+      );
+      expect(
+        plan.statuses.values.contains(ExerciseStatus.mastered),
+        isFalse,
+      );
+    });
+
+    test('rows always start at the first step', () {
+      final plan = planFor(strength: {'pushups': 30, 'pullups': 20});
+
+      expect(plan.statuses['rows_vertical_rows'], ExerciseStatus.active);
+      expect(
+        plan.statuses.keys.where((id) => id.contains('rows')).length,
+        1,
+      );
+    });
+
+    test('the barbell squat opens at 3 × 5 on 70% of the reported 1RM', () {
+      final plan = planFor(hasGym: true, strength: {'squat': 100});
+      final target = plan.targets['barbell_squat_barbell_squat']!;
+
+      expect(target.sets, 3);
+      expect(target.value, 5);
+      expect(target.weightKg, 70);
+    });
+
+    test('the opening barbell weight is rounded to a loadable 2.5 kg', () {
+      expect(ProgramStartPlanner.barbellSquatStartKg(105), 72.5);
+      expect(ProgramStartPlanner.barbellSquatStartKg(1), 2.5);
+      expect(ProgramStartPlanner.barbellSquatStartKg(null), isNull);
+    });
+
+    test('the Romanian deadlift opens light and the Nordic curl at 3 × 5', () {
+      final rdl = planFor(hasGym: true).targets['hinge_romanian_deadlift']!;
+      expect(
+        (rdl.sets, rdl.value, rdl.weightKg),
+        (3, 5, ProgramStartPlanner.romanianDeadliftStartKg),
+      );
+
+      final nordic = planFor().targets['hinge_nordic_nordic_curl']!;
+      expect((nordic.sets, nordic.value, nordic.weightKg), (3, 5, null));
+    });
+  });
+
+  group('the sessions a planned program builds', () {
+    final service = TrainingProgramService();
+
+    Set<String> categoriesOf({
+      required ProgramStartPlan plan,
+      required TrainingProgramType programType,
+      required TrainingSessionType sessionType,
+    }) {
+      return service
+          .buildToday(
+            progressMap: plan.statuses,
+            programType: programType,
+            sessionType: sessionType,
+            skillTracks: tracksOf(plan),
+          )
+          .items
+          .map((item) => item.sourceSkillCategoryId)
+          .toSet();
+    }
+
+    test('full body trains all six movements', () {
+      expect(
+        categoriesOf(
+          plan: planFor(hasGym: true),
+          programType: TrainingProgramType.fullBody,
+          sessionType: TrainingSessionType.fullBody,
+        ),
+        {
+          SkillCategoryCatalog.pushupsId,
+          SkillCategoryCatalog.dipsId,
+          SkillCategoryCatalog.rowsId,
+          SkillCategoryCatalog.pullupsId,
+          SkillCategoryCatalog.barbellSquatId,
+          SkillCategoryCatalog.hingeId,
+        },
+      );
+    });
+
+    test('push days press and squat, pull days pull and hinge', () {
+      final plan = planFor();
+
+      expect(
+        categoriesOf(
+          plan: plan,
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.push,
+        ),
+        {
+          SkillCategoryCatalog.pushupsId,
+          SkillCategoryCatalog.dipsId,
+          SkillCategoryCatalog.squatId,
+        },
+      );
+      expect(
+        categoriesOf(
+          plan: plan,
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.pull,
+        ),
+        {
+          SkillCategoryCatalog.rowsId,
+          SkillCategoryCatalog.pullupsId,
+          SkillCategoryCatalog.hingeId,
+        },
+      );
+    });
+
+    test('upper days take the four upper trees, lower days the two legs', () {
+      final plan = planFor(hasGym: true);
+
+      expect(
+        categoriesOf(
+          plan: plan,
+          programType: TrainingProgramType.upperLower,
+          sessionType: TrainingSessionType.upper,
+        ),
+        {
+          SkillCategoryCatalog.pushupsId,
+          SkillCategoryCatalog.dipsId,
+          SkillCategoryCatalog.rowsId,
+          SkillCategoryCatalog.pullupsId,
+        },
+      );
+      expect(
+        categoriesOf(
+          plan: plan,
+          programType: TrainingProgramType.upperLower,
+          sessionType: TrainingSessionType.lower,
+        ),
+        {
+          SkillCategoryCatalog.barbellSquatId,
+          SkillCategoryCatalog.hingeId,
+        },
+      );
+    });
+
+    test('sessions open on the starting node the answers placed', () {
+      final plan = planFor(strength: {'pushups': 12, 'pullups': 3});
+      final items = service
+          .buildToday(
+            progressMap: plan.statuses,
+            programType: TrainingProgramType.fullBody,
+            sessionType: TrainingSessionType.fullBody,
+            skillTracks: tracksOf(plan),
+          )
+          .items
+          .map((item) => item.exercise.id)
+          .toList();
+
+      expect(items, contains('pushups_push_up'));
+      expect(items, contains('pullups_pull_up_negative'));
+      expect(items, isNot(contains('pushups_wall_push_up')));
+    });
+  });
+
+  group('a skipped step is cleared, not claimed', () {
+    test('logging the mastery target masters it for real', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(
+            exercise: ExerciseCatalog.findById('pushups_push_up')!,
+            volume: 24, // 3 × 8, the default mastery target.
+          ),
+        ],
+        progressRows: {
+          'pushups_push_up': ExerciseProgress(
+            exerciseId: 'pushups_push_up',
+            status: ExerciseStatus.skipped,
+            updatedAt: DateTime(2026, 7, 28),
+          ),
+        },
+      );
+
+      expect(outcome.statusChanges['pushups_push_up'], ExerciseStatus.mastered);
+    });
+
+    test('falling short of the target leaves it skipped', () {
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(
+            exercise: ExerciseCatalog.findById('pushups_push_up')!,
+            volume: 9,
+          ),
+        ],
+        progressRows: {
+          'pushups_push_up': ExerciseProgress(
+            exerciseId: 'pushups_push_up',
+            status: ExerciseStatus.skipped,
+            updatedAt: DateTime(2026, 7, 28),
+          ),
+        },
+      );
+
+      expect(outcome.statusChanges, isEmpty);
+    });
+  });
+
+  group('the rows applyPlan writes', () {
+    test('status and target arrive joined, as one position per exercise', () {
+      final plan = ProgramStartPlanner.planFor(
+        hasGym: true,
+        goalSkillIds: const [],
+        // Ten push-ups: starts on the push-up itself, skipping the steps
+        // behind it — so the plan carries both targets and skipped statuses.
+        startingStrength: const {'squat': 100, 'pushups': 10},
+      );
+
+      final positions = ProgramStartService.startingPositionsFor(
+        plan,
+        existing: const {},
+      );
+
+      final squat = positions['barbell_squat_barbell_squat']!;
+      expect(squat.status, ExerciseStatus.active);
+      expect(squat.targetSets, ProgramStartPlanner.loadedLiftSets);
+      expect(squat.targetValue, ProgramStartPlanner.loadedLiftStartReps);
+      expect(squat.targetWeightKg, 70);
+
+      // A step with no special opening target still carries its status —
+      // null target means the standard ladder target.
+      final skipped = positions.entries
+          .firstWhere((entry) => entry.value.status == ExerciseStatus.skipped);
+      expect(skipped.value.targetSets, isNull);
+    });
+
+    test('an exercise the user already has a row for is left alone', () {
+      final plan = ProgramStartPlanner.planFor(
+        hasGym: true,
+        goalSkillIds: const [],
+        startingStrength: const {'squat': 100},
+      );
+
+      final positions = ProgramStartService.startingPositionsFor(
+        plan,
+        existing: {'barbell_squat_barbell_squat'},
+      );
+
+      expect(positions.containsKey('barbell_squat_barbell_squat'), isFalse);
+      expect(positions, isNotEmpty, reason: 'the rest is still written');
+    });
+  });
+}

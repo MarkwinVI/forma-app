@@ -1,0 +1,185 @@
+Skill tree,Skill tree id,Branch name,Branch id,Step,Exercise,Exercise id,Difficulty,Previous node,Previous node id,Prerequisite ids,Shared foundation,Movement pattern,Measured in,Tree order
+Pullups,pullups,Weighted,weighted,1,Scapular Pull,pullups_scapular_pull,1,,,,yes,Vertical Pull,reps,0
+Pullups,pullups,Weighted,weighted,2,Arch Hang,pullups_arch_hang,2,Scapular Pull,pullups_scapular_pull,pullups_scapular_pull,yes,Vertical Pull,seconds,1
+Pullups,pullups,Weighted,weighted,3,Pull Up Negatives,pullups_pull_up_negative,2,Arch Hang,pullups_arch_hang,pullups_arch_hang,yes,Vertical Pull,reps,2
+Pullups,pullups,Weighted,weighted,4,Assisted Pull-Up,pullups_assisted_pull_up,3,Pull Up Negatives,pullups_pull_up_negative,pullups_pull_up_negative,yes,Vertical Pull,reps,3
+Pullups,pullups,Weighted,weighted,5,Pull-Up,pullups_pull_up,4,Assisted Pull-Up,pullups_assisted_pull_up,pullups_assisted_pull_up,yes,Vertical Pull,reps,4
+Pullups,pullups,Weighted,weighted,6,1.15x Bodyweight,pullups_weighted_pull_up_115,4,Pull-Up,pullups_pull_up,pullups_pull_up,no,Vertical Pull,reps,5
+Pullups,pullups,Weighted,weighted,7,1.35x Bodyweight,pullups_weighted_pull_up_135,4,1.15x Bodyweight,pullups_weighted_pull_up_115,pullups_weighted_pull_up_115,no,Vertical Pull,reps,6
+Pullups,pullups,Weighted,weighted,8,1.5x Bodyweight,pullups_weighted_pull_up_150,5,1.35x Bodyweight,pullups_weighted_pull_up_135,pullups_weighted_pull_up_135,no,Vertical Pull,reps,7
+Pullups,pullups,Weighted,weighted,9,1.65x Bodyweight,pullups_weighted_pull_up_165,5,1.5x Bodyweight,pullups_weighted_pull_up_150,pullups_weighted_pull_up_150,no,Vertical Pull,reps,8
+Pullups,pullups,Weighted,weighted,10,1.8x Bodyweight,pullups_weighted_pull_up_180,5,1.65x Bodyweight,pullups_weighted_pull_up_165,pullups_weighted_pull_up_165,no,Vertical Pull,reps,9
+Pullups,pullups,Weighted,weighted,11,1.9x Bodyweight,pullups_weighted_pull_up_190,5,1.8x Bodyweight,pullups_weighted_pull_up_180,pullups_weighted_pull_up_180,no,Vertical Pull,reps,10
+Pullups,pullups,Weighted,weighted,12,2x Bodyweight,pullups_weighted_pull_up_200,5,1.9x Bodyweight,pullups_weighted_pull_up_190,pullups_weighted_pull_up_190,no,Vertical Pull,reps,11
+Pullups,pullups,High Pull-up,close_grip,1,Scapular Pull,pullups_scapular_pull,1,,,,yes,Vertical Pull,reps,0
+Pullups,pullups,High Pull-up,close_grip,2,Arch Hang,pullups_arch_hang,2,Scapular Pull,pullups_scapular_pull,pullups_scapular_pull,yes,Vertical Pull,seconds,1
+Pullups,pullups,High Pull-up,close_grip,3,Pull Up Negatives,pullups_pull_up_negative,2,Arch Hang,pullups_arch_hang,pullups_arch_hang,yes,Vertical Pull,reps,2
+Pullups,pullups,High Pull-up,close_grip,4,Assisted Pull-Up,pullups_assisted_pull_up,3,Pull Up Negatives,pullups_pull_up_negative,pullups_pull_up_negative,yes,Vertical Pull,reps,3
+Pullups,pullups,High Pull-up,close_grip,5,Pull-Up,pullups_pull_up,4,Assisted Pull-Up,pullups_assisted_pull_up,pullups_assisted_pull_up,yes,Vertical Pull,reps,4
+Pullups,pullups,High Pull-up,close_grip,6,Close-Grip Pull-Up,pullups_close_grip_pull_up,4,Pull-Up,pullups_pull_up,pullups_pull_up,no,Vertical Pull,reps,5
+Pullups,pullups,High Pull-up,close_grip,7,Wide-Grip Pull-Up,pullups_wide_grip_pull_up,4,Close-Grip Pull-Up,pullups_close_grip_pull_up,pullups_close_grip_pull_up,no,Vertical Pull,reps,6
+Pullups,pullups,High Pull-up,close_grip,8,Typewriter Pull-Up,pullups_typewriter_pull_up,5,Wide-Grip Pull-Up,pullups_wide_grip_pull_up,pullups_wide_grip_pull_up,no,Vertical Pull,reps,7
+Pullups,pullups,High Pull-up,close_grip,9,Archer Pull-Up,pullups_archer_pull_up,5,Typewriter Pull-Up,pullups_typewriter_pull_up,pullups_typewriter_pull_up,no,Vertical Pull,reps,8
+Pullups,pullups,High Pull-up,close_grip,10,Chest-to-Bar Pull-Up,pullups_sternum_pull_up,5,Archer Pull-Up,pullups_archer_pull_up,pullups_archer_pull_up,no,Vertical Pull,reps,9
+Pullups,pullups,High Pull-up,close_grip,11,Belly Button Pullups,pullups_belly_button_pull_up,5,Chest-to-Bar Pull-Up,pullups_sternum_pull_up,pullups_sternum_pull_up,no,Vertical Pull,reps,10
+Pullups,pullups,L-Sit,l_sit,1,Scapular Pull,pullups_scapular_pull,1,,,,yes,Vertical Pull,reps,0
+Pullups,pullups,L-Sit,l_sit,2,Arch Hang,pullups_arch_hang,2,Scapular Pull,pullups_scapular_pull,pullups_scapular_pull,yes,Vertical Pull,seconds,1
+Pullups,pullups,L-Sit,l_sit,3,Pull Up Negatives,pullups_pull_up_negative,2,Arch Hang,pullups_arch_hang,pullups_arch_hang,yes,Vertical Pull,reps,2
+Pullups,pullups,L-Sit,l_sit,4,Assisted Pull-Up,pullups_assisted_pull_up,3,Pull Up Negatives,pullups_pull_up_negative,pullups_pull_up_negative,yes,Vertical Pull,reps,3
+Pullups,pullups,L-Sit,l_sit,5,Pull-Up,pullups_pull_up,4,Assisted Pull-Up,pullups_assisted_pull_up,pullups_assisted_pull_up,yes,Vertical Pull,reps,4
+Pullups,pullups,L-Sit,l_sit,6,L-Sit Pull-Up,pullups_l_sit_pull_up,4,Pull-Up,pullups_pull_up,pullups_pull_up,no,Vertical Pull,seconds,5
+Pullups,pullups,L-Sit,l_sit,7,Pull Over,pullups_pull_over,5,L-Sit Pull-Up,pullups_l_sit_pull_up,pullups_l_sit_pull_up,no,Vertical Pull,reps,6
+Pullups,pullups,One Arm,one_arm,1,Scapular Pull,pullups_scapular_pull,1,,,,yes,Vertical Pull,reps,0
+Pullups,pullups,One Arm,one_arm,2,Arch Hang,pullups_arch_hang,2,Scapular Pull,pullups_scapular_pull,pullups_scapular_pull,yes,Vertical Pull,seconds,1
+Pullups,pullups,One Arm,one_arm,3,Pull Up Negatives,pullups_pull_up_negative,2,Arch Hang,pullups_arch_hang,pullups_arch_hang,yes,Vertical Pull,reps,2
+Pullups,pullups,One Arm,one_arm,4,Assisted Pull-Up,pullups_assisted_pull_up,3,Pull Up Negatives,pullups_pull_up_negative,pullups_pull_up_negative,yes,Vertical Pull,reps,3
+Pullups,pullups,One Arm,one_arm,5,Pull-Up,pullups_pull_up,4,Assisted Pull-Up,pullups_assisted_pull_up,pullups_assisted_pull_up,yes,Vertical Pull,reps,4
+Pullups,pullups,One Arm,one_arm,6,One-arm Towel Assisted Chin-up,pullups_one_arm_towel_assisted_chin_up,5,Pull-Up,pullups_pull_up,pullups_pull_up,no,Vertical Pull,reps,5
+Pullups,pullups,One Arm,one_arm,7,One-Arm Pull-Up Eccentric,pullups_one_arm_pull_up_eccentric,5,One-arm Towel Assisted Chin-up,pullups_one_arm_towel_assisted_chin_up,pullups_one_arm_towel_assisted_chin_up,no,Vertical Pull,reps,6
+Pullups,pullups,One Arm,one_arm,8,Half-one Arm Chin-up,pullups_half_one_arm_chin_up,5,One-Arm Pull-Up Eccentric,pullups_one_arm_pull_up_eccentric,pullups_one_arm_pull_up_eccentric,no,Vertical Pull,reps,7
+Pullups,pullups,One Arm,one_arm,9,One Arm Chin-up,pullups_one_arm_chin_up,5,Half-one Arm Chin-up,pullups_half_one_arm_chin_up,pullups_half_one_arm_chin_up,no,Vertical Pull,reps,8
+Rows,rows,Front Lever,front_lever,1,Incline Row,rows_vertical_rows,1,,,,yes,Horizontal Pull,reps,0
+Rows,rows,Front Lever,front_lever,2,Inverted Row (Bent Legs),rows_inverted_rows_bent_legs,1,Incline Row,rows_vertical_rows,rows_vertical_rows,yes,Horizontal Pull,reps,1
+Rows,rows,Front Lever,front_lever,3,Inverted Row (Straight Legs),rows_inverted_rows_straight_legs,2,Inverted Row (Bent Legs),rows_inverted_rows_bent_legs,rows_inverted_rows_bent_legs,yes,Horizontal Pull,reps,2
+Rows,rows,Front Lever,front_lever,4,Feet-Elevated Row,rows_feet_elevated_rows,3,Inverted Row (Straight Legs),rows_inverted_rows_straight_legs,rows_inverted_rows_straight_legs,yes,Horizontal Pull,reps,3
+Rows,rows,Front Lever,front_lever,5,Horizontal Rows,rows_horizontal_rows,3,Feet-Elevated Row,rows_feet_elevated_rows,rows_feet_elevated_rows,yes,Horizontal Pull,reps,4
+Rows,rows,Front Lever,front_lever,6,Wide Inverted Row,rows_horizontal_wide_rows,4,Horizontal Rows,rows_horizontal_rows,rows_horizontal_rows,yes,Horizontal Pull,reps,5
+Rows,rows,Front Lever,front_lever,7,Tuck Front Lever,rows_tuck_front_lever_rows_hold,4,Wide Inverted Row,rows_horizontal_wide_rows,rows_horizontal_wide_rows,no,Horizontal Pull,seconds,6
+Rows,rows,Front Lever,front_lever,8,Tuck FL Rows,rows_tuck_front_lever_rows,4,Tuck Front Lever,rows_tuck_front_lever_rows_hold,rows_tuck_front_lever_rows_hold,no,Horizontal Pull,reps,7
+Rows,rows,Front Lever,front_lever,9,Advanced Tuck FL Rows,rows_advanced_tuck_front_lever_rows,4,Tuck FL Rows,rows_tuck_front_lever_rows,rows_tuck_front_lever_rows,no,Horizontal Pull,reps,8
+Rows,rows,Front Lever,front_lever,10,One-Leg Front Lever Row,rows_one_leg_tuck_one_extended_front_lever_rows,5,Advanced Tuck FL Rows,rows_advanced_tuck_front_lever_rows,rows_advanced_tuck_front_lever_rows,no,Horizontal Pull,reps,9
+Rows,rows,Front Lever,front_lever,11,Straddle FL Rows,rows_straddle_front_lever_rows,5,One-Leg Front Lever Row,rows_one_leg_tuck_one_extended_front_lever_rows,rows_one_leg_tuck_one_extended_front_lever_rows,no,Horizontal Pull,reps,10
+Rows,rows,Front Lever,front_lever,12,Front Lever Row,rows_front_lever_rows,5,Straddle FL Rows,rows_straddle_front_lever_rows,rows_straddle_front_lever_rows,no,Horizontal Pull,reps,11
+Rows,rows,One Arm,one_arm,1,Incline Row,rows_vertical_rows,1,,,,yes,Horizontal Pull,reps,0
+Rows,rows,One Arm,one_arm,2,Inverted Row (Bent Legs),rows_inverted_rows_bent_legs,1,Incline Row,rows_vertical_rows,rows_vertical_rows,yes,Horizontal Pull,reps,1
+Rows,rows,One Arm,one_arm,3,Inverted Row (Straight Legs),rows_inverted_rows_straight_legs,2,Inverted Row (Bent Legs),rows_inverted_rows_bent_legs,rows_inverted_rows_bent_legs,yes,Horizontal Pull,reps,2
+Rows,rows,One Arm,one_arm,4,Feet-Elevated Row,rows_feet_elevated_rows,3,Inverted Row (Straight Legs),rows_inverted_rows_straight_legs,rows_inverted_rows_straight_legs,yes,Horizontal Pull,reps,3
+Rows,rows,One Arm,one_arm,5,Horizontal Rows,rows_horizontal_rows,3,Feet-Elevated Row,rows_feet_elevated_rows,rows_feet_elevated_rows,yes,Horizontal Pull,reps,4
+Rows,rows,One Arm,one_arm,6,Wide Inverted Row,rows_horizontal_wide_rows,4,Horizontal Rows,rows_horizontal_rows,rows_horizontal_rows,yes,Horizontal Pull,reps,5
+Rows,rows,One Arm,one_arm,7,Archer Row,rows_archer_rows,4,Wide Inverted Row,rows_horizontal_wide_rows,rows_horizontal_wide_rows,no,Horizontal Pull,reps,6
+Rows,rows,One Arm,one_arm,8,Bulgarian Rows,rows_bulgarian_rows,5,Archer Row,rows_archer_rows,rows_archer_rows,no,Horizontal Pull,reps,7
+Rows,rows,One Arm,one_arm,9,One-Arm Row,rows_one_arm_rows,5,Bulgarian Rows,rows_bulgarian_rows,rows_bulgarian_rows,no,Horizontal Pull,reps,8
+Rows,rows,Weighted,weighted,1,Incline Row,rows_vertical_rows,1,,,,yes,Horizontal Pull,reps,0
+Rows,rows,Weighted,weighted,2,Inverted Row (Bent Legs),rows_inverted_rows_bent_legs,1,Incline Row,rows_vertical_rows,rows_vertical_rows,yes,Horizontal Pull,reps,1
+Rows,rows,Weighted,weighted,3,Inverted Row (Straight Legs),rows_inverted_rows_straight_legs,2,Inverted Row (Bent Legs),rows_inverted_rows_bent_legs,rows_inverted_rows_bent_legs,yes,Horizontal Pull,reps,2
+Rows,rows,Weighted,weighted,4,Feet-Elevated Row,rows_feet_elevated_rows,3,Inverted Row (Straight Legs),rows_inverted_rows_straight_legs,rows_inverted_rows_straight_legs,yes,Horizontal Pull,reps,3
+Rows,rows,Weighted,weighted,5,Horizontal Rows,rows_horizontal_rows,3,Feet-Elevated Row,rows_feet_elevated_rows,rows_feet_elevated_rows,yes,Horizontal Pull,reps,4
+Rows,rows,Weighted,weighted,6,Wide Inverted Row,rows_horizontal_wide_rows,4,Horizontal Rows,rows_horizontal_rows,rows_horizontal_rows,yes,Horizontal Pull,reps,5
+Rows,rows,Weighted,weighted,7,Bodyweight (3x10),rows_weighted_rows_bodyweight_3x10,4,Wide Inverted Row,rows_horizontal_wide_rows,rows_horizontal_wide_rows,no,Horizontal Pull,reps,6
+Rows,rows,Weighted,weighted,8,+10% Bodyweight,rows_weighted_rows_plus_10,4,Bodyweight (3x10),rows_weighted_rows_bodyweight_3x10,rows_weighted_rows_bodyweight_3x10,no,Horizontal Pull,reps,7
+Rows,rows,Weighted,weighted,9,+20% Bodyweight,rows_weighted_rows_plus_20,4,+10% Bodyweight,rows_weighted_rows_plus_10,rows_weighted_rows_plus_10,no,Horizontal Pull,reps,8
+Rows,rows,Weighted,weighted,10,+35% Bodyweight,rows_weighted_rows_plus_35,5,+20% Bodyweight,rows_weighted_rows_plus_20,rows_weighted_rows_plus_20,no,Horizontal Pull,reps,9
+Rows,rows,Weighted,weighted,11,+50% Bodyweight,rows_weighted_rows_plus_50,5,+35% Bodyweight,rows_weighted_rows_plus_35,rows_weighted_rows_plus_35,no,Horizontal Pull,reps,10
+Rows,rows,Weighted,weighted,12,+75% Bodyweight,rows_weighted_rows_plus_75,5,+50% Bodyweight,rows_weighted_rows_plus_50,rows_weighted_rows_plus_50,no,Horizontal Pull,reps,11
+Rows,rows,Weighted,weighted,13,+Bodyweight (2x total load),rows_weighted_rows_plus_bodyweight,5,+75% Bodyweight,rows_weighted_rows_plus_75,rows_weighted_rows_plus_75,no,Horizontal Pull,reps,12
+Pushups,pushups,One Arm,one_arm,1,Wall Pushups,pushups_wall_push_up,1,,,,yes,Horizontal Push,reps,0
+Pushups,pushups,One Arm,one_arm,2,Incline Pushups,pushups_incline_push_up,1,Wall Pushups,pushups_wall_push_up,pushups_wall_push_up,yes,Horizontal Push,reps,1
+Pushups,pushups,One Arm,one_arm,3,Pushup,pushups_push_up,2,Incline Pushups,pushups_incline_push_up,pushups_incline_push_up,yes,Horizontal Push,reps,2
+Pushups,pushups,One Arm,one_arm,4,Elbows in Pushup,pushups_elbows_in_push_up,3,Pushup,pushups_push_up,pushups_push_up,yes,Horizontal Push,reps,3
+Pushups,pushups,One Arm,one_arm,5,Decline Pushup,pushups_decline_push_up,3,Elbows in Pushup,pushups_elbows_in_push_up,pushups_elbows_in_push_up,yes,Horizontal Push,reps,4
+Pushups,pushups,One Arm,one_arm,6,Diamond Pushup,pushups_diamond_push_up,4,Decline Pushup,pushups_decline_push_up,pushups_decline_push_up,yes,Horizontal Push,reps,5
+Pushups,pushups,One Arm,one_arm,7,Uneven Pushup,pushups_uneven_push_up,4,Diamond Pushup,pushups_diamond_push_up,pushups_diamond_push_up,no,Horizontal Push,reps,6
+Pushups,pushups,One Arm,one_arm,8,Archer Pushups,pushups_archer_push_up,4,Uneven Pushup,pushups_uneven_push_up,pushups_uneven_push_up,no,Horizontal Push,reps,7
+Pushups,pushups,One Arm,one_arm,9,Incline One Arm Pushups,pushups_incline_one_arm_push_up,5,Archer Pushups,pushups_archer_push_up,pushups_archer_push_up,no,Horizontal Push,reps,8
+Pushups,pushups,One Arm,one_arm,10,One-arm Pushup,pushups_one_arm_push_up,5,Incline One Arm Pushups,pushups_incline_one_arm_push_up,pushups_incline_one_arm_push_up,no,Horizontal Push,reps,9
+Pushups,pushups,Rings,rings,1,Wall Pushups,pushups_wall_push_up,1,,,,yes,Horizontal Push,reps,0
+Pushups,pushups,Rings,rings,2,Incline Pushups,pushups_incline_push_up,1,Wall Pushups,pushups_wall_push_up,pushups_wall_push_up,yes,Horizontal Push,reps,1
+Pushups,pushups,Rings,rings,3,Pushup,pushups_push_up,2,Incline Pushups,pushups_incline_push_up,pushups_incline_push_up,yes,Horizontal Push,reps,2
+Pushups,pushups,Rings,rings,4,Elbows in Pushup,pushups_elbows_in_push_up,3,Pushup,pushups_push_up,pushups_push_up,yes,Horizontal Push,reps,3
+Pushups,pushups,Rings,rings,5,Decline Pushup,pushups_decline_push_up,3,Elbows in Pushup,pushups_elbows_in_push_up,pushups_elbows_in_push_up,yes,Horizontal Push,reps,4
+Pushups,pushups,Rings,rings,6,Diamond Pushup,pushups_diamond_push_up,4,Decline Pushup,pushups_decline_push_up,pushups_decline_push_up,yes,Horizontal Push,reps,5
+Pushups,pushups,Rings,rings,7,Ring Wide Pushups,pushups_ring_wide_push_up,4,Diamond Pushup,pushups_diamond_push_up,pushups_diamond_push_up,no,Horizontal Push,reps,6
+Pushups,pushups,Rings,rings,8,Ring Pushup,pushups_ring_push_up,4,Ring Wide Pushups,pushups_ring_wide_push_up,pushups_ring_wide_push_up,no,Horizontal Push,reps,7
+Pushups,pushups,Rings,rings,9,RTO Pushup,pushups_rto_push_up,4,Ring Pushup,pushups_ring_push_up,pushups_ring_push_up,no,Horizontal Push,reps,8
+Pushups,pushups,Rings,rings,10,RTO Archer Pushups,pushups_rto_archer_push_up,5,RTO Pushup,pushups_rto_push_up,pushups_rto_push_up,no,Horizontal Push,reps,9
+Pushups,pushups,Rings,rings,11,RTO Pseudo Planche Push-Up (Lower Chest),pushups_rto_pseudo_planche_push_up_lower_chest,5,RTO Archer Pushups,pushups_rto_archer_push_up,pushups_rto_archer_push_up,no,Horizontal Push,reps,10
+Pushups,pushups,Rings,rings,12,RTO Pseudo Planche Push-Up (Belly Button),pushups_rto_pseudo_planche_push_up_belly_button,5,RTO Pseudo Planche Push-Up (Lower Chest),pushups_rto_pseudo_planche_push_up_lower_chest,pushups_rto_pseudo_planche_push_up_lower_chest,no,Horizontal Push,reps,11
+Pushups,pushups,Rings,rings,13,RTO Pseudo Planche Push-Up (Hips),pushups_rto_pseudo_planche_push_up_hips,5,RTO Pseudo Planche Push-Up (Belly Button),pushups_rto_pseudo_planche_push_up_belly_button,pushups_rto_pseudo_planche_push_up_belly_button,no,Horizontal Push,reps,12
+Pushups,pushups,Planche,planche,1,Wall Pushups,pushups_wall_push_up,1,,,,yes,Horizontal Push,reps,0
+Pushups,pushups,Planche,planche,2,Incline Pushups,pushups_incline_push_up,1,Wall Pushups,pushups_wall_push_up,pushups_wall_push_up,yes,Horizontal Push,reps,1
+Pushups,pushups,Planche,planche,3,Pushup,pushups_push_up,2,Incline Pushups,pushups_incline_push_up,pushups_incline_push_up,yes,Horizontal Push,reps,2
+Pushups,pushups,Planche,planche,4,Elbows in Pushup,pushups_elbows_in_push_up,3,Pushup,pushups_push_up,pushups_push_up,yes,Horizontal Push,reps,3
+Pushups,pushups,Planche,planche,5,Decline Pushup,pushups_decline_push_up,3,Elbows in Pushup,pushups_elbows_in_push_up,pushups_elbows_in_push_up,yes,Horizontal Push,reps,4
+Pushups,pushups,Planche,planche,6,Diamond Pushup,pushups_diamond_push_up,4,Decline Pushup,pushups_decline_push_up,pushups_decline_push_up,yes,Horizontal Push,reps,5
+Pushups,pushups,Planche,planche,7,Pseudo Planche Push-Up (Lower Chest),pushups_pseudo_planche_push_up_lower_chest,4,Diamond Pushup,pushups_diamond_push_up,pushups_diamond_push_up,no,Horizontal Push,reps,6
+Pushups,pushups,Planche,planche,8,Pseudo Planche Push-Up (Belly Button),pushups_pseudo_planche_push_up_belly_button,4,Pseudo Planche Push-Up (Lower Chest),pushups_pseudo_planche_push_up_lower_chest,pushups_pseudo_planche_push_up_lower_chest,no,Horizontal Push,reps,7
+Pushups,pushups,Planche,planche,9,Pseudo Planche Push-Up (Hips),pushups_pseudo_planche_push_up_hips,5,Pseudo Planche Push-Up (Belly Button),pushups_pseudo_planche_push_up_belly_button,pushups_pseudo_planche_push_up_belly_button,no,Horizontal Push,reps,8
+Pushups,pushups,Planche,planche,10,Tuck Planche Pushups,pushups_tuck_planche_push_up,5,Pseudo Planche Push-Up (Hips),pushups_pseudo_planche_push_up_hips,pushups_pseudo_planche_push_up_hips,no,Horizontal Push,reps,9
+Pushups,pushups,Planche,planche,11,Advanced Tuck Planche Pushups,pushups_advanced_tuck_planche_push_up,5,Tuck Planche Pushups,pushups_tuck_planche_push_up,pushups_tuck_planche_push_up,no,Horizontal Push,reps,10
+Pushups,pushups,Planche,planche,12,Straddle Planche Pushups,pushups_straddle_planche_push_up,5,Advanced Tuck Planche Pushups,pushups_advanced_tuck_planche_push_up,pushups_advanced_tuck_planche_push_up,no,Horizontal Push,reps,11
+Pushups,pushups,Planche,planche,13,Planche Pushups,pushups_planche_push_up,5,Straddle Planche Pushups,pushups_straddle_planche_push_up,pushups_straddle_planche_push_up,no,Horizontal Push,reps,12
+Planche,planche,Main,main,1,Planche Lean (Slight),planche_planche_lean_just_past,3,,,,no,Horizontal Push,seconds,0
+Planche,planche,Main,main,2,Planche Lean (Moderate),planche_planche_lean_moderate,3,Planche Lean (Slight),planche_planche_lean_just_past,planche_planche_lean_just_past,no,Horizontal Push,seconds,1
+Planche,planche,Main,main,3,Planche Lean (Deep),planche_planche_lean_far_past,4,Planche Lean (Moderate),planche_planche_lean_moderate,planche_planche_lean_moderate,no,Horizontal Push,seconds,2
+Planche,planche,Main,main,4,Tuck Planche Lean,planche_tuck_planche_lean,4,Planche Lean (Deep),planche_planche_lean_far_past,planche_planche_lean_far_past,no,Horizontal Push,seconds,3
+Planche,planche,Main,main,5,Tuck Planche,planche_tuck_planche_hold,4,Tuck Planche Lean,planche_tuck_planche_lean,planche_tuck_planche_lean,no,Horizontal Push,seconds,4
+Planche,planche,Main,main,6,Advanced Tuck Planche,planche_advanced_tuck_planche_hold,5,Tuck Planche,planche_tuck_planche_hold,planche_tuck_planche_hold,no,Horizontal Push,seconds,5
+Planche,planche,Main,main,7,Straddle Planche (Wide),planche_straddle_planche_wide,5,Advanced Tuck Planche,planche_advanced_tuck_planche_hold,planche_advanced_tuck_planche_hold,no,Horizontal Push,seconds,6
+Planche,planche,Main,main,8,Straddle Planche (Medium),planche_straddle_planche_medium,5,Straddle Planche (Wide),planche_straddle_planche_wide,planche_straddle_planche_wide,no,Horizontal Push,seconds,7
+Planche,planche,Main,main,9,Straddle Planche (Narrow),planche_straddle_planche_narrow,5,Straddle Planche (Medium),planche_straddle_planche_medium,planche_straddle_planche_medium,no,Horizontal Push,seconds,8
+Planche,planche,Main,main,10,Full Planche,planche_full_planche_hold,5,Straddle Planche (Narrow),planche_straddle_planche_narrow,planche_straddle_planche_narrow,no,Horizontal Push,seconds,9
+Squat,squat,Pistol,pistol,1,Assisted Squat,squat_assisted_squat,1,,,,yes,Squat,reps,0
+Squat,squat,Pistol,pistol,2,Deep Assisted Squat,squat_deep_assisted_squat,1,Assisted Squat,squat_assisted_squat,squat_assisted_squat,yes,Squat,reps,1
+Squat,squat,Pistol,pistol,3,Squat,squat_squat,1,Deep Assisted Squat,squat_deep_assisted_squat,squat_deep_assisted_squat,yes,Squat,reps,2
+Squat,squat,Pistol,pistol,4,Deep Squat,squat_deep_squat,2,Squat,squat_squat,squat_squat,yes,Squat,reps,3
+Squat,squat,Pistol,pistol,5,Bulgarian Split Squat,squat_bulgarian_split_squat,2,Deep Squat,squat_deep_squat,squat_deep_squat,yes,Squat,reps,4
+Squat,squat,Pistol,pistol,6,Box Pistol Squat (Knee Height),squat_box_pistol_squat_knee_height,3,Bulgarian Split Squat,squat_bulgarian_split_squat,squat_bulgarian_split_squat,no,Squat,reps,5
+Squat,squat,Pistol,pistol,7,Box Pistol Squat (Mid-Calf Height),squat_box_pistol_squat_mid_calf_height,3,Box Pistol Squat (Knee Height),squat_box_pistol_squat_knee_height,squat_box_pistol_squat_knee_height,no,Squat,reps,6
+Squat,squat,Pistol,pistol,8,Assisted Pistol Squat,squat_assisted_pistol_squat,4,Box Pistol Squat (Mid-Calf Height),squat_box_pistol_squat_mid_calf_height,squat_box_pistol_squat_mid_calf_height,no,Squat,reps,7
+Squat,squat,Pistol,pistol,9,Counterweighted Pistol Squat,squat_counter_weighted_pistol_squat,5,Assisted Pistol Squat,squat_assisted_pistol_squat,squat_assisted_pistol_squat,no,Squat,reps,8
+Squat,squat,Pistol,pistol,10,Pistol Squat,squat_pistol_squat,5,Counterweighted Pistol Squat,squat_counter_weighted_pistol_squat,squat_counter_weighted_pistol_squat,no,Squat,reps,9
+Squat,squat,Shrimp,shrimp,1,Assisted Squat,squat_assisted_squat,1,,,,yes,Squat,reps,0
+Squat,squat,Shrimp,shrimp,2,Deep Assisted Squat,squat_deep_assisted_squat,1,Assisted Squat,squat_assisted_squat,squat_assisted_squat,yes,Squat,reps,1
+Squat,squat,Shrimp,shrimp,3,Squat,squat_squat,1,Deep Assisted Squat,squat_deep_assisted_squat,squat_deep_assisted_squat,yes,Squat,reps,2
+Squat,squat,Shrimp,shrimp,4,Deep Squat,squat_deep_squat,2,Squat,squat_squat,squat_squat,yes,Squat,reps,3
+Squat,squat,Shrimp,shrimp,5,Bulgarian Split Squat,squat_bulgarian_split_squat,2,Deep Squat,squat_deep_squat,squat_deep_squat,yes,Squat,reps,4
+Squat,squat,Shrimp,shrimp,6,Beginner Shrimp Squat,squat_beginner_shrimp_squat,3,Bulgarian Split Squat,squat_bulgarian_split_squat,squat_bulgarian_split_squat,no,Squat,reps,5
+Squat,squat,Shrimp,shrimp,7,Intermediate Shrimp Squat,squat_intermediate_shrimp_squat,4,Beginner Shrimp Squat,squat_beginner_shrimp_squat,squat_beginner_shrimp_squat,no,Squat,reps,6
+Squat,squat,Shrimp,shrimp,8,Advanced Shrimp Squat,squat_advanced_shrimp_squat,5,Intermediate Shrimp Squat,squat_intermediate_shrimp_squat,squat_intermediate_shrimp_squat,no,Squat,reps,7
+Core,core,L-Sit / V-Sit,l_sit,1,Foot Supported L-sit,core_foot_supported_l_sit,1,,,,no,Core,seconds,0
+Core,core,L-Sit / V-Sit,l_sit,2,Tuck L-sit,core_l_sit_tuck,2,Foot Supported L-sit,core_foot_supported_l_sit,core_foot_supported_l_sit,no,Core,seconds,1
+Core,core,L-Sit / V-Sit,l_sit,3,Advanced Tuck L-sit,core_advanced_tuck_l_sit,3,Tuck L-sit,core_l_sit_tuck,core_l_sit_tuck,no,Core,seconds,2
+Core,core,L-Sit / V-Sit,l_sit,4,L-sit,core_l_sit,3,Advanced Tuck L-sit,core_advanced_tuck_l_sit,core_advanced_tuck_l_sit,no,Core,seconds,3
+Core,core,L-Sit / V-Sit,l_sit,5,Straddle L-sit,core_straddle_l_sit,4,L-sit,core_l_sit,core_l_sit,no,Core,seconds,4
+Core,core,L-Sit / V-Sit,l_sit,6,V-sit,core_v_sit,5,Straddle L-sit,core_straddle_l_sit,core_straddle_l_sit,no,Core,seconds,5
+Core,core,Ab Wheel,ab_wheel,1,25s Plank,core_plank,1,,,,no,Core,seconds,0
+Core,core,Ab Wheel,ab_wheel,2,60s Plank,core_plank_60s,2,25s Plank,core_plank,core_plank,no,Core,seconds,1
+Core,core,Ab Wheel,ab_wheel,3,1 Arm 1 Leg Plank,core_one_arm_one_leg_plank,3,60s Plank,core_plank_60s,core_plank_60s,no,Core,seconds,2
+Core,core,Ab Wheel,ab_wheel,4,Knees Ab Wheel,core_ab_wheel_kneeling,3,1 Arm 1 Leg Plank,core_one_arm_one_leg_plank,core_one_arm_one_leg_plank,no,Core,reps,3
+Core,core,Ab Wheel,ab_wheel,5,Ab Wheel Eccentric,core_ab_wheel_eccentric,4,Knees Ab Wheel,core_ab_wheel_kneeling,core_ab_wheel_kneeling,no,Core,reps,4
+Core,core,Ab Wheel,ab_wheel,6,Full Ab Wheel,core_ab_wheel_standing,4,Ab Wheel Eccentric,core_ab_wheel_eccentric,core_ab_wheel_eccentric,no,Core,reps,5
+Core,core,Leg Raises,leg_raises,1,Lying Knee Raise,core_lying_knee_raises,1,,,,no,Core,reps,0
+Core,core,Leg Raises,leg_raises,2,Lying Bent-Leg Raise,core_bent_leg_lying_leg_raises,1,Lying Knee Raise,core_lying_knee_raises,core_lying_knee_raises,no,Core,reps,1
+Core,core,Leg Raises,leg_raises,3,Lying Straight-Leg Raise,core_straight_leg_lying_leg_raises,2,Lying Bent-Leg Raise,core_bent_leg_lying_leg_raises,core_bent_leg_lying_leg_raises,no,Core,reps,2
+Core,core,Leg Raises,leg_raises,4,Hanging Knee Raise,core_hanging_knee_raises,3,Lying Straight-Leg Raise,core_straight_leg_lying_leg_raises,core_straight_leg_lying_leg_raises,no,Core,reps,3
+Core,core,Leg Raises,leg_raises,5,Hanging Bent-Leg Raise,core_bent_leg_hanging_leg_raises,4,Hanging Knee Raise,core_hanging_knee_raises,core_hanging_knee_raises,no,Core,reps,4
+Core,core,Leg Raises,leg_raises,6,Hanging Straight-Leg Raise,core_straight_leg_hanging_leg_raises,5,Hanging Bent-Leg Raise,core_bent_leg_hanging_leg_raises,core_bent_leg_hanging_leg_raises,no,Core,reps,5
+Muscle-up,muscle_up,Main,main,1,False Grip Pull-Up,muscle_up_false_grip_pull_ups,3,,,,no,Vertical Pull,reps,0
+Muscle-up,muscle_up,Main,main,2,Muscle Up Negatives,muscle_up_muscle_up_negatives,4,False Grip Pull-Up,muscle_up_false_grip_pull_ups,muscle_up_false_grip_pull_ups,no,Vertical Pull,reps,1
+Muscle-up,muscle_up,Main,main,3,Kipping Muscle Up,muscle_up_kipping_muscle_up,4,Muscle Up Negatives,muscle_up_muscle_up_negatives,muscle_up_muscle_up_negatives,no,Vertical Pull,reps,2
+Muscle-up,muscle_up,Main,main,4,Muscle-up,muscle_up_muscle_up,5,Kipping Muscle Up,muscle_up_kipping_muscle_up,muscle_up_kipping_muscle_up,no,Vertical Pull,reps,3
+Handstand Pushups,handstand_pushups,Main,main,1,Pike Pushup,handstand_pushups_pike_push_up,2,,,,no,Vertical Push,reps,0
+Handstand Pushups,handstand_pushups,Main,main,2,Box Pushup,handstand_pushups_box_push_up,3,Pike Pushup,handstand_pushups_pike_push_up,handstand_pushups_pike_push_up,no,Vertical Push,reps,1
+Handstand Pushups,handstand_pushups,Main,main,3,Wall Headstand Pushup Eccentrics,handstand_pushups_wall_headstand_push_up_eccentrics,3,Box Pushup,handstand_pushups_box_push_up,handstand_pushups_box_push_up,no,Vertical Push,reps,2
+Handstand Pushups,handstand_pushups,Main,main,4,Wall Headstand Pushup,handstand_pushups_wall_headstand_push_up,4,Wall Headstand Pushup Eccentrics,handstand_pushups_wall_headstand_push_up_eccentrics,handstand_pushups_wall_headstand_push_up_eccentrics,no,Vertical Push,reps,3
+Handstand Pushups,handstand_pushups,Main,main,5,Wall Handstand Pushup,handstand_pushups_wall_handstand_push_up,4,Wall Headstand Pushup,handstand_pushups_wall_headstand_push_up,handstand_pushups_wall_headstand_push_up,no,Vertical Push,reps,4
+Handstand Pushups,handstand_pushups,Main,main,6,Free Headstand Pushup,handstand_pushups_free_headstand_push_up,5,Wall Handstand Pushup,handstand_pushups_wall_handstand_push_up,handstand_pushups_wall_handstand_push_up,no,Vertical Push,reps,5
+Handstand Pushups,handstand_pushups,Main,main,7,Free Handstand Pushup,handstand_pushups_free_handstand_push_up,5,Free Headstand Pushup,handstand_pushups_free_headstand_push_up,handstand_pushups_free_headstand_push_up,no,Vertical Push,reps,6
+Dips,dips,Weighted,weighted,1,Bench Dip,dips_bench_dips,1,,,,yes,Vertical Push,reps,0
+Dips,dips,Weighted,weighted,2,Dip Negatives,dips_dip_negatives,2,Bench Dip,dips_bench_dips,dips_bench_dips,yes,Vertical Push,reps,1
+Dips,dips,Weighted,weighted,3,Parallel Bar Dip,dips_parallel_bar_dips,3,Dip Negatives,dips_dip_negatives,dips_dip_negatives,yes,Vertical Push,reps,2
+Dips,dips,Weighted,weighted,4,1.2x Bodyweight Dips,dips_weighted_dips_120,4,Parallel Bar Dip,dips_parallel_bar_dips,dips_parallel_bar_dips,no,Vertical Push,reps,3
+Dips,dips,Weighted,weighted,5,1.4x Bodyweight Dips,dips_weighted_dips_140,4,1.2x Bodyweight Dips,dips_weighted_dips_120,dips_weighted_dips_120,no,Vertical Push,reps,4
+Dips,dips,Weighted,weighted,6,1.6x Bodyweight Dips,dips_weighted_dips_160,4,1.4x Bodyweight Dips,dips_weighted_dips_140,dips_weighted_dips_140,no,Vertical Push,reps,5
+Dips,dips,Weighted,weighted,7,1.8x Bodyweight Dips,dips_weighted_dips_180,5,1.6x Bodyweight Dips,dips_weighted_dips_160,dips_weighted_dips_160,no,Vertical Push,reps,6
+Dips,dips,Weighted,weighted,8,2.0x Bodyweight Dips,dips_weighted_dips_200,5,1.8x Bodyweight Dips,dips_weighted_dips_180,dips_weighted_dips_180,no,Vertical Push,reps,7
+Dips,dips,Rings,rings,1,Bench Dip,dips_bench_dips,1,,,,yes,Vertical Push,reps,0
+Dips,dips,Rings,rings,2,Dip Negatives,dips_dip_negatives,2,Bench Dip,dips_bench_dips,dips_bench_dips,yes,Vertical Push,reps,1
+Dips,dips,Rings,rings,3,Parallel Bar Dip,dips_parallel_bar_dips,3,Dip Negatives,dips_dip_negatives,dips_dip_negatives,yes,Vertical Push,reps,2
+Dips,dips,Rings,rings,4,Ring Dip,dips_ring_dips,4,Parallel Bar Dip,dips_parallel_bar_dips,dips_parallel_bar_dips,no,Vertical Push,reps,3
+Dips,dips,Rings,rings,5,RTO Ring Dip,dips_ring_dips_rto,5,Ring Dip,dips_ring_dips,dips_ring_dips,no,Vertical Push,reps,4
+Barbell Squat,barbell_squat,Main,main,1,Barbell Squat,barbell_squat_barbell_squat,3,,,,no,Squat,reps,0
+Hinge,hinge,Romanian Deadlift,rdl,1,Romanian Deadlift,hinge_romanian_deadlift,2,,,,no,Hinge,reps,0
+Hinge,hinge,Nordic Curl,nordic,1,Nordic Curl,hinge_nordic_nordic_curl,3,,,,no,Hinge,reps,0
+Hinge,hinge,Posterior Chain,posterior_chain,1,Single Leg RDL,hinge_single_leg_rdl,2,,,,no,Hinge,reps,0
+Hinge,hinge,Posterior Chain,posterior_chain,2,Nordic Curl,hinge_posterior_chain_nordic_curl,3,Single Leg RDL,hinge_single_leg_rdl,hinge_single_leg_rdl,no,Hinge,reps,1

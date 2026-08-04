@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_nav_bar.dart';
+import '../../core/widgets/loading_indicator.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/training_program_store_service.dart';
 import '../data/data_view.dart';
 import '../home/home_view.dart';
-import '../settings/settings_view.dart';
-import '../skills/skills_view.dart';
+import '../program/program_view.dart';
+import '../progress/progress_view.dart';
+
+const _progressTab = 0;
+const _trainTab = 1;
+const _programTab = 2;
+const _profileTab = 3;
 
 class ShellView extends StatefulWidget {
   const ShellView({super.key});
@@ -14,25 +23,114 @@ class ShellView extends StatefulWidget {
 }
 
 class _ShellViewState extends State<ShellView> {
-  int _currentIndex = 0;
+  /// Null until the landing tab is known. Picking it after the first frame
+  /// would show one tab and then jump to another, so the shell waits.
+  int? _currentIndex;
 
-  static const _pages = [
-    HomeView(),
-    DataView(),
-    SkillsView(),
-    SettingsView(),
+  /// One scroll controller per tab, handed down as each tab's
+  /// [PrimaryScrollController] so a tap on the tab you are already on can
+  /// send it back to the top. The tab's own scroll view opts in with
+  /// `primary: true`.
+  final _tabScrollControllers = [
+    for (var i = 0; i < 4; i++) ScrollController(),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _resolveLandingTab();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _tabScrollControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    if (index != _currentIndex) {
+      setState(() => _currentIndex = index);
+      return;
+    }
+
+    // Re-tapping the tab you are on means "take me back to the top". The
+    // positions are animated one by one because a tab can host more than one
+    // attached scrollable across its states.
+    for (final position in _tabScrollControllers[index].positions) {
+      position.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  /// Without a program the app opens on the Program tab, whose whole empty
+  /// state is about building one. Anything that goes wrong lands on
+  /// Progress, the normal home — a failed lookup should not strand people
+  /// in setup.
+  Future<void> _resolveLandingTab() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) {
+      if (mounted) setState(() => _currentIndex = _progressTab);
+      return;
+    }
+
+    var landing = _progressTab;
+    try {
+      final logic =
+          await TrainingProgramStoreService().fetchProgramLogic(userId);
+      if (logic == null) landing = _programTab;
+    } catch (error, stackTrace) {
+      debugPrint('Failed to resolve the landing tab: $error\n$stackTrace');
+    }
+    if (mounted) setState(() => _currentIndex = landing);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currentIndex = _currentIndex;
+    if (currentIndex == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Center(child: LoadingIndicator()),
+      );
+    }
+
+    // Every tab's "Create my program" opens the setup wizard right where the
+    // user is, and a freshly built program lands them on Progress, the tab
+    // the app treats as home once a program exists. Progress hosts its own
+    // completion — the wizard already leaves the user there.
+    final pages = [
+      ProgressView(isActive: currentIndex == _progressTab),
+      HomeView(
+        isActive: currentIndex == _trainTab,
+        onProgramCreated: () => setState(() => _currentIndex = _progressTab),
+      ),
+      ProgramView(
+        isActive: currentIndex == _programTab,
+        onProgramCreated: () => setState(() => _currentIndex = _progressTab),
+      ),
+      DataView(isActive: currentIndex == _profileTab),
+    ];
+
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+        index: currentIndex,
+        children: [
+          for (var i = 0; i < pages.length; i++)
+            PrimaryScrollController(
+              controller: _tabScrollControllers[i],
+              child: pages[i],
+            ),
+        ],
       ),
       bottomNavigationBar: AppNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        currentIndex: currentIndex,
+        onTap: _onTabTapped,
       ),
     );
   }

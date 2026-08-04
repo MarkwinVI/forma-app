@@ -1,7 +1,7 @@
 name: forma_app
 description: Forma - Flutter mobile application
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.2+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -14,6 +14,14 @@ dependencies:
   crypto: ^3.0.3
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
+  shared_preferences: ^2.3.2
+  # The exercise demo relies on this package rendering its web view through
+  # an OverlayPortal (6.x): the demo supplies a local Overlay to catch it, so
+  # the video stays inside its box instead of floating over the page. After
+  # any upgrade, re-check that a playing video scrolls under the pinned tabs
+  # and back bar in the exercise detail view.
+  youtube_player_iframe: ^6.0.2
+  webview_flutter: ^4.14.1
 
 dev_dependencies:
   flutter_test:

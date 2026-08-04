@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/theme/app_colors.dart';
-import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
-import '../../data/models/exercise_progress_model.dart';
+import '../../data/models/skill_category_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import 'exercise_search_view.dart';
@@ -11,7 +11,12 @@ import 'skill_tree_view.dart';
 import 'widgets/category_progress_card.dart';
 
 class SkillsView extends StatefulWidget {
-  const SkillsView({super.key});
+  final bool isActive;
+
+  const SkillsView({
+    super.key,
+    this.isActive = false,
+  });
 
   @override
   State<SkillsView> createState() => _SkillsViewState();
@@ -28,9 +33,25 @@ class _SkillsViewState extends State<SkillsView> {
     _loadProgress();
   }
 
+  @override
+  void didUpdateWidget(covariant SkillsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
+    // this tab becomes active — otherwise resets or workouts logged
+    // elsewhere leave the tree showing stale statuses.
+    if (!oldWidget.isActive && widget.isActive) {
+      _loadProgress();
+    }
+  }
+
   Future<void> _loadProgress() async {
     final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) {
+      setState(() => _loading = false);
+      return;
+    }
+
     try {
       final progress = await _progressService.fetchAll(userId);
       setState(() {
@@ -42,41 +63,46 @@ class _SkillsViewState extends State<SkillsView> {
     }
   }
 
-  int _masteredCount(ExerciseCategory category) {
-    return ExerciseCatalog.forCategory(category)
-        .where((e) => _progressMap[e.id] == ExerciseStatus.mastered)
-        .length;
+  bool _isCategoryLocked(SkillCategory category) {
+    return category.isLockedFor(_progressMap);
   }
 
   @override
   Widget build(BuildContext context) {
+    final categories = SkillCategoryCatalog.browsable();
+
     return Scaffold(
       backgroundColor: AppColors.bgSecondary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgSecondary,
+        surfaceTintColor: AppColors.bgSecondary,
+        elevation: 0,
+        foregroundColor: AppColors.textPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left_rounded, size: 30),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Skills',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                child: Text(
-                  'Skills',
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            // ── Search bar ──────────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 18),
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).push(
                     PageRouteBuilder(
                       transitionDuration: const Duration(milliseconds: 150),
-                      reverseTransitionDuration: const Duration(milliseconds: 150),
+                      reverseTransitionDuration:
+                          const Duration(milliseconds: 150),
                       pageBuilder: (_, __, ___) => ExerciseSearchView(
                         progressMap: _progressMap,
                         onProgressChanged: (id, status) =>
@@ -87,25 +113,28 @@ class _SkillsViewState extends State<SkillsView> {
                     ),
                   ),
                   child: Container(
-                    height: 42,
+                    height: 46,
                     decoration: BoxDecoration(
                       color: AppColors.bgTertiary,
                       border: Border.all(color: AppColors.borderPrimary),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Row(
+                    child: const Row(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Icon(Icons.search,
-                              color: AppColors.textMuted, size: 16),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 14),
+                          child: Icon(
+                            Icons.search_rounded,
+                            color: AppColors.textMuted,
+                            size: 18,
+                          ),
                         ),
                         Text(
                           'Search exercises...',
-                          style: GoogleFonts.inter(
+                          style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textMuted,
-                            letterSpacing: -0.15,
+                            letterSpacing: -0.1,
                           ),
                         ),
                       ],
@@ -114,42 +143,37 @@ class _SkillsViewState extends State<SkillsView> {
                 ),
               ),
             ),
-
             if (_loading)
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final category = ExerciseCategory.values[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: CategoryProgressCard(
-                          category: category,
-                          mastered: _masteredCount(category),
-                          total: ExerciseCatalog.totalForCategory(category),
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => SkillTreeView(
-                                  category: category,
-                                  progressMap: _progressMap,
-                                  onProgressChanged: (id, status) {
-                                    setState(() => _progressMap[id] = status);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                    childCount: ExerciseCategory.values.length,
-                  ),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+                sliver: SliverList.separated(
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    return CategoryProgressCard(
+                      category: category,
+                      isLocked: _isCategoryLocked(category),
+                      progressMap: _progressMap,
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => SkillTreeView(
+                              skillCategoryId: category.id,
+                              progressMap: _progressMap,
+                              onProgressChanged: (id, status) {
+                                setState(() => _progressMap[id] = status);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                 ),
               ),
           ],
