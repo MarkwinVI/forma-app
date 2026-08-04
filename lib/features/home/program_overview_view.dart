@@ -984,7 +984,7 @@ class _WorkoutTypeRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            '$timesPerWeek× / week',
+            '$timesPerWeek× week',
             style: GoogleFonts.robotoMono(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
