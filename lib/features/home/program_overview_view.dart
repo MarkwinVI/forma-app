@@ -633,6 +633,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                   ProgramWeekStrip(
                     weekCycle: weekCycle,
                     onTap: _openDaysSheet,
+                    flush: true,
                   ),
                   for (var i = 0; i < workouts.length; i++)
                     _WorkoutTypeRow(

@@ -144,6 +144,11 @@ class ProgramWeekStrip extends StatelessWidget {
   final double nodeSize;
   final bool withDivider;
 
+  /// Pins the first and last columns to the strip's edges, so the markers
+  /// line up with the content rows around it instead of sitting centered
+  /// inside their seventh of the width.
+  final bool flush;
+
   const ProgramWeekStrip({
     super.key,
     required this.weekCycle,
@@ -151,6 +156,7 @@ class ProgramWeekStrip extends StatelessWidget {
     this.onDayTap,
     this.nodeSize = 22,
     this.withDivider = true,
+    this.flush = false,
   });
 
   @override
@@ -163,9 +169,15 @@ class ProgramWeekStrip extends StatelessWidget {
             : null,
       ),
       child: Row(
+        mainAxisAlignment: flush
+            ? MainAxisAlignment.spaceBetween
+            : MainAxisAlignment.start,
         children: [
           for (var i = 0; i < weekCycle.length; i++)
-            Expanded(child: _column(i)),
+            if (flush)
+              SizedBox(width: nodeSize, child: _column(i))
+            else
+              Expanded(child: _column(i)),
         ],
       ),
     );
