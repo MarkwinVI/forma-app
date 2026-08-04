@@ -637,7 +637,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                   for (var i = 0; i < workouts.length; i++)
                     _WorkoutTypeRow(
                       sessionType: workouts[i].sessionType,
-                      weekdays: workouts[i].weekdays,
                       last: i == workouts.length - 1,
                       onTap: () => _openWorkoutEditor(
                         workouts[i].sessionType,
@@ -961,23 +960,17 @@ class _ProgramRow extends StatelessWidget {
 /// every scheduled day shares — no remembering which day you're editing.
 class _WorkoutTypeRow extends StatelessWidget {
   final TrainingSessionType sessionType;
-  final List<int> weekdays;
   final bool last;
   final VoidCallback onTap;
 
   const _WorkoutTypeRow({
     required this.sessionType,
-    required this.weekdays,
     required this.last,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final dayNames = [
-      for (final day in weekdays) kWeekdayShortNames[day],
-    ].join(' · ');
-
     return _ProgramContentRow(
       last: last,
       onTap: onTap,
@@ -997,15 +990,6 @@ class _WorkoutTypeRow extends StatelessWidget {
                 letterSpacing: -0.4,
                 height: 1.15,
               ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            '${weekdays.length}× · $dayNames',
-            style: GoogleFonts.robotoMono(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
             ),
           ),
         ],

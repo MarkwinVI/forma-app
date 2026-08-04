@@ -642,8 +642,6 @@ void main() {
     // the strip above: Mon/Wed/Fri alternating push · pull · push.
     expect(find.text('Push'), findsOneWidget);
     expect(find.text('Pull'), findsOneWidget);
-    expect(find.text('2× · Mon · Fri'), findsOneWidget);
-    expect(find.text('1× · Wed'), findsOneWidget);
 
     // The hero pushes the workout rows below the test surface.
     await tester.ensureVisible(find.text('Push'));
