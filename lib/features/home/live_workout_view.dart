@@ -2023,15 +2023,14 @@ class _WorkoutExerciseCard extends StatelessWidget {
                     : Border.all(color: AppColors.surface3, width: 1.5),
               ),
               alignment: Alignment.center,
-              child: set.completed
-                  // Dark on green, the way every other done-state tick in the
-                  // app is drawn — white on this green is thin.
-                  ? const Icon(
-                      Icons.check_rounded,
-                      size: 14,
-                      color: AppColors.bg,
-                    )
-                  : null,
+              // The tick is always there — gray while the set waits, dark on
+              // green once it is logged, the way every other done-state tick
+              // in the app is drawn.
+              child: Icon(
+                Icons.check_rounded,
+                size: 14,
+                color: set.completed ? AppColors.bg : AppColors.textMuted,
+              ),
             ),
           ),
         ),
