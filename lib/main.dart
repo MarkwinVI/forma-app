@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'core/theme/app_colors.dart';
+import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/onboarding_service.dart';
@@ -47,8 +48,30 @@ class FormaApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.bg,
         splashFactory: NoSplash.splashFactory,
       ),
-      home: const _AppEntry(),
+      home: const _StartupGate(),
     );
+  }
+}
+
+class _StartupGate extends StatefulWidget {
+  const _StartupGate();
+
+  @override
+  State<_StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<_StartupGate> {
+  var _splashComplete = false;
+
+  void _finishSplash() {
+    if (!mounted) return;
+    setState(() => _splashComplete = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_splashComplete) return const _AppEntry();
+    return FormaSplash(onDone: _finishSplash);
   }
 }
 

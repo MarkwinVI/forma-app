@@ -18,21 +18,52 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Calisthenics decoded.">
+  <meta name="theme-color" content="#111016">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="forma_app">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <meta name="apple-mobile-web-app-title" content="Forma">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
 
-  <title>forma_app</title>
+  <title>Forma</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      background: #111016;
+      height: 100%;
+      margin: 0;
+    }
+
+    #forma-splash {
+      align-items: center;
+      display: flex;
+      inset: 0;
+      justify-content: center;
+      position: fixed;
+    }
+
+    #forma-splash img {
+      height: auto;
+      max-height: 24vh;
+      width: min(53vw, 768px);
+    }
+  </style>
 </head>
 <body>
+  <div id="forma-splash" role="status" aria-label="Loading Forma">
+    <img src="assets/splash-mark.svg" alt="">
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      document.getElementById('forma-splash')?.remove();
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
