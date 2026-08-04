@@ -42,14 +42,14 @@ import '../data/past_workout_detail_view.dart';
 class HomeView extends StatefulWidget {
   final bool isActive;
 
-  /// Switches the shell to the Program tab — used by the no-program state
-  /// to send the user to where setup lives.
-  final VoidCallback? onGoToProgram;
+  /// Fired after the setup wizard has written a program and been dismissed,
+  /// so the shell can move the user on to Progress, their new home tab.
+  final VoidCallback? onProgramCreated;
 
   const HomeView({
     super.key,
     this.isActive = false,
-    this.onGoToProgram,
+    this.onProgramCreated,
   });
 
   @override
@@ -379,13 +379,20 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _openProgramSetup() async {
+    var created = false;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
-          onComplete: _completeProgramSetup,
+          onComplete: (result) async {
+            await _completeProgramSetup(result);
+            created = true;
+          },
         ),
       ),
     );
+    // Abandoning the wizard midway must not move the user, so the redirect
+    // only fires once a program was actually written and the wizard closed.
+    if (created) widget.onProgramCreated?.call();
     // Re-fetch so the tab reflects the freshly created program even if the
     // user abandoned the wizard midway on a stale state.
     await _loadHomeData();
@@ -465,7 +472,7 @@ class _HomeViewState extends State<HomeView> {
                     backgroundColor: AppColors.surface,
                     onRefresh: _loadHomeData,
                     child: HomeEmptyState(
-                      onGoToProgram: widget.onGoToProgram ?? _openProgramSetup,
+                      onCreateProgram: _openProgramSetup,
                     ),
                   )
                 : _buildTab(snapshot),

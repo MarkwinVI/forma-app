@@ -16,7 +16,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: HomeEmptyState(onGoToProgram: () => tapped++),
+          body: HomeEmptyState(onCreateProgram: () => tapped++),
         ),
       ),
     );

@@ -4,13 +4,13 @@ import '../../core/widgets/no_program_state.dart';
 import '../../core/widgets/type_led.dart';
 
 /// First-run Train tab, shown while the user has no training program yet.
-/// Setup itself lives on the Program tab; this screen says what will be here
-/// once it is done, and offers the same way to get there.
+/// This screen says what will be here once setup is done, and its CTA opens
+/// the setup wizard directly.
 class HomeEmptyState extends StatelessWidget {
-  /// Sends the user to the Program tab, where setup lives.
-  final VoidCallback onGoToProgram;
+  /// Opens the program setup wizard.
+  final VoidCallback onCreateProgram;
 
-  const HomeEmptyState({super.key, required this.onGoToProgram});
+  const HomeEmptyState({super.key, required this.onCreateProgram});
 
   static const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -20,7 +20,7 @@ class HomeEmptyState extends StatelessWidget {
       title: 'Your workouts will appear here',
       sub: 'Create your program to see what to train today and what’s '
           'planned for the rest of your week.',
-      onCreateProgram: onGoToProgram,
+      onCreateProgram: onCreateProgram,
       children: [
         // A week with nothing in it: every letter reads the same, so no day
         // looks already chosen.

@@ -67,10 +67,10 @@ class _ShellViewState extends State<ShellView> {
     }
   }
 
-  /// Without a program every other tab is an empty state pointing at the
-  /// Program tab, so the app opens there rather than making the user follow
-  /// the signpost. Anything that goes wrong lands on Progress, the normal
-  /// home — a failed lookup should not strand people in setup.
+  /// Without a program the app opens on the Program tab, whose whole empty
+  /// state is about building one. Anything that goes wrong lands on
+  /// Progress, the normal home — a failed lookup should not strand people
+  /// in setup.
   Future<void> _resolveLandingTab() async {
     final userId = AuthService().currentUser?.id;
     if (userId == null) {
@@ -99,19 +99,18 @@ class _ShellViewState extends State<ShellView> {
       );
     }
 
+    // Every tab's "Create my program" opens the setup wizard right where the
+    // user is, and a freshly built program lands them on Progress, the tab
+    // the app treats as home once a program exists. Progress hosts its own
+    // completion — the wizard already leaves the user there.
     final pages = [
-      ProgressView(
-        isActive: currentIndex == _progressTab,
-        onGoToProgram: () => setState(() => _currentIndex = _programTab),
-      ),
+      ProgressView(isActive: currentIndex == _progressTab),
       HomeView(
         isActive: currentIndex == _trainTab,
-        onGoToProgram: () => setState(() => _currentIndex = _programTab),
+        onProgramCreated: () => setState(() => _currentIndex = _progressTab),
       ),
       ProgramView(
         isActive: currentIndex == _programTab,
-        // A freshly built program lands the user on Progress, the tab the
-        // app treats as home once a program exists.
         onProgramCreated: () => setState(() => _currentIndex = _progressTab),
       ),
       DataView(isActive: currentIndex == _profileTab),

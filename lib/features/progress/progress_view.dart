@@ -22,6 +22,8 @@ import '../../data/services/training_schedule_service.dart';
 import '../../core/widgets/type_led.dart';
 import '../home/home_dashboard_metrics.dart';
 import '../home/program_day_items.dart';
+import '../home/program_setup_completion.dart';
+import '../home/program_setup_view.dart';
 import '../skills/skill_tree_view.dart';
 import 'widgets/skill_tree_row.dart';
 
@@ -30,14 +32,9 @@ import 'widgets/skill_tree_row.dart';
 class ProgressView extends StatefulWidget {
   final bool isActive;
 
-  /// Sends the user to the Program tab, where setup lives — the empty state
-  /// offers the same action the other tabs do.
-  final VoidCallback? onGoToProgram;
-
   const ProgressView({
     super.key,
     this.isActive = false,
-    this.onGoToProgram,
   });
 
   @override
@@ -192,6 +189,33 @@ class _ProgressViewState extends State<ProgressView> {
     return const {};
   }
 
+  Future<void> _openProgramSetup() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProgramSetupView(
+          onComplete: _completeProgramSetup,
+        ),
+      ),
+    );
+    // Re-fetch so the tab reflects the freshly created program even if the
+    // user abandoned the wizard midway on a stale state. The wizard already
+    // lands the user here, so no redirect is needed on completion.
+    await _loadData();
+  }
+
+  Future<void> _completeProgramSetup(ProgramSetupResult result) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    await completeProgramSetup(
+      userId: userId,
+      result: result,
+      trainingProgramService: _trainingProgramService,
+      storeService: _trainingProgramStoreService,
+    );
+    await _loadData();
+  }
+
   Future<void> _openSkillTree(String skillCategoryId) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -233,7 +257,7 @@ class _ProgressViewState extends State<ProgressView> {
                 // trees are for rather than titling an empty list.
                 child: empty
                     ? _ProgressEmptyState(
-                        onCreateProgram: widget.onGoToProgram ?? () {},
+                        onCreateProgram: _openProgramSetup,
                       )
                     : SingleChildScrollView(
                         // Attached to the shell's per-tab controller, so
