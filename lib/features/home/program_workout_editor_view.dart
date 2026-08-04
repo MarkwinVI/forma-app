@@ -14,7 +14,6 @@ import '../../data/services/training_program_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import '../exercises/exercise_picker_view.dart';
 import 'program_day_items.dart';
-import 'program_week_strip.dart';
 
 /// Destructive action colour, matching the design's red.
 const _dangerRed = Color(0xFFFF6B57);
@@ -25,11 +24,6 @@ const _dangerRed = Color(0xFFFF6B57);
 /// straight to the exercise search.
 class ProgramWorkoutEditorView extends StatefulWidget {
   final TrainingSessionType sessionType;
-
-  /// Which weekdays run this workout, Monday-first indexes — stated in the
-  /// header so there is nothing to remember.
-  final List<int> weekdays;
-
   final TrainingProgramType programType;
   final Map<TrainingTrack, String> branchSelections;
   final Map<String, ExerciseStatus> progressMap;
@@ -39,7 +33,6 @@ class ProgramWorkoutEditorView extends StatefulWidget {
   const ProgramWorkoutEditorView({
     super.key,
     required this.sessionType,
-    required this.weekdays,
     required this.programType,
     required this.branchSelections,
     required this.progressMap,
@@ -60,26 +53,6 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   bool _saving = false;
 
   String get _typeName => programWorkoutTypeName(widget.sessionType);
-
-  /// "Monday & Thursday — one list, both days. Change anything here and the
-  /// whole week follows."
-  String get _scheduleSentence {
-    final names = [for (final day in widget.weekdays) kWeekdayNames[day]];
-    if (names.isEmpty) {
-      return 'Not on the schedule this week — edits are kept for when it '
-          'comes back.';
-    }
-    if (names.length == 1) {
-      return '${names.single} — change anything here and the whole week '
-          'follows.';
-    }
-    final joined = names.length == 2
-        ? '${names.first} & ${names.last}'
-        : '${names.sublist(0, names.length - 1).join(', ')} & ${names.last}';
-    final every = names.length == 2 ? 'both days' : 'all ${names.length} days';
-    return '$joined — one list, $every. Change anything here and the whole '
-        'week follows.';
-  }
 
   @override
   void initState() {
@@ -272,34 +245,14 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          ProgramTypeNode(
-                            sessionType: widget.sessionType,
-                            size: 26,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _typeName,
-                              style: const TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                                letterSpacing: -0.9,
-                                height: 1.05,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
                       Text(
-                        _scheduleSentence,
+                        _typeName,
                         style: const TextStyle(
-                          fontSize: 14.5,
-                          color: AppColors.textSecondary,
-                          height: 1.45,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.9,
+                          height: 1.05,
                         ),
                       ),
                     ],

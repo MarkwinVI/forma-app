@@ -155,15 +155,11 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text(toast)));
   }
 
-  Future<void> _openWorkoutEditor(
-    TrainingSessionType sessionType, {
-    required List<int> weekdays,
-  }) async {
+  Future<void> _openWorkoutEditor(TrainingSessionType sessionType) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProgramWorkoutEditorView(
           sessionType: sessionType,
-          weekdays: weekdays,
           programType: _logic.program.programType,
           branchSelections: _branchSelections,
           progressMap: widget.progressMap,
@@ -632,10 +628,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                       sessionType: workouts[i].sessionType,
                       timesPerWeek: workouts[i].weekdays.length,
                       last: i == workouts.length - 1,
-                      onTap: () => _openWorkoutEditor(
-                        workouts[i].sessionType,
-                        weekdays: workouts[i].weekdays,
-                      ),
+                      onTap: () =>
+                          _openWorkoutEditor(workouts[i].sessionType),
                     ),
                   const _ProgramSectionLabel('About the program'),
                   for (var i = 0; i < kProgramFaq.length; i++)
