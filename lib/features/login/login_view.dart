@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -122,25 +121,6 @@ class _LoginViewState extends State<LoginView> {
                         height: 1.5,
                       ),
                     ),
-                    // Debug builds keep a way in that does not need an Apple
-                    // account; it never ships.
-                    if (kDebugMode && !_isLoading)
-                      Pressable(
-                        onTap: () =>
-                            _signIn(() => _authService.signInAnonymously()),
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 18),
-                          child: Text(
-                            'Dev login (anonymous)',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),

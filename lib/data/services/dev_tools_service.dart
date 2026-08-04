@@ -15,7 +15,7 @@ import 'training_program_store_service.dart';
 import 'training_schedule_service.dart';
 
 /// Helpers for resetting and seeding account data.
-/// Reachable from the Developer section in Settings (all builds, for now).
+/// Reachable from the Developer section in Settings, debug builds only.
 class DevToolsService {
   final _client = SupabaseService.client;
   final _exerciseLogService = ExerciseLogService();

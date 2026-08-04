@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -67,8 +68,10 @@ class SettingsView extends StatelessWidget {
                 ],
               ),
               const Divider(height: 32, color: AppColors.borderPrimary),
-              const SizedBox(height: 8),
-              const _DevToolsSection(),
+              if (kDebugMode) ...[
+                const SizedBox(height: 8),
+                const _DevToolsSection(),
+              ],
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -93,7 +96,7 @@ class SettingsView extends StatelessWidget {
   }
 }
 
-/// Data reset and seeding shortcuts, visible in all builds for now.
+/// Data reset and seeding shortcuts — debug builds only, never shipped.
 class _DevToolsSection extends StatefulWidget {
   const _DevToolsSection();
 
