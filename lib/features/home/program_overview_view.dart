@@ -627,17 +627,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                         ),
                   ],
                   const _ProgramSectionLabel('Workouts'),
-                  // The overview a day-led list would give: seven columns,
-                  // each training day carrying its type's marker. Tapping it
-                  // opens the schedule.
-                  ProgramWeekStrip(
-                    weekCycle: weekCycle,
-                    onTap: _openDaysSheet,
-                    flush: true,
-                  ),
                   for (var i = 0; i < workouts.length; i++)
                     _WorkoutTypeRow(
                       sessionType: workouts[i].sessionType,
+                      timesPerWeek: workouts[i].weekdays.length,
                       last: i == workouts.length - 1,
                       onTap: () => _openWorkoutEditor(
                         workouts[i].sessionType,
@@ -961,11 +954,13 @@ class _ProgramRow extends StatelessWidget {
 /// every scheduled day shares — no remembering which day you're editing.
 class _WorkoutTypeRow extends StatelessWidget {
   final TrainingSessionType sessionType;
+  final int timesPerWeek;
   final bool last;
   final VoidCallback onTap;
 
   const _WorkoutTypeRow({
     required this.sessionType,
+    required this.timesPerWeek,
     required this.last,
     required this.onTap,
   });
@@ -991,6 +986,15 @@ class _WorkoutTypeRow extends StatelessWidget {
                 letterSpacing: -0.4,
                 height: 1.15,
               ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '$timesPerWeek× / week',
+            style: GoogleFonts.robotoMono(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
