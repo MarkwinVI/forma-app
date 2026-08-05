@@ -93,22 +93,26 @@ class WorkoutNotificationService {
         const NotificationDetails(
           iOS: DarwinNotificationDetails(
             interruptionLevel: InterruptionLevel.timeSensitive,
-            // The default sound plays wherever the notification lands —
+            // The bundled chime plays wherever the notification lands —
             // lock screen, another app, or Forma itself. In the foreground
             // the banner stays hidden (the workout screen IS the rest
             // timer) but the sound still marks the moment; the in-app
             // fallback chime only fires when permission was denied.
+            sound: 'rest_over.caf',
             presentAlert: false,
             presentBanner: false,
             presentSound: true,
           ),
           android: AndroidNotificationDetails(
-            'rest_timer',
+            // Sounds bake into a channel at creation, so the custom chime
+            // needs a fresh channel id — never reuse 'rest_timer'.
+            'rest_timer_v2',
             'Rest timer',
             channelDescription: 'Alerts when a rest timer finishes',
             importance: Importance.high,
             priority: Priority.high,
             category: AndroidNotificationCategory.workout,
+            sound: RawResourceAndroidNotificationSound('rest_over'),
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
