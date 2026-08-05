@@ -21,6 +21,12 @@ class WorkoutNotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  bool _permissionGranted = false;
+
+  /// Whether the rest-over sound is owned by the notification. When
+  /// permission was denied the workout screen keeps playing its own alert
+  /// sound instead, so rest never ends silently.
+  bool get soundHandledByNotification => _permissionGranted;
 
   bool get _isSupported => !kIsWeb && (Platform.isIOS || Platform.isAndroid);
 
@@ -51,15 +57,17 @@ class WorkoutNotificationService {
 
     try {
       if (Platform.isIOS) {
-        await _plugin
-            .resolvePlatformSpecificImplementation<
-                IOSFlutterLocalNotificationsPlugin>()
-            ?.requestPermissions(alert: true, sound: true);
+        _permissionGranted = await _plugin
+                .resolvePlatformSpecificImplementation<
+                    IOSFlutterLocalNotificationsPlugin>()
+                ?.requestPermissions(alert: true, sound: true) ??
+            false;
       } else if (Platform.isAndroid) {
-        await _plugin
-            .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
-            ?.requestNotificationsPermission();
+        _permissionGranted = await _plugin
+                .resolvePlatformSpecificImplementation<
+                    AndroidFlutterLocalNotificationsPlugin>()
+                ?.requestNotificationsPermission() ??
+            false;
       }
     } catch (error, stackTrace) {
       debugPrint('Notification permission request failed: $error\n$stackTrace');
@@ -85,12 +93,14 @@ class WorkoutNotificationService {
         const NotificationDetails(
           iOS: DarwinNotificationDetails(
             interruptionLevel: InterruptionLevel.timeSensitive,
-            // In the foreground the workout screen plays its own sound, so
-            // the notification stays quiet there and only presents when the
-            // app is backgrounded or the phone is locked.
+            // The default sound plays wherever the notification lands —
+            // lock screen, another app, or Forma itself. In the foreground
+            // the banner stays hidden (the workout screen IS the rest
+            // timer) but the sound still marks the moment; the in-app
+            // fallback chime only fires when permission was denied.
             presentAlert: false,
             presentBanner: false,
-            presentSound: false,
+            presentSound: true,
           ),
           android: AndroidNotificationDetails(
             'rest_timer',

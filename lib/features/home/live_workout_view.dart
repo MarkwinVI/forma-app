@@ -149,7 +149,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           _activeRestTimer != null &&
           _activeRestRemainingSeconds() <= 0;
       if (!_isRunning && !shouldClearRest) return;
-      if (shouldClearRest) {
+      if (shouldClearRest &&
+          !WorkoutNotificationService.instance.soundHandledByNotification) {
         SystemSound.play(SystemSoundType.alert);
       }
       setState(() {
