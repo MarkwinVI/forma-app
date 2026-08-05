@@ -162,15 +162,16 @@ private struct ActiveSetRow: View {
     var body: some View {
         HStack {
             Text(state.repGoalLabel)
-                .font(.title3.weight(.semibold))
+                .font(.headline)
             Spacer()
             if #available(iOS 17.0, *) {
                 Button(intent: CompleteSetIntent()) {
                     Image(systemName: "checkmark")
                         .font(.footnote.weight(.bold))
-                        .frame(width: 30, height: 20)
+                        .frame(width: 20, height: 20)
                 }
                 .buttonStyle(.bordered)
+                .buttonBorderShape(.circle)
                 .tint(.white)
             }
         }
