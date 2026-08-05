@@ -9,6 +9,7 @@ import '../../core/widgets/reorder_exercises_page.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
 import '../exercises/exercise_detail_view.dart';
@@ -28,6 +29,11 @@ class ProgramWorkoutEditorView extends StatefulWidget {
   final Map<TrainingTrack, String> branchSelections;
   final Map<String, ExerciseStatus> progressMap;
   final Map<String, dynamic> sessionItemsConfig;
+
+  /// The program's skill tracks — the default day is built from these, so
+  /// the editor opens on the session the user actually trains rather than
+  /// the legacy lane defaults.
+  final List<SkillTrack> skillTracks;
   final Future<void> Function(Map<String, dynamic> sessionItemsConfig) onSave;
 
   const ProgramWorkoutEditorView({
@@ -37,6 +43,7 @@ class ProgramWorkoutEditorView extends StatefulWidget {
     required this.branchSelections,
     required this.progressMap,
     required this.sessionItemsConfig,
+    this.skillTracks = const [],
     required this.onSave,
   });
 
@@ -64,6 +71,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       sessionType: widget.sessionType,
       branchSelections: widget.branchSelections,
       progressMap: widget.progressMap,
+      skillTracks: widget.skillTracks,
     );
     _initialSerialized = _serialized();
   }

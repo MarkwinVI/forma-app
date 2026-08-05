@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../data/catalog/exercise_catalog.dart';
+import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/training_program_service.dart';
 
 /// Answers collected by the "Build your program" wizard.
 class ProgramSetupResult {
@@ -219,9 +222,14 @@ const kGoalSkillOptions = [
 class ProgramSetupView extends StatefulWidget {
   final Future<void> Function(ProgramSetupResult result) onComplete;
 
+  /// The user's exercise statuses, used to keep gated goal skills (handstand
+  /// push-ups, planche, muscle-up) locked until the tree behind each is open.
+  final Map<String, ExerciseStatus> progressMap;
+
   const ProgramSetupView({
     super.key,
     required this.onComplete,
+    this.progressMap = const {},
   });
 
   @override
@@ -249,6 +257,17 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   final List<String> _pickedSkills = [];
   bool _saving = false;
   bool _ready = false;
+
+  /// Gated goal options still behind their unlock, id → the note naming what
+  /// opens them. Same rule the planner enforces, so the wizard never shows a
+  /// pickable goal the plan would drop.
+  late final Map<String, String> _lockedSkillNotes = {
+    for (final option in kGoalSkillOptions)
+      if (TrainingProgramService.lockedGoal(option.id, widget.progressMap)
+          case final requirement?)
+        option.id: 'Unlocks after '
+            '${ExerciseCatalog.findById(requirement.exerciseId)?.name ?? 'earlier work'}',
+  };
 
   TrainingProgramType get _effectiveSplit => _split ?? _recommendedSplit(_days);
 
@@ -286,7 +305,12 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                   ? null
                   : _strength[exercise.id]!.value,
           },
-          skillIds: List.of(_pickedSkills),
+          // Locked goals can't be picked, but filter anyway so a stale
+          // selection can never outrun the gate.
+          skillIds: [
+            for (final id in _pickedSkills)
+              if (!_lockedSkillNotes.containsKey(id)) id,
+          ],
         ),
       );
       if (!mounted) return;
@@ -355,7 +379,9 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                     ),
                   _ => _SkillsStep(
                       picked: _pickedSkills,
+                      lockedNotes: _lockedSkillNotes,
                       onToggleSkill: (id) => setState(() {
+                        if (_lockedSkillNotes.containsKey(id)) return;
                         if (_pickedSkills.contains(id)) {
                           _pickedSkills.remove(id);
                         } else {
@@ -1232,10 +1258,12 @@ class _StepperButton extends StatelessWidget {
 
 class _SkillsStep extends StatelessWidget {
   final List<String> picked;
+  final Map<String, String> lockedNotes;
   final ValueChanged<String> onToggleSkill;
 
   const _SkillsStep({
     required this.picked,
+    required this.lockedNotes,
     required this.onToggleSkill,
   });
 
@@ -1282,6 +1310,7 @@ class _SkillsStep extends StatelessWidget {
       _SkillGrid(
         skills: skills,
         picked: picked,
+        lockedNotes: lockedNotes,
         onToggleSkill: onToggleSkill,
       ),
     ];
@@ -1291,16 +1320,25 @@ class _SkillsStep extends StatelessWidget {
 class _SkillGrid extends StatelessWidget {
   final List<GoalSkillOption> skills;
   final List<String> picked;
+  final Map<String, String> lockedNotes;
   final ValueChanged<String> onToggleSkill;
 
   const _SkillGrid({
     required this.skills,
     required this.picked,
+    required this.lockedNotes,
     required this.onToggleSkill,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget cardFor(GoalSkillOption skill) => _SkillCard(
+          skill: skill,
+          selected: picked.contains(skill.id),
+          lockedNote: lockedNotes[skill.id],
+          onTap: () => onToggleSkill(skill.id),
+        );
+
     final rows = <Widget>[];
     for (var index = 0; index < skills.length; index += 2) {
       rows.add(
@@ -1310,21 +1348,11 @@ class _SkillGrid extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: _SkillCard(
-                    skill: skills[index],
-                    selected: picked.contains(skills[index].id),
-                    onTap: () => onToggleSkill(skills[index].id),
-                  ),
-                ),
+                Expanded(child: cardFor(skills[index])),
                 const SizedBox(width: 8),
                 Expanded(
                   child: index + 1 < skills.length
-                      ? _SkillCard(
-                          skill: skills[index + 1],
-                          selected: picked.contains(skills[index + 1].id),
-                          onTap: () => onToggleSkill(skills[index + 1].id),
-                        )
+                      ? cardFor(skills[index + 1])
                       : const SizedBox(),
                 ),
               ],
@@ -1340,18 +1368,25 @@ class _SkillGrid extends StatelessWidget {
 class _SkillCard extends StatelessWidget {
   final GoalSkillOption skill;
   final bool selected;
+
+  /// Non-null when the goal's tree is still locked: names what opens it and
+  /// makes the card inert.
+  final String? lockedNote;
   final VoidCallback onTap;
 
   const _SkillCard({
     required this.skill,
     required this.selected,
+    this.lockedNote,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final locked = lockedNote != null;
+
     return Pressable(
-      onTap: onTap,
+      onTap: locked ? null : onTap,
       child: Container(
         padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
         decoration: BoxDecoration(
@@ -1361,76 +1396,97 @@ class _SkillCard extends StatelessWidget {
               ? Border.all(color: AppColors.accentPrimary, width: 1.5)
               : null,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  skill.icon,
-                  size: 22,
-                  color: selected
-                      ? AppColors.accentPrimary
-                      : AppColors.textSecondary,
-                ),
-                if (selected)
-                  Container(
-                    width: 18,
-                    height: 18,
-                    decoration: const BoxDecoration(
-                      color: AppColors.accentPrimary,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.check_rounded,
-                      size: 11,
-                      color: Colors.white,
-                    ),
+        child: Opacity(
+          opacity: locked ? 0.55 : 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(
+                    skill.icon,
+                    size: 22,
+                    color: selected
+                        ? AppColors.accentPrimary
+                        : AppColors.textSecondary,
                   ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              skill.label,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.15,
-                height: 1.2,
+                  if (locked)
+                    const Icon(
+                      Icons.lock_rounded,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    )
+                  else if (selected)
+                    Container(
+                      width: 18,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: AppColors.accentPrimary,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.check_rounded,
+                        size: 11,
+                        color: Colors.white,
+                      ),
+                    ),
+                ],
               ),
-            ),
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                for (var dot = 0; dot < 3; dot++)
-                  Container(
-                    width: 4.5,
-                    height: 4.5,
-                    margin: EdgeInsets.only(right: dot < 2 ? 2.5 : 0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: dot <= skill.difficulty
-                          ? (selected
-                              ? AppColors.accentPrimary
-                              : AppColors.textSecondary)
-                          : Colors.white.withValues(alpha: 0.12),
-                    ),
-                  ),
-                const SizedBox(width: 5),
+              const SizedBox(height: 10),
+              Text(
+                skill.label,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.15,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 5),
+              if (locked)
                 Text(
-                  _difficultyLabels[skill.difficulty],
+                  lockedNote!,
+                  maxLines: 2,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textMuted,
+                    height: 1.3,
                   ),
+                )
+              else
+                Row(
+                  children: [
+                    for (var dot = 0; dot < 3; dot++)
+                      Container(
+                        width: 4.5,
+                        height: 4.5,
+                        margin: EdgeInsets.only(right: dot < 2 ? 2.5 : 0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: dot <= skill.difficulty
+                              ? (selected
+                                  ? AppColors.accentPrimary
+                                  : AppColors.textSecondary)
+                              : Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                    const SizedBox(width: 5),
+                    Text(
+                      _difficultyLabels[skill.difficulty],
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -18,6 +18,7 @@ import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/live_activity_service.dart';
 import '../../data/services/progress_service.dart';
+import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/workout_notification_service.dart';
@@ -1016,6 +1017,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final config = Map<String, dynamic>.from(
       logic.program.variationRules['session_items_v1'] as Map? ?? const {},
     );
+    // The baseline plan must be the one the program actually runs — its
+    // skill tracks — or matching would run against lane defaults and carry
+    // exercises the program never trained into the saved day.
+    final skillTracks = await SkillTrackService().fetchAll(userId);
     final planItems = ProgramSessionPlan.loadDay(
       service: _programService,
       sessionItemsConfig: config,
@@ -1023,6 +1028,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       sessionType: sessionType,
       branchSelections: logic.branchSelections,
       progressMap: _progressMap,
+      skillTracks: skillTracks,
     );
 
     final unmatched = List.of(planItems);

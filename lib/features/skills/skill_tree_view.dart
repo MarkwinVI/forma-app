@@ -232,7 +232,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
 
     final unlockRequirement = _skillCategory.unlockRequirement;
     final isLocked = unlockRequirement != null &&
-        _localProgress[unlockRequirement.exerciseId] != ExerciseStatus.mastered;
+        _skillCategory.isLockedFor(_localProgress);
 
     return Scaffold(
       backgroundColor: AppColors.bg,

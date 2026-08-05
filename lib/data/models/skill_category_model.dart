@@ -58,12 +58,14 @@ class SkillCategory {
   });
 
   /// Whether this tree is still behind its unlock requirement — the gating
-  /// exercise has not been mastered yet. Trees without a requirement are
-  /// always open.
+  /// exercise is not yet behind the user. A step cleared at setup (skipped)
+  /// unlocks the same as one that was mastered: the program will never
+  /// schedule a skipped step again, so demanding mastery would lock the
+  /// tree for good. Trees without a requirement are always open.
   bool isLockedFor(Map<String, ExerciseStatus> progressMap) {
     final requirement = unlockRequirement;
     if (requirement == null) return false;
-    return progressMap[requirement.exerciseId] != ExerciseStatus.mastered;
+    return !(progressMap[requirement.exerciseId]?.isCleared ?? false);
   }
 
   /// The trunk every specialised branch of this category grows out of, by the

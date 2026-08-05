@@ -164,6 +164,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
           branchSelections: _branchSelections,
           progressMap: widget.progressMap,
           sessionItemsConfig: _sessionItemsConfig,
+          skillTracks: _skillTracks,
           onSave: (config) => _saveLogic(
             sessionItemsConfig: config,
             toast: '${programWorkoutTypeName(sessionType)} updated',

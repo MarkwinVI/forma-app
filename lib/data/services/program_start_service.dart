@@ -106,8 +106,18 @@ class ProgramStartPlanner {
     required bool hasGym,
     required List<String> goalSkillIds,
     required Map<String, int?> startingStrength,
+    Map<String, ExerciseStatus> existingProgress = const {},
   }) {
-    final goalBranches = _goalBranchesByCategory(goalSkillIds);
+    // A gated goal (handstand push-ups, planche, muscle-up) only becomes a
+    // track once the tree behind it is open. The wizard already refuses the
+    // pick; this is the rule itself, so no caller can plan a locked tree.
+    final unlockedGoalIds = [
+      for (final goalId in goalSkillIds)
+        if (TrainingProgramService.lockedGoal(goalId, existingProgress) ==
+            null)
+          goalId,
+    ];
+    final goalBranches = _goalBranchesByCategory(unlockedGoalIds);
     final tracks = <String, String>{};
 
     void addTrack(String categoryId, String branchId) {

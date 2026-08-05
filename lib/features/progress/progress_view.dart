@@ -193,6 +193,7 @@ class _ProgressViewState extends State<ProgressView> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
+          progressMap: _progressMap,
           onComplete: _completeProgramSetup,
         ),
       ),

@@ -14,11 +14,13 @@ void main() {
     bool hasGym = false,
     List<String> goals = const [],
     Map<String, int?> strength = const {},
+    Map<String, ExerciseStatus> progress = const {},
   }) {
     return ProgramStartPlanner.planFor(
       hasGym: hasGym,
       goalSkillIds: goals,
       startingStrength: strength,
+      existingProgress: progress,
     );
   }
 
@@ -69,9 +71,30 @@ void main() {
     });
 
     test('a goal for a movement the six do not cover adds its own track', () {
-      final tracks = planFor(goals: ['lsit', 'hspu']).tracks;
+      final tracks = planFor(
+        goals: ['lsit', 'hspu'],
+        progress: {'pushups_diamond_push_up': ExerciseStatus.mastered},
+      ).tracks;
 
       expect(tracks[SkillCategoryCatalog.coreId], 'l_sit');
+      expect(tracks[SkillCategoryCatalog.handstandPushupsId], 'main');
+    });
+
+    test('a gated goal is dropped while its tree is still locked', () {
+      final tracks = planFor(goals: ['hspu']).tracks;
+
+      expect(
+        tracks.containsKey(SkillCategoryCatalog.handstandPushupsId),
+        isFalse,
+      );
+    });
+
+    test('a step skipped at setup unlocks a gated goal like mastery does', () {
+      final tracks = planFor(
+        goals: ['hspu'],
+        progress: {'pushups_diamond_push_up': ExerciseStatus.skipped},
+      ).tracks;
+
       expect(tracks[SkillCategoryCatalog.handstandPushupsId], 'main');
     });
 
