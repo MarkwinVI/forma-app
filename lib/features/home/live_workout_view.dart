@@ -754,18 +754,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   // ── Live Activity ─────────────────────────────────────────────────
 
   void _syncLiveActivity() {
-    final item = _currentItemForActivity();
-    if (item != null) {
-      // Fetch the thumbnail in the background; once it lands in the shared
-      // container, push another update so the lock screen picks it up.
-      _liveActivityService.prepareImage(
-        exerciseId: item.exercise.id,
-        imageUrl: item.exercise.imageUrl,
-        onReady: () {
-          if (mounted) _liveActivityService.update(_liveActivityState());
-        },
-      );
-    }
     _liveActivityService.update(_liveActivityState());
   }
 
@@ -827,8 +815,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
               .subtract(Duration(seconds: restTimer.totalSeconds))
           : null,
       restEndsAt: resting ? restTimer!.endsAt : null,
-      imageFileName:
-          item == null ? null : _liveActivityService.imageFileFor(item.exercise.id),
     );
   }
 

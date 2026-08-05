@@ -15,20 +15,14 @@ struct WorkoutLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 8) {
-                        ExerciseThumbnail(
-                            fileName: context.state.imageFileName,
-                            size: 36
-                        )
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(context.state.exerciseName)
-                                .font(.subheadline.weight(.semibold))
-                                .lineLimit(1)
-                            Text(subtitle(for: context.state))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(context.state.exerciseName)
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                        Text(subtitle(for: context.state))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
@@ -91,17 +85,14 @@ private struct LockScreenView: View {
                     .font(.footnote.weight(.semibold))
                     .frame(maxWidth: 64)
             }
-            HStack(spacing: 12) {
-                ExerciseThumbnail(fileName: state.imageFileName, size: 44)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(state.exerciseName)
-                        .font(.title3.weight(.semibold))
-                        .lineLimit(1)
-                    Text(subtitle(for: state))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(state.exerciseName)
+                    .font(.title3.weight(.semibold))
+                    .lineLimit(1)
+                Text(subtitle(for: state))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
             if state.isResting {
                 RestProgressBar(state: state)
@@ -216,41 +207,5 @@ private struct RestControls: View {
                 }
             }
         }
-    }
-}
-
-/// Round exercise image from the app-group container, glyph fallback.
-private struct ExerciseThumbnail: View {
-    let fileName: String?
-    let size: CGFloat
-
-    var body: some View {
-        Group {
-            if let image = loadImage() {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: "figure.strengthtraining.traditional")
-                    .font(.system(size: size * 0.5))
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .frame(width: size, height: size)
-        .background(Color.white)
-        .clipShape(Circle())
-    }
-
-    private func loadImage() -> UIImage? {
-        guard
-            let fileName,
-            let container = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: liveWorkoutAppGroupId
-            )
-        else { return nil }
-        return UIImage(
-            contentsOfFile: container.appendingPathComponent(fileName).path
-        )
     }
 }

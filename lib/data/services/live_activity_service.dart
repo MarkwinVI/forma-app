@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +17,6 @@ class LiveWorkoutActivityState {
   final String? pausedElapsedLabel;
   final DateTime? restStartedAt;
   final DateTime? restEndsAt;
-  final String? imageFileName;
 
   const LiveWorkoutActivityState({
     required this.exerciseName,
@@ -29,7 +28,6 @@ class LiveWorkoutActivityState {
     this.pausedElapsedLabel,
     this.restStartedAt,
     this.restEndsAt,
-    this.imageFileName,
   });
 
   Map<String, Object?> toMap() => {
@@ -42,7 +40,6 @@ class LiveWorkoutActivityState {
         'pausedElapsedLabel': pausedElapsedLabel,
         'restStartedAtMs': restStartedAt?.millisecondsSinceEpoch,
         'restEndsAtMs': restEndsAt?.millisecondsSinceEpoch,
-        'imageFileName': imageFileName,
       };
 }
 
@@ -63,11 +60,6 @@ class LiveActivityService {
   void Function(String action)? onAction;
 
   bool _started = false;
-  String? _containerPath;
-
-  /// Thumbnails already written to the shared container, by exercise id.
-  final Map<String, String> _imageFiles = {};
-  final Set<String> _imageDownloadsInFlight = {};
 
   bool get _isIOS => !kIsWeb && Platform.isIOS;
 
@@ -120,60 +112,6 @@ class LiveActivityService {
       await _channel.invokeMethod('end');
     } catch (error) {
       debugPrint('Live Activity end failed: $error');
-    }
-  }
-
-  /// Name of the thumbnail for [exerciseId] inside the shared container, if
-  /// it has already been fetched this session.
-  String? imageFileFor(String exerciseId) => _imageFiles[exerciseId];
-
-  /// Downloads the exercise thumbnail into the app-group container so the
-  /// widget extension can render it. Calls [onReady] once the file exists —
-  /// the caller then pushes a fresh activity update carrying the file name.
-  Future<void> prepareImage({
-    required String exerciseId,
-    required String? imageUrl,
-    required void Function() onReady,
-  }) async {
-    if (!_isIOS ||
-        imageUrl == null ||
-        imageUrl.isEmpty ||
-        _imageFiles.containsKey(exerciseId) ||
-        !_imageDownloadsInFlight.add(exerciseId)) {
-      return;
-    }
-
-    try {
-      _containerPath ??=
-          await _channel.invokeMethod<String>('containerPath');
-      final containerPath = _containerPath;
-      if (containerPath == null) return;
-
-      final directory = Directory('$containerPath/exercise_images');
-      await directory.create(recursive: true);
-      final fileName = 'exercise_images/$exerciseId.img';
-      final file = File('$containerPath/$fileName');
-
-      if (!await file.exists()) {
-        final client = HttpClient();
-        try {
-          final request = await client.getUrl(Uri.parse(imageUrl));
-          final response = await request.close();
-          if (response.statusCode != HttpStatus.ok) return;
-          await file.writeAsBytes(
-            await consolidateHttpClientResponseBytes(response),
-          );
-        } finally {
-          client.close();
-        }
-      }
-
-      _imageFiles[exerciseId] = fileName;
-      onReady();
-    } catch (error) {
-      debugPrint('Exercise thumbnail fetch failed: $error');
-    } finally {
-      _imageDownloadsInFlight.remove(exerciseId);
     }
   }
 }

@@ -42,14 +42,6 @@ final class LiveWorkoutActivityController {
             } else {
                 result(false)
             }
-        case "containerPath":
-            result(
-                FileManager.default
-                    .containerURL(
-                        forSecurityApplicationGroupIdentifier:
-                            liveWorkoutAppGroupId
-                    )?.path
-            )
         case "start":
             if #available(iOS 16.2, *),
                let args = call.arguments as? [String: Any] {
@@ -141,8 +133,7 @@ final class LiveWorkoutActivityController {
             isPaused: args["isPaused"] as? Bool ?? false,
             pausedElapsedLabel: args["pausedElapsedLabel"] as? String,
             restStartedAt: date("restStartedAtMs"),
-            restEndsAt: date("restEndsAtMs"),
-            imageFileName: args["imageFileName"] as? String
+            restEndsAt: date("restEndsAtMs")
         )
     }
     #endif

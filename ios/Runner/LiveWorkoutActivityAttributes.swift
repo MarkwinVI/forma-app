@@ -27,10 +27,6 @@ struct LiveWorkoutActivityAttributes: ActivityAttributes {
         /// Present while a rest timer runs; drives the countdown and bar.
         var restStartedAt: Date?
         var restEndsAt: Date?
-        /// Exercise thumbnail file inside the app-group container
-        /// (`exercise_images/<id>.png`), written by the app before starting
-        /// or updating the activity. Nil falls back to a glyph.
-        var imageFileName: String?
 
         var isResting: Bool { restEndsAt != nil }
     }
@@ -38,7 +34,4 @@ struct LiveWorkoutActivityAttributes: ActivityAttributes {
     /// Static for the whole workout.
     var sessionLabel: String
 }
-
-/// The app group both targets share; the thumbnail travels through it.
-let liveWorkoutAppGroupId = "group.tryforma.co"
 #endif
