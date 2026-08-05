@@ -3043,10 +3043,12 @@ class _RestTimerBar extends StatelessWidget {
                       ),
                       child: const Text(
                         'Skip',
+                        // Same face as the header's Finish button, so the
+                        // two blue actions on this screen read as one kind.
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.bg,
+                          color: Colors.white,
                         ),
                       ),
                     ),

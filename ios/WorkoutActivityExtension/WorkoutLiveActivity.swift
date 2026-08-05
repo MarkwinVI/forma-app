@@ -227,11 +227,13 @@ private struct RestControls: View {
                 Spacer(minLength: 0)
                 if #available(iOS 17.0, *) {
                     AdjustButton(label: "+10", delta: 10)
+                    // Same face as the in-app Skip (which itself matches
+                    // the Finish button): white bold text on accent.
                     Button(intent: SkipRestIntent()) {
                         Text("Skip")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(formaBg)
-                            .padding(.horizontal, 16)
+                            .font(.system(size: 13.5, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 15)
                             .frame(height: 32)
                             .background(
                                 formaAccent,
