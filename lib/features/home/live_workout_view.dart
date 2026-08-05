@@ -831,10 +831,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
             return;
           }
         }
-      case 'restPlus15':
-        _adjustRestTimer(15);
-      case 'restMinus15':
-        _adjustRestTimer(-15);
+      case 'restPlus10':
+        _adjustRestTimer(10);
+      case 'restMinus10':
+        _adjustRestTimer(-10);
       case 'skipRest':
         _clearActiveRestTimer();
     }
@@ -3010,8 +3010,8 @@ class _RestTimerBar extends StatelessWidget {
               child: Row(
                 children: [
                   _RestAdjustButton(
-                    label: '−15',
-                    onTap: () => onAdjust(-15),
+                    label: '−10',
+                    onTap: () => onAdjust(-10),
                   ),
                   Expanded(
                     child: Text(
@@ -3027,8 +3027,8 @@ class _RestTimerBar extends StatelessWidget {
                     ),
                   ),
                   _RestAdjustButton(
-                    label: '+15',
-                    onTap: () => onAdjust(15),
+                    label: '+10',
+                    onTap: () => onAdjust(10),
                   ),
                   const SizedBox(width: 10),
                   Pressable(

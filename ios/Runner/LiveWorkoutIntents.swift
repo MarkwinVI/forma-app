@@ -29,7 +29,7 @@ struct CompleteSetIntent: LiveActivityIntent {
     }
 }
 
-/// Adds or removes rest time (−15s / +15s on the Live Activity).
+/// Adds or removes rest time (−10 / +10 on the Live Activity).
 @available(iOS 17.0, *)
 struct AdjustRestIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Adjust Rest"
@@ -46,7 +46,7 @@ struct AdjustRestIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         LiveWorkoutActionRelay.post(
-            deltaSeconds < 0 ? "restMinus15" : "restPlus15"
+            deltaSeconds < 0 ? "restMinus10" : "restPlus10"
         )
         return .result()
     }

@@ -109,6 +109,12 @@ private struct LockScreenView: View {
 
 // ── Shared pieces ─────────────────────────────────────────────────────
 
+// The workout screen's palette (AppColors), so the activity's rest
+// controls read as the same bar the user knows from inside the app.
+private let formaAccent = Color(red: 0x3D / 255, green: 0x7B / 255, blue: 0xFF / 255)
+private let formaBg = Color(red: 0x11 / 255, green: 0x11 / 255, blue: 0x14 / 255)
+private let formaTextSecondary = Color(red: 0xA0 / 255, green: 0xA1 / 255, blue: 0xA9 / 255)
+
 /// The Forma mark — filled disc, bar, ring — drawn in code so it stays
 /// crisp at every size the activity needs. Geometry mirrors
 /// web/assets/splash-mark.svg (1360 × 480 viewBox).
@@ -192,13 +198,14 @@ private struct RestProgressBar: View {
                 currentValueLabel: { EmptyView() }
             )
             .progressViewStyle(.linear)
-            .tint(.blue)
+            .tint(formaAccent)
         }
     }
 }
 
-/// −15s · countdown · +15s · Skip. Buttons are iOS 17+; below that the
-/// countdown stands alone.
+/// −10 · countdown · +10 · Skip, styled after the in-app rest bar: dim
+/// rounded-rect adjust buttons, brand-blue Skip. Buttons are iOS 17+;
+/// below that the countdown stands alone.
 private struct RestControls: View {
     let state: LiveWorkoutActivityAttributes.ContentState
 
@@ -206,35 +213,56 @@ private struct RestControls: View {
         if let restEndsAt = state.restEndsAt {
             HStack(spacing: 10) {
                 if #available(iOS 17.0, *) {
-                    Button(intent: AdjustRestIntent(deltaSeconds: -15)) {
-                        Text("−15s").font(.footnote.weight(.semibold))
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.white)
+                    AdjustButton(label: "−10", delta: -10)
                 }
                 Spacer(minLength: 0)
                 Text(
                     timerInterval: Date.now...max(Date.now, restEndsAt),
                     countsDown: true
                 )
-                .font(.title2.weight(.bold))
+                .font(.system(size: 24, weight: .bold))
                 .monospacedDigit()
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 72)
+                .frame(maxWidth: 76)
                 Spacer(minLength: 0)
                 if #available(iOS 17.0, *) {
-                    Button(intent: AdjustRestIntent(deltaSeconds: 15)) {
-                        Text("+15s").font(.footnote.weight(.semibold))
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.white)
+                    AdjustButton(label: "+10", delta: 10)
                     Button(intent: SkipRestIntent()) {
-                        Text("Skip").font(.footnote.weight(.semibold))
+                        Text("Skip")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(formaBg)
+                            .padding(.horizontal, 16)
+                            .frame(height: 32)
+                            .background(
+                                formaAccent,
+                                in: RoundedRectangle(cornerRadius: 10)
+                            )
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+}
+
+@available(iOS 17.0, *)
+private struct AdjustButton: View {
+    let label: String
+    let delta: Int
+
+    var body: some View {
+        Button(intent: AdjustRestIntent(deltaSeconds: delta)) {
+            Text(label)
+                .font(.system(size: 14, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(formaTextSecondary)
+                .padding(.horizontal, 12)
+                .frame(height: 32)
+                .background(
+                    .white.opacity(0.07),
+                    in: RoundedRectangle(cornerRadius: 10)
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
