@@ -38,7 +38,8 @@ struct WorkoutLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: "dumbbell.fill")
+                FormaMark()
+                    .frame(height: 11)
             } compactTrailing: {
                 if let restEndsAt = context.state.restEndsAt {
                     Text(
@@ -52,7 +53,8 @@ struct WorkoutLiveActivity: Widget {
                     Text("S\(context.state.setNumber)/\(context.state.totalSets)")
                 }
             } minimal: {
-                Image(systemName: "dumbbell.fill")
+                FormaMark()
+                    .frame(height: 9)
             }
         }
     }
@@ -74,10 +76,9 @@ private struct LockScreenView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: "dumbbell.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                Text("Workout")
+                FormaMark()
+                    .frame(height: 11)
+                Text("Forma")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -108,6 +109,33 @@ private struct LockScreenView: View {
 
 // ── Shared pieces ─────────────────────────────────────────────────────
 
+/// The Forma mark — filled disc, bar, ring — drawn in code so it stays
+/// crisp at every size the activity needs. Geometry mirrors
+/// web/assets/splash-mark.svg (1360 × 480 viewBox).
+private struct FormaMark: View {
+    var color: Color = Color(red: 0x3C / 255, green: 0x7D / 255, blue: 0xFF / 255)
+
+    var body: some View {
+        Canvas { context, size in
+            let u = size.height / 480
+            context.fill(
+                Path(ellipseIn: CGRect(x: 2 * u, y: 8 * u, width: 464 * u, height: 464 * u)),
+                with: .color(color)
+            )
+            context.fill(
+                Path(CGRect(x: 374 * u, y: 175 * u, width: 582 * u, height: 130 * u)),
+                with: .color(color)
+            )
+            context.stroke(
+                Path(ellipseIn: CGRect(x: 919 * u, y: 41 * u, width: 398 * u, height: 398 * u)),
+                with: .color(color),
+                lineWidth: 75 * u
+            )
+        }
+        .aspectRatio(1360.0 / 480.0, contentMode: .fit)
+    }
+}
+
 /// The total-workout clock: ticks up natively, freezes while paused.
 private struct WorkoutClock: View {
     let state: LiveWorkoutActivityAttributes.ContentState
@@ -134,13 +162,13 @@ private struct ActiveSetRow: View {
     var body: some View {
         HStack {
             Text(state.repGoalLabel)
-                .font(.title.bold())
+                .font(.title3.weight(.semibold))
             Spacer()
             if #available(iOS 17.0, *) {
                 Button(intent: CompleteSetIntent()) {
                     Image(systemName: "checkmark")
-                        .font(.body.weight(.bold))
-                        .frame(width: 44, height: 32)
+                        .font(.footnote.weight(.bold))
+                        .frame(width: 30, height: 20)
                 }
                 .buttonStyle(.bordered)
                 .tint(.white)
