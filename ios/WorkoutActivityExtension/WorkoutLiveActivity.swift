@@ -50,7 +50,7 @@ struct WorkoutLiveActivity: Widget {
                     .frame(maxWidth: 44)
                     .multilineTextAlignment(.trailing)
                 } else {
-                    Text("S\(context.state.setNumber)/\(context.state.totalSets)")
+                    Text("\(context.state.setNumber)/\(context.state.totalSets)")
                 }
             } minimal: {
                 FormaMark()
