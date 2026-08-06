@@ -178,6 +178,7 @@ class _ProgressViewState extends State<ProgressView> {
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
       skillTracks: _skillTracks,
+      hasGym: programUsesGym(snapshot.program.variationRules),
     );
 
     return HomeDashboardMetricsCalculator.build(

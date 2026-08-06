@@ -85,7 +85,9 @@ class ProgramDayItem {
   List<String> get muscles {
     final exercise =
         exerciseId == null ? null : ExerciseCatalog.findById(exerciseId!);
-    if (exercise != null) return ProgramSessionPlan.musclesForExercise(exercise);
+    if (exercise != null) {
+      return ProgramSessionPlan.musclesForExercise(exercise);
+    }
     return ProgramSessionPlan.musclesForCategory(category);
   }
 
@@ -118,6 +120,7 @@ class ProgramSessionPlan {
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
     List<SkillTrack> skillTracks = const [],
+    bool hasGym = true,
   }) {
     final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
     if (sessionMap != null) {
@@ -143,6 +146,7 @@ class ProgramSessionPlan {
         programType: programType,
         sessionType: sessionType,
         skillTracks: skillTracks,
+        hasGym: hasGym,
       );
       final branchByCategory = {
         for (final track in skillTracks)
@@ -169,6 +173,7 @@ class ProgramSessionPlan {
       sessionType: sessionType,
       branchSelections: branchSelections,
       progressMap: progressMap,
+      hasGym: hasGym,
     );
   }
 
@@ -347,6 +352,7 @@ class ProgramSessionPlan {
     required TrainingSessionType sessionType,
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
+    required bool hasGym,
   }) {
     final resolvedBranches = service.resolveSelectedBranches(branchSelections);
     final skillOption = resolvedBranches[TrainingTrack.skillWork]!;
@@ -358,6 +364,7 @@ class ProgramSessionPlan {
       programType: programType,
       sessionType: sessionType,
       branchSelections: branchSelections,
+      hasGym: hasGym,
     );
 
     final items = <ProgramDayItem>[

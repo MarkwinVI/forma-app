@@ -44,15 +44,15 @@ class ProgramStartPlan {
 ///
 /// Two rules, both pure:
 ///
-/// 1. **What the program trains.** Every split is built from six movements —
-///    push-ups, dips, rows, pull-ups, one knee-dominant and one hinge — and
-///    the split itself decides which of them a given day runs. The two leg
-///    slots depend on equipment: with a gym the knee-dominant slot is a
-///    barbell squat and the hinge slot a Romanian deadlift; without one they
-///    are the squat progression and the Nordic curl. A goal skill replaces
-///    the default tree for its movement (a pistol-squat goal takes the
-///    knee-dominant slot back from the barbell) and adds a track of its own
-///    for movements the six do not cover.
+/// 1. **What the program trains.** Every split is built from seven movements
+///    — push-ups, dips, rows, pull-ups, one knee-dominant, one hinge, and
+///    core — and the split itself decides which of them a given day runs.
+///    The two leg slots depend on equipment: with a gym the knee-dominant
+///    slot is a barbell squat and the hinge slot a Romanian deadlift; without
+///    one they are the squat progression and the Nordic curl. A goal skill
+///    replaces the default tree for its movement (a pistol-squat goal takes
+///    the knee-dominant slot back from the barbell) and adds a track of its
+///    own for movements the seven do not cover.
 ///
 /// 2. **Where it starts.** The reported one-set maximum places the starting
 ///    node on the push-up, pull-up, dip and bodyweight-squat trees, read
@@ -149,7 +149,14 @@ class ProgramStartPlanner {
     // Hinge: loaded when there is a bar to load, bodyweight otherwise.
     addTrack(SkillCategoryCatalog.hingeId, hasGym ? 'rdl' : 'nordic');
 
-    // Goals for movements the six defaults do not cover get their own track.
+    // Direct core work belongs in every program. The split schedules it at
+    // the end of full-body, push, and lower sessions.
+    addTrack(
+      SkillCategoryCatalog.coreId,
+      SkillCategoryCatalog.core.defaultTrainingPathId,
+    );
+
+    // Goals for movements the seven defaults do not cover get their own track.
     for (final entry in goalBranches.entries) {
       addTrack(entry.key, entry.value);
     }

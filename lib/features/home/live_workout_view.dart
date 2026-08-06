@@ -1029,6 +1029,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       branchSelections: logic.branchSelections,
       progressMap: _progressMap,
       skillTracks: skillTracks,
+      hasGym: programUsesGym(logic.program.variationRules),
     );
 
     final unmatched = List.of(planItems);

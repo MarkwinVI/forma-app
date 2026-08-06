@@ -95,6 +95,7 @@ class TrainingProgramService {
     Map<TrainingTrack, String> branchSelections = const {},
     Map<String, dynamic> sessionItemsConfig = const {},
     List<SkillTrack> skillTracks = const [],
+    bool hasGym = true,
     DateTime? plannedDate,
     int? plannedStepIndex,
     bool affectsSchedule = true,
@@ -120,9 +121,11 @@ class TrainingProgramService {
         items: configuredItems ??
             (currentSessionType == TrainingSessionType.rest
                 ? const []
-                : _buildItems(
-                    _trackBranchesForSession(currentSessionType, skillTracks),
+                : _buildTrackItemsForSession(
+                    currentSessionType,
+                    skillTracks,
                     progressMap,
+                    hasGym: hasGym,
                   )),
         plannedDate: plannedDate,
         plannedStepIndex: plannedStepIndex,
@@ -618,7 +621,6 @@ class TrainingProgramService {
       ExerciseCategory.horizontalPull,
       ExerciseCategory.verticalPull,
       ExerciseCategory.hinge,
-      ExerciseCategory.core,
     },
     TrainingSessionType.upper: {
       ExerciseCategory.skill,
@@ -641,18 +643,54 @@ class TrainingProgramService {
   ) =>
       _sessionPatterns[sessionType] ?? const <ExerciseCategory>{};
 
-  /// Presentation order of patterns within a session: skill work first,
-  /// then pushes/pulls, then lower-body and core.
-  static const List<ExerciseCategory> _patternOrder = [
-    ExerciseCategory.skill,
-    ExerciseCategory.verticalPush,
-    ExerciseCategory.horizontalPush,
-    ExerciseCategory.verticalPull,
-    ExerciseCategory.horizontalPull,
-    ExerciseCategory.squat,
-    ExerciseCategory.hinge,
-    ExerciseCategory.core,
-  ];
+  /// Presentation order for each generated workout. Full body alternates
+  /// pull and push; upper alternates push and pull. Lower-body, hinge, core,
+  /// and any accessories stay at the end.
+  static const Map<TrainingSessionType, List<ExerciseCategory>>
+      _patternOrderBySession = {
+    TrainingSessionType.fullBody: [
+      ExerciseCategory.skill,
+      ExerciseCategory.verticalPull,
+      ExerciseCategory.verticalPush,
+      ExerciseCategory.horizontalPull,
+      ExerciseCategory.horizontalPush,
+      ExerciseCategory.squat,
+      ExerciseCategory.hinge,
+      ExerciseCategory.core,
+    ],
+    TrainingSessionType.push: [
+      ExerciseCategory.skill,
+      ExerciseCategory.verticalPush,
+      ExerciseCategory.horizontalPush,
+      ExerciseCategory.squat,
+      ExerciseCategory.core,
+    ],
+    TrainingSessionType.pull: [
+      ExerciseCategory.skill,
+      ExerciseCategory.verticalPull,
+      ExerciseCategory.horizontalPull,
+      ExerciseCategory.hinge,
+    ],
+    TrainingSessionType.upper: [
+      ExerciseCategory.skill,
+      ExerciseCategory.verticalPush,
+      ExerciseCategory.verticalPull,
+      ExerciseCategory.horizontalPush,
+      ExerciseCategory.horizontalPull,
+    ],
+    TrainingSessionType.lower: [
+      ExerciseCategory.skill,
+      ExerciseCategory.squat,
+      ExerciseCategory.hinge,
+      ExerciseCategory.core,
+    ],
+  };
+
+  static const Map<TrainingSessionType, String> _gymAccessoryIds = {
+    TrainingSessionType.push: 'lateral_raise_dumbbell',
+    TrainingSessionType.pull: 'face_pull',
+    TrainingSessionType.lower: 'standing_calf_raise',
+  };
 
   /// The movement lane a pattern reports as (for item labels, logging, and
   /// dashboards); tracks are scheduled by pattern, not stored by lane.
@@ -690,7 +728,9 @@ class TrainingProgramService {
         _sessionPatterns[sessionType] ?? const <ExerciseCategory>{};
     final branches = <_TrainingBranch>[];
 
-    for (final pattern in _patternOrder) {
+    final patternOrder =
+        _patternOrderBySession[sessionType] ?? const <ExerciseCategory>[];
+    for (final pattern in patternOrder) {
       if (!patterns.contains(pattern)) continue;
       for (final track in skillTracks) {
         if (!track.included) continue;
@@ -728,6 +768,33 @@ class TrainingProgramService {
     }
 
     return branches;
+  }
+
+  List<TrainingRecommendationItem> _buildTrackItemsForSession(
+    TrainingSessionType sessionType,
+    List<SkillTrack> skillTracks,
+    Map<String, ExerciseStatus> progressMap, {
+    required bool hasGym,
+  }) {
+    final items = _buildItems(
+      _trackBranchesForSession(sessionType, skillTracks),
+      progressMap,
+    );
+    final accessoryId = hasGym ? _gymAccessoryIds[sessionType] : null;
+    final accessory =
+        accessoryId == null ? null : ExerciseCatalog.findById(accessoryId);
+    if (accessory != null) {
+      items.add(
+        TrainingRecommendationItem(
+          track: trainingTrackForPattern(accessory.category),
+          exercise: accessory,
+          status: progressMap[accessory.id] ?? ExerciseStatus.inactive,
+          sourceCategory: accessory.category,
+          sourceSkillCategoryId: '',
+        ),
+      );
+    }
+    return items;
   }
 
   /// The branch options for the trees the program actually trains: one per

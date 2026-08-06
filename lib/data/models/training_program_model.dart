@@ -58,6 +58,14 @@ const List<String> kWeekdayNames = [
 String programDayConfigKey(TrainingSessionType sessionType) =>
     sessionType.dbValue;
 
+/// Equipment choice saved by program setup. Programs created before the
+/// answer was stored follow the app's original full-gym default.
+bool programUsesGym(Map<String, dynamic> variationRules) {
+  final setup = variationRules['program_setup_v1'];
+  if (setup is! Map) return true;
+  return setup['has_gym'] as bool? ?? true;
+}
+
 /// The stored plan for a workout type, or null when it still runs on
 /// generated defaults.
 Map<String, dynamic>? programDayConfig(

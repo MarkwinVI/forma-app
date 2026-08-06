@@ -164,6 +164,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
           branchSelections: _branchSelections,
           progressMap: widget.progressMap,
           sessionItemsConfig: _sessionItemsConfig,
+          hasGym: _hasGym,
           skillTracks: _skillTracks,
           onSave: (config) => _saveLogic(
             sessionItemsConfig: config,
@@ -353,6 +354,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
             sessionType: sessionType,
             branchSelections: _branchSelections,
             progressMap: _progress,
+            hasGym: _hasGym,
             skillTracks: tracks,
           ),
     };
@@ -515,6 +517,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
             sessionType: sessionType,
             branchSelections: _branchSelections,
             progressMap: _progress,
+            hasGym: _hasGym,
             skillTracks: _skillTracks,
           ),
         ),
@@ -1909,7 +1912,6 @@ class _DaysSheetState extends State<_DaysSheet> {
       ),
     );
   }
-
 }
 
 class _SplitSheet extends StatefulWidget {

@@ -115,6 +115,8 @@ class DevToolsService {
         branchSelections: branchSelections,
         sessionItemsConfig: sessionItemsConfig,
         skillTracks: skillTracks,
+        hasGym:
+            logic == null ? true : programUsesGym(logic.program.variationRules),
       );
       if (recommendation.items.isEmpty) continue;
 

@@ -29,6 +29,7 @@ class ProgramWorkoutEditorView extends StatefulWidget {
   final Map<TrainingTrack, String> branchSelections;
   final Map<String, ExerciseStatus> progressMap;
   final Map<String, dynamic> sessionItemsConfig;
+  final bool hasGym;
 
   /// The program's skill tracks — the default day is built from these, so
   /// the editor opens on the session the user actually trains rather than
@@ -43,6 +44,7 @@ class ProgramWorkoutEditorView extends StatefulWidget {
     required this.branchSelections,
     required this.progressMap,
     required this.sessionItemsConfig,
+    this.hasGym = true,
     this.skillTracks = const [],
     required this.onSave,
   });
@@ -72,6 +74,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       branchSelections: widget.branchSelections,
       progressMap: widget.progressMap,
       skillTracks: widget.skillTracks,
+      hasGym: widget.hasGym,
     );
     _initialSerialized = _serialized();
   }

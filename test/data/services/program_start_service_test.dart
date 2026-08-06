@@ -35,8 +35,7 @@ void main() {
       ];
 
   group('what a new program trains', () {
-    test('without a gym: four upper trees, the squat tree and Nordic curls',
-        () {
+    test('without a gym: upper trees, squat, Nordic curls, and core', () {
       expect(planFor().tracks, {
         SkillCategoryCatalog.pushupsId: 'planche',
         SkillCategoryCatalog.dipsId: 'weighted',
@@ -44,6 +43,7 @@ void main() {
         SkillCategoryCatalog.pullupsId: 'weighted',
         SkillCategoryCatalog.squatId: 'pistol',
         SkillCategoryCatalog.hingeId: 'nordic',
+        SkillCategoryCatalog.coreId: 'l_sit',
       });
     });
 
@@ -53,10 +53,10 @@ void main() {
       expect(tracks[SkillCategoryCatalog.barbellSquatId], 'main');
       expect(tracks.containsKey(SkillCategoryCatalog.squatId), isFalse);
       expect(tracks[SkillCategoryCatalog.hingeId], 'rdl');
+      expect(tracks[SkillCategoryCatalog.coreId], 'l_sit');
     });
 
-    test('a squat goal takes the knee-dominant slot back from the barbell',
-        () {
+    test('a squat goal takes the knee-dominant slot back from the barbell', () {
       final tracks = planFor(hasGym: true, goals: ['pistol']).tracks;
 
       expect(tracks[SkillCategoryCatalog.squatId], 'pistol');
@@ -98,8 +98,8 @@ void main() {
       expect(tracks[SkillCategoryCatalog.handstandPushupsId], 'main');
     });
 
-    test('no core track unless a goal asks for one', () {
-      expect(planFor().tracks.containsKey(SkillCategoryCatalog.coreId), isFalse);
+    test('core is included even when no goal asks for it', () {
+      expect(planFor().tracks[SkillCategoryCatalog.coreId], 'l_sit');
     });
   });
 
@@ -206,10 +206,11 @@ void main() {
   group('the sessions a planned program builds', () {
     final service = TrainingProgramService();
 
-    Set<String> categoriesOf({
+    List<String> exerciseIdsOf({
       required ProgramStartPlan plan,
       required TrainingProgramType programType,
       required TrainingSessionType sessionType,
+      required bool hasGym,
     }) {
       return service
           .buildToday(
@@ -217,85 +218,144 @@ void main() {
             programType: programType,
             sessionType: sessionType,
             skillTracks: tracksOf(plan),
+            hasGym: hasGym,
           )
           .items
-          .map((item) => item.sourceSkillCategoryId)
-          .toSet();
+          .map((item) => item.exercise.id)
+          .toList();
     }
 
-    test('full body trains all six movements', () {
+    test('full body alternates pull and push, then legs, hinge, and core', () {
+      final plan = planFor(hasGym: true);
       expect(
-        categoriesOf(
-          plan: planFor(hasGym: true),
+        exerciseIdsOf(
+          plan: plan,
           programType: TrainingProgramType.fullBody,
           sessionType: TrainingSessionType.fullBody,
+          hasGym: true,
         ),
-        {
-          SkillCategoryCatalog.pushupsId,
-          SkillCategoryCatalog.dipsId,
-          SkillCategoryCatalog.rowsId,
-          SkillCategoryCatalog.pullupsId,
-          SkillCategoryCatalog.barbellSquatId,
-          SkillCategoryCatalog.hingeId,
-        },
+        [
+          'pullups_scapular_pull',
+          'dips_bench_dips',
+          'rows_vertical_rows',
+          'pushups_wall_push_up',
+          'barbell_squat_barbell_squat',
+          'hinge_romanian_deadlift',
+          'core_foot_supported_l_sit',
+        ],
       );
     });
 
-    test('push days press and squat, pull days pull and hinge', () {
-      final plan = planFor();
-
-      expect(
-        categoriesOf(
-          plan: plan,
-          programType: TrainingProgramType.pushPull,
-          sessionType: TrainingSessionType.push,
-        ),
-        {
-          SkillCategoryCatalog.pushupsId,
-          SkillCategoryCatalog.dipsId,
-          SkillCategoryCatalog.squatId,
-        },
-      );
-      expect(
-        categoriesOf(
-          plan: plan,
-          programType: TrainingProgramType.pushPull,
-          sessionType: TrainingSessionType.pull,
-        ),
-        {
-          SkillCategoryCatalog.rowsId,
-          SkillCategoryCatalog.pullupsId,
-          SkillCategoryCatalog.hingeId,
-        },
-      );
-    });
-
-    test('upper days take the four upper trees, lower days the two legs', () {
+    test('gym push and pull days include their accessories in final position',
+        () {
       final plan = planFor(hasGym: true);
 
       expect(
-        categoriesOf(
+        exerciseIdsOf(
+          plan: plan,
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.push,
+          hasGym: true,
+        ),
+        [
+          'dips_bench_dips',
+          'pushups_wall_push_up',
+          'barbell_squat_barbell_squat',
+          'core_foot_supported_l_sit',
+          'lateral_raise_dumbbell',
+        ],
+      );
+      expect(
+        exerciseIdsOf(
+          plan: plan,
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.pull,
+          hasGym: true,
+        ),
+        [
+          'pullups_scapular_pull',
+          'rows_vertical_rows',
+          'hinge_romanian_deadlift',
+          'face_pull',
+        ],
+      );
+    });
+
+    test('upper alternates push and pull; lower ends with core and calves', () {
+      final plan = planFor(hasGym: true);
+
+      expect(
+        exerciseIdsOf(
           plan: plan,
           programType: TrainingProgramType.upperLower,
           sessionType: TrainingSessionType.upper,
+          hasGym: true,
         ),
-        {
-          SkillCategoryCatalog.pushupsId,
-          SkillCategoryCatalog.dipsId,
-          SkillCategoryCatalog.rowsId,
-          SkillCategoryCatalog.pullupsId,
-        },
+        [
+          'dips_bench_dips',
+          'pullups_scapular_pull',
+          'pushups_wall_push_up',
+          'rows_vertical_rows',
+        ],
       );
       expect(
-        categoriesOf(
+        exerciseIdsOf(
           plan: plan,
           programType: TrainingProgramType.upperLower,
           sessionType: TrainingSessionType.lower,
+          hasGym: true,
         ),
-        {
-          SkillCategoryCatalog.barbellSquatId,
-          SkillCategoryCatalog.hingeId,
-        },
+        [
+          'barbell_squat_barbell_squat',
+          'hinge_romanian_deadlift',
+          'core_foot_supported_l_sit',
+          'standing_calf_raise',
+        ],
+      );
+    });
+
+    test('no-gym sessions omit accessories', () {
+      final plan = planFor();
+
+      expect(
+        exerciseIdsOf(
+          plan: plan,
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.push,
+          hasGym: false,
+        ),
+        [
+          'dips_bench_dips',
+          'pushups_wall_push_up',
+          'squat_assisted_squat',
+          'core_foot_supported_l_sit',
+        ],
+      );
+      expect(
+        exerciseIdsOf(
+          plan: plan,
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.pull,
+          hasGym: false,
+        ),
+        [
+          'pullups_scapular_pull',
+          'rows_vertical_rows',
+          'hinge_nordic_nordic_curl',
+        ],
+      );
+      expect(
+        exerciseIdsOf(
+          plan: plan,
+          programType: TrainingProgramType.upperLower,
+          sessionType: TrainingSessionType.lower,
+          hasGym: false,
+        ),
+        [
+          'squat_assisted_squat',
+          'hinge_nordic_nordic_curl',
+          'core_foot_supported_l_sit',
+        ],
       );
     });
 
@@ -307,6 +367,7 @@ void main() {
             programType: TrainingProgramType.fullBody,
             sessionType: TrainingSessionType.fullBody,
             skillTracks: tracksOf(plan),
+            hasGym: false,
           )
           .items
           .map((item) => item.exercise.id)
