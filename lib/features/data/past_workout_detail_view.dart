@@ -314,7 +314,7 @@ class _ExerciseRow extends StatelessWidget {
                 : () => openExerciseDetailView<void>(
                       context,
                       exercise: exerciseModel,
-                      initialTab: ExerciseDetailTab.summary,
+                      initialTab: ExerciseDetailTab.trends,
                     ),
             child: Row(
               children: [

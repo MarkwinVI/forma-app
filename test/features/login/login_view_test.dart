@@ -26,6 +26,7 @@ void main() {
 
     expect(find.text('FORMA'), findsOneWidget);
     expect(find.textContaining('Level up'), findsOneWidget);
+    expect(find.textContaining('Calisthenics decoded'), findsNothing);
     expect(find.text('Continue with Apple'), findsOneWidget);
     expect(find.text('Track progress'), findsOneWidget);
 

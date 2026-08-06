@@ -26,7 +26,8 @@ void main() {
     );
   });
 
-  final category = SkillCategoryCatalog.findById(SkillCategoryCatalog.pullupsId)!;
+  final category =
+      SkillCategoryCatalog.findById(SkillCategoryCatalog.pullupsId)!;
   final firstStep = ExerciseCatalog.findById(
     category.pathFor(category.defaultTrainingPathId).first,
   )!;
@@ -49,9 +50,21 @@ void main() {
 
     expect(find.byType(ExerciseDetailView), findsOneWidget);
     expect(find.byType(ExercisePreviewSheet), findsNothing);
+
+    await tester.drag(
+      find.byType(NestedScrollView),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('How to'), findsOneWidget);
+    expect(find.text('Trends'), findsOneWidget);
+    expect(find.text('Summary'), findsNothing);
+    expect(find.text('History'), findsNothing);
   });
 
-  testWidgets('the opened exercise reads its own how-to, not the pattern default',
+  testWidgets(
+      'the opened exercise reads its own how-to, not the pattern default',
       (tester) async {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();

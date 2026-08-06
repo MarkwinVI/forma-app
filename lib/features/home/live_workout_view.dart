@@ -86,6 +86,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   late List<TrainingRecommendationItem> _sessionItems;
   late Map<String, List<_WorkoutSetDraft>> _setDrafts;
   late Map<String, int> _restSecondsByExercise;
+  final Map<String, ValueNotifier<List<ExerciseSet>>> _liveSetNotifiers = {};
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressRows = {};
 
@@ -169,6 +170,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     _toastTimer?.cancel();
+    for (final notifier in _liveSetNotifiers.values) {
+      notifier.dispose();
+    }
     WorkoutNotificationService.instance.cancelRestOver();
     _liveActivityService.onAction = null;
     _liveActivityService.end();
@@ -434,6 +438,30 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     return _setDrafts[item.exercise.id] ?? _initialSetDrafts(item);
   }
 
+  List<ExerciseSet> _completedExerciseSets(
+    TrainingRecommendationItem item,
+  ) {
+    final isTimed = _isTimedExercise(item.exercise);
+    return [
+      for (final set in _setsFor(item))
+        if (set.completed && set.target > 0)
+          ExerciseSet(
+            reps: isTimed ? 0 : set.target,
+            durationSeconds: isTimed ? set.target : 0,
+            weightKg: item.exercise.isWeighted ? set.weightKg : 0,
+          ),
+    ];
+  }
+
+  ValueNotifier<List<ExerciseSet>> _liveSetsNotifierFor(
+    TrainingRecommendationItem item,
+  ) {
+    return _liveSetNotifiers.putIfAbsent(
+      item.exercise.id,
+      () => ValueNotifier(_completedExerciseSets(item)),
+    );
+  }
+
   void _replaceSets(
     TrainingRecommendationItem item,
     List<_WorkoutSetDraft> sets,
@@ -444,6 +472,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         item.exercise.id: sets,
       };
     });
+    final liveNotifier = _liveSetNotifiers[item.exercise.id];
+    if (liveNotifier != null) {
+      liveNotifier.value = _completedExerciseSets(item);
+    }
     // Every set edit funnels through here, so the Live Activity's set count
     // and rep goal stay honest without per-call-site plumbing.
     _syncLiveActivity();
@@ -786,8 +818,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   LiveWorkoutActivityState _liveActivityState() {
     final item = _currentItemForActivity();
-    final sets =
-        item == null ? const <_WorkoutSetDraft>[] : _setsFor(item);
+    final sets = item == null ? const <_WorkoutSetDraft>[] : _setsFor(item);
     _WorkoutSetDraft? openSet;
     for (final set in sets) {
       if (!set.completed) {
@@ -890,7 +921,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     for (final item in _sessionItems) {
       final isTimed = _isTimedExercise(item.exercise);
       final completedSets = _setsFor(item)
-          .where((set) => set.hasData)
+          .where((set) => set.completed && set.target > 0)
           .map(
             (set) => CompletedWorkoutSet(
               number: set.number,
@@ -1131,15 +1162,19 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       context,
       exercise: item.exercise,
       skillCategoryId: item.sourceSkillCategoryId,
+      liveSetsListenable: _liveSetsNotifierFor(item),
+      liveSessionStartedAt: _startedAt,
     );
   }
 
-  Future<void> _openExerciseHistory(TrainingRecommendationItem item) async {
+  Future<void> _openExerciseTrends(TrainingRecommendationItem item) async {
     await openExerciseDetailView<void>(
       context,
       exercise: item.exercise,
       skillCategoryId: item.sourceSkillCategoryId,
-      initialTab: ExerciseDetailTab.history,
+      initialTab: ExerciseDetailTab.trends,
+      liveSetsListenable: _liveSetsNotifierFor(item),
+      liveSessionStartedAt: _startedAt,
     );
   }
 
@@ -1248,8 +1283,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       case _ExerciseAction.howToPerform:
         _openExerciseDetail(item);
         break;
-      case _ExerciseAction.history:
-        await _openExerciseHistory(item);
+      case _ExerciseAction.trends:
+        await _openExerciseTrends(item);
         break;
       case _ExerciseAction.reorderExercises:
         await _openReorderExercises();
@@ -1361,9 +1396,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                 goalValue: entry.items[i].isProgression
                                     ? _prescribedTargetFor(entry.items[i]).value
                                     : null,
-                                goalWeightKg: _progressRows[
-                                        entry.items[i].exercise.id]
-                                    ?.currentTargetWeightKg,
+                                goalWeightKg:
+                                    _progressRows[entry.items[i].exercise.id]
+                                        ?.currentTargetWeightKg,
                                 restSeconds: _restSecondsByExercise[
                                         entry.items[i].exercise.id] ??
                                     0,
@@ -2535,9 +2570,9 @@ class _ExerciseMenuSheet extends StatelessWidget {
                 onTap: () => pick(_ExerciseAction.howToPerform),
               ),
               _SheetRow(
-                label: 'History',
+                label: 'Trends',
                 withDivider: true,
-                onTap: () => pick(_ExerciseAction.history),
+                onTap: () => pick(_ExerciseAction.trends),
               ),
             ],
           ),
@@ -3236,9 +3271,7 @@ class _WorkoutSetDraft {
 /// keep their decimal. No unit — the column is already headed KG.
 String _kgText(double weightKg) {
   final rounded = (weightKg * 10).round() / 10;
-  return rounded == rounded.roundToDouble()
-      ? '${rounded.round()}'
-      : '$rounded';
+  return rounded == rounded.roundToDouble() ? '${rounded.round()}' : '$rounded';
 }
 
 /// What the last session's matching set read as, for the LAST column. Reps
@@ -3304,7 +3337,7 @@ TrainingTrack _trackForExercise(Exercise exercise) {
 
 enum _ExerciseAction {
   howToPerform,
-  history,
+  trends,
   reorderExercises,
   replaceExercise,
   removeExercise,

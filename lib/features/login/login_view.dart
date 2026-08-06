@@ -187,18 +187,6 @@ class _HeroText extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 300),
-          child: const Text(
-            'Calisthenics decoded. A clear path from foundation to mastery.',
-            style: TextStyle(
-              fontSize: 15.5,
-              color: AppColors.textSecondary,
-              height: 1.45,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -426,8 +414,7 @@ class _ConstellationPainter extends CustomPainter {
       at(const Offset(300, 90)),
       180 * scale,
       Paint()
-        ..color = AppColors.accentPrimary
-            .withValues(alpha: 0.20 * glowOpacity)
+        ..color = AppColors.accentPrimary.withValues(alpha: 0.20 * glowOpacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60),
     );
 

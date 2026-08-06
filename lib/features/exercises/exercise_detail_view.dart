@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -14,13 +16,13 @@ import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
-import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../home/program_day_items.dart';
+import 'exercise_summary_metrics.dart';
 
 /// Which tab the exercise detail view opens on. Live workout and the skill
-/// tree open on "How to", the Data tab opens on "Summary".
-enum ExerciseDetailTab { howTo, summary, history }
+/// tree open on "How to", while logged exercise links open on "Trends".
+enum ExerciseDetailTab { howTo, trends }
 
 /// Height of the back bar. The page is inset by it and then scrolls under it.
 const _detailNavBarHeight = 44.0;
@@ -31,6 +33,8 @@ Future<T?> openExerciseDetailView<T>(
   Color accentColor = AppColors.accentPrimary,
   String? skillCategoryId,
   ExerciseDetailTab initialTab = ExerciseDetailTab.howTo,
+  ValueListenable<List<ExerciseSet>>? liveSetsListenable,
+  DateTime? liveSessionStartedAt,
 }) {
   return Navigator.of(context).push<T>(
     MaterialPageRoute(
@@ -39,22 +43,27 @@ Future<T?> openExerciseDetailView<T>(
         accentColor: accentColor,
         skillCategoryId: skillCategoryId,
         initialTab: initialTab,
+        liveSetsListenable: liveSetsListenable,
+        liveSessionStartedAt: liveSessionStartedAt,
       ),
     ),
   );
 }
 
 /// Exercise detail page in the polished design language, split into
-/// "How to" (demo, steps, form checks), "Summary" (progress chart and
-/// personal records), and "History" (logged sessions) tabs.
+/// "How to" (demo, steps, form checks) and "Trends" (progress charts and
+/// logged sessions) tabs.
 class ExerciseDetailView extends StatefulWidget {
   final Exercise exercise;
   final Color accentColor;
+
   /// Which tree the caller came from. The page no longer prints it — the
   /// heading names the movement and what it works — but callers still pass
   /// it, and it is what a per-tree view here would need.
   final String? skillCategoryId;
   final ExerciseDetailTab initialTab;
+  final ValueListenable<List<ExerciseSet>>? liveSetsListenable;
+  final DateTime? liveSessionStartedAt;
 
   const ExerciseDetailView({
     super.key,
@@ -62,6 +71,8 @@ class ExerciseDetailView extends StatefulWidget {
     this.accentColor = AppColors.accentPrimary,
     this.skillCategoryId,
     this.initialTab = ExerciseDetailTab.howTo,
+    this.liveSetsListenable,
+    this.liveSessionStartedAt,
   });
 
   @override
@@ -71,8 +82,7 @@ class ExerciseDetailView extends StatefulWidget {
 class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   static const _tabs = [
     ExerciseDetailTab.howTo,
-    ExerciseDetailTab.summary,
-    ExerciseDetailTab.history,
+    ExerciseDetailTab.trends,
   ];
 
   final _exerciseLogService = ExerciseLogService();
@@ -105,7 +115,6 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   @override
   Widget build(BuildContext context) {
     final exercise = widget.exercise;
-    final isTimed = _isTimedExercise(exercise);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -143,8 +152,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                     pinned: true,
                     delegate: _PinnedTabs(
                       selectedIndex: _tabs.indexOf(_tab),
-                      onChanged: (index) =>
-                          setState(() => _tab = _tabs[index]),
+                      onChanged: (index) => setState(() => _tab = _tabs[index]),
                     ),
                   ),
                 ],
@@ -153,13 +161,11 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                       exercise: exercise,
                       restSeconds: _restSeconds,
                     ),
-                  ExerciseDetailTab.summary => _SummaryTab(
+                  ExerciseDetailTab.trends => ExerciseTrendsTab(
                       logsFuture: _logsFuture,
-                      isTimed: isTimed,
-                    ),
-                  ExerciseDetailTab.history => _HistoryTab(
-                      logsFuture: _logsFuture,
-                      isTimed: isTimed,
+                      exercise: exercise,
+                      liveSetsListenable: widget.liveSetsListenable,
+                      liveSessionStartedAt: widget.liveSessionStartedAt,
                     ),
                 },
               ),
@@ -200,7 +206,7 @@ class _PinnedTabs extends SliverPersistentHeaderDelegate {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 26, 22, 0),
         child: TypeWordTabs(
-          labels: const ['How to', 'Summary', 'History'],
+          labels: const ['How to', 'Trends'],
           selectedIndex: selectedIndex,
           onChanged: onChanged,
         ),
@@ -367,47 +373,85 @@ class _HowToTab extends StatelessWidget {
   }
 }
 
-// ── Summary tab ───────────────────────────────────────────────────────
+// ── Trends tab ────────────────────────────────────────────────────────
 
-enum _SummaryMetric { sessionTotal, bestSet }
+class _SummarySession {
+  final DateTime loggedAt;
+  final List<ExerciseSet> sets;
+  final bool isLive;
 
-class _SummaryTab extends StatefulWidget {
+  const _SummarySession({
+    required this.loggedAt,
+    required this.sets,
+    this.isLive = false,
+  });
+}
+
+class ExerciseTrendsTab extends StatefulWidget {
   final Future<List<ExerciseLog>> logsFuture;
-  final bool isTimed;
+  final Exercise exercise;
+  final ValueListenable<List<ExerciseSet>>? liveSetsListenable;
+  final DateTime? liveSessionStartedAt;
 
-  const _SummaryTab({
+  const ExerciseTrendsTab({
+    super.key,
     required this.logsFuture,
-    required this.isTimed,
+    required this.exercise,
+    this.liveSetsListenable,
+    this.liveSessionStartedAt,
   });
 
   @override
-  State<_SummaryTab> createState() => _SummaryTabState();
+  State<ExerciseTrendsTab> createState() => _ExerciseTrendsTabState();
 }
 
-class _SummaryTabState extends State<_SummaryTab> {
-  _SummaryMetric _metric = _SummaryMetric.sessionTotal;
+class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
+  late ExerciseSummaryMetric _metric;
 
-  int _sessionTotal(ExerciseLog log) {
-    if (widget.isTimed) {
-      return log.sets.fold(0, (sum, set) => sum + set.durationSeconds);
-    }
-    return log.sets.fold(0, (sum, set) => sum + set.reps);
+  @override
+  void initState() {
+    super.initState();
+    _metric = summaryMetricsFor(widget.exercise).first;
   }
 
-  int _bestSet(ExerciseLog log) {
-    var best = 0;
-    for (final set in log.sets) {
-      final value = widget.isTimed ? set.durationSeconds : set.reps;
-      if (value > best) best = value;
+  @override
+  void didUpdateWidget(covariant ExerciseTrendsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final metrics = summaryMetricsFor(widget.exercise);
+    if (!metrics.contains(_metric)) {
+      _metric = metrics.first;
     }
-    return best;
   }
 
-  String _formatValue(int value) =>
-      widget.isTimed ? _formatSeconds(value) : '$value';
+  String _formatValue(double value) => _formatValueFor(_metric, value);
+
+  String _formatValueFor(ExerciseSummaryMetric metric, double value) {
+    switch (metric) {
+      case ExerciseSummaryMetric.bestTime:
+      case ExerciseSummaryMetric.totalTime:
+        return _formatSeconds(value.round());
+      case ExerciseSummaryMetric.heaviestWeight:
+      case ExerciseSummaryMetric.totalVolume:
+        return '${_formatDecimal(value)}kg';
+      case ExerciseSummaryMetric.totalReps:
+      case ExerciseSummaryMetric.bestSet:
+        return '${value.round()}';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final liveSetsListenable = widget.liveSetsListenable;
+    if (liveSetsListenable == null) {
+      return _buildLogs(const <ExerciseSet>[]);
+    }
+    return ValueListenableBuilder<List<ExerciseSet>>(
+      valueListenable: liveSetsListenable,
+      builder: (context, liveSets, _) => _buildLogs(liveSets),
+    );
+  }
+
+  Widget _buildLogs(List<ExerciseSet> liveSets) {
     return FutureBuilder<List<ExerciseLog>>(
       future: widget.logsFuture,
       builder: (context, snapshot) {
@@ -425,59 +469,40 @@ class _SummaryTabState extends State<_SummaryTab> {
             ],
           );
         }
-        return _buildSummary(snapshot.data ?? const <ExerciseLog>[]);
+        return _buildSummary(
+          snapshot.data ?? const <ExerciseLog>[],
+          liveSets,
+        );
       },
     );
   }
 
-  Widget _buildSummary(List<ExerciseLog> logs) {
+  Widget _buildSummary(List<ExerciseLog> logs, List<ExerciseSet> liveSets) {
     // Logs arrive newest-first — the chart wants oldest-first.
-    final ordered = logs.reversed.toList();
+    final ordered = [
+      for (final log in logs.reversed)
+        _SummarySession(loggedAt: log.loggedAt, sets: log.sets),
+      if (liveSets.isNotEmpty)
+        _SummarySession(
+          loggedAt: widget.liveSessionStartedAt ?? DateTime.now(),
+          sets: liveSets,
+          isLive: true,
+        ),
+    ];
     final cutoff = DateTime.now().subtract(const Duration(days: 90));
-    var window = ordered.where((log) => log.loggedAt.isAfter(cutoff)).toList();
+    var window =
+        ordered.where((session) => session.loggedAt.isAfter(cutoff)).toList();
     var windowLabel = 'Last 3 months';
-    if (window.length < 2 && ordered.isNotEmpty) {
+    if (window.isEmpty && ordered.isNotEmpty) {
       window =
           ordered.length > 12 ? ordered.sublist(ordered.length - 12) : ordered;
       windowLabel = 'All sessions';
     }
 
-    final metricLabel = _metric == _SummaryMetric.sessionTotal
-        ? 'Session total'
-        : 'Most reps (set)';
-    final metricDef = _metric == _SummaryMetric.sessionTotal
-        ? (widget.isTimed
-            ? 'Total hold time per training session'
-            : 'Total reps per training session')
-        : (widget.isTimed
-            ? 'Longest single hold per session'
-            : 'Highest rep count in a single set');
+    final metrics = summaryMetricsFor(widget.exercise);
     final series = window
-        .map(
-          (log) => _metric == _SummaryMetric.sessionTotal
-              ? _sessionTotal(log)
-              : _bestSet(log),
-        )
+        .map((session) => summaryMetricValue(_metric, session.sets))
         .toList();
-
-    final bestSetAllTime = logs.fold<int>(
-        0, (best, log) => _bestSet(log) > best ? _bestSet(log) : best);
-    final bestSessionAllTime = logs.fold<int>(0,
-        (best, log) => _sessionTotal(log) > best ? _sessionTotal(log) : best);
-    final records = logs.isEmpty
-        ? const <(String, String)>[]
-        : <(String, String)>[
-            (
-              widget.isTimed ? 'Longest hold' : 'Most reps in a set',
-              _formatValue(bestSetAllTime),
-            ),
-            (
-              widget.isTimed ? 'Best session time' : 'Best session total',
-              _formatValue(bestSessionAllTime),
-            ),
-            ('Sessions logged', '${logs.length}'),
-            ('Last session', _formatShortDate(logs.first.loggedAt)),
-          ];
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
@@ -490,28 +515,26 @@ class _SummaryTabState extends State<_SummaryTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${metricLabel.toUpperCase()} · '
+                '${_metric.label.toUpperCase()} · '
                 '${windowLabel.toUpperCase()}',
                 style: monoStyle(size: 11, letterSpacing: 1.4),
               ),
               const SizedBox(height: 5),
               Text(
-                metricDef,
+                _metric.definition,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textMuted,
                 ),
               ),
               const SizedBox(height: 12),
-              if (series.length < 2)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
+              if (series.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
                   child: Text(
-                    logs.isEmpty
-                        ? 'No sessions logged yet — your trend appears '
-                            'after your first workout.'
-                        : 'Log one more session to see your trend here.',
-                    style: const TextStyle(
+                    'No completed sets yet — finish a set and this graph '
+                    'will update immediately.',
+                    style: TextStyle(
                       fontSize: 13.5,
                       color: AppColors.textSecondary,
                       height: 1.5,
@@ -521,57 +544,30 @@ class _SummaryTabState extends State<_SummaryTab> {
               else
                 _TrendChart(
                   values: series,
-                  dates: window.map((log) => log.loggedAt).toList(),
+                  sessionLabels: [
+                    for (var i = 0; i < window.length; i++)
+                      window[i].isLive ? 'Live' : 'S${i + 1}',
+                  ],
                   formatValue: _formatValue,
+                  repaintKey: _metric,
                 ),
               const SizedBox(height: 14),
               SegmentedTabs(
-                labels: const ['Session total', 'Most reps (set)'],
-                selectedIndex: _metric == _SummaryMetric.sessionTotal ? 0 : 1,
-                onChanged: (index) => setState(() {
-                  _metric = index == 0
-                      ? _SummaryMetric.sessionTotal
-                      : _SummaryMetric.bestSet;
-                }),
+                labels: metrics.map((metric) => metric.label).toList(),
+                selectedIndex: metrics.indexOf(_metric),
+                onChanged: (index) => setState(() => _metric = metrics[index]),
               ),
             ],
           ),
         ),
-        const TypeSectionLabel('Personal records'),
-        if (records.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text(
-              'Personal records appear after your first logged session.',
-              style: TextStyle(
-                fontSize: 14.5,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
+        const TypeSectionLabel('History'),
+        if (logs.isEmpty)
+          const _MessageCard(
+            message: 'Log this exercise in a finished workout and your '
+                'sessions will show up here.',
           )
         else
-          for (var i = 0; i < records.length; i++)
-            TypeSettingRow(
-              name: records[i].$1,
-              value: records[i].$2,
-              valueColor: AppColors.textPrimary,
-              chevron: false,
-              last: i == records.length - 1,
-            ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
-          child: Text(
-            widget.isTimed
-                ? 'Holds are tracked as time, not volume.'
-                : 'Only completed working sets count toward these numbers.',
-            style: const TextStyle(
-              fontSize: 12.5,
-              color: AppColors.textMuted,
-              height: 1.5,
-            ),
-          ),
-        ),
+          _HistoryCard(logs: logs, exercise: widget.exercise),
       ],
     );
   }
@@ -580,26 +576,51 @@ class _SummaryTabState extends State<_SummaryTab> {
 /// Line chart in the polished language: soft gridlines with min/mid/max
 /// labels, accent polyline with dots, and a value chip on the last point.
 class _TrendChart extends StatelessWidget {
-  final List<int> values;
-  final List<DateTime> dates;
-  final String Function(int) formatValue;
+  final List<double> values;
+  final List<String> sessionLabels;
+  final String Function(double) formatValue;
+  final Object repaintKey;
 
   const _TrendChart({
     required this.values,
-    required this.dates,
+    required this.sessionLabels,
     required this.formatValue,
+    required this.repaintKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 150,
-      width: double.infinity,
-      child: CustomPaint(
-        painter: _TrendChartPainter(
-          values: values,
-          dates: dates,
-          formatValue: formatValue,
+    return Semantics(
+      label: 'Exercise sessions chart',
+      value: [
+        for (var i = 0; i < values.length; i++)
+          '${sessionLabels[i]} ${formatValue(values[i])}',
+      ].join(', '),
+      child: SizedBox(
+        height: 150,
+        width: double.infinity,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final chartWidth = math.max(
+              constraints.maxWidth,
+              values.length * 54.0,
+            );
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              child: SizedBox(
+                width: chartWidth,
+                child: CustomPaint(
+                  painter: _TrendChartPainter(
+                    values: values,
+                    sessionLabels: sessionLabels,
+                    formatValue: formatValue,
+                    repaintKey: repaintKey,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -607,30 +628,17 @@ class _TrendChart extends StatelessWidget {
 }
 
 class _TrendChartPainter extends CustomPainter {
-  final List<int> values;
-  final List<DateTime> dates;
-  final String Function(int) formatValue;
+  final List<double> values;
+  final List<String> sessionLabels;
+  final String Function(double) formatValue;
+  final Object repaintKey;
 
   _TrendChartPainter({
     required this.values,
-    required this.dates,
+    required this.sessionLabels,
     required this.formatValue,
+    required this.repaintKey,
   });
-
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
 
   TextPainter _text(
     String value, {
@@ -660,8 +668,16 @@ class _TrendChartPainter extends CustomPainter {
 
     final max = values.reduce((a, b) => a > b ? a : b);
     final min = values.reduce((a, b) => a < b ? a : b);
-    final span = (max - min) == 0 ? 1 : max - min;
-    final gridValues = [max, ((max + min) / 2).round(), min];
+    final isFlat = max == min;
+    final flatPadding = max == 0 ? 1.0 : max.abs() * 0.1;
+    final chartMax = isFlat ? max + flatPadding : max;
+    final chartMin = isFlat ? math.max(0.0, min - flatPadding) : min;
+    final span = chartMax - chartMin;
+    final gridValues = [
+      chartMax,
+      (chartMax + chartMin) / 2,
+      chartMin,
+    ];
 
     final labelPainters = [
       for (final value in gridValues)
@@ -675,10 +691,11 @@ class _TrendChartPainter extends CustomPainter {
 
     final chartWidth = size.width - padLeft - padRight;
     final chartHeight = size.height - padTop - padBottom;
-    double xAt(int i) =>
-        padLeft +
-        (values.length == 1 ? 0 : i * chartWidth / (values.length - 1));
-    double yAt(num value) => padTop + (1 - (value - min) / span) * chartHeight;
+    double xAt(int i) => values.length == 1
+        ? padLeft + chartWidth / 2
+        : padLeft + i * chartWidth / (values.length - 1);
+    double yAt(num value) =>
+        padTop + (1 - (value - chartMin) / span) * chartHeight;
 
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.07)
@@ -759,70 +776,31 @@ class _TrendChartPainter extends CustomPainter {
           chipTop + (17 - chipText.height) / 2),
     );
 
-    // First / last date labels along the bottom.
-    String dateLabel(DateTime date) => '${_months[date.month - 1]} ${date.day}';
-    final firstLabel = _text(
-      dateLabel(dates.first),
-      color: AppColors.textMuted,
-    );
-    firstLabel.paint(canvas, Offset(padLeft, size.height - firstLabel.height));
-    final lastLabel = _text(
-      dateLabel(dates.last),
-      color: AppColors.textMuted,
-    );
-    lastLabel.paint(
-      canvas,
-      Offset(size.width - padRight - lastLabel.width,
-          size.height - lastLabel.height),
-    );
+    // Every point is one exercise session. A wide history scrolls so each
+    // session keeps its own readable x-axis label instead of collapsing into
+    // a date range.
+    for (var i = 0; i < sessionLabels.length; i++) {
+      final label = _text(
+        sessionLabels[i],
+        color: sessionLabels[i] == 'Live'
+            ? AppColors.accentPrimary
+            : AppColors.textMuted,
+      );
+      label.paint(
+        canvas,
+        Offset(
+          (xAt(i) - label.width / 2).clamp(0, size.width - label.width),
+          size.height - label.height,
+        ),
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant _TrendChartPainter oldDelegate) =>
-      oldDelegate.values != values || oldDelegate.dates != dates;
-}
-
-// ── History tab ───────────────────────────────────────────────────────
-
-class _HistoryTab extends StatelessWidget {
-  final Future<List<ExerciseLog>> logsFuture;
-  final bool isTimed;
-
-  const _HistoryTab({
-    required this.logsFuture,
-    required this.isTimed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<ExerciseLog>>(
-      future: logsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: LoadingIndicator());
-        }
-        Widget child;
-        if (snapshot.hasError) {
-          child = const _MessageCard(
-            message: 'Couldn’t load your history. Pull back and try '
-                'again in a moment.',
-          );
-        } else {
-          final logs = snapshot.data ?? const <ExerciseLog>[];
-          child = logs.isEmpty
-              ? const _MessageCard(
-                  message: 'Log this exercise in a finished workout and '
-                      'your sessions will show up here.',
-                )
-              : _HistoryCard(logs: logs, isTimed: isTimed);
-        }
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
-          children: [child],
-        );
-      },
-    );
-  }
+      oldDelegate.values != values ||
+      oldDelegate.sessionLabels != sessionLabels ||
+      oldDelegate.repaintKey != repaintKey;
 }
 
 /// Bare back chevron — the exercise names itself in the title below.
@@ -1116,10 +1094,10 @@ class _DemoMediaState extends State<_DemoMedia> {
   /// What stands in for the clip: the sheet's still, the exercise's own
   /// picture, or the outline that says there is no footage yet.
   Widget _still() {
-    final still = ExerciseCoachingCatalog.forExercise(widget.exercise)?.imageUrl;
-    final imageUrl = (still == null || still.isEmpty)
-        ? widget.exercise.imageUrl
-        : still;
+    final still =
+        ExerciseCoachingCatalog.forExercise(widget.exercise)?.imageUrl;
+    final imageUrl =
+        (still == null || still.isEmpty) ? widget.exercise.imageUrl : still;
 
     return imageUrl == null
         ? const _DemoPlaceholder()
@@ -1336,17 +1314,24 @@ class _MessageCard extends StatelessWidget {
 
 class _HistoryCard extends StatelessWidget {
   final List<ExerciseLog> logs;
-  final bool isTimed;
+  final Exercise exercise;
 
-  const _HistoryCard({required this.logs, required this.isTimed});
+  const _HistoryCard({required this.logs, required this.exercise});
 
   String _setsLabel(ExerciseLog log) {
-    final values = log.sets
-        .map(
-          (set) => isTimed ? '${set.durationSeconds}s' : '${set.reps}',
-        )
-        .join(' · ');
-    return isTimed ? values : '$values reps';
+    final values = log.sets.map((set) {
+      if (exercise.isTimed) {
+        final time = _formatSeconds(set.durationSeconds);
+        return exercise.isWeighted && set.weightKg > 0
+            ? '$time × ${_formatDecimal(set.weightKg)}kg'
+            : time;
+      }
+      if (exercise.isWeighted) {
+        return '${set.reps} × ${_formatDecimal(set.weightKg)}kg';
+      }
+      return '${set.reps}';
+    }).join(' · ');
+    return exercise.isTimed || exercise.isWeighted ? values : '$values reps';
   }
 
   @override
@@ -1391,9 +1376,13 @@ class _HistoryCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 16),
           child: Text(
-            isTimed
-                ? 'Hold per set · most recent first'
-                : 'Reps per set · most recent first',
+            exercise.isTimed
+                ? exercise.isWeighted
+                    ? 'Time × weight per set · most recent first'
+                    : 'Time per set · most recent first'
+                : exercise.isWeighted
+                    ? 'Reps × weight per set · most recent first'
+                    : 'Reps per set · most recent first',
             style: const TextStyle(
               fontSize: 12.5,
               color: AppColors.textMuted,
@@ -1561,8 +1550,11 @@ _ExerciseCoachData _patternCoachDataFor(Exercise exercise) {
   }
 }
 
-bool _isTimedExercise(Exercise exercise) =>
-    ExerciseProgressionService.isTimedExercise(exercise);
+String _formatDecimal(double value) {
+  return value == value.roundToDouble()
+      ? value.toStringAsFixed(0)
+      : value.toStringAsFixed(1);
+}
 
 String _formatSeconds(int seconds) {
   if (seconds < 60) return '${seconds}s';
