@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/no_program_state.dart';
-import '../../data/catalog/skill_category_catalog.dart';
+import '../../core/widgets/type_led.dart';
+import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
-import '../../data/models/skill_category_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
@@ -19,16 +18,18 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
-import '../../core/widgets/type_led.dart';
+import '../exercises/exercise_detail_view.dart';
 import '../home/home_dashboard_metrics.dart';
 import '../home/program_day_items.dart';
 import '../home/program_setup_completion.dart';
 import '../home/program_setup_view.dart';
-import '../skills/skill_tree_view.dart';
-import 'widgets/skill_tree_row.dart';
+import 'skill_wheel_data.dart';
+import 'widgets/skill_wheel.dart';
+import 'widgets/skill_wheel_screen.dart';
 
-/// Progress tab — every skill tree as a node map with the user's path
-/// highlighted and a node-anchored rail toward the next unlock.
+/// Progress tab — every skill tree on one radial wheel. Tap a family to fly
+/// in, swipe up/down to spin between families, swipe left/right to walk the
+/// steps, tap the background to pull back out.
 class ProgressView extends StatefulWidget {
   final bool isActive;
 
@@ -54,11 +55,10 @@ class _ProgressViewState extends State<ProgressView> {
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
   List<SkillTrack> _skillTracks = const [];
-
-  /// Rows the user has opened. Every tree starts folded, so the tab opens as
-  /// a plain list.
-  final Set<String> _expandedTrees = {};
   TrainingProgramLogicSnapshot? _logicSnapshot;
+
+  List<WheelFamily> _families = const [];
+  Map<String, JourneySkillProgressData> _journeyByCategory = const {};
 
   @override
   void initState() {
@@ -114,6 +114,7 @@ class _ProgressViewState extends State<ProgressView> {
         _pastWorkouts = results[2] as List<PastWorkout>;
         _skillTracks = skillTracks;
         _loading = false;
+        _rebuildDerived();
       });
     } catch (error, stackTrace) {
       debugPrint('Failed to load progress data: $error\n$stackTrace');
@@ -125,6 +126,21 @@ class _ProgressViewState extends State<ProgressView> {
         ),
       );
     }
+  }
+
+  /// Families for the wheel plus the per-tree journey numbers, rebuilt
+  /// whenever the underlying data changes.
+  void _rebuildDerived() {
+    _families = buildWheelFamilies(
+      progressMap: _progressMap,
+      skillTracks: _skillTracks,
+    );
+    final metrics = _buildMetrics();
+    _journeyByCategory = {
+      if (metrics != null)
+        for (final skill in metrics.journeySnapshot.closestSkills)
+          skill.skillCategoryId: skill,
+    };
   }
 
   HomeDashboardMetrics? _buildMetrics() {
@@ -198,9 +214,6 @@ class _ProgressViewState extends State<ProgressView> {
         ),
       ),
     );
-    // Re-fetch so the tab reflects the freshly created program even if the
-    // user abandoned the wizard midway on a stale state. The wizard already
-    // lands the user here, so no redirect is needed on completion.
     await _loadData();
   }
 
@@ -217,22 +230,14 @@ class _ProgressViewState extends State<ProgressView> {
     await _loadData();
   }
 
-  Future<void> _openSkillTree(String skillCategoryId) async {
-    await Navigator.of(context).push(
+  void _openExercise(WheelNode node) {
+    final exercise = ExerciseCatalog.findById(node.exerciseId);
+    if (exercise == null) return;
+    Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SkillTreeView(
-          skillCategoryId: skillCategoryId,
-          progressMap: _progressMap,
-          onProgressChanged: (exerciseId, status) {
-            setState(() {
-              _progressMap[exerciseId] = status;
-              _progressEntries[exerciseId] = ExerciseProgress(
-                exerciseId: exerciseId,
-                status: status,
-                updatedAt: DateTime.now(),
-              );
-            });
-          },
+        builder: (_) => ExerciseDetailView(
+          exercise: exercise,
+          skillCategoryId: exercise.skillCategoryId,
         ),
       ),
     );
@@ -240,9 +245,7 @@ class _ProgressViewState extends State<ProgressView> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = _loading ? null : _buildMetrics();
-
-    final empty = !_hasProgram || metrics == null;
+    final empty = !_loading && (!_hasProgram || _families.isEmpty);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -250,156 +253,13 @@ class _ProgressViewState extends State<ProgressView> {
         bottom: false,
         child: _loading
             ? const Center(child: LoadingIndicator())
-            : RefreshIndicator(
-                color: AppColors.accentPrimary,
-                backgroundColor: AppColors.surface,
-                onRefresh: _loadData,
-                // Nothing has been trained yet, so the tab states what these
-                // trees are for rather than titling an empty list.
-                child: empty
-                    ? _ProgressEmptyState(
-                        onCreateProgram: _openProgramSetup,
-                      )
-                    : SingleChildScrollView(
-                        // Attached to the shell's per-tab controller, so
-                        // re-tapping the tab scrolls back to the top.
-                        primary: true,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.fromLTRB(22, 38, 22, 0),
-                              child: Text(
-                                'Skill trees',
-                                style: TextStyle(
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -1.02,
-                                  height: 1.05,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(22, 0, 22, 130),
-                              child: _buildSections(metrics),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildSections(HomeDashboardMetrics metrics) {
-    // closestSkills is ordered by how close each tree is to its next unlock,
-    // so the list leads with the tree nearest levelling up. Every other
-    // catalog tree follows as one not started yet.
-    final active = <({JourneySkillProgressData skill, SkillCategory category})>[
-      for (final skill in metrics.journeySnapshot.closestSkills)
-        if (SkillCategoryCatalog.findById(skill.skillCategoryId)
-            case final category?)
-          (skill: skill, category: category),
-    ];
-    final activeIds = {for (final tree in active) tree.category.id};
-    final inactive = [
-      for (final category in SkillCategoryCatalog.browsable())
-        if (!activeIds.contains(category.id)) category,
-    ];
-
-    Widget rowFor(
-      ({JourneySkillProgressData skill, SkillCategory category}) tree, {
-      required bool last,
-    }) {
-      final key = _skillKey(tree.skill);
-      return SkillTreeRow(
-        key: ValueKey(key),
-        skill: tree.skill,
-        category: tree.category,
-        progressMap: _progressMap,
-        expanded: _expandedTrees.contains(key),
-        last: last,
-        onToggleExpanded: () => _toggleTree(key),
-        onOpenTree: () => _openSkillTree(tree.category.id),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (active.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 28),
-            child: Text(
-              'Your program has no active skill progressions yet. '
-              'Pick branches in your program settings to grow your trees.',
-              style: TextStyle(
-                fontSize: 14.5,
-                height: 1.45,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          )
-        else ...[
-          const _GroupLabel('Training now'),
-          for (final tree in active) rowFor(tree, last: tree == active.last),
-        ],
-        if (inactive.isNotEmpty) ...[
-          // Same wording as the Program tab's tree list — both read the same
-          // skill tracks, so both must group the trees the same way.
-          const _GroupLabel('Not active'),
-          for (final category in inactive)
-            SkillTreeRow(
-              key: ValueKey(_categoryKey(category)),
-              skill: null,
-              category: category,
-              progressMap: _progressMap,
-              expanded: _expandedTrees.contains(_categoryKey(category)),
-              last: category == inactive.last,
-              onToggleExpanded: () => _toggleTree(_categoryKey(category)),
-              onOpenTree: () => _openSkillTree(category.id),
-            ),
-        ],
-      ],
-    );
-  }
-
-  /// Trained trees are keyed by category + branch — the same tree can appear
-  /// on two branches, and each keeps its own expanded state.
-  String _skillKey(JourneySkillProgressData skill) =>
-      '${skill.skillCategoryId}:${skill.branchId}';
-
-  String _categoryKey(SkillCategory category) => '${category.id}:*';
-
-  void _toggleTree(String key) {
-    setState(() {
-      if (!_expandedTrees.remove(key)) _expandedTrees.add(key);
-    });
-  }
-}
-
-/// Splits the list into the tree closest to levelling up, the rest of the
-/// program, and everything not started — spacing and type only, no chrome.
-class _GroupLabel extends StatelessWidget {
-  final String label;
-
-  const _GroupLabel(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 34, 0, 6),
-      child: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.robotoMono(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.65,
-          color: AppColors.textMuted,
-        ),
+            : empty
+                ? _ProgressEmptyState(onCreateProgram: _openProgramSetup)
+                : SkillWheelScreen(
+                    families: _families,
+                    journeyByCategory: _journeyByCategory,
+                    onOpenExercise: _openExercise,
+                  ),
       ),
     );
   }
