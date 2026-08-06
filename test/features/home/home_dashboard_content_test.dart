@@ -374,7 +374,7 @@ void main() {
     );
 
     final firstTop = tester.getTopLeft(find.text('Scapular Pulls')).dy;
-    final secondTop = tester.getTopLeft(find.text('Arch Hangs')).dy;
+    final secondTop = tester.getTopLeft(find.text('Negative Pull Up')).dy;
 
     expect(firstTop, lessThan(secondTop));
     expect(find.text('Difficulty 1/5 · Goal 24 reps'), findsOneWidget);
@@ -399,7 +399,7 @@ void main() {
       motionLabel: 'Pullups',
       skillTitle: 'Weighted Pullups',
       currentExerciseName: 'Scapular Pulls',
-      nextExerciseName: 'Arch Hangs',
+      nextExerciseName: 'Negative Pull Up',
       targetVolume: 24,
       lastSessionVolume: 26,
       targetLabel: '24 reps',
@@ -749,7 +749,7 @@ JourneySnapshotData _journeySnapshot() {
         motionLabel: 'Pullups',
         skillTitle: 'Weighted Pullups',
         currentExerciseName: 'Scapular Pulls',
-        nextExerciseName: 'Arch Hangs',
+        nextExerciseName: 'Negative Pull Up',
         targetVolume: 24,
         lastSessionVolume: 18,
         targetLabel: '24 reps',
@@ -777,8 +777,8 @@ JourneySnapshotData _journeySnapshot() {
             unlockRequirementName: null,
           ),
           const JourneySkillStageData(
-            exerciseId: 'pullups_arch_hang',
-            exerciseName: 'Arch Hangs',
+            exerciseId: 'pullups_pull_up_negative',
+            exerciseName: 'Negative Pull Up',
             status: JourneySkillStageStatus.locked,
             targetVolume: 36,
             targetLabel: '36 reps',

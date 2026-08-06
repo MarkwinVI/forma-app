@@ -1,16 +1,15 @@
 Node_id,Node name,Skill tree ID,Branch,Excercise id,Previous Node_id,Difficulty,(Optional) weight setting
 pullups_scapular_pull,Scapular Pull Ups,pullups,foundation,scapular_pull_ups,,1,
-pullups_arch_hang,Arch Hang,pullups,foundation,arch_hang,pullups_scapular_pull,2,
-pullups_pull_up_negative,Negative Pull Up,pullups,foundation,negative_pull_up,pullups_arch_hang,2,
+pullups_pull_up_negative,Negative Pull Up,pullups,foundation,negative_pull_up,pullups_scapular_pull,2,
 pullups_assisted_pull_up,Pull Up (Assisted),pullups,foundation,pull_up_assisted,pullups_pull_up_negative,3,
 pullups_pull_up,Pull Up,pullups,foundation,pull_up,pullups_assisted_pull_up,4,
-pullups_weighted_pull_up_115,Pull Up (Weighted - 1.15x Bodyweight),pullups,weighted,pull_up_weighted,pullups_pull_up,4,user_bodyweight + user_bodyweight * 0.15
-pullups_weighted_pull_up_135,Pull Up (Weighted - 1.35x Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_115,4,user_bodyweight + user_bodyweight * 0.35
-pullups_weighted_pull_up_150,Pull Up (Weighted - 1.5x Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_135,5,user_bodyweight + user_bodyweight * 0.50
-pullups_weighted_pull_up_165,Pull Up (Weighted - 1.65x Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_150,5,user_bodyweight + user_bodyweight * 0.65
-pullups_weighted_pull_up_180,Pull Up (Weighted - 1.8x Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_165,5,user_bodyweight + user_bodyweight * 0.80
-pullups_weighted_pull_up_190,Pull Up (Weighted - 1.9x Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_180,5,user_bodyweight + user_bodyweight * 0.90
-pullups_weighted_pull_up_200,Pull Up (Weighted - 2x Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_190,5,user_bodyweight + user_bodyweight * 1.00
+pullups_weighted_pull_up_115,Pull Up (+15% Bodyweight),pullups,weighted,pull_up_weighted,pullups_pull_up,4,user_bodyweight + user_bodyweight * 0.15
+pullups_weighted_pull_up_135,Pull Up (+35% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_115,4,user_bodyweight + user_bodyweight * 0.35
+pullups_weighted_pull_up_150,Pull Up (+50% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_135,5,user_bodyweight + user_bodyweight * 0.50
+pullups_weighted_pull_up_165,Pull Up (+65% Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_150,5,user_bodyweight + user_bodyweight * 0.65
+pullups_weighted_pull_up_180,Pull Up (+80% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_165,5,user_bodyweight + user_bodyweight * 0.80
+pullups_weighted_pull_up_190,Pull Up (+90% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_180,5,user_bodyweight + user_bodyweight * 0.90
+pullups_weighted_pull_up_200,Pull Up (+100% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_190,5,user_bodyweight + user_bodyweight * 1.00
 pullups_close_grip_pull_up,Pull Up (Close Grip),pullups,close_grip,pull_up_close_grip,pullups_pull_up,4,
 pullups_wide_grip_pull_up,Wide Pull Up,pullups,close_grip,wide_pull_up,pullups_close_grip_pull_up,4,
 pullups_typewriter_pull_up,Pull Up (Typewriter),pullups,close_grip,pull_up_typewriter,pullups_wide_grip_pull_up,5,
@@ -27,30 +26,28 @@ rows_vertical_rows,Inverted Row (Incline),rows,foundation,inverted_row_incline,,
 rows_inverted_rows_bent_legs,Inverted Row (Bent Legs),rows,foundation,inverted_row_bent_legs,rows_vertical_rows,1,
 rows_inverted_rows_straight_legs,Inverted Row (Straight Legs),rows,foundation,inverted_row_straight_legs,rows_inverted_rows_bent_legs,2,
 rows_feet_elevated_rows,Inverted Row (Feet Elevated),rows,foundation,inverted_row_feet_elevated,rows_inverted_rows_straight_legs,3,
-rows_horizontal_rows,Inverted Row,rows,foundation,inverted_row,rows_feet_elevated_rows,3,
-rows_horizontal_wide_rows,Inverted Row (Wide Grip),rows,foundation,inverted_row_wide_grip,rows_horizontal_rows,4,
 rows_tuck_front_lever_rows_hold,Front Lever Hold (Tuck),rows,front_lever,front_lever_hold_tuck,rows_horizontal_wide_rows,4,
 rows_tuck_front_lever_rows,Front Lever Row (Tuck),rows,front_lever,front_lever_row_tuck,rows_tuck_front_lever_rows_hold,4,
 rows_advanced_tuck_front_lever_rows,Front Lever Row (Advanced Tuck),rows,front_lever,front_lever_row_advanced_tuck,rows_tuck_front_lever_rows,4,
 rows_one_leg_tuck_one_extended_front_lever_rows,Front Lever Row (One Leg),rows,front_lever,front_lever_row_one_leg,rows_advanced_tuck_front_lever_rows,5,
 rows_straddle_front_lever_rows,Front Lever Row (Straddle),rows,front_lever,front_lever_row_straddle,rows_one_leg_tuck_one_extended_front_lever_rows,5,
 rows_front_lever_rows,Front Lever Row,rows,front_lever,front_lever_row,rows_straddle_front_lever_rows,5,
+rows_horizontal_wide_rows,Inverted Row (Wide Grip),rows,one_arm,inverted_row_wide_grip,rows_feet_elevated_rows,4,
 rows_archer_rows,Inverted Row (Archer),rows,one_arm,inverted_row_archer,rows_horizontal_wide_rows,4,
 rows_bulgarian_rows,"Inverted Row (One Arm, Assisted)",rows,one_arm,inverted_row_one_arm_assisted,rows_archer_rows,5,
 rows_one_arm_rows,Inverted Row (One Arm),rows,one_arm,inverted_row_one_arm,rows_bulgarian_rows,5,
-rows_weighted_rows_bodyweight_3x10,Bodyweight (3x10),rows,weighted,inverted_row_weighted,rows_horizontal_wide_rows,4,0
-rows_weighted_rows_plus_10,Inverted Row (Weighted - 1.1x Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_bodyweight_3x10,4,user_bodyweight + user_bodyweight * 0.10
-rows_weighted_rows_plus_20,Inverted Row (Weighted - 1.2x Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_10,4,user_bodyweight + user_bodyweight * 0.20
-rows_weighted_rows_plus_35,Inverted Row (Weighted - 1.3x Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_20,5,user_bodyweight + user_bodyweight * 0.35
-rows_weighted_rows_plus_50,Inverted Row (Weighted - 1.5x Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_35,5,user_bodyweight + user_bodyweight * 0.50
-rows_weighted_rows_plus_75,Inverted Row (Weighted - 1.75x Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_50,5,user_bodyweight + user_bodyweight * 0.75
-rows_weighted_rows_plus_bodyweight,Inverted Row (Weighted - 2x Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_75,5,user_bodyweight + user_bodyweight * 1.00
+rows_weighted_rows_bodyweight_3x10,nverted Row (Bodyweight),rows,weighted,inverted_row_weighted,rows_horizontal_wide_rows,4,0
+rows_weighted_rows_plus_10,Inverted Row (+10% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_bodyweight_3x10,4,user_bodyweight + user_bodyweight * 0.10
+rows_weighted_rows_plus_20,Inverted Row (+20% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_10,4,user_bodyweight + user_bodyweight * 0.20
+rows_weighted_rows_plus_35,Inverted Row (+35% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_20,5,user_bodyweight + user_bodyweight * 0.35
+rows_weighted_rows_plus_50,Inverted Row (+50% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_35,5,user_bodyweight + user_bodyweight * 0.50
+rows_weighted_rows_plus_75,Inverted Row (+75% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_50,5,user_bodyweight + user_bodyweight * 0.75
+rows_weighted_rows_plus_bodyweight,Inverted Row (+100% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_75,5,user_bodyweight + user_bodyweight * 1.00
 pushups_wall_push_up,Push-Up (Wall),pushups,foundation,push_up_wall,,1,
 pushups_incline_push_up,Incline Push Ups,pushups,foundation,incline_push_ups,pushups_wall_push_up,1,
 pushups_push_up,Push Up,pushups,foundation,push_up,pushups_incline_push_up,2,
 pushups_elbows_in_push_up,Push Up - Close Grip,pushups,foundation,push_up_close_grip,pushups_push_up,3,
-pushups_decline_push_up,Decline Push Up,pushups,foundation,decline_push_up,pushups_elbows_in_push_up,3,
-pushups_diamond_push_up,Diamond Push Up,pushups,foundation,diamond_push_up,pushups_decline_push_up,4,
+pushups_diamond_push_up,Diamond Push Up,pushups,foundation,diamond_push_up,pushups_elbows_in_push_up,4,
 pushups_uneven_push_up,Push-Up (Uneven),pushups,one_arm,push_up_uneven,pushups_diamond_push_up,4,
 pushups_archer_push_up,Push-Up (Archer),pushups,one_arm,push_up_archer,pushups_uneven_push_up,4,
 pushups_incline_one_arm_push_up,"Push-Up (One Arm, Incline)",pushups,one_arm,push_up_one_arm_incline,pushups_archer_push_up,5,
@@ -124,11 +121,11 @@ handstand_pushups_free_handstand_push_up,Handstand Push-Up (Freestanding),handst
 dips_bench_dips,Bench Dip,dips,foundation,bench_dip,,1,
 dips_dip_negatives,Chest Dip (Eccentric),dips,foundation,chest_dip_eccentric,dips_bench_dips,2,
 dips_parallel_bar_dips,Chest Dip,dips,foundation,chest_dip,dips_dip_negatives,3,
-dips_weighted_dips_120,Chest Dip (Weighted -1.2x Bodyweight),dips,weighted,chest_dip_weighted,dips_parallel_bar_dips,4,user_bodyweight + user_bodyweight * 0.20
-dips_weighted_dips_140,Chest Dip (Weighted -1.4x Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_120,4,user_bodyweight + user_bodyweight * 0.40
-dips_weighted_dips_160,Chest Dip (Weighted -1.6x Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_140,4,user_bodyweight + user_bodyweight * 0.60
-dips_weighted_dips_180,Chest Dip (Weighted -1.8x Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_160,5,user_bodyweight + user_bodyweight * 0.80
-dips_weighted_dips_200,Chest Dip (Weighted -2x Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_180,5,user_bodyweight + user_bodyweight * 1.00
+dips_weighted_dips_120,Chest Dip (+20% Bodyweigh),dips,weighted,chest_dip_weighted,dips_parallel_bar_dips,4,user_bodyweight + user_bodyweight * 0.20
+dips_weighted_dips_140,Chest Dip (+40% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_120,4,user_bodyweight + user_bodyweight * 0.40
+dips_weighted_dips_160,Chest Dip (+60% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_140,4,user_bodyweight + user_bodyweight * 0.60
+dips_weighted_dips_180,Chest Dip (+80% Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_160,5,user_bodyweight + user_bodyweight * 0.80
+dips_weighted_dips_200,Chest Dip (+100% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_180,5,user_bodyweight + user_bodyweight * 1.00
 dips_ring_dips,Ring Dips,dips,rings,ring_dips,dips_parallel_bar_dips,4,
 dips_ring_dips_rto,Ring Dip (Rings Turned Out),dips,rings,ring_dip_rings_turned_out,dips_ring_dips,5,
 barbell_squat_barbell_squat,Squat (Barbell),barbell_squat,main,squat_barbell,,3,

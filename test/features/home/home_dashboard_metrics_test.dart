@@ -105,7 +105,6 @@ void main() {
     test('tree level awards mastered steps and the current active step', () {
       final progressMap = {
         'pullups_scapular_pull': ExerciseStatus.mastered,
-        'pullups_arch_hang': ExerciseStatus.mastered,
         'pullups_pull_up_negative': ExerciseStatus.active,
       };
 
@@ -130,7 +129,6 @@ void main() {
     test('tree level uses the strongest branch in a multi-branch tree', () {
       final progressMap = {
         'pullups_scapular_pull': ExerciseStatus.mastered,
-        'pullups_arch_hang': ExerciseStatus.mastered,
         'pullups_pull_up_negative': ExerciseStatus.mastered,
         'pullups_assisted_pull_up': ExerciseStatus.mastered,
         'pullups_pull_up': ExerciseStatus.mastered,

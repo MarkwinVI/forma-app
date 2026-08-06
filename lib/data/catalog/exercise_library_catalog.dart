@@ -2444,19 +2444,6 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
     ),
     Exercise(
-      id: 'inverted_row',
-      category: ExerciseCategory.horizontalPull,
-      name: 'Inverted Row',
-      description:
-          'From a horizontal row position, pull toward one hand while the other arm straightens out to the side.',
-      difficulty: 3,
-      treeOrder: 0,
-      isLibrary: true,
-      primaryMuscles: ['Upper back'],
-      secondaryMuscles: ['Biceps', 'rear deltoids', 'Forearms'],
-      isLoaded: true,
-    ),
-    Exercise(
       id: 'inverted_row_archer',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Archer)',
@@ -9020,19 +9007,6 @@ class ExerciseLibraryCatalog {
         'No sagging hips',
       ],
       videoUrl: 'https://www.youtube.com/watch?v=KOaCM1HMwU0',
-      imageUrl: '',
-    ),
-    'inverted_row': ExerciseCoaching(
-      howTo: [
-        'From a horizontal row position, pull toward one hand while the other arm straightens out to the side.',
-        'Alternate sides each rep.',
-      ],
-      formChecks: [
-        'Pull to one side at a time',
-        'Far arm straightens',
-        'Hips stay square',
-      ],
-      videoUrl: 'https://www.youtube.com/watch?v=WRMnf6ClD6k',
       imageUrl: '',
     ),
     'inverted_row_archer': ExerciseCoaching(

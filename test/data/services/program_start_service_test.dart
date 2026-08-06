@@ -152,7 +152,6 @@ void main() {
             'pushups_wall_push_up',
             'pushups_incline_push_up',
             'pullups_scapular_pull',
-            'pullups_arch_hang',
             'pullups_pull_up_negative',
             'pullups_assisted_pull_up',
           ])

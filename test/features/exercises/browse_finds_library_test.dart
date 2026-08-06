@@ -70,10 +70,11 @@ void main() {
       const MaterialApp(home: ExercisePickerView.browse()),
     );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).first, 'bodyweight 3x10');
+    await tester.enterText(
+        find.byType(TextField).first, 'nverted row bodyweight');
     await tester.pumpAndSettle();
 
-    expect(find.text('Bodyweight (3x10)'), findsNothing);
+    expect(find.text('nverted Row (Bodyweight)'), findsNothing);
   });
 
   testWidgets('browsing finds accessory work with no tree at all',
@@ -82,7 +83,8 @@ void main() {
   });
 
   // Picking shows the step rather than the movement, and a rung is named for
-  // the load it asks for rather than the movement — "Bodyweight (3x10)" is a
+  // the load it asks for rather than the movement — "nverted Row
+  // (Bodyweight)" is a
   // rung of the weighted inverted row — so it answers to the movement's name
   // as well, which is the name most people would type.
   const picking = ExercisePickerView(excludedIds: {}, progressMap: {});
@@ -92,7 +94,7 @@ void main() {
     await expectFound(
       tester,
       'inverted row weighted',
-      'Bodyweight (3x10)',
+      'nverted Row (Bodyweight)',
       page: picking,
     );
   });
@@ -100,8 +102,8 @@ void main() {
   testWidgets('picking finds that rung by its own name too', (tester) async {
     await expectFound(
       tester,
-      'bodyweight 3x10',
-      'Bodyweight (3x10)',
+      'nverted row bodyweight',
+      'nverted Row (Bodyweight)',
       page: picking,
     );
   });
