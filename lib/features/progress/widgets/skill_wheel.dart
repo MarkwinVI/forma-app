@@ -640,10 +640,17 @@ class _SkillWheelState extends State<SkillWheel>
           builder: (context, _) {
             final vb = _liveVB();
             final height = vb[3] * width / _w;
-            // The detector sits inside the centring, not around it: taps are
+            // heightFactor 1, not a plain Center: the band takes exactly the
+            // height it paints, so the camera's own framing sets the gap
+            // below the header — a Center would hold the full height it was
+            // allowed and pad the short focused band top and bottom.
+            //
+            // The detector sits inside the alignment, not around it: taps are
             // read in the painted box's own coordinates, so a wheel narrower
             // than the space it was given still maps a tap to the right node.
-            return Center(
+            return Align(
+              alignment: Alignment.topCenter,
+              heightFactor: 1,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTapUp: (d) => _onTapUp(d, width),
