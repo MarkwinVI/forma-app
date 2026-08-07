@@ -12,6 +12,7 @@ class ProgramSetupResult {
   final int daysPerWeek;
   final TrainingProgramType split;
   final bool hasGym;
+  final double bodyweightKg;
 
   /// exercise id -> reps/kg value, or null when the user picked "I don't know".
   final Map<String, int?> startingStrength;
@@ -21,6 +22,7 @@ class ProgramSetupResult {
     required this.daysPerWeek,
     required this.split,
     required this.hasGym,
+    required this.bodyweightKg,
     required this.startingStrength,
     required this.skillIds,
   });
@@ -30,6 +32,7 @@ class ProgramSetupResult {
       'days_per_week': daysPerWeek,
       'split': split.dbValue,
       'has_gym': hasGym,
+      'bodyweight_kg': bodyweightKg,
       'starting_strength': startingStrength,
       'skill_ids': skillIds,
     };
@@ -80,7 +83,9 @@ class _StrengthExercise {
   final String unit;
   final int step;
   final int def;
+  final int min;
   final int max;
+  final bool allowUnknown;
 
   const _StrengthExercise({
     required this.id,
@@ -90,9 +95,24 @@ class _StrengthExercise {
     this.unit = 'reps',
     this.step = 1,
     required this.def,
+    this.min = 0,
     required this.max,
+    this.allowUnknown = true,
   });
 }
+
+const _bodyweight = _StrengthExercise(
+  id: 'bodyweight',
+  label: 'Bodyweight',
+  sub: 'Used to set weighted skill targets',
+  icon: Icons.monitor_weight_outlined,
+  unit: 'kg',
+  step: 1,
+  def: 75,
+  min: 20,
+  max: 300,
+  allowUnknown: false,
+);
 
 const _baseStrengthExercises = [
   _StrengthExercise(
@@ -147,6 +167,7 @@ const _bodyweightSquat = _StrengthExercise(
 /// The starting-strength questions for the current equipment choice — the
 /// squat gate swaps between a barbell 1RM and a bodyweight rep count.
 List<_StrengthExercise> _strengthExercisesFor({required bool hasGym}) => [
+      _bodyweight,
       ..._baseStrengthExercises,
       hasGym ? _barbellSquat : _bodyweightSquat,
     ];
@@ -154,6 +175,7 @@ List<_StrengthExercise> _strengthExercisesFor({required bool hasGym}) => [
 /// Every strength question that can appear, so an answer is retained when the
 /// user toggles gym access back and forth.
 const _allStrengthExercises = [
+  _bodyweight,
   ..._baseStrengthExercises,
   _barbellSquat,
   _bodyweightSquat,
@@ -297,13 +319,15 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
           daysPerWeek: _days,
           split: _effectiveSplit,
           hasGym: _hasGym,
+          bodyweightKg: _strength[_bodyweight.id]!.value.toDouble(),
           // Only record the squat variant matching the equipment choice, so
           // the opposite variant's default doesn't leak into the answers.
           startingStrength: {
             for (final exercise in _strengthExercisesFor(hasGym: _hasGym))
-              exercise.id: _strength[exercise.id]!.unsure
-                  ? null
-                  : _strength[exercise.id]!.value,
+              if (exercise.id != _bodyweight.id)
+                exercise.id: _strength[exercise.id]!.unsure
+                    ? null
+                    : _strength[exercise.id]!.value,
           },
           // Locked goals can't be picked, but filter anyway so a stale
           // selection can never outrun the gate.
@@ -1089,6 +1113,7 @@ class _StrengthCard extends StatelessWidget {
                 _Stepper(
                   value: answer.value,
                   step: exercise.step,
+                  min: exercise.min,
                   max: exercise.max,
                   unit: exercise.unit,
                   onChanged: (value) {
@@ -1098,60 +1123,63 @@ class _StrengthCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 11),
-          Pressable(
-            onTap: () {
-              answer.unsure = !answer.unsure;
-              onChanged();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-              decoration: BoxDecoration(
-                color: unsure ? AppColors.accentSoft : AppColors.surface2,
-                borderRadius: BorderRadius.circular(999),
-                border: unsure
-                    ? Border.all(color: AppColors.accentPrimary, width: 1.5)
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        width: 1.6,
+          if (exercise.allowUnknown) ...[
+            const SizedBox(height: 11),
+            Pressable(
+              onTap: () {
+                answer.unsure = !answer.unsure;
+                onChanged();
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                decoration: BoxDecoration(
+                  color: unsure ? AppColors.accentSoft : AppColors.surface2,
+                  borderRadius: BorderRadius.circular(999),
+                  border: unsure
+                      ? Border.all(color: AppColors.accentPrimary, width: 1.5)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          width: 1.6,
+                          color: unsure
+                              ? AppColors.accentPrimary
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: unsure
+                          ? const Icon(
+                              Icons.check_rounded,
+                              size: 9,
+                              color: AppColors.accentPrimary,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      'I don’t know',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
                         color: unsure
                             ? AppColors.accentPrimary
-                            : AppColors.textMuted,
+                            : AppColors.textSecondary,
                       ),
                     ),
-                    alignment: Alignment.center,
-                    child: unsure
-                        ? const Icon(
-                            Icons.check_rounded,
-                            size: 9,
-                            color: AppColors.accentPrimary,
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    'I don’t know',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: unsure
-                          ? AppColors.accentPrimary
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1161,6 +1189,7 @@ class _StrengthCard extends StatelessWidget {
 class _Stepper extends StatelessWidget {
   final int value;
   final int step;
+  final int min;
   final int max;
   final String unit;
   final ValueChanged<int> onChanged;
@@ -1168,6 +1197,7 @@ class _Stepper extends StatelessWidget {
   const _Stepper({
     required this.value,
     required this.step,
+    this.min = 0,
     required this.max,
     required this.unit,
     required this.onChanged,
@@ -1180,8 +1210,8 @@ class _Stepper extends StatelessWidget {
       children: [
         _StepperButton(
           icon: Icons.remove_rounded,
-          enabled: value > 0,
-          onTap: () => onChanged((value - step).clamp(0, max)),
+          enabled: value > min,
+          onTap: () => onChanged((value - step).clamp(min, max)),
         ),
         Container(
           constraints: const BoxConstraints(minWidth: 52),
@@ -1215,7 +1245,7 @@ class _Stepper extends StatelessWidget {
         _StepperButton(
           icon: Icons.add_rounded,
           enabled: value < max,
-          onTap: () => onChanged((value + step).clamp(0, max)),
+          onTap: () => onChanged((value + step).clamp(min, max)),
         ),
       ],
     );

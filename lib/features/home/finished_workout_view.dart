@@ -21,6 +21,7 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
+import '../../data/services/user_profile_service.dart';
 import 'completed_workout_model.dart';
 
 /// Post-workout celebration flow: a summary step that saves the session,
@@ -114,7 +115,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           return WorkoutExerciseLogInput(
             exerciseId: exerciseEntry.exercise.id,
             sets: sets,
-            isProgression: exerciseEntry.item.isProgression,
+            isProgression: exerciseEntry.item.hasProgressionContext,
             trackId: exerciseEntry.track.dbValue,
             targetSets: exerciseEntry.targetSets ??
                 ExerciseProgressionService.setCountForExercise(
@@ -165,6 +166,13 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             },
             goalSkillIds: goalIds,
           );
+          double? bodyweightKg;
+          try {
+            bodyweightKg = await UserProfileService().fetchBodyweightKg(userId);
+          } catch (_) {
+            // Rep and timed shortcuts still work; weighted ones safely wait
+            // until the profile value can be read.
+          }
           await ExerciseProgressionService().applySessionResults(
             userId: userId,
             sessionId: sessionId,
@@ -177,14 +185,24 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
               for (final track in tracks) track.skillCategoryId: track.branchId,
             },
             goalSkillIds: goalIds,
+            bodyweightKg: bodyweightKg,
             results: [
               for (final exerciseEntry in widget.workout.exercises)
-                if (exerciseEntry.item.isProgression)
+                if (exerciseEntry.item.hasProgressionContext)
                   SessionExerciseResult(
                     exercise: exerciseEntry.exercise,
                     volume: exerciseEntry.sets
                         .fold<int>(0, (sum, set) => sum + set.value),
                     trackId: exerciseEntry.track.dbValue,
+                    wasManuallyAdded:
+                        exerciseEntry.item.isManualSkillTreeExercise,
+                    sets: [
+                      for (final set in exerciseEntry.sets)
+                        SessionSetResult(
+                          value: set.value,
+                          weightKg: set.weightKg,
+                        ),
+                    ],
                   ),
             ],
           );
@@ -234,7 +252,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         if (exerciseEntry.sets.isNotEmpty)
           PersonalBestCandidate(
             exerciseId: exerciseEntry.exercise.id,
-            trackId: exerciseEntry.item.isProgression
+            trackId: exerciseEntry.item.hasProgressionContext
                 ? exerciseEntry.track.dbValue
                 : null,
             bestSetValue: exerciseEntry.sets
@@ -319,6 +337,34 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         : ExerciseCatalog.findById(event.relatedExerciseId!);
     if (newExercise == null || mastered == null) return null;
 
+    // A valueFrom on an activation is the ledger marker for a manual
+    // fast-forward. It can cross several nodes (or branches), so render the
+    // existing exercise-change animation around its source and destination
+    // instead of requiring adjacency.
+    if (event.valueFrom != null) {
+      for (final category in SkillCategoryCatalog.all()) {
+        for (final entry in category.trainingPaths.entries) {
+          if (!entry.value.contains(newExercise.id)) continue;
+          return _UnlockData(
+            newExercise: newExercise,
+            mastered: mastered,
+            startSets: event.targetSets ?? 3,
+            startValue: event.valueTo ??
+                ExerciseProgressionService.initialTargetValueForExercise(
+                  newExercise,
+                ),
+            masterySets: 3,
+            masteryValue: event.valueFrom!,
+            treeTitle: category.title,
+            branchLabel: _branchLabel(category, entry.key),
+            nodeNames: [mastered.name, newExercise.name],
+            clearedIndex: 0,
+            isShortcut: true,
+          );
+        }
+      }
+    }
+
     // The path this unlock happened on: mastered followed by the new move.
     for (final category in SkillCategoryCatalog.all()) {
       for (final entry in category.trainingPaths.entries) {
@@ -352,6 +398,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
               ExerciseCatalog.findById(id)?.name ?? id,
           ],
           clearedIndex: index - start,
+          isShortcut: false,
         );
       }
     }
@@ -564,6 +611,7 @@ class _UnlockData {
   final String branchLabel;
   final List<String> nodeNames;
   final int clearedIndex;
+  final bool isShortcut;
 
   const _UnlockData({
     required this.newExercise,
@@ -576,6 +624,7 @@ class _UnlockData {
     required this.branchLabel,
     required this.nodeNames,
     required this.clearedIndex,
+    required this.isShortcut,
   });
 }
 
@@ -990,9 +1039,11 @@ class _UnlockContentState extends State<_UnlockContent> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _CelebrationTag(
+            _CelebrationTag(
               color: AppColors.accentPrimary,
-              label: 'New exercise unlocked',
+              label: data.isShortcut
+                  ? 'Exercise changed'
+                  : 'New exercise unlocked',
             ),
             const SizedBox(height: 6),
             AnimatedSwitcher(
@@ -1020,7 +1071,11 @@ class _UnlockContentState extends State<_UnlockContent> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _swapped ? 'STARTING TARGET' : 'PREREQUISITE',
+                          _swapped
+                              ? 'STARTING TARGET'
+                              : data.isShortcut
+                                  ? 'CURRENT TARGET'
+                                  : 'PREREQUISITE',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -1124,10 +1179,14 @@ class _UnlockContentState extends State<_UnlockContent> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 290),
                 child: Text(
-                  'Clearing ${data.mastered.name} at ${data.masterySets} × '
-                  '${data.masteryValue}${data.mastered.isTimed ? 's' : ''} '
-                  'opens ${data.newExercise.name} — your next move on this '
-                  'path.',
+                  data.isShortcut
+                      ? 'Your logged result moves your active exercise to '
+                          '${data.newExercise.name}.'
+                      : 'Clearing ${data.mastered.name} at '
+                          '${data.masterySets} × ${data.masteryValue}'
+                          '${data.mastered.isTimed ? 's' : ''} opens '
+                          '${data.newExercise.name} — your next move on this '
+                          'path.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,

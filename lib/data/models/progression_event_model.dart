@@ -12,6 +12,10 @@ enum ProgressionEventKind {
   /// target.
   activated,
 
+  /// A manual ahead-of-program result cleared this node without mastering it.
+  /// valueFrom stores the previous ExerciseStatus index for deletion rollback.
+  skipped,
+
   /// A new best single-set value (valueFrom = previous best, valueTo = new).
   personalBest,
 
@@ -34,6 +38,8 @@ extension ProgressionEventKindX on ProgressionEventKind {
         return 'mastered';
       case ProgressionEventKind.activated:
         return 'activated';
+      case ProgressionEventKind.skipped:
+        return 'skipped';
       case ProgressionEventKind.personalBest:
         return 'personal_best';
       case ProgressionEventKind.branchChoice:
@@ -51,6 +57,8 @@ extension ProgressionEventKindX on ProgressionEventKind {
         return ProgressionEventKind.mastered;
       case 'activated':
         return ProgressionEventKind.activated;
+      case 'skipped':
+        return ProgressionEventKind.skipped;
       case 'personal_best':
         return ProgressionEventKind.personalBest;
       case 'branch_choice':

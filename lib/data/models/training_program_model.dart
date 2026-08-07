@@ -338,6 +338,9 @@ class TrainingRecommendationItem {
   /// the progression's own set count applies.
   final int? plannedSets;
 
+  /// Added or substituted by the user after the live session started.
+  final bool wasManuallyAdded;
+
   const TrainingRecommendationItem({
     required this.track,
     required this.exercise,
@@ -346,11 +349,21 @@ class TrainingRecommendationItem {
     required this.sourceSkillCategoryId,
     this.progressionExerciseIds = const [],
     this.plannedSets,
+    this.wasManuallyAdded = false,
   });
 
   /// Whether this item is the current exercise of a skill-tree progression.
   /// Standalone/custom exercises are never auto-progressed.
   bool get isProgression => progressionExerciseIds.isNotEmpty;
+
+  /// A manually selected catalog node can fast-forward its skill tree when
+  /// the user proves the minimum set-by-set requirement.
+  bool get isManualSkillTreeExercise =>
+      wasManuallyAdded &&
+      sourceSkillCategoryId.isNotEmpty &&
+      !exercise.isLibrary;
+
+  bool get hasProgressionContext => isProgression || isManualSkillTreeExercise;
 }
 
 class DailyTrainingRecommendation {

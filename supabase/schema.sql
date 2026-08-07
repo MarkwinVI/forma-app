@@ -7,6 +7,7 @@ create table public.users (
   email       text,
   full_name   text,
   avatar_url  text,
+  bodyweight_kg numeric check (bodyweight_kg between 20 and 400),
   created_at  timestamptz default now() not null
 );
 
@@ -143,7 +144,7 @@ create policy "Users manage own workout exercise logs"
 
 -- ── Progression Events ────────────────────────────────────────────────────
 -- One row per progression change a saved workout earned: target increases,
--- masteries, newly activated exercises, and personal bests. Powers the
+-- masteries, skipped nodes, newly activated exercises, and personal bests. Powers the
 -- "what changed" feed (seen_at), achievements, deletion rollback, and makes
 -- progression application idempotent per session.
 
@@ -153,13 +154,13 @@ create table public.progression_events (
   workout_session_id  uuid references public.workout_sessions(id) on delete cascade,
   exercise_id         text not null,
   track_id            text,     -- progression track; null for standalone PBs
-  kind                text not null, -- 'target_increase' | 'mastered' | 'activated' | 'personal_best' | 'branch_choice' | 'load_increase'
-  value_from          int,      -- per-set value before (reps or seconds); previous best for PBs
+  kind                text not null, -- 'target_increase' | 'mastered' | 'activated' | 'skipped' | 'personal_best' | 'branch_choice' | 'load_increase'
+  value_from          int,      -- prior value/PB; prior status index for shortcut rollback
   value_to            int,      -- per-set value after; new best for PBs
   target_sets         int,      -- set count the target values apply to
   weight_from         numeric,  -- for 'load_increase': working weight before, in kg
   weight_to           numeric,  -- for 'load_increase': working weight after, in kg
-  related_exercise_id text,     -- for 'activated': the mastered exercise that unlocked it
+  related_exercise_id text,     -- activation source, or shortcut destination for skipped nodes
   created_at          timestamptz default now() not null,
   seen_at             timestamptz -- null until the user has seen it in the feed
 );

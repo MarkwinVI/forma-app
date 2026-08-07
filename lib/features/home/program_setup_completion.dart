@@ -4,6 +4,7 @@ import '../../data/services/program_start_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/user_profile_service.dart';
 import 'program_setup_view.dart';
 
 /// Everything a finished "Build your program" wizard writes, in one place so
@@ -16,9 +17,15 @@ Future<void> completeProgramSetup({
   TrainingProgramService? trainingProgramService,
   TrainingProgramStoreService? storeService,
   ProgramStartService? startService,
+  UserProfileService? profileService,
 }) async {
   final programService = trainingProgramService ?? TrainingProgramService();
   final store = storeService ?? TrainingProgramStoreService();
+
+  await (profileService ?? UserProfileService()).updateBodyweightKg(
+    userId,
+    result.bodyweightKg,
+  );
 
   // Locked goals are judged against the progress the user actually has:
   // a rebuild by someone who already cleared diamond push-ups keeps their

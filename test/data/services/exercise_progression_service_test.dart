@@ -71,8 +71,7 @@ void main() {
       expect(target.value, 7);
     });
 
-    test('is clamped to a lowered mastery target without touching storage',
-        () {
+    test('is clamped to a lowered mastery target without touching storage', () {
       final target = ExerciseProgressionService.currentTargetForExercise(
         repExercise,
         progress: progressWith(
@@ -146,8 +145,7 @@ void main() {
       expect(outcome.targetChanges[repExercise.id]?.value, 8);
     });
 
-    test('reaching the mastery target masters and activates the next move',
-        () {
+    test('reaching the mastery target masters and activates the next move', () {
       final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
         first,
       ).volume;
@@ -203,8 +201,7 @@ void main() {
       expect(outcome.targetChanges[repExercise.id]?.value, 9);
     });
 
-    test('a lowered mastery target only masters through a workout result',
-        () {
+    test('a lowered mastery target only masters through a workout result', () {
       // Stored target 3 × 10 with mastery lowered to 8: nothing happens
       // until a session actually reaches 3 × 8 = 24 total.
       final rows = {
@@ -378,6 +375,185 @@ void main() {
 
       expect(outcome.statusChanges[first.id], ExerciseStatus.mastered);
       expect(outcome.statusChanges.containsKey(secondId), isFalse);
+    });
+  });
+
+  group('manual skill-tree fast-forward', () {
+    SessionExerciseResult manualResult(
+      Exercise exercise, {
+      int value = 6,
+      double weightKg = 0,
+    }) {
+      return SessionExerciseResult(
+        exercise: exercise,
+        volume: value * 3,
+        wasManuallyAdded: true,
+        sets: [
+          for (var i = 0; i < 3; i++)
+            SessionSetResult(value: value, weightKg: weightKg),
+        ],
+      );
+    }
+
+    test('manually adding the current active node still advances its target',
+        () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final active = ExerciseCatalog.findById(category.pathFor('one_arm')[1])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(active)],
+        progressRows: {active.id: progressWith(exerciseId: active.id)},
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      expect(outcome.targetChanges[active.id]?.value, 7);
+      expect(outcome.statusChanges, isEmpty);
+    });
+
+    test('skips the active and intermediate nodes and activates destination',
+        () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final path = category.pathFor('one_arm');
+      final active = path[1];
+      final destination = ExerciseCatalog.findById(path[4])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination)],
+        progressRows: {
+          active: progressWith(exerciseId: active),
+        },
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      for (final id in path.sublist(1, 4)) {
+        expect(outcome.statusChanges[id], ExerciseStatus.skipped);
+      }
+      expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
+      expect(outcome.shortcutActivationsBySource[active], destination.id);
+      expect(outcome.branchesToPersist, isEmpty);
+    });
+
+    test('a foundation shortcut switches to the destination branch', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pullupsId,
+      )!;
+      final selectedPath = category.pathFor('weighted');
+      final destinationPath = category.pathFor('one_arm');
+      final active = selectedPath[2];
+      final destination = ExerciseCatalog.findById(destinationPath[5])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination)],
+        progressRows: {active: progressWith(exerciseId: active)},
+        activeBranchByCategory: {category.id: 'weighted'},
+      );
+
+      expect(outcome.statusChanges[active], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
+      expect(outcome.branchesToPersist, {category.id: 'one_arm'});
+    });
+
+    test('a cross-branch shortcut leaves the selected branch unchanged', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pullupsId,
+      )!;
+      final selectedPath = category.pathFor('weighted');
+      final destinationPath = category.pathFor('one_arm');
+      final active = selectedPath[4];
+      final destination = ExerciseCatalog.findById(destinationPath[6])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination)],
+        progressRows: {active: progressWith(exerciseId: active)},
+        activeBranchByCategory: {category.id: 'weighted'},
+      );
+
+      expect(outcome.statusChanges[active], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[destinationPath[4]], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[destinationPath[5]], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
+      expect(outcome.branchesToPersist, isEmpty);
+    });
+
+    test('mastering the manual destination activates its successor', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final path = category.pathFor('one_arm');
+      final active = path[0];
+      final destination = ExerciseCatalog.findById(path[2])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination, value: 8)],
+        progressRows: {active: progressWith(exerciseId: active)},
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      expect(outcome.statusChanges[destination.id], ExerciseStatus.mastered);
+      expect(outcome.statusChanges[path[3]], ExerciseStatus.active);
+      expect(
+        outcome.shortcutActivationsBySource[destination.id],
+        path[3],
+      );
+    });
+
+    test('timed nodes require three sets of at least ten seconds', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.plancheId,
+      )!;
+      final path = category.pathFor('main');
+      final active = path[0];
+      final destination = ExerciseCatalog.findById(path[2])!;
+      expect(destination.isTimed, isTrue);
+      final rows = {active: progressWith(exerciseId: active)};
+
+      final below = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination, value: 9)],
+        progressRows: rows,
+        activeBranchByCategory: {category.id: 'main'},
+      );
+      expect(below.isEmpty, isTrue);
+
+      final met = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination, value: 10)],
+        progressRows: rows,
+        activeBranchByCategory: {category.id: 'main'},
+      );
+      expect(met.statusChanges[destination.id], ExerciseStatus.active);
+    });
+
+    test('weighted nodes require the bodyweight-derived external load', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pullupsId,
+      )!;
+      final path = category.pathFor('weighted');
+      final active = path[3];
+      final destination = ExerciseCatalog.findById(path[4])!;
+      expect(
+        ExerciseProgressionService.requiredExternalWeightKg(destination, 80),
+        closeTo(12, 0.001),
+      );
+      final rows = {active: progressWith(exerciseId: active)};
+
+      final below = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination, weightKg: 11.5)],
+        progressRows: rows,
+        activeBranchByCategory: {category.id: 'weighted'},
+        bodyweightKg: 80,
+      );
+      expect(below.isEmpty, isTrue);
+
+      final met = ExerciseProgressionService.computeSessionOutcome(
+        results: [manualResult(destination, weightKg: 12)],
+        progressRows: rows,
+        activeBranchByCategory: {category.id: 'weighted'},
+        bodyweightKg: 80,
+      );
+      expect(met.statusChanges[destination.id], ExerciseStatus.active);
     });
   });
 }

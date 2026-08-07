@@ -101,6 +101,8 @@ void main() {
     expect(result!.daysPerWeek, 3);
     expect(result!.split, TrainingProgramType.upperLower);
     expect(result!.hasGym, isFalse);
+    expect(result!.bodyweightKg, 75);
+    expect(result!.startingStrength.containsKey('bodyweight'), isFalse);
     expect(result!.startingStrength['pushups'], isNull);
     expect(result!.startingStrength['pullups'], 3);
     expect(result!.skillIds, ['weighted']);

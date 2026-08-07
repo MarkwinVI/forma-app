@@ -62,7 +62,8 @@ void main() {
       expect(event.targetSets, 3);
     });
 
-    test('mastery produces a mastered event and an activation event linked '
+    test(
+        'mastery produces a mastered event and an activation event linked '
         'to it', () {
       final masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
         first,
@@ -131,6 +132,61 @@ void main() {
 
       expect(events, isEmpty);
     });
+
+    test('manual fast-forward records skipped nodes and changed exercise', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final path = category.pathFor('one_arm');
+      final activeId = path[1];
+      final destination = ExerciseCatalog.findById(path[3])!;
+      final rows = {
+        activeId: ExerciseProgress(
+          exerciseId: activeId,
+          status: ExerciseStatus.active,
+          updatedAt: DateTime(2026),
+        ),
+      };
+      final results = [
+        SessionExerciseResult(
+          exercise: destination,
+          volume: 18,
+          trackId: 'horizontal_push',
+          wasManuallyAdded: true,
+          sets: const [
+            SessionSetResult(value: 6),
+            SessionSetResult(value: 6),
+            SessionSetResult(value: 6),
+          ],
+        ),
+      ];
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: results,
+        progressRows: rows,
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      final events = ExerciseProgressionService.buildSessionEvents(
+        outcome: outcome,
+        results: results,
+        progressRows: rows,
+      );
+
+      final skipped = events
+          .where((event) => event.kind == ProgressionEventKind.skipped)
+          .toList();
+      expect(skipped, hasLength(2));
+      expect(skipped.first.valueFrom, ExerciseStatus.active.index);
+      expect(skipped.first.trackId, 'horizontal_push');
+
+      final activated = events.singleWhere(
+        (event) => event.kind == ProgressionEventKind.activated,
+      );
+      expect(activated.exerciseId, destination.id);
+      expect(activated.relatedExerciseId, activeId);
+      expect(activated.valueFrom, 6);
+      expect(activated.valueTo, 6);
+    });
   });
 
   group('deletion rollback', () {
@@ -192,7 +248,9 @@ void main() {
         event(exerciseId: 'chin_up', kind: ProgressionEventKind.mastered),
         event(exerciseId: 'muscle_up', kind: ProgressionEventKind.activated),
         event(exerciseId: 'row', kind: ProgressionEventKind.personalBest),
-        event(exerciseId: 'pullups_pull_up', kind: ProgressionEventKind.branchChoice),
+        event(
+            exerciseId: 'pullups_pull_up',
+            kind: ProgressionEventKind.branchChoice),
         // A legacy increase without a before-value can't be restored.
         event(
           exerciseId: 'dip',
@@ -216,6 +274,26 @@ void main() {
       final deactivate = actions[2];
       expect(deactivate.exerciseId, 'muscle_up');
       expect(deactivate.status, ExerciseStatus.inactive);
+    });
+
+    test('shortcut rollback restores skipped and directly mastered statuses',
+        () {
+      final actions = ExerciseProgressionService.rollbackActionsFor([
+        event(
+          exerciseId: 'pushups_incline_push_up',
+          kind: ProgressionEventKind.skipped,
+          valueFrom: ExerciseStatus.active.index,
+        ),
+        event(
+          exerciseId: 'pushups_diamond_push_up',
+          kind: ProgressionEventKind.mastered,
+          valueFrom: ExerciseStatus.inactive.index,
+        ),
+      ]);
+
+      expect(actions, hasLength(2));
+      expect(actions[0].status, ExerciseStatus.active);
+      expect(actions[1].status, ExerciseStatus.inactive);
     });
   });
 

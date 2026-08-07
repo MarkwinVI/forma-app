@@ -21,6 +21,7 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/user_profile_service.dart';
 import '../../data/services/workout_notification_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
@@ -81,6 +82,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   final _programService = TrainingProgramService();
   final _programStoreService = TrainingProgramStoreService();
   final _exerciseLogService = ExerciseLogService();
+  final _profileService = UserProfileService();
 
   late final DateTime _startedAt;
   late List<TrainingRecommendationItem> _sessionItems;
@@ -94,6 +96,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   /// id. Fills the LAST column and pre-fills the kg field.
   Map<String, List<ExerciseSet>> _lastSets = {};
   MasteryTargetSettings _masterySettings = MasteryTargetSettings.defaults;
+  double? _bodyweightKg;
   _ActiveRestTimer? _activeRestTimer;
   Timer? _ticker;
   Duration _pausedDuration = Duration.zero;
@@ -238,12 +241,18 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     try {
       final progress = await _progressService.fetchAll(userId);
       MasteryTargetSettings masteryTargets = MasteryTargetSettings.defaults;
+      double? bodyweightKg;
       try {
         masteryTargets = (await _programStoreService.fetchProgramLogic(userId))
                 ?.masteryTargets ??
             MasteryTargetSettings.defaults;
       } catch (_) {
         // Defaults are fine; targets are still coherent, just unpersonalized.
+      }
+      try {
+        bodyweightKg = await _profileService.fetchBodyweightKg(userId);
+      } catch (_) {
+        // Only weighted tree shortcuts need this; the workout remains usable.
       }
       if (!mounted) return;
 
@@ -255,6 +264,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           for (final item in progress) item.exerciseId: item.status,
         };
         _masterySettings = masteryTargets;
+        _bodyweightKg = bodyweightKg;
         // Ladder targets arrived after the initial drafts were built from
         // defaults — rebuild any exercise the user hasn't logged or edited
         // yet so the shown targets match their stored progression state.
@@ -394,7 +404,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   /// state, else 3 × 6 / 3 × 10s, clamped to the live mastery target) for
   /// progression items, the catalog formula for standalone exercises.
   ExerciseTarget _prescribedTargetFor(TrainingRecommendationItem item) {
-    if (item.isProgression) {
+    if (item.hasProgressionContext) {
       return ExerciseProgressionService.currentTargetForExercise(
         item.exercise,
         progress: _progressRows[item.exercise.id],
@@ -427,10 +437,22 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         return _WorkoutSetDraft(
           number: index + 1,
           target: target.value,
-          weightKg: item.exercise.isWeighted ? (last?.weightKg ?? 0) : 0,
+          weightKg: item.exercise.isWeighted
+              ? (last?.weightKg ?? _goalWeightFor(item) ?? 0)
+              : 0,
           previousLabel: previousSetLabel(item.exercise, last),
         );
       },
+    );
+  }
+
+  double? _goalWeightFor(TrainingRecommendationItem item) {
+    final stored = _progressRows[item.exercise.id]?.currentTargetWeightKg;
+    if (stored != null) return stored;
+    if (!item.exercise.isWeighted) return null;
+    return ExerciseProgressionService.requiredExternalWeightKg(
+      item.exercise,
+      _bodyweightKg,
     );
   }
 
@@ -641,6 +663,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       status: _progressMap[exercise.id] ?? ExerciseStatus.inactive,
       sourceCategory: exercise.category,
       sourceSkillCategoryId: exercise.skillCategoryId,
+      wasManuallyAdded: true,
     );
 
     _planEdited = true;
@@ -712,6 +735,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       status: currentItem.status,
       sourceCategory: replacement.category,
       sourceSkillCategoryId: replacement.skillCategoryId,
+      wasManuallyAdded: true,
     );
 
     _singleExerciseIds.add(replacement.id);
@@ -1393,12 +1417,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                 sets: _setsFor(entry.items[i]),
                                 isTimed:
                                     _isTimedExercise(entry.items[i].exercise),
-                                goalValue: entry.items[i].isProgression
+                                goalValue: entry.items[i].hasProgressionContext
                                     ? _prescribedTargetFor(entry.items[i]).value
                                     : null,
-                                goalWeightKg:
-                                    _progressRows[entry.items[i].exercise.id]
-                                        ?.currentTargetWeightKg,
+                                goalWeightKg: _goalWeightFor(entry.items[i]),
                                 restSeconds: _restSecondsByExercise[
                                         entry.items[i].exercise.id] ??
                                     0,

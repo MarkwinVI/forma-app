@@ -20,6 +20,8 @@ import 'training_program_service.dart';
 class SessionExerciseResult {
   final Exercise exercise;
   final int volume;
+  final List<SessionSetResult> sets;
+  final bool wasManuallyAdded;
 
   /// Progression track the exercise was trained under (TrainingTrack
   /// dbValue); recorded on the events this result produces.
@@ -28,8 +30,19 @@ class SessionExerciseResult {
   const SessionExerciseResult({
     required this.exercise,
     required this.volume,
+    this.sets = const [],
+    this.wasManuallyAdded = false,
     this.trackId,
   });
+}
+
+/// One completed set, retained for rules that must be met set-by-set rather
+/// than by total volume (manual skill-tree fast-forwarding in particular).
+class SessionSetResult {
+  final int value;
+  final double weightKg;
+
+  const SessionSetResult({required this.value, this.weightKg = 0});
 }
 
 /// A resolved sets × value target (reps, or seconds when timed).
@@ -55,6 +68,14 @@ class SessionProgressionOutcome {
   /// mastered exercise id → the exercise its mastery activated.
   final Map<String, String> activationsByMastered;
 
+  /// A manually logged exercise can move the active node without mastering
+  /// the old one. This maps the node being left to the newly active node.
+  final Map<String, String> shortcutActivationsBySource;
+
+  /// Statuses before a shortcut changed them, used to write reversible ledger
+  /// events for skipped and directly-mastered nodes.
+  final Map<String, ExerciseStatus> shortcutPreviousStatuses;
+
   /// Branches chosen by goal-driven fork resolution (skill category id →
   /// branch id), to be saved so future workouts follow the new branch.
   final Map<String, String> branchesToPersist;
@@ -71,6 +92,8 @@ class SessionProgressionOutcome {
     required this.statusChanges,
     required this.targetChanges,
     this.activationsByMastered = const {},
+    this.shortcutActivationsBySource = const {},
+    this.shortcutPreviousStatuses = const {},
     this.branchesToPersist = const {},
     this.branchChoicesNeeded = const [],
     this.suggestions = const [],
@@ -243,10 +266,13 @@ class ExerciseProgressionService {
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
     Map<String, String> activeBranchByCategory = const {},
     List<String> goalSkillIds = const [],
+    double? bodyweightKg,
   }) {
     final statusChanges = <String, ExerciseStatus>{};
     final targetChanges = <String, ExerciseTarget>{};
     final activationsByMastered = <String, String>{};
+    final shortcutActivationsBySource = <String, String>{};
+    final shortcutPreviousStatuses = <String, ExerciseStatus>{};
     final branchesToPersist = <String, String>{};
     final branchChoicesNeeded = <String>[];
     final suggestions = <ProgressionSuggestion>[];
@@ -259,6 +285,30 @@ class ExerciseProgressionService {
     for (final result in results) {
       final exercise = result.exercise;
       if (statusOf(exercise.id) == ExerciseStatus.mastered) continue;
+
+      if (result.wasManuallyAdded &&
+          _applyManualShortcut(
+            result: result,
+            progressRows: progressRows,
+            statusChanges: statusChanges,
+            shortcutActivationsBySource: shortcutActivationsBySource,
+            shortcutPreviousStatuses: shortcutPreviousStatuses,
+            branchesToPersist: branchesToPersist,
+            activeBranchByCategory: activeBranchByCategory,
+            masterySettings: masterySettings,
+            bodyweightKg: bodyweightKg,
+          )) {
+        continue;
+      }
+
+      // A manually added inactive node only changes progression when it
+      // qualifies for the explicit shortcut above. Manually adding the
+      // already-active node (or revisiting a skipped node) still uses the
+      // ordinary ladder rules below.
+      if (result.wasManuallyAdded &&
+          statusOf(exercise.id) == ExerciseStatus.inactive) {
+        continue;
+      }
 
       final current = currentTargetForExercise(
         exercise,
@@ -316,10 +366,197 @@ class ExerciseProgressionService {
       statusChanges: statusChanges,
       targetChanges: targetChanges,
       activationsByMastered: activationsByMastered,
+      shortcutActivationsBySource: shortcutActivationsBySource,
+      shortcutPreviousStatuses: shortcutPreviousStatuses,
       branchesToPersist: branchesToPersist,
       branchChoicesNeeded: branchChoicesNeeded,
       suggestions: suggestions,
     );
+  }
+
+  /// Added load required by a weighted skill rung. Catalog formulas express
+  /// total system load (`bodyweight + bodyweight * factor`), while the live
+  /// workout's kg field records only the external load, so the bodyweight
+  /// portion is subtracted here.
+  static double? requiredExternalWeightKg(
+    Exercise exercise,
+    double? bodyweightKg,
+  ) {
+    if (!exercise.isWeighted) return 0;
+    final formula = exercise.weightFormula?.replaceAll(' ', '');
+    if (formula == null) return null;
+    if (formula == '0') return 0;
+    if (bodyweightKg == null || bodyweightKg <= 0) return null;
+
+    final match = RegExp(
+      r'^user_bodyweight\+user_bodyweight\*([0-9]+(?:\.[0-9]+)?)$',
+    ).firstMatch(formula);
+    if (match == null) return null;
+    return bodyweightKg * double.parse(match.group(1)!);
+  }
+
+  static bool _meetsManualShortcutMinimum(
+    SessionExerciseResult result,
+    double? bodyweightKg,
+  ) {
+    final minimumValue =
+        result.exercise.isTimed ? initialTargetSeconds : initialTargetReps;
+    final requiredWeight = requiredExternalWeightKg(
+      result.exercise,
+      bodyweightKg,
+    );
+    if (result.exercise.isWeighted && requiredWeight == null) return false;
+
+    return result.sets
+            .where(
+              (set) =>
+                  set.value >= minimumValue &&
+                  (!result.exercise.isWeighted ||
+                      set.weightKg + 0.001 >= requiredWeight!),
+            )
+            .length >=
+        initialTargetSets;
+  }
+
+  static bool _applyManualShortcut({
+    required SessionExerciseResult result,
+    required Map<String, ExerciseProgress> progressRows,
+    required Map<String, ExerciseStatus> statusChanges,
+    required Map<String, String> shortcutActivationsBySource,
+    required Map<String, ExerciseStatus> shortcutPreviousStatuses,
+    required Map<String, String> branchesToPersist,
+    required Map<String, String> activeBranchByCategory,
+    required MasteryTargetSettings masterySettings,
+    required double? bodyweightKg,
+  }) {
+    final destination = result.exercise;
+    if (destination.skillCategoryId.isEmpty ||
+        !_meetsManualShortcutMinimum(result, bodyweightKg)) {
+      return false;
+    }
+    final category = SkillCategoryCatalog.findById(destination.skillCategoryId);
+    if (category == null || category.trainingPaths.isEmpty) return false;
+
+    ExerciseStatus originalStatus(String id) =>
+        progressRows[id]?.status ?? ExerciseStatus.inactive;
+    ExerciseStatus currentStatus(String id) =>
+        statusChanges[id] ?? originalStatus(id);
+
+    final selectedPathId =
+        activeBranchByCategory[category.id] ?? category.defaultTrainingPathId;
+    final selectedPath = category.pathFor(selectedPathId);
+    String? activeId;
+    for (final id in selectedPath) {
+      if (currentStatus(id) == ExerciseStatus.active) {
+        activeId = id;
+        break;
+      }
+    }
+    if (activeId == null) {
+      for (final path in category.trainingPaths.values) {
+        for (final id in path) {
+          if (currentStatus(id) == ExerciseStatus.active) {
+            activeId = id;
+            break;
+          }
+        }
+        if (activeId != null) break;
+      }
+    }
+    if (activeId == null || activeId == destination.id) return false;
+    if (currentStatus(destination.id) != ExerciseStatus.inactive) return false;
+
+    String? destinationPathId;
+    final declaredPath = category.trainingPaths[destination.branchId];
+    if (declaredPath?.contains(destination.id) ?? false) {
+      destinationPathId = destination.branchId;
+    } else if (selectedPath.contains(destination.id)) {
+      destinationPathId = selectedPathId;
+    } else {
+      for (final entry in category.trainingPaths.entries) {
+        if (entry.value.contains(destination.id)) {
+          destinationPathId = entry.key;
+          break;
+        }
+      }
+    }
+    if (destinationPathId == null) return false;
+    final destinationPath = category.pathFor(destinationPathId);
+    final destinationIndex = destinationPath.indexOf(destination.id);
+    final activeOnDestinationIndex = destinationPath.indexOf(activeId);
+
+    final nodesToSkip = <String>[];
+    var switchedFromFoundation = false;
+    if (activeOnDestinationIndex >= 0 &&
+        destinationIndex > activeOnDestinationIndex) {
+      nodesToSkip.addAll(
+        destinationPath.sublist(activeOnDestinationIndex, destinationIndex),
+      );
+      if (destinationPathId != selectedPathId) {
+        final commonLength = _commonPrefixLength(selectedPath, destinationPath);
+        switchedFromFoundation = activeOnDestinationIndex < commonLength;
+      }
+    } else {
+      // Different post-foundation branch: leave the selected branch intact,
+      // retire its active node, and clear only the destination branch's
+      // uncleared lead-in.
+      final commonLength = _commonPrefixLength(selectedPath, destinationPath);
+      if (!selectedPath.contains(activeId) ||
+          selectedPath.indexOf(activeId) < commonLength ||
+          destinationIndex < commonLength) {
+        return false;
+      }
+      nodesToSkip.add(activeId);
+      nodesToSkip.addAll(
+        destinationPath.sublist(commonLength, destinationIndex),
+      );
+    }
+
+    void changeStatus(String id, ExerciseStatus status) {
+      final before = currentStatus(id);
+      if (before == status) return;
+      shortcutPreviousStatuses.putIfAbsent(id, () => before);
+      statusChanges[id] = status;
+    }
+
+    for (final id in nodesToSkip.toSet()) {
+      if (!currentStatus(id).isCleared) {
+        changeStatus(id, ExerciseStatus.skipped);
+      }
+    }
+
+    final mastery = masteryTargetForExercise(
+      destination,
+      progress: progressRows[destination.id],
+      masterySettings: masterySettings,
+    );
+    final mastered = result.volume >= mastery.volume;
+    if (mastered) {
+      changeStatus(destination.id, ExerciseStatus.mastered);
+      if (destinationIndex + 1 < destinationPath.length) {
+        final successorId = destinationPath[destinationIndex + 1];
+        if (currentStatus(successorId) == ExerciseStatus.inactive) {
+          changeStatus(successorId, ExerciseStatus.active);
+          shortcutActivationsBySource[destination.id] = successorId;
+        }
+      }
+    } else {
+      changeStatus(destination.id, ExerciseStatus.active);
+      shortcutActivationsBySource[activeId] = destination.id;
+    }
+
+    if (switchedFromFoundation) {
+      branchesToPersist[category.id] = destinationPathId;
+    }
+    return true;
+  }
+
+  static int _commonPrefixLength(List<String> a, List<String> b) {
+    var length = 0;
+    while (length < a.length && length < b.length && a[length] == b[length]) {
+      length++;
+    }
+    return length;
   }
 
   /// What a loaded lift should do next, or null when the session did not
@@ -375,8 +612,7 @@ class ExerciseProgressionService {
         fromValue: current.value,
         toValue: math.min(loadedLiftBottomReps, topReps),
         fromWeightKg: weightKg,
-        toWeightKg:
-            weightKg == null ? null : weightKg + loadedLiftIncrementKg,
+        toWeightKg: weightKg == null ? null : weightKg + loadedLiftIncrementKg,
       );
     }
 
@@ -385,8 +621,8 @@ class ExerciseProgressionService {
       kind: ProgressionSuggestionKind.repIncrease,
       sets: current.sets,
       fromValue: current.value,
-      toValue: math.min(current.value + targetIncrementForExercise(exercise),
-          topReps),
+      toValue: math.min(
+          current.value + targetIncrementForExercise(exercise), topReps),
       fromWeightKg: weightKg,
       toWeightKg: weightKg,
     );
@@ -401,8 +637,7 @@ class ExerciseProgressionService {
     required Map<String, String> activeBranchByCategory,
     required List<String> goalSkillIds,
   }) {
-    final candidates =
-        <({String categoryId, String pathId, String nextId})>[];
+    final candidates = <({String categoryId, String pathId, String nextId})>[];
     for (final category in SkillCategoryCatalog.all()) {
       for (final entry in category.trainingPaths.entries) {
         final index = entry.value.indexOf(exercise.id);
@@ -490,6 +725,7 @@ class ExerciseProgressionService {
     MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
     Map<String, String> activeBranchByCategory = const {},
     List<String> goalSkillIds = const [],
+    double? bodyweightKg,
   }) async {
     if (await _eventService.hasEventsForSession(userId, sessionId)) {
       return const SessionProgressionOutcome(
@@ -504,6 +740,7 @@ class ExerciseProgressionService {
       masterySettings: masterySettings,
       activeBranchByCategory: activeBranchByCategory,
       goalSkillIds: goalSkillIds,
+      bodyweightKg: bodyweightKg,
     );
     for (final entry in outcome.statusChanges.entries) {
       await _progressService.upsert(userId, entry.key, entry.value);
@@ -630,7 +867,52 @@ class ExerciseProgressionService {
       for (final result in results)
         if (result.trackId != null) result.exercise.id: result.trackId,
     };
+    final trackByCategory = {
+      for (final result in results)
+        if (result.trackId != null &&
+            result.exercise.skillCategoryId.isNotEmpty)
+          result.exercise.skillCategoryId: result.trackId,
+    };
     final events = <ProgressionEventInput>[];
+
+    final shortcutDestinationIds =
+        outcome.shortcutActivationsBySource.values.toSet();
+    String? shortcutDestinationFor(String exerciseId) {
+      final direct = outcome.shortcutActivationsBySource[exerciseId];
+      if (direct != null) return direct;
+      final exercise = ExerciseCatalog.findById(exerciseId);
+      if (exercise == null) {
+        return shortcutDestinationIds.isEmpty
+            ? null
+            : shortcutDestinationIds.first;
+      }
+      for (final id in shortcutDestinationIds) {
+        if (ExerciseCatalog.findById(id)?.skillCategoryId ==
+            exercise.skillCategoryId) {
+          return id;
+        }
+      }
+      return null;
+    }
+
+    for (final entry in outcome.shortcutPreviousStatuses.entries) {
+      if (outcome.statusChanges[entry.key] != ExerciseStatus.skipped) continue;
+      final destinationId = shortcutDestinationFor(entry.key);
+      final exercise = ExerciseCatalog.findById(entry.key);
+      events.add(
+        ProgressionEventInput(
+          exerciseId: entry.key,
+          trackId:
+              (destinationId == null ? null : trackByExercise[destinationId]) ??
+                  (exercise == null
+                      ? null
+                      : trackByCategory[exercise.skillCategoryId]),
+          kind: ProgressionEventKind.skipped,
+          valueFrom: entry.value.index,
+          relatedExerciseId: destinationId,
+        ),
+      );
+    }
 
     for (final entry in outcome.targetChanges.entries) {
       final exercise = ExerciseCatalog.findById(entry.key);
@@ -671,6 +953,7 @@ class ExerciseProgressionService {
           exerciseId: exerciseId,
           trackId: trackByExercise[exerciseId],
           kind: ProgressionEventKind.mastered,
+          valueFrom: outcome.shortcutPreviousStatuses[exerciseId]?.index,
           valueTo: mastery.value,
           targetSets: mastery.sets,
         ),
@@ -691,6 +974,31 @@ class ExerciseProgressionService {
           ),
         );
       }
+    }
+
+    // Manual fast-forwards activate a destination without the ordinary
+    // adjacent mastery relationship. valueFrom marks this as an exercise
+    // change for the post-workout animation and carries the old target.
+    for (final entry in outcome.shortcutActivationsBySource.entries) {
+      final next = ExerciseCatalog.findById(entry.value);
+      final source = ExerciseCatalog.findById(entry.key);
+      if (next == null || source == null) continue;
+      final sourceTarget = currentTargetForExercise(
+        source,
+        progress: progressRows[source.id],
+        masterySettings: masterySettings,
+      );
+      events.add(
+        ProgressionEventInput(
+          exerciseId: next.id,
+          trackId: trackByExercise[next.id] ?? trackByExercise[source.id],
+          kind: ProgressionEventKind.activated,
+          relatedExerciseId: source.id,
+          valueFrom: sourceTarget.value,
+          valueTo: initialTargetValueForExercise(next),
+          targetSets: initialTargetSets,
+        ),
+      );
     }
 
     // Forks the user has to decide, surfaced in the what-changed feed.
@@ -729,7 +1037,8 @@ class ExerciseProgressionService {
       for (final event in events)
         if (event.kind == ProgressionEventKind.targetIncrease ||
             event.kind == ProgressionEventKind.mastered ||
-            event.kind == ProgressionEventKind.activated)
+            event.kind == ProgressionEventKind.activated ||
+            event.kind == ProgressionEventKind.skipped)
           event,
     ];
     if (progressionEvents.isEmpty) {
@@ -802,13 +1111,26 @@ class ExerciseProgressionService {
         case ProgressionEventKind.mastered:
           actions.add(RollbackAction.status(
             exerciseId: event.exerciseId,
-            status: ExerciseStatus.active,
+            status: event.valueFrom != null &&
+                    event.valueFrom! >= 0 &&
+                    event.valueFrom! < ExerciseStatus.values.length
+                ? ExerciseStatus.values[event.valueFrom!]
+                : ExerciseStatus.active,
           ));
         case ProgressionEventKind.activated:
           actions.add(RollbackAction.status(
             exerciseId: event.exerciseId,
             status: ExerciseStatus.inactive,
           ));
+        case ProgressionEventKind.skipped:
+          if (event.valueFrom != null &&
+              event.valueFrom! >= 0 &&
+              event.valueFrom! < ExerciseStatus.values.length) {
+            actions.add(RollbackAction.status(
+              exerciseId: event.exerciseId,
+              status: ExerciseStatus.values[event.valueFrom!],
+            ));
+          }
         case ProgressionEventKind.personalBest:
         case ProgressionEventKind.branchChoice:
           break; // Nothing was written to progression state.
@@ -847,7 +1169,6 @@ class ExerciseProgressionService {
 
   static String _rollbackScopeKey(ProgressionEvent event) =>
       event.trackId ?? 'exercise:${event.exerciseId}';
-
 }
 
 /// A deleted session's progression events split by rollback eligibility:
