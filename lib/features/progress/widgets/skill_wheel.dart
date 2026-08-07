@@ -748,17 +748,27 @@ class _WheelPainter extends CustomPainter {
   static const _hy = _SkillWheelState._hy;
 
   // Locked steps keep the default node size — only the active one is larger.
+  // A picker marks destinations, not the step being trained, so there it
+  // draws like any other step still to clear.
   double _radiusOf(WheelNodeState st) =>
-      st == WheelNodeState.active ? 4.9 : 3.5;
+      st == WheelNodeState.active && !state.widget.isPicker ? 4.9 : 3.5;
 
-  Color _fillOf(WheelNodeState st) => st == WheelNodeState.active
-      ? _SkillWheelState._accent
-      : st == WheelNodeState.locked
+  Color _fillOf(WheelNodeState st) {
+    if (st == WheelNodeState.active) {
+      return state.widget.isPicker
           ? _SkillWheelState._lock
-          : _SkillWheelState._green;
+          : _SkillWheelState._accent;
+    }
+    return st == WheelNodeState.locked
+        ? _SkillWheelState._lock
+        : _SkillWheelState._green;
+  }
 
-  bool _lit(_GeoLink l) =>
-      l.p.state != WheelNodeState.locked && l.q.state != WheelNodeState.locked;
+  /// Whether a link reads as travelled. A picker draws no working step, so
+  /// the lit path stops at the last step actually cleared.
+  bool _lit(_GeoLink l) => state.widget.isPicker
+      ? l.p.state.isCleared && l.q.state.isCleared
+      : l.p.state != WheelNodeState.locked && l.q.state != WheelNodeState.locked;
 
   @override
   void paint(Canvas canvas, Size size) {

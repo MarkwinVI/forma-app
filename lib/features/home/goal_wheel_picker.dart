@@ -22,6 +22,16 @@ class _PlacedGoal {
   });
 }
 
+/// Lets the wizard around the picker see and undo a flight into a tree, so
+/// its own back gesture pulls out of the tree before leaving the step.
+class GoalWheelPickerController {
+  _GoalWheelPickerState? _state;
+
+  bool get isTreeOpen => _state?._sel != null;
+
+  void back() => _state?._wheelController.back();
+}
+
 /// Program setup's goal step, drawn on the Progress tab's wheel: every tree
 /// radiating from one hub, each branch ending in a skill you can aim at.
 ///
@@ -48,6 +58,8 @@ class GoalWheelPicker extends StatefulWidget {
   /// Every goal the wizard offers, id and label, in its own order.
   final List<({String id, String label})> options;
 
+  final GoalWheelPickerController? controller;
+
   const GoalWheelPicker({
     super.key,
     required this.picked,
@@ -55,6 +67,7 @@ class GoalWheelPicker extends StatefulWidget {
     required this.progressMap,
     required this.onToggleSkill,
     required this.options,
+    this.controller,
   });
 
   @override
@@ -72,13 +85,21 @@ class _GoalWheelPickerState extends State<GoalWheelPicker> {
   @override
   void initState() {
     super.initState();
+    widget.controller?._state = this;
     _build();
   }
 
   @override
   void didUpdateWidget(covariant GoalWheelPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
+    widget.controller?._state = this;
     if (oldWidget.progressMap != widget.progressMap) _build();
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller?._state == this) widget.controller?._state = null;
+    super.dispose();
   }
 
   void _build() {

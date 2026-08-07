@@ -294,6 +294,19 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
 
   bool get _isLastStep => _step == _stepCount - 1;
 
+  final _goalPicker = GoalWheelPickerController();
+
+  /// A back gesture belongs to the wizard, not the route: it steps back
+  /// through the questions and only leaves once there is nothing behind.
+  /// On the goal step it first pulls out of any tree the user flew into.
+  void _handlePop() {
+    if (_goalPicker.isTreeOpen) {
+      _goalPicker.back();
+      return;
+    }
+    _back();
+  }
+
   void _toggleSkill(String id) => setState(() {
         if (_lockedSkillNotes.containsKey(id)) return;
         if (_pickedSkills.contains(id)) {
@@ -376,29 +389,37 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _WizardHeader(
-              step: _step,
-              stepCount: _stepCount,
-              onBack: _back,
-            ),
-            // The goal step is the wheel, which fills the height it is given
-            // and scrolls its own panel — so it sits outside the scroll view
-            // every other step lives in.
-            Expanded(
-              child: _isLastStep
-                  ? _SkillsStep(
-                      picked: _pickedSkills,
-                      lockedNotes: _lockedSkillNotes,
-                      progressMap: widget.progressMap,
-                      onToggleSkill: _toggleSkill,
-                    )
-                  : SingleChildScrollView(
+    return PopScope(
+      // Only the first step is the wizard's exit; everywhere else the back
+      // gesture is handled here and steps backwards instead.
+      canPop: _step == 0 && !_goalPicker.isTreeOpen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handlePop();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _WizardHeader(
+                step: _step,
+                stepCount: _stepCount,
+                onBack: _handlePop,
+              ),
+              // The goal step is the wheel, which fills the height it is
+              // given and scrolls its own panel — so it sits outside the
+              // scroll view every other step lives in.
+              Expanded(
+                child: _isLastStep
+                    ? _SkillsStep(
+                        picked: _pickedSkills,
+                        lockedNotes: _lockedSkillNotes,
+                        progressMap: widget.progressMap,
+                        onToggleSkill: _toggleSkill,
+                        pickerController: _goalPicker,
+                      )
+                    : SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
                 child: switch (_step) {
                   0 => _ScheduleStep(
@@ -422,18 +443,19 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                   _ => const SizedBox.shrink(),
                 },
               ),
-            ),
-            _WizardFooter(
-              label: !_isLastStep
-                  ? 'Continue'
-                  : _pickedSkills.isEmpty
-                      ? 'Skip — build my program'
-                      : 'Build my program',
-              trailingChevron: !_isLastStep,
-              saving: _saving,
-              onTap: _next,
-            ),
-          ],
+              ),
+              _WizardFooter(
+                label: !_isLastStep
+                    ? 'Continue'
+                    : _pickedSkills.isEmpty
+                        ? 'Skip — build my program'
+                        : 'Build my program',
+                trailingChevron: !_isLastStep,
+                saving: _saving,
+                onTap: _next,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1300,12 +1322,14 @@ class _SkillsStep extends StatelessWidget {
   final Map<String, String> lockedNotes;
   final Map<String, ExerciseStatus> progressMap;
   final ValueChanged<String> onToggleSkill;
+  final GoalWheelPickerController pickerController;
 
   const _SkillsStep({
     required this.picked,
     required this.lockedNotes,
     required this.progressMap,
     required this.onToggleSkill,
+    required this.pickerController,
   });
 
   @override
@@ -1315,6 +1339,7 @@ class _SkillsStep extends StatelessWidget {
       lockedNotes: lockedNotes,
       progressMap: progressMap,
       onToggleSkill: onToggleSkill,
+      controller: pickerController,
       options: [
         for (final skill in kGoalSkillOptions)
           (id: skill.id, label: skill.label),

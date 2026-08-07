@@ -146,6 +146,53 @@ void main() {
     expect(find.text('Open wizard'), findsOneWidget);
   });
 
+  testWidgets('a back gesture steps backwards rather than leaving the wizard',
+      (tester) async {
+    await pumpWizard(tester, onComplete: (_) async {});
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 / 5'), findsOneWidget);
+
+    // What the iOS edge swipe and the Android back button both call.
+    Future<void> systemBack() async {
+      await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+      await tester.pumpAndSettle();
+    }
+
+    await systemBack();
+    expect(find.text('1 / 5'), findsOneWidget);
+    expect(find.text('Open wizard'), findsNothing);
+
+    // Only once there is no step behind does it leave.
+    await systemBack();
+    expect(find.text('Open wizard'), findsOneWidget);
+  });
+
+  testWidgets('a back gesture on the goal step leaves the tree, not the step',
+      (tester) async {
+    await pumpWizard(tester, onComplete: (_) async {});
+
+    for (var step = 0; step < 4; step++) {
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Pick your goals'), findsOneWidget);
+
+    final wheel = tester.getRect(find.byType(SkillWheel));
+    await tester.tapAt(
+      Offset(wheel.center.dx, wheel.top + wheel.height * 0.35),
+    );
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('GOALS IN PULLUPS'), findsOneWidget);
+
+    await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+    await tester.pump(const Duration(milliseconds: 900));
+    // Back on the wheel, still on the goal step.
+    expect(find.text('Pick your goals'), findsOneWidget);
+    expect(find.text('5 / 5'), findsOneWidget);
+  });
+
   testWidgets('getting started checklist reflects program completion',
       (tester) async {
     await tester.pumpWidget(
