@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/features/home/getting_started_checklist.dart';
 import 'package:forma_app/features/home/program_setup_view.dart';
+import 'package:forma_app/features/progress/widgets/skill_wheel.dart';
 
 void main() {
   Future<void> pumpWizard(
@@ -87,10 +88,18 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    // Step 5: skills — CTA reads "Skip" until something is picked.
-    expect(find.text('What do you want to learn?'), findsOneWidget);
+    // Step 5: goals on the skill wheel — CTA reads "Skip" until one is
+    // picked. Pullups points straight up out of the hub, so a tap above the
+    // middle of the wheel flies into that tree, where its goals are listed.
+    expect(find.text('Pick your goals'), findsOneWidget);
     expect(find.text('Skip — build my program'), findsOneWidget);
-    await tester.ensureVisible(find.text('Weighted pull-up'));
+    final wheel = tester.getRect(find.byType(SkillWheel));
+    await tester.tapAt(
+      Offset(wheel.center.dx, wheel.top + wheel.height * 0.35),
+    );
+    // Not pumpAndSettle: the focused wheel breathes its markers forever.
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('GOALS IN PULLUPS'), findsOneWidget);
     await tester.tap(find.text('Weighted pull-up'));
     await tester.pump();
     expect(find.text('Build my program'), findsOneWidget);

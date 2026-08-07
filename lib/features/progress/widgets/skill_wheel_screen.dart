@@ -103,13 +103,20 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     ),
                   ),
                 ),
-                SkillWheel(
-                  families: widget.families,
-                  controller: _wheelController,
-                  onChanged: (sel, focus) => setState(() {
-                    _sel = sel;
-                    _focus = focus;
-                  }),
+                // Natural height where there is room, shrunk to fit where
+                // there is not — the panel below always keeps a share.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: constraints.maxHeight * 0.62,
+                  ),
+                  child: SkillWheel(
+                    families: widget.families,
+                    controller: _wheelController,
+                    onChanged: (sel, focus) => setState(() {
+                      _sel = sel;
+                      _focus = focus;
+                    }),
+                  ),
                 ),
                 Expanded(
                   child: family == null

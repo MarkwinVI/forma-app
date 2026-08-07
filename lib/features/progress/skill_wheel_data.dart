@@ -4,6 +4,7 @@ import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/skill_track_model.dart';
+import '../../data/services/training_program_service.dart';
 import 'widgets/skill_wheel.dart';
 
 /// Wheel order interleaves the wide fans with the straight lines so the
@@ -32,6 +33,48 @@ const Map<String, List<String>> _branchDisplayOrder = {
     'close_grip',
   ],
 };
+
+/// Where a goal sits on the wheel when its own tree is the answer rather
+/// than the branch that trains it. Both of these are trained on another
+/// tree's branch — Planche through the pushups planche branch, Muscle-up
+/// through the pull-up foundation — but the wheel is a map of skills, and
+/// this is the tree a user looks in for them.
+const Map<String, String> _goalTreePlacements = {
+  'planche': SkillCategoryCatalog.plancheId,
+  'muscleup': SkillCategoryCatalog.muscleUpId,
+};
+
+/// The wheel tip a goal option marks, or null when the goal has no place on
+/// it. Keys match [SkillWheel.pickedGoals]: `<categoryId>:<branchId>`, or
+/// `<categoryId>:*` for a family drawn without branches.
+String? goalTipKey(String goalId, List<WheelFamily> families) {
+  WheelFamily? familyOf(String categoryId) {
+    for (final family in families) {
+      if (family.categoryId == categoryId) return family;
+    }
+    return null;
+  }
+
+  final ownTree = _goalTreePlacements[goalId];
+  if (ownTree != null) {
+    final family = familyOf(ownTree);
+    if (family == null) return null;
+    // These trees are drawn as a single line, so their tip is the family's.
+    return family.branches.isEmpty ? '$ownTree:*' : null;
+  }
+
+  final branchRef = TrainingProgramService.goalBranchIds[goalId];
+  if (branchRef == null) return null;
+  final parts = branchRef.split(':');
+  if (parts.length != 2) return null;
+  final family = familyOf(parts[0]);
+  if (family == null) return null;
+  if (family.branches.isEmpty) return '${parts[0]}:*';
+  for (final branch in family.branches) {
+    if (branch.id == parts[1]) return branchRef;
+  }
+  return null;
+}
 
 String _branchFor(SkillCategory category, List<SkillTrack> skillTracks) {
   for (final track in skillTracks) {

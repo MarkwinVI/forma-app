@@ -100,12 +100,32 @@ class SkillWheel extends StatefulWidget {
   final SkillWheelController? controller;
   final void Function(int? selected, int focus)? onChanged;
 
+  /// Goal keys (`<categoryId>:<branchId>`, or `<categoryId>:*` for a family
+  /// with no branches) currently chosen as destinations. Each lights an
+  /// amber route from the start of its tree and an amber marker on its tip.
+  final Set<String> pickedGoals;
+
+  /// Goal keys that can be chosen. A tip outside this set is drawn plain —
+  /// its branch is not something a program can be built toward.
+  final Set<String> pickableGoals;
+
+  /// Called with a tip's goal key when its marker is tapped. Supplying it
+  /// turns the wheel into a goal picker: tips become tappable markers, and
+  /// the per-step selector — which a picker has no use for — goes away
+  /// along with the left/right swipe that drives it.
+  final void Function(String goalKey)? onToggleGoal;
+
   const SkillWheel({
     super.key,
     required this.families,
     this.controller,
     this.onChanged,
+    this.pickedGoals = const {},
+    this.pickableGoals = const {},
+    this.onToggleGoal,
   });
+
+  bool get isPicker => onToggleGoal != null;
 
   @override
   State<SkillWheel> createState() => _SkillWheelState();
@@ -318,6 +338,7 @@ class _SkillWheelState extends State<SkillWheel>
       // stopping short.
       final branchPitch = (_reach - fork.r) / b.steps.length;
       var prev = fork;
+      final chain = <_GeoNode>[];
       for (var k = 0; k < b.steps.length; k++) {
         // A branch node sits on its own bearing from the hub, so the branch
         // reads as its own ray out of the fork.
@@ -330,17 +351,38 @@ class _SkillWheelState extends State<SkillWheel>
           flat: flat++,
         );
         nodes.add(n);
+        chain.add(n);
         // The one link that leaves the fork is a hairline.
         links.add(_GeoLink(p: prev, q: n, faint: k == 0));
         prev = n;
       }
-      tips.add(_GeoTip(name: b.label, x: prev.x, y: prev.y, ang: bearing));
+      tips.add(_GeoTip(
+        name: b.label,
+        x: prev.x,
+        y: prev.y,
+        ang: bearing,
+        id: '${f.categoryId}:${b.id}',
+        chain: chain,
+      ));
     }
     if (f.branches.isEmpty) {
-      tips.add(_GeoTip(name: f.title, x: fork.x, y: fork.y, ang: a));
+      tips.add(_GeoTip(
+        name: f.title,
+        x: fork.x,
+        y: fork.y,
+        ang: a,
+        id: '${f.categoryId}:*',
+        chain: const [],
+      ));
     }
 
-    final geo = _TreeGeo(nodes: nodes, links: links, tips: tips, fork: fork);
+    final geo = _TreeGeo(
+      nodes: nodes,
+      links: links,
+      tips: tips,
+      fork: fork,
+      trunk: trunk,
+    );
     _geoCache[i] = geo;
     return geo;
   }
@@ -502,6 +544,8 @@ class _SkillWheelState extends State<SkillWheel>
       // Across the tree: the next family comes up from below as you drag up.
       final i = (sel + (delta.dy > 0 ? -1 : 1) + _n) % _n;
       _go(i, widget.families[i].activeFlatIndex);
+    } else if (widget.isPicker) {
+      // Nothing to walk: a picker chooses destinations, not steps.
     } else {
       final count = widget.families[sel].flat.length;
       final next =
@@ -531,15 +575,30 @@ class _SkillWheelState extends State<SkillWheel>
     if (idx < 0) idx += _n;
 
     final sel = _sel;
+    final rot = _rotFor(sel ?? idx) * math.pi / 180;
+
+    // Picking a goal comes first: a tap on a tip's marker toggles it rather
+    // than doing anything to the camera.
+    if (widget.isPicker && sel != null) {
+      for (final tip in _tree(sel).tips) {
+        if (!widget.pickableGoals.contains(tip.id)) continue;
+        final p = _rotate(tip.x, tip.y, rot);
+        if ((p - Offset(ux, uy)).distance < 16) {
+          widget.onToggleGoal!(tip.id);
+          return;
+        }
+      }
+    }
+
     if (idx != sel) {
       _go(idx, widget.families[idx].activeFlatIndex);
       return;
     }
     if (sel == null) return;
+    if (widget.isPicker) return;
 
     // A tap on the focused tree moves the selector to the nearest node — the
     // tree stays put and the card below follows.
-    final rot = _rotFor(sel) * math.pi / 180;
     _GeoNode? best;
     var bestDistance = double.infinity;
     for (final node in _tree(sel).nodes) {
@@ -566,27 +625,41 @@ class _SkillWheelState extends State<SkillWheel>
     if (widget.families.length < 2) return const SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
+        // The band is as wide as it is given, and its height follows the
+        // camera. Where that would not fit — a short screen, a landscape
+        // window — the wheel narrows until the OPENING framing does, so the
+        // width stays put while the camera animates.
+        var width = constraints.maxWidth;
+        if (constraints.hasBoundedHeight) {
+          final capped =
+              constraints.maxHeight * _w / SkillWheel.overviewBandHeight;
+          if (capped < width) width = capped;
+        }
         return AnimatedBuilder(
           animation: _move,
           builder: (context, _) {
             final vb = _liveVB();
             final height = vb[3] * width / _w;
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapUp: (d) => _onTapUp(d, width),
-              onScaleStart: _onScaleStart,
-              onScaleUpdate: _onScaleUpdate,
-              onScaleEnd: _onScaleEnd,
-              child: ClipRect(
-                child: SizedBox(
-                  width: width,
-                  height: height,
-                  child: CustomPaint(
-                    painter: _WheelPainter(
-                      state: this,
-                      repaint:
-                          Listenable.merge([_move, _labels, _halo, _sector]),
+            // The detector sits inside the centring, not around it: taps are
+            // read in the painted box's own coordinates, so a wheel narrower
+            // than the space it was given still maps a tap to the right node.
+            return Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: (d) => _onTapUp(d, width),
+                onScaleStart: _onScaleStart,
+                onScaleUpdate: _onScaleUpdate,
+                onScaleEnd: _onScaleEnd,
+                child: ClipRect(
+                  child: SizedBox(
+                    width: width,
+                    height: height,
+                    child: CustomPaint(
+                      painter: _WheelPainter(
+                        state: this,
+                        repaint:
+                            Listenable.merge([_move, _labels, _halo, _sector]),
+                      ),
                     ),
                   ),
                 ),
@@ -624,11 +697,21 @@ class _GeoTip {
   final String name;
   final double x, y, ang;
 
+  /// Stable id for the branch this tip ends — `<categoryId>:<branchId>`, or
+  /// `<categoryId>:*` for a family with no branches. Goal picking keys on it.
+  final String id;
+
+  /// The tip's own steps, fork excluded. Prefixed by the trunk it gives the
+  /// whole route from the start of the tree to this goal.
+  final List<_GeoNode> chain;
+
   const _GeoTip({
     required this.name,
     required this.x,
     required this.y,
     required this.ang,
+    required this.id,
+    required this.chain,
   });
 }
 
@@ -637,12 +720,14 @@ class _TreeGeo {
   final List<_GeoLink> links;
   final List<_GeoTip> tips;
   final _GeoNode fork;
+  final List<_GeoNode> trunk;
 
   const _TreeGeo({
     required this.nodes,
     required this.links,
     required this.tips,
     required this.fork,
+    required this.trunk,
   });
 }
 
@@ -789,6 +874,58 @@ class _WheelPainter extends CustomPainter {
     }
   }
 
+  /// A goal marker on a branch tip: dashed and hollow while the goal is
+  /// still on offer, solid amber under a breathing halo once it is chosen.
+  void _paintGoalMarker(
+    Canvas canvas,
+    Offset at, {
+    required bool picked,
+    required double fade,
+    required double haloT,
+  }) {
+    if (!picked) {
+      canvas.drawCircle(
+        at,
+        6.5,
+        Paint()..color = _SkillWheelState._cardBg.withValues(alpha: fade),
+      );
+      // Dashes, drawn as short arcs: 12 marks around the ring reads as the
+      // design's 2.4/2.2 dash pattern at this radius.
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.3
+        ..color = AppColors.amber.withValues(alpha: 0.55 * fade);
+      const marks = 12;
+      const sweep = math.pi * 2 / marks;
+      for (var i = 0; i < marks; i++) {
+        canvas.drawArc(
+          Rect.fromCircle(center: at, radius: 6.5),
+          i * sweep,
+          sweep * 0.5,
+          false,
+          paint,
+        );
+      }
+      return;
+    }
+
+    canvas.drawCircle(
+      at,
+      5.5,
+      Paint()..color = AppColors.amber.withValues(alpha: fade),
+    );
+    final pulse =
+        0.45 + (0.08 - 0.45) * (0.5 - 0.5 * math.cos(2 * math.pi * haloT));
+    canvas.drawCircle(
+      at,
+      10.5,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.3
+        ..color = AppColors.amber.withValues(alpha: (fade * pulse).clamp(0, 1)),
+    );
+  }
+
   /// One name on an arc: glyphs placed one by one along the circle, each
   /// rotated to its local tangent.
   void _paintArcLabel(
@@ -856,6 +993,30 @@ class _WheelPainter extends CustomPainter {
     double fade,
   ) {
     if (fade <= 0) return;
+
+    // Goals chosen inside a tree stay visible from the wheel: an amber
+    // marker sits on each chosen tip.
+    if (state.widget.isPicker) {
+      for (var i = 0; i < state._n; i++) {
+        for (final tip in state._tree(i).tips) {
+          if (!state.widget.pickedGoals.contains(tip.id)) continue;
+          canvas.drawCircle(
+            Offset(tip.x, tip.y),
+            5,
+            Paint()..color = AppColors.amber.withValues(alpha: fade),
+          );
+          canvas.drawCircle(
+            Offset(tip.x, tip.y),
+            9.5,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.2
+              ..color = AppColors.amber.withValues(alpha: 0.5 * fade),
+          );
+        }
+      }
+    }
+
     canvas.drawCircle(
       const Offset(_hx, _hy),
       11,
@@ -886,6 +1047,31 @@ class _WheelPainter extends CustomPainter {
   ) {
     final sel = state._sel!;
     final geo = state._tree(sel);
+    final picker = state.widget.isPicker;
+
+    // Under everything else: the amber route from the start of the tree to
+    // each goal chosen in it.
+    if (picker && fade > 0) {
+      for (final tip in geo.tips) {
+        if (!state.widget.pickedGoals.contains(tip.id)) continue;
+        final route = [...geo.trunk, ...tip.chain];
+        if (route.length < 2) continue;
+        final path = Path();
+        for (var i = 0; i < route.length; i++) {
+          final p = _SkillWheelState._rotate(route[i].x, route[i].y, rot);
+          i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.2
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..color = AppColors.amber.withValues(alpha: 0.55 * fade),
+        );
+      }
+    }
 
     if (fade > 0) {
       // Tips rotated into the focused (horizontal) orientation.
@@ -895,6 +1081,7 @@ class _WheelPainter extends CustomPainter {
             name: tip.name,
             tip: _SkillWheelState._rotate(tip.x, tip.y, rot),
             ang: tip.ang + rot,
+            id: tip.id,
           ),
       ];
       for (final item in items) {
@@ -918,12 +1105,15 @@ class _WheelPainter extends CustomPainter {
 
       for (final item in items) {
         item.labelX = colX;
+        // A chosen goal says so in its name as well as its route.
+        final picked = state.widget.pickedGoals.contains(item.id);
         TextStyle style(double fontSize) => TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.12 * k,
               height: 1.15,
-              color: const Color(0xFF8A8B93).withValues(alpha: fade),
+              color: (picked ? AppColors.amber : const Color(0xFF8A8B93))
+                  .withValues(alpha: fade),
             );
         var fontSize = 12.5 * k;
         // Flutter breaks a word that cannot fit rather than overflowing, so
@@ -969,6 +1159,17 @@ class _WheelPainter extends CustomPainter {
       }
 
       for (final item in items) {
+        // Every pickable tip carries its marker: a dashed ring waiting to be
+        // chosen, a filled dot with a breathing halo once it is.
+        if (picker && state.widget.pickableGoals.contains(item.id)) {
+          _paintGoalMarker(
+            canvas,
+            item.tip,
+            picked: state.widget.pickedGoals.contains(item.id),
+            fade: fade,
+            haloT: state._halo.value,
+          );
+        }
         final painter = item.painter!;
         painter.paint(
           canvas,
@@ -976,6 +1177,9 @@ class _WheelPainter extends CustomPainter {
         );
       }
     }
+
+    // A picker has no working step to point at, so it draws no selector.
+    if (picker) return;
 
     // Selector ring, fading in on the same beat as the labels, then pulsing.
     final here = geo.nodes.firstWhere(
@@ -1006,8 +1210,14 @@ class _TipItem {
   final String name;
   final Offset tip;
   final double ang;
+  final String id;
   double labelX = 0, labelY = 0, labelY0 = 0;
   TextPainter? painter;
 
-  _TipItem({required this.name, required this.tip, required this.ang});
+  _TipItem({
+    required this.name,
+    required this.tip,
+    required this.ang,
+    required this.id,
+  });
 }

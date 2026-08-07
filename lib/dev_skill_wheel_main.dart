@@ -4,6 +4,8 @@ import 'core/theme/app_colors.dart';
 import 'data/catalog/skill_category_catalog.dart';
 import 'data/models/exercise_model.dart';
 import 'data/models/skill_track_model.dart';
+import 'features/home/goal_wheel_picker.dart';
+import 'features/home/program_setup_view.dart';
 import 'features/progress/skill_wheel_data.dart';
 import 'features/progress/widgets/skill_wheel.dart';
 import 'features/progress/widgets/skill_wheel_screen.dart';
@@ -97,21 +99,50 @@ class _WheelProbeScreen extends StatefulWidget {
 }
 
 class _WheelProbeScreenState extends State<_WheelProbeScreen> {
+  late final Map<String, ExerciseStatus> _progress = _mockProgress();
   late final List<WheelFamily> _families = buildWheelFamilies(
-    progressMap: _mockProgress(),
+    progressMap: _progress,
     skillTracks: _mockTracks(),
   );
+
+  /// Which screen the probe is showing: the Progress tab or program setup's
+  /// goal step, both drawn on the same wheel.
+  bool _picker = false;
+  final List<String> _picked = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.surface,
+        onPressed: () => setState(() => _picker = !_picker),
+        label: Text(
+          _picker ? 'Progress' : 'Goal picker',
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
-        child: SkillWheelScreen(
-          families: _families,
-          onOpenExercise: (_) {},
-        ),
+        child: _picker
+            ? GoalWheelPicker(
+                picked: _picked,
+                lockedNotes: const {
+                  'hspu': 'Unlock Diamond Pushup in the Pushups track',
+                },
+                progressMap: _progress,
+                onToggleSkill: (id) => setState(() {
+                  _picked.contains(id) ? _picked.remove(id) : _picked.add(id);
+                }),
+                options: [
+                  for (final skill in kGoalSkillOptions)
+                    (id: skill.id, label: skill.label),
+                ],
+              )
+            : SkillWheelScreen(
+                families: _families,
+                onOpenExercise: (_) {},
+              ),
       ),
     );
   }
