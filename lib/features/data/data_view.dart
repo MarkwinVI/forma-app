@@ -127,11 +127,7 @@ class _DataViewState extends State<DataView> {
     final userId = AuthService().currentUser?.id;
     if (userId == null) return;
 
-    final savedKg = await showBodyweightSheet(
-      context,
-      kg: _bodyweightKg,
-      now: _devClockService.now(),
-    );
+    final savedKg = await showBodyweightSheet(context, kg: _bodyweightKg);
     if (savedKg == null || !mounted) return;
 
     final previous = _bodyweightKg;

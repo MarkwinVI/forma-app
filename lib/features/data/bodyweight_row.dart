@@ -52,21 +52,19 @@ class BodyweightRow extends StatelessWidget {
 Future<double?> showBodyweightSheet(
   BuildContext context, {
   required double? kg,
-  required DateTime now,
 }) {
   return showModalBottomSheet<double>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
-    builder: (_) => _BodyweightSheet(kg: kg, now: now),
+    builder: (_) => _BodyweightSheet(kg: kg),
   );
 }
 
 class _BodyweightSheet extends StatefulWidget {
   final double? kg;
-  final DateTime now;
 
-  const _BodyweightSheet({required this.kg, required this.now});
+  const _BodyweightSheet({required this.kg});
 
   @override
   State<_BodyweightSheet> createState() => _BodyweightSheetState();
@@ -145,16 +143,6 @@ class _BodyweightSheetState extends State<_BodyweightSheet> {
               ),
               const SizedBox(height: 20),
               Text('BODYWEIGHT', style: monoStyle()),
-              const SizedBox(height: 10),
-              Text(
-                'Today, ${_formatDay(widget.now)}',
-                style: const TextStyle(
-                  fontSize: 27,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.8,
-                ),
-              ),
               const SizedBox(height: 20),
               Center(
                   child: WeightUnitToggle(unit: _unit, onChanged: _pickUnit)),
@@ -198,22 +186,4 @@ class _BodyweightSheetState extends State<_BodyweightSheet> {
       ),
     );
   }
-}
-
-String _formatDay(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}';
 }

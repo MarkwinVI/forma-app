@@ -19,11 +19,7 @@ void main() {
             body: Center(
               child: TextButton(
                 onPressed: () async {
-                  saved = await showBodyweightSheet(
-                    context,
-                    kg: kg,
-                    now: DateTime(2026, 8, 11),
-                  );
+                  saved = await showBodyweightSheet(context, kg: kg);
                 },
                 child: const Text('Open'),
               ),
@@ -48,11 +44,7 @@ void main() {
             body: Center(
               child: TextButton(
                 onPressed: () async {
-                  saved = await showBodyweightSheet(
-                    context,
-                    kg: 74,
-                    now: DateTime(2026, 8, 11),
-                  );
+                  saved = await showBodyweightSheet(context, kg: 74);
                 },
                 child: const Text('Open'),
               ),
@@ -66,7 +58,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('BODYWEIGHT'), findsOneWidget);
-    expect(find.text('Today, Aug 11'), findsOneWidget);
     expect(find.text('74.0'), findsOneWidget);
 
     await tester.tap(find.text('7'));
