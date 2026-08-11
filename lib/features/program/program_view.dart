@@ -138,7 +138,6 @@ class _ProgramViewState extends State<ProgramView> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
-          progressMap: _progressMap,
           onComplete: (result) async {
             await _completeProgramSetup(result);
             created = true;

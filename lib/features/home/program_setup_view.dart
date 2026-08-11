@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
-import '../../data/catalog/exercise_catalog.dart';
-import '../../data/models/exercise_model.dart';
 import '../../data/models/training_program_model.dart';
-import '../../data/services/training_program_service.dart';
-import 'goal_wheel_picker.dart';
 
 /// Answers collected by the "Build your program" wizard.
 class ProgramSetupResult {
@@ -17,7 +13,6 @@ class ProgramSetupResult {
 
   /// exercise id -> reps/kg value, or null when the user picked "I don't know".
   final Map<String, int?> startingStrength;
-  final List<String> skillIds;
 
   const ProgramSetupResult({
     required this.daysPerWeek,
@@ -25,7 +20,6 @@ class ProgramSetupResult {
     required this.hasGym,
     required this.bodyweightKg,
     required this.startingStrength,
-    required this.skillIds,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,7 +29,6 @@ class ProgramSetupResult {
       'has_gym': hasGym,
       'bodyweight_kg': bodyweightKg,
       'starting_strength': startingStrength,
-      'skill_ids': skillIds,
     };
   }
 }
@@ -182,75 +175,17 @@ const _allStrengthExercises = [
   _bodyweightSquat,
 ];
 
-class GoalSkillGroup {
-  final String id;
-  final String label;
-
-  const GoalSkillGroup(this.id, this.label);
-}
-
-const kGoalSkillGroups = [
-  GoalSkillGroup('pullups', 'Pull-ups'),
-  GoalSkillGroup('rows', 'Rows'),
-  GoalSkillGroup('pushups', 'Push-ups'),
-  GoalSkillGroup('dips', 'Dips'),
-  GoalSkillGroup('squat', 'Squat'),
-  GoalSkillGroup('other', 'Other skills'),
-];
-
-class GoalSkillOption {
-  final String id;
-  final String label;
-  final IconData icon;
-  final String group;
-  final int difficulty;
-
-  const GoalSkillOption({
-    required this.id,
-    required this.label,
-    required this.icon,
-    required this.group,
-    required this.difficulty,
-  });
-}
-
-const kGoalSkillOptions = [
-  GoalSkillOption(id: 'weighted', label: 'Weighted pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
-  GoalSkillOption(id: 'highpull', label: 'High pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
-  GoalSkillOption(id: 'lsitpull', label: 'L-sit pull-up', icon: Icons.self_improvement_rounded, group: 'pullups', difficulty: 1),
-  GoalSkillOption(id: 'oap', label: 'One-arm pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 2),
-  GoalSkillOption(id: 'wrow', label: 'Weighted row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
-  GoalSkillOption(id: 'oarow', label: 'One-arm row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
-  GoalSkillOption(id: 'frontlever', label: 'Front lever', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 2),
-  GoalSkillOption(id: 'ringpu', label: 'Rings push-up', icon: Icons.north_rounded, group: 'pushups', difficulty: 1),
-  GoalSkillOption(id: 'oapu', label: 'One-arm push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 1),
-  GoalSkillOption(id: 'planchepu', label: 'Planche push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 2),
-  GoalSkillOption(id: 'wdip', label: 'Weighted dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
-  GoalSkillOption(id: 'ringdip', label: 'Ring dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
-  GoalSkillOption(id: 'pistol', label: 'Pistol squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
-  GoalSkillOption(id: 'shrimp', label: 'Shrimp squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
-  GoalSkillOption(id: 'lsit', label: 'L-sit / V-sit', icon: Icons.self_improvement_rounded, group: 'other', difficulty: 1),
-  GoalSkillOption(id: 'muscleup', label: 'Muscle-up', icon: Icons.fitness_center_rounded, group: 'other', difficulty: 2),
-  GoalSkillOption(id: 'hspu', label: 'Handstand push-up', icon: Icons.sports_gymnastics_rounded, group: 'other', difficulty: 2),
-  GoalSkillOption(id: 'planche', label: 'Planche', icon: Icons.trending_flat_rounded, group: 'other', difficulty: 2),
-];
-
 // ── Wizard ──────────────────────────────────────────────────
 
-/// Five-step "Build your program" wizard: schedule, split, equipment,
-/// starting strength and skill goals. Calls [onComplete] with the answers,
-/// then shows the "program ready" confirmation.
+/// Four-step "Build your program" wizard: schedule, split, equipment and
+/// starting strength. Calls [onComplete] with the answers, then shows the
+/// "program ready" confirmation.
 class ProgramSetupView extends StatefulWidget {
   final Future<void> Function(ProgramSetupResult result) onComplete;
-
-  /// The user's exercise statuses, used to keep gated goal skills (handstand
-  /// push-ups, planche, muscle-up) locked until the tree behind each is open.
-  final Map<String, ExerciseStatus> progressMap;
 
   const ProgramSetupView({
     super.key,
     required this.onComplete,
-    this.progressMap = const {},
   });
 
   @override
@@ -265,7 +200,7 @@ class _StrengthAnswer {
 }
 
 class _ProgramSetupViewState extends State<ProgramSetupView> {
-  static const _stepCount = 5;
+  static const _stepCount = 4;
 
   int _step = 0;
   int _days = 3;
@@ -275,46 +210,12 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
     for (final exercise in _allStrengthExercises)
       exercise.id: _StrengthAnswer(exercise.def),
   };
-  final List<String> _pickedSkills = [];
   bool _saving = false;
   bool _ready = false;
-
-  /// Gated goal options still behind their unlock, id → the note naming what
-  /// opens them. Same rule the planner enforces, so the wizard never shows a
-  /// pickable goal the plan would drop.
-  late final Map<String, String> _lockedSkillNotes = {
-    for (final option in kGoalSkillOptions)
-      if (TrainingProgramService.lockedGoal(option.id, widget.progressMap)
-          case final requirement?)
-        option.id: 'Unlocks after '
-            '${ExerciseCatalog.findById(requirement.exerciseId)?.name ?? 'earlier work'}',
-  };
 
   TrainingProgramType get _effectiveSplit => _split ?? _recommendedSplit(_days);
 
   bool get _isLastStep => _step == _stepCount - 1;
-
-  final _goalPicker = GoalWheelPickerController();
-
-  /// A back gesture belongs to the wizard, not the route: it steps back
-  /// through the questions and only leaves once there is nothing behind.
-  /// On the goal step it first pulls out of any tree the user flew into.
-  void _handlePop() {
-    if (_goalPicker.isTreeOpen) {
-      _goalPicker.back();
-      return;
-    }
-    _back();
-  }
-
-  void _toggleSkill(String id) => setState(() {
-        if (_lockedSkillNotes.containsKey(id)) return;
-        if (_pickedSkills.contains(id)) {
-          _pickedSkills.remove(id);
-        } else {
-          _pickedSkills.add(id);
-        }
-      });
 
   Future<void> _next() async {
     if (!_isLastStep) {
@@ -350,12 +251,6 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                     ? null
                     : _strength[exercise.id]!.value,
           },
-          // Locked goals can't be picked, but filter anyway so a stale
-          // selection can never outrun the gate.
-          skillIds: [
-            for (final id in _pickedSkills)
-              if (!_lockedSkillNotes.containsKey(id)) id,
-          ],
         ),
       );
       if (!mounted) return;
@@ -381,10 +276,6 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       return _ProgramSummaryView(
         days: _days,
         split: _effectiveSplit,
-        skills: [
-          for (final skill in kGoalSkillOptions)
-            if (_pickedSkills.contains(skill.id)) skill,
-        ],
         onDone: () => Navigator.of(context).pop(),
       );
     }
@@ -392,9 +283,9 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
     return PopScope(
       // Only the first step is the wizard's exit; everywhere else the back
       // gesture is handled here and steps backwards instead.
-      canPop: _step == 0 && !_goalPicker.isTreeOpen,
+      canPop: _step == 0,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _handlePop();
+        if (!didPop) _back();
       },
       child: Scaffold(
         backgroundColor: AppColors.bg,
@@ -405,51 +296,36 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
               _WizardHeader(
                 step: _step,
                 stepCount: _stepCount,
-                onBack: _handlePop,
+                onBack: _back,
               ),
-              // The goal step is the wheel, which fills the height it is
-              // given and scrolls its own panel — so it sits outside the
-              // scroll view every other step lives in.
               Expanded(
-                child: _isLastStep
-                    ? _SkillsStep(
-                        picked: _pickedSkills,
-                        lockedNotes: _lockedSkillNotes,
-                        progressMap: widget.progressMap,
-                        onToggleSkill: _toggleSkill,
-                        pickerController: _goalPicker,
-                      )
-                    : SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                child: switch (_step) {
-                  0 => _ScheduleStep(
-                      days: _days,
-                      onChanged: (value) => setState(() => _days = value),
-                    ),
-                  1 => _SplitStep(
-                      days: _days,
-                      split: _effectiveSplit,
-                      onChanged: (value) => setState(() => _split = value),
-                    ),
-                  2 => _EquipmentStep(
-                      hasGym: _hasGym,
-                      onChanged: (value) => setState(() => _hasGym = value),
-                    ),
-                  3 => _StrengthStep(
-                      strength: _strength,
-                      hasGym: _hasGym,
-                      onChanged: () => setState(() {}),
-                    ),
-                  _ => const SizedBox.shrink(),
-                },
-              ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                  child: switch (_step) {
+                    0 => _ScheduleStep(
+                        days: _days,
+                        onChanged: (value) => setState(() => _days = value),
+                      ),
+                    1 => _SplitStep(
+                        days: _days,
+                        split: _effectiveSplit,
+                        onChanged: (value) => setState(() => _split = value),
+                      ),
+                    2 => _EquipmentStep(
+                        hasGym: _hasGym,
+                        onChanged: (value) => setState(() => _hasGym = value),
+                      ),
+                    3 => _StrengthStep(
+                        strength: _strength,
+                        hasGym: _hasGym,
+                        onChanged: () => setState(() {}),
+                      ),
+                    _ => const SizedBox.shrink(),
+                  },
+                ),
               ),
               _WizardFooter(
-                label: !_isLastStep
-                    ? 'Continue'
-                    : _pickedSkills.isEmpty
-                        ? 'Skip — build my program'
-                        : 'Build my program',
+                label: _isLastStep ? 'Build my program' : 'Continue',
                 trailingChevron: !_isLastStep,
                 saving: _saving,
                 onTap: _next,
@@ -1313,41 +1189,6 @@ class _StepperButton extends StatelessWidget {
   }
 }
 
-// ── Step 5: skills ──────────────────────────────────────────
-
-/// The goal step: every skill tree on one wheel, each branch ending in a
-/// skill the program can be built toward. See [GoalWheelPicker].
-class _SkillsStep extends StatelessWidget {
-  final List<String> picked;
-  final Map<String, String> lockedNotes;
-  final Map<String, ExerciseStatus> progressMap;
-  final ValueChanged<String> onToggleSkill;
-  final GoalWheelPickerController pickerController;
-
-  const _SkillsStep({
-    required this.picked,
-    required this.lockedNotes,
-    required this.progressMap,
-    required this.onToggleSkill,
-    required this.pickerController,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GoalWheelPicker(
-      picked: picked,
-      lockedNotes: lockedNotes,
-      progressMap: progressMap,
-      onToggleSkill: onToggleSkill,
-      controller: pickerController,
-      options: [
-        for (final skill in kGoalSkillOptions)
-          (id: skill.id, label: skill.label),
-      ],
-    );
-  }
-}
-
 // ── Program summary ─────────────────────────────────────────
 
 class _WeekDay {
@@ -1411,18 +1252,16 @@ List<_WeekDay> _weekLayout(int days, TrainingProgramType split) {
   }
 }
 
-/// Post-wizard reveal: presents the built program (week layout, skills) as a
-/// motivating overview before landing back on Home.
+/// Post-wizard reveal: presents the built program's week as a motivating
+/// overview before landing back on Home.
 class _ProgramSummaryView extends StatefulWidget {
   final int days;
   final TrainingProgramType split;
-  final List<GoalSkillOption> skills;
   final VoidCallback onDone;
 
   const _ProgramSummaryView({
     required this.days,
     required this.split,
-    required this.skills,
     required this.onDone,
   });
 
@@ -1466,7 +1305,6 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
   @override
   Widget build(BuildContext context) {
     final week = _weekLayout(widget.days, widget.split);
-    final skills = widget.skills;
     final bottomInset = MediaQuery.of(context).padding.bottom;
     var step = 0;
 
@@ -1560,16 +1398,6 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
                               label: 'movement patterns',
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _SummaryStat(
-                              animation: _segment(step++),
-                              value: skills.isEmpty ? '—' : '${skills.length}',
-                              label: skills.length == 1
-                                  ? 'skill path'
-                                  : 'skill paths',
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -1580,20 +1408,6 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
                     _Reveal(
                       animation: _segment(step++),
                       child: _WeekCard(week: week),
-                    ),
-                    _SummaryLabel(
-                      animation: _segment(step++),
-                      text: skills.isEmpty ? 'Skills' : 'Target skills',
-                    ),
-                    _Reveal(
-                      animation: _segment(step++),
-                      child: skills.isEmpty
-                          ? const _InfoNote(
-                              text: 'You skipped skill goals, so Forma built '
-                                  'a balanced foundation. Pick skills anytime '
-                                  'and they’ll weave into your week.',
-                            )
-                          : _SummarySkillGrid(skills: skills),
                     ),
                   ],
                 ),
@@ -1818,70 +1632,3 @@ class _WeekCard extends StatelessWidget {
   }
 }
 
-class _SummarySkillGrid extends StatelessWidget {
-  final List<GoalSkillOption> skills;
-
-  const _SummarySkillGrid({required this.skills});
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <Widget>[];
-    for (var index = 0; index < skills.length; index += 2) {
-      rows.add(
-        Padding(
-          padding: EdgeInsets.only(top: index > 0 ? 8 : 0),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: _SummarySkillChip(skill: skills[index])),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: index + 1 < skills.length
-                      ? _SummarySkillChip(skill: skills[index + 1])
-                      : const SizedBox(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    return Column(children: rows);
-  }
-}
-
-class _SummarySkillChip extends StatelessWidget {
-  final GoalSkillOption skill;
-
-  const _SummarySkillChip({required this.skill});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(skill.icon, size: 20, color: AppColors.accentPrimary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              skill.label,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.14,
-                height: 1.2,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

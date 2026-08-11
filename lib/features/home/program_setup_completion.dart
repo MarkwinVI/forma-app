@@ -1,7 +1,6 @@
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/program_start_service.dart';
-import '../../data/services/progress_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/user_profile_service.dart';
@@ -27,19 +26,13 @@ Future<void> completeProgramSetup({
     result.bodyweightKg,
   );
 
-  // Locked goals are judged against the progress the user actually has:
-  // a rebuild by someone who already cleared diamond push-ups keeps their
-  // handstand push-up goal, a fresh account cannot smuggle one in.
-  final existingProgress = {
-    for (final progress in await ProgressService().fetchAll(userId))
-      progress.exerciseId: progress.status,
-  };
-
   final plan = ProgramStartPlanner.planFor(
     hasGym: result.hasGym,
-    goalSkillIds: result.skillIds,
+    // The wizard no longer asks about goal skills, so setup plans the default
+    // branch of every tree. The planner still takes goals for whatever picks
+    // them next; it just has none to work from here.
+    goalSkillIds: const [],
     startingStrength: result.startingStrength,
-    existingProgress: existingProgress,
   );
 
   await store.updateProgramLogic(

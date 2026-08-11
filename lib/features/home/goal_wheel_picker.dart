@@ -6,6 +6,46 @@ import '../../data/models/exercise_model.dart';
 import '../progress/skill_wheel_data.dart';
 import '../progress/widgets/skill_wheel.dart';
 
+/// A skill the picker can aim a program at.
+class GoalSkillOption {
+  final String id;
+  final String label;
+  final IconData icon;
+  final String group;
+  final int difficulty;
+
+  const GoalSkillOption({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.group,
+    required this.difficulty,
+  });
+}
+
+/// Every goal the picker offers. Ids match TrainingProgramService's
+/// goalBranchIds, which is what turns a pick into the branch a program trains.
+const kGoalSkillOptions = [
+  GoalSkillOption(id: 'weighted', label: 'Weighted pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
+  GoalSkillOption(id: 'highpull', label: 'High pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 1),
+  GoalSkillOption(id: 'lsitpull', label: 'L-sit pull-up', icon: Icons.self_improvement_rounded, group: 'pullups', difficulty: 1),
+  GoalSkillOption(id: 'oap', label: 'One-arm pull-up', icon: Icons.arrow_upward_rounded, group: 'pullups', difficulty: 2),
+  GoalSkillOption(id: 'wrow', label: 'Weighted row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
+  GoalSkillOption(id: 'oarow', label: 'One-arm row', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 1),
+  GoalSkillOption(id: 'frontlever', label: 'Front lever', icon: Icons.sync_alt_rounded, group: 'rows', difficulty: 2),
+  GoalSkillOption(id: 'ringpu', label: 'Rings push-up', icon: Icons.north_rounded, group: 'pushups', difficulty: 1),
+  GoalSkillOption(id: 'oapu', label: 'One-arm push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 1),
+  GoalSkillOption(id: 'planchepu', label: 'Planche push-up', icon: Icons.trending_flat_rounded, group: 'pushups', difficulty: 2),
+  GoalSkillOption(id: 'wdip', label: 'Weighted dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
+  GoalSkillOption(id: 'ringdip', label: 'Ring dip', icon: Icons.north_rounded, group: 'dips', difficulty: 1),
+  GoalSkillOption(id: 'pistol', label: 'Pistol squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
+  GoalSkillOption(id: 'shrimp', label: 'Shrimp squat', icon: Icons.accessibility_new_rounded, group: 'squat', difficulty: 1),
+  GoalSkillOption(id: 'lsit', label: 'L-sit / V-sit', icon: Icons.self_improvement_rounded, group: 'other', difficulty: 1),
+  GoalSkillOption(id: 'muscleup', label: 'Muscle-up', icon: Icons.fitness_center_rounded, group: 'other', difficulty: 2),
+  GoalSkillOption(id: 'hspu', label: 'Handstand push-up', icon: Icons.sports_gymnastics_rounded, group: 'other', difficulty: 2),
+  GoalSkillOption(id: 'planche', label: 'Planche', icon: Icons.trending_flat_rounded, group: 'other', difficulty: 2),
+];
+
 /// One goal option placed on the wheel: the option itself, the tip it marks,
 /// and the family that tip belongs to.
 class _PlacedGoal {
@@ -22,8 +62,8 @@ class _PlacedGoal {
   });
 }
 
-/// Lets the wizard around the picker see and undo a flight into a tree, so
-/// its own back gesture pulls out of the tree before leaving the step.
+/// Lets the screen around the picker see and undo a flight into a tree, so
+/// its own back gesture pulls out of the tree before leaving.
 class GoalWheelPickerController {
   _GoalWheelPickerState? _state;
 
@@ -32,8 +72,10 @@ class GoalWheelPickerController {
   void back() => _state?._wheelController.back();
 }
 
-/// Program setup's goal step, drawn on the Progress tab's wheel: every tree
-/// radiating from one hub, each branch ending in a skill you can aim at.
+/// A goal picker drawn on the Progress tab's wheel: every tree radiating from
+/// one hub, each branch ending in a skill you can aim at. No screen ships it
+/// today — the setup wizard no longer asks about goals — but the dev probe
+/// (`lib/dev_skill_wheel_main.dart`) still runs it.
 ///
 /// Tap a tree to fly in, then add a goal from the list or by tapping the
 /// dashed marker on its tip — the route from the start of that tree lights
@@ -43,19 +85,19 @@ class GoalWheelPickerController {
 /// The wheel is [SkillWheel] itself rather than a copy, in its picker mode,
 /// so it keeps whatever the Progress tab's wheel learns.
 class GoalWheelPicker extends StatefulWidget {
-  /// Goal option ids currently picked — the wizard's own list.
+  /// Goal option ids currently picked — the caller's own list.
   final List<String> picked;
 
   /// Goals still behind an unlock, id → the note naming what opens them.
   final Map<String, String> lockedNotes;
 
-  /// The user's statuses from the strength step, so the trees show where
-  /// they are starting from rather than a blank slate.
+  /// The user's exercise statuses, so the trees show where they are starting
+  /// from rather than a blank slate.
   final Map<String, ExerciseStatus> progressMap;
 
   final ValueChanged<String> onToggleSkill;
 
-  /// Every goal the wizard offers, id and label, in its own order.
+  /// Every goal on offer, id and label, in its own order.
   final List<({String id, String label})> options;
 
   final GoalWheelPickerController? controller;

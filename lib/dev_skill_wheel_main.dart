@@ -5,7 +5,6 @@ import 'data/catalog/skill_category_catalog.dart';
 import 'data/models/exercise_model.dart';
 import 'data/models/skill_track_model.dart';
 import 'features/home/goal_wheel_picker.dart';
-import 'features/home/program_setup_view.dart';
 import 'features/progress/skill_wheel_data.dart';
 import 'features/progress/widgets/skill_wheel.dart';
 import 'features/progress/widgets/skill_wheel_screen.dart';
@@ -105,8 +104,8 @@ class _WheelProbeScreenState extends State<_WheelProbeScreen> {
     skillTracks: _mockTracks(),
   );
 
-  /// Which screen the probe is showing: the Progress tab or program setup's
-  /// goal step, both drawn on the same wheel.
+  /// Which screen the probe is showing: the Progress tab or the goal picker,
+  /// both drawn on the same wheel.
   bool _picker = false;
   final List<String> _picked = [];
 
