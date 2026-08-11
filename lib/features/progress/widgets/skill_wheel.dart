@@ -932,10 +932,10 @@ class _WheelPainter extends CustomPainter {
     }
   }
 
-  /// The padlock badge on a locked tree's spoke, just inside the rim: the
-  /// tree waits on a prerequisite in another tree.
+  /// The padlock badge on a locked tree's spoke, inside the rim and clear
+  /// of the curved names: the tree waits on a prerequisite in another tree.
   void _paintPadlock(Canvas canvas, double angleRad, double opacity) {
-    const r = _SkillWheelState._rim - 22;
+    const r = _SkillWheelState._rim - 34;
     final lx = _hx + r * math.cos(angleRad);
     final ly = _hy + r * math.sin(angleRad);
 
