@@ -32,3 +32,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # LLDB attach on the iOS simulator stalls for minutes on this setup; the
+  # pre-LLDB debug attach works fine, so keep it.
+  config:
+    enable-lldb-debugging: false
