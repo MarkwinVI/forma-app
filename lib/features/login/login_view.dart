@@ -61,71 +61,90 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 16, bottom: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 22),
-                child: _BrandMark(),
-              ),
-              // Full-bleed: the graph runs past the page margin on both sides.
-              const _ConstellationHero(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 30, 22, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // The pitch scrolls if it must; the sign-in block below never
+            // moves.
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const _HeroText(),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.only(top: 4),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: AppColors.divider),
-                        ),
-                      ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 22),
+                      child: _BrandMark(),
+                    ),
+                    // Full-bleed: the graph runs past the page margin on
+                    // both sides.
+                    const _ConstellationHero(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 30, 22, 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          for (var i = 0; i < _values.length; i++)
-                            _ValueRow(
-                              name: _values[i].$1,
-                              sub: _values[i].$2,
-                              last: i == _values.length - 1,
+                          const _HeroText(),
+                          const SizedBox(height: 24),
+                          Container(
+                            padding: const EdgeInsets.only(top: 4),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: AppColors.divider),
+                              ),
                             ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (var i = 0; i < _values.length; i++)
+                                  _ValueRow(
+                                    name: _values[i].$1,
+                                    sub: _values[i].$2,
+                                    last: i == _values.length - 1,
+                                  ),
+                              ],
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    // The pressed state stays on the page: the button reports
-                    // itself rather than opening a spinner over everything.
-                    if (_isLoading)
-                      const _SigningInButton()
-                    else
-                      _AppleButton(
-                        onTap: () =>
-                            _signIn(() => _authService.signInWithApple()),
-                      ),
-                    const SizedBox(height: 14),
-                    Text(
-                      _isLoading
-                          ? 'Apple is confirming your account.'
-                          : 'By continuing you agree to our Terms and '
-                              'Privacy Policy.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textMuted,
-                        height: 1.5,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            // Pinned to the bottom of the page: the sign-in button and the
+            // terms line, wherever the pitch above ends.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // The pressed state stays on the page: the button reports
+                  // itself rather than opening a spinner over everything.
+                  if (_isLoading)
+                    const _SigningInButton()
+                  else
+                    _AppleButton(
+                      onTap: () =>
+                          _signIn(() => _authService.signInWithApple()),
+                    ),
+                  const SizedBox(height: 14),
+                  Text(
+                    _isLoading
+                        ? 'Apple is confirming your account.'
+                        : 'By continuing you agree to our Terms and '
+                            'Privacy Policy.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textMuted,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
