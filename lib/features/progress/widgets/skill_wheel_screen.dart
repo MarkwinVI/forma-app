@@ -298,10 +298,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                 Padding(
                                   padding:
                                       const EdgeInsets.fromLTRB(22, 12, 22, 0),
-                                  child: _TreeLockBanner(
-                                    lock: lock,
-                                    editable: widget.editable,
-                                  ),
+                                  child: _TreeLockBanner(lock: lock),
                                 ),
                               Expanded(
                                 child: WheelExerciseCard(
@@ -378,13 +375,11 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
 }
 
 /// The amber note under the wheel while a locked tree is focused: what
-/// unlocks it — and, where starting is offered, that starting early is
-/// possible but not advised.
+/// unlocks it.
 class _TreeLockBanner extends StatelessWidget {
   final WheelTreeLock lock;
-  final bool editable;
 
-  const _TreeLockBanner({required this.lock, required this.editable});
+  const _TreeLockBanner({required this.lock});
 
   @override
   Widget build(BuildContext context) {
@@ -424,11 +419,6 @@ class _TreeLockBanner extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: ' in the ${lock.prereqTreeTitle} tree.'),
-                  if (editable)
-                    const TextSpan(
-                      text: ' You can start it anyway — not advised '
-                          'before then.',
-                    ),
                 ],
               ),
               style: const TextStyle(
