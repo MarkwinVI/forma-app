@@ -72,8 +72,7 @@ class _DayHint {
 const _dayHints = {
   2: _DayHint(
     'Light',
-    'Good if you’re short on time or just getting started. You’ll still '
-        'progress, but more slowly than with 3 days.',
+    'Two focused sessions can cover the minimum.',
   ),
   3: _DayHint(
     'Recommended',
@@ -82,8 +81,7 @@ const _dayHints = {
   ),
   4: _DayHint(
     'More training',
-    'Great for intermediate trainees. We’ll use a split so each movement '
-        'gets trained twice per week.',
+    'Four days is room to train everything evenly.',
   ),
   5: _DayHint(
     'High frequency',
@@ -904,7 +902,7 @@ class _EquipmentStep extends StatelessWidget {
         _RadioRow(
           selected: equipment == SetupEquipment.fullGym,
           label: 'Full gym',
-          sub: 'Pull-up bar, rings, barbells — the works',
+          sub: 'Pull-up bar, rings, barbells',
           why: 'Unlocks weighted progressions — weighted pull-ups, dips and '
               'barbell work run alongside your skill goals.',
           onTap: () => onChanged(SetupEquipment.fullGym),
@@ -1073,9 +1071,8 @@ class _StrengthStep extends StatelessWidget {
       children: [
         const _StepTitle(
           title: 'Where are you starting?',
-          sub: 'Max reps in one set. Add a number where you know it — a '
-              'rough guess is fine. Anything left blank gets tested in your '
-              'first session.',
+          sub: 'Max reps in one set — a rough guess is fine. Your first '
+              'session will dial it in.',
         ),
         const SizedBox(height: 18),
         for (var index = 0; index < exercises.length; index++) ...[
@@ -1443,8 +1440,8 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
                         child: SizedBox(
                           width: 300,
                           child: Text(
-                            'Built from your answers — here’s the plan that '
-                            'takes you from today to your goals.',
+                            'Built from your answers. Change anything '
+                            'you like.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14.5,
@@ -1472,7 +1469,7 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
                             child: _SummaryStat(
                               animation: _segment(step++),
                               value: '8',
-                              label: 'movement patterns',
+                              label: 'exercises',
                             ),
                           ),
                         ],

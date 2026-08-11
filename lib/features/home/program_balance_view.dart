@@ -164,20 +164,20 @@ extension BalanceVerdictX on BalanceVerdict {
     }
   }
 
-  /// How the settings row counts this verdict: "2 patterns short", where
-  /// "Needs work" would read as one pattern speaking for two.
+  /// How the settings row counts this verdict: "2 areas undertrained",
+  /// where "Needs work" would read as one area speaking for two.
   String get summaryWord {
     switch (this) {
       case BalanceVerdict.missing:
         return 'missing';
       case BalanceVerdict.needsWork:
-        return 'short';
+        return 'undertrained';
       case BalanceVerdict.balanced:
         return 'balanced';
       case BalanceVerdict.concentrated:
         return 'on one day';
       case BalanceVerdict.tooMuch:
-        return 'over';
+        return 'overtrained';
       case BalanceVerdict.optional:
         return 'optional';
     }
@@ -292,9 +292,9 @@ double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
   return context.trainingDaysPerWeek * covering / sequence.length;
 }
 
-/// "2 patterns short", "1 pattern over" — or all clear.
+/// "2 areas undertrained", "1 area overtrained" — or all clear.
 /// The value the Program tab shows against "Weekly balance" — a settings-row
-/// value, so it counts the patterns that are off rather than naming them.
+/// value, so it counts the areas that are off rather than naming them.
 String balanceSummary(List<BalanceCategory> categories) {
   final off = [
     for (final entry in categories)
@@ -303,7 +303,7 @@ String balanceSummary(List<BalanceCategory> categories) {
   ];
   if (off.isEmpty) return 'Balanced';
 
-  final noun = off.length == 1 ? 'pattern' : 'patterns';
+  final noun = off.length == 1 ? 'area' : 'areas';
   final kinds = off.toSet();
   if (kinds.length == 1) {
     return '${off.length} $noun ${kinds.first.summaryWord}';

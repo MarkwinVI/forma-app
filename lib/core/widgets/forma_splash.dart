@@ -2,19 +2,38 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Forma animated splash — the charge fills the link, runs one lap around the
-/// open node, then floods it solid. Geometry matches the Forma brand mark.
+/// Forma animated splash — "next node" motion.
+///
+/// Frame 0 is the FULLY LIT mark, pixel-identical to the native static splash
+/// (the OS draws the same lit mark on #111016), so the takeover is invisible.
+/// The mark keeps the storyboard's size rule (53% of screen width, capped by
+/// 24% of screen height) and its exact centering — the wordmark is overlaid
+/// below without shifting the mark. The sequence per cycle:
+///   1. Hold the lit mark.
+///   2. The constellation slides forward one node (884/1360 of the mark
+///      width): the old node exits at the mark's edge, a dim track reveals
+///      ahead.
+///   3. The charge fills the new segment — bar, ring lap, node flood.
+///   4. Ends fully lit again, so the loop (and a one-shot run) is seamless.
+///
+///   FormaSplash(onDone: () => Navigator.of(context).pushReplacement(...))
+///
+/// Leave [onDone] null to loop forever.
 class FormaSplash extends StatefulWidget {
+  final VoidCallback? onDone;
+  final Duration duration;
+  final bool showWordmark;
+
   const FormaSplash({
     super.key,
     this.onDone,
+    this.duration = const Duration(milliseconds: 5500),
     this.showWordmark = true,
-    this.duration = const Duration(milliseconds: 3600),
   });
 
-  final VoidCallback? onDone;
-  final bool showWordmark;
-  final Duration duration;
+  static const Color ink = Color(0xFF111016);
+  static const Color blue = Color(0xFF3C7DFF);
+  static const Color unlit = Color(0xFF1B2A4E);
 
   @override
   State<FormaSplash> createState() => _FormaSplashState();
@@ -22,249 +41,248 @@ class FormaSplash extends StatefulWidget {
 
 class _FormaSplashState extends State<FormaSplash>
     with SingleTickerProviderStateMixin {
-  static const ink = Color(0xFF111016);
-  static const blue = Color(0xFF3C7DFF);
-  static const unlit = Color(0xFF1B2A4E);
-
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: widget.duration,
-  );
+  late final AnimationController _run =
+      AnimationController(vsync: this, duration: widget.duration);
 
   @override
   void initState() {
     super.initState();
     if (widget.onDone == null) {
-      _controller.repeat();
+      _run.repeat();
     } else {
-      _controller.forward().whenComplete(widget.onDone!);
+      _run.forward().whenComplete(widget.onDone!);
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _run.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context);
-    final markWidth = math.min(viewport.width * 0.53, viewport.height * 0.24);
+    // The storyboard's rule: 53% of the width, capped so the mark's height
+    // never passes 24% of the screen. Matching it keeps the handover from
+    // the static splash invisible.
+    final markWidth = math.min(
+      viewport.width * 0.53,
+      viewport.height * 0.24 * _MarkPainter.boxW / _MarkPainter.boxH,
+    );
+    final markHeight = markWidth * _MarkPainter.boxH / _MarkPainter.boxW;
 
     // Material, not ColoredBox: this widget is the app's `home`, and without
     // a Material ancestor the wordmark falls back to the framework's error
     // text style — yellow double-underline included.
     return Material(
-      color: ink,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedBuilder(
-              animation: _controller,
+      color: FormaSplash.ink,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // The mark alone is centred — exactly where the storyboard puts
+          // the static image.
+          Center(
+            child: AnimatedBuilder(
+              animation: _run,
               builder: (_, __) => SizedBox(
                 width: markWidth,
-                height: markWidth * 480 / 1360,
+                height: markHeight,
                 child: CustomPaint(
                   painter: _MarkPainter(
-                    _controller.value,
-                    blue: blue,
-                    unlit: unlit,
+                    _run.value,
+                    blue: FormaSplash.blue,
+                    unlit: FormaSplash.unlit,
                   ),
                 ),
               ),
             ),
-            if (widget.showWordmark) ...[
-              SizedBox(height: markWidth * 0.12),
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (_, __) {
-                  final progress = _controller.value;
-                  final opacity = progress < 0.56
-                      ? 0.0
-                      : progress < 0.74
-                          ? (progress - 0.56) / 0.18
-                          : progress < 0.90
-                              ? 1.0
-                              : 1 - (progress - 0.90) / 0.10;
-                  return Opacity(
-                    opacity: opacity.clamp(0.0, 1.0),
-                    child: Text(
-                      'FORMA',
-                      style: TextStyle(
-                        fontSize: markWidth * 0.078,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: markWidth * 0.028,
-                        color: const Color(0xFFFAFAFA),
+          ),
+          if (widget.showWordmark)
+            Center(
+              child: Transform.translate(
+                // Overlaid under the mark: half the mark, the gap, and half
+                // the wordmark's own line — the mark itself never moves.
+                offset: Offset(
+                  0,
+                  markHeight / 2 + markWidth * 0.12 + markWidth * 0.05,
+                ),
+                child: AnimatedBuilder(
+                  animation: _run,
+                  builder: (_, __) {
+                    final t = _run.value;
+                    final opacity = t < 0.14
+                        ? 0.0
+                        : t < 0.30
+                            ? (t - 0.14) / 0.16
+                            : t < 0.96
+                                ? 1.0
+                                : 1 - (t - 0.96) / 0.04;
+                    return Opacity(
+                      opacity: opacity.clamp(0.0, 1.0),
+                      child: Text(
+                        'FORMA',
+                        style: TextStyle(
+                          fontSize: markWidth * 0.078,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: markWidth * 0.028,
+                          color: const Color(0xFFFAFAFA),
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ],
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
 }
 
 class _MarkPainter extends CustomPainter {
-  _MarkPainter(this.progress, {required this.blue, required this.unlit});
+  _MarkPainter(this.t, {required this.blue, required this.unlit});
 
-  final double progress;
+  final double t;
   final Color blue;
   final Color unlit;
 
-  static const _boxWidth = 1360.0;
-  static const _boxHeight = 480.0;
-  static const _discCenter = Offset(234, 240);
-  static const _discRadius = 232.0;
-  static const _ringCenter = Offset(1118, 240);
-  static const _ringRadius = 199.0;
-  static const _ringWidth = 75.0;
-  static const _barY = 240.0;
-  static const _barStart = 374.0;
-  static const _barEnd = 960.0;
-  static const _barWidth = 130.0;
-  static const _holeRadius = 160.0;
-  static const _floodRadius = 236.5;
+  static const boxW = 1360.0, boxH = 480.0;
+  static const _step = 884.0; // node-to-node spacing = slide distance
+  // segment 1 (lit at frame 0)
+  static const _discC = Offset(234, 240), _discR = 236.5;
+  static const _node1C = Offset(1118, 240);
+  static const _bar1X1 = 374.0, _bar1X2 = 960.0;
+  // segment 2 (revealed ahead, then filled)
+  static const _node2C = Offset(2002, 240);
+  static const _bar2X1 = 1258.0, _bar2X2 = 1844.0;
+  static const _ringR = 199.0, _ringW = 75.0;
+  static const _barY = 240.0, _barW = 130.0;
+  static const _holeR = 160.0, _floodR = 236.5;
 
-  static double _segment(double value, double start, double end) =>
-      ((value - start) / (end - start)).clamp(0.0, 1.0);
+  static double _seg(double t, double a, double b) =>
+      ((t - a) / (b - a)).clamp(0.0, 1.0);
 
-  static double _bezier(
-    double x,
-    double x1,
-    double y1,
-    double x2,
-    double y2,
-  ) {
+  // cubic-bezier(x1,y1,x2,y2), Newton-solved — same curves as the CSS/SVG
+  // version of the splash.
+  static double _bez(double x, double x1, double y1, double x2, double y2) {
     if (x <= 0) return 0;
     if (x >= 1) return 1;
-
-    double a(double p, double q) => 1 - 3 * q + 3 * p;
-    double b(double p, double q) => 3 * q - 6 * p;
     double c(double p) => 3 * p;
-    double calculate(double value, double p, double q) =>
-        ((a(p, q) * value + b(p, q)) * value + c(p)) * value;
-    double slope(double value, double p, double q) =>
-        3 * a(p, q) * value * value + 2 * b(p, q) * value + c(p);
-
-    var value = x;
-    for (var i = 0; i < 8; i++) {
-      final currentSlope = slope(value, x1, x2);
-      if (currentSlope == 0) break;
-      value -= (calculate(value, x1, x2) - x) / currentSlope;
+    double b(double p, double q) => 3 * (q - p) - c(p);
+    double a(double p, double q) => 1 - c(p) - b(p, q);
+    double calc(double u, double p, double q) =>
+        ((a(p, q) * u + b(p, q)) * u + c(p)) * u;
+    double slope(double u, double p, double q) =>
+        3 * a(p, q) * u * u + 2 * b(p, q) * u + c(p);
+    var u = x;
+    for (var i = 0; i < 5; i++) {
+      final s = slope(u, x1, x2);
+      if (s == 0) break;
+      u -= (calc(u, x1, x2) - x) / s;
     }
-    return calculate(value, y1, y2);
+    return calc(u, y1, y2);
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = size.width / _boxWidth;
-    canvas
-      ..save()
-      ..scale(scale);
+    final k = size.width / boxW;
+    canvas.save();
+    canvas.scale(k);
+    // the mark's own bounds clip the exiting node — the "clean exit"
+    canvas.clipRect(const Rect.fromLTWH(0, 0, boxW, boxH));
 
-    final alpha = progress < 0.92 ? 1.0 : 1 - _segment(progress, 0.92, 1);
-    if (alpha < 1) {
-      canvas.saveLayer(
-        const Rect.fromLTWH(0, 0, _boxWidth, _boxHeight),
-        Paint()..color = Color.fromRGBO(255, 255, 255, alpha),
+    final dx = -_step * _bez(_seg(t, 0.12, 0.34), .55, 0, .15, 1);
+    final trackO = _seg(t, 0.10, 0.16);
+    final pBar = _bez(_seg(t, 0.36, 0.58), .4, 0, .4, 1);
+    final pArc = _bez(_seg(t, 0.54, 0.78), .35, 0, .4, 1);
+    final pFill = _bez(_seg(t, 0.76, 0.90), .32, 1.25, .6, 1);
+
+    canvas.translate(dx, 0);
+
+    // the link never enters the next node's hole
+    final barClip = Path()
+      ..addRect(const Rect.fromLTWH(0, 0, 3000, boxH))
+      ..addOval(Rect.fromCircle(center: _node2C, radius: _holeR))
+      ..fillType = PathFillType.evenOdd;
+
+    // dim track ahead (bar + ring), fading in as the slide begins
+    if (trackO > 0) {
+      final trackPaint = Paint()..color = unlit.withValues(alpha: trackO);
+      canvas.save();
+      canvas.clipPath(barClip);
+      canvas.drawLine(
+        const Offset(_bar2X1, _barY),
+        const Offset(_bar2X2, _barY),
+        trackPaint..strokeWidth = _barW,
+      );
+      canvas.restore();
+      canvas.drawCircle(
+        _node2C,
+        _ringR,
+        Paint()
+          ..color = unlit.withValues(alpha: trackO)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _ringW,
       );
     }
 
-    final barClip = Path()
-      ..addRect(const Rect.fromLTWH(0, 0, _boxWidth, _boxHeight))
-      ..addOval(Rect.fromCircle(center: _ringCenter, radius: _holeRadius))
-      ..fillType = PathFillType.evenOdd;
-
-    canvas
-      ..save()
-      ..clipPath(barClip)
-      ..drawLine(
-        const Offset(_barStart, _barY),
-        const Offset(_barEnd, _barY),
+    // lit link of the previous segment — fades out at the end of the slide
+    // so no stub of it peeks past the anchor disc at the mark's left edge
+    final linkO = 1 - _seg(t, 0.28, 0.34);
+    if (linkO > 0) {
+      canvas.drawLine(
+        const Offset(_bar1X1, _barY),
+        const Offset(_bar1X2, _barY),
         Paint()
-          ..color = unlit
-          ..strokeWidth = _barWidth,
-      )
-      ..restore()
-      ..drawCircle(
-        _ringCenter,
-        _ringRadius,
-        Paint()
-          ..color = unlit
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = _ringWidth,
+          ..color = blue.withValues(alpha: linkO)
+          ..strokeWidth = _barW,
       );
+    }
 
-    final arcProgress = _bezier(
-      _segment(progress, 0.30, 0.70),
-      .35,
-      0,
-      .4,
-      1,
-    );
-    if (arcProgress > 0) {
+    // ring lap on the next node
+    if (pArc > 0) {
       canvas.drawArc(
-        Rect.fromCircle(center: _ringCenter, radius: _ringRadius),
-        math.pi,
-        arcProgress * 2 * math.pi,
+        Rect.fromCircle(center: _node2C, radius: _ringR),
+        -math.pi / 2,
+        pArc * 2 * math.pi,
         false,
         Paint()
           ..color = blue
           ..style = PaintingStyle.stroke
-          ..strokeWidth = _ringWidth
+          ..strokeWidth = _ringW
           ..strokeCap = StrokeCap.round,
       );
     }
 
-    final barProgress = _bezier(
-      _segment(progress, 0, 0.32),
-      .4,
-      0,
-      .4,
-      1,
-    );
-    if (barProgress > 0) {
-      canvas
-        ..save()
-        ..clipPath(barClip)
-        ..drawLine(
-          const Offset(_barStart, _barY),
-          Offset(_barStart + (_barEnd - _barStart) * barProgress, _barY),
-          Paint()
-            ..color = blue
-            ..strokeWidth = _barWidth,
-        )
-        ..restore();
-    }
-
-    final fillProgress = _bezier(
-      _segment(progress, 0.70, 0.86),
-      .32,
-      1.25,
-      .6,
-      1,
-    );
-    if (fillProgress > 0) {
-      canvas.drawCircle(
-        _ringCenter,
-        _floodRadius * fillProgress,
-        Paint()..color = blue,
+    // charge along the new link
+    if (pBar > 0) {
+      canvas.save();
+      canvas.clipPath(barClip);
+      canvas.drawLine(
+        const Offset(_bar2X1, _barY),
+        Offset(_bar2X1 + (_bar2X2 - _bar2X1) * pBar, _barY),
+        Paint()
+          ..color = blue
+          ..strokeWidth = _barW,
       );
+      canvas.restore();
     }
 
-    canvas.drawCircle(_discCenter, _discRadius, Paint()..color = blue);
+    // lit node of the previous segment (the new anchor after the slide)
+    canvas.drawCircle(_node1C, _floodR, Paint()..color = blue);
 
-    if (alpha < 1) canvas.restore();
+    // the next node floods
+    if (pFill > 0) {
+      canvas.drawCircle(_node2C, _floodR * pFill, Paint()..color = blue);
+    }
+
+    // mastered disc (exits during the slide)
+    canvas.drawCircle(_discC, _discR, Paint()..color = blue);
+
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_MarkPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(_MarkPainter old) => old.t != t;
 }

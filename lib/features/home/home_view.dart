@@ -615,7 +615,6 @@ class _HomeViewState extends State<HomeView> {
           Expanded(
             child: RestDayView(
               title: isToday ? 'Nothing to do today' : 'Rest day planned',
-              showReason: isToday,
               nextTitle: nextTitle,
               nextWhen: nextWhen,
               onTrainSomethingElse: isToday

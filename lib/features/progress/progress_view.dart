@@ -166,11 +166,11 @@ class _ProgressEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return NoProgramState(
       title: 'See how your strength develops',
-      sub: 'As you train and hit your rep targets, you’ll move along each '
-          'movement path and unlock harder exercises.',
+      sub: 'Hit your rep targets to climb each skill tree and unlock harder '
+          'exercises.',
       onCreateProgram: onCreateProgram,
       children: [
-        const TypeSectionLabel('Movement paths'),
+        const TypeSectionLabel('Skill trees'),
         for (var i = 0; i < _paths.length; i++)
           GhostRow(
             name: programPatternLabel(_paths[i]),

@@ -231,7 +231,7 @@ class _GoalWheelPickerState extends State<GoalWheelPicker> {
                   ),
                 Expanded(
                   child: Text(
-                    family?.title ?? 'Pick your goals',
+                    family?.title ?? 'What do you want to learn?',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -309,10 +309,9 @@ class _GoalWheelPickerState extends State<GoalWheelPicker> {
               ? const Padding(
                   padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: Text(
-                    'Tap a tree to see what it can unlock, then add the '
-                    'skills you want this program to build toward. Nothing '
-                    'calling to you yet? Skip — Forma builds a balanced '
-                    'program either way.',
+                    'Pick anything — you don’t need to be able to do it '
+                    'yet. Or skip, and Forma builds a balanced program '
+                    'either way.',
                     style: TextStyle(
                       fontSize: 13.5,
                       height: 1.55,

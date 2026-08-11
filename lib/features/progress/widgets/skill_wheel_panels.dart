@@ -204,7 +204,7 @@ const _stateLines = {
   WheelNodeState.mastered: 'Cleared. Kept in rotation as a warm-up.',
   WheelNodeState.skipped:
       'Marked as skipped — you can come back to it any time.',
-  WheelNodeState.locked: 'Opens once the step before it is cleared.',
+  WheelNodeState.locked: 'Opens once you clear the step before it.',
 };
 
 // ── Bottom exercise preview ───────────────────────────────────────────
@@ -352,7 +352,7 @@ class WheelExercisePreview extends StatelessWidget {
       final data = journey;
       if (data == null) {
         return const Text(
-          'Train this step to log progress toward the next unlock.',
+          'Train this step to reach the next unlock.',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: body,

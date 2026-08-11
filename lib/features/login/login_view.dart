@@ -44,15 +44,15 @@ class _LoginViewState extends State<LoginView> {
   static const _values = [
     (
       'Learn cool calisthenics skills',
-      'Custom programs based on your current abilities and goals.',
+      'A program built around your level and goals.',
     ),
     (
       'Track progress',
-      'See real improvements as you work towards elite skills.',
+      'Watch your strength climb toward elite skills.',
     ),
     (
       'Get world class advice',
-      'Master advanced skills through proven progressions.',
+      'Every skill broken into steps that work.',
     ),
   ];
 
@@ -62,7 +62,7 @@ class _LoginViewState extends State<LoginView> {
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 30, bottom: 34),
+          padding: const EdgeInsets.only(top: 16, bottom: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -73,12 +73,12 @@ class _LoginViewState extends State<LoginView> {
               // Full-bleed: the graph runs past the page margin on both sides.
               const _ConstellationHero(),
               Padding(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 0),
+                padding: const EdgeInsets.fromLTRB(22, 30, 22, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const _HeroText(),
-                    const SizedBox(height: 26),
+                    const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.only(top: 4),
                       decoration: const BoxDecoration(
@@ -98,7 +98,7 @@ class _LoginViewState extends State<LoginView> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 34),
+                    const SizedBox(height: 30),
                     // The pressed state stays on the page: the button reports
                     // itself rather than opening a spinner over everything.
                     if (_isLoading)
@@ -347,7 +347,7 @@ class _ConstellationHeroState extends State<_ConstellationHero>
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 230,
+      height: 165,
       width: double.infinity,
       child: AnimatedBuilder(
         animation: Listenable.merge([_run, _halo, _glow]),
@@ -405,8 +405,11 @@ class _ConstellationPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // The layout is drawn on a 402 × 230 grid but the box may be shorter —
+    // the graph compresses vertically to fit rather than clipping.
     final scale = size.width / 402;
-    Offset at(Offset point) => Offset(point.dx * scale, point.dy * scale);
+    final scaleY = size.height / 230;
+    Offset at(Offset point) => Offset(point.dx * scale, point.dy * scaleY);
 
     // Blue bloom behind the graph, breathing on its own cycle.
     final glowOpacity = 0.55 + 0.35 * math.sin(glow * 2 * math.pi);

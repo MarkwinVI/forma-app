@@ -190,9 +190,8 @@ class _ProgramViewState extends State<ProgramView> {
             onRefresh: _loadData,
             child: NoProgramState(
               title: 'Build your training program',
-              sub: 'Tell us your goals, training days and available '
-                  'equipment. Forma builds a balanced program, tells you what '
-                  'to train, and adjusts it as you progress.',
+              sub: 'Answer a few questions. Forma builds your program and '
+                  'adjusts it as you get stronger.',
               onCreateProgram: _openProgramSetup,
             ),
           ),

@@ -1587,7 +1587,7 @@ class _DaysSheetState extends State<_DaysSheet> {
 
     return SheetShell(
       title: 'Weekly schedule',
-      sub: 'Pick how many days — or tap the days themselves',
+      sub: 'Pick a number or tap the days themselves',
       footer: PillButton(
         label: _dirty ? 'Save schedule' : 'No changes yet',
         onTap: _dirty ? () => Navigator.of(context).pop(_mask) : null,
@@ -1665,8 +1665,8 @@ class _DaysSheetState extends State<_DaysSheet> {
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Text(
-                'Tap a day to train or rest on it. Sessions repeat in order — '
-                'miss one and it slots into your next training day.',
+                'Sessions repeat in order. Miss one and it slots into your '
+                'next training day.',
                 style: TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textMuted,
@@ -1706,7 +1706,7 @@ class _SplitSheetState extends State<_SplitSheet> {
       case TrainingProgramType.pushPull:
         return 'Alternate pushing and pulling days';
       case TrainingProgramType.upperLower:
-        return 'Alternate upper- and lower-body days';
+        return 'Alternate upper and lower body days';
     }
   }
 
@@ -1716,7 +1716,7 @@ class _SplitSheetState extends State<_SplitSheet> {
 
     return SheetShell(
       title: 'Split',
-      sub: 'How each week is divided into sessions',
+      sub: 'How your week splits into sessions',
       footer: PillButton(
         label: dirty ? 'Save & rebuild sessions' : 'No changes yet',
         onTap: dirty ? () => Navigator.of(context).pop(_picked) : null,
@@ -1793,7 +1793,7 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
               (
                 SetupEquipment.fullGym,
                 'Full gym',
-                'Pull-up bar, rings, barbells — the works',
+                'Pull-up bar, rings, barbells',
               ),
               (
                 SetupEquipment.freeWeights,

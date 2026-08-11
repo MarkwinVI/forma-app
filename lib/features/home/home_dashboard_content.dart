@@ -1511,7 +1511,7 @@ class _EmptySkillPathsCard extends StatelessWidget {
     return const SurfaceCard(
       padding: EdgeInsets.all(18),
       child: Text(
-        'No active skill paths are configured yet.',
+        'No active skill trees are configured yet.',
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
