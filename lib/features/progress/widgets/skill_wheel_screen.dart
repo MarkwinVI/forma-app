@@ -134,7 +134,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       final panelBottomPad = MediaQuery.of(context).padding.bottom +
           (widget.editable ? 14 : 90);
       bottomPanelAllowance =
-          140 + (showCta ? 96 : 0) + (widget.editable ? 0 : 76);
+          112 + (showCta ? 62 : 0) + (widget.editable ? 0 : 76);
       bottomPanel = Container(
         padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
         decoration: const BoxDecoration(
@@ -152,24 +152,18 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
             ),
             if (showCta) ...[
               const SizedBox(height: 10),
-              _TrainFooter(
-                caption: lock != null
-                    ? 'Not advised yet — master ${lock.prereqExerciseName} '
-                        '(${lock.prereqTreeTitle} tree) before starting '
-                        'this one.'
+              PillButton(
+                label: _acting
+                    ? 'Saving…'
                     : familyActive
-                        ? 'This will replace your current '
-                            '${family.title} exercise.'
-                        : 'This starts the ${family.title} progression — '
-                            'the exercise joins your workouts.',
-                warn: lock != null,
-                label: familyActive
-                    ? 'Train this exercise'
-                    : lock != null
-                        ? 'Start anyway'
-                        : 'Start here',
-                busy: _acting,
-                onTap: () => _act(() => widget.onTrainNode!(family, node)),
+                        ? 'Train this exercise'
+                        : lock != null
+                            ? 'Start anyway'
+                            : 'Start here',
+                color: lock != null ? AppColors.amber : null,
+                onTap: _acting
+                    ? null
+                    : () => _act(() => widget.onTrainNode!(family, node)),
               ),
             ],
           ],
@@ -611,48 +605,3 @@ class _StopTrainingPill extends StatelessWidget {
   }
 }
 
-/// Caption + CTA fixed to the bottom edge while a non-active node is
-/// focused: what the tap will do, then the button that does it.
-class _TrainFooter extends StatelessWidget {
-  final String caption;
-  final String label;
-  final bool busy;
-
-  /// The tree is locked: the caption and CTA turn amber — a warning, not an
-  /// invitation.
-  final bool warn;
-  final VoidCallback onTap;
-
-  const _TrainFooter({
-    required this.caption,
-    required this.label,
-    required this.busy,
-    this.warn = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          caption,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-            color: warn ? AppColors.amber : AppColors.textMuted,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 8),
-        PillButton(
-          label: busy ? 'Saving…' : label,
-          color: warn ? AppColors.amber : null,
-          onTap: busy ? null : onTap,
-        ),
-      ],
-    );
-  }
-}

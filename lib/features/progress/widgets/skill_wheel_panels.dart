@@ -288,18 +288,7 @@ class WheelExercisePreview extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _description(),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      height: 1.45,
-                      color: Color(0xFF8A8B93),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(99),
                     child: Container(
@@ -328,15 +317,6 @@ class WheelExercisePreview extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// What the exercise is — its own description when the catalog has one,
-  /// the status line otherwise.
-  String _description() {
-    final exercise = ExerciseCatalog.findById(node.exerciseId);
-    final description = exercise?.description.trim() ?? '';
-    if (description.isNotEmpty) return description;
-    return _stateLines[node.state] ?? '';
   }
 
   Widget _progressCaption() {
