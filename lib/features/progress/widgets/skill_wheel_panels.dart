@@ -659,7 +659,11 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
               width: 14,
               child: Column(
                 children: [
-                  Container(width: 1.5, height: 8, color: railTop),
+                  // Rails split the leftover evenly, so the dot sits at the
+                  // row's vertical centre — level with the exercise name.
+                  Expanded(
+                    child: Container(width: 1.5, color: railTop),
+                  ),
                   Container(
                     width: dotSize,
                     height: dotSize,

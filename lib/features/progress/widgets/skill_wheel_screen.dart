@@ -133,10 +133,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       final showCta = widget.editable && node.state != WheelNodeState.active;
       final panelBottomPad = MediaQuery.of(context).padding.bottom +
           (widget.editable ? 14 : 90);
-      bottomPanelAllowance = 140 +
-          (lock != null ? 76 : 0) +
-          (showCta ? 96 : 0) +
-          (widget.editable ? 0 : 76);
+      bottomPanelAllowance =
+          140 + (showCta ? 96 : 0) + (widget.editable ? 0 : 76);
       bottomPanel = Container(
         padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
         decoration: const BoxDecoration(
@@ -147,10 +145,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (lock != null) ...[
-              _TreeLockBanner(lock: lock, editable: widget.editable),
-              const SizedBox(height: 10),
-            ],
             WheelExercisePreview(
               node: node,
               journey: widget.journeyByCategory[family.categoryId],
@@ -300,16 +294,36 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                               top: BorderSide(color: AppColors.divider),
                             ),
                           ),
-                          child: WheelExerciseCard(
-                            family: family,
-                            focus: _focus,
-                            // The bottom panel floats over the list's tail,
-                            // so the list needs the extra room to scroll
-                            // clear of it.
-                            bottomInset: bottomInset + bottomPanelAllowance,
-                            onPickStep: (flatIndex) =>
-                                _wheelController.goTo(_sel!, flatIndex),
-                            onDismiss: _wheelController.back,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // The lock note is pinned above the list — it
+                              // must stay in view while the steps scroll
+                              // under it.
+                              if (lock != null)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                                  child: _TreeLockBanner(
+                                    lock: lock,
+                                    editable: widget.editable,
+                                  ),
+                                ),
+                              Expanded(
+                                child: WheelExerciseCard(
+                                  family: family,
+                                  focus: _focus,
+                                  // The bottom panel floats over the list's
+                                  // tail, so the list needs the extra room
+                                  // to scroll clear of it.
+                                  bottomInset:
+                                      bottomInset + bottomPanelAllowance,
+                                  onPickStep: (flatIndex) =>
+                                      _wheelController.goTo(_sel!, flatIndex),
+                                  onDismiss: _wheelController.back,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                 ),
