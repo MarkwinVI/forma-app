@@ -272,9 +272,16 @@ class _MarkPainter extends CustomPainter {
     // lit node of the previous segment (the new anchor after the slide)
     canvas.drawCircle(_node1C, _floodR, Paint()..color = blue);
 
-    // the next node floods
+    // The next node floods from its base — the point where the link meets
+    // the disc. The growing circle stays tangent to the full disc's left
+    // edge, so the fill pours in from the connection rather than blooming
+    // out of the centre.
     if (pFill > 0) {
-      canvas.drawCircle(_node2C, _floodR * pFill, Paint()..color = blue);
+      canvas.drawCircle(
+        Offset(_node2C.dx - _floodR + _floodR * pFill, _node2C.dy),
+        _floodR * pFill,
+        Paint()..color = blue,
+      );
     }
 
     // mastered disc (exits during the slide)
