@@ -18,11 +18,13 @@ import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_schedule_service.dart';
+import '../progress/skill_wheel_data.dart';
 import 'program_balance_view.dart';
 import 'program_setup_view.dart';
 import 'program_day_items.dart';
 import 'program_faq.dart';
-import 'program_skill_trees_view.dart';
+import 'program_skill_trees_section.dart';
+import 'program_skill_wheel_view.dart';
 import 'program_week_strip.dart';
 import 'program_workout_editor_view.dart';
 
@@ -327,8 +329,44 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
-  int get _activeTrackCount =>
-      _skillTracks.where((track) => track.included).length;
+  /// One row per running progression, under the map card: the tree's name
+  /// carries the headline, the exercise it currently trains sits under it.
+  List<Widget> _activeTreeRows() {
+    final rows = <({SkillCategory category, SkillTrack track})>[];
+    for (final track in _skillTracks) {
+      if (!track.included) continue;
+      final category = SkillCategoryCatalog.findById(track.skillCategoryId);
+      if (category == null) continue;
+      rows.add((category: category, track: track));
+    }
+
+    return [
+      for (var i = 0; i < rows.length; i++)
+        ProgramActiveTreeRow(
+          treeName: rows[i].category.title,
+          exerciseLine: _activeTreeLine(rows[i].category, rows[i].track),
+          last: i == rows.length - 1,
+          onTap: () => _openSkillWheel(
+            initialCategoryId: rows[i].category.id,
+          ),
+        ),
+    ];
+  }
+
+  /// "Now: Negative Pull Up · step 3 of 6" — the exercise a tree currently
+  /// trains and where it sits on the tree's route.
+  String _activeTreeLine(SkillCategory category, SkillTrack track) {
+    final current = ProgramSessionPlan.currentExerciseForPath(
+      skillCategoryId: category.id,
+      branchId: track.branchId,
+      progressMap: _progress,
+    );
+    if (current == null) return 'In your program';
+    final path = category.pathFor(track.branchId);
+    final index = path.indexOf(current.id);
+    if (index < 0) return 'Now: ${current.name}';
+    return 'Now: ${current.name} · step ${index + 1} of ${path.length}';
+  }
 
   /// What the balance copy needs to know about the program itself — the split
   /// it can schedule around, the equipment it can suggest for, and the trees
@@ -347,153 +385,34 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         },
       );
 
-  /// The week the program would run with [tracks]. One plan per workout
-  /// type — every day running the same session shares its list.
-  List<ProgramWeekDay> _weekFor(List<SkillTrack> tracks) {
-    final programType = _logic.program.programType;
-    final cycle = _weekPlan(_dayMask, programType);
-    final itemsByType = <TrainingSessionType, List<ProgramDayItem>>{
-      for (final sessionType in cycle.toSet())
-        if (sessionType != TrainingSessionType.rest)
-          sessionType: ProgramSessionPlan.loadDay(
-            service: _programService,
-            sessionItemsConfig: _sessionItemsConfig,
-            programType: programType,
-            sessionType: sessionType,
-            branchSelections: _branchSelections,
-            progressMap: _progress,
-            hasGym: _hasGym,
-            skillTracks: tracks,
-          ),
-    };
-    return [
-      for (var i = 0; i < cycle.length; i++)
-        if (cycle[i] != TrainingSessionType.rest)
-          ProgramWeekDay(
-            weekday: i,
-            sessionType: cycle[i],
-            items: itemsByType[cycle[i]]!,
-          ),
-    ];
-  }
-
-  /// What adding or removing a tree would do, worked out by building the week
-  /// both ways rather than guessing.
-  SkillTrackImpact? _impactOfTrackChange(String skillCategoryId, bool include) {
-    final category = SkillCategoryCatalog.findById(skillCategoryId);
-    if (category == null) return null;
-
-    final existing = _skillTracks
-        .where((track) => track.skillCategoryId == skillCategoryId)
-        .firstOrNull;
-    final simulated = [
-      for (final track in _skillTracks)
-        if (track.skillCategoryId != skillCategoryId) track,
-      SkillTrack(
-        skillCategoryId: skillCategoryId,
-        branchId: existing?.branchId ?? category.defaultTrainingPathId,
-        included: include,
-        updatedAt: DateTime.now(),
-      ),
-    ];
-
-    final before = _weekFor(_skillTracks);
-    final after = _weekFor(simulated);
-
-    bool trains(ProgramWeekDay day) =>
-        day.items.any((item) => item.skillCategoryId == skillCategoryId);
-    // Removing names the days it leaves; adding names the days it joins.
-    final source = include ? after : before;
-    final days = [
-      for (final day in source)
-        if (trains(day)) day,
-    ];
-    final dayNames = [for (final day in days) kWeekdayNames[day.weekday]];
-
-    // One kind of workout, and every one of them? Then the copy can say "all
-    // four full-body workouts" instead of listing weekdays. A tree on both
-    // push and pull days (core sits on each) has no single kind to name.
-    final kinds = {for (final day in days) day.sessionType};
-    final kind = kinds.length == 1 ? kinds.single : null;
-    final coversEverySession = kind != null &&
-        source.where((day) => day.sessionType == kind).length == days.length;
-
-    final balanceBefore = balanceFromWeek(before, context: _balanceContext);
-    final balanceAfter = balanceFromWeek(after, context: _balanceContext);
-    final index = balanceBefore.indexWhere(
-      (entry) => entry.group.categories.contains(category.track),
-    );
-    if (index < 0) return null;
-
-    final step = ProgramSessionPlan.currentExerciseForPath(
-      skillCategoryId: skillCategoryId,
-      branchId: existing?.branchId ?? category.defaultTrainingPathId,
-      progressMap: _progress,
-    );
-
-    return SkillTrackImpact(
-      exerciseName: step?.name ?? category.title,
-      dayNames: dayNames,
-      sessionType: kind,
-      coversEverySession: coversEverySession,
-      balanceLabel: balanceBefore[index].label,
-      before: balanceBefore[index].weeklyBlocks,
-      after: balanceAfter[index].weeklyBlocks,
-    );
-  }
-
-  Future<void> _openSkillTrees() async {
+  /// Opens the skill-tree map (the editable wheel), then re-reads progress
+  /// and tracks — a progression started, moved, or stopped there must show
+  /// here the moment the user comes back.
+  Future<void> _openSkillWheel({String? initialCategoryId}) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ProgramSkillTreesView(
-          tracks: _skillTracks,
-          progressMap: _progress,
-          onUpdate: _updateSkillTrack,
-          describeImpact: _impactOfTrackChange,
+        builder: (_) => ProgramSkillWheelView(
+          initialCategoryId: initialCategoryId,
         ),
       ),
     );
-    if (mounted) setState(() {});
-  }
+    if (!mounted) return;
 
-  /// Writes one track change, reloads, and reports which days moved.
-  Future<SkillTrackChange?> _updateSkillTrack({
-    required String skillCategoryId,
-    String? branchId,
-    bool? included,
-  }) async {
     final userId = AuthService().currentUser?.id;
-    if (userId == null) return null;
-
-    final category = SkillCategoryCatalog.findById(skillCategoryId);
-    final existing = _skillTracks
-        .where((track) => track.skillCategoryId == skillCategoryId)
-        .firstOrNull;
-    try {
-      await _skillTrackService.upsertTrack(
-        userId,
-        skillCategoryId: skillCategoryId,
-        branchId: branchId ??
-            existing?.branchId ??
-            category?.defaultTrainingPathId ??
-            'main',
-        included: included ?? existing?.included ?? true,
-      );
-    } catch (error, stackTrace) {
-      debugPrint('Failed to update skill track: $error\n$stackTrace');
-      if (!mounted) return null;
-      return SkillTrackChange(
-        tracks: _skillTracks,
-        message: "Couldn't save that change. Try again.",
-      );
+    if (userId != null) {
+      try {
+        final rows = await ProgressService().fetchAll(userId);
+        if (!mounted) return;
+        setState(() {
+          _progressOverrides.addAll({
+            for (final row in rows) row.exerciseId: row.status,
+          });
+        });
+      } catch (error, stackTrace) {
+        debugPrint('Failed to refresh progress: $error\n$stackTrace');
+      }
     }
-
     await _loadSkillTracks();
-    if (!mounted) return null;
-
-    // The confirmation sheet already spelled out what this does, so there is
-    // nothing left to announce.
-    return SkillTrackChange(tracks: _skillTracks);
   }
 
   @override
@@ -583,13 +502,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                     onTap: _openSplitSheet,
                   ),
                   _ProgramRow(
-                    label: 'Active skill trees',
-                    value: _activeTrackCount == 1
-                        ? '1 tree'
-                        : '$_activeTrackCount trees',
-                    onTap: _openSkillTrees,
-                  ),
-                  _ProgramRow(
                     label: 'Weekly balance',
                     value: balanceSummary(balance),
                     // The only settings value that can carry a warning — an
@@ -638,6 +550,19 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                           onTap: () => _openAdjustSheet(track),
                         ),
                   ],
+                  const _ProgramSectionLabel('Skill trees'),
+                  ProgramSkillTreesCard(
+                    families: buildWheelFamilies(
+                      progressMap: _progress,
+                      skillTracks: _skillTracks,
+                    ),
+                    activeCategoryIds: {
+                      for (final track in _skillTracks)
+                        if (track.included) track.skillCategoryId,
+                    },
+                    onOpen: _openSkillWheel,
+                  ),
+                  ..._activeTreeRows(),
                   const _ProgramSectionLabel('Workouts'),
                   for (var i = 0; i < workouts.length; i++)
                     _WorkoutTypeRow(

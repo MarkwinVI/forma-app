@@ -115,6 +115,11 @@ class SkillWheel extends StatefulWidget {
   /// along with the left/right swipe that drives it.
   final void Function(String goalKey)? onToggleGoal;
 
+  /// Categories with a progression running in the program. Each gets a blue
+  /// rim arc over its sector on the overview, and its curved name brightens
+  /// to match.
+  final Set<String> activeCategoryIds;
+
   const SkillWheel({
     super.key,
     required this.families,
@@ -123,6 +128,7 @@ class SkillWheel extends StatefulWidget {
     this.pickedGoals = const {},
     this.pickableGoals = const {},
     this.onToggleGoal,
+    this.activeCategoryIds = const {},
   });
 
   bool get isPicker => onToggleGoal != null;
@@ -880,13 +886,40 @@ class _WheelPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = Colors.white.withValues(alpha: 0.055 * opacity),
     );
+    // Blue rim arcs: one over each sector whose tree has a progression
+    // running in the program — the wheel's "training now" hint.
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..color =
+          _SkillWheelState._accent.withValues(alpha: 0.85 * opacity);
     for (var i = 0; i < state._n; i++) {
+      if (!state.widget.activeCategoryIds
+          .contains(state.widget.families[i].categoryId)) {
+        continue;
+      }
+      const arcR = rim + 6;
+      final halfSweep =
+          math.min(19.0, stepDeg / 2 - 3) * math.pi / 180;
+      canvas.drawArc(
+        Rect.fromCircle(center: const Offset(_hx, _hy), radius: arcR),
+        state._angRad(i) - halfSweep,
+        2 * halfSweep,
+        false,
+        arcPaint,
+      );
+    }
+    for (var i = 0; i < state._n; i++) {
+      final active = state.widget.activeCategoryIds
+          .contains(state.widget.families[i].categoryId);
       _paintArcLabel(
         canvas,
         state.widget.families[i].title.toUpperCase(),
         state._angDeg(i),
         k,
         opacity,
+        color: active ? const Color(0xFF8FB4F5) : const Color(0xFF66676E),
       );
     }
   }
@@ -950,8 +983,9 @@ class _WheelPainter extends CustomPainter {
     String text,
     double midDeg,
     double k,
-    double opacity,
-  ) {
+    double opacity, {
+    Color color = const Color(0xFF66676E),
+  }) {
     final reversed = math.sin(midDeg * math.pi / 180) > 0.3;
     final r = reversed ? 245.0 : 235.0;
 
@@ -959,7 +993,7 @@ class _WheelPainter extends CustomPainter {
           fontSize: fontSize,
           fontWeight: FontWeight.w700,
           letterSpacing: fontSize * 0.13,
-          color: const Color(0xFF66676E).withValues(alpha: opacity),
+          color: color.withValues(alpha: opacity),
         );
 
     List<TextPainter> layout(double fontSize) => [
