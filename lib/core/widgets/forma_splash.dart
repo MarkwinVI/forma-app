@@ -240,11 +240,13 @@ class _MarkPainter extends CustomPainter {
       );
     }
 
-    // ring lap on the next node
+    // ring lap on the next node — starts at the base, where the link meets
+    // the ring, and sweeps a full clockwise lap (the SVG rotates the dashed
+    // circle 180° for the same reason)
     if (pArc > 0) {
       canvas.drawArc(
         Rect.fromCircle(center: _node2C, radius: _ringR),
-        -math.pi / 2,
+        math.pi,
         pArc * 2 * math.pi,
         false,
         Paint()
@@ -272,16 +274,10 @@ class _MarkPainter extends CustomPainter {
     // lit node of the previous segment (the new anchor after the slide)
     canvas.drawCircle(_node1C, _floodR, Paint()..color = blue);
 
-    // The next node floods from its base — the point where the link meets
-    // the disc. The growing circle stays tangent to the full disc's left
-    // edge, so the fill pours in from the connection rather than blooming
-    // out of the centre.
+    // the next node floods, blooming from its centre like the SVG's
+    // scale(0)→scale(1) flood
     if (pFill > 0) {
-      canvas.drawCircle(
-        Offset(_node2C.dx - _floodR + _floodR * pFill, _node2C.dy),
-        _floodR * pFill,
-        Paint()..color = blue,
-      );
+      canvas.drawCircle(_node2C, _floodR * pFill, Paint()..color = blue);
     }
 
     // mastered disc (exits during the slide)
