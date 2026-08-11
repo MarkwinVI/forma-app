@@ -130,10 +130,11 @@ void main() {
     // Initial focus is the active step — no CTA there.
     expect(find.text('Train this exercise'), findsNothing);
 
-    // Walk the selector onto the locked step via its list row.
+    // Walk the selector onto the locked step via its list row — a step not
+    // yet reached gets the quiet "anyway" offer.
     await tester.tap(find.text('Pullups step 2'));
     await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Train this exercise'), findsOneWidget);
+    expect(find.text('Train it anyway'), findsOneWidget);
   });
 
   testWidgets('program card is the plain door into the trees',

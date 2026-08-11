@@ -152,19 +152,31 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
             ),
             if (showCta) ...[
               const SizedBox(height: 10),
-              PillButton(
-                label: _acting
-                    ? 'Saving…'
-                    : familyActive
-                        ? 'Train this exercise'
-                        : lock != null
-                            ? 'Start anyway'
-                            : 'Start here',
-                color: lock != null ? AppColors.amber : null,
-                onTap: _acting
-                    ? null
-                    : () => _act(() => widget.onTrainNode!(family, node)),
-              ),
+              // A step not yet reached — or a whole tree behind its
+              // prerequisite — offers itself quietly: an outline button
+              // rather than the filled call to action.
+              if (node.state == WheelNodeState.locked || lock != null)
+                _QuietPill(
+                  label: _acting
+                      ? 'Saving…'
+                      : familyActive
+                          ? 'Train it anyway'
+                          : 'Start anyway',
+                  onTap: _acting
+                      ? null
+                      : () => _act(() => widget.onTrainNode!(family, node)),
+                )
+              else
+                PillButton(
+                  label: _acting
+                      ? 'Saving…'
+                      : familyActive
+                          ? 'Train this exercise'
+                          : 'Start here',
+                  onTap: _acting
+                      ? null
+                      : () => _act(() => widget.onTrainNode!(family, node)),
+                ),
             ],
           ],
         ),
@@ -370,6 +382,41 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+/// The quiet variant of the CTA: a hairline outline instead of a filled
+/// pill — for actions the app offers without recommending.
+class _QuietPill extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+
+  const _QuietPill({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.16),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.15,
+            color: onTap == null ? AppColors.textMuted : AppColors.textPrimary,
+          ),
+        ),
+      ),
     );
   }
 }

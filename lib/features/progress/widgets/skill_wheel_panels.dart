@@ -244,14 +244,10 @@ class WheelExercisePreview extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onOpen,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.045),
-          borderRadius: BorderRadius.circular(14),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 2, 2, 4),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _thumb(),
             const SizedBox(width: 12),
@@ -269,14 +265,15 @@ class WheelExercisePreview extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.15,
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.25,
+                            height: 1.25,
                             color: AppColors.textPrimary,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Text(
                         _statusLabels[state]!,
                         style: GoogleFonts.robotoMono(
@@ -288,7 +285,7 @@ class WheelExercisePreview extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(99),
                     child: Container(
@@ -378,15 +375,15 @@ class WheelExercisePreview extends StatelessWidget {
             ? coaching!.imageUrl
             : exercise?.imageUrl);
 
-    const badge = Center(child: _PlayBadge());
+    const badge = Center(child: _PlayBadge(size: 24, iconSize: 13));
 
     return Container(
-      width: 74,
-      height: 74,
+      width: 52,
+      height: 52,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: const Color(0xFF0C0C0E),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: imageUrl == null
@@ -682,17 +679,19 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
                 ),
               ),
             ),
-            Text(
-              _statusLabels[state]!,
-              style: GoogleFonts.robotoMono(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.17,
-                color: focused
-                    ? _statusColors[state]
-                    : const Color(0xFF4A4B52),
+            // A locked step needs no tag — the dim dot already says it.
+            if (state != WheelNodeState.locked)
+              Text(
+                _statusLabels[state]!,
+                style: GoogleFonts.robotoMono(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.17,
+                  color: focused
+                      ? _statusColors[state]
+                      : const Color(0xFF4A4B52),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -702,21 +701,24 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
 
 /// The small circular play affordance on a video thumbnail.
 class _PlayBadge extends StatelessWidget {
-  const _PlayBadge();
+  final double size;
+  final double iconSize;
+
+  const _PlayBadge({this.size = 28, this.iconSize = 17});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 28,
-      height: 28,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(99),
         border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.play_arrow_rounded,
-        size: 17,
+        size: iconSize,
         color: AppColors.textPrimary,
       ),
     );
