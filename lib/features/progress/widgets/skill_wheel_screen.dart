@@ -520,6 +520,17 @@ class _ProgressionsPanel extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
+                      // The running marker: the same blue dot the wheel's
+                      // language uses for an active progression.
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accentBright,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
