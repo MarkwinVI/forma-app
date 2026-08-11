@@ -146,7 +146,7 @@ void main() {
       ),
     )));
 
-    expect(find.text('Edit skill trees'), findsOneWidget);
+    expect(find.text('Edit Progression'), findsOneWidget);
     expect(find.text('OPEN SKILL TREE MAP'), findsNothing);
   });
 

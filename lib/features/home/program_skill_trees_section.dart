@@ -48,7 +48,7 @@ class ProgramSkillTreesCard extends StatelessWidget {
             const SizedBox(width: 18),
             const Expanded(
               child: Text(
-                'Edit skill trees',
+                'Edit Progression',
                 style: TextStyle(
                   fontSize: 19.5,
                   fontWeight: FontWeight.w800,
