@@ -315,6 +315,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
                         families: bundle.families,
                         journeyByCategory: bundle.journeyByCategory,
                         activeCategoryIds: bundle.activeCategoryIds,
+                        treeLocks: bundle.treeLocks,
                         editable: true,
                         onTrainNode: _trainNode,
                         onStopTraining: _stopTraining,

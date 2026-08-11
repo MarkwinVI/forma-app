@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -329,45 +328,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
-  /// One row per running progression, under the map card: the tree's name
-  /// carries the headline, the exercise it currently trains sits under it.
-  List<Widget> _activeTreeRows() {
-    final rows = <({SkillCategory category, SkillTrack track})>[];
-    for (final track in _skillTracks) {
-      if (!track.included) continue;
-      final category = SkillCategoryCatalog.findById(track.skillCategoryId);
-      if (category == null) continue;
-      rows.add((category: category, track: track));
-    }
-
-    return [
-      for (var i = 0; i < rows.length; i++)
-        ProgramActiveTreeRow(
-          treeName: rows[i].category.title,
-          exerciseLine: _activeTreeLine(rows[i].category, rows[i].track),
-          last: i == rows.length - 1,
-          onTap: () => _openSkillWheel(
-            initialCategoryId: rows[i].category.id,
-          ),
-        ),
-    ];
-  }
-
-  /// "Now: Negative Pull Up · step 3 of 6" — the exercise a tree currently
-  /// trains and where it sits on the tree's route.
-  String _activeTreeLine(SkillCategory category, SkillTrack track) {
-    final current = ProgramSessionPlan.currentExerciseForPath(
-      skillCategoryId: category.id,
-      branchId: track.branchId,
-      progressMap: _progress,
-    );
-    if (current == null) return 'In your program';
-    final path = category.pathFor(track.branchId);
-    final index = path.indexOf(current.id);
-    if (index < 0) return 'Now: ${current.name}';
-    return 'Now: ${current.name} · step ${index + 1} of ${path.length}';
-  }
-
   /// What the balance copy needs to know about the program itself — the split
   /// it can schedule around, the equipment it can suggest for, and the trees
   /// it must not suggest adding when they already run.
@@ -465,18 +425,31 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SingleChildScrollView(
-        // Attached to the shell's per-tab controller, so re-tapping the tab
-        // scrolls back to the top.
-        primary: true,
-        // No top SafeArea — the hero runs full-bleed under the status bar.
-        // The bottom padding clears the floating tab bar.
-        padding: const EdgeInsets.only(bottom: 120),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _ProgramHero(),
-            Padding(
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          // Attached to the shell's per-tab controller, so re-tapping the tab
+          // scrolls back to the top.
+          primary: true,
+          // The bottom padding clears the floating tab bar.
+          padding: const EdgeInsets.only(bottom: 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(22, 10, 22, 0),
+                child: Text(
+                  'Program',
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -1.02,
+                    height: 1.05,
+                  ),
+                ),
+              ),
+              Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,9 +533,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                       for (final track in _skillTracks)
                         if (track.included) track.skillCategoryId,
                     },
+                    lockedCategoryIds: computeTreeLocks(_progress).keys.toSet(),
                     onOpen: _openSkillWheel,
                   ),
-                  ..._activeTreeRows(),
                   const _ProgramSectionLabel('Workouts'),
                   for (var i = 0; i < workouts.length; i++)
                     _WorkoutTypeRow(
@@ -578,10 +551,11 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                       last: i == kProgramFaq.length - 1,
                       onTap: () => showFaqSheet(context, kProgramFaq[i]),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -601,158 +575,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       };
 }
 
-/// Hero constellation: an abstract read of the program itself, drawn as a
-/// graph that never fills in — it sets the tone rather than reporting
-/// progress — with the title sitting under it, where the graph has faded out.
-class _ProgramHero extends StatelessWidget {
-  const _ProgramHero();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 318,
-      width: double.infinity,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF10151F), Color(0xFF111219), AppColors.bg],
-                stops: [0, 0.45, 1],
-              ),
-            ),
-            child: SizedBox.expand(),
-          ),
-          CustomPaint(painter: _ConstellationPainter()),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x00111114),
-                  Color(0x80111114),
-                  AppColors.bg,
-                ],
-                stops: [0.55, 0.78, 1],
-              ),
-            ),
-            child: SizedBox.expand(),
-          ),
-          Positioned(
-            left: 22,
-            right: 22,
-            bottom: 16,
-            child: Text(
-              'Program',
-              style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -1.02,
-                height: 1.05,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Paints the hero's node graph — a spine with two branches, laid out on the
-/// 402 × 318 grid the design uses and scaled to the screen width.
-class _ConstellationPainter extends CustomPainter {
-  const _ConstellationPainter();
-
-  static const _spine = [
-    Offset(26, 208),
-    Offset(82, 196),
-    Offset(138, 182),
-    Offset(194, 166),
-    Offset(252, 150),
-    Offset(310, 136),
-    Offset(368, 124),
-  ];
-  static const _upperBranch = [
-    Offset(214, 118),
-    Offset(252, 92),
-    Offset(296, 72),
-  ];
-  static const _lowerBranch = [Offset(286, 196), Offset(330, 216)];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scale = size.width / 402;
-    Offset at(Offset point) => Offset(point.dx * scale, point.dy * scale);
-
-    // Soft accent bloom behind the graph.
-    canvas.drawCircle(
-      at(const Offset(194, 166)),
-      120 * scale,
-      Paint()..color = AppColors.accentPrimary.withValues(alpha: 0.07),
-    );
-    canvas.drawCircle(
-      at(const Offset(310, 110)),
-      80 * scale,
-      Paint()..color = AppColors.accentPrimary.withValues(alpha: 0.05),
-    );
-
-    for (var i = 1; i < _spine.length; i++) {
-      _segment(canvas, at(_spine[i - 1]), at(_spine[i]));
-    }
-    _segment(canvas, at(_spine[3]), at(_upperBranch[0]));
-    _segment(canvas, at(_upperBranch[0]), at(_upperBranch[1]));
-    _segment(canvas, at(_upperBranch[1]), at(_upperBranch[2]));
-    _segment(canvas, at(_spine[4]), at(_lowerBranch[0]));
-    _segment(canvas, at(_lowerBranch[0]), at(_lowerBranch[1]));
-
-    for (final point in [..._spine, ..._upperBranch, ..._lowerBranch]) {
-      _node(canvas, at(point), scale);
-    }
-  }
-
-  void _segment(Canvas canvas, Offset a, Offset b) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round
-      ..color = Colors.white.withValues(alpha: 0.14);
-
-    // Every link is dashed — the same "nothing here yet" language the rest of
-    // the app uses.
-    const dash = 4.0, gap = 5.0;
-    final total = (b - a).distance;
-    final step = (b - a) / total;
-    for (var travelled = 0.0; travelled < total; travelled += dash + gap) {
-      final end = math.min(travelled + dash, total);
-      canvas.drawLine(a + step * travelled, a + step * end, paint);
-    }
-  }
-
-  void _node(Canvas canvas, Offset center, double scale) {
-    final radius = 6.5 * scale;
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()..color = Colors.white.withValues(alpha: 0.10),
-    );
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.3
-        ..color = Colors.white.withValues(alpha: 0.22),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_ConstellationPainter oldDelegate) => false;
-}
 
 /// Mono, uppercase section eyebrow — the type-led alternative to a card
 /// header, with an optional subtitle and trailing action.

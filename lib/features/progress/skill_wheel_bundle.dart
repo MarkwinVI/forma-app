@@ -38,12 +38,15 @@ class SkillWheelBundle {
 
   bool get hasProgram => logicSnapshot != null;
 
-  /// Categories with a progression running — the trees the wheel marks with
-  /// a blue rim arc.
+  /// Categories with a progression running — the trees the wheel names in
+  /// blue.
   Set<String> get activeCategoryIds => {
         for (final track in skillTracks)
           if (track.included) track.skillCategoryId,
       };
+
+  /// Trees behind an unmet prerequisite, with what unlocks them.
+  Map<String, WheelTreeLock> get treeLocks => computeTreeLocks(progressMap);
 }
 
 /// Fetches progress, program logic, workout history and skill tracks, then

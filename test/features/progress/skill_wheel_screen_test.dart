@@ -56,13 +56,13 @@ void main() {
     )));
     await tester.pump(const Duration(milliseconds: 800));
 
-    expect(find.text('YOUR PROGRESSIONS'), findsOneWidget);
-    expect(find.text('2 RUNNING'), findsOneWidget);
-    // The active step of each running tree, tagged with its tree's name.
-    expect(find.text('Pullups step 1'), findsOneWidget);
-    expect(find.text('PUSHUPS'), findsOneWidget);
+    expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
+    // Tree name leads each row; the active step reads under it.
+    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Now: Pullups step 1'), findsOneWidget);
+    expect(find.text('Pushups'), findsOneWidget);
     // A tree that isn't running stays off the list.
-    expect(find.text('SQUAT'), findsNothing);
+    expect(find.text('Now: Squat step 0'), findsNothing);
   });
 
   testWidgets(
@@ -75,9 +75,39 @@ void main() {
     )));
     await tester.pump(const Duration(milliseconds: 800));
 
-    expect(find.text('YOUR PROGRESSIONS'), findsNothing);
+    expect(find.text('ACTIVE SKILL TREES'), findsNothing);
     expect(find.text('STOP TRAINING'), findsNothing);
     expect(find.text('Train this exercise'), findsNothing);
+  });
+
+  testWidgets('a locked tree shows the padlock note and Start anyway',
+      (tester) async {
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      treeLocks: const {
+        'c': WheelTreeLock(
+          prereqExerciseName: 'Diamond Pushup',
+          prereqTreeTitle: 'Pushups',
+        ),
+      },
+      editable: true,
+      initialCategoryId: 'c',
+      onTrainNode: (_, __) async {},
+      onStopTraining: (_) async {},
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    // The lock note names the prerequisite, and the CTA softens to a
+    // warned "Start anyway".
+    expect(
+      find.textContaining('Locked tree.', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text('Start anyway'), findsOneWidget);
+    expect(find.text('Start here'), findsNothing);
   });
 
   testWidgets(
@@ -106,7 +136,8 @@ void main() {
     expect(find.text('Train this exercise'), findsOneWidget);
   });
 
-  testWidgets('program card counts running progressions', (tester) async {
+  testWidgets('program card is the plain door into the trees',
+      (tester) async {
     await tester.pumpWidget(_host(SingleChildScrollView(
       child: ProgramSkillTreesCard(
         families: _families(),
@@ -115,8 +146,8 @@ void main() {
       ),
     )));
 
-    expect(find.text('2 progressions running'), findsOneWidget);
-    expect(find.text('OPEN SKILL TREE MAP'), findsOneWidget);
+    expect(find.text('Edit skill trees'), findsOneWidget);
+    expect(find.text('OPEN SKILL TREE MAP'), findsNothing);
   });
 
   testWidgets('moved toast shows the OUT → IN pair with UNDO',

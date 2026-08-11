@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -13,19 +12,22 @@ import '../progress/widgets/skill_wheel.dart';
 class ProgramSkillTreesCard extends StatelessWidget {
   final List<WheelFamily> families;
   final Set<String> activeCategoryIds;
+
+  /// Trees behind an unmet prerequisite — dashed gray arcs on the
+  /// miniature, where running trees get blue ones.
+  final Set<String> lockedCategoryIds;
   final VoidCallback onOpen;
 
   const ProgramSkillTreesCard({
     super.key,
     required this.families,
     required this.activeCategoryIds,
+    this.lockedCategoryIds = const {},
     required this.onOpen,
   });
 
   @override
   Widget build(BuildContext context) {
-    final running = activeCategoryIds.length;
-
     return Pressable(
       onTap: onOpen,
       child: Padding(
@@ -39,124 +41,24 @@ class ProgramSkillTreesCard extends StatelessWidget {
                 painter: _MiniWheelPainter(
                   families: families,
                   activeCategoryIds: activeCategoryIds,
+                  lockedCategoryIds: lockedCategoryIds,
                 ),
               ),
             ),
             const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    running == 0
-                        ? 'No progressions running'
-                        : running == 1
-                            ? '1 progression running'
-                            : '$running progressions running',
-                    style: const TextStyle(
-                      fontSize: 19.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                      height: 1.15,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Start, move, or stop a progression on the map — your '
-                    'workouts follow.',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      height: 1.45,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  Text(
-                    'OPEN SKILL TREE MAP',
-                    style: GoogleFonts.robotoMono(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.25,
-                      color: AppColors.amber,
-                    ),
-                  ),
-                ],
+            const Expanded(
+              child: Text(
+                'Edit skill trees',
+                style: TextStyle(
+                  fontSize: 19.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                  height: 1.15,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.textMuted,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// One running progression under the card: the tree carries the headline,
-/// the exercise it currently trains sits under it.
-class ProgramActiveTreeRow extends StatelessWidget {
-  final String treeName;
-  final String exerciseLine;
-  final bool last;
-  final VoidCallback onTap;
-
-  const ProgramActiveTreeRow({
-    super.key,
-    required this.treeName,
-    required this.exerciseLine,
-    required this.last,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.only(top: 17, bottom: 19),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    treeName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                      height: 1.15,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    exerciseLine,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      letterSpacing: -0.14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
             const Icon(
               Icons.chevron_right_rounded,
               size: 18,
@@ -176,10 +78,12 @@ class ProgramActiveTreeRow extends StatelessWidget {
 class _MiniWheelPainter extends CustomPainter {
   final List<WheelFamily> families;
   final Set<String> activeCategoryIds;
+  final Set<String> lockedCategoryIds;
 
   _MiniWheelPainter({
     required this.families,
     required this.activeCategoryIds,
+    required this.lockedCategoryIds,
   });
 
   static const double _r0 = 20, _reach = 209, _rim = 250;
@@ -210,9 +114,9 @@ class _MiniWheelPainter extends CustomPainter {
       final active = activeCategoryIds.contains(family.categoryId);
       final angle = (-90 + stepDeg * i) * math.pi / 180;
 
+      const arcR = _rim + 12;
+      final halfSweep = math.min(19.0, stepDeg / 2 - 3) * math.pi / 180;
       if (active) {
-        const arcR = _rim + 12;
-        final halfSweep = math.min(19.0, stepDeg / 2 - 3) * math.pi / 180;
         canvas.drawArc(
           Rect.fromCircle(center: Offset.zero, radius: arcR),
           angle - halfSweep,
@@ -224,6 +128,26 @@ class _MiniWheelPainter extends CustomPainter {
             ..strokeCap = StrokeCap.round
             ..color = AppColors.accentBright.withValues(alpha: 0.85),
         );
+      } else if (lockedCategoryIds.contains(family.categoryId)) {
+        // Locked behind a prerequisite: the same arc, dashed and gray.
+        final dashPaint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0xFF66676E);
+        const dashLen = 7.0, gapLen = 12.0;
+        const dashSweep = dashLen / arcR, gapSweep = gapLen / arcR;
+        for (var a = angle - halfSweep;
+            a < angle + halfSweep;
+            a += dashSweep + gapSweep) {
+          canvas.drawArc(
+            Rect.fromCircle(center: Offset.zero, radius: arcR),
+            a,
+            math.min(dashSweep, angle + halfSweep - a),
+            false,
+            dashPaint,
+          );
+        }
       }
 
       _paintFamily(

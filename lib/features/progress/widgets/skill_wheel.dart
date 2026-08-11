@@ -76,6 +76,19 @@ class WheelFamily {
   }
 }
 
+/// Why a tree is locked: the prerequisite step in another tree that has to
+/// be mastered first. Only unmet locks are represented — a passed
+/// prerequisite means no lock at all.
+class WheelTreeLock {
+  final String prereqExerciseName;
+  final String prereqTreeTitle;
+
+  const WheelTreeLock({
+    required this.prereqExerciseName,
+    required this.prereqTreeTitle,
+  });
+}
+
 /// Lets the screen around the wheel drive it (back arrow, queue rows).
 class SkillWheelController {
   _SkillWheelState? _state;
@@ -120,6 +133,12 @@ class SkillWheel extends StatefulWidget {
   /// to match.
   final Set<String> activeCategoryIds;
 
+  /// Categories still behind an unmet prerequisite in another tree. Each
+  /// gets a dashed gray rim arc and a padlock badge on its spoke, and its
+  /// curved name dims. A tree that is actively training draws as active —
+  /// the user started it anyway, so it is running.
+  final Set<String> lockedCategoryIds;
+
   const SkillWheel({
     super.key,
     required this.families,
@@ -129,6 +148,7 @@ class SkillWheel extends StatefulWidget {
     this.pickableGoals = const {},
     this.onToggleGoal,
     this.activeCategoryIds = const {},
+    this.lockedCategoryIds = const {},
   });
 
   bool get isPicker => onToggleGoal != null;
@@ -886,42 +906,75 @@ class _WheelPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = Colors.white.withValues(alpha: 0.055 * opacity),
     );
-    // Blue rim arcs: one over each sector whose tree has a progression
-    // running in the program — the wheel's "training now" hint.
-    final arcPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..color =
-          _SkillWheelState._accent.withValues(alpha: 0.85 * opacity);
+    // The "training now" hint lives in the curved names: active trees read
+    // in blue, locked trees dim behind their padlock. (Rim arcs were tried
+    // and clipped at the screen edge — the labels carry it instead.)
     for (var i = 0; i < state._n; i++) {
-      if (!state.widget.activeCategoryIds
-          .contains(state.widget.families[i].categoryId)) {
-        continue;
+      final categoryId = state.widget.families[i].categoryId;
+      final active = state.widget.activeCategoryIds.contains(categoryId);
+      final locked = !active &&
+          state.widget.lockedCategoryIds.contains(categoryId);
+      if (locked) {
+        _paintPadlock(canvas, state._angRad(i), opacity);
       }
-      const arcR = rim + 6;
-      final halfSweep =
-          math.min(19.0, stepDeg / 2 - 3) * math.pi / 180;
-      canvas.drawArc(
-        Rect.fromCircle(center: const Offset(_hx, _hy), radius: arcR),
-        state._angRad(i) - halfSweep,
-        2 * halfSweep,
-        false,
-        arcPaint,
-      );
-    }
-    for (var i = 0; i < state._n; i++) {
-      final active = state.widget.activeCategoryIds
-          .contains(state.widget.families[i].categoryId);
       _paintArcLabel(
         canvas,
         state.widget.families[i].title.toUpperCase(),
         state._angDeg(i),
         k,
         opacity,
-        color: active ? const Color(0xFF8FB4F5) : const Color(0xFF66676E),
+        color: active
+            ? const Color(0xFF8FB4F5)
+            : locked
+                ? const Color(0xFF4A4B52)
+                : const Color(0xFF66676E),
       );
     }
+  }
+
+  /// The padlock badge on a locked tree's spoke, just inside the rim: the
+  /// tree waits on a prerequisite in another tree.
+  void _paintPadlock(Canvas canvas, double angleRad, double opacity) {
+    const r = _SkillWheelState._rim - 22;
+    final lx = _hx + r * math.cos(angleRad);
+    final ly = _hy + r * math.sin(angleRad);
+
+    canvas.drawCircle(
+      Offset(lx, ly),
+      10.5,
+      Paint()..color = _SkillWheelState._cardBg.withValues(alpha: opacity),
+    );
+    canvas.drawCircle(
+      Offset(lx, ly),
+      10.5,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = Colors.white.withValues(alpha: 0.22 * opacity),
+    );
+    final metal = const Color(0xFF8A8B93).withValues(alpha: opacity);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(lx - 4, ly - 1, 8, 6.6),
+        const Radius.circular(1.8),
+      ),
+      Paint()..color = metal,
+    );
+    final shackle = Path()
+      ..moveTo(lx - 2.5, ly - 1)
+      ..lineTo(lx - 2.5, ly - 2.8)
+      ..arcToPoint(
+        Offset(lx + 2.5, ly - 2.8),
+        radius: const Radius.circular(2.5),
+      )
+      ..lineTo(lx + 2.5, ly - 1);
+    canvas.drawPath(
+      shackle,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = metal,
+    );
   }
 
   /// A goal marker on a branch tip: dashed and hollow while the goal is

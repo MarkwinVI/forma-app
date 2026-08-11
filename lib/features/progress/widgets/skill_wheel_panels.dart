@@ -184,18 +184,258 @@ class PerformancePanel extends StatelessWidget {
   }
 }
 
-// ── Focused exercise card ─────────────────────────────────────────────
+// ── Focused exercise: shared status metadata ──────────────────────────
 
-/// One card for the exercise the selector sits on — status, progress, the
-/// exercise's own demo clip, and under it the whole tree as a scrollable
-/// list. Tapping a row moves the selector; moving the selector (swipe or
-/// node tap) scrolls the list to the step it landed on.
+const _statusLabels = {
+  WheelNodeState.active: 'NOW',
+  WheelNodeState.mastered: 'MASTERED',
+  WheelNodeState.skipped: 'SKIPPED',
+  WheelNodeState.locked: 'LOCKED',
+};
+
+const _statusColors = {
+  WheelNodeState.active: AppColors.accentBright,
+  WheelNodeState.mastered: AppColors.green,
+  WheelNodeState.skipped: AppColors.green,
+  WheelNodeState.locked: AppColors.textMuted,
+};
+
+const _stateLines = {
+  WheelNodeState.mastered: 'Cleared. Kept in rotation as a warm-up.',
+  WheelNodeState.skipped:
+      'Marked as skipped — you can come back to it any time.',
+  WheelNodeState.locked: 'Opens once the step before it is cleared.',
+};
+
+// ── Bottom exercise preview ───────────────────────────────────────────
+
+/// The panel that grows at the bottom while a node is selected: the
+/// exercise's demo as a square thumbnail, its name and status, what it is,
+/// and its progress bar. Tapping it opens the exercise's own page.
+class WheelExercisePreview extends StatelessWidget {
+  final WheelNode node;
+  final JourneySkillProgressData? journey;
+  final VoidCallback onOpen;
+
+  const WheelExercisePreview({
+    super.key,
+    required this.node,
+    required this.journey,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final state = node.state;
+
+    final double barPct;
+    final Color barColor;
+    if (state == WheelNodeState.active) {
+      barPct = (journey?.progressPercent ?? 0).clamp(0.0, 1.0);
+      barColor = AppColors.accentBright;
+    } else if (state == WheelNodeState.locked) {
+      barPct = 0;
+      barColor = Colors.white.withValues(alpha: 0.08);
+    } else {
+      barPct = 1;
+      barColor = AppColors.green;
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onOpen,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.045),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _thumb(),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          node.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.15,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _statusLabels[state]!,
+                        style: GoogleFonts.robotoMono(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                          color: _statusColors[state],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _description(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.45,
+                      color: Color(0xFF8A8B93),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: Container(
+                      height: 4,
+                      color: Colors.white.withValues(alpha: 0.08),
+                      alignment: Alignment.centerLeft,
+                      child: AnimatedFractionallySizedBox(
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                        widthFactor: barPct,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: barColor,
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  _progressCaption(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// What the exercise is — its own description when the catalog has one,
+  /// the status line otherwise.
+  String _description() {
+    final exercise = ExerciseCatalog.findById(node.exerciseId);
+    final description = exercise?.description.trim() ?? '';
+    if (description.isNotEmpty) return description;
+    return _stateLines[node.state] ?? '';
+  }
+
+  Widget _progressCaption() {
+    const body =
+        TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF8A8B93));
+    const figure = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
+    );
+
+    if (node.state == WheelNodeState.active) {
+      final data = journey;
+      if (data == null) {
+        return const Text(
+          'Train this step to log progress toward the next unlock.',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: body,
+        );
+      }
+      final unit = data.isTimed ? 's' : ' reps';
+      return Text.rich(
+        TextSpan(
+          text: 'Last ',
+          style: body,
+          children: [
+            TextSpan(text: '${data.lastSessionVolume}', style: figure),
+            const TextSpan(text: ' of '),
+            TextSpan(text: '${data.targetVolume}$unit', style: figure),
+            const TextSpan(
+              text: ' (total)',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+          ],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return Text(
+      _stateLines[node.state] ?? '',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: body,
+    );
+  }
+
+  /// The demo as a square thumbnail — the clip's poster frame when there is
+  /// footage, the exercise's still otherwise, a play badge always.
+  Widget _thumb() {
+    final exercise = ExerciseCatalog.findById(node.exerciseId);
+    final coaching =
+        exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
+    final videoId = coaching?.videoId;
+    final imageUrl = videoId != null
+        ? 'https://img.youtube.com/vi/$videoId/hqdefault.jpg'
+        : ((coaching?.imageUrl.isNotEmpty ?? false)
+            ? coaching!.imageUrl
+            : exercise?.imageUrl);
+
+    const badge = Center(child: _PlayBadge());
+
+    return Container(
+      width: 74,
+      height: 74,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0C0C0E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: imageUrl == null
+          ? badge
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+                badge,
+              ],
+            ),
+    );
+  }
+}
+
+// ── Focused tree: the step list ───────────────────────────────────────
+
+/// The whole tree as a scrollable list grouped by branch. Tapping a row
+/// moves the selector; moving the selector (swipe or node tap) scrolls the
+/// list to the step it landed on. The selected step's detail lives in the
+/// bottom preview panel, not here.
 class WheelExerciseCard extends StatefulWidget {
   final WheelFamily family;
   final int focus;
-  final JourneySkillProgressData? journey;
   final double bottomInset;
-  final void Function(WheelNode node) onOpenExercise;
   final void Function(int flatIndex) onPickStep;
 
   /// Called when the list is pulled down past its top — the gesture that
@@ -206,9 +446,7 @@ class WheelExerciseCard extends StatefulWidget {
     super.key,
     required this.family,
     required this.focus,
-    required this.journey,
     required this.bottomInset,
-    required this.onOpenExercise,
     required this.onPickStep,
     this.onDismiss,
   });
@@ -230,36 +468,6 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   /// One dismiss per drag: re-armed when the scroll settles.
   bool _dismissArmed = true;
 
-  /// The media row folds away once the list is scrolled ~28px down, and
-  /// comes back after a deliberate upward drag or when the selector moves.
-  bool _mediaHidden = false;
-
-  /// Drag distance since the last direction change — both the fold and the
-  /// reveal need a real pull, not a single wobbly tick.
-  double _upScrollAccum = 0;
-  double _downScrollAccum = 0;
-
-  static const _statusLabels = {
-    WheelNodeState.active: 'NOW',
-    WheelNodeState.mastered: 'MASTERED',
-    WheelNodeState.skipped: 'SKIPPED',
-    WheelNodeState.locked: 'LOCKED',
-  };
-
-  static const _statusColors = {
-    WheelNodeState.active: AppColors.accentBright,
-    WheelNodeState.mastered: AppColors.green,
-    WheelNodeState.skipped: AppColors.green,
-    WheelNodeState.locked: AppColors.textMuted,
-  };
-
-  static const _stateLines = {
-    WheelNodeState.mastered: 'Cleared. Kept in rotation as a warm-up.',
-    WheelNodeState.skipped:
-        'Marked as skipped — you can come back to it any time.',
-    WheelNodeState.locked: 'Opens once the step before it is cleared.',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -271,7 +479,6 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.focus != widget.focus ||
         oldWidget.family.categoryId != widget.family.categoryId) {
-      _mediaHidden = false;
       _scrollToFocus(jump: oldWidget.family.categoryId !=
           widget.family.categoryId);
     }
@@ -309,218 +516,10 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   Widget build(BuildContext context) {
     final flat = widget.family.flat;
     final index = widget.focus.clamp(0, flat.length - 1);
-    final node = flat[index];
-    final state = node.state;
-
-    final double barPct;
-    final Color barColor;
-    if (state == WheelNodeState.active) {
-      barPct = (widget.journey?.progressPercent ?? 0).clamp(0.0, 1.0);
-      barColor = AppColors.accentBright;
-    } else if (state == WheelNodeState.locked) {
-      barPct = 0;
-      barColor = Colors.white.withValues(alpha: 0.08);
-    } else {
-      barPct = 1;
-      barColor = AppColors.green;
-    }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // The status + name block opens the exercise's own page.
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => widget.onOpenExercise(node),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _statusLabels[state]!,
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.4,
-                    color: _statusColors[state],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  node.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: Container(
-              height: 5,
-              color: Colors.white.withValues(alpha: 0.08),
-              alignment: Alignment.centerLeft,
-              child: AnimatedFractionallySizedBox(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOut,
-                widthFactor: barPct,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Compact media row: the demo as a small thumbnail, the progress
-          // line beside it. Tapping the thumb opens the exercise page with
-          // the full player. It folds away while browsing the list.
-          ClipRect(
-            child: AnimatedAlign(
-              alignment: Alignment.topCenter,
-              heightFactor: _mediaHidden ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              child: AnimatedOpacity(
-                opacity: _mediaHidden ? 0.0 : 1.0,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => widget.onOpenExercise(node),
-                    child: Row(
-                      children: [
-                        _videoThumb(node),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _progressLine(node),
-                              const SizedBox(height: 6),
-                              Text(
-                                'WATCH DEMO',
-                                style: GoogleFonts.robotoMono(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.17,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Expanded(child: _groupedList(flat, index)),
-        ],
-      ),
-    );
-  }
-
-  Widget _progressLine(WheelNode node) {
-    const body =
-        TextStyle(fontSize: 12.5, height: 1.45, color: Color(0xFF8A8B93));
-    const figure = TextStyle(
-      fontSize: 12.5,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-    );
-
-    if (node.state == WheelNodeState.active) {
-      final data = widget.journey;
-      if (data == null) {
-        return const Text(
-          'Train this step to log progress toward the next unlock.',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: body,
-        );
-      }
-      final unit = data.isTimed ? 's' : ' reps';
-      return Text.rich(
-        TextSpan(
-          text: 'Last ',
-          style: body,
-          children: [
-            TextSpan(text: '${data.lastSessionVolume}', style: figure),
-            const TextSpan(text: ' of '),
-            TextSpan(text: '${data.targetVolume}$unit', style: figure),
-            const TextSpan(
-              text: ' (total)',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-          ],
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      );
-    }
-    return Text(
-      _stateLines[node.state] ?? '',
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-      style: body,
-    );
-  }
-
-  /// The focused exercise's demo as a compact 16:9 thumbnail — the clip's
-  /// own poster frame when there is footage, the exercise's still otherwise,
-  /// a play badge always.
-  Widget _videoThumb(WheelNode node) {
-    final exercise = ExerciseCatalog.findById(node.exerciseId);
-    final coaching =
-        exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
-    final videoId = coaching?.videoId;
-    final imageUrl = videoId != null
-        ? 'https://img.youtube.com/vi/$videoId/hqdefault.jpg'
-        : ((coaching?.imageUrl.isNotEmpty ?? false)
-            ? coaching!.imageUrl
-            : exercise?.imageUrl);
-
-    const badge = Center(
-      child: _PlayBadge(),
-    );
-
-    return Container(
-      width: 104,
-      height: 104 * 9 / 16,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0C0C0E),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF27272A)),
-      ),
-      child: imageUrl == null
-          ? badge
-          : Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-                badge,
-              ],
-            ),
+      padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
+      child: _groupedList(flat, index),
     );
   }
 
@@ -567,28 +566,6 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
               widget.onDismiss != null) {
             _dismissArmed = false;
             widget.onDismiss!();
-          }
-          // Fold the media row away while browsing down the list; a
-          // deliberate upward pull brings it back.
-          if (notification.dragDetails != null) {
-            final delta = notification.scrollDelta ?? 0;
-            if (delta > 0) {
-              _upScrollAccum = 0;
-              _downScrollAccum += delta;
-              if (!_mediaHidden &&
-                  _downScrollAccum > 48 &&
-                  notification.metrics.pixels > 28) {
-                setState(() => _mediaHidden = true);
-              }
-            } else if (delta < 0) {
-              _downScrollAccum = 0;
-              if (_mediaHidden) {
-                _upScrollAccum -= delta;
-                if (_upScrollAccum > 28) {
-                  setState(() => _mediaHidden = false);
-                }
-              }
-            }
           }
         } else if (notification is ScrollEndNotification) {
           _dismissArmed = true;

@@ -76,6 +76,30 @@ String? goalTipKey(String goalId, List<WheelFamily> families) {
   return null;
 }
 
+/// The trees still behind an unmet prerequisite, keyed by category id —
+/// muscle-up until the pull-up is mastered, handstand pushups and planche
+/// until the diamond pushup is. A cleared (mastered or skipped)
+/// prerequisite removes the lock entirely.
+Map<String, WheelTreeLock> computeTreeLocks(
+  Map<String, ExerciseStatus> progressMap,
+) {
+  final locks = <String, WheelTreeLock>{};
+  for (final category in SkillCategoryCatalog.browsable()) {
+    final requirement = category.unlockRequirement;
+    if (requirement == null || !category.isLockedFor(progressMap)) continue;
+    locks[category.id] = WheelTreeLock(
+      prereqExerciseName: ExerciseCatalog.findById(requirement.exerciseId)
+              ?.name ??
+          requirement.exerciseId,
+      prereqTreeTitle:
+          SkillCategoryCatalog.findById(requirement.targetSkillCategoryId)
+                  ?.title ??
+              'another',
+    );
+  }
+  return locks;
+}
+
 String _branchFor(SkillCategory category, List<SkillTrack> skillTracks) {
   for (final track in skillTracks) {
     if (track.skillCategoryId == category.id) return track.branchId;

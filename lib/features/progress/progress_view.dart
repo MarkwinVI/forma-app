@@ -138,6 +138,7 @@ class _ProgressViewState extends State<ProgressView> {
                     families: bundle!.families,
                     journeyByCategory: bundle.journeyByCategory,
                     activeCategoryIds: bundle.activeCategoryIds,
+                    treeLocks: bundle.treeLocks,
                     onOpenExercise: _openExercise,
                   ),
       ),
