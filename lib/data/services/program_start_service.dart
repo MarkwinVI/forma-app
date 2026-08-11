@@ -73,9 +73,6 @@ class ProgramStartPlanner {
   /// Steps back from the answer's own exercise for a 1–9 rep answer.
   static const int partialRepStepBack = 2;
 
-  /// Fraction of the reported squat 1RM used as the opening working weight.
-  static const double barbellSquatOneRepMaxFraction = 0.70;
-
   /// Loaded lifts open at 3 × 5 working sets and climb from there.
   static const int loadedLiftSets = 3;
   static const int loadedLiftStartReps = 5;
@@ -305,14 +302,15 @@ class ProgramStartPlanner {
     return (referenceIndex - partialRepStepBack).clamp(0, referenceIndex);
   }
 
-  /// Opening barbell squat weight: 70% of the reported 1RM, rounded down to
-  /// a loadable 2.5 kg. Null when the user did not report a maximum.
-  static double? barbellSquatStartKg(int? oneRepMaxKg) {
-    if (oneRepMaxKg == null || oneRepMaxKg <= 0) return null;
+  /// Opening barbell squat weight: the setup answer is the bar weight the
+  /// user can squat for five reps, which IS a working weight for the 3 × 5
+  /// opening sets — it just gets rounded down to a loadable 2.5 kg. Null
+  /// when the user left the answer blank.
+  static double? barbellSquatStartKg(int? fiveRepWeightKg) {
+    if (fiveRepWeightKg == null || fiveRepWeightKg <= 0) return null;
 
-    final working = oneRepMaxKg * barbellSquatOneRepMaxFraction;
     final rounded =
-        (working / barbellIncrementKg).floor() * barbellIncrementKg;
+        (fiveRepWeightKg / barbellIncrementKg).floor() * barbellIncrementKg;
     return rounded < barbellIncrementKg ? barbellIncrementKg : rounded;
   }
 }

@@ -1,8 +1,17 @@
+import 'package:flutter/foundation.dart';
+
 import 'supabase_service.dart';
 
 /// Profile values that affect training prescriptions.
 class UserProfileService {
   final _client = SupabaseService.client;
+
+  /// The last bodyweight this session has seen, updated by every fetch and
+  /// save. Open screens that derive weights from bodyweight — the live
+  /// workout's "+100% bodyweight" targets — listen and repaint, so a profile
+  /// edit lands everywhere at once.
+  static final ValueNotifier<double?> bodyweightKgNotifier =
+      ValueNotifier(null);
 
   Future<double?> fetchBodyweightKg(String userId) async {
     final data = await _client
@@ -10,7 +19,9 @@ class UserProfileService {
         .select('bodyweight_kg')
         .eq('id', userId)
         .maybeSingle();
-    return (data?['bodyweight_kg'] as num?)?.toDouble();
+    final value = (data?['bodyweight_kg'] as num?)?.toDouble();
+    bodyweightKgNotifier.value = value;
+    return value;
   }
 
   Future<void> updateBodyweightKg(String userId, double bodyweightKg) async {
@@ -24,5 +35,6 @@ class UserProfileService {
     await _client.from('users').update({
       'bodyweight_kg': bodyweightKg,
     }).eq('id', userId);
+    bodyweightKgNotifier.value = bodyweightKg;
   }
 }

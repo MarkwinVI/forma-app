@@ -6,6 +6,7 @@ import '../../../core/widgets/type_led.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/models/progression_event_model.dart';
 import '../../../data/services/dev_clock_service.dart';
+import '../../../data/services/weight_unit_service.dart';
 import '../program_faq.dart';
 
 const _weekdayNames = [
@@ -494,13 +495,11 @@ _InsightItem? _itemFor(ProgressionEvent event) {
   }
 }
 
-/// A working weight as the app writes it: whole numbers stay whole, halves
-/// keep their decimal, and a missing weight reads as a dash.
+/// A working weight as the app writes it: shown in the display unit, whole
+/// numbers stay whole, halves keep their decimal, and a missing weight reads
+/// as a dash.
 String weightLabel(double? weightKg) {
   if (weightKg == null) return '—';
-  final rounded = (weightKg * 10).round() / 10;
-  final value = rounded == rounded.roundToDouble()
-      ? rounded.round().toString()
-      : rounded.toStringAsFixed(1);
-  return '$value kg';
+  return '${WeightUnitService.displayText(weightKg)} '
+      '${WeightUnitService.unit.suffix}';
 }

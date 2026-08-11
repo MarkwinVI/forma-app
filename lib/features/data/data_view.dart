@@ -8,8 +8,10 @@ import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/user_profile_service.dart';
 import '../settings/settings_view.dart';
 import '../exercises/exercise_picker_view.dart';
+import 'bodyweight_row.dart';
 import 'calendar_view.dart';
 import 'past_workout_detail_view.dart';
 
@@ -28,10 +30,13 @@ class DataView extends StatefulWidget {
 class _DataViewState extends State<DataView> {
   final _exerciseLogService = ExerciseLogService();
   final _devClockService = DevClockService();
+  final _profileService = UserProfileService();
 
   bool _loading = true;
   String? _error;
   List<PastWorkout> _workouts = const [];
+  double? _bodyweightKg;
+  bool _bodyweightJustSaved = false;
 
   @override
   void initState() {
@@ -69,9 +74,16 @@ class _DataViewState extends State<DataView> {
       await _devClockService.loadOffset();
       final workouts = await _exerciseLogService.fetchPastWorkouts(userId);
 
+      // Best-effort: the tab still works without a bodyweight to show.
+      double? bodyweightKg;
+      try {
+        bodyweightKg = await _profileService.fetchBodyweightKg(userId);
+      } catch (_) {}
+
       if (!mounted) return;
       setState(() {
         _workouts = workouts;
+        _bodyweightKg = bodyweightKg;
         _loading = false;
       });
     } catch (error) {
@@ -109,6 +121,36 @@ class _DataViewState extends State<DataView> {
       MaterialPageRoute(builder: (_) => const SettingsView()),
     );
     await _loadData();
+  }
+
+  Future<void> _openBodyweightSheet() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    final savedKg = await showBodyweightSheet(
+      context,
+      kg: _bodyweightKg,
+      now: _devClockService.now(),
+    );
+    if (savedKg == null || !mounted) return;
+
+    final previous = _bodyweightKg;
+    setState(() {
+      _bodyweightKg = savedKg;
+      _bodyweightJustSaved = true;
+    });
+    try {
+      await _profileService.updateBodyweightKg(userId, savedKg);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _bodyweightKg = previous;
+        _bodyweightJustSaved = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't update bodyweight.")),
+      );
+    }
   }
 
   void _openAllSessions() {
@@ -199,6 +241,11 @@ class _DataViewState extends State<DataView> {
         now: now,
         onDataChanged: _loadData,
         showActivityHeatmap: false,
+      ),
+      BodyweightRow(
+        kg: _bodyweightKg,
+        savedNow: _bodyweightJustSaved,
+        onOpen: _openBodyweightSheet,
       ),
       const TypeSectionLabel('Recent sessions'),
       if (recentWorkouts.isEmpty)

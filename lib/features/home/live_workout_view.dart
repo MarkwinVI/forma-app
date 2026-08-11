@@ -22,6 +22,7 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/user_profile_service.dart';
+import '../../data/services/weight_unit_service.dart';
 import '../../data/services/workout_notification_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
@@ -124,6 +125,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // A profile edit mid-session must reach the "+% bodyweight" goal chips,
+    // so the bodyweight is live rather than a one-time fetch.
+    UserProfileService.bodyweightKgNotifier.addListener(_onBodyweightChanged);
     _devClockService.loadOffset();
     _startedAt = DateTime.now();
     _sessionItems = List.of(widget.recommendation.items);
@@ -171,6 +175,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    UserProfileService.bodyweightKgNotifier.removeListener(
+      _onBodyweightChanged,
+    );
     _ticker?.cancel();
     _toastTimer?.cancel();
     for (final notifier in _liveSetNotifiers.values) {
@@ -180,6 +187,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _liveActivityService.onAction = null;
     _liveActivityService.end();
     super.dispose();
+  }
+
+  void _onBodyweightChanged() {
+    final value = UserProfileService.bodyweightKgNotifier.value;
+    if (!mounted || value == null || value == _bodyweightKg) return;
+    setState(() => _bodyweightKg = value);
   }
 
   @override
@@ -1665,10 +1678,11 @@ class _WeightFieldState extends State<_WeightField> {
 
   /// With nothing logged before, the field rests on zero rather than a dash —
   /// a load is a number you adjust up from, not a blank.
-  String get _hintText => widget.weightKg > 0 ? _kgText(widget.weightKg) : '0';
+  String get _hintText =>
+      widget.weightKg > 0 ? _weightText(widget.weightKg) : '0';
 
   String get _desiredText =>
-      _showsValue && widget.weightKg > 0 ? _kgText(widget.weightKg) : '';
+      _showsValue && widget.weightKg > 0 ? _weightText(widget.weightKg) : '';
 
   @override
   void initState() {
@@ -1706,7 +1720,8 @@ class _WeightFieldState extends State<_WeightField> {
 
   void _handleChanged(String text) {
     final parsed = double.tryParse(text.trim().replaceAll(',', '.'));
-    if (parsed != null) widget.onChanged(parsed);
+    // Typed in the display unit, stored in canonical kilograms.
+    if (parsed != null) widget.onChanged(WeightUnitService.toKg(parsed));
   }
 
   @override
@@ -2020,7 +2035,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
   });
 
   /// A reps-and-weight lift logs a load alongside its reps, so the grid takes
-  /// its kg column and the LAST column reads "60kg x 8".
+  /// its weight column and the LAST column reads "60kg x 8".
   bool get isWeighted => item.exercise.isWeighted;
 
   /// The prescribed set, written the way the set itself is: a loaded lift
@@ -2029,7 +2044,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
   String? get _goalLabel {
     if (goalValue == null) return null;
     final value = '$goalValue${isTimed ? 's' : ''}';
-    return isWeighted ? '${_kgText(goalWeightKg ?? 0)}kg x $value' : value;
+    return isWeighted
+        ? '${_weightText(goalWeightKg ?? 0)}${WeightUnitService.unit.suffix} '
+            'x $value'
+        : value;
   }
 
   /// LAST and GOAL both spell out a load on a weighted row, and two of those
@@ -2138,7 +2156,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
             leading: _columnHead('SET'),
             middle: _columnHead('LAST'),
             goal: _goalLabel == null ? null : _columnHead('GOAL'),
-            weight: isWeighted ? _columnHead('KG') : null,
+            weight: isWeighted
+                ? _columnHead(
+                    WeightUnitService.unit == WeightUnit.lb ? 'LBS' : 'KG')
+                : null,
             value: _columnHead(isTimed ? 'TIME' : 'REPS'),
             trailing: const SizedBox.shrink(),
           ),
@@ -3289,19 +3310,19 @@ class _WorkoutSetDraft {
   }
 }
 
-/// A load as the app writes it inside a row: whole numbers stay whole, halves
-/// keep their decimal. No unit — the column is already headed KG.
-String _kgText(double weightKg) {
-  final rounded = (weightKg * 10).round() / 10;
-  return rounded == rounded.roundToDouble() ? '${rounded.round()}' : '$rounded';
-}
+/// A load as the app writes it inside a row: converted to the display unit,
+/// whole numbers stay whole, halves keep their decimal. No unit suffix — the
+/// column is already headed KG or LBS.
+String _weightText(double weightKg) => WeightUnitService.displayText(weightKg);
 
 /// What the last session's matching set read as, for the LAST column. Reps
 /// are a count and holds are seconds; anything carrying load leads with it —
 /// "60kg x 8", or "20kg x 30s" for a loaded hold.
 String previousSetLabel(Exercise exercise, ExerciseSet? set) {
   if (set == null) return _noPreviousLabel;
-  final load = exercise.isWeighted ? '${_kgText(set.weightKg)}kg x ' : '';
+  final load = exercise.isWeighted
+      ? '${_weightText(set.weightKg)}${WeightUnitService.unit.suffix} x '
+      : '';
 
   if (exercise.isTimed) {
     return set.durationSeconds > 0

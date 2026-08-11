@@ -27,7 +27,10 @@ Future<void> completeProgramSetup({
   );
 
   final plan = ProgramStartPlanner.planFor(
-    hasGym: result.hasGym,
+    // Free weights count the same as a full gym here: everywhere the plan
+    // chooses between a loaded and a bodyweight lift, the question is only
+    // whether there is a bar to load.
+    hasGym: result.hasWeights,
     // The wizard no longer asks about goal skills, so setup plans the default
     // branch of every tree. The planner still takes goals for whatever picks
     // them next; it just has none to work from here.

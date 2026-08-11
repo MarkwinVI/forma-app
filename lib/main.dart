@@ -8,6 +8,7 @@ import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/onboarding_service.dart';
+import 'data/services/weight_unit_service.dart';
 import 'features/login/login_view.dart';
 import 'features/onboarding/onboarding_view.dart';
 import 'features/shell/shell_view.dart';
@@ -26,6 +27,9 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+
+  // The remembered kg/lbs choice, restored before any weight is rendered.
+  await WeightUnitService.load();
 
   runApp(const FormaApp());
 }

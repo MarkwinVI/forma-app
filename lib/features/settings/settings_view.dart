@@ -6,7 +6,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_tools_service.dart';
-import '../../data/services/user_profile_service.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -68,8 +67,6 @@ class SettingsView extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              _BodyweightSetting(userId: userId),
               const Divider(height: 32, color: AppColors.borderPrimary),
               if (kDebugMode) ...[
                 const SizedBox(height: 8),
@@ -95,141 +92,6 @@ class SettingsView extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _BodyweightSetting extends StatefulWidget {
-  final String userId;
-
-  const _BodyweightSetting({required this.userId});
-
-  @override
-  State<_BodyweightSetting> createState() => _BodyweightSettingState();
-}
-
-class _BodyweightSettingState extends State<_BodyweightSetting> {
-  final _service = UserProfileService();
-  final _controller = TextEditingController();
-  bool _loading = true;
-  bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    if (widget.userId == 'Not available') {
-      if (mounted) setState(() => _loading = false);
-      return;
-    }
-    try {
-      final value = await _service.fetchBodyweightKg(widget.userId);
-      if (!mounted) return;
-      if (value != null) {
-        _controller.text = value == value.roundToDouble()
-            ? value.round().toString()
-            : value.toStringAsFixed(1);
-      }
-    } catch (_) {
-      // Keep the field editable; a save can retry the profile request.
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _save() async {
-    final value = double.tryParse(_controller.text.replaceAll(',', '.'));
-    if (value == null || value < 20 || value > 400 || _saving) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a bodyweight from 20 to 400 kg.')),
-      );
-      return;
-    }
-    setState(() => _saving = true);
-    try {
-      await _service.updateBodyweightKg(widget.userId, value);
-      if (!mounted) return;
-      FocusScope.of(context).unfocus();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bodyweight updated')),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't update bodyweight.")),
-      );
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'BODYWEIGHT',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textMuted,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                enabled: !_loading && !_saving,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
-                ],
-                decoration: InputDecoration(
-                  hintText: _loading ? 'Loading…' : 'Enter bodyweight',
-                  suffixText: 'kg',
-                  filled: true,
-                  fillColor: AppColors.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                onSubmitted: (_) => _save(),
-              ),
-            ),
-            const SizedBox(width: 10),
-            FilledButton(
-              onPressed: _loading || _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Used to calculate weighted skill-tree targets.',
-          style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-        ),
-      ],
     );
   }
 }

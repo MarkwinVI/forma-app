@@ -9,6 +9,7 @@ import '../models/progression_suggestion_model.dart';
 import '../models/training_program_model.dart';
 import 'exercise_log_service.dart';
 import 'progress_service.dart';
+import 'weight_unit_service.dart';
 import 'progression_event_service.dart';
 import 'progression_suggestion_service.dart';
 import 'skill_track_service.dart';
@@ -208,12 +209,8 @@ class ExerciseProgressionService {
   static String? weightLabelFor(ExerciseProgress? progress) {
     final weightKg = progress?.currentTargetWeightKg;
     if (weightKg == null || weightKg <= 0) return null;
-
-    final rounded = (weightKg * 10).round() / 10;
-    final value = rounded == rounded.roundToDouble()
-        ? rounded.round().toString()
-        : rounded.toStringAsFixed(1);
-    return '$value kg';
+    return '${WeightUnitService.displayText(weightKg)} '
+        '${WeightUnitService.unit.suffix}';
   }
 
   /// Per-set target for standalone (non-progression) exercises, derived from

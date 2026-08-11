@@ -2,31 +2,55 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../core/widgets/weight_entry.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/weight_unit_service.dart';
+
+/// What the user trains with, asked once during setup. Both weighted answers
+/// — a full gym or just a barbell and dumbbells — count as access to weights
+/// wherever the skill trees choose between a loaded and a bodyweight lift.
+enum SetupEquipment { fullGym, freeWeights, none }
+
+extension SetupEquipmentX on SetupEquipment {
+  String get dbValue => switch (this) {
+        SetupEquipment.fullGym => 'gym',
+        SetupEquipment.freeWeights => 'barbell',
+        SetupEquipment.none => 'none',
+      };
+
+  bool get hasWeights => this != SetupEquipment.none;
+}
 
 /// Answers collected by the "Build your program" wizard.
 class ProgramSetupResult {
   final int daysPerWeek;
   final TrainingProgramType split;
-  final bool hasGym;
+  final SetupEquipment equipment;
   final double bodyweightKg;
 
-  /// exercise id -> reps/kg value, or null when the user picked "I don't know".
+  /// exercise id -> reps (or squat kg), null when the user left it blank.
   final Map<String, int?> startingStrength;
 
   const ProgramSetupResult({
     required this.daysPerWeek,
     required this.split,
-    required this.hasGym,
+    required this.equipment,
     required this.bodyweightKg,
     required this.startingStrength,
   });
+
+  /// Whether loaded progressions (barbell squat, weighted skills) are on the
+  /// table — true for both the full-gym and free-weights answers.
+  bool get hasWeights => equipment.hasWeights;
 
   Map<String, dynamic> toMap() {
     return {
       'days_per_week': daysPerWeek,
       'split': split.dbValue,
-      'has_gym': hasGym,
+      'equipment': equipment.dbValue,
+      // The pre-equipment readers of this flag all mean "can load a bar",
+      // so free weights count the same as a full gym.
+      'has_gym': hasWeights,
       'bodyweight_kg': bodyweightKg,
       'starting_strength': startingStrength,
     };
@@ -37,82 +61,75 @@ class ProgramSetupResult {
 
 const _days = [2, 3, 4, 5, 6];
 
-class _SplitOption {
-  final TrainingProgramType type;
-  final String label;
-  final String sub;
+class _DayHint {
+  final String tag;
+  final String desc;
 
-  const _SplitOption(this.type, this.label, this.sub);
+  const _DayHint(this.tag, this.desc);
 }
 
-const _splits = [
-  _SplitOption(
-    TrainingProgramType.fullBody,
-    'Full body',
-    'Every session trains everything',
+/// What each weekly frequency means for the person picking it.
+const _dayHints = {
+  2: _DayHint(
+    'Light',
+    'Good if you’re short on time or just getting started. You’ll still '
+        'progress, but more slowly than with 3 days.',
   ),
-  _SplitOption(
-    TrainingProgramType.upperLower,
-    'Upper / Lower',
-    'Alternate upper- and lower-body days',
+  3: _DayHint(
+    'Recommended',
+    'Ideal for most beginners and intermediates. Enough training frequency '
+        'to progress while leaving plenty of time to recover.',
   ),
-  _SplitOption(
-    TrainingProgramType.pushPull,
-    'Push / Pull',
-    'One movement focus per session',
+  4: _DayHint(
+    'More training',
+    'Great for intermediate trainees. We’ll use a split so each movement '
+        'gets trained twice per week.',
   ),
-];
+  5: _DayHint(
+    'High frequency',
+    'Best suited to a split routine and people who want to train most days '
+        'of the week.',
+  ),
+  6: _DayHint(
+    'Advanced',
+    'Best for experienced trainees using a split who can recover well from '
+        'frequent training.',
+  ),
+};
 
-TrainingProgramType _recommendedSplit(int days) {
-  if (days <= 3) return TrainingProgramType.fullBody;
-  if (days == 4) return TrainingProgramType.upperLower;
-  return TrainingProgramType.pushPull;
-}
+/// The split is no longer a question: 2–3 days runs full body, 4–6 days a
+/// push/pull rotation.
+TrainingProgramType splitForDays(int days) =>
+    days <= 3 ? TrainingProgramType.fullBody : TrainingProgramType.pushPull;
 
 class _StrengthExercise {
   final String id;
   final String label;
-  final String sub;
+  final String? hint;
   final IconData icon;
-  final String unit;
+
+  /// Whether the answer is a load (kg/lbs) rather than a rep count.
+  final bool isWeight;
   final int step;
   final int def;
-  final int min;
   final int max;
-  final bool allowUnknown;
 
   const _StrengthExercise({
     required this.id,
     required this.label,
-    required this.sub,
+    this.hint,
     required this.icon,
-    this.unit = 'reps',
+    this.isWeight = false,
     this.step = 1,
     required this.def,
-    this.min = 0,
     required this.max,
-    this.allowUnknown = true,
   });
 }
 
-const _bodyweight = _StrengthExercise(
-  id: 'bodyweight',
-  label: 'Bodyweight',
-  sub: 'Used to set weighted skill targets',
-  icon: Icons.monitor_weight_outlined,
-  unit: 'kg',
-  step: 1,
-  def: 75,
-  min: 20,
-  max: 300,
-  allowUnknown: false,
-);
-
-const _baseStrengthExercises = [
+const _repStrengthExercises = [
   _StrengthExercise(
     id: 'pushups',
     label: 'Push-ups',
-    sub: 'Max reps in one set',
     icon: Icons.trending_flat_rounded,
     def: 10,
     max: 100,
@@ -120,7 +137,6 @@ const _baseStrengthExercises = [
   _StrengthExercise(
     id: 'pullups',
     label: 'Pull-ups',
-    sub: 'Max reps in one set',
     icon: Icons.arrow_upward_rounded,
     def: 3,
     max: 50,
@@ -128,58 +144,40 @@ const _baseStrengthExercises = [
   _StrengthExercise(
     id: 'dips',
     label: 'Dips',
-    sub: 'Max reps in one set',
     icon: Icons.north_rounded,
     def: 5,
     max: 50,
   ),
 ];
 
-/// Asked when the user has a gym: strength gate for the squat is a loaded
-/// one-rep max.
-const _barbellSquat = _StrengthExercise(
-  id: 'squat',
-  label: 'Barbell squat',
-  sub: 'One rep maximum',
-  icon: Icons.accessibility_new_rounded,
-  unit: 'kg',
-  step: 5,
-  def: 40,
-  max: 300,
-);
+/// Asked with access to weights: the bar weight squatted for five reps, in
+/// the display unit the wizard is running in.
+_StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
+      id: 'squat',
+      label: 'Barbell squat',
+      hint: 'Bar weight × 5 reps',
+      icon: Icons.accessibility_new_rounded,
+      isWeight: true,
+      step: 5,
+      def: unit == WeightUnit.lb ? 90 : 40,
+      max: unit == WeightUnit.lb ? 660 : 300,
+    );
 
-/// Asked when the user has no gym: bodyweight squats measured in reps instead.
+/// Asked without weights: bodyweight squats measured in reps instead.
 const _bodyweightSquat = _StrengthExercise(
   id: 'squat_bw',
-  label: 'Squat',
-  sub: 'Max reps in one set',
+  label: 'Bodyweight squats',
   icon: Icons.accessibility_new_rounded,
-  def: 20,
+  def: 15,
   max: 100,
 );
 
-/// The starting-strength questions for the current equipment choice — the
-/// squat gate swaps between a barbell 1RM and a bodyweight rep count.
-List<_StrengthExercise> _strengthExercisesFor({required bool hasGym}) => [
-      _bodyweight,
-      ..._baseStrengthExercises,
-      hasGym ? _barbellSquat : _bodyweightSquat,
-    ];
-
-/// Every strength question that can appear, so an answer is retained when the
-/// user toggles gym access back and forth.
-const _allStrengthExercises = [
-  _bodyweight,
-  ..._baseStrengthExercises,
-  _barbellSquat,
-  _bodyweightSquat,
-];
-
 // ── Wizard ──────────────────────────────────────────────────
 
-/// Four-step "Build your program" wizard: schedule, split, equipment and
-/// starting strength. Calls [onComplete] with the answers, then shows the
-/// "program ready" confirmation.
+/// Four-step "Build your program" wizard: schedule, equipment, bodyweight
+/// and starting strength. The split comes from the schedule ([splitForDays])
+/// rather than being asked. Calls [onComplete] with the answers, then shows
+/// the "program ready" confirmation.
 class ProgramSetupView extends StatefulWidget {
   final Future<void> Function(ProgramSetupResult result) onComplete;
 
@@ -192,32 +190,98 @@ class ProgramSetupView extends StatefulWidget {
   State<ProgramSetupView> createState() => _ProgramSetupViewState();
 }
 
-class _StrengthAnswer {
-  int value;
-  bool unsure;
-
-  _StrengthAnswer(this.value) : unsure = false;
-}
-
 class _ProgramSetupViewState extends State<ProgramSetupView> {
   static const _stepCount = 4;
 
   int _step = 0;
-  int _days = 3;
-  TrainingProgramType? _split; // null = follow recommendation
-  bool _hasGym = true;
-  final Map<String, _StrengthAnswer> _strength = {
-    for (final exercise in _allStrengthExercises)
-      exercise.id: _StrengthAnswer(exercise.def),
+
+  /// Schedule and equipment start unanswered — the CTA holds until a pick.
+  int? _days;
+  SetupEquipment? _equipment;
+
+  /// Bodyweight is kept in the unit being displayed; only the finish
+  /// converts to canonical kilograms.
+  WeightUnit _unit = WeightUnitService.unit;
+  late double _bw = _unit == WeightUnit.lb ? 165 : 75;
+  String _bwEdit = '';
+  bool _bwEditing = false;
+
+  /// Starting-strength answers, unset until the user adds a number. The
+  /// squat value lives in the display unit while the wizard runs.
+  final Map<String, int?> _strength = {
+    'pushups': null,
+    'pullups': null,
+    'dips': null,
+    'squat': null,
+    'squat_bw': null,
   };
+
   bool _saving = false;
   bool _ready = false;
 
-  TrainingProgramType get _effectiveSplit => _split ?? _recommendedSplit(_days);
+  double get _bwMin => _unit == WeightUnit.lb ? 66 : 30;
+  double get _bwMax => _unit == WeightUnit.lb ? 550 : 250;
+
+  TrainingProgramType get _split => splitForDays(_days ?? 3);
 
   bool get _isLastStep => _step == _stepCount - 1;
 
+  bool get _ctaDisabled =>
+      (_step == 0 && _days == null) || (_step == 1 && _equipment == null);
+
+  /// The wizard's unit toggle is the app-wide choice: picking lbs here flips
+  /// every weight the app shows from now on.
+  void _setUnit(WeightUnit unit) {
+    if (unit == _unit) return;
+    _commitBodyweight();
+    setState(() {
+      final kg = _unit == WeightUnit.lb ? _bw * WeightUnitService.kgPerLb : _bw;
+      // The squat answer is a load, so it travels with the unit — rounded to
+      // something loadable rather than a raw conversion.
+      final squat = _strength['squat'];
+      if (squat != null) {
+        final converted = unit == WeightUnit.lb
+            ? squat / WeightUnitService.kgPerLb
+            : squat * WeightUnitService.kgPerLb;
+        _strength['squat'] = ((converted / 5).round() * 5)
+            .clamp(5, _barbellSquatFor(unit).max)
+            .toInt();
+      }
+      _unit = unit;
+      _bw = _clampBw(
+        unit == WeightUnit.lb
+            ? (kg / WeightUnitService.kgPerLb).roundToDouble()
+            : kg.roundToDouble(),
+      );
+      _bwEdit = '';
+    });
+    WeightUnitService.set(unit);
+  }
+
+  double _clampBw(double value) => value.clamp(_bwMin, _bwMax);
+
+  /// Folds whatever was typed into the bodyweight value and closes the
+  /// keypad. Runs when the step is left in any direction.
+  void _commitBodyweight() {
+    if (!_bwEditing && _bwEdit.isEmpty) return;
+    final parsed = double.tryParse(_bwEdit);
+    setState(() {
+      if (parsed != null && parsed > 0) _bw = _clampBw(parsed);
+      _bwEdit = '';
+      _bwEditing = false;
+    });
+  }
+
+  void _pressBwKey(String key) {
+    setState(() {
+      _bwEdit = weightEntryPress(_bwEdit, key);
+      final parsed = double.tryParse(_bwEdit);
+      if (parsed != null) _bw = parsed.clamp(0, _bwMax).toDouble();
+    });
+  }
+
   Future<void> _next() async {
+    if (_step == 2) _commitBodyweight();
     if (!_isLastStep) {
       setState(() => _step += 1);
       return;
@@ -226,6 +290,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   }
 
   void _back() {
+    if (_step == 2) _commitBodyweight();
     if (_step > 0) {
       setState(() => _step -= 1);
     } else {
@@ -234,22 +299,34 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   }
 
   Future<void> _finish() async {
+    final equipment = _equipment ?? SetupEquipment.fullGym;
+    final bodyweightKg = _clampBw(_bw) *
+        (_unit == WeightUnit.lb ? WeightUnitService.kgPerLb : 1);
+    final squat = _strength['squat'];
+
     setState(() => _saving = true);
     try {
       await widget.onComplete(
         ProgramSetupResult(
-          daysPerWeek: _days,
-          split: _effectiveSplit,
-          hasGym: _hasGym,
-          bodyweightKg: _strength[_bodyweight.id]!.value.toDouble(),
-          // Only record the squat variant matching the equipment choice, so
-          // the opposite variant's default doesn't leak into the answers.
+          daysPerWeek: _days ?? 3,
+          split: _split,
+          equipment: equipment,
+          bodyweightKg: bodyweightKg,
+          // Only the squat variant matching the equipment answer is
+          // recorded, and its load is converted back to canonical kilograms.
           startingStrength: {
-            for (final exercise in _strengthExercisesFor(hasGym: _hasGym))
-              if (exercise.id != _bodyweight.id)
-                exercise.id: _strength[exercise.id]!.unsure
-                    ? null
-                    : _strength[exercise.id]!.value,
+            'pushups': _strength['pushups'],
+            'pullups': _strength['pullups'],
+            'dips': _strength['dips'],
+            if (equipment.hasWeights)
+              'squat': squat == null
+                  ? null
+                  : (_unit == WeightUnit.lb
+                          ? squat * WeightUnitService.kgPerLb
+                          : squat.toDouble())
+                      .round()
+            else
+              'squat_bw': _strength['squat_bw'],
           },
         ),
       );
@@ -274,8 +351,8 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   Widget build(BuildContext context) {
     if (_ready) {
       return _ProgramSummaryView(
-        days: _days,
-        split: _effectiveSplit,
+        days: _days ?? 3,
+        split: _split,
         onDone: () => Navigator.of(context).pop(),
       );
     }
@@ -306,18 +383,28 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                         days: _days,
                         onChanged: (value) => setState(() => _days = value),
                       ),
-                    1 => _SplitStep(
-                        days: _days,
-                        split: _effectiveSplit,
-                        onChanged: (value) => setState(() => _split = value),
+                    1 => _EquipmentStep(
+                        equipment: _equipment,
+                        onChanged: (value) =>
+                            setState(() => _equipment = value),
                       ),
-                    2 => _EquipmentStep(
-                        hasGym: _hasGym,
-                        onChanged: (value) => setState(() => _hasGym = value),
+                    2 => _WeightStep(
+                        bw: _bw,
+                        edit: _bwEdit,
+                        editing: _bwEditing,
+                        unit: _unit,
+                        min: _bwMin,
+                        onUnitChanged: _setUnit,
+                        onTapValue: () => setState(() {
+                          _bwEditing = true;
+                          _bwEdit = '';
+                        }),
+                        onKey: _pressBwKey,
                       ),
                     3 => _StrengthStep(
                         strength: _strength,
-                        hasGym: _hasGym,
+                        hasWeights: _equipment?.hasWeights ?? true,
+                        unit: _unit,
                         onChanged: () => setState(() {}),
                       ),
                     _ => const SizedBox.shrink(),
@@ -325,10 +412,14 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                 ),
               ),
               _WizardFooter(
-                label: _isLastStep ? 'Build my program' : 'Continue',
-                trailingChevron: !_isLastStep,
+                label: _isLastStep
+                    ? 'Build my program'
+                    : _ctaDisabled
+                        ? 'Pick one to continue'
+                        : 'Continue',
+                trailingChevron: !_isLastStep && !_ctaDisabled,
                 saving: _saving,
-                onTap: _next,
+                onTap: _ctaDisabled ? null : _next,
               ),
             ],
           ),
@@ -427,7 +518,7 @@ class _WizardFooter extends StatelessWidget {
   final String label;
   final bool trailingChevron;
   final bool saving;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _WizardFooter({
     required this.label,
@@ -513,9 +604,9 @@ class _StepTitle extends StatelessWidget {
 }
 
 class _InfoNote extends StatelessWidget {
-  final String text;
+  final InlineSpan message;
 
-  const _InfoNote({required this.text});
+  const _InfoNote({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -526,8 +617,8 @@ class _InfoNote extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Text(
-        text,
+      child: Text.rich(
+        message,
         style: const TextStyle(
           fontSize: 13,
           color: AppColors.textSecondary,
@@ -579,18 +670,19 @@ class _WarnNote extends StatelessWidget {
   }
 }
 
+/// Radio card with a one-sentence "why" explainer under the choice.
 class _RadioRow extends StatelessWidget {
   final bool selected;
   final String label;
   final String sub;
-  final String? badge;
+  final String? why;
   final VoidCallback onTap;
 
   const _RadioRow({
     required this.selected,
     required this.label,
     required this.sub,
-    this.badge,
+    this.why,
     required this.onTap,
   });
 
@@ -608,10 +700,12 @@ class _RadioRow extends StatelessWidget {
               : null,
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 22,
               height: 22,
+              margin: const EdgeInsets.only(top: 1),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -638,41 +732,14 @@ class _RadioRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          label,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.16,
-                          ),
-                        ),
-                      ),
-                      if (badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.greenSoft,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            badge!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.green,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.16,
+                    ),
                   ),
                   const SizedBox(height: 1),
                   Text(
@@ -682,6 +749,17 @@ class _RadioRow extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
+                  if (why != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      why!,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: AppColors.textMuted,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -695,7 +773,7 @@ class _RadioRow extends StatelessWidget {
 // ── Step 1: schedule ────────────────────────────────────────
 
 class _ScheduleStep extends StatelessWidget {
-  final int days;
+  final int? days;
   final ValueChanged<int> onChanged;
 
   const _ScheduleStep({
@@ -705,6 +783,8 @@ class _ScheduleStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hint = days == null ? null : _dayHints[days];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -727,14 +807,23 @@ class _ScheduleStep extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 16),
-        _InfoNote(
-          text: days == 2
-              ? 'Two focused sessions still move you forward — Forma keeps '
-                  'each one efficient.'
-              : '$days days gives Forma room for a balanced week across '
-                  'every movement pattern.',
-        ),
+        if (hint != null) ...[
+          const SizedBox(height: 16),
+          _InfoNote(
+            message: TextSpan(
+              children: [
+                TextSpan(
+                  text: '$days days — ${hint.tag}. ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: days == 3 ? AppColors.green : AppColors.textPrimary,
+                  ),
+                ),
+                TextSpan(text: hint.desc),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -791,74 +880,14 @@ class _DayCell extends StatelessWidget {
   }
 }
 
-// ── Step 2: split ───────────────────────────────────────────
-
-class _SplitStep extends StatelessWidget {
-  final int days;
-  final TrainingProgramType split;
-  final ValueChanged<TrainingProgramType> onChanged;
-
-  const _SplitStep({
-    required this.days,
-    required this.split,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final recommended = _recommendedSplit(days);
-    final warn = days == 2 && split != TrainingProgramType.fullBody;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _StepTitle(
-          title: 'Pick your split',
-          sub: 'How your $days weekly sessions divide the work. '
-              'You can change this anytime.',
-        ),
-        const SizedBox(height: 18),
-        for (var index = 0; index < _splits.length; index++) ...[
-          if (index > 0) const SizedBox(height: 10),
-          _RadioRow(
-            selected: _splits[index].type == split,
-            label: _splits[index].label,
-            sub: _splits[index].sub,
-            badge: _splits[index].type == recommended ? 'Recommended' : null,
-            onTap: () => onChanged(_splits[index].type),
-          ),
-        ],
-        if (warn) ...[
-          const SizedBox(height: 14),
-          const _WarnNote(
-            icon: Icons.warning_amber_rounded,
-            message: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'At 2 days a week, a split rotation trains each '
-                      'muscle less than once a week. ',
-                ),
-                TextSpan(
-                  text: 'Full body is recommended.',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ── Step 3: equipment ───────────────────────────────────────
+// ── Step 2: equipment ───────────────────────────────────────
 
 class _EquipmentStep extends StatelessWidget {
-  final bool hasGym;
-  final ValueChanged<bool> onChanged;
+  final SetupEquipment? equipment;
+  final ValueChanged<SetupEquipment> onChanged;
 
   const _EquipmentStep({
-    required this.hasGym,
+    required this.equipment,
     required this.onChanged,
   });
 
@@ -868,30 +897,43 @@ class _EquipmentStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _StepTitle(
-          title: 'Where will you train?',
-          sub: 'Do you have access to a full gym?',
+          title: 'Your equipment',
+          sub: 'What do you have access to?',
         ),
         const SizedBox(height: 18),
         _RadioRow(
-          selected: hasGym,
-          label: 'Yes, a full gym',
+          selected: equipment == SetupEquipment.fullGym,
+          label: 'Full gym',
           sub: 'Pull-up bar, rings, barbells — the works',
-          onTap: () => onChanged(true),
+          why: 'Unlocks weighted progressions — weighted pull-ups, dips and '
+              'barbell work run alongside your skill goals.',
+          onTap: () => onChanged(SetupEquipment.fullGym),
         ),
         const SizedBox(height: 10),
         _RadioRow(
-          selected: !hasGym,
-          label: 'No gym',
-          sub: 'Training at home or outdoors',
-          onTap: () => onChanged(false),
+          selected: equipment == SetupEquipment.freeWeights,
+          label: 'Barbell and dumbbells',
+          sub: 'A home setup with free weights',
+          why: 'Weighted progressions stay in — Forma just builds around '
+              'free weights instead of machines and cables.',
+          onTap: () => onChanged(SetupEquipment.freeWeights),
         ),
-        if (!hasGym) ...[
+        const SizedBox(height: 10),
+        _RadioRow(
+          selected: equipment == SetupEquipment.none,
+          label: 'No equipment',
+          sub: 'Training at home or outdoors',
+          why: 'Progress comes from harder bodyweight variations instead of '
+              'added weight — nothing about the skills changes.',
+          onTap: () => onChanged(SetupEquipment.none),
+        ),
+        if (equipment != null && equipment != SetupEquipment.fullGym) ...[
           const SizedBox(height: 14),
           const _WarnNote(
             icon: Icons.fitness_center_rounded,
             message: TextSpan(
               children: [
-                TextSpan(text: 'You’ll need access to at least a '),
+                TextSpan(text: 'You’ll still need access to at least a '),
                 TextSpan(
                   text: 'pull-up bar',
                   style: TextStyle(fontWeight: FontWeight.w700),
@@ -909,37 +951,143 @@ class _EquipmentStep extends StatelessWidget {
   }
 }
 
+// ── Step 3: bodyweight — tap the number, type on a keypad ───
+
+class _WeightStep extends StatelessWidget {
+  final double bw;
+  final String edit;
+  final bool editing;
+  final WeightUnit unit;
+  final double min;
+  final ValueChanged<WeightUnit> onUnitChanged;
+  final VoidCallback onTapValue;
+  final ValueChanged<String> onKey;
+
+  const _WeightStep({
+    required this.bw,
+    required this.edit,
+    required this.editing,
+    required this.unit,
+    required this.min,
+    required this.onUnitChanged,
+    required this.onTapValue,
+    required this.onKey,
+  });
+
+  String get _valueText {
+    if (edit.isNotEmpty) return edit;
+    return bw == bw.roundToDouble()
+        ? bw.round().toString()
+        : bw.toStringAsFixed(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final belowMin = editing && bw < min;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _StepTitle(
+          title: 'Your bodyweight',
+          sub: 'Weighted skill targets — like a pull-up at +50% of '
+              'bodyweight — are calculated from it, and progressions scale '
+              'with it.',
+        ),
+        const SizedBox(height: 22),
+        Center(child: WeightUnitToggle(unit: unit, onChanged: onUnitChanged)),
+        const SizedBox(height: 22),
+        WeightValueDisplay(
+          text: _valueText,
+          dim: editing && edit.isEmpty,
+          unit: unit,
+          editing: editing,
+          onTap: onTapValue,
+        ),
+        const SizedBox(height: 4),
+        if (!editing)
+          const Center(
+            child: Text(
+              'Tap the number to change it',
+              style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+            ),
+          )
+        else if (belowMin)
+          Center(
+            child: Text(
+              'Minimum ${min.round()} ${unit.suffix}',
+              style: const TextStyle(fontSize: 12.5, color: AppColors.amber),
+            ),
+          ),
+        if (editing) ...[
+          const SizedBox(height: 16),
+          WeightKeypad(onKey: onKey),
+        ],
+        const SizedBox(height: 16),
+        const _InfoNote(
+          message: TextSpan(
+            children: [
+              TextSpan(
+                  text: 'A close guess is fine — you can update it '
+                      'anytime under '),
+              TextSpan(
+                text: 'Profile',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              TextSpan(text: ', and Forma re-scales your targets.'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // ── Step 4: starting strength ───────────────────────────────
 
 class _StrengthStep extends StatelessWidget {
-  final Map<String, _StrengthAnswer> strength;
-  final bool hasGym;
+  final Map<String, int?> strength;
+  final bool hasWeights;
+  final WeightUnit unit;
   final VoidCallback onChanged;
 
   const _StrengthStep({
     required this.strength,
-    required this.hasGym,
+    required this.hasWeights,
+    required this.unit,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final exercises = _strengthExercisesFor(hasGym: hasGym);
+    final exercises = [
+      ..._repStrengthExercises,
+      if (hasWeights) _barbellSquatFor(unit) else _bodyweightSquat,
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _StepTitle(
           title: 'Where are you starting?',
-          sub: 'A rough guess is fine — this just sets your opening '
-              'progressions. Not sure? Your first session will find out.',
+          sub: 'Max reps in one set. Add a number where you know it — a '
+              'rough guess is fine. Anything left blank gets tested in your '
+              'first session.',
         ),
         const SizedBox(height: 18),
         for (var index = 0; index < exercises.length; index++) ...[
           if (index > 0) const SizedBox(height: 10),
           _StrengthCard(
             exercise: exercises[index],
-            answer: strength[exercises[index].id]!,
-            onChanged: onChanged,
+            value: strength[exercises[index].id],
+            unit: unit,
+            onChanged: (value) {
+              strength[exercises[index].id] = value;
+              onChanged();
+            },
           ),
         ],
       ],
@@ -949,174 +1097,102 @@ class _StrengthStep extends StatelessWidget {
 
 class _StrengthCard extends StatelessWidget {
   final _StrengthExercise exercise;
-  final _StrengthAnswer answer;
-  final VoidCallback onChanged;
+  final int? value;
+  final WeightUnit unit;
+  final ValueChanged<int?> onChanged;
 
   const _StrengthCard({
     required this.exercise,
-    required this.answer,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final unsure = answer.unsure;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              IconTile(icon: exercise.icon, tint: true),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      exercise.label,
-                      style: const TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.16,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      unsure
-                          ? 'Forma will test this in session one'
-                          : exercise.sub,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (unsure)
-                const SizedBox(
-                  width: 130,
-                  child: Text(
-                    '—',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                )
-              else
-                _Stepper(
-                  value: answer.value,
-                  step: exercise.step,
-                  min: exercise.min,
-                  max: exercise.max,
-                  unit: exercise.unit,
-                  onChanged: (value) {
-                    answer.value = value;
-                    onChanged();
-                  },
-                ),
-            ],
-          ),
-          if (exercise.allowUnknown) ...[
-            const SizedBox(height: 11),
-            Pressable(
-              onTap: () {
-                answer.unsure = !answer.unsure;
-                onChanged();
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                decoration: BoxDecoration(
-                  color: unsure ? AppColors.accentSoft : AppColors.surface2,
-                  borderRadius: BorderRadius.circular(999),
-                  border: unsure
-                      ? Border.all(color: AppColors.accentPrimary, width: 1.5)
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          width: 1.6,
-                          color: unsure
-                              ? AppColors.accentPrimary
-                              : AppColors.textMuted,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: unsure
-                          ? const Icon(
-                              Icons.check_rounded,
-                              size: 9,
-                              color: AppColors.accentPrimary,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      'I don’t know',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: unsure
-                            ? AppColors.accentPrimary
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Stepper extends StatelessWidget {
-  final int value;
-  final int step;
-  final int min;
-  final int max;
-  final String unit;
-  final ValueChanged<int> onChanged;
-
-  const _Stepper({
     required this.value,
-    required this.step,
-    this.min = 0,
-    required this.max,
     required this.unit,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          IconTile(icon: exercise.icon, tint: true),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exercise.label,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.16,
+                  ),
+                ),
+                if (exercise.hint != null) ...[
+                  const SizedBox(height: 1),
+                  Text(
+                    exercise.hint!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          _UnsetStepper(
+            value: value,
+            step: exercise.step,
+            def: exercise.def,
+            max: exercise.max,
+            unitSuffix: exercise.isWeight ? unit.suffix : null,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Unset by default — "+" adds a value, and stepping below zero clears it
+/// back to unset ("—"), which the planner reads as "test it in session one".
+class _UnsetStepper extends StatelessWidget {
+  final int? value;
+  final int step;
+  final int def;
+  final int max;
+  final String? unitSuffix;
+  final ValueChanged<int?> onChanged;
+
+  const _UnsetStepper({
+    required this.value,
+    required this.step,
+    required this.def,
+    required this.max,
+    required this.unitSuffix,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final unset = value == null;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _StepperButton(
           icon: Icons.remove_rounded,
-          enabled: value > min,
-          onTap: () => onChanged((value - step).clamp(min, max)),
+          enabled: !unset,
+          onTap: () {
+            final next = value! - step;
+            onChanged(next < 0 ? null : next);
+          },
         ),
         Container(
           constraints: const BoxConstraints(minWidth: 52),
@@ -1125,19 +1201,19 @@ class _Stepper extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: '$value',
-                  style: const TextStyle(
+                  text: unset ? '—' : '$value',
+                  style: TextStyle(
                     fontSize: 21,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: unset ? AppColors.textMuted : AppColors.textPrimary,
                     letterSpacing: -0.42,
-                    fontFeatures: [FontFeature.tabularFigures()],
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-                if (unit == 'kg')
-                  const TextSpan(
-                    text: ' kg',
-                    style: TextStyle(
+                if (!unset && unitSuffix != null)
+                  TextSpan(
+                    text: ' $unitSuffix',
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textMuted,
@@ -1149,8 +1225,8 @@ class _Stepper extends StatelessWidget {
         ),
         _StepperButton(
           icon: Icons.add_rounded,
-          enabled: value < max,
-          onTap: () => onChanged((value + step).clamp(min, max)),
+          enabled: unset || value! < max,
+          onTap: () => onChanged(unset ? def : (value! + step).clamp(0, max)),
         ),
       ],
     );
@@ -1324,7 +1400,8 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _controller,
-                        curve: const Interval(0, 0.4, curve: Curves.easeOutBack),
+                        curve:
+                            const Interval(0, 0.4, curve: Curves.easeOutBack),
                       ),
                       child: Container(
                         width: 72,
@@ -1631,4 +1708,3 @@ class _WeekCard extends StatelessWidget {
     );
   }
 }
-

@@ -175,17 +175,17 @@ void main() {
       );
     });
 
-    test('the barbell squat opens at 3 × 5 on 70% of the reported 1RM', () {
+    test('the barbell squat opens at 3 × 5 on the reported 5-rep weight', () {
       final plan = planFor(hasGym: true, strength: {'squat': 100});
       final target = plan.targets['barbell_squat_barbell_squat']!;
 
       expect(target.sets, 3);
       expect(target.value, 5);
-      expect(target.weightKg, 70);
+      expect(target.weightKg, 100);
     });
 
     test('the opening barbell weight is rounded to a loadable 2.5 kg', () {
-      expect(ProgramStartPlanner.barbellSquatStartKg(105), 72.5);
+      expect(ProgramStartPlanner.barbellSquatStartKg(104), 102.5);
       expect(ProgramStartPlanner.barbellSquatStartKg(1), 2.5);
       expect(ProgramStartPlanner.barbellSquatStartKg(null), isNull);
     });
@@ -439,7 +439,7 @@ void main() {
       expect(squat.status, ExerciseStatus.active);
       expect(squat.targetSets, ProgramStartPlanner.loadedLiftSets);
       expect(squat.targetValue, ProgramStartPlanner.loadedLiftStartReps);
-      expect(squat.targetWeightKg, 70);
+      expect(squat.targetWeightKg, 100);
 
       // A step with no special opening target still carries its status —
       // null target means the standard ladder target.

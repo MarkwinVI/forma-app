@@ -16,6 +16,7 @@ import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/weight_unit_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
 import '../home/program_day_items.dart';
 import 'exercise_summary_metrics.dart';
@@ -432,7 +433,7 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
         return _formatSeconds(value.round());
       case ExerciseSummaryMetric.heaviestWeight:
       case ExerciseSummaryMetric.totalVolume:
-        return '${_formatDecimal(value)}kg';
+        return WeightUnitService.label(value);
       case ExerciseSummaryMetric.totalReps:
       case ExerciseSummaryMetric.bestSet:
         return '${value.round()}';
@@ -1323,11 +1324,11 @@ class _HistoryCard extends StatelessWidget {
       if (exercise.isTimed) {
         final time = _formatSeconds(set.durationSeconds);
         return exercise.isWeighted && set.weightKg > 0
-            ? '$time × ${_formatDecimal(set.weightKg)}kg'
+            ? '$time × ${WeightUnitService.label(set.weightKg)}'
             : time;
       }
       if (exercise.isWeighted) {
-        return '${set.reps} × ${_formatDecimal(set.weightKg)}kg';
+        return '${set.reps} × ${WeightUnitService.label(set.weightKg)}';
       }
       return '${set.reps}';
     }).join(' · ');
@@ -1548,12 +1549,6 @@ _ExerciseCoachData _patternCoachDataFor(Exercise exercise) {
         ],
       );
   }
-}
-
-String _formatDecimal(double value) {
-  return value == value.roundToDouble()
-      ? value.toStringAsFixed(0)
-      : value.toStringAsFixed(1);
 }
 
 String _formatSeconds(int seconds) {

@@ -19,6 +19,7 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import 'program_balance_view.dart';
+import 'program_setup_view.dart';
 import 'program_day_items.dart';
 import 'program_faq.dart';
 import 'program_skill_trees_view.dart';
@@ -125,7 +126,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         ..._programService.laneSelectionsFromTracks(_skillTracks),
       };
 
-  List<TrainingSessionType> _weekPlan(List<int> mask, TrainingProgramType type) {
+  List<TrainingSessionType> _weekPlan(
+      List<int> mask, TrainingProgramType type) {
     return TrainingScheduleService().cycleFor(
       programType: type,
       frequencyPerWeek: mask.where((day) => day == 1).length,
@@ -227,18 +229,24 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   }
 
   Future<void> _openEquipmentSheet() async {
-    final picked = await showModalBottomSheet<bool>(
+    final picked = await showModalBottomSheet<SetupEquipment>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (_) => _EquipmentSheet(current: _hasGym),
+      builder: (_) => _EquipmentSheet(current: _equipment),
     );
 
-    if (picked == null || picked == _hasGym || !mounted) return;
+    if (picked == null || picked == _equipment || !mounted) return;
 
     await _saveLogic(
-      setupAnswers: {..._setupAnswers, 'has_gym': picked},
+      // Both keys travel together: 'equipment' is the answer itself,
+      // 'has_gym' the derived can-load-a-bar flag every planner reads.
+      setupAnswers: {
+        ..._setupAnswers,
+        'equipment': picked.dbValue,
+        'has_gym': picked.hasWeights,
+      },
       toast: 'Equipment updated',
     );
   }
@@ -557,7 +565,11 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                   const _ProgramSectionLabel('Your program'),
                   _ProgramRow(
                     label: 'Equipment',
-                    value: _hasGym ? 'Full gym' : 'No gym',
+                    value: switch (_equipment) {
+                      SetupEquipment.fullGym => 'Full gym',
+                      SetupEquipment.freeWeights => 'Barbell & dumbbells',
+                      SetupEquipment.none => 'No equipment',
+                    },
                     onTap: _openEquipmentSheet,
                   ),
                   _ProgramRow(
@@ -632,8 +644,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                       sessionType: workouts[i].sessionType,
                       timesPerWeek: workouts[i].weekdays.length,
                       last: i == workouts.length - 1,
-                      onTap: () =>
-                          _openWorkoutEditor(workouts[i].sessionType),
+                      onTap: () => _openWorkoutEditor(workouts[i].sessionType),
                     ),
                   const _ProgramSectionLabel('About the program'),
                   for (var i = 0; i < kProgramFaq.length; i++)
@@ -654,6 +665,15 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   /// The setup wizard defaults to a full gym, so an unanswered program reads
   /// the same way here.
   bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
+
+  /// The tri-state answer when program setup stored one; programs from
+  /// before it map the old boolean onto its ends.
+  SetupEquipment get _equipment => switch (_setupAnswers['equipment']) {
+        'gym' => SetupEquipment.fullGym,
+        'barbell' => SetupEquipment.freeWeights,
+        'none' => SetupEquipment.none,
+        _ => _hasGym ? SetupEquipment.fullGym : SetupEquipment.none,
+      };
 }
 
 /// Hero constellation: an abstract read of the program itself, drawn as a
@@ -1987,10 +2007,10 @@ class _SplitSheetState extends State<_SplitSheet> {
   }
 }
 
-/// Where you train — the same two choices the setup wizard asks, so the
+/// Where you train — the same three choices the setup wizard asks, so the
 /// answer can be revised without re-running it.
 class _EquipmentSheet extends StatefulWidget {
-  final bool current;
+  final SetupEquipment current;
 
   const _EquipmentSheet({required this.current});
 
@@ -1999,7 +2019,7 @@ class _EquipmentSheet extends StatefulWidget {
 }
 
 class _EquipmentSheetState extends State<_EquipmentSheet> {
-  late bool _picked;
+  late SetupEquipment _picked;
 
   @override
   void initState() {
@@ -2023,8 +2043,21 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
         child: Column(
           children: [
             for (final option in const [
-              (true, 'Yes, a full gym', 'Pull-up bar, rings, barbells — the works'),
-              (false, 'No gym', 'Training at home or outdoors'),
+              (
+                SetupEquipment.fullGym,
+                'Full gym',
+                'Pull-up bar, rings, barbells — the works',
+              ),
+              (
+                SetupEquipment.freeWeights,
+                'Barbell and dumbbells',
+                'A home setup with free weights',
+              ),
+              (
+                SetupEquipment.none,
+                'No equipment',
+                'Training at home or outdoors',
+              ),
             ])
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -2035,7 +2068,7 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
                   onTap: () => setState(() => _picked = option.$1),
                 ),
               ),
-            if (!_picked)
+            if (_picked != SetupEquipment.fullGym)
               const Padding(
                 padding: EdgeInsets.fromLTRB(2, 2, 2, 0),
                 child: Text(
