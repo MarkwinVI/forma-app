@@ -11,12 +11,17 @@ import '../../core/widgets/reorder_exercises_page.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/progress_service.dart';
+import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import '../exercises/exercise_picker_view.dart';
 import 'program_day_items.dart';
+import 'program_skill_wheel_view.dart';
 
 /// Destructive action colour, matching the design's red.
 const _dangerRed = Color(0xFFFF6B57);
@@ -63,23 +68,30 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   late String _initialSerialized;
   bool _saving = false;
 
+  /// Live copies of the parent's progress and tracks — re-fetched after the
+  /// user edits a progression in its tree, so the day re-reads fresh state.
+  late Map<String, ExerciseStatus> _progress = widget.progressMap;
+  late List<SkillTrack> _skillTracks = widget.skillTracks;
+
   String get _typeName => programWorkoutTypeName(widget.sessionType);
 
   @override
   void initState() {
     super.initState();
-    _items = ProgramSessionPlan.loadDay(
-      service: _programService,
-      sessionItemsConfig: widget.sessionItemsConfig,
-      programType: widget.programType,
-      sessionType: widget.sessionType,
-      branchSelections: widget.branchSelections,
-      progressMap: widget.progressMap,
-      skillTracks: widget.skillTracks,
-      hasGym: widget.hasGym,
-    );
+    _items = _loadDay();
     _initialSerialized = _serialized();
   }
+
+  List<ProgramDayItem> _loadDay() => ProgramSessionPlan.loadDay(
+        service: _programService,
+        sessionItemsConfig: widget.sessionItemsConfig,
+        programType: widget.programType,
+        sessionType: widget.sessionType,
+        branchSelections: widget.branchSelections,
+        progressMap: _progress,
+        skillTracks: _skillTracks,
+        hasGym: widget.hasGym,
+      );
 
   String _serialized() => jsonEncode(ProgramSessionPlan.serializeDay(_items));
 
@@ -121,10 +133,9 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         exerciseId: exercise.id,
       );
 
-  /// Both adding and replacing open the exercise search. Replacing takes the
-  /// first tap and drops it into that row's slot; adding accumulates picks
-  /// and appends them all at once.
-  Future<void> _openAddPicker({int? replacingIndex}) async {
+  /// Add exercise opens the exercise search; picks accumulate and append all
+  /// at once.
+  Future<void> _openAddPicker() async {
     final picked = await Navigator.of(context).push<List<Exercise>>(
       MaterialPageRoute(
         builder: (_) => ExercisePickerView(
@@ -132,20 +143,13 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
             for (final item in _items)
               if (item.exerciseId != null) item.exerciseId!,
           },
-          progressMap: widget.progressMap,
-          singlePick: replacingIndex != null,
+          progressMap: _progress,
         ),
       ),
     );
     if (picked == null || picked.isEmpty || !mounted) return;
 
-    setState(() {
-      if (replacingIndex != null && replacingIndex < _items.length) {
-        _items[replacingIndex] = _itemFor(picked.first);
-        return;
-      }
-      _items.addAll(picked.map(_itemFor));
-    });
+    setState(() => _items.addAll(picked.map(_itemFor)));
   }
 
   Exercise? _exerciseFor(ProgramDayItem item) =>
@@ -167,9 +171,6 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   /// Options for one row: what you can do to the workout. Reading about the
   /// exercise is a tap on its name instead.
   Future<void> _openItemActions(ProgramDayItem item) async {
-    final index = _items.indexWhere((entry) => entry.id == item.id);
-    if (index < 0) return;
-
     final action = await showModalBottomSheet<_ItemAction>(
       context: context,
       isScrollControlled: true,
@@ -178,18 +179,58 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       builder: (_) => _ItemMenuSheet(
         title: item.name,
         subtitle: _itemSubtitle(item),
+        isProgression: item.kind == ProgramDayItemKind.progression,
         canReorder: _items.length > 1,
       ),
     );
     if (action == null || !mounted) return;
 
     switch (action) {
+      case _ItemAction.editProgression:
+        await _openProgressionEditor(item);
       case _ItemAction.reorder:
         await _openReorder();
-      case _ItemAction.replace:
-        await _openAddPicker(replacingIndex: index);
       case _ItemAction.remove:
         _removeItem(item.id);
+    }
+  }
+
+  /// "Edit progression" — the skill wheel flown straight into this item's
+  /// tree, where the current step and branch live. On return the day is
+  /// re-read with fresh progress so a moved progression shows its new step,
+  /// unless unsaved edits here would be thrown away by the re-read.
+  Future<void> _openProgressionEditor(ProgramDayItem item) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProgramSkillWheelView(
+          initialCategoryId: item.skillCategoryId,
+        ),
+      ),
+    );
+    if (!mounted || _dirty) return;
+
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final results = await Future.wait([
+        ProgressService().fetchAll(userId),
+        SkillTrackService().fetchAll(userId),
+      ]);
+      if (!mounted) return;
+      final progress = results[0] as List<ExerciseProgress>;
+      final tracks = results[1] as List<SkillTrack>;
+      setState(() {
+        _progress = {for (final row in progress) row.exerciseId: row.status};
+        _skillTracks = tracks;
+        _items = _loadDay();
+        // The re-read is the saved day, just resolved against fresh progress
+        // — it must not count as an edit.
+        _initialSerialized = _serialized();
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Failed to refresh after editing a progression: '
+          '$error\n$stackTrace');
     }
   }
 
@@ -493,18 +534,21 @@ class _SourceChip extends StatelessWidget {
   }
 }
 
-enum _ItemAction { reorder, replace, remove }
+enum _ItemAction { editProgression, reorder, remove }
 
 /// The row's options: what you can do to the workout. What the exercise *is*
-/// belongs to its own page, which the row's name opens.
+/// belongs to its own page, which the row's name opens. A progression also
+/// offers its tree — the progression itself is edited there, not here.
 class _ItemMenuSheet extends StatelessWidget {
   final String title;
   final String subtitle;
+  final bool isProgression;
   final bool canReorder;
 
   const _ItemMenuSheet({
     required this.title,
     required this.subtitle,
+    required this.isProgression,
     required this.canReorder,
   });
 
@@ -515,6 +559,7 @@ class _ItemMenuSheet extends StatelessWidget {
     return SheetShell(
       title: title,
       sub: subtitle,
+      showClose: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
         child: Column(
@@ -524,15 +569,16 @@ class _ItemMenuSheet extends StatelessWidget {
               clip: true,
               child: Column(
                 children: [
+                  if (isProgression)
+                    _MenuRow(
+                      label: 'Edit progression',
+                      onTap: () => pick(_ItemAction.editProgression),
+                    ),
                   _MenuRow(
                     label: 'Reorder exercises',
                     enabled: canReorder,
+                    withDivider: isProgression,
                     onTap: () => pick(_ItemAction.reorder),
-                  ),
-                  _MenuRow(
-                    label: 'Replace exercise',
-                    withDivider: true,
-                    onTap: () => pick(_ItemAction.replace),
                   ),
                   _MenuRow(
                     label: 'Remove exercise',

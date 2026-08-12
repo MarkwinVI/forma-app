@@ -640,12 +640,12 @@ void main() {
 
     // Workouts are listed per type — one row per session, its days read off
     // the strip above: Mon/Wed/Fri alternating push · pull · push.
-    expect(find.text('Push'), findsOneWidget);
-    expect(find.text('Pull'), findsOneWidget);
+    expect(find.text('Push day'), findsOneWidget);
+    expect(find.text('Pull day'), findsOneWidget);
 
     // The hero pushes the workout rows below the test surface.
-    await tester.ensureVisible(find.text('Push'));
-    await tester.tap(find.text('Push'));
+    await tester.ensureVisible(find.text('Push day'));
+    await tester.tap(find.text('Push day'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ProgramWorkoutEditorView), findsOneWidget);

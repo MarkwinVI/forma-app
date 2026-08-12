@@ -627,6 +627,10 @@ class SheetShell extends StatelessWidget {
   final Widget? footer;
   final bool expand;
 
+  /// Sheets that are a quick pick-one menu drop the close button — the grab
+  /// handle and the scrim already offer two ways out.
+  final bool showClose;
+
   const SheetShell({
     super.key,
     required this.title,
@@ -634,6 +638,7 @@ class SheetShell extends StatelessWidget {
     required this.child,
     this.footer,
     this.expand = false,
+    this.showClose = true,
   });
 
   @override
@@ -697,23 +702,24 @@ class SheetShell extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Pressable(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.close_rounded,
-                          size: 15,
-                          color: AppColors.textPrimary,
+                    if (showClose)
+                      Pressable(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: AppColors.surface,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 15,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],
