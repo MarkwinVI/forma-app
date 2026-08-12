@@ -507,13 +507,18 @@ class _SkillWheelState extends State<SkillWheel>
 
     // Labels come in on the bounce-back: the overshoot peaks around 62% of
     // the duration, so names materialise while the wheel settles into its
-    // detent — not mid-flight, not a beat after everything stopped.
-    final delayMs = (moves || spins) ? (durationMs * 0.62).round() : 200;
-    _labelTimer?.cancel();
-    _labels.value = 0;
-    _labelTimer = Timer(Duration(milliseconds: delayMs), () {
-      if (mounted) _labels.forward(from: 0);
-    });
+    // detent — not mid-flight, not a beat after everything stopped. Only
+    // when the view itself changes, though: refocusing another node of the
+    // focused tree moves no camera, and the branch names must hold steady
+    // rather than blink out and back.
+    if (moves || spins || sel != _sel) {
+      final delayMs = (moves || spins) ? (durationMs * 0.62).round() : 200;
+      _labelTimer?.cancel();
+      _labels.value = 0;
+      _labelTimer = Timer(Duration(milliseconds: delayMs), () {
+        if (mounted) _labels.forward(from: 0);
+      });
+    }
 
     if (sel == null) {
       _halo.stop();
