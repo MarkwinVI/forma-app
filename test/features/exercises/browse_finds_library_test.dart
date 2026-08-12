@@ -82,29 +82,27 @@ void main() {
     await expectFound(tester, 'curl', 'Bicep Curl (Barbell)');
   });
 
-  // Picking shows the step rather than the movement, and a rung is named for
-  // the load it asks for rather than the movement — "nverted Row
-  // (Bodyweight)" is a
-  // rung of the weighted inverted row — so it answers to the movement's name
-  // as well, which is the name most people would type.
+  // Picking is the library too: tree rungs enter a workout through their
+  // skill track, not from the picker, so the picker offers each movement
+  // once — "Inverted Row (Weighted)", not the ten rungs stepped through it.
   const picking = ExercisePickerView(excludedIds: {}, progressMap: {});
 
-  testWidgets('picking finds a rung by the movement behind it',
-      (tester) async {
+  testWidgets('picking finds the library movement', (tester) async {
     await expectFound(
       tester,
       'inverted row weighted',
-      'nverted Row (Bodyweight)',
+      'Inverted Row (Weighted)',
       page: picking,
     );
   });
 
-  testWidgets('picking finds that rung by its own name too', (tester) async {
-    await expectFound(
-      tester,
-      'nverted row bodyweight',
-      'nverted Row (Bodyweight)',
-      page: picking,
-    );
+  testWidgets('picking shows no skill-tree rungs', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: picking));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byType(TextField).first, 'nverted row bodyweight');
+    await tester.pumpAndSettle();
+
+    expect(find.text('nverted Row (Bodyweight)'), findsNothing);
   });
 }

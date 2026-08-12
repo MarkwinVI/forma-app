@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
-import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/exercise_library_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
@@ -88,17 +87,11 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
     );
   }
 
-  /// Browsing is the library, and only the library. A tree step is a rung —
-  /// it is performed with a library movement and adds nothing to read that
-  /// the movement does not already say — so nothing is lost by leaving the
-  /// steps out, and every exercise appears exactly once.
-  ///
-  /// Picking is a choice rather than a read, and there the step is the point:
-  /// it puts the work on its skill tree. So it stands for the movement it is
-  /// performed with, and that movement is the one left out.
-  List<Exercise> get _catalogue => widget.browsing
-      ? ExerciseLibraryCatalog.all()
-      : ExerciseCatalog.searchable();
+  /// The library, and only the library — browsing and picking alike. Tree
+  /// steps are rungs on a progression, not standalone movements: a picker
+  /// offering ten pullup variants next to "Weighted Pull-Up" is noise, and
+  /// progressions enter a workout through their skill track, not from here.
+  List<Exercise> get _catalogue => ExerciseLibraryCatalog.all();
 
   List<Exercise> get _matches {
     final tokens = _query
