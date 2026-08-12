@@ -57,12 +57,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
-    // Tree name leads each row; the active step reads under it.
+    // The tree name is the whole row — no "Now:" step subtitle under it.
     expect(find.text('Pullups'), findsOneWidget);
-    expect(find.text('Now: Pullups step 1'), findsOneWidget);
+    expect(find.text('Now: Pullups step 1'), findsNothing);
     expect(find.text('Pushups'), findsOneWidget);
     // A tree that isn't running stays off the list.
-    expect(find.text('Now: Squat step 0'), findsNothing);
+    expect(find.text('Squat'), findsNothing);
   });
 
   testWidgets(

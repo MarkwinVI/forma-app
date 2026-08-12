@@ -578,34 +578,17 @@ class _ProgressionsPanel extends StatelessWidget {
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              family.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.4,
-                                height: 1.15,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'Now: '
-                              '${family.flat[family.activeFlatIndex].name}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                letterSpacing: -0.14,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          family.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                            height: 1.15,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
