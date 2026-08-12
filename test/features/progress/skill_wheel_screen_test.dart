@@ -76,7 +76,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
-    expect(find.text('STOP TRAINING'), findsNothing);
+    expect(find.text('Stop training'), findsNothing);
     expect(find.text('Train this exercise'), findsNothing);
   });
 
@@ -111,7 +111,7 @@ void main() {
   });
 
   testWidgets(
-      'focusing an active tree shows STOP TRAINING, and a locked node the CTA',
+      'the active step offers Stop training, and a locked node Jump here',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
@@ -126,15 +126,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    expect(find.text('STOP TRAINING'), findsOneWidget);
-    // Initial focus is the active step — no CTA there.
+    // Initial focus is the active step — its CTA is the red stop.
+    expect(find.text('Stop training'), findsOneWidget);
     expect(find.text('Train this exercise'), findsNothing);
 
     // Walk the selector onto the locked step via its list row — a step not
-    // yet reached gets the quiet "anyway" offer.
+    // yet reached gets the amber jump with its skipped-steps warning.
     await tester.tap(find.text('Pullups step 2'));
     await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Train it anyway'), findsOneWidget);
+    expect(find.text('Jump here'), findsOneWidget);
+    expect(
+      find.textContaining('Skips the steps before it'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('program card is the plain door into the trees',

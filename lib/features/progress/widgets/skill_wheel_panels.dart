@@ -5,52 +5,59 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/catalog/exercise_coaching_catalog.dart';
 import '../../home/home_dashboard_metrics.dart';
+import '../performance_overview.dart';
 import 'skill_wheel.dart';
 
-// ── MY PERFORMANCE (hardcoded for now; data layer comes later) ────────
+// ── MY PERFORMANCE ────────────────────────────────────────────────────
 
-class _PerfRow {
-  final String name;
-  final String best;
-  final String delta;
-
-  const _PerfRow(this.name, this.best, this.delta);
-}
-
-class _PerfGroup {
+/// Look of one trend section: label, tint, and the trailing trend icon
+/// (none for NEW — there is nothing to compare yet).
+class _PerfGroupStyle {
   final String label;
   final Color color;
-  final IconData icon;
-  final List<_PerfRow> rows;
+  final IconData? icon;
 
-  const _PerfGroup(this.label, this.color, this.icon, this.rows);
+  const _PerfGroupStyle(this.label, this.color, this.icon);
 }
 
-/// The wheel-overview panel: how the last 14 days compare to the 14 before.
+const _perfGroupStyles = {
+  PerformanceTrend.improving: _PerfGroupStyle(
+    'IMPROVING',
+    AppColors.green,
+    Icons.trending_up_rounded,
+  ),
+  PerformanceTrend.noChange: _PerfGroupStyle(
+    'NO CHANGE',
+    AppColors.textSecondary,
+    Icons.trending_flat_rounded,
+  ),
+  PerformanceTrend.needsAttention: _PerfGroupStyle(
+    'NEEDS ATTENTION',
+    AppColors.amber,
+    Icons.trending_down_rounded,
+  ),
+  PerformanceTrend.fresh: _PerfGroupStyle(
+    'NEW',
+    AppColors.accentBright,
+    null,
+  ),
+};
+
+/// The wheel-overview panel: every exercise in the workout lists, grouped by
+/// how its best set moved — the last 14 days against the 14 before.
 /// Lives in a draggable sheet — [controller] is the sheet's scroll
 /// controller, so dragging the panel raises the sheet over the wheel.
 class PerformancePanel extends StatelessWidget {
+  final PerformanceOverview overview;
   final double bottomInset;
   final ScrollController? controller;
 
   const PerformancePanel({
     super.key,
+    required this.overview,
     required this.bottomInset,
     this.controller,
   });
-
-  static const _groups = [
-    _PerfGroup('IMPROVING', AppColors.green, Icons.trending_up_rounded, [
-      _PerfRow('Assisted Pull-up', '21 reps', '+7'),
-      _PerfRow('B.W. Push-ups', '21 reps', '+7'),
-      _PerfRow('Barbell Squats', '300kg', '+7'),
-    ]),
-    _PerfGroup(
-        'NEEDS ATTENTION', AppColors.amber, Icons.trending_down_rounded, [
-      _PerfRow('Ring Rows', '9 reps', '−2'),
-      _PerfRow('Tuck Planche', '12s', '−4'),
-    ]),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +90,9 @@ class PerformancePanel extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            'LAST 14 DAYS VS PREV. 14 DAYS',
+            overview.comparesRecentSessions
+                ? 'LATEST SESSION VS PREV. SESSIONS'
+                : 'LAST 14 DAYS VS PREV. 14 DAYS',
             style: GoogleFonts.robotoMono(
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
@@ -91,121 +100,138 @@ class PerformancePanel extends StatelessWidget {
               color: AppColors.textMuted,
             ),
           ),
-          for (final group in _groups) ...[
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: group.color,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  group.label,
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.35,
-                    color: group.color,
-                  ),
-                ),
-              ],
+          if (!overview.hasComparisons) ...[
+            const SizedBox(height: 14),
+            const Text(
+              'Once you\'ve trained a bit, you\'ll start seeing how '
+              'you\'re progressing in each exercise.',
+              style: TextStyle(
+                fontSize: 13.5,
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 6),
-            for (final row in group.rows)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: const BoxDecoration(
-                  border:
-                      Border(bottom: BorderSide(color: AppColors.divider)),
+          ],
+          for (final trend in PerformanceTrend.values)
+            ..._group(trend, overview.rowsFor(trend)),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _group(PerformanceTrend trend, List<PerformanceRowData> rows) {
+    if (rows.isEmpty) return const [];
+    final style = _perfGroupStyles[trend]!;
+    return [
+      const SizedBox(height: 20),
+      Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: style.color,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            style.label,
+            style: GoogleFonts.robotoMono(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.35,
+              color: style.color,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      for (final row in rows)
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.divider)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  row.exerciseName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    letterSpacing: -0.15,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        row.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          letterSpacing: -0.15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Best set:',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      row.best,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 52,
-                      child: Row(
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Best set:',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                _bestLabel(row),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              // Fixed-width trailing box so the best-set values line up
+              // across groups; NEW rows leave it blank.
+              SizedBox(
+                width: 52,
+                child: row.delta == null || style.icon == null
+                    ? null
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Icon(group.icon, size: 15, color: group.color),
+                          Icon(style.icon, size: 15, color: style.color),
                           const SizedBox(width: 2),
                           Text(
-                            row.delta,
+                            _deltaLabel(row.delta!),
                             style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
-                              color: group.color,
+                              color: style.color,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
               ),
-          ],
-        ],
-      ),
-    );
+            ],
+          ),
+        ),
+    ];
+  }
+
+  static String _bestLabel(PerformanceRowData row) {
+    if (row.bestValue <= 0) return '—';
+    if (row.isTimed) return '${row.bestValue}s';
+    return row.bestValue == 1 ? '1 rep' : '${row.bestValue} reps';
+  }
+
+  /// Signed delta, with the typographic minus the design reads best with.
+  static String _deltaLabel(int delta) {
+    if (delta > 0) return '+$delta';
+    if (delta < 0) return '−${-delta}';
+    return '0';
   }
 }
 
 // ── Focused exercise: shared status metadata ──────────────────────────
 
-const _statusLabels = {
-  WheelNodeState.active: 'NOW',
-  WheelNodeState.mastered: 'MASTERED',
-  WheelNodeState.skipped: 'SKIPPED',
-  WheelNodeState.locked: 'LOCKED',
-};
-
-const _statusColors = {
-  WheelNodeState.active: AppColors.accentBright,
-  WheelNodeState.mastered: AppColors.green,
-  WheelNodeState.skipped: AppColors.green,
-  WheelNodeState.locked: AppColors.textMuted,
-};
-
-const _stateLines = {
-  WheelNodeState.mastered: 'Cleared. Kept in rotation as a warm-up.',
-  WheelNodeState.skipped:
-      'Marked as skipped — you can come back to it any time.',
-  WheelNodeState.locked: 'Opens once you clear the step before it.',
-};
+/// The lighter "training now" blue the reference design reads captions in.
+const kWheelTrainingBlue = Color(0xFF7FA9F2);
 
 // ── Bottom exercise preview ───────────────────────────────────────────
 
@@ -227,69 +253,52 @@ class WheelExercisePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = node.state;
+    final done = state.isCleared;
 
     final double barPct;
     final Color barColor;
-    if (state == WheelNodeState.active) {
-      barPct = (journey?.progressPercent ?? 0).clamp(0.0, 1.0);
-      barColor = AppColors.accentBright;
-    } else if (state == WheelNodeState.locked) {
-      barPct = 0;
-      barColor = Colors.white.withValues(alpha: 0.08);
-    } else {
+    if (done) {
       barPct = 1;
       barColor = AppColors.green;
+    } else if (state == WheelNodeState.active) {
+      barPct = (journey?.progressPercent ?? 0).clamp(0.0, 1.0);
+      barColor = AppColors.accentBright;
+    } else {
+      barPct = 0;
+      barColor = AppColors.accentBright;
     }
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onOpen,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(2, 2, 2, 4),
+        padding: const EdgeInsets.fromLTRB(2, 2, 2, 6),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _thumb(),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          node.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.25,
-                            height: 1.25,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        _statusLabels[state]!,
-                        style: GoogleFonts.robotoMono(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.1,
-                          color: _statusColors[state],
-                        ),
-                      ),
-                    ],
+                  Text(
+                    node.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.28,
+                      height: 1.2,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(99),
                     child: Container(
-                      height: 4,
+                      height: 6,
                       color: Colors.white.withValues(alpha: 0.08),
                       alignment: Alignment.centerLeft,
                       child: AnimatedFractionallySizedBox(
@@ -305,8 +314,8 @@ class WheelExercisePreview extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  _progressCaption(),
+                  const SizedBox(height: 7),
+                  _statusLine(),
                 ],
               ),
             ),
@@ -316,49 +325,44 @@ class WheelExercisePreview extends StatelessWidget {
     );
   }
 
-  Widget _progressCaption() {
-    const body =
-        TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF8A8B93));
-    const figure = TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
-    );
-
-    if (node.state == WheelNodeState.active) {
-      final data = journey;
-      if (data == null) {
-        return const Text(
-          'Train this step to reach the next unlock.',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: body,
-        );
-      }
-      final unit = data.isTimed ? 's' : ' reps';
-      return Text.rich(
-        TextSpan(
-          text: 'Last ',
-          style: body,
-          children: [
-            TextSpan(text: '${data.lastSessionVolume}', style: figure),
-            const TextSpan(text: ' of '),
-            TextSpan(text: '${data.targetVolume}$unit', style: figure),
-            const TextSpan(
-              text: ' (total)',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-          ],
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
+  /// One status line under the bar — the design's single meta line, no
+  /// separate state tag.
+  Widget _statusLine() {
+    final String text;
+    final Color color;
+    switch (node.state) {
+      case WheelNodeState.mastered:
+        text = 'Mastered';
+        color = AppColors.green;
+      case WheelNodeState.skipped:
+        text = 'Skipped — come back to it any time';
+        color = AppColors.green;
+      case WheelNodeState.active:
+        final data = journey;
+        if (data == null) {
+          text = 'Training now';
+        } else {
+          final unit = data.isTimed ? 'sec' : 'reps';
+          text = 'Training now · ${data.lastSessionVolume} / '
+              '${data.targetVolume} $unit';
+        }
+        color = kWheelTrainingBlue;
+      case WheelNodeState.available:
+        text = 'Available to start';
+        color = AppColors.textSecondary;
+      case WheelNodeState.locked:
+        text = 'Locked — clear the step before it';
+        color = AppColors.textMuted;
     }
     return Text(
-      _stateLines[node.state] ?? '',
+      text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: body,
+      style: TextStyle(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w600,
+        color: color,
+      ),
     );
   }
 
@@ -375,15 +379,15 @@ class WheelExercisePreview extends StatelessWidget {
             ? coaching!.imageUrl
             : exercise?.imageUrl);
 
-    const badge = Center(child: _PlayBadge(size: 24, iconSize: 13));
+    const badge = Center(child: _PlayBadge(size: 38, iconSize: 18));
 
     return Container(
-      width: 52,
-      height: 52,
+      width: 88,
+      height: 88,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: const Color(0xFF0C0C0E),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: imageUrl == null
@@ -433,8 +437,11 @@ class WheelExerciseCard extends StatefulWidget {
 }
 
 class _WheelExerciseCardState extends State<WheelExerciseCard> {
-  static const double _rowHeight = 38;
-  static const double _groupHeaderHeight = 40;
+  static const double _rowHeight = 42;
+
+  /// The training-now row carries a subtitle, so it runs taller.
+  static const double _activeRowHeight = 59;
+  static const double _groupHeaderHeight = 33;
 
   final _scrollController = ScrollController();
 
@@ -524,10 +531,10 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
       y += _groupHeaderHeight;
       for (var i = start; i <= end; i++) {
         offsets[i] = y;
-        children.add(
-          _stepRow(flat, i, index, first: i == start, last: i == end),
-        );
-        y += _rowHeight;
+        children.add(_stepRow(flat, i, index));
+        y += flat[i].state == WheelNodeState.active
+            ? _activeRowHeight
+            : _rowHeight;
       }
     }
     _rowOffsets = offsets;
@@ -564,134 +571,143 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     return SizedBox(
       height: _groupHeaderHeight,
       child: Padding(
-        padding: const EdgeInsets.only(top: 16, bottom: 8),
-        child: Row(
-          children: [
-            Text(
-              name,
-              style: GoogleFonts.robotoMono(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.4,
-                color: AppColors.textMuted,
-              ),
+        padding: const EdgeInsets.only(top: 15, bottom: 5),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.77,
+              color: AppColors.textMuted,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Container(height: 1, color: AppColors.divider),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _stepRow(
-    List<WheelNode> flat,
-    int i,
-    int index, {
-    required bool first,
-    required bool last,
-  }) {
+  /// The quiet leading glyph that carries the step's state — check for
+  /// mastered, skip arrow, padlock, the halo dot for training now, and a
+  /// plain white ring for a step available to start.
+  Widget _lead(WheelNodeState state) {
+    final Widget glyph;
+    switch (state) {
+      case WheelNodeState.active:
+        glyph = Container(
+          width: 11,
+          height: 11,
+          decoration: const BoxDecoration(
+            color: AppColors.accentBright,
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: Color(0x383D7BFF), spreadRadius: 3.5)],
+          ),
+        );
+      case WheelNodeState.mastered:
+        glyph = const Icon(
+          Icons.check_rounded,
+          size: 16,
+          color: AppColors.green,
+        );
+      case WheelNodeState.skipped:
+        glyph = Icon(
+          Icons.arrow_outward_rounded,
+          size: 14,
+          color: AppColors.green.withValues(alpha: 0.6),
+        );
+      case WheelNodeState.available:
+        glyph = Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1.7,
+            ),
+          ),
+        );
+      case WheelNodeState.locked:
+        glyph = const Icon(
+          Icons.lock_rounded,
+          size: 13,
+          color: Color(0xFF4A4B52),
+        );
+    }
+    return SizedBox(width: 20, child: Center(child: glyph));
+  }
+
+  Widget _stepRow(List<WheelNode> flat, int i, int index) {
     final node = flat[i];
     final focused = i == index;
     final state = node.state;
-    final prev = first ? null : flat[i - 1];
+    final isActive = state == WheelNodeState.active;
 
-    final Color dotColor;
-    final double dotSize;
-    switch (state) {
-      case WheelNodeState.active:
-        dotColor = AppColors.accentBright;
-        dotSize = 10;
-      case WheelNodeState.mastered:
-      case WheelNodeState.skipped:
-        dotColor = AppColors.green;
-        dotSize = 8;
-      case WheelNodeState.locked:
-        dotColor = AppColors.surface3;
-        dotSize = 6.5;
-    }
-
-    final railOn = Colors.white.withValues(alpha: 0.09);
-    const railGreen = Color(0x803FD07E);
-    final railTop = prev == null
-        ? Colors.transparent
-        : (prev.state.isCleared &&
-                (state.isCleared || state == WheelNodeState.active))
-            ? railGreen
-            : railOn;
-    final railBottom = last
-        ? Colors.transparent
-        : (state.isCleared ? railGreen : railOn);
+    final titleColor = switch (state) {
+      WheelNodeState.active => AppColors.accentBright,
+      WheelNodeState.locked => AppColors.textMuted,
+      WheelNodeState.mastered ||
+      WheelNodeState.skipped =>
+        const Color(0xFF9A9BA1),
+      WheelNodeState.available => AppColors.textPrimary,
+    };
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: focused ? null : () => widget.onPickStep(i),
-      child: SizedBox(
-        height: _rowHeight,
+      child: Container(
+        height: isActive ? _activeRowHeight : _rowHeight,
+        // The ring is drawn inside the box, so the focused row gives its
+        // border width back — the text must not shift when the ring lands.
+        padding: EdgeInsets.symmetric(horizontal: focused ? 8.5 : 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isActive
+              ? AppColors.accentPrimary.withValues(alpha: 0.10)
+              : focused
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.transparent,
+          border: focused
+              ? Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1.5,
+                )
+              : null,
+        ),
         child: Row(
           children: [
-            SizedBox(
-              width: 14,
+            _lead(state),
+            const SizedBox(width: 13),
+            Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rails split the leftover evenly, so the dot sits at the
-                  // row's vertical centre — level with the exercise name.
-                  Expanded(
-                    child: Container(width: 1.5, color: railTop),
-                  ),
-                  Container(
-                    width: dotSize,
-                    height: dotSize,
-                    decoration: BoxDecoration(
-                      color: dotColor,
-                      borderRadius: BorderRadius.circular(99),
-                      boxShadow: focused
-                          ? const [
-                              BoxShadow(
-                                color: Color(0x383D7BFF),
-                                spreadRadius: 3,
-                              ),
-                            ]
-                          : null,
+                  Text(
+                    node.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      letterSpacing: -0.15,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                      color: titleColor,
                     ),
                   ),
-                  Expanded(
-                    child: Container(width: 1.5, color: railBottom),
-                  ),
+                  if (isActive) ...[
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Training now',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: kWheelTrainingBlue,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                node.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14.5,
-                  letterSpacing: -0.15,
-                  fontWeight: focused ? FontWeight.w700 : FontWeight.w500,
-                  color: !focused && state == WheelNodeState.locked
-                      ? const Color(0xFF8A8B93)
-                      : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            // A locked step needs no tag — the dim dot already says it.
-            if (state != WheelNodeState.locked)
-              Text(
-                _statusLabels[state]!,
-                style: GoogleFonts.robotoMono(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.17,
-                  color: focused
-                      ? _statusColors[state]
-                      : const Color(0xFF4A4B52),
-                ),
-              ),
           ],
         ),
       ),

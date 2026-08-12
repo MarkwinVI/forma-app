@@ -9,7 +9,9 @@ import '../../../core/theme/app_colors.dart';
 /// How one step of a tree reads on the wheel. Skipped counts as cleared
 /// everywhere (same rule as the rest of the app); the wheel only tells the
 /// two apart in the focused card's status line.
-enum WheelNodeState { mastered, skipped, active, locked }
+/// [available] is a step whose prerequisite is cleared but which is not the
+/// step being trained — reachable right now, drawn as a white node.
+enum WheelNodeState { mastered, skipped, active, available, locked }
 
 extension WheelNodeStateX on WheelNodeState {
   bool get isCleared =>
@@ -785,21 +787,29 @@ class _WheelPainter extends CustomPainter {
       st == WheelNodeState.active && !state.widget.isPicker ? 4.9 : 3.5;
 
   Color _fillOf(WheelNodeState st) {
-    if (st == WheelNodeState.active) {
-      return state.widget.isPicker
-          ? _SkillWheelState._lock
-          : _SkillWheelState._accent;
+    if (state.widget.isPicker) {
+      // A picker marks destinations, not progress — only cleared steps read
+      // green, everything still ahead is neutral.
+      return st.isCleared ? _SkillWheelState._green : _SkillWheelState._lock;
     }
-    return st == WheelNodeState.locked
-        ? _SkillWheelState._lock
-        : _SkillWheelState._green;
+    return switch (st) {
+      WheelNodeState.active => _SkillWheelState._accent,
+      WheelNodeState.mastered || WheelNodeState.skipped =>
+        _SkillWheelState._green,
+      WheelNodeState.available => AppColors.textPrimary,
+      WheelNodeState.locked => _SkillWheelState._lock,
+    };
   }
 
   /// Whether a link reads as travelled. A picker draws no working step, so
-  /// the lit path stops at the last step actually cleared.
-  bool _lit(_GeoLink l) => state.widget.isPicker
-      ? l.p.state.isCleared && l.q.state.isCleared
-      : l.p.state != WheelNodeState.locked && l.q.state != WheelNodeState.locked;
+  /// the lit path stops at the last step actually cleared. An available step
+  /// is reachable but not travelled — links into it stay unlit.
+  bool _lit(_GeoLink l) {
+    bool travelled(WheelNodeState st) => state.widget.isPicker
+        ? st.isCleared
+        : st.isCleared || st == WheelNodeState.active;
+    return travelled(l.p.state) && travelled(l.q.state);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {

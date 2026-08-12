@@ -140,6 +140,8 @@ List<WheelFamily> buildWheelFamilies({
         state = WheelNodeState.mastered;
       } else if (tree == TreeNodeState.cur) {
         state = WheelNodeState.active;
+      } else if (tree == TreeNodeState.unlocked) {
+        state = WheelNodeState.available;
       } else {
         state = WheelNodeState.locked;
       }

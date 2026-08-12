@@ -11,6 +11,7 @@ import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../home/home_dashboard_metrics.dart';
+import 'performance_overview.dart';
 import 'skill_wheel_data.dart';
 import 'widgets/skill_wheel.dart';
 
@@ -26,6 +27,10 @@ class SkillWheelBundle {
   final List<WheelFamily> families;
   final Map<String, JourneySkillProgressData> journeyByCategory;
 
+  /// MY PERFORMANCE: every exercise in the program's workout lists,
+  /// classified by how its best set moved. Null without a program.
+  final PerformanceOverview? performance;
+
   const SkillWheelBundle({
     required this.progressMap,
     required this.progressEntries,
@@ -34,6 +39,7 @@ class SkillWheelBundle {
     required this.pastWorkouts,
     required this.families,
     required this.journeyByCategory,
+    required this.performance,
   });
 
   bool get hasProgram => logicSnapshot != null;
@@ -87,7 +93,7 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
     skillTracks: skillTracks,
   );
 
-  final metrics = _buildMetrics(
+  final derived = _buildDerived(
     logicSnapshot: logicSnapshot,
     progressMap: progressMap,
     progressEntries: progressEntries,
@@ -96,6 +102,7 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
     trainingProgramService: trainingProgramService,
     devClockService: devClockService,
   );
+  final metrics = derived?.metrics;
 
   return SkillWheelBundle(
     progressMap: progressMap,
@@ -109,10 +116,12 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
         for (final skill in metrics.journeySnapshot.closestSkills)
           skill.skillCategoryId: skill,
     },
+    performance: derived?.performance,
   );
 }
 
-HomeDashboardMetrics? _buildMetrics({
+({HomeDashboardMetrics metrics, PerformanceOverview performance})?
+    _buildDerived({
   required TrainingProgramLogicSnapshot? logicSnapshot,
   required Map<String, ExerciseStatus> progressMap,
   required Map<String, ExerciseProgress> progressEntries,
@@ -138,18 +147,20 @@ HomeDashboardMetrics? _buildMetrics({
       : const <String, dynamic>{};
   final dayMask =
       TrainingScheduleService.dayMaskFrom(snapshot.program.variationRules);
+  final cycle = trainingProgramService.scheduleCycleFor(
+    programType: programType,
+    scheduleVariant: scheduleVariant,
+    frequencyPerWeek: snapshot.program.frequencyPerWeek,
+    dayMask: dayMask,
+  );
   final schedule = HomeDashboardMetricsCalculator.resolveSchedule(
-    cycle: trainingProgramService.scheduleCycleFor(
-      programType: programType,
-      scheduleVariant: scheduleVariant,
-      frequencyPerWeek: snapshot.program.frequencyPerWeek,
-      dayMask: dayMask,
-    ),
+    cycle: cycle,
     nextStepIndex: snapshot.state.nextStepIndex,
     nextSessionType: snapshot.state.nextSessionType,
     lastWorkoutAt: pastWorkouts.isEmpty ? null : pastWorkouts.first.loggedAt,
     now: now,
   );
+  final hasGym = programUsesGym(snapshot.program.variationRules);
   final recommendation = trainingProgramService.buildToday(
     progressMap: progressMap,
     programType: programType,
@@ -157,10 +168,48 @@ HomeDashboardMetrics? _buildMetrics({
     branchSelections: branchSelections,
     sessionItemsConfig: sessionItemsConfig,
     skillTracks: skillTracks,
-    hasGym: programUsesGym(snapshot.program.variationRules),
+    hasGym: hasGym,
   );
 
-  return HomeDashboardMetricsCalculator.build(
+  // Every exercise across the program's workout lists — one build per
+  // session type in the cycle, deduped. Removing or replacing an exercise
+  // in the workout editor removes it here.
+  final activeExercises = <ActivePerformanceExercise>[];
+  final seenExerciseIds = <String>{};
+  final sessionTypes = <TrainingSessionType>{
+    for (final type in cycle)
+      if (type != TrainingSessionType.rest) type,
+  };
+  for (final type in sessionTypes) {
+    final session = type == schedule.effectiveSessionType
+        ? recommendation
+        : trainingProgramService.buildToday(
+            progressMap: progressMap,
+            programType: programType,
+            sessionType: type,
+            branchSelections: branchSelections,
+            sessionItemsConfig: sessionItemsConfig,
+            skillTracks: skillTracks,
+            hasGym: hasGym,
+          );
+    for (final item in session.items) {
+      if (seenExerciseIds.add(item.exercise.id)) {
+        activeExercises.add(ActivePerformanceExercise(
+          exerciseId: item.exercise.id,
+          exerciseName: item.exercise.name,
+          isTimed: item.exercise.isTimed,
+        ));
+      }
+    }
+  }
+
+  final performance = buildPerformanceOverview(
+    activeExercises: activeExercises,
+    workouts: pastWorkouts,
+    now: now,
+  );
+
+  final metrics = HomeDashboardMetricsCalculator.build(
     recommendation: recommendation,
     trainingProgramService: trainingProgramService,
     programType: programType,
@@ -177,4 +226,6 @@ HomeDashboardMetrics? _buildMetrics({
     dayMask: dayMask,
     now: now,
   );
+
+  return (metrics: metrics, performance: performance);
 }

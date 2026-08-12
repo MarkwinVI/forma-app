@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../home/home_dashboard_metrics.dart';
+import '../performance_overview.dart';
 import 'skill_wheel.dart';
 import 'skill_wheel_panels.dart';
 
@@ -26,6 +27,10 @@ class SkillWheelScreen extends StatefulWidget {
   /// Trees behind an unmet prerequisite, with what unlocks them. They carry
   /// a padlock on the wheel and a lock note while focused.
   final Map<String, WheelTreeLock> treeLocks;
+
+  /// MY PERFORMANCE data for the sheet under the wheel. The sheet only
+  /// mounts when this is set (Progress tab); editable hosts never show it.
+  final PerformanceOverview? performance;
 
   /// Whether this screen can change progressions (Program-tab entry). The
   /// Progress tab keeps the wheel read-only.
@@ -59,6 +64,7 @@ class SkillWheelScreen extends StatefulWidget {
     required this.onOpenExercise,
     this.activeCategoryIds = const {},
     this.treeLocks = const {},
+    this.performance,
     this.editable = false,
     this.onTrainNode,
     this.onStopTraining,
@@ -145,11 +151,22 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     if (family != null) {
       final flat = family.flat;
       final node = flat[_focus.clamp(0, flat.length - 1)];
-      final showCta = widget.editable && node.state != WheelNodeState.active;
+      // The current step of a running tree offers Stop; everything else
+      // offers the verb that would make it the trained exercise.
+      final isCurrent =
+          familyActive && node.state == WheelNodeState.active;
+      final showCta = widget.editable &&
+          (isCurrent ? widget.onStopTraining != null : true);
+      final lockedNode = node.state == WheelNodeState.locked;
+      // The tree lock's warning wins over the skipped-steps one — starting
+      // the whole tree early is the bigger call.
+      final warn = !isCurrent && (lock != null || lockedNode);
       final panelBottomPad = MediaQuery.of(context).padding.bottom +
           (widget.editable ? 14 : 90);
-      bottomPanelAllowance =
-          112 + (showCta ? 62 : 0) + (widget.editable ? 0 : 76);
+      bottomPanelAllowance = 146 +
+          (showCta ? 66 : 0) +
+          (warn ? 30 : 0) +
+          (widget.editable ? 0 : 76);
       bottomPanel = Container(
         padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
         decoration: const BoxDecoration(
@@ -166,32 +183,53 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
               onOpen: () => widget.onOpenExercise(node),
             ),
             if (showCta) ...[
-              const SizedBox(height: 10),
-              // A step not yet reached — or a whole tree behind its
-              // prerequisite — offers itself quietly: an outline button
-              // rather than the filled call to action.
-              if (node.state == WheelNodeState.locked || lock != null)
-                _QuietPill(
-                  label: _acting
-                      ? 'Saving…'
-                      : familyActive
-                          ? 'Train it anyway'
-                          : 'Start anyway',
+              const SizedBox(height: 8),
+              if (isCurrent)
+                _WheelCta(
+                  label: _acting ? 'Saving…' : 'Stop training',
+                  color: AppColors.red,
                   onTap: _acting
                       ? null
-                      : () => _act(() => widget.onTrainNode!(family, node)),
+                      : () => _act(() => widget.onStopTraining!(family)),
                 )
-              else
-                PillButton(
+              else ...[
+                if (warn)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      lock != null
+                          ? 'Not advised yet — master '
+                              '${lock.prereqExerciseName} '
+                              '(${lock.prereqTreeTitle} tree) before '
+                              'starting this one.'
+                          : 'Skips the steps before it'
+                              '${familyActive ? ' and moves the progression here' : ''}.',
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                        color:
+                            lock != null ? AppColors.amber : AppColors.textMuted,
+                      ),
+                    ),
+                  ),
+                _WheelCta(
                   label: _acting
                       ? 'Saving…'
-                      : familyActive
-                          ? 'Train this exercise'
-                          : 'Start here',
+                      : lockedNode && familyActive
+                          ? 'Jump here'
+                          : !familyActive
+                              ? (lock != null ? 'Start anyway' : 'Start here')
+                              : 'Train this exercise',
+                  color: warn ? AppColors.amber : AppColors.accentPrimary,
                   onTap: _acting
                       ? null
                       : () => _act(() => widget.onTrainNode!(family, node)),
                 ),
+              ],
             ],
           ],
         ),
@@ -265,16 +303,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             ),
                           ),
                         ),
-                        if (widget.editable && familyActive) ...[
-                          const SizedBox(width: 10),
-                          _StopTrainingPill(
-                            onTap: _acting
-                                ? null
-                                : () => _act(
-                                      () => widget.onStopTraining!(family),
-                                    ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -375,7 +403,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
             // MY PERFORMANCE rides in a sheet: resting just under the wheel,
             // draggable up to snap over it at the top of the page, and back
             // down to the resting view.
-            if (family == null && !widget.editable)
+            if (family == null &&
+                !widget.editable &&
+                widget.performance != null)
               DraggableScrollableSheet(
                 initialChildSize: minFraction,
                 minChildSize: minFraction,
@@ -389,6 +419,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     ),
                   ),
                   child: PerformancePanel(
+                    overview: widget.performance!,
                     controller: scrollController,
                     bottomInset: bottomInset,
                   ),
@@ -401,26 +432,30 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   }
 }
 
-/// The quiet variant of the CTA: a hairline outline instead of a filled
-/// pill — for actions the app offers without recommending.
-class _QuietPill extends StatelessWidget {
+/// The one CTA style of the reference design: a soft tinted pill whose tint
+/// carries the action — blue = go, amber = caution, red = stop.
+class _WheelCta extends StatelessWidget {
   final String label;
+  final Color color;
   final VoidCallback? onTap;
 
-  const _QuietPill({required this.label, required this.onTap});
+  const _WheelCta({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
       child: Container(
-        height: 48,
+        height: 46,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.16),
-          ),
+          borderRadius: BorderRadius.circular(13),
+          color: color.withValues(alpha: 0.13),
+          border: Border.all(color: color.withValues(alpha: 0.38)),
         ),
         child: Text(
           label,
@@ -428,7 +463,7 @@ class _QuietPill extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.15,
-            color: onTap == null ? AppColors.textMuted : AppColors.textPrimary,
+            color: onTap == null ? AppColors.textMuted : color,
           ),
         ),
       ),
@@ -602,39 +637,6 @@ class _ProgressionsPanel extends StatelessWidget {
                 ),
               ),
         ],
-      ),
-    );
-  }
-}
-
-/// The mono red pill that stops the focused tree's progression.
-class _StopTrainingPill extends StatelessWidget {
-  final VoidCallback? onTap;
-
-  const _StopTrainingPill({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-        decoration: BoxDecoration(
-          color: AppColors.bg,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: AppColors.red.withValues(alpha: 0.4),
-          ),
-        ),
-        child: Text(
-          'STOP TRAINING',
-          style: GoogleFonts.robotoMono(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.1,
-            color: AppColors.red,
-          ),
-        ),
       ),
     );
   }

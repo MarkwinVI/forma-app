@@ -205,6 +205,8 @@ class _MiniWheelPainter extends CustomPainter {
         WheelNodeState.mastered => AppColors.green,
         WheelNodeState.skipped => AppColors.green.withValues(alpha: 0.4),
         WheelNodeState.active => AppColors.textPrimary,
+        WheelNodeState.available =>
+          AppColors.textPrimary.withValues(alpha: 0.85),
         WheelNodeState.locked => const Color(0xFF4A4B52),
       };
       canvas.drawCircle(
