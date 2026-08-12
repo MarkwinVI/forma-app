@@ -448,7 +448,7 @@ class _SourceChip extends StatelessWidget {
         ? null
         : SkillCategoryCatalog.findById(item.skillCategoryId!);
     final label = fromTree
-        ? '${category?.title ?? 'Skill tree'} progression'
+        ? '${category?.title ?? 'Skill Tree'} Progression'
         : 'Standalone';
     final color =
         fromTree ? const Color(0xFF9DB9FF) : AppColors.textSecondary;
@@ -476,13 +476,13 @@ class _SourceChip extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              label.toUpperCase(),
+              label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.robotoMono(
-                fontSize: 10.5,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 1.1,
+                letterSpacing: 0.3,
                 color: color,
               ),
             ),
@@ -637,7 +637,7 @@ class _AddExerciseRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             const Text(
-              'Add exercise',
+              'Add standalone exercise',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w700,
