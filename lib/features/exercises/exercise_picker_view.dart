@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -143,10 +142,6 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
     return category?.isLockedFor(widget.progressMap) ?? false;
   }
 
-  /// The step a tree is currently sitting on — adding it resumes that path.
-  bool _continuesAPath(Exercise exercise) =>
-      widget.progressMap[exercise.id] == ExerciseStatus.active;
-
   void _toggle(Exercise exercise) {
     if (widget.browsing) {
       openExerciseDetailView<void>(context, exercise: exercise);
@@ -235,8 +230,6 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   @override
   Widget build(BuildContext context) {
     final matches = _matches;
-    final resumes = matches.where(_continuesAPath).toList();
-    final rest = matches.where((e) => !_continuesAPath(e)).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -364,36 +357,15 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
                             _picked.isEmpty ? 40 : 130,
                           ),
                           children: [
-                            if (resumes.isNotEmpty) ...[
-                              const _ResultsHeader(
-                                'Continues a path you’re on',
-                              ),
-                              for (final exercise in resumes)
-                                _ExerciseResultRow(
-                                  exercise: exercise,
-                                  added: _picked.any(
-                                    (entry) => entry.id == exercise.id,
-                                  ),
-                                  browsing: widget.browsing,
-                                  onTap: () => _toggle(exercise),
+                            for (final exercise in matches)
+                              _ExerciseResultRow(
+                                exercise: exercise,
+                                added: _picked.any(
+                                  (entry) => entry.id == exercise.id,
                                 ),
-                            ],
-                            if (rest.isNotEmpty) ...[
-                              _ResultsHeader(
-                                resumes.isEmpty
-                                    ? 'All exercises'
-                                    : 'Everything else',
+                                browsing: widget.browsing,
+                                onTap: () => _toggle(exercise),
                               ),
-                              for (final exercise in rest)
-                                _ExerciseResultRow(
-                                  exercise: exercise,
-                                  added: _picked.any(
-                                    (entry) => entry.id == exercise.id,
-                                  ),
-                                  browsing: widget.browsing,
-                                  onTap: () => _toggle(exercise),
-                                ),
-                            ],
                           ],
                         ),
                 ),
@@ -558,28 +530,6 @@ class _FilterChip extends StatelessWidget {
               color: active ? AppColors.accentPrimary : AppColors.textMuted,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ResultsHeader extends StatelessWidget {
-  final String label;
-
-  const _ResultsHeader(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 26, bottom: 2),
-      child: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.robotoMono(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
-          letterSpacing: 1.65,
         ),
       ),
     );
