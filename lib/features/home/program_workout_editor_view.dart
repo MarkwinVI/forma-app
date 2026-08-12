@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -292,7 +294,6 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
                           for (final item in _items)
                             _ItemRow(
                               item: item,
-                              subtitle: _itemSubtitle(item),
                               onOptions: () => _openItemActions(item),
                               onOpenDetail: _exerciseFor(item) == null
                                   ? null
@@ -352,15 +353,14 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         ? null
         : SkillCategoryCatalog.findById(item.skillCategoryId!);
     if (category == null) return 'Skill tree progression';
-    return 'From: ${category.title} skill tree';
+    return '${category.title} progression';
   }
 }
 
-/// One exercise in the workout: name, what it trains, and a single options
+/// One exercise in the workout: name, where it came from, and a single options
 /// button — everything else lives in the sheet behind it.
 class _ItemRow extends StatelessWidget {
   final ProgramDayItem item;
-  final String subtitle;
   final VoidCallback onOptions;
 
   /// Opens the exercise's own page. Null for the rare item whose exercise is
@@ -369,7 +369,6 @@ class _ItemRow extends StatelessWidget {
 
   const _ItemRow({
     required this.item,
-    required this.subtitle,
     required this.onOptions,
     this.onOpenDetail,
   });
@@ -405,16 +404,8 @@ class _ItemRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                const SizedBox(height: 8),
+                _SourceChip(item: item),
               ],
             ),
           ),
@@ -433,6 +424,66 @@ class _ItemRow extends StatelessWidget {
                 Icons.more_horiz_rounded,
                 size: 17,
                 color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Where the exercise came from, worn as a tag: an accent "progression" chip
+/// linking it to its skill tree, or a muted "standalone" chip for hand-added
+/// work that nothing schedules or advances.
+class _SourceChip extends StatelessWidget {
+  final ProgramDayItem item;
+
+  const _SourceChip({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final fromTree = item.kind == ProgramDayItemKind.progression;
+    final category = item.skillCategoryId == null
+        ? null
+        : SkillCategoryCatalog.findById(item.skillCategoryId!);
+    final label = fromTree
+        ? '${category?.title ?? 'Skill tree'} progression'
+        : 'Standalone';
+    final color =
+        fromTree ? const Color(0xFF9DB9FF) : AppColors.textSecondary;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(11, 5, 12, 5),
+      decoration: BoxDecoration(
+        color: fromTree
+            ? AppColors.accentSoft
+            : Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (fromTree)
+            // The diagonal chain link of the reference design — Material only
+            // draws it horizontal.
+            Transform.rotate(
+              angle: -math.pi / 4,
+              child: Icon(Icons.link_rounded, size: 13, color: color),
+            )
+          else
+            Icon(Icons.motion_photos_on_rounded, size: 12, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.robotoMono(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+                color: color,
               ),
             ),
           ),
