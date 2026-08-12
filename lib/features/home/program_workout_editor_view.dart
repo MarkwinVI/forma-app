@@ -204,6 +204,9 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       MaterialPageRoute(
         builder: (_) => ProgramSkillWheelView(
           initialCategoryId: item.skillCategoryId,
+          // Back from the tree returns to this list — the wheel overview
+          // would be a detour the user never asked for.
+          exitOnTreeBack: true,
         ),
       ),
     );

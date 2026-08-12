@@ -45,6 +45,13 @@ class SkillWheelScreen extends StatefulWidget {
   /// Fly into this category's tree on first build.
   final String? initialCategoryId;
 
+  /// Backing out of a focused tree normally pulls out to the wheel overview.
+  /// Hosts that open straight into one tree (a workout's Edit progression)
+  /// set this so back leaves the screen entirely via [onBack] instead — the
+  /// wheel overview would be a detour on the way back to where they came
+  /// from.
+  final bool exitOnTreeBack;
+
   const SkillWheelScreen({
     super.key,
     required this.families,
@@ -57,6 +64,7 @@ class SkillWheelScreen extends StatefulWidget {
     this.onStopTraining,
     this.onBack,
     this.initialCategoryId,
+    this.exitOnTreeBack = false,
   });
 
   @override
@@ -98,6 +106,13 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       _focus = 0;
     }
   }
+
+  /// What backing out of a focused tree does — pull out to the wheel, or
+  /// leave the screen when the host opened straight into the tree.
+  VoidCallback get _treeBack =>
+      widget.exitOnTreeBack && widget.onBack != null
+          ? widget.onBack!
+          : _wheelController.back;
 
   Future<void> _act(Future<void> Function() action) async {
     if (_acting) return;
@@ -214,7 +229,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                         if (_sel != null)
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
-                            onTap: _wheelController.back,
+                            onTap: _treeBack,
                             child: const Padding(
                               padding: EdgeInsets.only(right: 10),
                               child: Icon(
@@ -323,7 +338,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                       bottomInset + bottomPanelAllowance,
                                   onPickStep: (flatIndex) =>
                                       _wheelController.goTo(_sel!, flatIndex),
-                                  onDismiss: _wheelController.back,
+                                  onDismiss: _treeBack,
                                 ),
                               ),
                             ],
@@ -346,7 +361,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                   onHorizontalDragStart: (_) => _edgeDragDx = 0,
                   onHorizontalDragUpdate: (d) => _edgeDragDx += d.delta.dx,
                   onHorizontalDragEnd: (_) {
-                    if (_edgeDragDx > 50) _wheelController.back();
+                    if (_edgeDragDx > 50) _treeBack();
                   },
                 ),
               ),

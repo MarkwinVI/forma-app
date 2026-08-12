@@ -26,7 +26,16 @@ class ProgramSkillWheelView extends StatefulWidget {
   /// Fly straight into this tree on open.
   final String? initialCategoryId;
 
-  const ProgramSkillWheelView({super.key, this.initialCategoryId});
+  /// Backing out of the tree pops this whole view instead of pulling out to
+  /// the wheel overview — for hosts (the workout editor) where the wheel
+  /// would be a detour on the way back.
+  final bool exitOnTreeBack;
+
+  const ProgramSkillWheelView({
+    super.key,
+    this.initialCategoryId,
+    this.exitOnTreeBack = false,
+  });
 
   @override
   State<ProgramSkillWheelView> createState() => _ProgramSkillWheelViewState();
@@ -322,6 +331,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
                         onOpenExercise: _openExercise,
                         onBack: () => Navigator.of(context).pop(),
                         initialCategoryId: widget.initialCategoryId,
+                        exitOnTreeBack: widget.exitOnTreeBack,
                       ),
                       if (toast != null)
                         Positioned(
