@@ -741,11 +741,7 @@ class _WorkoutTypeRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              // Splits read as days here ("Push day"); Full Body already
-              // names the whole session, so it stays as is.
-              sessionType == TrainingSessionType.fullBody
-                  ? programWorkoutTypeName(sessionType)
-                  : '${programWorkoutTypeName(sessionType)} day',
+              programWorkoutDayName(sessionType),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(

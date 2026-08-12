@@ -257,7 +257,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _typeName,
+                        programWorkoutDayName(widget.sessionType),
                         style: const TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w800,

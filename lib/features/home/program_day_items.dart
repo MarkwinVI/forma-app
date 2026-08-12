@@ -437,6 +437,13 @@ String programWorkoutTypeName(TrainingSessionType sessionType) {
   }
 }
 
+/// The split as a day name — "Push day"; Full Body already names the whole
+/// session, so it stays as is.
+String programWorkoutDayName(TrainingSessionType sessionType) {
+  final name = programWorkoutTypeName(sessionType);
+  return sessionType == TrainingSessionType.fullBody ? name : '$name day';
+}
+
 String programDayTitle(TrainingSessionType sessionType) {
   switch (sessionType) {
     case TrainingSessionType.fullBody:
