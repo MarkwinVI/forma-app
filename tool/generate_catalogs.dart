@@ -53,10 +53,10 @@ const _sectionForWorkoutSection = <String, String>{
 /// A movement with no harder variation waiting: it is never mastered, and the
 /// only way on is more reps and then more load, which the user approves. Not
 /// a column in either sheet — it is what the app does with a lift, so it is
-/// stated here rather than guessed from the name.
+/// stated here rather than guessed from the name. Only the legacy one-lift
+/// squat tree still works this way; every current tree climbs rungs instead.
 const _openEndedNodes = <String>{
   'barbell_squat_barbell_squat',
-  'hinge_romanian_deadlift',
 };
 
 /// The library is outside the progressions, so every movement in it is

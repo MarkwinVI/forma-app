@@ -14,17 +14,17 @@ void main() {
 
   group('what the sheet became', () {
     test('every tree step and every library movement is here', () {
-      expect(steps, hasLength(143));
-      expect(library, hasLength(488));
-      expect(ExerciseCatalog.everything(), hasLength(143 + 488));
+      expect(steps, hasLength(153));
+      expect(library, hasLength(491));
+      expect(ExerciseCatalog.everything(), hasLength(153 + 491));
     });
 
     test('picking lists a movement once, as the step performed with it', () {
       final searchable = ExerciseCatalog.searchable();
       final performedWith = steps.map((step) => step.libraryId).toSet();
 
-      expect(performedWith, hasLength(107));
-      expect(searchable, hasLength(143 + 488 - 107));
+      expect(performedWith, hasLength(110));
+      expect(searchable, hasLength(153 + 491 - 110));
       expect(
         searchable.where((e) => e.isLibrary && performedWith.contains(e.id)),
         isEmpty,
@@ -150,7 +150,7 @@ void main() {
     test('only the barbell lifts are open-ended', () {
       expect(
         steps.where((e) => e.isLoaded).map((e) => e.id),
-        unorderedEquals(['barbell_squat_barbell_squat', 'hinge_romanian_deadlift']),
+        unorderedEquals(['barbell_squat_barbell_squat']),
       );
     });
 

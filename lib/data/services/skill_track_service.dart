@@ -69,8 +69,11 @@ class SkillTrackService {
       if (parts.length != 2) return;
       final category = SkillCategoryCatalog.findById(parts[0]);
       if (category == null) return;
-      if (!category.trainingPaths.containsKey(parts[1])) return;
-      seeds.putIfAbsent(parts[0], () => parts[1]);
+      // Lane selections can predate a tree's restructuring; their branch is
+      // read as the one that replaced it, like every other stored branch id.
+      final branchId = SkillCategoryCatalog.migrateBranchId(parts[0], parts[1]);
+      if (!category.trainingPaths.containsKey(branchId)) return;
+      seeds.putIfAbsent(parts[0], () => branchId);
     }
 
     for (final track in TrainingTrack.values) {

@@ -44,7 +44,7 @@ void main() {
         SkillCategoryCatalog.rowsId: 'front_lever',
         SkillCategoryCatalog.pullupsId: 'weighted',
         SkillCategoryCatalog.squatId: 'pistol',
-        SkillCategoryCatalog.hingeId: 'nordic',
+        SkillCategoryCatalog.hingeId: 'nordic_curls',
         SkillCategoryCatalog.coreId: 'l_sit',
       });
     });
@@ -55,7 +55,7 @@ void main() {
 
       expect(tracks[SkillCategoryCatalog.squatId], 'weighted');
       expect(tracks.containsKey(SkillCategoryCatalog.barbellSquatId), isFalse);
-      expect(tracks[SkillCategoryCatalog.hingeId], 'rdl');
+      expect(tracks[SkillCategoryCatalog.hingeId], 'weighted');
       expect(tracks[SkillCategoryCatalog.coreId], 'l_sit');
     });
 
@@ -238,15 +238,52 @@ void main() {
       expect(plan.statuses['squat_barbell_squat'], ExerciseStatus.active);
     });
 
-    test('the Romanian deadlift opens light and the Nordic curl at 3 × 5', () {
-      final rdl = planFor(hasGym: true).targets['hinge_romanian_deadlift']!;
-      expect(
-        (rdl.sets, rdl.value, rdl.weightKg),
-        (3, 5, ProgramStartPlanner.romanianDeadliftStartKg),
+    test('the weighted hinge places its rung from 80% of the RDL max', () {
+      // 80% of a 100 kg max is 80 kg — the +100% bodyweight rung exactly.
+      final plan = planFor(
+        hasGym: true,
+        strength: {'rdl': 100},
+        bodyweightKg: 80,
       );
 
-      final nordic = planFor().targets['hinge_nordic_nordic_curl']!;
-      expect((nordic.sets, nordic.value, nordic.weightKg), (3, 5, null));
+      expect(plan.statuses['hinge_rdl_100_bw'], ExerciseStatus.active);
+      expect(
+        [
+          for (final id in const [
+            'hinge_romanian_deadlift_bodyweight',
+            'hinge_romanian_deadlift_barbell',
+            'hinge_rdl_25_bw',
+            'hinge_rdl_50_bw',
+            'hinge_rdl_75_bw',
+          ])
+            plan.statuses[id],
+        ],
+        everyElement(ExerciseStatus.skipped),
+      );
+      expect(plan.statuses.containsKey('hinge_rdl_125_bw'), isFalse);
+    });
+
+    test('a blank RDL answer starts the hinge on its first step', () {
+      final plan = planFor(hasGym: true);
+
+      expect(
+        plan.statuses['hinge_romanian_deadlift_bodyweight'],
+        ExerciseStatus.active,
+      );
+      expect(
+        plan.statuses.containsKey('hinge_romanian_deadlift_barbell'),
+        isFalse,
+      );
+    });
+
+    test('without a gym the hinge runs the Nordic curls from the start', () {
+      final plan = planFor();
+
+      expect(
+        plan.statuses['hinge_romanian_deadlift_bodyweight'],
+        ExerciseStatus.active,
+      );
+      expect(plan.tracks[SkillCategoryCatalog.hingeId], 'nordic_curls');
     });
   });
 
@@ -287,7 +324,7 @@ void main() {
           'rows_vertical_rows',
           'pushups_wall_push_up',
           'squat_barbell_squat',
-          'hinge_romanian_deadlift',
+          'hinge_romanian_deadlift_bodyweight',
           'core_foot_supported_l_sit',
         ],
       );
@@ -322,7 +359,7 @@ void main() {
         [
           'pullups_scapular_pull',
           'rows_vertical_rows',
-          'hinge_romanian_deadlift',
+          'hinge_romanian_deadlift_bodyweight',
           'face_pull',
         ],
       );
@@ -354,7 +391,7 @@ void main() {
         ),
         [
           'squat_barbell_squat',
-          'hinge_romanian_deadlift',
+          'hinge_romanian_deadlift_bodyweight',
           'core_foot_supported_l_sit',
           'standing_calf_raise',
         ],
@@ -388,7 +425,7 @@ void main() {
         [
           'pullups_scapular_pull',
           'rows_vertical_rows',
-          'hinge_nordic_nordic_curl',
+          'hinge_romanian_deadlift_bodyweight',
         ],
       );
       expect(
@@ -400,7 +437,7 @@ void main() {
         ),
         [
           'squat_assisted_squat',
-          'hinge_nordic_nordic_curl',
+          'hinge_romanian_deadlift_bodyweight',
           'core_foot_supported_l_sit',
         ],
       );
@@ -470,13 +507,19 @@ void main() {
 
   group('the rows applyPlan writes', () {
     test('status and target arrive joined, as one position per exercise', () {
-      final plan = ProgramStartPlanner.planFor(
-        hasGym: true,
-        goalSkillIds: const [],
-        // Ten push-ups: starts on the push-up itself, skipping the steps
-        // behind it — so the plan carries both targets and skipped statuses.
-        startingStrength: const {'squat': 100, 'pushups': 10},
-        bodyweightKg: 80,
+      // The planner itself no longer sets opening targets — every rung's
+      // load comes from its own formula — but the write path still has to
+      // join a status with a target when a plan carries both.
+      const plan = ProgramStartPlan(
+        tracks: {},
+        statuses: {
+          'hinge_romanian_deadlift_barbell': ExerciseStatus.active,
+          'hinge_romanian_deadlift_bodyweight': ExerciseStatus.skipped,
+        },
+        targets: {
+          'hinge_romanian_deadlift_barbell':
+              ProgramStartTarget(sets: 3, value: 5, weightKg: 60),
+        },
       );
 
       final positions = ProgramStartService.startingPositionsFor(
@@ -484,24 +527,38 @@ void main() {
         existing: const {},
       );
 
-      final rdl = positions['hinge_romanian_deadlift']!;
+      final rdl = positions['hinge_romanian_deadlift_barbell']!;
       expect(rdl.status, ExerciseStatus.active);
-      expect(rdl.targetSets, ProgramStartPlanner.loadedLiftSets);
-      expect(rdl.targetValue, ProgramStartPlanner.loadedLiftStartReps);
-      expect(rdl.targetWeightKg, ProgramStartPlanner.romanianDeadliftStartKg);
+      expect(rdl.targetSets, 3);
+      expect(rdl.targetValue, 5);
+      expect(rdl.targetWeightKg, 60);
 
-      // A weighted squat rung has no special opening target: its load comes
-      // from the rung's own bodyweight-relative formula.
+      // A step with no special opening target still carries its status —
+      // null target means the standard ladder target.
+      final skipped = positions['hinge_romanian_deadlift_bodyweight']!;
+      expect(skipped.status, ExerciseStatus.skipped);
+      expect(skipped.targetSets, isNull);
+    });
+
+    test('a weighted rung placed by setup has no special opening target — '
+        'its load comes from the rung formula', () {
+      final plan = ProgramStartPlanner.planFor(
+        hasGym: true,
+        goalSkillIds: const [],
+        startingStrength: const {'squat': 100, 'rdl': 100},
+        bodyweightKg: 80,
+      );
+
+      expect(plan.targets, isEmpty);
+
+      final positions = ProgramStartService.startingPositionsFor(
+        plan,
+        existing: const {},
+      );
       final squat = positions['squat_barbell_plus_100']!;
       expect(squat.status, ExerciseStatus.active);
       expect(squat.targetSets, isNull);
       expect(squat.targetWeightKg, isNull);
-
-      // A step with no special opening target still carries its status —
-      // null target means the standard ladder target.
-      final skipped = positions.entries
-          .firstWhere((entry) => entry.value.status == ExerciseStatus.skipped);
-      expect(skipped.value.targetSets, isNull);
     });
 
     test('an exercise the user already has a row for is left alone', () {

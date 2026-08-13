@@ -19,6 +19,7 @@ const List<String> kWheelOrder = [
   SkillCategoryCatalog.pushupsId,
   SkillCategoryCatalog.dipsId,
   SkillCategoryCatalog.squatId,
+  SkillCategoryCatalog.hingeId,
 ];
 
 /// Wheel-specific branch display order, by category. Branches fan from the

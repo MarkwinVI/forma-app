@@ -6655,6 +6655,44 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
     ),
+    Exercise(
+      id: 'romanian_deadlift_bodyweight',
+      category: ExerciseCategory.hinge,
+      name: 'Romanian Deadlift (Bodyweight)',
+      description: 'Stand tall with a slight bend in the knees.',
+      difficulty: 3,
+      treeOrder: 0,
+      isLibrary: true,
+      primaryMuscles: ['Hamstrings'],
+      secondaryMuscles: ['Glutes', 'Lower back'],
+      isLoaded: true,
+    ),
+    Exercise(
+      id: 'nordic_hamstring_curl_banded_eccentric',
+      category: ExerciseCategory.hinge,
+      name: 'Nordic Hamstring Curl (Banded, Eccentric)',
+      description:
+          'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+      difficulty: 3,
+      treeOrder: 0,
+      isLibrary: true,
+      primaryMuscles: ['Hamstrings'],
+      secondaryMuscles: ['Glutes', 'Calves'],
+      isLoaded: true,
+    ),
+    Exercise(
+      id: 'nordic_hamstring_curl_banded',
+      category: ExerciseCategory.hinge,
+      name: 'Nordic Hamstring Curl (Banded)',
+      description:
+          'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+      difficulty: 3,
+      treeOrder: 0,
+      isLibrary: true,
+      primaryMuscles: ['Hamstrings'],
+      secondaryMuscles: ['Glutes', 'Calves'],
+      isLoaded: true,
+    ),
   ];
 
   static const Map<String, ExerciseCoaching> _coaching = {
@@ -13054,6 +13092,50 @@ class ExerciseLibraryCatalog {
         'Go light, the lowering half is the hard part',
       ],
       videoUrl: 'https://www.youtube.com/watch?v=irCfZmiJKuo',
+      imageUrl: '',
+    ),
+    'romanian_deadlift_bodyweight': ExerciseCoaching(
+      howTo: [
+        'Stand tall with a slight bend in the knees.',
+        'Brace your core, push your hips back and hinge your torso forward until you feel tension in the hamstrings.',
+        'Squeeze the glutes and drive the hips forward to return to standing.',
+      ],
+      formChecks: [
+        'Hips move back, not down',
+        'Keep a neutral spine',
+        'Knees stay softly bent',
+        'Feel the stretch in the hamstrings, not the lower back',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=EK-Fi5sFSm4',
+      imageUrl: '',
+    ),
+    'nordic_hamstring_curl_banded_eccentric': ExerciseCoaching(
+      howTo: [
+        'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+        'Keep your hips extended and slowly lower your body toward the floor.',
+        'Catch yourself with your hands at the bottom and push back to the start instead of curling yourself up.',
+      ],
+      formChecks: [
+        'Straight line from knees to shoulders',
+        'Keep hips extended',
+        'Lower slowly under control',
+        'Use the hands to return, not the hamstrings',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=HUXS3S2xSX4',
+      imageUrl: '',
+    ),
+    'nordic_hamstring_curl_banded': ExerciseCoaching(
+      howTo: [
+        'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+        'Keeping your hips extended, lower under control, then contract your hamstrings to pull yourself back to the starting position with assistance from the band.',
+      ],
+      formChecks: [
+        'Straight line from knees to shoulders',
+        'Do not pike at the hips',
+        'Control the descent',
+        'Use the band only as much as needed',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=HUXS3S2xSX4',
       imageUrl: '',
     ),
   };

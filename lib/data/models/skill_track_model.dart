@@ -1,3 +1,5 @@
+import '../catalog/skill_category_catalog.dart';
+
 /// One skill tree the user is running as an independent progression track:
 /// its active branch and whether it is currently included in the program.
 /// included = false means paused — the track leaves future workouts but its
@@ -17,9 +19,15 @@ class SkillTrack {
   });
 
   factory SkillTrack.fromMap(Map<String, dynamic> map) {
+    final categoryId = map['skill_category_id'] as String;
     return SkillTrack(
-      skillCategoryId: map['skill_category_id'] as String,
-      branchId: map['branch_id'] as String,
+      skillCategoryId: categoryId,
+      // Branch ids stored before a tree was restructured are read as the
+      // branch that replaced theirs, so old rows keep resolving.
+      branchId: SkillCategoryCatalog.migrateBranchId(
+        categoryId,
+        map['branch_id'] as String,
+      ),
       included: map['included'] as bool? ?? true,
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );

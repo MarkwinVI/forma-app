@@ -81,14 +81,14 @@ squat_deep_assisted_squat,"Squat (Assisted, Deep)",squat,foundation,squat_assist
 squat_squat,Squat (Bodyweight),squat,foundation,squat_bodyweight,squat_deep_assisted_squat,1,
 squat_deep_squat,Squat (Deep),squat,foundation,squat_deep,squat_squat,2,
 squat_barbell_squat,Squat (Barbell),squat,weighted,squat_barbell,squat_deep_squat,2,"0kg, just the bar"
-squat_barbell_plus_25,Barbell Squat (+25% Bodyweight),squat,weighted,squat_barbell,squat_barbell_squat,3,user_bodyweight * 0.25
-squat_barbell_plus_50,Barbell Squat (+50% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_25,3,user_bodyweight * 0.50
-squat_barbell_plus_75,Barbell Squat (+75% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_50,4,user_bodyweight * 0.75
-squat_barbell_plus_100,Barbell Squat (+100% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_75,4,user_bodyweight
-squat_barbell_plus_125,Barbell Squat (+125% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_100,4,user_bodyweight * 1.25
-squat_barbell_plus_150,Barbell Squat (+150% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_125,5,user_bodyweight * 1.5
-squat_barbell_plus_175,Barbell Squat (+175% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_150,5,user_bodyweight * 1.75
-squat_barbell_plus_200,Barbell Squat (+200% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_175,6,user_bodyweight * 2
+squat_barbell_plus_25,Barbell Squat (25% Bodyweight),squat,weighted,squat_barbell,squat_barbell_squat,3,user_bodyweight * 0.25
+squat_barbell_plus_50,Barbell Squat (50% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_25,3,user_bodyweight * 0.50
+squat_barbell_plus_75,Barbell Squat (75% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_50,4,user_bodyweight * 0.75
+squat_barbell_plus_100,Barbell Squat (100% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_75,4,user_bodyweight
+squat_barbell_plus_125,Barbell Squat (125% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_100,4,user_bodyweight * 1.25
+squat_barbell_plus_150,Barbell Squat (150% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_125,5,user_bodyweight * 1.5
+squat_barbell_plus_175,Barbell Squat (175% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_150,5,user_bodyweight * 1.75
+squat_barbell_plus_200,Barbell Squat (200% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_175,6,user_bodyweight * 2
 squat_box_pistol_squat_knee_height,Box Pistol Squat (Knee Height),squat,pistol,pistol_squat_box,squat_bulgarian_split_squat,3,
 squat_box_pistol_squat_mid_calf_height,Box Pistol Squat (Mid-Calf Height),squat,pistol,pistol_squat_box,squat_box_pistol_squat_knee_height,3,
 squat_assisted_pistol_squat,Assisted Pistol Squats,squat,pistol,assisted_pistol_squats,squat_box_pistol_squat_mid_calf_height,4,
@@ -138,7 +138,17 @@ dips_weighted_dips_200,Chest Dip (+100% Bodyweigh),dips,weighted,chest_dip_weigh
 dips_ring_dips,Ring Dips,dips,rings,ring_dips,dips_parallel_bar_dips,4,
 dips_ring_dips_rto,Ring Dip (Rings Turned Out),dips,rings,ring_dip_rings_turned_out,dips_ring_dips,5,
 barbell_squat_barbell_squat,Squat (Barbell),barbell_squat,main,squat_barbell,,3,
-hinge_romanian_deadlift,Romanian Deadlift (Barbell),hinge,rdl,romanian_deadlift_barbell,,2,
-hinge_nordic_nordic_curl,Nordic Hamstrings Curls,hinge,nordic,nordic_hamstrings_curls,,3,
-hinge_single_leg_rdl,Single Leg Romanian Deadlift (Bodyweight),hinge,posterior_chain,single_leg_romanian_deadlift_bodyweight,,2,
-hinge_posterior_chain_nordic_curl,Nordic Hamstrings Curls,hinge,posterior_chain,nordic_hamstrings_curls,hinge_single_leg_rdl,3,
+hinge_romanian_deadlift_bodyweight,Romanian Deadlift (Bodyweight),hinge,foundation,romanian_deadlift_bodyweight,,1,
+hinge_single_leg_rdl,Single Leg Romanian Deadlift (Bodyweight),hinge,nordic_curls,single_leg_romanian_deadlift_bodyweight,hinge_romanian_deadlift_bodyweight,2,
+hinge_banded_nordic_eccentric,"Nordic Hamstring Curl (Banded, Eccentric)",hinge,nordic_curls,nordic_hamstring_curl_banded_eccentric,hinge_single_leg_rdl,3,
+hinge_banded_nordic,Nordic Hamstring Curl (Banded),hinge,nordic_curls,nordic_hamstring_curl_banded,hinge_banded_nordic_eccentric,4,
+hinge_nordic_curl,Nordic Hamstrings Curls,hinge,nordic_curls,nordic_hamstrings_curls,hinge_banded_nordic,5,
+hinge_romanian_deadlift_barbell,Romanian Deadlift (Barbell),hinge,weighted,romanian_deadlift_barbell,hinge_romanian_deadlift_bodyweight,2,"0kg, just the bar"
+hinge_rdl_25_bw,Romanian Deadlift (25% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_romanian_deadlift_barbell,2,user_bodyweight * 0.25
+hinge_rdl_50_bw,Romanian Deadlift (50% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_25_bw,3,user_bodyweight * 0.50
+hinge_rdl_75_bw,Romanian Deadlift (75% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_50_bw,3,user_bodyweight * 0.75
+hinge_rdl_100_bw,Romanian Deadlift (100% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_75_bw,4,user_bodyweight * 1.00
+hinge_rdl_125_bw,Romanian Deadlift (125% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_100_bw,4,user_bodyweight * 1.25
+hinge_rdl_150_bw,Romanian Deadlift (150% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_125_bw,5,user_bodyweight * 1.50
+hinge_rdl_175_bw,Romanian Deadlift (175% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_150_bw,5,user_bodyweight * 1.75
+hinge_rdl_200_bw,Romanian Deadlift (200% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_175_bw,5,user_bodyweight * 2.00

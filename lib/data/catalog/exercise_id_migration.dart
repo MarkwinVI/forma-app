@@ -125,9 +125,15 @@ class ExerciseIdMigration {
     'bulgarian_split_squat': 'squat_bulgarian_split_squat',
     'single_leg_rdl': 'hinge_single_leg_rdl',
     'barbell_squat': 'barbell_squat_barbell_squat',
-    'romanian_deadlift': 'hinge_romanian_deadlift',
+    'romanian_deadlift': 'hinge_romanian_deadlift_barbell',
     'box_pistol_squat_knee_height': 'squat_box_pistol_squat_knee_height',
-    'nordic_curl': 'hinge_nordic_nordic_curl',
+    'nordic_curl': 'hinge_nordic_curl',
+    // The hinge slot's pre-tree steps, replaced when it grew into a real
+    // progression: the loaded RDL became the weighted ladder's bar step, and
+    // both Nordic steps the ladder's final curl.
+    'hinge_romanian_deadlift': 'hinge_romanian_deadlift_barbell',
+    'hinge_nordic_nordic_curl': 'hinge_nordic_curl',
+    'hinge_posterior_chain_nordic_curl': 'hinge_nordic_curl',
     'box_pistol_squat_mid_calf_height':
         'squat_box_pistol_squat_mid_calf_height',
     'beginner_shrimp_squat': 'squat_beginner_shrimp_squat',

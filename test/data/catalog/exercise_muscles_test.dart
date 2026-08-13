@@ -18,8 +18,8 @@ void main() {
     });
 
     test('both halves are covered, not just one', () {
-      expect(everything.where((e) => e.isLibrary), hasLength(488));
-      expect(everything.where((e) => !e.isLibrary), hasLength(143));
+      expect(everything.where((e) => e.isLibrary), hasLength(491));
+      expect(everything.where((e) => !e.isLibrary), hasLength(153));
     });
 
     test('no exercise invents a group the sheet does not use', () {

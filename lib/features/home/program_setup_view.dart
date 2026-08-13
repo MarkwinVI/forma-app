@@ -162,6 +162,20 @@ _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
       max: unit == WeightUnit.lb ? 660 : 300,
     );
 
+/// Also asked with access to weights: the heaviest single-rep Romanian
+/// deadlift, placing the start of the hinge tree's weighted ladder the same
+/// way — at 80% of it.
+_StrengthExercise _romanianDeadliftFor(WeightUnit unit) => _StrengthExercise(
+      id: 'rdl',
+      label: 'Romanian deadlift',
+      hint: 'Best single rep — bar weight',
+      icon: Icons.fitness_center_rounded,
+      isWeight: true,
+      step: 5,
+      def: unit == WeightUnit.lb ? 90 : 40,
+      max: unit == WeightUnit.lb ? 660 : 300,
+    );
+
 /// Asked without weights: bodyweight squats measured in reps instead.
 const _bodyweightSquat = _StrengthExercise(
   id: 'squat_bw',
@@ -206,12 +220,13 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   bool _bwEditing = false;
 
   /// Starting-strength answers, unset until the user adds a number. The
-  /// squat value lives in the display unit while the wizard runs.
+  /// squat and RDL loads live in the display unit while the wizard runs.
   final Map<String, int?> _strength = {
     'pushups': null,
     'pullups': null,
     'dips': null,
     'squat': null,
+    'rdl': null,
     'squat_bw': null,
   };
 
@@ -235,16 +250,16 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
     _commitBodyweight();
     setState(() {
       final kg = _unit == WeightUnit.lb ? _bw * WeightUnitService.kgPerLb : _bw;
-      // The squat answer is a load, so it travels with the unit — rounded to
-      // something loadable rather than a raw conversion.
-      final squat = _strength['squat'];
-      if (squat != null) {
+      // The barbell answers are loads, so they travel with the unit —
+      // rounded to something loadable rather than a raw conversion.
+      for (final barbell in [_barbellSquatFor(unit), _romanianDeadliftFor(unit)]) {
+        final value = _strength[barbell.id];
+        if (value == null) continue;
         final converted = unit == WeightUnit.lb
-            ? squat / WeightUnitService.kgPerLb
-            : squat * WeightUnitService.kgPerLb;
-        _strength['squat'] = ((converted / 5).round() * 5)
-            .clamp(5, _barbellSquatFor(unit).max)
-            .toInt();
+            ? value / WeightUnitService.kgPerLb
+            : value * WeightUnitService.kgPerLb;
+        _strength[barbell.id] =
+            ((converted / 5).round() * 5).clamp(5, barbell.max).toInt();
       }
       _unit = unit;
       _bw = _clampBw(
@@ -297,11 +312,20 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
     }
   }
 
+  /// A barbell answer in canonical kilograms, whatever unit it was typed in.
+  int? _strengthKg(String id) {
+    final value = _strength[id];
+    if (value == null) return null;
+    return (_unit == WeightUnit.lb
+            ? value * WeightUnitService.kgPerLb
+            : value.toDouble())
+        .round();
+  }
+
   Future<void> _finish() async {
     final equipment = _equipment ?? SetupEquipment.fullGym;
     final bodyweightKg = _clampBw(_bw) *
         (_unit == WeightUnit.lb ? WeightUnitService.kgPerLb : 1);
-    final squat = _strength['squat'];
 
     setState(() => _saving = true);
     try {
@@ -311,20 +335,17 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
           split: _split,
           equipment: equipment,
           bodyweightKg: bodyweightKg,
-          // Only the squat variant matching the equipment answer is
-          // recorded, and its load is converted back to canonical kilograms.
+          // Only the leg questions matching the equipment answer are
+          // recorded, and the loads are converted back to canonical
+          // kilograms.
           startingStrength: {
             'pushups': _strength['pushups'],
             'pullups': _strength['pullups'],
             'dips': _strength['dips'],
-            if (equipment.hasWeights)
-              'squat': squat == null
-                  ? null
-                  : (_unit == WeightUnit.lb
-                          ? squat * WeightUnitService.kgPerLb
-                          : squat.toDouble())
-                      .round()
-            else
+            if (equipment.hasWeights) ...{
+              'squat': _strengthKg('squat'),
+              'rdl': _strengthKg('rdl'),
+            } else
               'squat_bw': _strength['squat_bw'],
           },
         ),
@@ -1064,7 +1085,11 @@ class _StrengthStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final exercises = [
       ..._repStrengthExercises,
-      if (hasWeights) _barbellSquatFor(unit) else _bodyweightSquat,
+      if (hasWeights) ...[
+        _barbellSquatFor(unit),
+        _romanianDeadliftFor(unit),
+      ] else
+        _bodyweightSquat,
     ];
 
     return Column(

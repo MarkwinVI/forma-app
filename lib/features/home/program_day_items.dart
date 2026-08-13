@@ -519,7 +519,11 @@ void sortExerciseResults(
     }
     final byRank = rank(a).compareTo(rank(b));
     if (byRank != 0) return byRank;
-    return a.name.compareTo(b.name);
+    final byName = a.name.compareTo(b.name);
+    if (byName != 0) return byName;
+    // A step and the movement it is performed with share a name; the step
+    // stands for the movement, so it wins the tie.
+    return origin(b).compareTo(origin(a));
   });
 }
 

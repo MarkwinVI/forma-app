@@ -455,41 +455,64 @@ class SkillCategoryCatalog {
     },
   );
 
-  /// The hinge slot. Which branch a program runs is an equipment question:
-  /// a Romanian deadlift with a gym, a Nordic curl without one.
-  /// `posterior_chain` is the pair programs used before that split, kept so
-  /// existing programs keep training exactly what they were training.
+  /// The hinge slot, grown into a browsable tree: bodyweight hinging into
+  /// Nordic curls, or a loaded Romanian deadlift ladder with a bar.
+  /// Programs stored before the rebuild carry the old branch ids — those are
+  /// migrated to these when their tracks are read ([SkillTrack.fromMap]).
   static const SkillCategory hinge = SkillCategory(
     id: hingeId,
     title: 'Hinge',
     subtitle: 'Hinge',
     description:
-        'Balance the knee-dominant work with hamstring and posterior-chain training.',
+        'Build posterior-chain strength from bodyweight hinging into Nordic '
+        'curls or a loaded Romanian deadlift.',
     track: ExerciseCategory.hinge,
-    defaultTrainingPathId: 'nordic',
-    isBrowsable: false,
+    defaultTrainingPathId: 'nordic_curls',
     branches: [
-      SkillCategoryBranch(id: 'rdl', label: 'Romanian Deadlift', lane: 0),
-      SkillCategoryBranch(id: 'nordic', label: 'Nordic Curl', lane: 1),
-      SkillCategoryBranch(
-        id: 'posterior_chain',
-        label: 'Posterior Chain',
-        lane: -1,
-      ),
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
+      SkillCategoryBranch(id: 'nordic_curls', label: 'Nordic Curl', lane: -1),
+      SkillCategoryBranch(id: 'weighted', label: 'Weighted', lane: 1),
     ],
     trainingPaths: {
-      'rdl': [
-        'hinge_romanian_deadlift',
-      ],
-      'nordic': [
-        'hinge_nordic_nordic_curl',
-      ],
-      'posterior_chain': [
+      'nordic_curls': [
+        'hinge_romanian_deadlift_bodyweight',
         'hinge_single_leg_rdl',
-        'hinge_posterior_chain_nordic_curl',
+        'hinge_banded_nordic_eccentric',
+        'hinge_banded_nordic',
+        'hinge_nordic_curl',
+      ],
+      'weighted': [
+        'hinge_romanian_deadlift_bodyweight',
+        'hinge_romanian_deadlift_barbell',
+        'hinge_rdl_25_bw',
+        'hinge_rdl_50_bw',
+        'hinge_rdl_75_bw',
+        'hinge_rdl_100_bw',
+        'hinge_rdl_125_bw',
+        'hinge_rdl_150_bw',
+        'hinge_rdl_175_bw',
+        'hinge_rdl_200_bw',
       ],
     },
   );
+
+  /// Where programs stored under the hinge slot's pre-tree branch ids land
+  /// now. The loaded branch became the weighted ladder; both bodyweight
+  /// branches — the Nordic single and the old fixed pair — continue as the
+  /// Nordic curls progression (the pair's single-leg RDL is a step of it).
+  static const Map<String, String> _renamedHingeBranches = {
+    'rdl': 'weighted',
+    'nordic': 'nordic_curls',
+    'posterior_chain': 'nordic_curls',
+  };
+
+  /// Canonical branch id for a stored (categoryId, branchId) pair. Reads of
+  /// persisted branch ids go through this so rows written before a tree was
+  /// restructured keep pointing at the progression that replaced theirs.
+  static String migrateBranchId(String categoryId, String branchId) {
+    if (categoryId != hingeId) return branchId;
+    return _renamedHingeBranches[branchId] ?? branchId;
+  }
 
   static const List<SkillCategory> _custom = [
     pullups,

@@ -85,7 +85,7 @@ class TrainingProgramService {
     TrainingTrack.horizontalPull: '${SkillCategoryCatalog.rowsId}:front_lever',
     TrainingTrack.core: '${SkillCategoryCatalog.coreId}:l_sit',
     TrainingTrack.squat: '${SkillCategoryCatalog.squatId}:pistol',
-    TrainingTrack.hinge: 'hinge:posterior_chain',
+    TrainingTrack.hinge: 'hinge:nordic_curls',
   };
 
   DailyTrainingRecommendation buildToday({
@@ -749,8 +749,9 @@ class TrainingProgramService {
         );
       }
       // Programs built before the hinge slot became a track of its own have
-      // no hinge row to schedule; they keep the fixed pair they were built
-      // with. A program that does have one is already handled above.
+      // no hinge row to schedule; they ran the fixed bodyweight pair, which
+      // continues as the Nordic curls progression (its single-leg RDL is a
+      // step of it). A program that does have one is already handled above.
       if (pattern == ExerciseCategory.hinge &&
           !skillTracks.any(
             (track) =>
@@ -760,7 +761,7 @@ class TrainingProgramService {
         branches.add(
           _branchFromOption(
             branchOptionsForTrack(TrainingTrack.hinge).firstWhere(
-              (option) => option.trainingPathId == 'posterior_chain',
+              (option) => option.trainingPathId == 'nordic_curls',
             ),
           ),
         );
@@ -1095,23 +1096,16 @@ class TrainingProgramService {
           _branchOptionFromCategory(
             track: track,
             category: SkillCategoryCatalog.hinge,
-            pathId: 'rdl',
-            rationale:
-                'The hinge slot with a gym: a loaded hip hinge is the simplest way to train the posterior chain.',
-          ),
-          _branchOptionFromCategory(
-            track: track,
-            category: SkillCategoryCatalog.hinge,
-            pathId: 'nordic',
+            pathId: 'nordic_curls',
             rationale:
                 'The hinge slot without a gym: hamstring strength from your own bodyweight, assisted as needed.',
           ),
           _branchOptionFromCategory(
             track: track,
             category: SkillCategoryCatalog.hinge,
-            pathId: 'posterior_chain',
+            pathId: 'weighted',
             rationale:
-                'The original fixed pair, kept so programs built before the hinge slot split keep their work.',
+                'The hinge slot with a gym: the Romanian deadlift ladder trains the posterior chain under load.',
           ),
         ];
     }

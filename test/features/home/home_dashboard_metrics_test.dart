@@ -155,18 +155,25 @@ void main() {
 
     test('journey snapshot includes untouched skill trees as zero', () {
       final service = TrainingProgramService();
+      const progressMap = {
+        'pullups_scapular_pull': ExerciseStatus.active,
+      };
       final snapshot = HomeDashboardMetricsCalculator.buildJourneySnapshotData(
         trainingProgramService: service,
         programType: TrainingProgramType.fullBody,
         branchSelections: service.defaultBranchSelections(),
         sessionItemsConfig: const {},
-        progressMap: const {
-          'pullups_scapular_pull': ExerciseStatus.active,
-        },
+        progressMap: progressMap,
         workouts: const [],
       );
 
-      const expectedPullupsLevel = (0.6 / 12) * 10;
+      // The pullups tree carries the only level; every untouched tree
+      // contributes zero to the average.
+      final expectedPullupsLevel =
+          HomeDashboardMetricsCalculator.treeLevelForCategory(
+        SkillCategoryCatalog.pullups,
+        progressMap,
+      );
       final treeCount = SkillCategoryCatalog.browsable().length;
       final expectedAverage =
           double.parse((expectedPullupsLevel / treeCount).toStringAsFixed(1));
@@ -255,7 +262,8 @@ void main() {
       expect(snapshot.closestSkills, isNotEmpty);
     });
 
-    test('active skill paths exclude non-browsable tracks like hinge', () {
+    test('active skill paths carry only browsable trees — which now includes '
+        'the hinge', () {
       final service = TrainingProgramService();
 
       final rows = HomeDashboardMetricsCalculator.buildActiveSkillPathData(
@@ -268,7 +276,7 @@ void main() {
         workouts: const [],
       );
 
-      expect(rows.any((row) => row.track == TrainingTrack.hinge), isFalse);
+      expect(rows.any((row) => row.track == TrainingTrack.hinge), isTrue);
       expect(
         rows.every(
           (row) => SkillCategoryCatalog.isBrowsableId(row.skillCategoryId),

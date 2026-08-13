@@ -49,13 +49,13 @@ class ProgramStartPlan {
 /// 1. **What the program trains.** Every split is built from seven movements
 ///    — push-ups, dips, rows, pull-ups, one knee-dominant, one hinge, and
 ///    core — and the split itself decides which of them a given day runs.
-///    The two leg slots depend on equipment: with a gym the knee-dominant
-///    slot is the squat tree's weighted (barbell) branch and the hinge slot
-///    a Romanian deadlift; without one they are the squat progression and
-///    the Nordic curl. A goal skill replaces the default tree for its
-///    movement (a pistol-squat goal takes the knee-dominant slot back from
-///    the barbell branch) and adds a track of its own for movements the
-///    seven do not cover.
+///    The two leg slots depend on equipment: with a gym both run their
+///    tree's weighted branch — the barbell squat ladder and the Romanian
+///    deadlift ladder; without one they run the squat progression and the
+///    Nordic curls. A goal skill replaces the default tree for its movement
+///    (a pistol-squat goal takes the knee-dominant slot back from the
+///    barbell branch) and adds a track of its own for movements the seven
+///    do not cover.
 ///
 /// 2. **Where it starts.** The reported one-set maximum places the starting
 ///    node on the push-up, pull-up, dip and bodyweight-squat trees, read
@@ -65,10 +65,11 @@ class ProgramStartPlan {
 ///    more reps start on that named step, and 1–9 reps start two steps
 ///    before it. Everything behind the starting node is marked skipped, not
 ///    mastered — it was never trained here. Rows always start at the first
-///    step. The weighted squat branch starts on the deepest barbell rung
-///    whose load fits inside 80% of the reported squat one-rep max — rounded
-///    down, so an answer between rungs lands on the lighter one — and the
-///    Romanian deadlift opens deliberately light at 20 kg.
+///    step. A weighted branch starts on the deepest barbell rung whose load
+///    fits inside 80% of the reported one-rep max — rounded down, so an
+///    answer between rungs lands on the lighter one. Without an answer the
+///    squat opens on the empty bar and the hinge on the tree's first step,
+///    the bodyweight Romanian deadlift.
 class ProgramStartPlanner {
   ProgramStartPlanner._();
 
@@ -78,20 +79,18 @@ class ProgramStartPlanner {
   /// Steps back from the answer's own exercise for a 1–9 rep answer.
   static const int partialRepStepBack = 2;
 
-  /// Loaded lifts open at 3 × 5 working sets and climb from there.
-  static const int loadedLiftSets = 3;
-  static const int loadedLiftStartReps = 5;
+  /// How much of a reported one-rep max a starting rung may ask for.
+  static const double weightedStartFractionOfMax = 0.8;
 
-  /// Deliberately light opening load for the Romanian deadlift: the hinge is
-  /// there to balance the knee-dominant work, not to be tested on day one.
-  static const double romanianDeadliftStartKg = 20;
-
-  /// Nordic curls open at 3 × 5, assisted as much as it takes.
-  static const int nordicCurlSets = 3;
-  static const int nordicCurlReps = 5;
-
-  /// How much of the reported squat one-rep max a starting rung may ask for.
-  static const double squatStartFractionOfMax = 0.8;
+  /// Per weighted branch: the setup answer (a one-rep max in kg) that places
+  /// the starting rung, and where a blank answer starts — the first barbell
+  /// step for the squat (a gym user never starts on the bodyweight run-up),
+  /// the tree's first step for the hinge (the bodyweight Romanian deadlift
+  /// is where an untested hinge begins).
+  static const Map<String, _WeightedGate> _weightedGates = {
+    SkillCategoryCatalog.squatId: _WeightedGate('squat', blankStartsOnBar: true),
+    SkillCategoryCatalog.hingeId: _WeightedGate('rdl', blankStartsOnBar: false),
+  };
 
   /// Per tree: the setup answer that places the starting node, and the step
   /// that answer is about. "Ten push-ups" means ten of the exercise called
@@ -147,8 +146,9 @@ class ProgramStartPlanner {
           : SkillCategoryCatalog.squat.defaultTrainingPathId,
     );
 
-    // Hinge: loaded when there is a bar to load, bodyweight otherwise.
-    addTrack(SkillCategoryCatalog.hingeId, hasGym ? 'rdl' : 'nordic');
+    // Hinge: the loaded ladder when there is a bar to load, the Nordic
+    // curls progression otherwise.
+    addTrack(SkillCategoryCatalog.hingeId, hasGym ? 'weighted' : 'nordic_curls');
 
     // Direct core work belongs in every program. The split schedules it at
     // the end of full-body, push, and lower sessions.
@@ -214,19 +214,17 @@ class ProgramStartPlanner {
     required Map<String, int?> startingStrength,
     required double? bodyweightKg,
   }) {
-    if (category.id == SkillCategoryCatalog.hingeId) {
-      return _hingeStartingPosition(branchId);
-    }
-
     final path = category.pathFor(branchId);
     if (path.isEmpty) return const _StartingPosition.empty();
 
     final int startIndex;
-    if (category.id == SkillCategoryCatalog.squatId && branchId == 'weighted') {
-      startIndex = weightedSquatStartIndex(
+    final weightedGate = _weightedGates[category.id];
+    if (branchId == 'weighted' && weightedGate != null) {
+      startIndex = weightedStartIndex(
         path: path,
-        oneRepMaxKg: startingStrength['squat'],
+        oneRepMaxKg: startingStrength[weightedGate.answerKey],
         bodyweightKg: bodyweightKg,
+        blankStartsOnBar: weightedGate.blankStartsOnBar,
       );
     } else {
       // Rows have no rep gate: everyone starts at the first step, because
@@ -251,39 +249,6 @@ class ProgramStartPlanner {
     );
   }
 
-  static _StartingPosition _hingeStartingPosition(String branchId) {
-    switch (branchId) {
-      case 'rdl':
-        return const _StartingPosition(
-          statuses: {'hinge_romanian_deadlift': ExerciseStatus.active},
-          targets: {
-            // Same 3 × 5 the barbell squat opens on, so both loaded lifts
-            // run the same climb; the load is what is set low here.
-            'hinge_romanian_deadlift': ProgramStartTarget(
-              sets: loadedLiftSets,
-              value: loadedLiftStartReps,
-              weightKg: romanianDeadliftStartKg,
-            ),
-          },
-        );
-      case 'nordic':
-        return const _StartingPosition(
-          statuses: {'hinge_nordic_nordic_curl': ExerciseStatus.active},
-          targets: {
-            'hinge_nordic_nordic_curl': ProgramStartTarget(
-              sets: nordicCurlSets,
-              value: nordicCurlReps,
-            ),
-          },
-        );
-      default:
-        return const _StartingPosition(
-          statuses: {'single_leg_rdl': ExerciseStatus.active},
-          targets: {},
-        );
-    }
-  }
-
   /// Index of the starting node along [path] for a reported one-set maximum
   /// of [referenceExerciseId]. Ten or more reps start on that exercise, 1–9
   /// two steps before it, and an unknown answer starts at the beginner node
@@ -305,29 +270,33 @@ class ProgramStartPlanner {
     return (referenceIndex - partialRepStepBack).clamp(0, referenceIndex);
   }
 
-  /// Index of the starting rung along the weighted squat [path]: the deepest
-  /// barbell step whose load fits inside [squatStartFractionOfMax] of the
+  /// Index of the starting rung along a weighted [path]: the deepest barbell
+  /// step whose load fits inside [weightedStartFractionOfMax] of the
   /// reported one-rep max. An answer between two rungs rounds down to the
-  /// lighter one, and a blank answer — or a missing bodyweight, which the
-  /// rung loads scale from — starts on the first barbell step, the empty
-  /// bar. A gym user never starts on the bodyweight run-up before it.
-  static int weightedSquatStartIndex({
+  /// lighter one. A blank answer — or a missing bodyweight, which the rung
+  /// loads scale from — starts on the first barbell step when
+  /// [blankStartsOnBar], and at the path's first step otherwise.
+  static int weightedStartIndex({
     required List<String> path,
     required int? oneRepMaxKg,
     required double? bodyweightKg,
+    required bool blankStartsOnBar,
   }) {
-    var startIndex = 0;
+    var barIndex = 0;
     for (var index = 0; index < path.length; index++) {
       final exercise = ExerciseCatalog.findById(path[index]);
       if (exercise != null && exercise.isWeighted) {
-        startIndex = index;
+        barIndex = index;
         break;
       }
     }
-    if (oneRepMaxKg == null || oneRepMaxKg <= 0) return startIndex;
+    if (oneRepMaxKg == null || oneRepMaxKg <= 0) {
+      return blankStartsOnBar ? barIndex : 0;
+    }
 
-    final budgetKg = oneRepMaxKg * squatStartFractionOfMax;
-    for (var index = startIndex + 1; index < path.length; index++) {
+    var startIndex = barIndex;
+    final budgetKg = oneRepMaxKg * weightedStartFractionOfMax;
+    for (var index = barIndex + 1; index < path.length; index++) {
       final exercise = ExerciseCatalog.findById(path[index]);
       final loadKg = exercise == null
           ? null
@@ -340,6 +309,15 @@ class ProgramStartPlanner {
     }
     return startIndex;
   }
+}
+
+/// A weighted branch's placement gate: which setup answer places the
+/// starting rung, and where a blank answer starts.
+class _WeightedGate {
+  final String answerKey;
+  final bool blankStartsOnBar;
+
+  const _WeightedGate(this.answerKey, {required this.blankStartsOnBar});
 }
 
 /// A tree's rep gate: the setup answer, and the step it is an answer about.
