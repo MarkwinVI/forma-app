@@ -145,6 +145,184 @@ void main() {
     expect(find.textContaining('Skips the steps before it'), findsNothing);
   });
 
+  testWidgets('stopping asks first, and cancel keeps the progression',
+      (tester) async {
+    var stopped = false;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      editable: true,
+      initialCategoryId: 'a',
+      onTrainNode: (_, __) async {},
+      onStopTraining: (_) async => stopped = true,
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    await tester.tap(find.text('Stop training'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Stop training Pullups step 1?'), findsOneWidget);
+    expect(
+      find.textContaining('Your progress stays saved', findRichText: true),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(stopped, isFalse);
+
+    // Confirming does stop it.
+    await tester.tap(find.text('Stop training'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Stop training').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(stopped, isTrue);
+  });
+
+  testWidgets('a locked step asks to jump ahead before training',
+      (tester) async {
+    var trained = false;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      editable: true,
+      initialCategoryId: 'a',
+      onTrainNode: (_, __) async => trained = true,
+      onStopTraining: (_) async {},
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    await tester.tap(find.text('Pullups step 2'));
+    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.tap(find.text('Unlock'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Jump ahead to Pullups step 2?'), findsOneWidget);
+    await tester.tap(find.text('Jump ahead'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(trained, isTrue);
+  });
+
+  testWidgets('an idle tree asks to start training its white step',
+      (tester) async {
+    final families = [
+      _family('a', 'Pullups', trunk: [
+        WheelNodeState.available,
+        WheelNodeState.locked,
+        WheelNodeState.locked,
+      ]),
+      ..._families().skip(1),
+    ];
+    var trained = false;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: families,
+      activeCategoryIds: const {},
+      editable: true,
+      initialCategoryId: 'a',
+      onTrainNode: (_, __) async => trained = true,
+      onStopTraining: (_) async {},
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    await tester.tap(find.text('Start training'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Start training Pullups step 0?'), findsOneWidget);
+    expect(
+      find.textContaining('activate', findRichText: true),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Start training').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(trained, isTrue);
+  });
+
+  testWidgets('a cleared step of a running tree asks to go back',
+      (tester) async {
+    var trained = false;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      editable: true,
+      initialCategoryId: 'a',
+      onTrainNode: (_, __) async => trained = true,
+      onStopTraining: (_) async {},
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    // Pullups step 0 is mastered — selecting it is a move backward. The
+    // list rests with the focused row at its top, so scroll back up first.
+    await tester.scrollUntilVisible(
+      find.text('Pullups step 0'),
+      -60,
+      scrollable: find.byType(Scrollable).last,
+    );
+    // Let the bounce settle before tapping.
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.text('Pullups step 0'), warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.tap(find.text('Start training'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Go back to Pullups step 0?'), findsOneWidget);
+    expect(
+      find.textContaining('locked again', findRichText: true),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Go back'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(trained, isTrue);
+  });
+
+  testWidgets('a locked tree asks for the early start',
+      (tester) async {
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      treeLocks: const {
+        'c': WheelTreeLock(
+          prereqExerciseName: 'Diamond Pushup',
+          prereqTreeTitle: 'Pushups',
+        ),
+      },
+      editable: true,
+      initialCategoryId: 'c',
+      onTrainNode: (_, __) async {},
+      onStopTraining: (_) async {},
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    await tester.tap(find.text('Unlock'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Start Squat step 0 early?'), findsOneWidget);
+    expect(
+      find.textContaining('prerequisite', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text('Start anyway'), findsOneWidget);
+  });
+
   testWidgets('program card is the plain door into the trees',
       (tester) async {
     await tester.pumpWidget(_host(SingleChildScrollView(

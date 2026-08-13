@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../home/home_dashboard_metrics.dart';
 import '../performance_overview.dart';
+import 'skill_tree_confirm.dart';
 import 'skill_wheel.dart';
 import 'skill_wheel_panels.dart';
 
@@ -134,6 +135,202 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     }
   }
 
+  /// Nodes after [node] along every route through it — the rest of its own
+  /// branch, or, for a trunk step, the rest of the trunk plus every branch
+  /// (they all pass through it).
+  List<WheelNode> _nodesAfter(WheelFamily family, WheelNode node) {
+    final trunkIndex = family.trunk
+        .indexWhere((step) => step.exerciseId == node.exerciseId);
+    if (trunkIndex >= 0) {
+      return [
+        ...family.trunk.sublist(trunkIndex + 1),
+        for (final branch in family.branches) ...branch.steps,
+      ];
+    }
+    for (final branch in family.branches) {
+      final index = branch.steps
+          .indexWhere((step) => step.exerciseId == node.exerciseId);
+      if (index >= 0) return branch.steps.sublist(index + 1);
+    }
+    return const [];
+  }
+
+  /// Whether picking [node] moves the progression backward — the node is
+  /// already cleared, or something past it has been reached.
+  bool _isBackward(WheelFamily family, WheelNode node) {
+    if (node.state.isCleared) return true;
+    return _nodesAfter(family, node).any(
+      (step) =>
+          step.state.isCleared || step.state == WheelNodeState.active,
+    );
+  }
+
+  /// Confirms stopping the tree's progression, then stops it.
+  Future<void> _stopWithConfirm(WheelFamily family, WheelNode node) async {
+    final confirmed = await showSkillTreeConfirm(
+      context,
+      icon: Icons.stop_circle_rounded,
+      caution: false,
+      title: 'Stop training ${node.name}?',
+      body: [
+        const TextSpan(text: 'This will remove '),
+        skillTreeConfirmBold(node.name),
+        const TextSpan(text: ' from your workouts and make '),
+        skillTreeConfirmBold('${family.title} progression'),
+        const TextSpan(text: ' inactive. Your progress stays saved.'),
+      ],
+      confirmLabel: 'Stop training',
+    );
+    if (!confirmed || !mounted) return;
+    await _act(() => widget.onStopTraining!(family));
+  }
+
+  /// Asks the question that fits what picking [node] would do — start,
+  /// switch, jump ahead, go back, or unlock a whole tree early — and only
+  /// then makes it the trained exercise.
+  Future<void> _trainWithConfirm(
+    WheelFamily family,
+    WheelNode node, {
+    required bool familyActive,
+    required WheelTreeLock? lock,
+  }) async {
+    final tree = '${family.title} progression';
+    final current =
+        familyActive ? family.flat[family.activeFlatIndex].name : null;
+
+    final IconData icon;
+    var caution = false;
+    final String title;
+    final String confirmLabel;
+    final List<InlineSpan> body;
+
+    if (lock != null) {
+      // 7C — a node inside a tree whose prerequisite is not met.
+      icon = Icons.lock_open_rounded;
+      caution = true;
+      title = 'Start ${node.name} early?';
+      confirmLabel = 'Start anyway';
+      body = [
+        const TextSpan(text: "You haven't completed the prerequisite for "),
+        skillTreeConfirmBold(tree),
+        const TextSpan(
+          text: " yet. Only start this progression if you feel confident "
+              "you're ready for ",
+        ),
+        skillTreeConfirmBold(node.name),
+        const TextSpan(text: '.\n\nThis will unlock '),
+        skillTreeConfirmBold(tree),
+        const TextSpan(text: ' early and add '),
+        skillTreeConfirmBold(node.name),
+        const TextSpan(text: ' to your workouts.'),
+      ];
+    } else if (node.state == WheelNodeState.locked) {
+      icon = Icons.move_up;
+      caution = true;
+      if (familyActive) {
+        // 7A — jump ahead past the step being trained.
+        title = 'Jump ahead to ${node.name}?';
+        confirmLabel = 'Jump ahead';
+        body = [
+          const TextSpan(
+            text: 'This exercise is further ahead in the progression. Only '
+                'jump ahead if you feel confident you can already perform '
+                'it with good form.\n\nThis will replace ',
+          ),
+          skillTreeConfirmBold(current!),
+          const TextSpan(text: ' in your workouts.'),
+        ];
+      } else {
+        // 7B — start an idle tree past its available step.
+        title = 'Start at ${node.name}?';
+        confirmLabel = 'Start here';
+        body = [
+          const TextSpan(
+            text: 'This exercise is further ahead in the progression. Only '
+                'start here if you feel confident you can already perform '
+                'it with good form.\n\nThis will activate ',
+          ),
+          skillTreeConfirmBold(tree),
+          const TextSpan(text: ' and add '),
+          skillTreeConfirmBold(node.name),
+          const TextSpan(text: ' to your workouts.'),
+        ];
+      }
+    } else if (_isBackward(family, node)) {
+      if (familyActive) {
+        // 8A — an earlier step of a running tree: later steps re-lock.
+        icon = Icons.undo_rounded;
+        title = 'Go back to ${node.name}?';
+        confirmLabel = 'Go back';
+        body = [
+          const TextSpan(text: 'This will replace '),
+          skillTreeConfirmBold(current!),
+          const TextSpan(text: ' in your workouts with '),
+          skillTreeConfirmBold(node.name),
+          const TextSpan(text: '. Exercises after '),
+          skillTreeConfirmBold(node.name),
+          const TextSpan(
+            text: ' will be locked again until you progress through them.',
+          ),
+        ];
+      } else {
+        // 8B — a new, earlier starting point in an idle tree.
+        icon = Icons.restart_alt_rounded;
+        title = 'Start again from ${node.name}?';
+        confirmLabel = 'Start exercise';
+        body = [
+          const TextSpan(text: 'This will add '),
+          skillTreeConfirmBold(node.name),
+          const TextSpan(text: ' to your workouts and activate '),
+          skillTreeConfirmBold(tree),
+          const TextSpan(text: '. Exercises after '),
+          skillTreeConfirmBold(node.name),
+          const TextSpan(
+            text: ' will be locked again until you progress through them.',
+          ),
+        ];
+      }
+    } else if (familyActive) {
+      // 6 — another reachable exercise at the same point: a plain swap.
+      icon = Icons.swap_horiz_rounded;
+      title = 'Switch to ${node.name}?';
+      confirmLabel = 'Switch exercise';
+      body = [
+        const TextSpan(text: 'This will replace '),
+        skillTreeConfirmBold(current!),
+        const TextSpan(text: ' in your workouts with '),
+        skillTreeConfirmBold(node.name),
+        const TextSpan(text: '.'),
+      ];
+    } else {
+      // 5 — start an idle tree at its available step.
+      icon = Icons.play_arrow_rounded;
+      title = 'Start training ${node.name}?';
+      confirmLabel = 'Start training';
+      body = [
+        const TextSpan(text: 'This will add '),
+        skillTreeConfirmBold(node.name),
+        const TextSpan(text: ' to your workouts and activate '),
+        skillTreeConfirmBold(tree),
+        const TextSpan(
+          text: ". Once you master it, you'll automatically progress to "
+              'the next exercise.',
+        ),
+      ];
+    }
+
+    final confirmed = await showSkillTreeConfirm(
+      context,
+      icon: icon,
+      caution: caution,
+      title: title,
+      body: body,
+      confirmLabel: confirmLabel,
+    );
+    if (!confirmed || !mounted) return;
+    await _act(() => widget.onTrainNode!(family, node));
+  }
+
   @override
   Widget build(BuildContext context) {
     final family = _sel == null ? null : widget.families[_sel!];
@@ -185,9 +382,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 _WheelCta(
                   label: _acting ? 'Saving…' : 'Stop training',
                   color: AppColors.red,
-                  onTap: _acting
-                      ? null
-                      : () => _act(() => widget.onStopTraining!(family)),
+                  onTap:
+                      _acting ? null : () => _stopWithConfirm(family, node),
                 )
               else
                 // A locked step — a locked tree's steps included — offers a
@@ -208,7 +404,12 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       : AppColors.accentPrimary,
                   onTap: _acting
                       ? null
-                      : () => _act(() => widget.onTrainNode!(family, node)),
+                      : () => _trainWithConfirm(
+                            family,
+                            node,
+                            familyActive: familyActive,
+                            lock: lock,
+                          ),
                 ),
             ],
           ],

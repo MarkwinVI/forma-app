@@ -178,9 +178,16 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
               : ExerciseStatus.inactive;
     }
     // A working step left behind on another branch stops being active —
-    // one tree trains one exercise.
+    // one tree trains one exercise. And a trunk step restarts the whole
+    // tree: every branch runs through it, so cleared steps on the other
+    // branches re-lock too.
+    final restartsTree =
+        category.pathFor(category.foundationBranchId).contains(node.exerciseId);
     for (final id in touchable) {
-      if (!desired.containsKey(id) && before[id] == ExerciseStatus.active) {
+      if (desired.containsKey(id)) continue;
+      final existing = before[id]!;
+      if (existing == ExerciseStatus.active ||
+          (restartsTree && existing != ExerciseStatus.inactive)) {
         desired[id] = ExerciseStatus.inactive;
       }
     }
