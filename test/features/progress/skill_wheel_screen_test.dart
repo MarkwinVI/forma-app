@@ -87,7 +87,7 @@ void main() {
     expect(find.text('Start training'), findsNothing);
   });
 
-  testWidgets('a locked tree shows the padlock note and Start anyway',
+  testWidgets('a locked tree shows the padlock note and the gray Unlock',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
@@ -107,13 +107,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    // The lock note names the prerequisite; the CTA keeps the plain
-    // "Start here" label (its amber tint carries the warning).
+    // The lock note names the prerequisite; a locked tree's steps are all
+    // locked, so the CTA is the quiet gray Unlock.
     expect(
       find.textContaining('Locked tree.', findRichText: true),
       findsOneWidget,
     );
-    expect(find.text('Start here'), findsOneWidget);
+    expect(find.text('Unlock'), findsOneWidget);
+    expect(find.text('Start here'), findsNothing);
   });
 
   testWidgets(
@@ -137,10 +138,10 @@ void main() {
     expect(find.text('Start training'), findsNothing);
 
     // Walk the selector onto the locked step via its list row — a step not
-    // yet reached gets the amber jump, with no helper text above it.
+    // yet reached gets the quiet gray unlock, with no helper text above it.
     await tester.tap(find.text('Pullups step 2'));
     await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Jump here'), findsOneWidget);
+    expect(find.text('Unlock'), findsOneWidget);
     expect(find.textContaining('Skips the steps before it'), findsNothing);
   });
 

@@ -158,9 +158,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       final showCta = widget.editable &&
           (isCurrent ? widget.onStopTraining != null : true);
       final lockedNode = node.state == WheelNodeState.locked;
-      // Amber marks the calls that skip ahead — a locked step, or a whole
-      // tree still behind its prerequisite.
-      final warn = !isCurrent && (lock != null || lockedNode);
       final panelBottomPad = MediaQuery.of(context).padding.bottom + 14;
       bottomPanelAllowance = 146 + (showCta ? 66 : 0);
       bottomPanel = Container(
@@ -189,15 +186,19 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       : () => _act(() => widget.onStopTraining!(family)),
                 )
               else
+                // A locked step — a locked tree's steps included — offers a
+                // quiet gray Unlock; a reachable step gets the blue verb.
                 _WheelCta(
                   label: _acting
                       ? 'Saving…'
-                      : lockedNode && familyActive
-                          ? 'Jump here'
+                      : lockedNode
+                          ? 'Unlock'
                           : !familyActive
                               ? 'Start here'
                               : 'Start training',
-                  color: warn ? AppColors.amber : AppColors.accentPrimary,
+                  color: lockedNode
+                      ? AppColors.textSecondary
+                      : AppColors.accentPrimary,
                   onTap: _acting
                       ? null
                       : () => _act(() => widget.onTrainNode!(family, node)),
