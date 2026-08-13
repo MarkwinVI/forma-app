@@ -46,6 +46,8 @@ class DevToolsService {
         .delete()
         .eq('user_id', userId);
     await _client.from('user_training_programs').delete().eq('user_id', userId);
+    // These deletes bypass the store service, so its cache must be told.
+    TrainingProgramStoreService.invalidateLogicCache();
   }
 
   /// Fast-forwards the local developer clock by one day. Workout history stays

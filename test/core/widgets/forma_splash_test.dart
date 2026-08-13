@@ -15,7 +15,7 @@ void main() {
     expect(find.text('FORMA'), findsOneWidget);
     expect(completed, isFalse);
 
-    await tester.pump(const Duration(milliseconds: 5499));
+    await tester.pump(const Duration(milliseconds: 2499));
     expect(completed, isFalse);
 
     await tester.pump(const Duration(milliseconds: 2));

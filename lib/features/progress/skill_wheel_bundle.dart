@@ -55,6 +55,28 @@ class SkillWheelBundle {
   Map<String, WheelTreeLock> get treeLocks => computeTreeLocks(progressMap);
 }
 
+Future<SkillWheelBundle>? _warmBundle;
+
+/// Started by main() during the splash animation, so the landing tab's data
+/// is already in flight — usually finished — by the time the shell builds.
+void warmSkillWheelBundle(String userId) {
+  final future = loadSkillWheelBundle(userId);
+  _warmBundle = future;
+  // A failed warm-up quietly withdraws itself; the tab then runs its own
+  // fresh load with its normal error handling.
+  future.then<void>((_) {}, onError: (Object _) {
+    if (identical(_warmBundle, future)) _warmBundle = null;
+  });
+}
+
+/// Hands the warmed bundle to its one consumer — the Progress tab's first
+/// load. Take-once, so a later refresh can never see startup-stale data.
+Future<SkillWheelBundle>? takeWarmSkillWheelBundle() {
+  final future = _warmBundle;
+  _warmBundle = null;
+  return future;
+}
+
 /// Fetches progress, program logic, workout history and skill tracks, then
 /// derives the wheel families and per-tree journey numbers from them.
 Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
@@ -64,19 +86,18 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
   final exerciseLogService = ExerciseLogService();
   final devClockService = DevClockService();
 
-  await devClockService.loadOffset();
   final results = await Future.wait([
     progressService.fetchAll(userId),
     trainingProgramStoreService.fetchProgramLogic(userId),
     exerciseLogService.fetchPastWorkouts(userId),
+    // Best-effort: missing tracks shouldn't block the wheel — it simply
+    // shows no tree as running.
+    SkillTrackService()
+        .fetchAll(userId)
+        .catchError((Object _) => const <SkillTrack>[]),
+    devClockService.loadOffset(),
   ]);
-  // Best-effort: missing tracks shouldn't block the wheel.
-  var skillTracks = const <SkillTrack>[];
-  try {
-    skillTracks = await SkillTrackService().fetchAll(userId);
-  } catch (_) {
-    // The wheel simply shows no tree as running.
-  }
+  final skillTracks = results[3] as List<SkillTrack>;
 
   final progress = results[0] as List<ExerciseProgress>;
   final progressEntries = {

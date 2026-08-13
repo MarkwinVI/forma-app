@@ -27,7 +27,7 @@ class FormaSplash extends StatefulWidget {
   const FormaSplash({
     super.key,
     this.onDone,
-    this.duration = const Duration(milliseconds: 5500),
+    this.duration = const Duration(milliseconds: 2500),
     this.showWordmark = true,
   });
 

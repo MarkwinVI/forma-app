@@ -11,27 +11,45 @@ import 'data/services/onboarding_service.dart';
 import 'data/services/weight_unit_service.dart';
 import 'features/login/login_view.dart';
 import 'features/onboarding/onboarding_view.dart';
+import 'features/progress/skill_wheel_bundle.dart';
 import 'features/shell/shell_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Every screen is designed portrait. The platform has to allow landscape so
-  // a video can turn sideways for fullscreen, so the lock lives here instead
-  // of in the manifests, and the player lifts it for as long as it needs it.
-  await SystemChrome.setPreferredOrientations(const [
-    DeviceOrientation.portraitUp,
+  await Future.wait([
+    // Every screen is designed portrait. The platform has to allow landscape
+    // so a video can turn sideways for fullscreen, so the lock lives here
+    // instead of in the manifests, and the player lifts it for as long as it
+    // needs it.
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+    ]),
+    Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
+    ),
+    // The remembered kg/lbs choice, restored before any weight is rendered.
+    WeightUnitService.load(),
   ]);
 
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
-  );
-
-  // The remembered kg/lbs choice, restored before any weight is rendered.
-  await WeightUnitService.load();
+  _warmStartupData();
 
   runApp(const FormaApp());
+}
+
+/// Fires a signed-in user's startup queries so they run behind the splash
+/// animation instead of after it. The gates and the landing tab then resolve
+/// from work that is already done — the caches involved make sure the app,
+/// not this warm-up, stays the owner of every result.
+void _warmStartupData() {
+  final userId = AuthService().currentUser?.id;
+  if (userId == null) return;
+
+  OnboardingService().hasCompletedOnboarding(userId).ignore();
+  // Also seeds TrainingProgramStoreService's logic cache, which the shell
+  // reads to pick the landing tab.
+  warmSkillWheelBundle(userId);
 }
 
 class FormaApp extends StatelessWidget {
