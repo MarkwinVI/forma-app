@@ -85,6 +85,10 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   double _edgeDragDx = 0;
   bool _acting = false;
 
+  /// Whether the focused step's row is inside the list viewport — the
+  /// detail sheet slides away while the user has scrolled past it.
+  bool _focusInView = true;
+
   @override
   void initState() {
     super.initState();
@@ -297,6 +301,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     onChanged: (sel, focus) => setState(() {
                       _sel = sel;
                       _focus = focus;
+                      // A fresh selection scrolls its row into view, so the
+                      // sheet comes back with it rather than a beat later.
+                      _focusInView = true;
                     }),
                   ),
                 ),
@@ -344,6 +351,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                   onPickStep: (flatIndex) =>
                                       _wheelController.goTo(_sel!, flatIndex),
                                   onDismiss: _treeBack,
+                                  onFocusVisible: (visible) => setState(
+                                    () => _focusInView = visible,
+                                  ),
                                 ),
                               ),
                             ],
@@ -375,7 +385,17 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: bottomPanel,
+                // Scrolling the focused row out of the list slides the sheet
+                // away; it rides back in the moment the row returns.
+                child: IgnorePointer(
+                  ignoring: !_focusInView,
+                  child: AnimatedSlide(
+                    offset: _focusInView ? Offset.zero : const Offset(0, 1.05),
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                    child: bottomPanel,
+                  ),
+                ),
               ),
             // MY PERFORMANCE rides in a sheet: resting just under the wheel,
             // draggable up to snap over it at the top of the page, and back

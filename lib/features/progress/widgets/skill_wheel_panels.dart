@@ -423,6 +423,10 @@ class WheelExerciseCard extends StatefulWidget {
   /// dismisses the tree back to the wheel.
   final VoidCallback? onDismiss;
 
+  /// Reports whether the focused step's row is inside the list's viewport —
+  /// the host slides the detail sheet away while it is not.
+  final ValueChanged<bool>? onFocusVisible;
+
   const WheelExerciseCard({
     super.key,
     required this.family,
@@ -430,6 +434,7 @@ class WheelExerciseCard extends StatefulWidget {
     required this.bottomInset,
     required this.onPickStep,
     this.onDismiss,
+    this.onFocusVisible,
   });
 
   @override
@@ -448,6 +453,10 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
 
   /// One dismiss per drag: re-armed when the scroll settles.
   bool _dismissArmed = true;
+
+  /// Last visibility reported for the focused row, so the host only hears
+  /// about changes.
+  bool _focusReportedVisible = true;
 
   @override
   void initState() {
@@ -490,7 +499,28 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
           curve: Curves.easeOutCubic,
         );
       }
+      _reportFocusVisibility();
     });
+  }
+
+  /// Whether the focused row is inside the viewport right now. Measured
+  /// against the whole viewport — not the band the detail sheet covers — so
+  /// the sheet hiding and showing cannot feed back into the measurement.
+  void _reportFocusVisibility() {
+    if (!_scrollController.hasClients) return;
+    final rowTop = widget.focus < _rowOffsets.length
+        ? _rowOffsets[widget.focus]
+        : widget.focus * _rowHeight;
+    final position = _scrollController.position;
+    final top = position.pixels;
+    final bottom = top + position.viewportDimension;
+    // At least half the row must show to count as in view.
+    final visible =
+        rowTop + _rowHeight / 2 > top && rowTop + _rowHeight / 2 < bottom;
+    if (visible != _focusReportedVisible) {
+      _focusReportedVisible = visible;
+      widget.onFocusVisible?.call(visible);
+    }
   }
 
   @override
@@ -546,8 +576,10 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
             _dismissArmed = false;
             widget.onDismiss!();
           }
+          _reportFocusVisibility();
         } else if (notification is ScrollEndNotification) {
           _dismissArmed = true;
+          _reportFocusVisibility();
         }
         return false;
       },
