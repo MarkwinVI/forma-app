@@ -422,7 +422,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         // Where the performance sheet rests: just under the wheel band. The
         // header height mirrors the compact header row below; the band
         // height is the wheel's overview framing scaled to width.
-        const headerHeight = 51.0;
+        const headerHeight = 54.0;
         final bandHeight =
             SkillWheel.overviewBandHeight * constraints.maxWidth / 400;
         final minFraction =
@@ -442,7 +442,11 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                   padding:
                       EdgeInsets.fromLTRB(22, 10, 22, _sel == null ? 6 : 18),
                   child: SizedBox(
-                    height: 35,
+                    // Tall enough for the 30px title's full line box — a
+                    // shorter row makes the paragraph overflow its height
+                    // constraint, which turns ellipsis clipping on and chops
+                    // descenders (the g of "Hinge") flat.
+                    height: 38,
                     child: Row(
                       children: [
                         if (_sel != null)
