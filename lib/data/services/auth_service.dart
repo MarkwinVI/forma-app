@@ -93,11 +93,13 @@ class AuthService {
         .eq('id', user.id)
         .maybeSingle();
 
+    // created_at is deliberately absent: the column's `default now()` stamps
+    // it once on insert, and an upsert only touches the columns it is given —
+    // so a returning sign-in can no longer overwrite the registration date.
     await _client.from('users').upsert({
       'id': user.id,
       'email': user.email ?? credential.email,
       'full_name': fullName.isEmpty ? null : fullName,
-      'created_at': DateTime.now().toIso8601String(),
     });
 
     if (existing == null) {
