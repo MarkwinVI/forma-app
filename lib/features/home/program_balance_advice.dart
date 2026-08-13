@@ -5,7 +5,6 @@ import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
 import 'program_balance_view.dart';
-import 'program_day_items.dart';
 
 /// One thing the user could do about a movement that is off target: the
 /// action, and the sentence explaining it.
@@ -14,22 +13,6 @@ class BalanceAdvice {
   final String detail;
 
   const BalanceAdvice({required this.title, required this.detail});
-}
-
-/// The whole read of one movement: the heading, the sentence under it, the
-/// label over the list, and the actions themselves.
-class BalanceReport {
-  final String headline;
-  final String explanation;
-  final String actionsLabel;
-  final List<BalanceAdvice> advice;
-
-  const BalanceReport({
-    required this.headline,
-    required this.explanation,
-    required this.actionsLabel,
-    required this.advice,
-  });
 }
 
 /// Standalone exercises worth adding for each movement pattern, split by what
@@ -90,64 +73,13 @@ class BalanceSuggestions {
   const BalanceSuggestions({required this.gym, required this.minimal});
 }
 
-/// Reads one movement into the copy the detail page shows.
+/// The concrete moves for a movement that is missing or low — the only
+/// verdicts the detail page offers fixes for.
 ///
 /// The rule behind every branch: change the split only when the split is what
 /// causes the problem. Otherwise the fix is a specific exercise or
 /// progression, because that is the smallest change that works.
-BalanceReport balanceReportFor({
-  required BalanceCategory entry,
-  required List<ProgramWeekDay> week,
-  required List<BalanceCategory> allCategories,
-  required BalanceProgramContext context,
-}) {
-  final movement = entry.label;
-  final blocks = entry.weeklyBlocks;
-  final unit = blocks == 1 ? 'block' : 'blocks';
-
-  if (entry.verdict == BalanceVerdict.tooMuch) {
-    return BalanceReport(
-      headline: 'Too much work',
-      explanation: '$movement has $blocks $unit this week. Forma recommends '
-          '$kBalanceTargetLabel blocks a week. Extra work may make recovery '
-          'harder.',
-      actionsLabel: 'WAYS TO REDUCE IT',
-      advice: _tooMuch(
-        entry: entry,
-        week: week,
-        allCategories: allCategories,
-        context: context,
-      ),
-    );
-  }
-
-  // Enough work, all of it in one session. A note rather than a fault, so it
-  // reads as one: nothing is missing, the week just sits it all in one place.
-  if (entry.verdict == BalanceVerdict.concentrated) {
-    return BalanceReport(
-      headline: 'Concentrated in one workout',
-      explanation: '$movement has enough weekly work, but most of it is '
-          'concentrated in one workout. Spread across at least two training '
-          'days it recovers better and holds its quality.',
-      actionsLabel: 'WAYS TO SPREAD IT',
-      advice: _tooBunched(entry: entry, week: week, context: context),
-    );
-  }
-
-  return BalanceReport(
-    headline: 'Needs more work',
-    explanation: '$movement has $blocks $unit this week. Aim for '
-        '$kBalanceTargetLabel blocks a week.',
-    actionsLabel: 'WAYS TO IMPROVE IT',
-    advice: _tooLittle(entry: entry, week: week, context: context),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Too little
-// ---------------------------------------------------------------------------
-
-List<BalanceAdvice> _tooLittle({
+List<BalanceAdvice> balanceImprovementAdvice({
   required BalanceCategory entry,
   required List<ProgramWeekDay> week,
   required BalanceProgramContext context,
@@ -186,7 +118,7 @@ List<BalanceAdvice> _tooLittle({
       BalanceAdvice(
         title: 'Add $existing to another workout',
         detail: 'Train $movement on ${kWeekdayNames[open]} to move towards '
-            '$kBalanceTargetLabel blocks a week.',
+            '$kBalanceMinBlocks blocks a week.',
       ),
     BalanceAdvice(
       title: 'Add another $movement exercise',
@@ -198,39 +130,6 @@ List<BalanceAdvice> _tooLittle({
         splitDetail: 'Choose a split that comes back to $movement more often.',
       ),
   ];
-}
-
-// ---------------------------------------------------------------------------
-// Enough work, all in one session
-// ---------------------------------------------------------------------------
-
-/// The volume is there, so nothing here adds work — it only moves some of it
-/// onto a second day, or makes room for a second day to exist.
-List<BalanceAdvice> _tooBunched({
-  required BalanceCategory entry,
-  required List<ProgramWeekDay> week,
-  required BalanceProgramContext context,
-}) {
-  final movement = entry.label.toLowerCase();
-  final open = _openDayFor(entry, week);
-  final movable = _mostFrequentExercise(entry);
-
-  if (open != null && movable != null) {
-    return [
-      BalanceAdvice(
-        title: 'Move $movable to ${kWeekdayNames[open]}',
-        detail: 'Splitting the work across two days trains $movement just as '
-            'much with better recovery between sessions.',
-      ),
-    ];
-  }
-
-  // Nowhere to move it to — the split gives the movement one day and no more.
-  return _scheduleAdvice(
-    context,
-    splitDetail: 'Choose a split that trains $movement on at least two days '
-        'per week.',
-  );
 }
 
 /// The schedule-level moves, for when the split itself is what holds the
@@ -334,143 +233,6 @@ List<String> _suggestionsFor(
     }
   }
   return picks;
-}
-
-// ---------------------------------------------------------------------------
-// Too much
-// ---------------------------------------------------------------------------
-
-List<BalanceAdvice> _tooMuch({
-  required BalanceCategory entry,
-  required List<ProgramWeekDay> week,
-  required List<BalanceCategory> allCategories,
-  required BalanceProgramContext context,
-}) {
-  final movement = entry.label.toLowerCase();
-  final advice = <BalanceAdvice>[];
-
-  // Case A — on more days than the weekly ceiling allows, so no amount of
-  // tidying inside a session brings it back. Thin the movement out of a
-  // workout rather than dropping a whole training day.
-  if (entry.times > kBalanceMaxBlocks) {
-    final busiest = _mostFrequentExercise(entry);
-    advice.add(
-      BalanceAdvice(
-        title: 'Reduce $movement frequency',
-        detail: 'Remove ${busiest ?? 'an exercise'} from one or more workouts '
-            'while keeping it active in your program.',
-      ),
-    );
-
-    // Only when the schedule is what overtrains the user — several movements
-    // over at once — is the schedule itself worth touching.
-    final overloaded = allCategories
-        .where((other) => other.verdict == BalanceVerdict.tooMuch)
-        .length;
-    if (overloaded > 1) {
-      advice.addAll(const [
-        BalanceAdvice(
-          title: 'Reduce your training days',
-          detail: 'Keep your current split but train fewer days per week.',
-        ),
-        BalanceAdvice(
-          title: 'Change your split',
-          detail: 'Choose a split that gives your movements more recovery '
-              'between sessions.',
-        ),
-      ]);
-    }
-  }
-
-  // Case B — several blocks land in the same session. Supporting exercises
-  // go before progressions, since a progression is the thing being trained.
-  final doubled = _doubledUpItems(entry);
-  final spare = doubled
-      .where((item) => item.kind != ProgramDayItemKind.progression)
-      .firstOrNull;
-  if (spare != null) {
-    advice.addAll([
-      BalanceAdvice(
-        title: 'Remove ${spare.name}',
-        detail: 'Remove a supporting exercise that overlaps with your active '
-            'progression.',
-      ),
-      BalanceAdvice(
-        title: 'Replace ${spare.name}',
-        detail: 'Replace it with a movement your program currently needs '
-            'more of.',
-      ),
-    ]);
-  }
-
-  // Case C — two progressions feeding one movement, still over once the
-  // supporting exercises are set aside. Pause, never remove: the tree keeps
-  // everything it has earned.
-  final pausable = _lowerPriorityTree(entry, context);
-  if (pausable != null) {
-    final progressionBlocks = entry.blocks
-        .where((block) => block.item.kind == ProgramDayItemKind.progression)
-        .length;
-    if (progressionBlocks > kBalanceMaxBlocks) {
-      advice.add(
-        BalanceAdvice(
-          title: 'Pause ${pausable.title}',
-          detail: 'Pause the lower-priority progression while keeping its '
-              'progress saved.',
-        ),
-      );
-    }
-  }
-
-  if (advice.isEmpty) {
-    final busiest = _mostFrequentExercise(entry);
-    advice.add(
-      BalanceAdvice(
-        title: 'Reduce $movement frequency',
-        detail: 'Remove ${busiest ?? 'an exercise'} from one or more workouts '
-            'while keeping it active in your program.',
-      ),
-    );
-  }
-  return advice;
-}
-
-/// Items of this movement that share a day with another block of it.
-List<ProgramDayItem> _doubledUpItems(BalanceCategory entry) {
-  final byDay = <int, List<ProgramDayItem>>{};
-  for (final block in entry.blocks) {
-    (byDay[block.weekday] ??= []).add(block.item);
-  }
-  return [
-    for (final items in byDay.values)
-      if (items.length > 1) ...items,
-  ];
-}
-
-/// Of the trees feeding this movement, the one to pause: never a tree behind
-/// a goal the user chose, and of the rest the one added last.
-SkillCategory? _lowerPriorityTree(
-  BalanceCategory entry,
-  BalanceProgramContext context,
-) {
-  final ids = <String>{
-    for (final block in entry.blocks)
-      if (block.item.kind == ProgramDayItemKind.progression &&
-          block.item.skillCategoryId != null)
-        block.item.skillCategoryId!,
-  };
-  if (ids.length < 2) return null;
-
-  final candidates = [
-    for (final track in context.skillTracks)
-      if (ids.contains(track.skillCategoryId) &&
-          !context.goalSkillCategoryIds.contains(track.skillCategoryId))
-        track,
-  ]..sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
-
-  final pick = candidates.lastOrNull;
-  if (pick == null) return null;
-  return SkillCategoryCatalog.findById(pick.skillCategoryId);
 }
 
 // ---------------------------------------------------------------------------

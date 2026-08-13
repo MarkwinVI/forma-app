@@ -481,8 +481,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                     // off-target week is the one thing here worth colouring.
                     warn: balance.any(
                       (entry) =>
-                          entry.group.primary &&
-                          entry.verdict != BalanceVerdict.balanced,
+                          entry.group.primary && !entry.verdict.onTarget,
                     ),
                     last: true,
                     onTap: () => Navigator.of(context).push(

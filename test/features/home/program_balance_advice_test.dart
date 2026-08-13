@@ -7,13 +7,13 @@ import 'package:forma_app/features/home/program_balance_view.dart';
 import 'package:forma_app/features/home/program_day_items.dart';
 
 void main() {
-  group('weekly balance copy', () {
+  group('weekly balance advice', () {
     test('a missing movement offers a tree, then a supporting exercise', () {
       final week = [
         _day(0, TrainingSessionType.fullBody,
             [_progression('dips', 'Bench Dips')]),
       ];
-      final report = _reportFor(
+      final advice = _adviceFor(
         'Vertical pull',
         week: week,
         context: _context(
@@ -23,16 +23,13 @@ void main() {
         ),
       );
 
-      expect(report.headline, 'Needs more work');
-      expect(report.explanation, contains('has 0 blocks this week'));
-      expect(report.actionsLabel, 'WAYS TO IMPROVE IT');
-      expect(report.advice.first.title, 'Add a Pullups progression');
-      expect(report.advice.last.title, 'Add a vertical pull exercise');
+      expect(advice.first.title, 'Add a Pullups progression');
+      expect(advice.last.title, 'Add a vertical pull exercise');
       // Bodyweight kit, so no lat pulldown.
-      expect(report.advice.last.detail, contains('Chin-up'));
+      expect(advice.last.detail, contains('Chin-up'));
       // Adding days cannot fix a week with nothing to schedule.
       expect(
-        report.advice.map((a) => a.title),
+        advice.map((a) => a.title),
         isNot(contains('Add another training day')),
       );
     });
@@ -42,7 +39,7 @@ void main() {
         _day(0, TrainingSessionType.fullBody,
             [_progression('dips', 'Bench Dips')]),
       ];
-      final report = _reportFor(
+      final advice = _adviceFor(
         'Vertical pull',
         week: week,
         context: _context(
@@ -53,10 +50,10 @@ void main() {
       );
 
       expect(
-        report.advice.map((a) => a.title),
+        advice.map((a) => a.title),
         isNot(contains('Add a Pullups progression')),
       );
-      expect(report.advice.single.title, 'Add a vertical pull exercise');
+      expect(advice.single.title, 'Add a vertical pull exercise');
     });
 
     test('a missing movement never suggests a locked tree', () {
@@ -66,7 +63,7 @@ void main() {
         _day(0, TrainingSessionType.fullBody,
             [_progression('pullups', 'Pull Ups')]),
       ];
-      final report = _reportFor(
+      final advice = _adviceFor(
         'Vertical push',
         week: week,
         context: _context(
@@ -75,7 +72,7 @@ void main() {
         ),
       );
 
-      expect(report.advice.first.title, 'Add a Dips progression');
+      expect(advice.first.title, 'Add a Dips progression');
     });
 
     test('a split that rarely revisits the movement is the split', () {
@@ -86,7 +83,7 @@ void main() {
         _day(2, TrainingSessionType.lower, const []),
         _day(4, TrainingSessionType.upper, const []),
       ];
-      final report = _reportFor(
+      final advice = _adviceFor(
         'Vertical push',
         week: week,
         context: _context(
@@ -95,13 +92,12 @@ void main() {
         ),
       );
 
-      expect(report.explanation, contains('Aim for 3–4 blocks a week'));
-      expect(report.advice.map((a) => a.title), [
+      expect(advice.map((a) => a.title), [
         'Add another training day',
         'Change your split',
       ]);
       expect(
-        report.advice.last.detail,
+        advice.last.detail,
         'Choose a split that trains vertical push at least twice per week.',
       );
     });
@@ -112,7 +108,7 @@ void main() {
         _day(0, TrainingSessionType.fullBody,
             [_progression('dips', 'Bench Dips')]),
       ];
-      final report = _reportFor(
+      final advice = _adviceFor(
         'Vertical push',
         week: week,
         context: _context(
@@ -121,8 +117,8 @@ void main() {
         ),
       );
 
-      expect(report.advice.single.title, 'Add another training day');
-      expect(report.advice.single.detail,
+      expect(advice.single.title, 'Add another training day');
+      expect(advice.single.detail,
           'Train your full-body program more frequently.');
     });
 
@@ -130,11 +126,10 @@ void main() {
       final week = [
         _day(0, TrainingSessionType.fullBody,
             [_progression('dips', 'Bench Dips')]),
-        _day(2, TrainingSessionType.fullBody,
-            [_progression('dips', 'Bench Dips')]),
+        _day(2, TrainingSessionType.fullBody, const []),
         _day(4, TrainingSessionType.fullBody, const []),
       ];
-      final report = _reportFor(
+      final advice = _adviceFor(
         'Vertical push',
         week: week,
         context: _context(
@@ -143,138 +138,24 @@ void main() {
         ),
       );
 
-      expect(report.advice.first.title, 'Add Bench Dips to another workout');
+      expect(advice.first.title, 'Add Bench Dips to another workout');
       expect(
-        report.advice.first.detail,
-        'Train vertical push on Friday to move towards 3–4 blocks a week.',
+        advice.first.detail,
+        'Train vertical push on Wednesday to move towards 3 blocks a week.',
       );
-      expect(report.advice.last.title, 'Add another vertical push exercise');
+      expect(advice.last.title, 'Add another vertical push exercise');
       // The split gives it three chances a week, so the split is not at fault.
       expect(
-        report.advice.map((a) => a.title),
+        advice.map((a) => a.title),
         isNot(contains('Change your split')),
-      );
-    });
-
-    test('too many days thins the movement out before touching the schedule',
-        () {
-      final week = [
-        for (final weekday in [0, 1, 2, 3, 4])
-          _day(weekday, TrainingSessionType.fullBody,
-              [_progression('dips', 'Bench Dips')]),
-      ];
-      final report = _reportFor(
-        'Vertical push',
-        week: week,
-        context: _context(
-          programType: TrainingProgramType.fullBody,
-          trainingDaysPerWeek: 5,
-        ),
-      );
-
-      expect(report.headline, 'Too much work');
-      expect(report.explanation, contains('has 5 blocks this week'));
-      expect(report.explanation, contains('recommends 3–4 blocks a week'));
-      expect(report.actionsLabel, 'WAYS TO REDUCE IT');
-      expect(report.advice.first.title, 'Reduce vertical push frequency');
-      expect(report.advice.first.detail, contains('Bench Dips'));
-      expect(
-        report.advice.map((a) => a.title),
-        isNot(contains('Reduce your training days')),
-      );
-    });
-
-    test('the schedule is only blamed when several movements are over', () {
-      final week = [
-        for (final weekday in [0, 1, 2, 3, 4])
-          _day(weekday, TrainingSessionType.fullBody, [
-            _progression('dips', 'Bench Dips'),
-            _progression('pullups', 'Pull Ups'),
-          ]),
-      ];
-      final report = _reportFor(
-        'Vertical push',
-        week: week,
-        context: _context(
-          programType: TrainingProgramType.fullBody,
-          trainingDaysPerWeek: 5,
-        ),
-      );
-
-      expect(
-          report.advice.map((a) => a.title),
-          containsAll(const [
-            'Reduce vertical push frequency',
-            'Reduce your training days',
-            'Change your split',
-          ]));
-    });
-
-    test('doubled-up days drop the supporting exercise, not the progression',
-        () {
-      final week = [
-        _day(0, TrainingSessionType.fullBody, [
-          _progression('dips', 'Bench Dips'),
-          _standalone('Barbell overhead press', 'dips_parallel_bar_dips'),
-        ]),
-        for (final weekday in [2, 4, 6])
-          _day(weekday, TrainingSessionType.fullBody,
-              [_progression('dips', 'Bench Dips')]),
-      ];
-      final report = _reportFor(
-        'Vertical push',
-        week: week,
-        context: _context(
-          programType: TrainingProgramType.fullBody,
-          trainingDaysPerWeek: 4,
-        ),
-      );
-
-      // Four days is within what the ceiling allows, so this is a volume
-      // problem, not a frequency one — no "reduce frequency" line.
-      expect(report.advice.map((a) => a.title), const [
-        'Remove Barbell overhead press',
-        'Replace Barbell overhead press',
-      ]);
-    });
-
-    test('two trees on one movement pause the one behind no goal', () {
-      final week = [
-        for (final weekday in [0, 2, 4])
-          _day(weekday, TrainingSessionType.fullBody, [
-            _progression('dips', 'Bench Dips'),
-            _progression('handstand_pushups', 'Pike Pushup'),
-          ]),
-      ];
-      final report = _reportFor(
-        'Vertical push',
-        week: week,
-        context: _context(
-          programType: TrainingProgramType.fullBody,
-          trainingDaysPerWeek: 3,
-          skillTracks: [
-            _track(SkillCategoryCatalog.dipsId, 'weighted'),
-            _track(SkillCategoryCatalog.handstandPushupsId, 'main'),
-          ],
-          goalSkillCategoryIds: {SkillCategoryCatalog.handstandPushupsId},
-        ),
-      );
-
-      expect(
-        report.advice.map((a) => a.title),
-        contains('Pause Dips'),
-      );
-      expect(
-        report.advice.map((a) => a.title),
-        isNot(contains('Pause Handstand Pushups')),
       );
     });
   });
 
   group('weekly balance verdicts', () {
     test('weekly blocks read on the same scale for every movement', () {
-      // 0–2 short, 3–4 balanced, 5 and up too much — checked on a week wide
-      // enough that frequency never decides the answer.
+      // 0 missing, 1 low, 2 good, 3 recommended, 4 and up high — checked on
+      // a week wide enough that the split never decides the answer.
       final verdicts = [
         for (var blocks = 0; blocks <= 5; blocks++)
           _entryFor(
@@ -298,11 +179,11 @@ void main() {
 
       expect(verdicts, const [
         BalanceVerdict.missing,
-        BalanceVerdict.needsWork,
-        BalanceVerdict.needsWork,
-        BalanceVerdict.balanced,
-        BalanceVerdict.balanced,
-        BalanceVerdict.tooMuch,
+        BalanceVerdict.low,
+        BalanceVerdict.good,
+        BalanceVerdict.recommended,
+        BalanceVerdict.high,
+        BalanceVerdict.high,
       ]);
     });
 
@@ -324,24 +205,16 @@ void main() {
 
       expect(entry.opportunities, 2);
       expect(entry.weeklyBlocks, 2);
-      expect(entry.verdict, BalanceVerdict.needsWork);
-
-      // Nothing left to schedule, so the schedule itself is on the list.
-      final report = _reportFor('Horizontal pull', week: week, context: context);
-      expect(report.headline, 'Needs more work');
-      expect(report.advice.map((a) => a.title), const [
-        'Add another horizontal pull exercise',
-        'Add another training day',
-        'Change your split',
-      ]);
+      expect(entry.verdict, BalanceVerdict.good);
     });
 
-    test('enough work stacked on one day is a note, not a fault', () {
+    test('blocks stacked on one day still read on the block count', () {
       final week = [
         _day(0, TrainingSessionType.fullBody, [
           _progression('dips', 'Bench Dips'),
           _standalone('Barbell overhead press', 'dips_parallel_bar_dips'),
-          _standalone('Dumbbell shoulder press', 'handstand_pushups_pike_push_up'),
+          _standalone(
+              'Dumbbell shoulder press', 'handstand_pushups_pike_push_up'),
         ]),
         _day(2, TrainingSessionType.fullBody, const []),
       ];
@@ -353,17 +226,7 @@ void main() {
 
       expect(entry.weeklyBlocks, 3);
       expect(entry.times, 1);
-      expect(entry.verdict, BalanceVerdict.concentrated);
-
-      final report = _reportFor('Vertical push', week: week, context: context);
-      expect(report.headline, 'Concentrated in one workout');
-      expect(
-        report.explanation,
-        startsWith('Vertical push has enough weekly work, but most of it is '
-            'concentrated in one workout.'),
-      );
-      // The volume is already there, so nothing here adds any.
-      expect(report.advice.single.title, 'Move Bench Dips to Wednesday');
+      expect(entry.verdict, BalanceVerdict.recommended);
     });
 
     test('squats and hinges are judged apart, never as one leg line', () {
@@ -395,7 +258,7 @@ void main() {
       // Three squat blocks are three squat blocks — they say nothing about
       // the hinge line, which has nothing in it.
       expect(squats.weeklyBlocks, 3);
-      expect(squats.verdict, BalanceVerdict.balanced);
+      expect(squats.verdict, BalanceVerdict.recommended);
       expect(hinges.weeklyBlocks, 0);
       expect(hinges.verdict, BalanceVerdict.missing);
     });
@@ -419,8 +282,61 @@ void main() {
       for (final label in const ['Squats & lunges', 'Glutes & hamstrings']) {
         final entry = categories.firstWhere((entry) => entry.label == label);
         expect(entry.weeklyBlocks, 3, reason: label);
-        expect(entry.verdict, BalanceVerdict.balanced, reason: label);
+        expect(entry.verdict, BalanceVerdict.recommended, reason: label);
       }
+    });
+  });
+
+  group('weekly balance status copy', () {
+    test('each exposure level gets its own sentence', () {
+      String copyFor(int blocks) {
+        return balanceStatusCopy(
+          _entryFor(
+            'Vertical push',
+            week: [
+              for (var weekday = 0; weekday < 5; weekday++)
+                _day(
+                  weekday,
+                  TrainingSessionType.fullBody,
+                  weekday < blocks
+                      ? [_progression('dips', 'Bench Dips')]
+                      : const [],
+                ),
+            ],
+            context: _context(
+              programType: TrainingProgramType.fullBody,
+              trainingDaysPerWeek: 5,
+            ),
+          ),
+        );
+      }
+
+      expect(
+        copyFor(0),
+        'You’re not currently training Vertical push. Add it to keep your '
+        'program balanced.',
+      );
+      expect(
+        copyFor(1),
+        'You’re training Vertical push once per week. Increasing it to at '
+        'least twice per week should support more consistent progress.',
+      );
+      expect(
+        copyFor(2),
+        'You’re training Vertical push twice per week. That’s enough to make '
+        'solid progress, though training it 3 times per week may help you '
+        'progress faster.',
+      );
+      expect(
+        copyFor(3),
+        'You’re training Vertical push 3 times per week — a strong frequency '
+        'for progressing efficiently.',
+      );
+      expect(
+        copyFor(4),
+        'You’re training Vertical push frequently. This can work well, but '
+        'make sure you’re recovering well and not overtraining.',
+      );
     });
   });
 }
@@ -434,16 +350,14 @@ BalanceCategory _entryFor(
       .firstWhere((entry) => entry.label == label);
 }
 
-BalanceReport _reportFor(
+List<BalanceAdvice> _adviceFor(
   String label, {
   required List<ProgramWeekDay> week,
   required BalanceProgramContext context,
 }) {
-  final categories = balanceFromWeek(week, context: context);
-  return balanceReportFor(
-    entry: categories.firstWhere((entry) => entry.label == label),
+  return balanceImprovementAdvice(
+    entry: _entryFor(label, week: week, context: context),
     week: week,
-    allCategories: categories,
     context: context,
   );
 }

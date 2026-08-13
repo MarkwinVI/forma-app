@@ -60,23 +60,17 @@ class BalanceBlock {
   const BalanceBlock({required this.weekday, required this.item});
 }
 
-/// How much of a primary category a week should hold: 0–2 blocks is short of
-/// what the pattern needs, 3–4 is where it should be, and past 4 the extra
-/// work costs recovery instead of progress.
+/// The weekly block count a primary category is recommended to sit at.
 ///
 /// The same benchmark whatever the split. A split that only reaches horizontal
 /// pull twice a week does not lower what horizontal pull needs — it is the
 /// split that has to give.
 const int kBalanceMinBlocks = 3;
-const int kBalanceMaxBlocks = 4;
 
-/// Volume on its own would let three blocks stacked into one session pass, so
-/// how the week spreads them is checked separately: at least two training
-/// days, and only ever as a soft note.
+/// Below this many weekly-equivalent chances, the split itself is what holds
+/// a movement back — the advice reaches for the schedule instead of an
+/// exercise.
 const int kBalanceMinDays = 2;
-
-/// The target as copy reads it: "3–4 blocks a week".
-const String kBalanceTargetLabel = '$kBalanceMinBlocks–$kBalanceMaxBlocks';
 
 /// One line of the weekly balance: the movement patterns it covers, and
 /// whether it is one of the primary categories the program is judged on.
@@ -135,14 +129,14 @@ const List<BalanceGroup> kBalanceGroups = [
   ),
 ];
 
-/// Where a category sits. The first three are the volume read; [concentrated]
-/// is the frequency one — enough work, all of it in the same session.
+/// Where a category sits, read straight off its weekly blocks:
+/// 0 missing, 1 low, 2 good, 3 recommended, 4 and up high.
 enum BalanceVerdict {
   missing,
-  needsWork,
-  balanced,
-  concentrated,
-  tooMuch,
+  low,
+  good,
+  recommended,
+  high,
   optional,
 }
 
@@ -151,33 +145,39 @@ extension BalanceVerdictX on BalanceVerdict {
     switch (this) {
       case BalanceVerdict.missing:
         return 'Missing';
-      case BalanceVerdict.needsWork:
-        return 'Needs work';
-      case BalanceVerdict.balanced:
-        return 'Balanced';
-      case BalanceVerdict.concentrated:
-        return 'One day';
-      case BalanceVerdict.tooMuch:
-        return 'Too much';
+      case BalanceVerdict.low:
+        return 'Low';
+      case BalanceVerdict.good:
+        return 'Good';
+      case BalanceVerdict.recommended:
+        return 'Recommended';
+      case BalanceVerdict.high:
+        return 'High';
       case BalanceVerdict.optional:
         return 'Optional';
     }
   }
 
+  /// Whether the settings row counts this as fine: enough weekly work
+  /// without tipping into too much.
+  bool get onTarget =>
+      this == BalanceVerdict.good ||
+      this == BalanceVerdict.recommended ||
+      this == BalanceVerdict.optional;
+
   /// How the settings row counts this verdict: "2 areas undertrained",
-  /// where "Needs work" would read as one area speaking for two.
+  /// where "Low" would read as one area speaking for two.
   String get summaryWord {
     switch (this) {
       case BalanceVerdict.missing:
         return 'missing';
-      case BalanceVerdict.needsWork:
+      case BalanceVerdict.low:
         return 'undertrained';
-      case BalanceVerdict.balanced:
-        return 'balanced';
-      case BalanceVerdict.concentrated:
-        return 'on one day';
-      case BalanceVerdict.tooMuch:
+      case BalanceVerdict.high:
         return 'overtrained';
+      case BalanceVerdict.good:
+      case BalanceVerdict.recommended:
+        return 'balanced';
       case BalanceVerdict.optional:
         return 'optional';
     }
@@ -185,17 +185,18 @@ extension BalanceVerdictX on BalanceVerdict {
 
   Color get color {
     switch (this) {
-      case BalanceVerdict.balanced:
+      case BalanceVerdict.missing:
+      case BalanceVerdict.low:
+        return AppColors.red;
+      // Both are cautions rather than faults: good is short of the
+      // recommendation, high is past it.
+      case BalanceVerdict.good:
+      case BalanceVerdict.high:
+        return AppColors.amber;
+      case BalanceVerdict.recommended:
         return AppColors.green;
       case BalanceVerdict.optional:
         return AppColors.textMuted;
-      // A week with the work in it but bunched up is a note, not a fault.
-      case BalanceVerdict.concentrated:
-        return AppColors.textSecondary;
-      case BalanceVerdict.missing:
-      case BalanceVerdict.needsWork:
-      case BalanceVerdict.tooMuch:
-        return AppColors.amber;
     }
   }
 }
@@ -239,15 +240,44 @@ class BalanceCategory {
   /// of the same category in one session are one go at that pattern, not two.
   int get times => {for (final block in blocks) block.weekday}.length;
 
-  /// Volume first, on the same 3–4 blocks every category is held to, then —
-  /// only once the volume is there — how the week spreads it.
+  /// Blocks alone decide the read — every category held to the same scale.
   BalanceVerdict get verdict {
     if (!group.primary) return BalanceVerdict.optional;
-    if (blocks.isEmpty) return BalanceVerdict.missing;
-    if (weeklyBlocks < kBalanceMinBlocks) return BalanceVerdict.needsWork;
-    if (weeklyBlocks > kBalanceMaxBlocks) return BalanceVerdict.tooMuch;
-    if (times < kBalanceMinDays) return BalanceVerdict.concentrated;
-    return BalanceVerdict.balanced;
+    return switch (weeklyBlocks) {
+      0 => BalanceVerdict.missing,
+      1 => BalanceVerdict.low,
+      2 => BalanceVerdict.good,
+      3 => BalanceVerdict.recommended,
+      _ => BalanceVerdict.high,
+    };
+  }
+}
+
+/// The sentence the detail page shows under the week: what the current
+/// weekly exposure means for progress.
+String balanceStatusCopy(BalanceCategory entry) {
+  final label = entry.label;
+  switch (entry.verdict) {
+    case BalanceVerdict.missing:
+      return 'You’re not currently training $label. Add it to keep your '
+          'program balanced.';
+    case BalanceVerdict.low:
+      return 'You’re training $label once per week. Increasing it to at '
+          'least twice per week should support more consistent progress.';
+    case BalanceVerdict.good:
+      return 'You’re training $label twice per week. That’s enough to make '
+          'solid progress, though training it 3 times per week may help you '
+          'progress faster.';
+    case BalanceVerdict.recommended:
+      return 'You’re training $label 3 times per week — a strong frequency '
+          'for progressing efficiently.';
+    case BalanceVerdict.high:
+      return 'You’re training $label frequently. This can work well, but '
+          'make sure you’re recovering well and not overtraining.';
+    case BalanceVerdict.optional:
+      return '$label backs up the primary categories rather than being '
+          'judged alongside them — train it as much or as little as suits '
+          'you.';
   }
 }
 
@@ -298,8 +328,7 @@ double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
 String balanceSummary(List<BalanceCategory> categories) {
   final off = [
     for (final entry in categories)
-      if (entry.group.primary && entry.verdict != BalanceVerdict.balanced)
-        entry.verdict,
+      if (entry.group.primary && !entry.verdict.onTarget) entry.verdict,
   ];
   if (off.isEmpty) return 'Balanced';
 
@@ -346,7 +375,6 @@ class ProgramBalanceView extends StatelessWidget {
                           builder: (_) => _CategoryDetailView(
                             entry: entry,
                             week: week,
-                            categories: categories,
                             program: program,
                           ),
                         ),
@@ -362,18 +390,17 @@ class ProgramBalanceView extends StatelessWidget {
   }
 }
 
-/// Why one category reads the way it does: the week day by day, then what is
-/// short (or over) and the concrete ways to change it.
+/// Why one category reads the way it does: the week day by day, what the
+/// current exposure means — and, only when it is missing or low, the
+/// concrete ways to improve it.
 class _CategoryDetailView extends StatelessWidget {
   final BalanceCategory entry;
   final List<ProgramWeekDay> week;
-  final List<BalanceCategory> categories;
   final BalanceProgramContext program;
 
   const _CategoryDetailView({
     required this.entry,
     required this.week,
-    required this.categories,
     required this.program,
   });
 
@@ -382,15 +409,10 @@ class _CategoryDetailView extends StatelessWidget {
     final verdict = entry.verdict;
     final times = entry.times;
     final blocks = entry.weeklyBlocks;
-    final report = verdict == BalanceVerdict.balanced ||
-            verdict == BalanceVerdict.optional
-        ? null
-        : balanceReportFor(
-            entry: entry,
-            week: week,
-            allCategories: categories,
-            context: program,
-          );
+    final advice = verdict == BalanceVerdict.missing ||
+            verdict == BalanceVerdict.low
+        ? balanceImprovementAdvice(entry: entry, week: week, context: program)
+        : const <BalanceAdvice>[];
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -401,13 +423,11 @@ class _CategoryDetailView extends StatelessWidget {
           children: [
             _PageHeader(
               title: entry.label,
-              // The target counts blocks, so the line under the title does
-              // too — a movement can sit on three days and still be doubled
-              // up on one of them.
+              // Blocks, not days — a movement can sit on three days and
+              // still be doubled up on one of them.
               sub: verdict == BalanceVerdict.optional
                   ? 'Optional · $times ${times == 1 ? 'day' : 'days'} a week'
-                  : '$blocks ${blocks == 1 ? 'block' : 'blocks'} a week · '
-                      'target $kBalanceTargetLabel',
+                  : '$blocks ${blocks == 1 ? 'block' : 'blocks'} a week',
               subColor: verdict.color,
               subWeight: FontWeight.w600,
             ),
@@ -423,62 +443,22 @@ class _CategoryDetailView extends StatelessWidget {
                           if (entry.covers(item)) item.name,
                       ],
                     ),
-                  if (verdict == BalanceVerdict.optional)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 22),
-                      child: Text(
-                        '${entry.label} backs up the primary categories '
-                        'rather than being judged alongside them — train it '
-                        'as much or as little as suits you.',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.6,
-                        ),
-                      ),
-                    )
-                  else if (verdict == BalanceVerdict.balanced)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 22),
-                      child: Text(
-                        '${entry.label} is where it should be: $blocks blocks '
-                        'across $times ${times == 1 ? 'day' : 'days'} this '
-                        'week, against a target of $kBalanceTargetLabel.',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.6,
-                        ),
-                      ),
-                    )
-                  else if (report != null) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        report.headline,
-                        style: const TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.25,
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 22),
+                    child: Text(
+                      balanceStatusCopy(entry),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.6,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        report.explanation,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
+                  ),
+                  if (advice.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 26, bottom: 2),
                       child: Text(
-                        report.actionsLabel,
+                        'WAYS TO IMPROVE IT',
                         style: GoogleFonts.robotoMono(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -487,7 +467,7 @@ class _CategoryDetailView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    for (final fix in report.advice) _FixRow(fix),
+                    for (final fix in advice) _FixRow(fix),
                   ],
                 ],
               ),
@@ -497,7 +477,6 @@ class _CategoryDetailView extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// Back chevron over a display title, shared by both balance pages.
