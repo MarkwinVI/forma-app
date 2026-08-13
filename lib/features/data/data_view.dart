@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -184,17 +185,20 @@ class _DataViewState extends State<DataView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Expanded(child: TypeTitle('Profile')),
-                      Pressable(
-                        onTap: _openSettings,
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 6, left: 12),
-                          child: Icon(
-                            Icons.settings_outlined,
-                            size: 22,
-                            color: AppColors.textSecondary,
+                      // The gear only opens dev tooling now that account
+                      // actions live on the tab itself — debug builds only.
+                      if (kDebugMode)
+                        Pressable(
+                          onTap: _openSettings,
+                          child: const Padding(
+                            padding: EdgeInsets.only(top: 6, left: 12),
+                            child: Icon(
+                              Icons.settings_outlined,
+                              size: 22,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -298,7 +302,128 @@ class _DataViewState extends State<DataView> {
         last: true,
         onTap: _openExercises,
       ),
+      const TypeSectionLabel('Account'),
+      TypeContentRow(
+        name: 'Sign out',
+        chevron: false,
+        // _AppEntry listens to auth state and swaps to the login screen
+        // once the session ends.
+        onTap: () => AuthService().signOut(),
+      ),
+      const _DeleteAccountRow(),
     ];
+  }
+}
+
+/// The profile tab's destructive footer row: confirms, then permanently
+/// deletes the account and all server data. _AppEntry reacts to the session
+/// ending and shows the login screen.
+class _DeleteAccountRow extends StatefulWidget {
+  const _DeleteAccountRow();
+
+  @override
+  State<_DeleteAccountRow> createState() => _DeleteAccountRowState();
+}
+
+class _DeleteAccountRowState extends State<_DeleteAccountRow> {
+  bool _busy = false;
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Delete account?',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          'Permanently deletes your account and all of your data — training '
+          'program, exercise progress and workout history. This cannot be '
+          'undone.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || _busy || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await AuthService().deleteAccount();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete account: $error')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TypeContentRow(
+      chevron: false,
+      last: true,
+      onTap: _busy ? null : _confirmDelete,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Delete account',
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.red,
+                  letterSpacing: -0.42,
+                  height: 1.15,
+                ),
+              ),
+              if (_busy) ...[
+                const SizedBox(width: 10),
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.red,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text(
+              'Erases all workouts, programs and stats',
+              style: TextStyle(
+                fontSize: 14.5,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
