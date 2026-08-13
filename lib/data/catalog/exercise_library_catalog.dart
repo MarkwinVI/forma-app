@@ -15,8 +15,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_scissors',
       category: ExerciseCategory.core,
       name: 'Ab Scissors',
-      description:
-          'Lie on your back with the lower back pressed flat and both legs raised a few inches off the floor.',
+      description: 'Lie on your back with the lower back pressed flat and both legs raised a few inches off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -28,8 +27,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_wheel_eccentric',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (Eccentric)',
-      description:
-          'Roll out from the knees through a longer range than you can return from, taking three to five seconds on the way out.',
+      description: 'Roll out from the knees through a longer range than you can return from, taking three to five seconds on the way out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -41,8 +39,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_wheel_kneeling',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (Kneeling)',
-      description:
-          'Kneel with the wheel under your shoulders and grip the handles.',
+      description: 'Kneel with the wheel under your shoulders and grip the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -54,8 +51,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_wheel_standing',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (Standing)',
-      description:
-          'Start standing with the wheel on the floor in front of your feet.',
+      description: 'Start standing with the wheel on the floor in front of your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -67,8 +63,7 @@ class ExerciseLibraryCatalog {
       id: 'aerobics',
       category: ExerciseCategory.other,
       name: 'Aerobics',
-      description:
-          'Follow a continuous routine of rhythmic, low impact movements that keeps the heart rate up for the whole session.',
+      description: 'Follow a continuous routine of rhythmic, low impact movements that keeps the heart rate up for the whole session.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -81,8 +76,7 @@ class ExerciseLibraryCatalog {
       id: 'air_bike',
       category: ExerciseCategory.other,
       name: 'Air Bike',
-      description:
-          'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
+      description: 'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -95,8 +89,7 @@ class ExerciseLibraryCatalog {
       id: 'arch_hang',
       category: ExerciseCategory.verticalPull,
       name: 'Arch Hang',
-      description:
-          'Hang from the bar and pull the shoulder blades down, then arch the chest toward the bar while looking up.',
+      description: 'Hang from the bar and pull the shoulder blades down, then arch the chest toward the bar while looking up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -109,8 +102,7 @@ class ExerciseLibraryCatalog {
       id: 'arnold_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Arnold Press (Dumbbell)',
-      description:
-          'Start with the dumbbells in front of the shoulders, palms facing you.',
+      description: 'Start with the dumbbells in front of the shoulders, palms facing you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -123,8 +115,7 @@ class ExerciseLibraryCatalog {
       id: 'around_the_world',
       category: ExerciseCategory.other,
       name: 'Around The World',
-      description:
-          'Lie on a bench holding a light dumbbell in each hand at your hips, palms up.',
+      description: 'Lie on a bench holding a light dumbbell in each hand at your hips, palms up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -136,8 +127,7 @@ class ExerciseLibraryCatalog {
       id: 'assisted_pistol_squats',
       category: ExerciseCategory.squat,
       name: 'Assisted Pistol Squats',
-      description:
-          'Hold a doorframe or strap for light assistance and lower on one leg with the other held out in front.',
+      description: 'Hold a doorframe or strap for light assistance and lower on one leg with the other held out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -149,8 +139,7 @@ class ExerciseLibraryCatalog {
       id: 'back_extension_hyperextension',
       category: ExerciseCategory.hinge,
       name: 'Back Extension (Hyperextension)',
-      description:
-          'Set the pad just below your hip bones and hook your heels under the rollers.',
+      description: 'Set the pad just below your hip bones and hook your heels under the rollers.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -162,8 +151,7 @@ class ExerciseLibraryCatalog {
       id: 'back_extension_machine',
       category: ExerciseCategory.hinge,
       name: 'Back Extension (Machine)',
-      description:
-          'Sit in the machine with the pad across your upper back and your feet planted.',
+      description: 'Sit in the machine with the pad across your upper back and your feet planted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -176,8 +164,7 @@ class ExerciseLibraryCatalog {
       id: 'back_extension_weighted_hyperextension',
       category: ExerciseCategory.hinge,
       name: 'Back Extension (Weighted Hyperextension)',
-      description:
-          'Hold a plate against your chest or behind your head on the hyperextension bench.',
+      description: 'Hold a plate against your chest or behind your head on the hyperextension bench.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -190,8 +177,7 @@ class ExerciseLibraryCatalog {
       id: 'ball_slams',
       category: ExerciseCategory.other,
       name: 'Ball Slams',
-      description:
-          'Stand with the slam ball at your feet and lift it overhead with straight arms.',
+      description: 'Stand with the slam ball at your feet and lift it overhead with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -203,8 +189,7 @@ class ExerciseLibraryCatalog {
       id: 'band_pullaparts',
       category: ExerciseCategory.other,
       name: 'Band Pullaparts',
-      description:
-          'Hold a band with both hands, arms extended straight out in front at shoulder height.',
+      description: 'Hold a band with both hands, arms extended straight out in front at shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -216,8 +201,7 @@ class ExerciseLibraryCatalog {
       id: 'bar_pullover',
       category: ExerciseCategory.verticalPull,
       name: 'Bar Pullover',
-      description:
-          'Pull hard until the bar reaches the waist, then lean the shoulders forward and rotate over the bar into a straight arm support.',
+      description: 'Pull hard until the bar reaches the waist, then lean the shoulders forward and rotate over the bar into a straight arm support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -229,8 +213,7 @@ class ExerciseLibraryCatalog {
       id: 'battle_ropes',
       category: ExerciseCategory.other,
       name: 'Battle Ropes',
-      description:
-          'Anchor a heavy rope at its center and hold one end in each hand with arms at your sides.',
+      description: 'Anchor a heavy rope at its center and hold one end in each hand with arms at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -243,8 +226,7 @@ class ExerciseLibraryCatalog {
       id: 'behind_the_back_bicep_wrist_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Behind the Back Bicep Wrist Curl (Barbell)',
-      description:
-          'Stand upright holding a barbell behind your back with an overhand grip and let it hang at your fingertips.',
+      description: 'Stand upright holding a barbell behind your back with an overhand grip and let it hang at your fingertips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -257,8 +239,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Bench Dip',
-      description:
-          'Sit on a bench with the hands beside the hips and the feet on the floor in front of you.',
+      description: 'Sit on a bench with the hands beside the hips and the feet on the floor in front of you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -270,8 +251,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Bench Press (Barbell)',
-      description:
-          'Lie on a flat bench and take a grip that puts the forearms vertical at the bottom.',
+      description: 'Lie on a flat bench and take a grip that puts the forearms vertical at the bottom.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -284,8 +264,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_press_cable',
       category: ExerciseCategory.horizontalPush,
       name: 'Bench Press (Cable)',
-      description:
-          'Lie on a bench set between two low cable pulleys and take a handle in each hand at chest height.',
+      description: 'Lie on a bench set between two low cable pulleys and take a handle in each hand at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -298,8 +277,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Bench Press (Dumbbell)',
-      description:
-          'Lie back on a flat bench with a dumbbell in each hand at chest height, palms facing forward.',
+      description: 'Lie back on a flat bench with a dumbbell in each hand at chest height, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -325,8 +303,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_press_close_grip_barbell',
       category: ExerciseCategory.other,
       name: 'Bench Press - Close Grip (Barbell)',
-      description:
-          'Lie back on a flat bench and grip the bar at about shoulder width.',
+      description: 'Lie back on a flat bench and grip the bar at about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -352,8 +329,7 @@ class ExerciseLibraryCatalog {
       id: 'bent_over_row_band',
       category: ExerciseCategory.horizontalPull,
       name: 'Bent Over Row (Band)',
-      description:
-          'Stand on the middle of the band and hinge forward with a flat back, holding one end in each hand.',
+      description: 'Stand on the middle of the band and hinge forward with a flat back, holding one end in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -365,8 +341,7 @@ class ExerciseLibraryCatalog {
       id: 'bent_over_row_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Bent Over Row (Barbell)',
-      description:
-          'Hinge forward with a flat back until your torso is close to parallel and let the barbell hang at arms length.',
+      description: 'Hinge forward with a flat back until your torso is close to parallel and let the barbell hang at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -379,8 +354,7 @@ class ExerciseLibraryCatalog {
       id: 'bent_over_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Bent Over Row (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand and hinge forward at the waist, knees slightly bent, back flat until your torso is almost parallel to the floor.',
+      description: 'Hold a dumbbell in each hand and hinge forward at the waist, knees slightly bent, back flat until your torso is almost parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -393,8 +367,7 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Barbell)',
-      description:
-          'Stand tall holding the bar with an underhand shoulder-width grip and elbows pinned to the sides.',
+      description: 'Stand tall holding the bar with an underhand shoulder-width grip and elbows pinned to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -407,8 +380,7 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_cable',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Cable)',
-      description:
-          'Stand facing a low pulley with a straight bar or handle and your elbows tucked at your sides.',
+      description: 'Stand facing a low pulley with a straight bar or handle and your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -421,8 +393,7 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Dumbbell)',
-      description:
-          'Stand upright with a dumbbell in each hand, arms at your sides and palms facing your thighs.',
+      description: 'Stand upright with a dumbbell in each hand, arms at your sides and palms facing your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -435,8 +406,7 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_machine',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Machine)',
-      description:
-          'Sit with your upper arms flat on the pad and grip the handles with your arms nearly straight.',
+      description: 'Sit with your upper arms flat on the pad and grip the handles with your arms nearly straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -449,8 +419,7 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_suspension',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Suspension)',
-      description:
-          'Hold the handles with palms up and walk your feet forward so your body leans back.',
+      description: 'Hold the handles with palms up and walk your feet forward so your body leans back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -462,8 +431,7 @@ class ExerciseLibraryCatalog {
       id: 'bicycle_crunch',
       category: ExerciseCategory.core,
       name: 'Bicycle Crunch',
-      description:
-          'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
+      description: 'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -475,8 +443,7 @@ class ExerciseLibraryCatalog {
       id: 'bicycle_crunch_raised_legs',
       category: ExerciseCategory.core,
       name: 'Bicycle Crunch Raised Legs',
-      description:
-          'Lie on your back with both legs raised and bent at ninety degrees and your hands light beside your head.',
+      description: 'Lie on your back with both legs raised and bent at ninety degrees and your hands light beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -512,8 +479,7 @@ class ExerciseLibraryCatalog {
       id: 'box_squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Box Squat (Barbell)',
-      description:
-          'Set a flat bench or box behind you and unrack a barbell across your upper back.',
+      description: 'Set a flat bench or box behind you and unrack a barbell across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -526,8 +492,7 @@ class ExerciseLibraryCatalog {
       id: 'boxing',
       category: ExerciseCategory.other,
       name: 'Boxing',
-      description:
-          'Work rounds on a bag or on pads, throwing combinations while keeping your hands up and your feet moving.',
+      description: 'Work rounds on a bag or on pads, throwing combinations while keeping your hands up and your feet moving.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -540,8 +505,7 @@ class ExerciseLibraryCatalog {
       id: 'bulgarian_split_squat',
       category: ExerciseCategory.squat,
       name: 'Bulgarian Split Squat',
-      description:
-          'Stand a stride in front of a bench and rest the top of the rear foot on it.',
+      description: 'Stand a stride in front of a bench and rest the top of the rear foot on it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -553,8 +517,7 @@ class ExerciseLibraryCatalog {
       id: 'burpee',
       category: ExerciseCategory.other,
       name: 'Burpee',
-      description:
-          'From standing, drop your hands to the floor and shoot your feet back into a push up position, then lower your chest to the ground.',
+      description: 'From standing, drop your hands to the floor and shoot your feet back into a push up position, then lower your chest to the ground.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -566,8 +529,7 @@ class ExerciseLibraryCatalog {
       id: 'burpee_over_the_bar',
       category: ExerciseCategory.other,
       name: 'Burpee Over the Bar',
-      description:
-          'Perform a burpee beside a loaded barbell, dropping your chest to the floor.',
+      description: 'Perform a burpee beside a loaded barbell, dropping your chest to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -579,8 +541,7 @@ class ExerciseLibraryCatalog {
       id: 'butterfly_pec_deck',
       category: ExerciseCategory.other,
       name: 'Butterfly (Pec Deck)',
-      description:
-          'Sit in the pec deck with your back flat against the pad and your forearms or hands on the pads at chest height.',
+      description: 'Sit in the pec deck with your back flat against the pad and your forearms or hands on the pads at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -592,8 +553,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_core_palloff_press',
       category: ExerciseCategory.core,
       name: 'Cable Core Palloff Press',
-      description:
-          'Stand side on to a cable set at chest height and hold the handle at your sternum with both hands.',
+      description: 'Stand side on to a cable set at chest height and hold the handle at your sternum with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -619,8 +579,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_fly_crossovers',
       category: ExerciseCategory.other,
       name: 'Cable Fly Crossovers',
-      description:
-          'Stand between two high pulleys with a handle in each hand and one foot forward.',
+      description: 'Stand between two high pulleys with a handle in each hand and one foot forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -633,8 +592,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_pull_through',
       category: ExerciseCategory.hinge,
       name: 'Cable Pull Through',
-      description:
-          'Face away from a low pulley with the rope passed between your legs and take a step forward.',
+      description: 'Face away from a low pulley with the rope passed between your legs and take a step forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -647,8 +605,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_twist_down_to_up',
       category: ExerciseCategory.core,
       name: 'Cable Twist (Down to up)',
-      description:
-          'Set the cable low and stand side on holding the handle with both hands near your outside hip.',
+      description: 'Set the cable low and stand side on holding the handle with both hands near your outside hip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -661,8 +618,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_twist_up_to_down',
       category: ExerciseCategory.core,
       name: 'Cable Twist (Up to down)',
-      description:
-          'Set the cable high and stand side on holding the handle with both hands above one shoulder.',
+      description: 'Set the cable high and stand side on holding the handle with both hands above one shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -675,8 +631,7 @@ class ExerciseLibraryCatalog {
       id: 'calf_extension_machine',
       category: ExerciseCategory.other,
       name: 'Calf Extension (Machine)',
-      description:
-          'Position the balls of your feet on the platform with the pad on your shoulders or thighs.',
+      description: 'Position the balls of your feet on the platform with the pad on your shoulders or thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -688,8 +643,7 @@ class ExerciseLibraryCatalog {
       id: 'calf_press_machine',
       category: ExerciseCategory.other,
       name: 'Calf Press (Machine)',
-      description:
-          'Sit in the leg press and place just the balls of your feet on the lower edge of the platform, heels off.',
+      description: 'Sit in the leg press and place just the balls of your feet on the lower edge of the platform, heels off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -701,8 +655,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Chest Dip',
-      description:
-          'Support yourself on parallel bars with straight arms and a tall chest.',
+      description: 'Support yourself on parallel bars with straight arms and a tall chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -714,8 +667,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_dip_assisted',
       category: ExerciseCategory.verticalPush,
       name: 'Chest Dip (Assisted)',
-      description:
-          'Kneel on the assist pad or loop a band under your knees on the parallel bars and lean your chest forward.',
+      description: 'Kneel on the assist pad or loop a band under your knees on the parallel bars and lean your chest forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -727,8 +679,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_dip_eccentric',
       category: ExerciseCategory.verticalPush,
       name: 'Chest Dip (Eccentric)',
-      description:
-          'Jump or step to the top of the parallel bars with straight arms.',
+      description: 'Jump or step to the top of the parallel bars with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -753,8 +704,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_fly_band',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Band)',
-      description:
-          'Anchor the band behind you at chest height and hold one end in each hand with the arms out wide.',
+      description: 'Anchor the band behind you at chest height and hold one end in each hand with the arms out wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -766,8 +716,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Dumbbell)',
-      description:
-          'Lie on a flat bench holding a dumbbell in each hand above your chest with a soft elbow bend.',
+      description: 'Lie on a flat bench holding a dumbbell in each hand above your chest with a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -780,8 +729,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_fly_machine',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Machine)',
-      description:
-          'Sit with your back flat against the pad and grip the handles with your arms out to the sides and elbows slightly bent.',
+      description: 'Sit with your back flat against the pad and grip the handles with your arms out to the sides and elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -794,8 +742,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_fly_suspension',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Suspension)',
-      description:
-          'Hold a handle in each hand and lean forward with your body straight and arms in front of your chest.',
+      description: 'Hold a handle in each hand and lean forward with your body straight and arms in front of your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -807,8 +754,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_press_band',
       category: ExerciseCategory.horizontalPush,
       name: 'Chest Press (Band)',
-      description:
-          'Anchor the band behind you at chest height and hold an end in each hand beside your chest.',
+      description: 'Anchor the band behind you at chest height and hold an end in each hand beside your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -820,8 +766,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_press_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Chest Press (Machine)',
-      description:
-          'Sit with your back flat on the pad and the handles level with the middle of your chest.',
+      description: 'Sit with your back flat on the pad and the handles level with the middle of your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -834,8 +779,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_supported_incline_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Chest Supported Incline Row (Dumbbell)',
-      description:
-          'Set an incline bench and lie chest-down against it with a dumbbell in each hand, neutral grip, arms hanging straight.',
+      description: 'Set an incline bench and lie chest-down against it with a dumbbell in each hand, neutral grip, arms hanging straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -848,8 +792,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_supported_reverse_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Chest Supported Reverse Fly (Dumbbell)',
-      description:
-          'Lie chest down on an incline bench with a dumbbell in each hand hanging below you.',
+      description: 'Lie chest down on an incline bench with a dumbbell in each hand hanging below you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -862,8 +805,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_supported_y_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Chest Supported Y Raise (Dumbbell)',
-      description:
-          'Lie chest down on an incline bench with light dumbbells hanging below you and thumbs pointing up.',
+      description: 'Lie chest down on an incline bench with light dumbbells hanging below you and thumbs pointing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -876,8 +818,7 @@ class ExerciseLibraryCatalog {
       id: 'chin_up',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up',
-      description:
-          'Hang from the bar with an underhand grip about shoulder width and your shoulder blades pulled down.',
+      description: 'Hang from the bar with an underhand grip about shoulder width and your shoulder blades pulled down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -889,8 +830,7 @@ class ExerciseLibraryCatalog {
       id: 'chin_up_assisted',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (Assisted)',
-      description:
-          'Set the assist machine or loop a band under your knee and take an underhand grip on the bar.',
+      description: 'Set the assist machine or loop a band under your knee and take an underhand grip on the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -902,8 +842,7 @@ class ExerciseLibraryCatalog {
       id: 'chin_up_one_arm',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (One Arm)',
-      description:
-          'Hang from one hand with a supinated grip and pull until the chin clears the bar.',
+      description: 'Hang from one hand with a supinated grip and pull until the chin clears the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -915,8 +854,7 @@ class ExerciseLibraryCatalog {
       id: 'chin_up_one_arm_half_range',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (One Arm, Half Range)',
-      description:
-          'Grip the bar with one hand in a supinated grip and pull through the top half of the range only.',
+      description: 'Grip the bar with one hand in a supinated grip and pull through the top half of the range only.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -940,8 +878,7 @@ class ExerciseLibraryCatalog {
       id: 'chin_up_weighted',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (Weighted)',
-      description:
-          'Add load with a dip belt or a weight vest and hang from the bar with an underhand grip.',
+      description: 'Add load with a dip belt or a weight vest and hang from the bar with an underhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -954,8 +891,7 @@ class ExerciseLibraryCatalog {
       id: 'clamshell',
       category: ExerciseCategory.other,
       name: 'Clamshell',
-      description:
-          'Lie on your side with your knees bent and stacked and your heels in line with your spine.',
+      description: 'Lie on your side with your knees bent and stacked and your heels in line with your spine.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -967,8 +903,7 @@ class ExerciseLibraryCatalog {
       id: 'clap_push_ups',
       category: ExerciseCategory.horizontalPush,
       name: 'Clap Push Ups',
-      description:
-          'Set up in a push up position and lower your chest to just above the floor.',
+      description: 'Set up in a push up position and lower your chest to just above the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -980,19 +915,12 @@ class ExerciseLibraryCatalog {
       id: 'clean',
       category: ExerciseCategory.other,
       name: 'Clean',
-      description:
-          'Set up over a barbell with an overhand grip just outside your legs, hips down, back flat and chest up.',
+      description: 'Set up over a barbell with an overhand grip just outside your legs, hips down, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -1000,19 +928,12 @@ class ExerciseLibraryCatalog {
       id: 'clean_and_jerk',
       category: ExerciseCategory.other,
       name: 'Clean and Jerk',
-      description:
-          'Clean the bar to the shoulders, then dip slightly and drive it overhead with the legs, splitting or squatting under to catch it locked out.',
+      description: 'Clean the bar to the shoulders, then dip slightly and drive it overhead with the legs, splitting or squatting under to catch it locked out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -1020,8 +941,7 @@ class ExerciseLibraryCatalog {
       id: 'clean_and_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Clean and Press',
-      description:
-          'Set up over a barbell with a overhand grip slightly wider than shoulder width, hips down and back flat.',
+      description: 'Set up over a barbell with a overhand grip slightly wider than shoulder width, hips down and back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1034,19 +954,12 @@ class ExerciseLibraryCatalog {
       id: 'clean_pull',
       category: ExerciseCategory.other,
       name: 'Clean Pull',
-      description:
-          'Set up over a barbell with an overhand or hook grip just outside your legs, hips down, back flat and chest up.',
+      description: 'Set up over a barbell with an overhand or hook grip just outside your legs, hips down, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -1054,8 +967,7 @@ class ExerciseLibraryCatalog {
       id: 'climbing',
       category: ExerciseCategory.other,
       name: 'Climbing',
-      description:
-          'Work up a climbing wall or route at a pace that keeps you moving continuously.',
+      description: 'Work up a climbing wall or route at a pace that keeps you moving continuously.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1068,8 +980,7 @@ class ExerciseLibraryCatalog {
       id: 'concentration_curl',
       category: ExerciseCategory.other,
       name: 'Concentration Curl',
-      description:
-          'Sit on a bench with your legs apart and brace the back of your upper arm against the inside of your thigh.',
+      description: 'Sit on a bench with your legs apart and brace the back of your upper arm against the inside of your thigh.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1081,8 +992,7 @@ class ExerciseLibraryCatalog {
       id: 'cross_body_hammer_curl',
       category: ExerciseCategory.other,
       name: 'Cross Body Hammer Curl',
-      description:
-          'Stand tall with a dumbbell in each hand and palms facing in.',
+      description: 'Stand tall with a dumbbell in each hand and palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1095,8 +1005,7 @@ class ExerciseLibraryCatalog {
       id: 'crunch',
       category: ExerciseCategory.core,
       name: 'Crunch',
-      description:
-          'Lie on your back with your knees bent and your hands light beside your head.',
+      description: 'Lie on your back with your knees bent and your hands light beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1108,8 +1017,7 @@ class ExerciseLibraryCatalog {
       id: 'crunch_machine',
       category: ExerciseCategory.core,
       name: 'Crunch (Machine)',
-      description:
-          'Sit in the ab machine with the pad across your chest and your feet hooked in place.',
+      description: 'Sit in the ab machine with the pad across your chest and your feet hooked in place.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1122,8 +1030,7 @@ class ExerciseLibraryCatalog {
       id: 'crunch_weighted',
       category: ExerciseCategory.core,
       name: 'Crunch (Weighted)',
-      description:
-          'Lie on your back with your knees bent and hold a plate or dumbbell against your chest or overhead.',
+      description: 'Lie on your back with your knees bent and hold a plate or dumbbell against your chest or overhead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1136,8 +1043,7 @@ class ExerciseLibraryCatalog {
       id: 'curtsy_lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Curtsy Lunge (Dumbbell)',
-      description:
-          'Stand holding dumbbells at your sides and step one leg back and across behind the other, like a curtsy.',
+      description: 'Stand holding dumbbells at your sides and step one leg back and across behind the other, like a curtsy.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1150,8 +1056,7 @@ class ExerciseLibraryCatalog {
       id: 'cycling',
       category: ExerciseCategory.other,
       name: 'Cycling',
-      description:
-          'Ride at a steady effort you can hold for the whole session, adjusting resistance or terrain to keep the heart rate in range.',
+      description: 'Ride at a steady effort you can hold for the whole session, adjusting resistance or terrain to keep the heart rate in range.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1164,8 +1069,7 @@ class ExerciseLibraryCatalog {
       id: 'dead_bug',
       category: ExerciseCategory.core,
       name: 'Dead Bug',
-      description:
-          'Lie on your back with arms reaching toward the ceiling and knees bent over your hips at 90 degrees.',
+      description: 'Lie on your back with arms reaching toward the ceiling and knees bent over your hips at 90 degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1177,8 +1081,7 @@ class ExerciseLibraryCatalog {
       id: 'dead_hang',
       category: ExerciseCategory.horizontalPull,
       name: 'Dead Hang',
-      description:
-          'Grip the bar with both hands about shoulder width and let your body hang with the arms straight.',
+      description: 'Grip the bar with both hands about shoulder width and let your body hang with the arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1191,8 +1094,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_band',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Band)',
-      description:
-          'Stand on the middle of the band with feet hip width and hold one end in each hand.',
+      description: 'Stand on the middle of the band with feet hip width and hold one end in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1204,8 +1106,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_barbell',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Barbell)',
-      description:
-          'Set the bar over the mid-foot, hip-width stance, and grip just outside the knees.',
+      description: 'Set the bar over the mid-foot, hip-width stance, and grip just outside the knees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1218,8 +1119,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand in front of your thighs with your feet hip width.',
+      description: 'Hold a dumbbell in each hand in front of your thighs with your feet hip width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1232,8 +1132,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_smith_machine',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Smith Machine)',
-      description:
-          'Set the bar low in the Smith machine and stand with it over the middle of your feet.',
+      description: 'Set the bar low in the Smith machine and stand with it over the middle of your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1246,8 +1145,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_trap_bar',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Trap bar)',
-      description:
-          'Stand in the center of a loaded trap bar and grip both handles.',
+      description: 'Stand in the center of a loaded trap bar and grip both handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1260,8 +1158,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_high_pull',
       category: ExerciseCategory.other,
       name: 'Deadlift High Pull',
-      description:
-          'Deadlift the bar from the floor and, as it passes the thighs, extend hard and pull it up to chest height with the elbows driving high and outside.',
+      description: 'Deadlift the bar from the floor and, as it passes the thighs, extend hard and pull it up to chest height with the elbows driving high and outside.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1272,8 +1169,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_bench_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Bench Press (Barbell)',
-      description:
-          'On a decline bench with feet secured, unrack and hold the bar over the lower chest.',
+      description: 'On a decline bench with feet secured, unrack and hold the bar over the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1286,8 +1182,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_bench_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Bench Press (Dumbbell)',
-      description:
-          'Lie on a decline bench with your legs hooked and a dumbbell in each hand at chest height.',
+      description: 'Lie on a decline bench with your legs hooked and a dumbbell in each hand at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1313,8 +1208,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_bench_press_smith_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Bench Press (Smith Machine)',
-      description:
-          'Set a decline bench in a Smith machine and lie back so the bar sits over your lower chest.',
+      description: 'Set a decline bench in a Smith machine and lie back so the bar sits over your lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1327,8 +1221,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_chest_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Decline Chest Fly (Dumbbell)',
-      description:
-          'Lie on a decline bench holding dumbbells above your chest with a soft elbow bend.',
+      description: 'Lie on a decline bench holding dumbbells above your chest with a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1341,8 +1234,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_crunch',
       category: ExerciseCategory.core,
       name: 'Decline Crunch',
-      description:
-          'Hook your legs at the top of a decline bench and lie back with your hands beside your head, elbows in.',
+      description: 'Hook your legs at the top of a decline bench and lie back with your hands beside your head, elbows in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1354,8 +1246,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_crunch_weighted',
       category: ExerciseCategory.core,
       name: 'Decline Crunch (Weighted)',
-      description:
-          'Hook your legs at the top of a decline bench and hold a plate against your chest.',
+      description: 'Hook your legs at the top of a decline bench and hold a plate against your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1368,8 +1259,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Push Up',
-      description:
-          'Place the feet on a box or bench with the hands on the floor.',
+      description: 'Place the feet on a box or bench with the hands on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1381,8 +1271,7 @@ class ExerciseLibraryCatalog {
       id: 'diamond_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Diamond Push Up',
-      description:
-          'Place the hands together under the chest so the thumbs and index fingers form a triangle.',
+      description: 'Place the hands together under the chest so the thumbs and index fingers form a triangle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1394,8 +1283,7 @@ class ExerciseLibraryCatalog {
       id: 'downward_dog',
       category: ExerciseCategory.other,
       name: 'Downward Dog',
-      description:
-          'From hands and knees, tuck the toes and lift the hips up and back so your body makes an inverted V.',
+      description: 'From hands and knees, tuck the toes and lift the hips up and back so your body makes an inverted V.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1407,8 +1295,7 @@ class ExerciseLibraryCatalog {
       id: 'drag_curl',
       category: ExerciseCategory.other,
       name: 'Drag Curl',
-      description:
-          'Hold a barbell with a palms-up grip and elbows drawn back behind your torso.',
+      description: 'Hold a barbell with a palms-up grip and elbows drawn back behind your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1433,8 +1320,7 @@ class ExerciseLibraryCatalog {
       id: 'dragonfly',
       category: ExerciseCategory.core,
       name: 'Dragonfly',
-      description:
-          'Lie on a bench holding behind your head and raise your body until it is nearly vertical on your shoulders.',
+      description: 'Lie on a bench holding behind your head and raise your body until it is nearly vertical on your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1446,8 +1332,7 @@ class ExerciseLibraryCatalog {
       id: 'dumbbell_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Dumbbell Row',
-      description:
-          'Set a dumbbell on the floor between your feet and hinge down to grip it.',
+      description: 'Hold a dumbbell in each hand and hinge forward at the hips with your knees slightly bent and back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1460,19 +1345,12 @@ class ExerciseLibraryCatalog {
       id: 'dumbbell_snatch',
       category: ExerciseCategory.other,
       name: 'Dumbbell Snatch',
-      description:
-          'Lie on a bench holding two dumbbells pressed hard together over your chest, palms facing each other.',
+      description: 'Set a dumbbell on the floor between your feet and hinge down to grip it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -1480,8 +1358,7 @@ class ExerciseLibraryCatalog {
       id: 'dumbbell_squeeze_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Dumbbell Squeeze Press',
-      description:
-          'Hold a dumbbell in each hand and place one whole foot on a box at about knee height.',
+      description: 'Lie on a bench holding two dumbbells pressed hard together over your chest, palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1494,8 +1371,7 @@ class ExerciseLibraryCatalog {
       id: 'dumbbell_step_up',
       category: ExerciseCategory.squat,
       name: 'Dumbbell Step Up',
-      description:
-          'Lie on your back and cross one ankle over the opposite bent knee, hands behind your head.',
+      description: 'Hold a dumbbell in each hand and place one whole foot on a box at about knee height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1508,7 +1384,7 @@ class ExerciseLibraryCatalog {
       id: 'elbow_to_knee',
       category: ExerciseCategory.core,
       name: 'Elbow to Knee',
-      description: 'Step onto the pedals and take hold of the moving handles.',
+      description: 'Lie on your back and cross one ankle over the opposite bent knee, hands behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1520,8 +1396,7 @@ class ExerciseLibraryCatalog {
       id: 'elliptical_trainer',
       category: ExerciseCategory.other,
       name: 'Elliptical Trainer',
-      description:
-          'Stand tall holding an EZ bar at the wide outer handles with palms facing forward and elbows close to your torso.',
+      description: 'Step onto the pedals and take hold of the moving handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1534,8 +1409,7 @@ class ExerciseLibraryCatalog {
       id: 'ez_bar_biceps_curl',
       category: ExerciseCategory.other,
       name: 'EZ Bar Biceps Curl',
-      description:
-          'Set a rope on a high pulley and grab both ends with palms facing in.',
+      description: 'Stand tall holding an EZ bar at the wide outer handles with palms facing forward and elbows close to your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1548,8 +1422,7 @@ class ExerciseLibraryCatalog {
       id: 'face_pull',
       category: ExerciseCategory.horizontalPull,
       name: 'Face Pull',
-      description:
-          'Pick up a heavy dumbbell or kettlebell in each hand with a flat back and stand tall.',
+      description: 'Set a rope on a high pulley and grab both ends with palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1562,7 +1435,7 @@ class ExerciseLibraryCatalog {
       id: 'farmers_walk',
       category: ExerciseCategory.other,
       name: 'Farmers Walk',
-      description: 'Start on hands and knees with a flat back.',
+      description: 'Pick up a heavy dumbbell or kettlebell in each hand with a flat back and stand tall.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1575,8 +1448,7 @@ class ExerciseLibraryCatalog {
       id: 'fire_hydrants',
       category: ExerciseCategory.other,
       name: 'Fire Hydrants',
-      description:
-          'Lie on the floor under a barbell with your knees bent and unrack it over your chest.',
+      description: 'Start on hands and knees with a flat back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1588,8 +1460,7 @@ class ExerciseLibraryCatalog {
       id: 'floor_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Floor Press (Barbell)',
-      description:
-          'Lie on the floor with a dumbbell in each hand at chest height and knees bent.',
+      description: 'Lie on the floor under a barbell with your knees bent and unrack it over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1602,8 +1473,7 @@ class ExerciseLibraryCatalog {
       id: 'floor_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Floor Press (Dumbbell)',
-      description:
-          'Sit on the floor with your knees bent and your hands beside your hips, fingers pointing forward.',
+      description: 'Lie on the floor with a dumbbell in each hand at chest height and knees bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1616,8 +1486,7 @@ class ExerciseLibraryCatalog {
       id: 'floor_triceps_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Floor Triceps Dip',
-      description:
-          'Lie facedown on a bench with your hips at the edge and hold the front for support.',
+      description: 'Sit on the floor with your knees bent and your hands beside your hips, fingers pointing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1629,7 +1498,7 @@ class ExerciseLibraryCatalog {
       id: 'flutter_kicks',
       category: ExerciseCategory.core,
       name: 'Flutter Kicks',
-      description: 'Squat down low with your hands between your feet.',
+      description: 'Lie facedown on a bench with your hips at the edge and hold the front for support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1641,8 +1510,7 @@ class ExerciseLibraryCatalog {
       id: 'frog_jumps',
       category: ExerciseCategory.other,
       name: 'Frog Jumps',
-      description:
-          'Lie on your back with the soles of your feet together and knees dropped out to the sides, holding a dumbbell on your hips.',
+      description: 'Squat down low with your hands between your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1654,8 +1522,7 @@ class ExerciseLibraryCatalog {
       id: 'frog_pumps_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Frog Pumps (Dumbbell)',
-      description:
-          'Hang from the bar and pull your shoulders down and back, then raise your body until it is horizontal and facing up.',
+      description: 'Lie on your back with the soles of your feet together and knees dropped out to the sides, holding a dumbbell on your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1668,8 +1535,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_hold',
       category: ExerciseCategory.other,
       name: 'Front Lever Hold',
-      description:
-          'Hang from a bar and pull the knees to the chest while rotating back so the back faces the floor and the shins point forward.',
+      description: 'Hang from the bar and pull your shoulders down and back, then raise your body until it is horizontal and facing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1681,8 +1547,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_hold_tuck',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Hold (Tuck)',
-      description:
-          'From a hang, pull your shoulders down and lift your straight body up to horizontal, then lower it back to the hang under control.',
+      description: 'Hang from a bar and pull the knees to the chest while rotating back so the back faces the floor and the shins point forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1695,8 +1560,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_raise',
       category: ExerciseCategory.other,
       name: 'Front Lever Raise',
-      description:
-          'Hold a full front lever with straight legs together and pull the chest to the bar.',
+      description: 'From a hang, pull your shoulders down and lift your straight body up to horizontal, then lower it back to the hang under control.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1707,8 +1571,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row',
-      description:
-          'Row while holding an advanced tuck front lever with the knees opened away from the chest and the hips high.',
+      description: 'Hold a full front lever with straight legs together and pull the chest to the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1720,8 +1583,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_row_advanced_tuck',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (Advanced Tuck)',
-      description:
-          'Row from a front lever with one leg extended and the other tucked.',
+      description: 'Row while holding an advanced tuck front lever with the knees opened away from the chest and the hips high.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1733,8 +1595,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_row_one_leg',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (One Leg)',
-      description:
-          'Hold a straddle front lever with the legs wide and row the chest toward the bar.',
+      description: 'Row from a front lever with one leg extended and the other tucked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1746,8 +1607,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_row_straddle',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (Straddle)',
-      description:
-          'Hold a tuck front lever and pull the chest toward the bar while keeping the knees tucked and the back flat.',
+      description: 'Hold a straddle front lever with the legs wide and row the chest toward the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1759,8 +1619,7 @@ class ExerciseLibraryCatalog {
       id: 'front_lever_row_tuck',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (Tuck)',
-      description:
-          'Stand on the middle of the band holding an end in each hand in front of your thighs.',
+      description: 'Hold a tuck front lever and pull the chest toward the bar while keeping the knees tucked and the back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1772,8 +1631,7 @@ class ExerciseLibraryCatalog {
       id: 'front_raise_band',
       category: ExerciseCategory.other,
       name: 'Front Raise (Band)',
-      description:
-          'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
+      description: 'Stand on the middle of the band holding an end in each hand in front of your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1785,8 +1643,7 @@ class ExerciseLibraryCatalog {
       id: 'front_raise_barbell',
       category: ExerciseCategory.other,
       name: 'Front Raise (Barbell)',
-      description:
-          'Face away from a low pulley gripping the single handle with one hand, arm hanging straight in front of your thigh.',
+      description: 'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1799,8 +1656,7 @@ class ExerciseLibraryCatalog {
       id: 'front_raise_cable',
       category: ExerciseCategory.other,
       name: 'Front Raise (Cable)',
-      description:
-          'Sit against an incline bench set to 30 to 60 degrees, holding a dumbbell in each hand with arms straight down and palms facing back.',
+      description: 'Face away from a low pulley gripping the single handle with one hand, arm hanging straight in front of your thigh.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1813,8 +1669,7 @@ class ExerciseLibraryCatalog {
       id: 'front_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Front Raise (Dumbbell)',
-      description:
-          'Hold the handles and lean back with your arms in front of you and your body straight.',
+      description: 'Sit against an incline bench set to 30 to 60 degrees, holding a dumbbell in each hand with arms straight down and palms facing back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1827,8 +1682,7 @@ class ExerciseLibraryCatalog {
       id: 'front_raise_suspension',
       category: ExerciseCategory.other,
       name: 'Front Raise (Suspension)',
-      description:
-          'Rack the bar across the front of the shoulders with the elbows high, take a shoulder-width stance and brace.',
+      description: 'Hold the handles and lean back with your arms in front of you and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1840,8 +1694,7 @@ class ExerciseLibraryCatalog {
       id: 'front_squat',
       category: ExerciseCategory.squat,
       name: 'Front Squat',
-      description:
-          'Stand with feet a little wider than your hips and toes turned slightly out.',
+      description: 'Rack the bar across the front of the shoulders with the elbows high, take a shoulder-width stance and brace.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1854,8 +1707,7 @@ class ExerciseLibraryCatalog {
       id: 'full_squat',
       category: ExerciseCategory.squat,
       name: 'Full Squat',
-      description:
-          'Lie on your back with knees bent and feet flat, heels close to your hips.',
+      description: 'Stand with feet a little wider than your hips and toes turned slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1867,8 +1719,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_bridge',
       category: ExerciseCategory.hinge,
       name: 'Glute Bridge',
-      description:
-          'Set your feet against the footplate between the rollers and lie facedown with your knees just behind the pad.',
+      description: 'Lie on your back with knees bent and feet flat, heels close to your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1880,8 +1731,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_ham_raise',
       category: ExerciseCategory.hinge,
       name: 'Glute Ham Raise',
-      description:
-          'Set the pad against the back of one thigh and hold the handles with your torso upright.',
+      description: 'Set your feet against the footplate between the rollers and lie facedown with your knees just behind the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1894,7 +1744,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_kickback_machine',
       category: ExerciseCategory.other,
       name: 'Glute Kickback (Machine)',
-      description: 'Start on hands and knees with a flat back.',
+      description: 'Set the pad against the back of one thigh and hold the handles with your torso upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1907,8 +1757,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_kickback_on_floor',
       category: ExerciseCategory.other,
       name: 'Glute Kickback on Floor',
-      description:
-          'Hold a dumbbell or kettlebell vertically against the chest.',
+      description: 'Start on hands and knees with a flat back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1920,8 +1769,7 @@ class ExerciseLibraryCatalog {
       id: 'goblet_squat',
       category: ExerciseCategory.squat,
       name: 'Goblet Squat',
-      description:
-          'Set a light bar across your upper back and stand with feet hip width and knees slightly bent.',
+      description: 'Hold a dumbbell or kettlebell vertically against the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1934,8 +1782,7 @@ class ExerciseLibraryCatalog {
       id: 'good_morning_barbell',
       category: ExerciseCategory.hinge,
       name: 'Good Morning (Barbell)',
-      description:
-          'Stand over two kettlebells with a wide stance and hinge down with a flat back to grip both.',
+      description: 'Set a light bar across your upper back and stand with feet hip width and knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1948,8 +1795,7 @@ class ExerciseLibraryCatalog {
       id: 'gorilla_row_kettlebell',
       category: ExerciseCategory.horizontalPull,
       name: 'Gorilla Row (Kettlebell)',
-      description:
-          'Set your shoulders and back against the pad with feet shoulder-width on the platform.',
+      description: 'Stand over two kettlebells with a wide stance and hinge down with a flat back to grip both.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1962,8 +1808,7 @@ class ExerciseLibraryCatalog {
       id: 'hack_squat',
       category: ExerciseCategory.squat,
       name: 'Hack Squat',
-      description:
-          'Set your shoulders under the pads with your feet mid platform and release the safeties.',
+      description: 'Set your shoulders and back against the pad with feet shoulder-width on the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1976,8 +1821,7 @@ class ExerciseLibraryCatalog {
       id: 'hack_squat_machine',
       category: ExerciseCategory.squat,
       name: 'Hack Squat (Machine)',
-      description:
-          'Stand on the band holding an end in each hand with palms facing each other.',
+      description: 'Set your shoulders under the pads with your feet mid platform and release the safeties.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1990,8 +1834,7 @@ class ExerciseLibraryCatalog {
       id: 'hammer_curl_band',
       category: ExerciseCategory.other,
       name: 'Hammer Curl (Band)',
-      description:
-          'Attach a rope to a low pulley and hold one end in each hand with palms facing each other.',
+      description: 'Stand on the band holding an end in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2003,8 +1846,7 @@ class ExerciseLibraryCatalog {
       id: 'hammer_curl_cable',
       category: ExerciseCategory.other,
       name: 'Hammer Curl (Cable)',
-      description:
-          'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
+      description: 'Attach a rope to a low pulley and hold one end in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2017,8 +1859,7 @@ class ExerciseLibraryCatalog {
       id: 'hammer_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Hammer Curl (Dumbbell)',
-      description:
-          'Kick or press up into a handstand against a wall with your hands about shoulder width.',
+      description: 'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2031,8 +1872,7 @@ class ExerciseLibraryCatalog {
       id: 'handstand_hold',
       category: ExerciseCategory.other,
       name: 'Handstand Hold',
-      description:
-          'Kick up to a wall handstand with the hands on parallettes or blocks.',
+      description: 'Kick or press up into a handstand against a wall with your hands about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2045,8 +1885,7 @@ class ExerciseLibraryCatalog {
       id: 'handstand_push_up',
       category: ExerciseCategory.verticalPush,
       name: 'Handstand Push Up',
-      description:
-          'Hold a freestanding handstand, lower to full depth, and press back to straight arms with no wall support.',
+      description: 'Kick up to a wall handstand with the hands on parallettes or blocks.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2058,8 +1897,7 @@ class ExerciseLibraryCatalog {
       id: 'handstand_push_up_freestanding',
       category: ExerciseCategory.verticalPush,
       name: 'Handstand Push-Up (Freestanding)',
-      description:
-          'Hold the bar at mid-thigh with a shoulder-width overhand or hook grip, back flat and torso leaning slightly forward.',
+      description: 'Hold a freestanding handstand, lower to full depth, and press back to straight arms with no wall support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2071,19 +1909,12 @@ class ExerciseLibraryCatalog {
       id: 'hang_clean',
       category: ExerciseCategory.other,
       name: 'Hang Clean',
-      description:
-          'Take a wide overhand or hook grip with the bar at the hips, feet under the hips and turned out, spine extended and chest up.',
+      description: 'Hold the bar at mid-thigh with a shoulder-width overhand or hook grip, back flat and torso leaning slightly forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -2091,19 +1922,12 @@ class ExerciseLibraryCatalog {
       id: 'hang_snatch',
       category: ExerciseCategory.other,
       name: 'Hang Snatch',
-      description:
-          'From a hang, straighten the legs a little and lift the thighs above hip height.',
+      description: 'Take a wide overhand or hook grip with the bar at the hips, feet under the hips and turned out, spine extended and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -2111,8 +1935,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_bent_leg_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Bent-Leg Raise',
-      description:
-          'Hang from a bar with straight arms and pull the shoulders down away from the ears.',
+      description: 'From a hang, straighten the legs a little and lift the thighs above hip height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2124,8 +1947,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_knee_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Knee Raise',
-      description:
-          'Hang from the bar with straight arms and the shoulders pulled down.',
+      description: 'Hang from a bar with straight arms and pull the shoulders down away from the ears.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2137,8 +1959,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_leg_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Leg Raise',
-      description:
-          'Hang with straight legs together and lift them until they are at least parallel to the floor.',
+      description: 'Hang from the bar with straight arms and the shoulders pulled down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2150,8 +1971,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_straight_leg_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Straight-Leg Raise',
-      description:
-          'Kick up to a freestanding handstand and lower under control until the head touches the floor.',
+      description: 'Hang with straight legs together and lift them until they are at least parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2163,8 +1983,7 @@ class ExerciseLibraryCatalog {
       id: 'headstand_push_up_freestanding',
       category: ExerciseCategory.verticalPush,
       name: 'Headstand Push-Up (Freestanding)',
-      description:
-          'Set up in a wall handstand and lower until the head touches the floor between the hands.',
+      description: 'Kick up to a freestanding handstand and lower under control until the head touches the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2176,7 +1995,7 @@ class ExerciseLibraryCatalog {
       id: 'headstand_push_up_wall',
       category: ExerciseCategory.verticalPush,
       name: 'Headstand Push-Up (Wall)',
-      description: 'Kick up to a handstand with the heels on the wall.',
+      description: 'Set up in a wall handstand and lower until the head touches the floor between the hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2188,8 +2007,7 @@ class ExerciseLibraryCatalog {
       id: 'headstand_push_up_wall_eccentric',
       category: ExerciseCategory.verticalPush,
       name: 'Headstand Push-Up (Wall, Eccentric)',
-      description:
-          'Lie on your back with knees bent, feet flat and shoulder-width apart, and arms extended at your sides.',
+      description: 'Kick up to a handstand with the heels on the wall.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2201,8 +2019,7 @@ class ExerciseLibraryCatalog {
       id: 'heel_taps',
       category: ExerciseCategory.core,
       name: 'Heel Taps',
-      description:
-          'Lie on a bench holding two hexagonal dumbbells pressed together over your chest.',
+      description: 'Lie on your back with knees bent, feet flat and shoulder-width apart, and arms extended at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2214,8 +2031,7 @@ class ExerciseLibraryCatalog {
       id: 'hex_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Hex Press (Dumbbell)',
-      description:
-          'Skip forward driving one knee up to hip height while the opposite arm swings up.',
+      description: 'Lie on a bench holding two hexagonal dumbbells pressed together over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2228,8 +2044,7 @@ class ExerciseLibraryCatalog {
       id: 'high_knee_skips',
       category: ExerciseCategory.other,
       name: 'High Knee Skips',
-      description:
-          'Run on the spot bringing each knee up to hip height as fast as you can.',
+      description: 'Skip forward driving one knee up to hip height while the opposite arm swings up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2241,8 +2056,7 @@ class ExerciseLibraryCatalog {
       id: 'high_knees',
       category: ExerciseCategory.other,
       name: 'High Knees',
-      description:
-          'Alternate hard intervals with easy recovery periods on any cardio machine or with bodyweight moves.',
+      description: 'Run on the spot bringing each knee up to hip height as fast as you can.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2254,8 +2068,7 @@ class ExerciseLibraryCatalog {
       id: 'hiit',
       category: ExerciseCategory.other,
       name: 'HIIT',
-      description:
-          'Walk a route with varied terrain and elevation at a pace you can hold for the whole session.',
+      description: 'Alternate hard intervals with easy recovery periods on any cardio machine or with bodyweight moves.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2268,8 +2081,7 @@ class ExerciseLibraryCatalog {
       id: 'hiking',
       category: ExerciseCategory.other,
       name: 'Hiking',
-      description:
-          'Sit in the machine with the pads against the outside of your knees and your back flat on the seat.',
+      description: 'Walk a route with varied terrain and elevation at a pace you can hold for the whole session.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2282,8 +2094,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_abduction_machine',
       category: ExerciseCategory.other,
       name: 'Hip Abduction (Machine)',
-      description:
-          'Sit with the pads against the inside of your knees and your legs open at a comfortable stretch.',
+      description: 'Sit in the machine with the pads against the outside of your knees and your back flat on the seat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2296,8 +2107,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_adduction_machine',
       category: ExerciseCategory.other,
       name: 'Hip Adduction (Machine)',
-      description:
-          'Sit with your upper back against a bench and your feet flat on the floor about shoulder width.',
+      description: 'Sit with the pads against the inside of your knees and your legs open at a comfortable stretch.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2310,8 +2120,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_thrust',
       category: ExerciseCategory.hinge,
       name: 'Hip Thrust',
-      description:
-          'Sit with the upper back on a bench and the bar across the hips.',
+      description: 'Sit with your upper back against a bench and your feet flat on the floor about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2323,8 +2132,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_thrust_barbell',
       category: ExerciseCategory.hinge,
       name: 'Hip Thrust (Barbell)',
-      description:
-          'Sit in the machine with the pad across your hips and your feet flat on the platform.',
+      description: 'Sit with the upper back on a bench and the bar across the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2337,8 +2145,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_thrust_machine',
       category: ExerciseCategory.hinge,
       name: 'Hip Thrust (Machine)',
-      description:
-          'Lie on your back and press the lower back into the floor, then lift the shoulders and legs to make a shallow banana shape.',
+      description: 'Sit in the machine with the pad across your hips and your feet flat on the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2351,8 +2158,7 @@ class ExerciseLibraryCatalog {
       id: 'hollow_rock',
       category: ExerciseCategory.core,
       name: 'Hollow Rock',
-      description:
-          'Lie back on an incline bench and grip the bar at medium width.',
+      description: 'Lie on your back and press the lower back into the floor, then lift the shoulders and legs to make a shallow banana shape.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2364,8 +2170,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_bench_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Bench Press (Barbell)',
-      description:
-          'On a 30-45 degree incline, start with the dumbbells at the upper chest, palms forward.',
+      description: 'Lie back on an incline bench and grip the bar at medium width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2378,8 +2183,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_bench_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Bench Press (Dumbbell)',
-      description:
-          'Set an incline bench under the Smith machine, with the bar set where your arms are almost fully extended.',
+      description: 'On a 30-45 degree incline, start with the dumbbells at the upper chest, palms forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2392,8 +2196,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_bench_press_smith_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Bench Press (Smith Machine)',
-      description:
-          'Lie back on a bench set to around thirty degrees holding dumbbells above your chest with a soft elbow bend.',
+      description: 'Set an incline bench under the Smith machine, with the bar set where your arms are almost fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2406,8 +2209,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_chest_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Incline Chest Fly (Dumbbell)',
-      description:
-          'Sit in the incline press with your back flat on the pad and the handles level with your upper chest.',
+      description: 'Lie back on a bench set to around thirty degrees holding dumbbells above your chest with a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2420,8 +2222,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_chest_press_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Chest Press (Machine)',
-      description:
-          'Put the hands on a bench, box or bar with the body in a straight line.',
+      description: 'Sit in the incline press with your back flat on the pad and the handles level with your upper chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2434,8 +2235,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_push_ups',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Push Ups',
-      description:
-          'Set up with the body fully parallel to the floor under the bar or rings.',
+      description: 'Put the hands on a bench, box or bar with the body in a straight line.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2447,8 +2247,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_archer',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Archer)',
-      description:
-          'Hang under a bar with the knees bent and the feet flat on the floor.',
+      description: 'Set up with the body fully parallel to the floor under the bar or rings.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2460,8 +2259,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_bent_legs',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Bent Legs)',
-      description:
-          'Put the feet on a box so the body sits close to horizontal under the bar.',
+      description: 'Hang under a bar with the knees bent and the feet flat on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2473,8 +2271,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_feet_elevated',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Feet Elevated)',
-      description:
-          'Set a bar or rings at chest height and hold on with the body almost upright.',
+      description: 'Put the feet on a box so the body sits close to horizontal under the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2486,8 +2283,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_incline',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Incline)',
-      description:
-          'Set up horizontally under the bar and row with a single arm while the body stays rigid and square.',
+      description: 'Set a bar or rings at chest height and hold on with the body almost upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2499,8 +2295,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_one_arm',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (One Arm)',
-      description:
-          'Row horizontally with most of the load on one arm while the other hand gives light support on the bar or a strap.',
+      description: 'Set up horizontally under the bar and row with a single arm while the body stays rigid and square.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2512,8 +2307,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_one_arm_assisted',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (One Arm, Assisted)',
-      description:
-          'Hang under the bar with straight legs and the heels on the floor at roughly forty five degrees.',
+      description: 'Row horizontally with most of the load on one arm while the other hand gives light support on the bar or a strap.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2525,8 +2319,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_straight_legs',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Straight Legs)',
-      description:
-          'Add external load with a vest or plates while keeping the body rigid.',
+      description: 'Hang under the bar with straight legs and the heels on the floor at roughly forty five degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2538,8 +2331,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_weighted',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Weighted)',
-      description:
-          'Row from the horizontal position with the hands set wider than shoulder width.',
+      description: 'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2552,8 +2344,7 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_wide_grip',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Wide Grip)',
-      description:
-          'Sit with your back on the pad and grip both handles at chest height.',
+      description: 'Row from the horizontal position with the hands set wider than shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2565,8 +2356,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_chest_press_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Iso-Lateral Chest Press (Machine)',
-      description:
-          'Sit with your chest against the pad and reach up to grip the high handles.',
+      description: 'Sit with your back on the pad and grip both handles at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2579,8 +2369,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_high_row_machine',
       category: ExerciseCategory.horizontalPull,
       name: 'Iso-Lateral High Row (Machine)',
-      description:
-          'Sit with your chest on the pad and grip the low handles with your arms extended.',
+      description: 'Sit with your chest against the pad and reach up to grip the high handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2593,8 +2382,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_low_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Iso-Lateral Low Row',
-      description:
-          'Sit with your chest against the pad and take one handle in each hand at arms length.',
+      description: 'Sit with your chest on the pad and grip the low handles with your arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2606,8 +2394,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_row_machine',
       category: ExerciseCategory.horizontalPull,
       name: 'Iso-Lateral Row (Machine)',
-      description:
-          'Set up in a push up position with both feet in the suspension cradles and your body straight.',
+      description: 'Sit with your chest against the pad and take one handle in each hand at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2620,8 +2407,7 @@ class ExerciseLibraryCatalog {
       id: 'jack_knife_suspension',
       category: ExerciseCategory.core,
       name: 'Jack Knife (Suspension)',
-      description:
-          'Lie flat with your arms extended overhead and legs straight.',
+      description: 'Set up in a push up position with both feet in the suspension cradles and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2633,8 +2419,7 @@ class ExerciseLibraryCatalog {
       id: 'jackknife_sit_up',
       category: ExerciseCategory.core,
       name: 'Jackknife Sit Up',
-      description:
-          'Lie on a bench holding the bar over your chest with a close grip.',
+      description: 'Lie flat with your arms extended overhead and legs straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2646,8 +2431,7 @@ class ExerciseLibraryCatalog {
       id: 'jm_press_barbell',
       category: ExerciseCategory.other,
       name: 'JM Press (Barbell)',
-      description:
-          'Hold the handles at hip height and turn the rope with the wrists rather than the arms.',
+      description: 'Lie on a bench holding the bar over your chest with a close grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2660,7 +2444,7 @@ class ExerciseLibraryCatalog {
       id: 'jump_rope',
       category: ExerciseCategory.other,
       name: 'Jump Rope',
-      description: 'Hold a barbell at arms length in front of your thighs.',
+      description: 'Hold the handles at hip height and turn the rope with the wrists rather than the arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2673,8 +2457,7 @@ class ExerciseLibraryCatalog {
       id: 'jump_shrug',
       category: ExerciseCategory.other,
       name: 'Jump Shrug',
-      description:
-          'Stand with feet shoulder width and squat down to around parallel.',
+      description: 'Hold a barbell at arms length in front of your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2686,7 +2469,7 @@ class ExerciseLibraryCatalog {
       id: 'jump_squat',
       category: ExerciseCategory.other,
       name: 'Jump Squat',
-      description: 'Start standing with feet together and arms at your sides.',
+      description: 'Stand with feet shoulder width and squat down to around parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2698,8 +2481,7 @@ class ExerciseLibraryCatalog {
       id: 'jumping_jack',
       category: ExerciseCategory.other,
       name: 'Jumping Jack',
-      description:
-          'Drop into a lunge with the front knee bent over your foot and the rear knee nearly touching the floor.',
+      description: 'Start standing with feet together and arms at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2712,8 +2494,7 @@ class ExerciseLibraryCatalog {
       id: 'jumping_lunge',
       category: ExerciseCategory.other,
       name: 'Jumping Lunge',
-      description:
-          'Place a kettlebell between your feet, push your hips back, and grip it one-handed with eyes forward.',
+      description: 'Drop into a lunge with the front knee bent over your foot and the rear knee nearly touching the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2725,19 +2506,12 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_clean',
       category: ExerciseCategory.other,
       name: 'Kettlebell Clean',
-      description:
-          'Hold a kettlebell in each hand by the handle with your elbows tucked at your sides.',
+      description: 'Place a kettlebell between your feet, push your hips back, and grip it one-handed with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -2745,8 +2519,7 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_curl',
       category: ExerciseCategory.other,
       name: 'Kettlebell Curl',
-      description:
-          'Stand in a wide sumo stance with a kettlebell between your feet and grip it with both hands, hips set back and chest up.',
+      description: 'Hold a kettlebell in each hand by the handle with your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2759,8 +2532,7 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_goblet_squat',
       category: ExerciseCategory.squat,
       name: 'Kettlebell Goblet Squat',
-      description:
-          'Clean the kettlebell to the rack position at your shoulder with the bell resting on the forearm.',
+      description: 'Stand with your feet around shoulder-width apart and hold a kettlebell close to your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2773,8 +2545,7 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_high_pull',
       category: ExerciseCategory.other,
       name: 'Kettlebell High Pull',
-      description:
-          'Set a kettlebell between your feet, bend the knees, and sit the hips back with eyes forward.',
+      description: 'Stand in a wide sumo stance with a kettlebell between your feet and grip it with both hands, hips set back and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2786,8 +2557,7 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_shoulder_press',
       category: ExerciseCategory.verticalPush,
       name: 'Kettlebell Shoulder Press',
-      description:
-          'Stand with the kettlebell a step in front of you and hinge down to grip it with both hands.',
+      description: 'Clean the kettlebell to the rack position at your shoulder with the bell resting on the forearm.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2800,19 +2570,12 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_snatch',
       category: ExerciseCategory.other,
       name: 'Kettlebell Snatch',
-      description:
-          'Lie on your back and press one kettlebell to a locked-out arm above your shoulder.',
+      description: 'Set a kettlebell between your feet, bend the knees, and sit the hips back with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -2820,8 +2583,7 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_swing',
       category: ExerciseCategory.other,
       name: 'Kettlebell Swing',
-      description:
-          'Hang from the bar and swing between a hollow and an arch position.',
+      description: 'Stand with the kettlebell a step in front of you and hinge down to grip it with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2833,8 +2595,7 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_turkish_get_up',
       category: ExerciseCategory.other,
       name: 'Kettlebell Turkish Get Up',
-      description:
-          'Support yourself on the raise station with your forearms on the pads and back against the rest, legs hanging straight down.',
+      description: 'Lie on your back and press one kettlebell to a locked-out arm above your shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2846,8 +2607,7 @@ class ExerciseLibraryCatalog {
       id: 'kipping_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Kipping Pull Up',
-      description:
-          'Anchor the band overhead and kneel underneath it holding one end in each hand.',
+      description: 'Hang from the bar and swing between a hollow and an arch position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2859,8 +2619,7 @@ class ExerciseLibraryCatalog {
       id: 'knee_raise_parallel_bars',
       category: ExerciseCategory.core,
       name: 'Knee Raise Parallel Bars',
-      description:
-          'Set up on your hands and knees with your hands under your shoulders and your body straight from knees to head.',
+      description: 'Support yourself on the raise station with your forearms on the pads and back against the rest, legs hanging straight down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2872,8 +2631,7 @@ class ExerciseLibraryCatalog {
       id: 'kneeling_pulldown_band',
       category: ExerciseCategory.verticalPull,
       name: 'Kneeling Pulldown (band)',
-      description:
-          'Support on parallettes or bars with straight arms, then lift straight legs until they are parallel to the floor.',
+      description: 'Anchor the band overhead and kneel underneath it holding one end in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2885,8 +2643,7 @@ class ExerciseLibraryCatalog {
       id: 'kneeling_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Kneeling Push Up',
-      description:
-          'From the tuck position, open the knees to roughly a right angle so the thighs move away from the chest.',
+      description: 'Set up on your hands and knees with your hands under your shoulders and your body straight from knees to head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2898,8 +2655,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold',
-      description:
-          'Sit with straight legs and press your hands into the floor or parallettes beside the hips.',
+      description: 'Support on parallettes or bars with straight arms, then lift straight legs until they are parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2913,7 +2669,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_advanced_tuck',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Advanced Tuck)',
-      description: 'Hold an L-sit and open the legs into a wide straddle.',
+      description: 'From the tuck position, open the knees to roughly a right angle so the thighs move away from the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2927,8 +2683,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_foot_supported',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Foot-Supported)',
-      description:
-          'Support yourself on parallettes or bars with straight arms and pull both knees tightly to the chest.',
+      description: 'Sit with straight legs and press your hands into the floor or parallettes beside the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2942,8 +2697,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_straddle',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Straddle)',
-      description:
-          'Hold the end of a landmine barbell overhead with both hands and your arms nearly straight.',
+      description: 'Hold an L-sit and open the legs into a wide straddle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2957,8 +2711,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_tuck',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Tuck)',
-      description:
-          'Straddle a landmine barbell and hinge forward with a flat back, gripping the bar with both hands or a V handle.',
+      description: 'Support yourself on parallettes or bars with straight arms and pull both knees tightly to the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2972,8 +2725,7 @@ class ExerciseLibraryCatalog {
       id: 'landmine_180',
       category: ExerciseCategory.core,
       name: 'Landmine 180',
-      description:
-          'Hold the end of a landmine bar at your chest with both hands.',
+      description: 'Hold the end of a landmine barbell overhead with both hands and your arms nearly straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2986,8 +2738,7 @@ class ExerciseLibraryCatalog {
       id: 'landmine_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Landmine Row',
-      description:
-          'Anchor the band overhead and hold one end in each hand with your arms extended above you.',
+      description: 'Straddle a landmine barbell and hinge forward with a flat back, gripping the bar with both hands or a V handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3000,8 +2751,7 @@ class ExerciseLibraryCatalog {
       id: 'landmine_squat_and_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Landmine Squat and Press',
-      description:
-          'Sit with your thighs under the pads and grip the bar wider than your shoulders.',
+      description: 'Hold the end of a landmine bar at your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3014,8 +2764,7 @@ class ExerciseLibraryCatalog {
       id: 'lat_pulldown_band',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown (Band)',
-      description:
-          'Sit with your thighs secured and grip the handles overhead.',
+      description: 'Anchor the band overhead and hold one end in each hand with your arms extended above you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3027,8 +2776,7 @@ class ExerciseLibraryCatalog {
       id: 'lat_pulldown_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown (Cable)',
-      description:
-          'Sit with your thighs under the pads and take a narrow neutral grip on the handle.',
+      description: 'Sit with your thighs under the pads and grip the bar wider than your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3041,8 +2789,7 @@ class ExerciseLibraryCatalog {
       id: 'lat_pulldown_machine',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown (Machine)',
-      description:
-          'Place a band around your legs just above the knees or ankles and sink into a quarter squat.',
+      description: 'Sit with your thighs secured and grip the handles overhead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3055,7 +2802,7 @@ class ExerciseLibraryCatalog {
       id: 'lat_pulldown_close_grip_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown - Close Grip (Cable)',
-      description: 'Stand tall beside a short box with feet hip-width.',
+      description: 'Sit with your thighs under the pads and take a narrow neutral grip on the handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3068,8 +2815,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_band_walks',
       category: ExerciseCategory.hinge,
       name: 'Lateral Band Walks',
-      description:
-          'Lie on your side with your body in a straight line and your lower arm supporting your head.',
+      description: 'Place a band around your legs just above the knees or ankles and sink into a quarter squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3081,7 +2827,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_box_jump',
       category: ExerciseCategory.other,
       name: 'Lateral Box Jump',
-      description: 'Stand tall and take a wide step out to one side.',
+      description: 'Stand tall beside a short box with feet hip-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3093,8 +2839,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_leg_raises',
       category: ExerciseCategory.hinge,
       name: 'Lateral Leg Raises',
-      description:
-          'Stand on the middle of the band with an end in each hand at your sides.',
+      description: 'Lie on your side with your body in a straight line and your lower arm supporting your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3106,8 +2851,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_lunge',
       category: ExerciseCategory.squat,
       name: 'Lateral Lunge',
-      description:
-          'Place a flat bench between two opposing low pulleys and sit on it.',
+      description: 'Stand tall and take a wide step out to one side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3119,8 +2863,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_raise_band',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Band)',
-      description:
-          'Stand holding a dumbbell in each hand at your sides with a slight bend in the elbows.',
+      description: 'Stand on the middle of the band with an end in each hand at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3132,8 +2875,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_raise_cable',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Cable)',
-      description:
-          'Sit with the pads against the outside of your upper arms and your torso upright.',
+      description: 'Place a flat bench between two opposing low pulleys and sit on it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3146,8 +2888,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Dumbbell)',
-      description:
-          'Stand with your feet much wider than your shoulders and your toes forward.',
+      description: 'Stand holding a dumbbell in each hand at your sides with a slight bend in the elbows.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3160,8 +2901,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_raise_machine',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Machine)',
-      description:
-          'Sit with the pad resting on the front of your ankles and your knees in line with the machine pivot.',
+      description: 'Sit with the pads against the outside of your upper arms and your torso upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3174,8 +2914,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_squat',
       category: ExerciseCategory.squat,
       name: 'Lateral Squat',
-      description:
-          'Sit in the sled with your feet shoulder width on the platform and release the safeties.',
+      description: 'Stand with your feet much wider than your shoulders and your toes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3187,8 +2926,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_extension_machine',
       category: ExerciseCategory.other,
       name: 'Leg Extension (Machine)',
-      description:
-          'Sit with your back against the pad and your feet flat on the platform in front of you.',
+      description: 'Sit with the pad resting on the front of your ankles and your knees in line with the machine pivot.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3201,8 +2939,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_press_machine',
       category: ExerciseCategory.squat,
       name: 'Leg Press (Machine)',
-      description:
-          'Support yourself on the parallel bars or a captains chair with your back against the pad.',
+      description: 'Sit in the sled with your feet shoulder width on the platform and release the safeties.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3215,8 +2952,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_press_horizontal_machine',
       category: ExerciseCategory.squat,
       name: 'Leg Press Horizontal (Machine)',
-      description:
-          'Stand between two low pulleys with a handle in each hand and your palms facing forward.',
+      description: 'Sit with your back against the pad and your feet flat on the platform in front of you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3229,8 +2965,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_raise_parallel_bars',
       category: ExerciseCategory.core,
       name: 'Leg Raise Parallel Bars',
-      description:
-          'Hold the handles and walk your feet forward so you hang back with your body straight.',
+      description: 'Support yourself on the parallel bars or a captains chair with your back against the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3242,7 +2977,7 @@ class ExerciseLibraryCatalog {
       id: 'low_cable_fly_crossovers',
       category: ExerciseCategory.other,
       name: 'Low Cable Fly Crossovers',
-      description: 'Stand tall and step forward into a long stride.',
+      description: 'Stand between two low pulleys with a handle in each hand and your palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3255,8 +2990,7 @@ class ExerciseLibraryCatalog {
       id: 'low_row_suspension',
       category: ExerciseCategory.horizontalPull,
       name: 'Low Row (Suspension)',
-      description:
-          'With the bar on the upper back, step forward and lower until the back knee is just off the floor and the front thigh is parallel.',
+      description: 'Hold the handles and walk your feet forward so you hang back with your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3268,8 +3002,7 @@ class ExerciseLibraryCatalog {
       id: 'lunge',
       category: ExerciseCategory.squat,
       name: 'Lunge',
-      description:
-          'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
+      description: 'Stand tall and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3281,8 +3014,7 @@ class ExerciseLibraryCatalog {
       id: 'lunge_barbell',
       category: ExerciseCategory.squat,
       name: 'Lunge (Barbell)',
-      description:
-          'Lie on your back and extend the shins so the legs are only slightly bent.',
+      description: 'With the bar on the upper back, step forward and lower until the back knee is just off the floor and the front thigh is parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3295,8 +3027,7 @@ class ExerciseLibraryCatalog {
       id: 'lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Lunge (Dumbbell)',
-      description:
-          'Lie on your back with the hands beside the hips and press the lower back into the floor.',
+      description: 'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3309,8 +3040,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_bent_leg_raise',
       category: ExerciseCategory.core,
       name: 'Lying Bent-Leg Raise',
-      description:
-          'Lie face down with the pad resting just above your heels and your knees just off the end of the bench.',
+      description: 'Lie on your back and extend the shins so the legs are only slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3322,8 +3052,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_knee_raise',
       category: ExerciseCategory.core,
       name: 'Lying Knee Raise',
-      description:
-          'Lie on your back with your hands under your hips and your legs straight.',
+      description: 'Lie on your back with the hands beside the hips and press the lower back into the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3335,8 +3064,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_leg_curl_machine',
       category: ExerciseCategory.other,
       name: 'Lying Leg Curl (Machine)',
-      description:
-          'Lie face up on a bench with your head hanging just off the end.',
+      description: 'Lie face down with the pad resting just above your heels and your knees just off the end of the bench.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3349,8 +3077,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_leg_raise',
       category: ExerciseCategory.core,
       name: 'Lying Leg Raise',
-      description:
-          'Lie face up with your head off the end of a bench and hold a light plate on your forehead with a towel underneath.',
+      description: 'Lie on your back with your hands under your hips and your legs straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3362,8 +3089,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_curls',
       category: ExerciseCategory.other,
       name: 'Lying Neck Curls',
-      description:
-          'Lie face down on a bench with your head hanging off the end.',
+      description: 'Lie face up on a bench with your head hanging just off the end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3374,8 +3100,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_curls_weighted',
       category: ExerciseCategory.other,
       name: 'Lying Neck Curls (Weighted)',
-      description:
-          'Lie face down with your head off the end of a bench and hold a light plate on the back of your head with a towel underneath.',
+      description: 'Lie face up with your head off the end of a bench and hold a light plate on your forehead with a towel underneath.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3387,7 +3112,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_extension',
       category: ExerciseCategory.other,
       name: 'Lying Neck Extension',
-      description: 'Lie flat with straight legs held together.',
+      description: 'Lie face down on a bench with your head hanging off the end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3398,8 +3123,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_extension_weighted',
       category: ExerciseCategory.other,
       name: 'Lying Neck Extension (Weighted)',
-      description:
-          'Stand side on at the loaded end of a landmine barbell and hinge over with a flat back, gripping the sleeve with the outside hand.',
+      description: 'Lie face down with your head off the end of a bench and hold a light plate on the back of your head with a towel underneath.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3411,8 +3135,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_straight_leg_raise',
       category: ExerciseCategory.core,
       name: 'Lying Straight-Leg Raise',
-      description:
-          'Set up in a push up position with your hands under your shoulders and your body straight.',
+      description: 'Lie flat with straight legs held together.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3424,8 +3147,7 @@ class ExerciseLibraryCatalog {
       id: 'meadows_rows_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Meadows Rows (Barbell)',
-      description:
-          'Pull explosively until the bar or rings reach the lower chest.',
+      description: 'Stand side on at the loaded end of a landmine barbell and hinge over with a flat back, gripping the sleeve with the outside hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3438,8 +3160,7 @@ class ExerciseLibraryCatalog {
       id: 'mountain_climber',
       category: ExerciseCategory.other,
       name: 'Mountain Climber',
-      description:
-          'Start at the top in a straight arm support and lower slowly through the transition until you finish in a hang.',
+      description: 'Set up in a push up position with your hands under your shoulders and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3450,8 +3171,7 @@ class ExerciseLibraryCatalog {
       id: 'muscle_up',
       category: ExerciseCategory.verticalPull,
       name: 'Muscle Up',
-      description:
-          'From a hang, swing the legs forward and drive the hips up while pulling the bar toward the waist.',
+      description: 'Pull explosively until the bar or rings reach the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3463,7 +3183,7 @@ class ExerciseLibraryCatalog {
       id: 'muscle_up_eccentric',
       category: ExerciseCategory.verticalPull,
       name: 'Muscle Up (Eccentric)',
-      description: 'Jump or step so your chin starts above the bar.',
+      description: 'Start at the top in a straight arm support and lower slowly through the transition until you finish in a hang.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3475,7 +3195,7 @@ class ExerciseLibraryCatalog {
       id: 'muscle_up_kipping',
       category: ExerciseCategory.verticalPull,
       name: 'Muscle Up (Kipping)',
-      description: 'Anchor the heels under a bar or have a partner hold them.',
+      description: 'From a hang, swing the legs forward and drive the hips up while pulling the bar toward the waist.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3487,8 +3207,7 @@ class ExerciseLibraryCatalog {
       id: 'negative_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Negative Pull Up',
-      description:
-          'Lie on your back with your knees bent and dropped to one side and your hands light beside your head.',
+      description: 'Jump or step so your chin starts above the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3500,8 +3219,7 @@ class ExerciseLibraryCatalog {
       id: 'nordic_hamstrings_curls',
       category: ExerciseCategory.hinge,
       name: 'Nordic Hamstrings Curls',
-      description:
-          'Set the feet wide and put one hand under the chest with the other behind the back.',
+      description: 'Anchor the heels under a bar or have a partner hold them.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3513,8 +3231,7 @@ class ExerciseLibraryCatalog {
       id: 'oblique_crunch',
       category: ExerciseCategory.core,
       name: 'Oblique Crunch',
-      description:
-          'From a forearm plank, lift one arm and the opposite leg a few inches off the floor.',
+      description: 'Lie on your back with your knees bent and dropped to one side and your hands light beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3526,7 +3243,7 @@ class ExerciseLibraryCatalog {
       id: 'one_arm_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'One Arm Push Up',
-      description: 'Set both pulleys high and grab a handle in each hand.',
+      description: 'Set the feet wide and put one hand under the chest with the other behind the back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3538,8 +3255,7 @@ class ExerciseLibraryCatalog {
       id: 'one_arm_one_leg_plank',
       category: ExerciseCategory.core,
       name: 'One-Arm One-Leg Plank',
-      description:
-          'Hold a dumbbell locked out overhead with one or both arms and step forward into a long stride.',
+      description: 'From a forearm plank, lift one arm and the opposite leg a few inches off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3552,8 +3268,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_curl_cable',
       category: ExerciseCategory.other,
       name: 'Overhead Curl (Cable)',
-      description:
-          'Hold the bar at shoulder height with your grip just outside your shoulders and your elbows slightly in front.',
+      description: 'Set both pulleys high and grab a handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3566,8 +3281,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_dumbbell_lunge',
       category: ExerciseCategory.squat,
       name: 'Overhead Dumbbell Lunge',
-      description:
-          'Hold a dumbbell in each hand at shoulder height with your palms facing forward.',
+      description: 'Hold a dumbbell locked out overhead with one or both arms and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3580,8 +3294,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Overhead Press (Barbell)',
-      description:
-          'Set a bench with back support under the Smith bar and sit so the bar sits just above your shoulders.',
+      description: 'Hold the bar at shoulder height with your grip just outside your shoulders and your elbows slightly in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3594,8 +3307,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Overhead Press (Dumbbell)',
-      description:
-          'Take a wide snatch grip and press the barbell to full lockout overhead, feet slightly wider than the shoulders.',
+      description: 'Hold a dumbbell in each hand at shoulder height with your palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3608,8 +3320,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_press_smith_machine',
       category: ExerciseCategory.verticalPush,
       name: 'Overhead Press (Smith Machine)',
-      description:
-          'Squat down with the bar on your back until your thighs are at least parallel and hold that bottom position for two to three seconds.',
+      description: 'Set a bench with back support under the Smith bar and sit so the bar sits just above your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3622,8 +3333,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_squat',
       category: ExerciseCategory.other,
       name: 'Overhead Squat',
-      description:
-          'Set your torso parallel to the floor with the bar resting on the ground.',
+      description: 'Take a wide snatch grip and press the barbell to full lockout overhead, feet slightly wider than the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3635,8 +3345,7 @@ class ExerciseLibraryCatalog {
       id: 'pause_squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Pause Squat (Barbell)',
-      description:
-          'Set your shoulders under the pads and your feet on the platform, then release the safeties.',
+      description: 'Squat down with the bar on your back until your thighs are at least parallel and hold that bottom position for two to three seconds.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3649,8 +3358,7 @@ class ExerciseLibraryCatalog {
       id: 'pendlay_row_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Pendlay Row (Barbell)',
-      description:
-          'Put the feet on a box so the hips stack higher over the shoulders.',
+      description: 'Set your torso parallel to the floor with the bar resting on the ground.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3663,8 +3371,7 @@ class ExerciseLibraryCatalog {
       id: 'pendulum_squat_machine',
       category: ExerciseCategory.squat,
       name: 'Pendulum Squat (Machine)',
-      description:
-          'Start in a pushup position and walk the feet in so the hips lift high and the body makes an upside down V.',
+      description: 'Set your shoulders under the pads and your feet on the platform, then release the safeties.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3677,8 +3384,7 @@ class ExerciseLibraryCatalog {
       id: 'pike_push_up_feet_elevated',
       category: ExerciseCategory.verticalPush,
       name: 'Pike Push-Up (Feet Elevated)',
-      description:
-          'Move through a sequence of controlled mat exercises that work the deep core, breathing steadily with each movement.',
+      description: 'Put the feet on a box so the hips stack higher over the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3690,8 +3396,7 @@ class ExerciseLibraryCatalog {
       id: 'pike_pushup',
       category: ExerciseCategory.verticalPush,
       name: 'Pike Pushup',
-      description:
-          'Stand holding a dumbbell in each hand with your palms facing your body.',
+      description: 'Start in a pushup position and walk the feet in so the hips lift high and the body makes an upside down V.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3703,8 +3408,7 @@ class ExerciseLibraryCatalog {
       id: 'pilates',
       category: ExerciseCategory.other,
       name: 'Pilates',
-      description:
-          'Stand on one leg with the other held straight out in front.',
+      description: 'Move through a sequence of controlled mat exercises that work the deep core, breathing steadily with each movement.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3717,8 +3421,7 @@ class ExerciseLibraryCatalog {
       id: 'pinwheel_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Pinwheel Curl (Dumbbell)',
-      description:
-          'Stand on one leg in front of a box, hold the free leg forward, and lower until the hips lightly touch the box before standing on the same leg.',
+      description: 'Stand holding a dumbbell in each hand with your palms facing your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3731,8 +3434,7 @@ class ExerciseLibraryCatalog {
       id: 'pistol_squat',
       category: ExerciseCategory.squat,
       name: 'Pistol Squat',
-      description:
-          'Hold a light plate or dumbbell out in front of the chest to balance the load.',
+      description: 'Stand on one leg with the other held straight out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3744,8 +3446,7 @@ class ExerciseLibraryCatalog {
       id: 'pistol_squat_box',
       category: ExerciseCategory.squat,
       name: 'Pistol Squat (Box)',
-      description:
-          'Hold the body horizontal with the legs together and the arms locked straight.',
+      description: 'Stand on one leg in front of a box, hold the free leg forward, and lower until the hips lightly touch the box before standing on the same leg.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3757,8 +3458,7 @@ class ExerciseLibraryCatalog {
       id: 'pistol_squat_counterweighted',
       category: ExerciseCategory.squat,
       name: 'Pistol Squat (Counterweighted)',
-      description:
-          'From the tuck planche, open the knees so the thighs move away from the chest and flatten the back.',
+      description: 'Hold a light plate or dumbbell out in front of the chest to balance the load.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3771,8 +3471,7 @@ class ExerciseLibraryCatalog {
       id: 'planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche',
-      description:
-          'Hold a straight-arm planche with the legs separated to shorten the lever.',
+      description: 'Hold the body horizontal with the legs together and the arms locked straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3786,8 +3485,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_advanced_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche (Advanced Tuck)',
-      description:
-          'Support on the floor or parallettes with straight arms, lean forward, and pull both knees to the chest with the hips lifted to shoulder height.',
+      description: 'From the tuck planche, open the knees so the thighs move away from the chest and flatten the back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3801,8 +3499,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_straddle',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche (Straddle)',
-      description:
-          'Start in a straight-arm push-up position with the hands slightly turned out.',
+      description: 'Hold a straight-arm planche with the legs separated to shorten the lever.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3816,8 +3513,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche (Tuck)',
-      description:
-          'Hold a deep planche lean and lift one knee at a time toward the chest so both feet leave the floor briefly.',
+      description: 'Support on the floor or parallettes with straight arms, lean forward, and pull both knees to the chest with the hips lifted to shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3831,8 +3527,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_lean',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Lean',
-      description:
-          'Hold a full planche with the legs together and the body horizontal.',
+      description: 'Start in a straight-arm push-up position with the hands slightly turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3846,8 +3541,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_lean_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Lean (Tuck)',
-      description:
-          'Hold an advanced tuck planche with the back flat and the knees away from the chest.',
+      description: 'Hold a deep planche lean and lift one knee at a time toward the chest so both feet leave the floor briefly.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3861,8 +3555,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up',
-      description:
-          'Hold a straddle planche with the legs wide and the body horizontal.',
+      description: 'Hold a full planche with the legs together and the body horizontal.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3874,8 +3567,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up_advanced_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up (Advanced Tuck)',
-      description:
-          'Hold a tuck planche with the knees at the chest and the hips high.',
+      description: 'Hold an advanced tuck planche with the back flat and the knees away from the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3887,8 +3579,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up_straddle',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up (Straddle)',
-      description:
-          'Rest on the forearms and toes with the elbows under the shoulders.',
+      description: 'Hold a straddle planche with the legs wide and the body horizontal.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3900,7 +3591,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up (Tuck)',
-      description: 'Start in a forearm plank with your body straight.',
+      description: 'Hold a tuck planche with the knees at the chest and the hips high.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3912,8 +3603,7 @@ class ExerciseLibraryCatalog {
       id: 'plank',
       category: ExerciseCategory.core,
       name: 'Plank',
-      description:
-          'Hold a weight plate by the edges in front of your thighs with your elbows tucked at your sides.',
+      description: 'Rest on the forearms and toes with the elbows under the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3926,8 +3616,7 @@ class ExerciseLibraryCatalog {
       id: 'plank_pushup',
       category: ExerciseCategory.horizontalPush,
       name: 'Plank Pushup',
-      description:
-          'Stand tall gripping a weight plate at the 3 and 9 o\'clock edges, palms facing each other, arms extended down with a slight elbow bend.',
+      description: 'Start in a forearm plank with your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3940,8 +3629,7 @@ class ExerciseLibraryCatalog {
       id: 'plate_curl',
       category: ExerciseCategory.other,
       name: 'Plate Curl',
-      description:
-          'Hold a weight plate flat between both palms at chest height with your elbows out.',
+      description: 'Hold a weight plate by the edges in front of your thighs with your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3954,8 +3642,7 @@ class ExerciseLibraryCatalog {
       id: 'plate_front_raise',
       category: ExerciseCategory.other,
       name: 'Plate Front Raise',
-      description:
-          'Press two plates together between your palms at chest height.',
+      description: 'Stand tall gripping a weight plate at the 3 and 9 o\'clock edges, palms facing each other, arms extended down with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3968,8 +3655,7 @@ class ExerciseLibraryCatalog {
       id: 'plate_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Plate Press',
-      description:
-          'From a deadlift setup, pull the bar explosively past the knees, extend the hips, ankles and knees, then whip the elbows through to catch the bar on the front of the shoulders in a partial squat.',
+      description: 'Hold a weight plate flat between both palms at chest height with your elbows out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3982,8 +3668,7 @@ class ExerciseLibraryCatalog {
       id: 'plate_squeeze_svend_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Plate Squeeze (Svend Press)',
-      description:
-          'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
+      description: 'Press two plates together between your palms at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3996,19 +3681,12 @@ class ExerciseLibraryCatalog {
       id: 'power_clean',
       category: ExerciseCategory.other,
       name: 'Power Clean',
-      description:
-          'Sit at the preacher bench with your upper arms flat on the pad and grip an EZ or straight bar.',
+      description: 'From a deadlift setup, pull the bar explosively past the knees, extend the hips, ankles and knees, then whip the elbows through to catch the bar on the front of the shoulders in a partial squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -4016,19 +3694,12 @@ class ExerciseLibraryCatalog {
       id: 'power_snatch',
       category: ExerciseCategory.other,
       name: 'Power Snatch',
-      description:
-          'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
+      description: 'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -4036,8 +3707,7 @@ class ExerciseLibraryCatalog {
       id: 'preacher_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Preacher Curl (Barbell)',
-      description:
-          'Sit with your upper arms flat on the pad and grip the handles with the arms extended.',
+      description: 'Sit at the preacher bench with your upper arms flat on the pad and grip an EZ or straight bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4050,7 +3720,7 @@ class ExerciseLibraryCatalog {
       id: 'preacher_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Preacher Curl (Dumbbell)',
-      description: 'Hold a light barbell at your shoulders.',
+      description: 'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4063,7 +3733,7 @@ class ExerciseLibraryCatalog {
       id: 'preacher_curl_machine',
       category: ExerciseCategory.other,
       name: 'Preacher Curl (Machine)',
-      description: 'Hang from the bar with an overhand grip at shoulder width.',
+      description: 'Sit with your upper arms flat on the pad and grip the handles with the arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4076,8 +3746,7 @@ class ExerciseLibraryCatalog {
       id: 'press_under',
       category: ExerciseCategory.horizontalPush,
       name: 'Press Under',
-      description:
-          'Pull up with a wide grip and travel toward one hand while the opposite arm stays straight along the bar.',
+      description: 'Hold a light barbell at your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4089,8 +3758,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up',
-      description:
-          'Set the assist machine or loop a band under your knee and grip the bar overhand, wider than your shoulders.',
+      description: 'Hang from the bar with an overhand grip at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4102,8 +3770,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_archer',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Archer)',
-      description:
-          'Loop a band under the knee or foot, or rest one foot on a low box.',
+      description: 'Pull up with a wide grip and travel toward one hand while the opposite arm stays straight along the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4115,8 +3782,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_assisted',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Assisted)',
-      description:
-          'Pull as high as you can while leaning back hard so the bar travels toward the navel.',
+      description: 'Set the assist machine or loop a band under your knee and grip the bar overhand, wider than your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4128,8 +3794,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_band',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Band)',
-      description:
-          'Pull explosively while leaning back so the bar meets the lower chest.',
+      description: 'Loop a band under the knee or foot, or rest one foot on a low box.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4141,7 +3806,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_belly_button',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Belly Button)',
-      description: 'Take an overhand grip narrower than shoulder width.',
+      description: 'Pull as high as you can while leaning back hard so the bar travels toward the navel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4153,8 +3818,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_chest_to_bar',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Chest to Bar)',
-      description:
-          'Hook the wrists over the rings or bar so the heel of the hand sits on top of the grip.',
+      description: 'Pull explosively while leaning back so the bar meets the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4166,8 +3830,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_close_grip',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Close Grip)',
-      description:
-          'Hold both legs straight out in front at hip height, then perform full pull ups without letting the legs drop.',
+      description: 'Take an overhand grip narrower than shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4179,7 +3842,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_false_grip',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (False Grip)',
-      description: 'Start at the top with one arm and the chin over the bar.',
+      description: 'Hook the wrists over the rings or bar so the heel of the hand sits on top of the grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4191,8 +3854,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_l_sit',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (L-Sit)',
-      description:
-          'Pull to the top with a wide grip, then shift sideways over one hand while the other arm straightens.',
+      description: 'Hold both legs straight out in front at hip height, then perform full pull ups without letting the legs drop.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4205,7 +3867,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_one_arm_eccentric',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (One Arm, Eccentric)',
-      description: 'Attach additional load with a belt or vest.',
+      description: 'Start at the top with one arm and the chin over the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4217,8 +3879,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_typewriter',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Typewriter)',
-      description:
-          'Lie on a bench holding one dumbbell over your chest with both hands and a soft elbow bend.',
+      description: 'Pull to the top with a wide grip, then shift sideways over one hand while the other arm straightens.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4230,8 +3891,7 @@ class ExerciseLibraryCatalog {
       id: 'pull_up_weighted',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Weighted)',
-      description:
-          'Sit in the machine with the pads on your upper arms and the belt fastened.',
+      description: 'Attach additional load with a belt or vest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4244,8 +3904,7 @@ class ExerciseLibraryCatalog {
       id: 'pullover_dumbbell',
       category: ExerciseCategory.verticalPull,
       name: 'Pullover (Dumbbell)',
-      description:
-          'Hold the bar on the front of the shoulders with a shoulder-width grip and elbows up.',
+      description: 'Lie on a bench holding one dumbbell over your chest with both hands and a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4258,8 +3917,7 @@ class ExerciseLibraryCatalog {
       id: 'pullover_machine',
       category: ExerciseCategory.verticalPull,
       name: 'Pullover (Machine)',
-      description:
-          'Set the hands slightly wider than the shoulders with the body in a straight line.',
+      description: 'Sit in the machine with the pads on your upper arms and the belt fastened.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4272,8 +3930,7 @@ class ExerciseLibraryCatalog {
       id: 'push_press',
       category: ExerciseCategory.verticalPush,
       name: 'Push Press',
-      description:
-          'Have a partner set a plate on your upper back or wear a weight vest, then set up in a push up position.',
+      description: 'Hold the bar on the front of the shoulders with a shoulder-width grip and elbows up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4286,8 +3943,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Push Up',
-      description:
-          'Perform pushups keeping the elbows tucked close to the ribs the whole way down.',
+      description: 'Set the hands slightly wider than the shoulders with the body in a straight line.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4299,8 +3955,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_weighted',
       category: ExerciseCategory.horizontalPush,
       name: 'Push Up (Weighted)',
-      description:
-          'Take a wide hand position and lower toward one hand while the other arm straightens out to the side.',
+      description: 'Have a partner set a plate on your upper back or wear a weight vest, then set up in a push up position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4313,8 +3968,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_close_grip',
       category: ExerciseCategory.horizontalPush,
       name: 'Push Up - Close Grip',
-      description:
-          'Place one hand on a bench or box with the other behind the back and the feet wide.',
+      description: 'Perform pushups keeping the elbows tucked close to the ribs the whole way down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4326,8 +3980,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_archer',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Archer)',
-      description:
-          'Place the hands lower beside the torso, lean the shoulders forward past the hands, and perform push-ups without losing the forward lean.',
+      description: 'Take a wide hand position and lower toward one hand while the other arm straightens out to the side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4339,8 +3992,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_one_arm_incline',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (One Arm, Incline)',
-      description:
-          'Set the rings just off the floor and turn them out so the palms face forward at the top.',
+      description: 'Place one hand on a bench or box with the other behind the back and the feet wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4352,7 +4004,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_pseudo_planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Pseudo Planche)',
-      description: 'Perform archer pushups on rings turned out at the top.',
+      description: 'Place the hands lower beside the torso, lean the shoulders forward past the hands, and perform push-ups without losing the forward lean.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4364,8 +4016,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_rings_turned_out',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings Turned Out)',
-      description:
-          'On rings turned out, lean the shoulders forward and perform push-ups while keeping the rings stable and the forward lean consistent.',
+      description: 'Set the rings just off the floor and turn them out so the palms face forward at the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4377,8 +4028,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_rings_turned_out_archer',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings Turned Out, Archer)',
-      description:
-          'Set the rings just off the floor and hold them at shoulder width.',
+      description: 'Perform archer pushups on rings turned out at the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4390,8 +4040,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_rings_turned_out_pseudo_planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings Turned Out, Pseudo Planche)',
-      description:
-          'Set the rings a few inches off the floor and take a wide hand position.',
+      description: 'On rings turned out, lean the shoulders forward and perform push-ups while keeping the rings stable and the forward lean consistent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4403,8 +4052,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_rings',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings)',
-      description:
-          'Put one hand on a low block or ball and the other on the floor.',
+      description: 'Set the rings just off the floor and hold them at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4416,8 +4064,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_rings_wide',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings, Wide)',
-      description:
-          'Stand an arm length from a wall and place the hands on it at chest height.',
+      description: 'Set the rings a few inches off the floor and take a wide hand position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4429,8 +4076,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_uneven',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Uneven)',
-      description:
-          'Set the barbell in a rack at about knee height and grip it with your shins close to the bar.',
+      description: 'Put one hand on a low block or ball and the other on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4442,8 +4088,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_wall',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Wall)',
-      description:
-          'Set both pulleys above head height and grab the left handle with your right hand and the right handle with your left so the cables cross in front.',
+      description: 'Stand an arm length from a wall and place the hands on it at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4455,8 +4100,7 @@ class ExerciseLibraryCatalog {
       id: 'rack_pull',
       category: ExerciseCategory.horizontalPull,
       name: 'Rack Pull',
-      description:
-          'Hinge forward with a flat back holding a dumbbell in each hand below your chest.',
+      description: 'Set the barbell in a rack at about knee height and grip it with your shins close to the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4468,8 +4112,7 @@ class ExerciseLibraryCatalog {
       id: 'rear_delt_reverse_fly_cable',
       category: ExerciseCategory.other,
       name: 'Rear Delt Reverse Fly (Cable)',
-      description:
-          'Sit facing the pad and grip the handles with your arms extended in front of you.',
+      description: 'Set both pulleys above head height and grab the left handle with your right hand and the right handle with your left so the cables cross in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4482,8 +4125,7 @@ class ExerciseLibraryCatalog {
       id: 'rear_delt_reverse_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Rear Delt Reverse Fly (Dumbbell)',
-      description:
-          'Set up in a push up position gripping a dumbbell in each hand with your feet wide.',
+      description: 'Hinge forward with a flat back holding a dumbbell in each hand below your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4496,8 +4138,7 @@ class ExerciseLibraryCatalog {
       id: 'rear_delt_reverse_fly_machine',
       category: ExerciseCategory.other,
       name: 'Rear Delt Reverse Fly (Machine)',
-      description:
-          'Lie on your back with your hands by your sides and your knees bent over your hips.',
+      description: 'Sit facing the pad and grip the handles with your arms extended in front of you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4510,8 +4151,7 @@ class ExerciseLibraryCatalog {
       id: 'renegade_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Renegade Row (Dumbbell)',
-      description:
-          'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
+      description: 'Set up in a push up position gripping a dumbbell in each hand with your feet wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4524,8 +4164,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_crunch',
       category: ExerciseCategory.core,
       name: 'Reverse Crunch',
-      description:
-          'Attach a straight bar to a low pulley and grip it at shoulder width with palms facing down.',
+      description: 'Lie on your back with your hands by your sides and your knees bent over your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4537,8 +4176,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Reverse Curl (Barbell)',
-      description:
-          'Stand tall with a dumbbell in each hand and your palms facing down, arms fully extended.',
+      description: 'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4551,8 +4189,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_curl_cable',
       category: ExerciseCategory.other,
       name: 'Reverse Curl (Cable)',
-      description:
-          'Stand side on to a cable set at chest height and take the handle in the far hand across your body.',
+      description: 'Attach a straight bar to a low pulley and grip it at shoulder width with palms facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4565,8 +4202,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Reverse Curl (Dumbbell)',
-      description:
-          'Sit with your legs apart and brace the back of your upper arm against the inside of your thigh, holding the dumbbell with an overhand grip.',
+      description: 'Stand tall with a dumbbell in each hand and your palms facing down, arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4579,8 +4215,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_fly_single_arm_cable',
       category: ExerciseCategory.other,
       name: 'Reverse Fly Single Arm (Cable)',
-      description:
-          'Sit with your thighs under the pads and take an underhand grip about shoulder width.',
+      description: 'Stand side on to a cable set at chest height and take the handle in the far hand across your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4593,8 +4228,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_grip_concentration_curl',
       category: ExerciseCategory.other,
       name: 'Reverse Grip Concentration Curl',
-      description:
-          'Lie face down on a bench or hyperextension machine with your hips at the edge and your legs hanging.',
+      description: 'Sit with your legs apart and brace the back of your upper arm against the inside of your thigh, holding the dumbbell with an overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4606,7 +4240,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_grip_lat_pulldown_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Reverse Grip Lat Pulldown (Cable)',
-      description: 'Stand tall and step one leg back into a long stride.',
+      description: 'Sit with your thighs under the pads and take an underhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4619,8 +4253,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_hyperextension',
       category: ExerciseCategory.hinge,
       name: 'Reverse Hyperextension',
-      description:
-          'Set a barbell across your upper back and step one leg back into a long stride.',
+      description: 'Lie face down on a bench or hyperextension machine with your hips at the edge and your legs hanging.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4632,7 +4265,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_lunge',
       category: ExerciseCategory.squat,
       name: 'Reverse Lunge',
-      description: 'Stand tall holding a dumbbell in each hand at your sides.',
+      description: 'Stand tall and step one leg back into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4644,8 +4277,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_lunge_barbell',
       category: ExerciseCategory.squat,
       name: 'Reverse Lunge (Barbell)',
-      description:
-          'Sit with your legs straight and your hands on the floor behind your hips, fingers pointing forward.',
+      description: 'Set a barbell across your upper back and step one leg back into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4658,8 +4290,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Reverse Lunge (Dumbbell)',
-      description:
-          'Perform ring dips and finish each press by turning the rings out so the palms face forward at the top.',
+      description: 'Stand tall holding a dumbbell in each hand at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4672,8 +4303,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_plank',
       category: ExerciseCategory.core,
       name: 'Reverse Plank',
-      description:
-          'Support on rings with straight arms and the rings held close to the hips.',
+      description: 'Sit with your legs straight and your hands on the floor behind your hips, fingers pointing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4686,8 +4316,7 @@ class ExerciseLibraryCatalog {
       id: 'ring_dip_rings_turned_out',
       category: ExerciseCategory.verticalPush,
       name: 'Ring Dip (Rings Turned Out)',
-      description:
-          'Stand tall holding a barbell at your thighs with your knees slightly bent.',
+      description: 'Perform ring dips and finish each press by turning the rings out so the palms face forward at the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4699,8 +4328,7 @@ class ExerciseLibraryCatalog {
       id: 'ring_dips',
       category: ExerciseCategory.verticalPush,
       name: 'Ring Dips',
-      description:
-          'Hold a dumbbell in each hand in front of your thighs with your knees slightly bent.',
+      description: 'Support on rings with straight arms and the rings held close to the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4712,8 +4340,7 @@ class ExerciseLibraryCatalog {
       id: 'romanian_deadlift_barbell',
       category: ExerciseCategory.hinge,
       name: 'Romanian Deadlift (Barbell)',
-      description:
-          'Attach a rope to a low pulley and hold one end in each hand with your elbows at your sides.',
+      description: 'Stand tall holding a barbell at your thighs with your knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4726,8 +4353,7 @@ class ExerciseLibraryCatalog {
       id: 'romanian_deadlift_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Romanian Deadlift (Dumbbell)',
-      description:
-          'Attach a rope to a high pulley and stand a couple feet back with a staggered stance.',
+      description: 'Hold a dumbbell in each hand in front of your thighs with your knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4740,7 +4366,7 @@ class ExerciseLibraryCatalog {
       id: 'rope_cable_curl',
       category: ExerciseCategory.other,
       name: 'Rope Cable Curl',
-      description: 'Strap in with your shins vertical and your arms straight.',
+      description: 'Attach a rope to a low pulley and hold one end in each hand with your elbows at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4753,8 +4379,7 @@ class ExerciseLibraryCatalog {
       id: 'rope_straight_arm_pulldown',
       category: ExerciseCategory.verticalPull,
       name: 'Rope Straight Arm Pulldown',
-      description:
-          'Run at a pace you can hold for the whole session, landing under your hips rather than reaching out in front.',
+      description: 'Attach a rope to a high pulley and stand a couple feet back with a staggered stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4767,8 +4392,7 @@ class ExerciseLibraryCatalog {
       id: 'rowing_machine',
       category: ExerciseCategory.other,
       name: 'Rowing Machine',
-      description:
-          'Sit with the knees bent and torso leaned back, feet up or down.',
+      description: 'Strap in with your shins vertical and your arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4781,8 +4405,7 @@ class ExerciseLibraryCatalog {
       id: 'running',
       category: ExerciseCategory.other,
       name: 'Running',
-      description:
-          'Sit with your knees bent and lean your torso back to about forty five degrees, holding a plate or dumbbell at your chest.',
+      description: 'Run at a pace you can hold for the whole session, landing under your hips rather than reaching out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4795,7 +4418,7 @@ class ExerciseLibraryCatalog {
       id: 'russian_twist_bodyweight',
       category: ExerciseCategory.core,
       name: 'Russian Twist (Bodyweight)',
-      description: 'Hang from the bar with straight arms.',
+      description: 'Sit with the knees bent and torso leaned back, feet up or down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4807,8 +4430,7 @@ class ExerciseLibraryCatalog {
       id: 'russian_twist_weighted',
       category: ExerciseCategory.core,
       name: 'Russian Twist (Weighted)',
-      description:
-          'Sit at the cable row with your feet on the platform and a slight knee bend, gripping the straight bar.',
+      description: 'Sit with your knees bent and lean your torso back to about forty five degrees, holding a plate or dumbbell at your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4821,8 +4443,7 @@ class ExerciseLibraryCatalog {
       id: 'scapular_pull_ups',
       category: ExerciseCategory.verticalPull,
       name: 'Scapular Pull Ups',
-      description:
-          'Sit at the cable row and take a wide overhand grip on the long bar.',
+      description: 'Hang from the bar with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4834,8 +4455,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_cable_row_bar_grip',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Cable Row - Bar Grip',
-      description:
-          'Sit with your feet planted and a slight knee bend, holding the V handle with both hands.',
+      description: 'Sit at the cable row with your feet on the platform and a slight knee bend, gripping the straight bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4848,8 +4468,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_cable_row_bar_wide_grip',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Cable Row - Bar Wide Grip',
-      description:
-          'Sit with the pad on the lower thighs and the balls of the feet on the block.',
+      description: 'Sit at the cable row and take a wide overhand grip on the long bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4862,8 +4481,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_cable_row_v_grip_cable',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Cable Row - V Grip (Cable)',
-      description:
-          'Sit on a bench between two cable pulleys set at chest height with a handle in each hand.',
+      description: 'Sit with your feet planted and a slight knee bend, holding the V handle with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4876,8 +4494,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_calf_raise',
       category: ExerciseCategory.other,
       name: 'Seated Calf Raise',
-      description:
-          'Sit with your back against the pad and grip the handles beside your hips.',
+      description: 'Sit with the pad on the lower thighs and the balls of the feet on the block.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4889,8 +4506,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_chest_flys_cable',
       category: ExerciseCategory.other,
       name: 'Seated Chest Flys (Cable)',
-      description:
-          'Sit on a flat bench holding a dumbbell in each hand at arm\'s length with elbows close to your sides.',
+      description: 'Sit on a bench between two cable pulleys set at chest height with a handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4903,8 +4519,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_dip_machine',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Dip Machine',
-      description:
-          'Sit on the end of a bench with a dumbbell in each hand at your sides and a slight elbow bend.',
+      description: 'Sit with your back against the pad and grip the handles beside your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4917,7 +4532,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_incline_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Seated Incline Curl (Dumbbell)',
-      description: 'Sit with the pad on the lower calves and thighs secured.',
+      description: 'Sit on a flat bench holding a dumbbell in each hand at arm\'s length with elbows close to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4930,8 +4545,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_lateral_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Seated Lateral Raise (Dumbbell)',
-      description:
-          'Sit on an upright bench with the bar at shoulder height and your grip just outside your shoulders.',
+      description: 'Sit on the end of a bench with a dumbbell in each hand at your sides and a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4944,8 +4558,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_leg_curl_machine',
       category: ExerciseCategory.other,
       name: 'Seated Leg Curl (Machine)',
-      description:
-          'Sit on a bench with back support and bring a dumbbell to each shoulder, palms facing forward.',
+      description: 'Sit with the pad on the lower calves and thighs secured.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4958,8 +4571,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_overhead_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Overhead Press (Barbell)',
-      description:
-          'Sit on a flat bench holding a dumbbell in each hand with your palms facing up.',
+      description: 'Sit on an upright bench with the bar at shoulder height and your grip just outside your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4972,8 +4584,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_overhead_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Overhead Press (Dumbbell)',
-      description:
-          'Sit with your chest against the pad and grip the handles at arms length.',
+      description: 'Sit on a bench with back support and bring a dumbbell to each shoulder, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4986,8 +4597,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_palms_up_wrist_curl',
       category: ExerciseCategory.other,
       name: 'Seated Palms Up Wrist Curl',
-      description:
-          'Sit with your back flat against the pad and the handles level with your shoulders.',
+      description: 'Sit on a flat bench holding a dumbbell in each hand with your palms facing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5000,8 +4610,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_row_machine',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Row (Machine)',
-      description:
-          'Sit on a bench with back support and hold one dumbbell overhead with both hands, arms locked out.',
+      description: 'Sit with your chest against the pad and grip the handles at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5014,8 +4623,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_shoulder_press_machine',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Shoulder Press (Machine)',
-      description:
-          'Sit with your forearms resting on your thighs and your wrists past the knees, holding a light barbell with an overhand grip.',
+      description: 'Sit with your back flat against the pad and the handles level with your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5028,8 +4636,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_triceps_press',
       category: ExerciseCategory.other,
       name: 'Seated Triceps Press',
-      description:
-          'Seated or standing, start with the dumbbells at shoulder height, palms forward.',
+      description: 'Sit on a bench with back support and hold one dumbbell overhead with both hands, arms locked out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5042,8 +4649,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_wrist_extension_barbell',
       category: ExerciseCategory.other,
       name: 'Seated Wrist Extension (Barbell)',
-      description:
-          'Sit with your back against the pad and grip the handles at shoulder height.',
+      description: 'Sit with your forearms resting on your thighs and your wrists past the knees, holding a light barbell with an overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5056,8 +4662,7 @@ class ExerciseLibraryCatalog {
       id: 'shoulder_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Shoulder Press (Dumbbell)',
-      description:
-          'Set up in a push up position with your feet wide and your body straight.',
+      description: 'Seated or standing, start with the dumbbells at shoulder height, palms forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5070,8 +4675,7 @@ class ExerciseLibraryCatalog {
       id: 'shoulder_press_machine_plates',
       category: ExerciseCategory.verticalPush,
       name: 'Shoulder Press (Machine Plates)',
-      description:
-          'Hold the rear foot behind you and lower until the back knee touches, keeping the torso upright and the balance steady with no assistance.',
+      description: 'Sit with your back against the pad and grip the handles at shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5084,8 +4688,7 @@ class ExerciseLibraryCatalog {
       id: 'shoulder_taps',
       category: ExerciseCategory.other,
       name: 'Shoulder Taps',
-      description:
-          'Hold one foot behind you with the same side hand and lower on the other leg until the back knee touches a pad.',
+      description: 'Set up in a push up position with your feet wide and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5097,8 +4700,7 @@ class ExerciseLibraryCatalog {
       id: 'shrimp_squat_advanced',
       category: ExerciseCategory.squat,
       name: 'Shrimp Squat (Advanced)',
-      description:
-          'Hold the rear foot with the same side hand and lower to the back knee without any hand support.',
+      description: 'Hold the rear foot behind you and lower until the back knee touches, keeping the torso upright and the balance steady with no assistance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5110,7 +4712,7 @@ class ExerciseLibraryCatalog {
       id: 'shrimp_squat_beginner',
       category: ExerciseCategory.squat,
       name: 'Shrimp Squat (Beginner)',
-      description: 'Hold the bar in front of the thighs with straight arms.',
+      description: 'Hold one foot behind you with the same side hand and lower on the other leg until the back knee touches a pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5122,8 +4724,7 @@ class ExerciseLibraryCatalog {
       id: 'shrimp_squat_intermediate',
       category: ExerciseCategory.squat,
       name: 'Shrimp Squat (Intermediate)',
-      description:
-          'Stand facing away from or beside a low pulley holding the handle or bar at arms length.',
+      description: 'Hold the rear foot with the same side hand and lower to the back knee without any hand support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5135,8 +4736,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_barbell',
       category: ExerciseCategory.other,
       name: 'Shrug (Barbell)',
-      description:
-          'Stand tall holding a dumbbell in each hand at your sides with the arms straight.',
+      description: 'Hold the bar in front of the thighs with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5149,8 +4749,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_cable',
       category: ExerciseCategory.other,
       name: 'Shrug (Cable)',
-      description:
-          'Stand or sit in the machine gripping the handles with your arms straight.',
+      description: 'Stand facing away from or beside a low pulley holding the handle or bar at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5163,8 +4762,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_dumbbell',
       category: ExerciseCategory.other,
       name: 'Shrug (Dumbbell)',
-      description:
-          'Stand inside the Smith machine holding the bar at arms length in front of your thighs.',
+      description: 'Stand tall holding a dumbbell in each hand at your sides with the arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5177,8 +4775,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_machine',
       category: ExerciseCategory.other,
       name: 'Shrug (Machine)',
-      description:
-          'Stand tall with your feet hip width and one hand behind your head.',
+      description: 'Stand or sit in the machine gripping the handles with your arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5191,8 +4788,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_smith_machine',
       category: ExerciseCategory.other,
       name: 'Shrug (Smith Machine)',
-      description:
-          'Stand holding a dumbbell in one hand at your side with the other hand behind your head.',
+      description: 'Stand inside the Smith machine holding the bar at arms length in front of your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5205,8 +4801,7 @@ class ExerciseLibraryCatalog {
       id: 'side_bend',
       category: ExerciseCategory.core,
       name: 'Side Bend',
-      description:
-          'Lie on your side and prop yourself on one forearm with the elbow under the shoulder and your feet stacked.',
+      description: 'Stand tall with your feet hip width and one hand behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5218,8 +4813,7 @@ class ExerciseLibraryCatalog {
       id: 'side_bend_dumbbell',
       category: ExerciseCategory.core,
       name: 'Side Bend (Dumbbell)',
-      description:
-          'Set the pulley high and take the handle in one hand, stepping forward so the arm is extended out and back.',
+      description: 'Stand holding a dumbbell in one hand at your side with the other hand behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5232,8 +4826,7 @@ class ExerciseLibraryCatalog {
       id: 'side_plank',
       category: ExerciseCategory.core,
       name: 'Side Plank',
-      description:
-          'Sit or stand facing a cable set at chest height and take the handle in one hand with the arm extended.',
+      description: 'Lie on your side and prop yourself on one forearm with the elbow under the shoulder and your feet stacked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5246,8 +4839,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_cable_crossover',
       category: ExerciseCategory.other,
       name: 'Single Arm Cable Crossover',
-      description:
-          'Grab a single handle at the low pulley and step back so the cable stays taut.',
+      description: 'Set the pulley high and take the handle in one hand, stepping forward so the arm is extended out and back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5260,8 +4852,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_cable_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Single Arm Cable Row',
-      description:
-          'Hold the end of a landmine barbell at your shoulder with one hand and stand square.',
+      description: 'Sit or stand facing a cable set at chest height and take the handle in one hand with the arm extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5274,8 +4865,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_curl_cable',
       category: ExerciseCategory.other,
       name: 'Single Arm Curl (Cable)',
-      description:
-          'Attach a single handle to a high pulley and sit with the knee pad snug against your thighs.',
+      description: 'Grab a single handle at the low pulley and step back so the cable stays taut.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5288,8 +4878,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_landmine_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Single Arm Landmine Press (Barbell)',
-      description:
-          'Stand side on to a low pulley and take the handle in the outside hand across your body.',
+      description: 'Hold the end of a landmine barbell at your shoulder with one hand and stand square.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5302,8 +4891,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_lat_pulldown',
       category: ExerciseCategory.verticalPull,
       name: 'Single Arm Lat Pulldown',
-      description:
-          'Sit or stand tall and raise a dumbbell overhead in one hand with the arm fully extended.',
+      description: 'Attach a single handle to a high pulley and sit with the knee pad snug against your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5316,8 +4904,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_lateral_raise_cable',
       category: ExerciseCategory.other,
       name: 'Single Arm Lateral Raise (Cable)',
-      description:
-          'Stand facing a high pulley with a single handle and your elbow tucked at your side.',
+      description: 'Stand side on to a low pulley and take the handle in the outside hand across your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5330,7 +4917,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_tricep_extension_dumbbell',
       category: ExerciseCategory.other,
       name: 'Single Arm Tricep Extension (Dumbbell)',
-      description: 'Sit on a bench or chair with one leg hanging.',
+      description: 'Sit or stand tall and raise a dumbbell overhead in one hand with the arm fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5343,8 +4930,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_triceps_pushdown_cable',
       category: ExerciseCategory.other,
       name: 'Single Arm Triceps Pushdown (Cable)',
-      description:
-          'Lie on your back with feet flat and knees bent, then lift one knee toward your chest.',
+      description: 'Stand facing a high pulley with a single handle and your elbow tucked at your side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5357,8 +4943,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_extensions',
       category: ExerciseCategory.other,
       name: 'Single Leg Extensions',
-      description:
-          'Rest your upper back on a bench with one foot flat on the floor and the other leg lifted.',
+      description: 'Sit on a bench or chair with one leg hanging.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5370,8 +4955,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_glute_bridge',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Glute Bridge',
-      description:
-          'Rest your upper back on a bench with a dumbbell across your hips and one foot planted.',
+      description: 'Lie on your back with feet flat and knees bent, then lift one knee toward your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5383,8 +4967,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_hip_thrust',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Hip Thrust',
-      description:
-          'Sit in the leg press and place one foot in the middle of the platform.',
+      description: 'Rest your upper back on a bench with one foot flat on the floor and the other leg lifted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5396,8 +4979,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_hip_thrust_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Hip Thrust (Dumbbell)',
-      description:
-          'Hold a barbell in front of your thighs and shift your weight onto one leg.',
+      description: 'Rest your upper back on a bench with a dumbbell across your hips and one foot planted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5410,8 +4992,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_press_machine',
       category: ExerciseCategory.squat,
       name: 'Single Leg Press (Machine)',
-      description:
-          'Stand on one leg with a soft knee and hinge at the hips, letting the free leg travel back as the chest lowers.',
+      description: 'Sit in the leg press and place one foot in the middle of the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5424,8 +5005,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_romanian_deadlift_barbell',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Romanian Deadlift (Barbell)',
-      description:
-          'Hold a dumbbell in one or both hands and stand on one leg with a soft knee bend.',
+      description: 'Hold a barbell in front of your thighs and shift your weight onto one leg.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5438,8 +5018,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_romanian_deadlift_bodyweight',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Romanian Deadlift (Bodyweight)',
-      description:
-          'Stand on one foot on the edge of a step with the heel hanging off, holding something for balance.',
+      description: 'Stand on one leg with a soft knee and hinge at the hips, letting the free leg travel back as the chest lowers.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5451,8 +5030,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_romanian_deadlift_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Romanian Deadlift (Dumbbell)',
-      description:
-          'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
+      description: 'Hold a dumbbell in one or both hands and stand on one leg with a soft knee bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5465,8 +5043,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_standing_calf_raise',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise',
-      description:
-          'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
+      description: 'Stand on one foot on the edge of a step with the heel hanging off, holding something for balance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5477,8 +5054,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_standing_calf_raise_barbell',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise (Barbell)',
-      description:
-          'Set the shoulder pads and stand on the platform with one foot, the heel hanging off the edge.',
+      description: 'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5490,8 +5066,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_standing_calf_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise (Dumbbell)',
-      description:
-          'Grip a squat rack upright with one hand and hold a weight plate against your chest with the other, feet shoulder-width and up on your toes.',
+      description: 'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5503,8 +5078,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_standing_calf_raise_machine',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise (Machine)',
-      description:
-          'Lie on your back with knees bent, feet anchored, and hands behind your head.',
+      description: 'Set the shoulder pads and stand on the platform with one foot, the heel hanging off the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5516,8 +5090,7 @@ class ExerciseLibraryCatalog {
       id: 'sissy_squat_weighted',
       category: ExerciseCategory.squat,
       name: 'Sissy Squat (Weighted)',
-      description:
-          'Lie on your back with your knees bent and hold a plate against your chest.',
+      description: 'Grip a squat rack upright with one hand and hold a weight plate against your chest with the other, feet shoulder-width and up on your toes.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5530,8 +5103,7 @@ class ExerciseLibraryCatalog {
       id: 'sit_up',
       category: ExerciseCategory.core,
       name: 'Sit Up',
-      description:
-          'Lie on a bench holding an EZ bar over your chest with a close grip.',
+      description: 'Lie on your back with knees bent, feet anchored, and hands behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5543,8 +5115,7 @@ class ExerciseLibraryCatalog {
       id: 'sit_up_weighted',
       category: ExerciseCategory.core,
       name: 'Sit Up (Weighted)',
-      description:
-          'Lie on a bench holding a dumbbell in each hand over your chest with palms facing each other.',
+      description: 'Lie on your back with your knees bent and hold a plate against your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5557,8 +5128,7 @@ class ExerciseLibraryCatalog {
       id: 'skullcrusher_barbell',
       category: ExerciseCategory.other,
       name: 'Skullcrusher (Barbell)',
-      description:
-          'Load the sled and grip the handles with your arms fully extended.',
+      description: 'Lie on a bench holding an EZ bar over your chest with a close grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5571,8 +5141,7 @@ class ExerciseLibraryCatalog {
       id: 'skullcrusher_dumbbell',
       category: ExerciseCategory.other,
       name: 'Skullcrusher (Dumbbell)',
-      description:
-          'From a wide grip, pull the bar explosively from the floor, extend the hips and pull under to catch it overhead in a full squat, then stand to lockout.',
+      description: 'Lie on a bench holding a dumbbell in each hand over your chest with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5585,8 +5154,7 @@ class ExerciseLibraryCatalog {
       id: 'sled_push',
       category: ExerciseCategory.other,
       name: 'Sled Push',
-      description:
-          'Ride at a pace and terrain that keeps you working continuously, staying low with the knees bent and the weight centered over the board.',
+      description: 'Load the sled and grip the handles with your arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5600,19 +5168,12 @@ class ExerciseLibraryCatalog {
       id: 'snatch',
       category: ExerciseCategory.other,
       name: 'Snatch',
-      description:
-          'Lie chest down on an incline bench with your arms hanging straight below you holding an EZ bar.',
+      description: 'From a wide grip, pull the bar explosively from the floor, extend the hips and pull under to catch it overhead in a full squat, then stand to lockout.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -5620,8 +5181,7 @@ class ExerciseLibraryCatalog {
       id: 'snowboarding',
       category: ExerciseCategory.other,
       name: 'Snowboarding',
-      description:
-          'Lie face down on an incline bench with your chest supported and shoulders near the top.',
+      description: 'Ride at a pace and terrain that keeps you working continuously, staying low with the knees bent and the weight centered over the board.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5634,7 +5194,7 @@ class ExerciseLibraryCatalog {
       id: 'spider_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Spider Curl (Barbell)',
-      description: 'Set up in a push up position with your body straight.',
+      description: 'Lie chest down on an incline bench with your arms hanging straight below you holding an EZ bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5647,8 +5207,7 @@ class ExerciseLibraryCatalog {
       id: 'spider_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Spider Curl (Dumbbell)',
-      description:
-          'Ride a stationary bike through changes of pace and resistance, staying seated or standing as the session calls for.',
+      description: 'Lie face down on an incline bench with your chest supported and shoulders near the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5661,8 +5220,7 @@ class ExerciseLibraryCatalog {
       id: 'spiderman',
       category: ExerciseCategory.core,
       name: 'Spiderman',
-      description:
-          'Rack the bar across your front delts, feet under your hips.',
+      description: 'Set up in a push up position with your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5674,8 +5232,7 @@ class ExerciseLibraryCatalog {
       id: 'spinning',
       category: ExerciseCategory.other,
       name: 'Spinning',
-      description:
-          'Hold a dumbbell in each hand and set your feet in a long split stance.',
+      description: 'Ride a stationary bike through changes of pace and resistance, staying seated or standing as the session calls for.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5688,19 +5245,12 @@ class ExerciseLibraryCatalog {
       id: 'split_jerk',
       category: ExerciseCategory.other,
       name: 'Split Jerk',
-      description:
-          'Run at close to maximum effort for a short distance or time, then walk or jog until you have recovered.',
+      description: 'Rack the bar across your front delts, feet under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
     ),
@@ -5708,8 +5258,7 @@ class ExerciseLibraryCatalog {
       id: 'split_squat_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Split Squat (Dumbbell)',
-      description:
-          'Hold a doorframe, pole or suspension strap and sit back into a squat.',
+      description: 'Hold a dumbbell in each hand and set your feet in a long split stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5722,8 +5271,7 @@ class ExerciseLibraryCatalog {
       id: 'sprints',
       category: ExerciseCategory.other,
       name: 'Sprints',
-      description:
-          'Using the same light support, lower all the way until the hamstrings meet the calves.',
+      description: 'Run at close to maximum effort for a short distance or time, then walk or jog until you have recovered.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5736,8 +5284,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_assisted',
       category: ExerciseCategory.squat,
       name: 'Squat (Assisted)',
-      description:
-          'Stand on the band with your feet shoulder width and bring the top of the loop over your shoulders.',
+      description: 'Hold a doorframe, pole or suspension strap and sit back into a squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5749,8 +5296,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_assisted_deep',
       category: ExerciseCategory.squat,
       name: 'Squat (Assisted, Deep)',
-      description:
-          'Set the bar just below shoulder height, step under it and rest it across your upper back.',
+      description: 'Using the same light support, lower all the way until the hamstrings meet the calves.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5762,8 +5308,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_band',
       category: ExerciseCategory.squat,
       name: 'Squat (Band)',
-      description:
-          'Stand with the feet about shoulder width and the toes turned slightly out.',
+      description: 'Stand on the band with your feet shoulder width and bring the top of the loop over your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5775,8 +5320,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Squat (Barbell)',
-      description:
-          'Squat all the way to the bottom so the hamstrings rest on the calves and hold there comfortably.',
+      description: 'Set the bar just below shoulder height, step under it and rest it across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5789,8 +5333,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_bodyweight',
       category: ExerciseCategory.squat,
       name: 'Squat (Bodyweight)',
-      description:
-          'Hold a dumbbell in each hand at your sides or one at your chest, feet about shoulder width.',
+      description: 'Stand with the feet about shoulder width and the toes turned slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5802,8 +5345,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_deep',
       category: ExerciseCategory.squat,
       name: 'Squat (Deep)',
-      description:
-          'Set the shoulder pads and place your feet on the platform about shoulder width.',
+      description: 'Squat all the way to the bottom so the hamstrings rest on the calves and hold there comfortably.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5815,8 +5357,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Squat (Dumbbell)',
-      description:
-          'Set the bar across your upper back in the Smith machine with your feet slightly forward.',
+      description: 'Hold a dumbbell in each hand at your sides or one at your chest, feet about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5829,8 +5370,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_machine',
       category: ExerciseCategory.squat,
       name: 'Squat (Machine)',
-      description:
-          'Hold the handles and stand with your feet shoulder width and the straps taut.',
+      description: 'Set the shoulder pads and place your feet on the platform about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5843,8 +5383,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_smith_machine',
       category: ExerciseCategory.squat,
       name: 'Squat (Smith Machine)',
-      description:
-          'Hold the suspension handles or a band and sink into a squat with your arms extended.',
+      description: 'Set the bar across your upper back in the Smith machine with your feet slightly forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5857,8 +5396,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_suspension',
       category: ExerciseCategory.squat,
       name: 'Squat (Suspension)',
-      description:
-          'Step onto the machine and climb at a steady pace, standing tall rather than leaning on the rails.',
+      description: 'Hold the handles and stand with your feet shoulder width and the straps taut.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5870,8 +5408,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Squat Row',
-      description:
-          'Climb at a steady step rate, standing upright with a light touch on the rails for balance only.',
+      description: 'Hold the suspension handles or a band and sink into a squat with your arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5883,8 +5420,7 @@ class ExerciseLibraryCatalog {
       id: 'stair_machine_floors',
       category: ExerciseCategory.other,
       name: 'Stair Machine (Floors)',
-      description:
-          'Attach an ankle strap to a low pulley and face the machine holding on for balance.',
+      description: 'Step onto the machine and climb at a steady pace, standing tall rather than leaning on the rails.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5897,8 +5433,7 @@ class ExerciseLibraryCatalog {
       id: 'stair_machine_steps',
       category: ExerciseCategory.other,
       name: 'Stair Machine (Steps)',
-      description:
-          'Set a loaded barbell across your upper back inside a squat rack and step out.',
+      description: 'Climb at a steady step rate, standing upright with a light touch on the rails for balance only.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5911,8 +5446,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_cable_glute_kickbacks',
       category: ExerciseCategory.other,
       name: 'Standing Cable Glute Kickbacks',
-      description:
-          'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
+      description: 'Attach an ankle strap to a low pulley and face the machine holding on for balance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5925,8 +5459,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise',
-      description:
-          'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
+      description: 'Set a loaded barbell across your upper back inside a squat rack and step out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5938,8 +5471,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise_barbell',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Barbell)',
-      description:
-          'Set the shoulder pads and stand with the balls of your feet on the platform edge.',
+      description: 'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5951,8 +5483,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Dumbbell)',
-      description:
-          'Set the bar across your upper back in the Smith machine and stand with the balls of your feet on a block.',
+      description: 'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5964,8 +5495,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise_machine',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Machine)',
-      description:
-          'Stand tall holding something for balance and shift your weight onto one leg.',
+      description: 'Set the shoulder pads and stand with the balls of your feet on the platform edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5977,8 +5507,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise_smith',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Smith)',
-      description:
-          'Hold the bar at the front of the shoulders, feet hip-width, glutes and abs braced.',
+      description: 'Set the bar across your upper back in the Smith machine and stand with the balls of your feet on a block.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5989,7 +5518,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_leg_curls',
       category: ExerciseCategory.other,
       name: 'Standing Leg Curls',
-      description: 'Place one whole foot on a box at about knee height.',
+      description: 'Stand tall holding something for balance and shift your weight onto one leg.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6001,8 +5530,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_military_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Standing Military Press (Barbell)',
-      description:
-          'Hang from the bar and pull while leaning your head back and arching the upper back.',
+      description: 'Hold the bar at the front of the shoulders, feet hip-width, glutes and abs braced.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6015,8 +5543,7 @@ class ExerciseLibraryCatalog {
       id: 'step_up',
       category: ExerciseCategory.squat,
       name: 'Step Up',
-      description:
-          'Grab a wide bar on a high pulley with an overhand grip wider than shoulder width and step back about two feet.',
+      description: 'Place one whole foot on a box at about knee height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6028,8 +5555,7 @@ class ExerciseLibraryCatalog {
       id: 'sternum_pull_up_gironda',
       category: ExerciseCategory.verticalPull,
       name: 'Sternum Pull up (Gironda)',
-      description:
-          'Stand with your feet hip width and your knees nearly locked.',
+      description: 'Hang from the bar and pull while leaning your head back and arching the upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6041,8 +5567,7 @@ class ExerciseLibraryCatalog {
       id: 'straight_arm_lat_pulldown_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Straight Arm Lat Pulldown (Cable)',
-      description:
-          'Move into each position until you feel a mild stretch, then hold it while you breathe steadily.',
+      description: 'Grab a wide bar on a high pulley with an overhand grip wider than shoulder width and step back about two feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6055,8 +5580,7 @@ class ExerciseLibraryCatalog {
       id: 'straight_leg_deadlift',
       category: ExerciseCategory.hinge,
       name: 'Straight Leg Deadlift',
-      description:
-          'Stand with a wide stance and your toes turned out, hands inside your knees.',
+      description: 'Stand with your feet hip width and your knees nearly locked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6068,8 +5592,7 @@ class ExerciseLibraryCatalog {
       id: 'stretching',
       category: ExerciseCategory.other,
       name: 'Stretching',
-      description:
-          'Stand with your feet much wider than your shoulders and your toes turned out.',
+      description: 'Move into each position until you feel a mild stretch, then hold it while you breathe steadily.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6082,8 +5605,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_deadlift',
       category: ExerciseCategory.hinge,
       name: 'Sumo Deadlift',
-      description:
-          'Set a barbell across your upper back and take a wide stance with your toes turned out.',
+      description: 'Stand with a wide stance and your toes turned out, hands inside your knees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6095,8 +5617,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_squat',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat',
-      description:
-          'Hold a single dumbbell with both hands hanging between your legs and take a wide stance with toes out.',
+      description: 'Stand with your feet much wider than your shoulders and your toes turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6108,8 +5629,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat (Barbell)',
-      description:
-          'Hold a kettlebell by the handle with both hands hanging in front of you and take a wide stance with toes out.',
+      description: 'Set a barbell across your upper back and take a wide stance with your toes turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6122,7 +5642,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_squat_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat (Dumbbell)',
-      description: 'Lie face down with your arms extended overhead.',
+      description: 'Hold a single dumbbell with both hands hanging between your legs and take a wide stance with toes out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6135,8 +5655,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_squat_kettlebell',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat (Kettlebell)',
-      description:
-          'Swim continuous lengths at a pace you can hold, breathing on a regular rhythm.',
+      description: 'Hold a kettlebell by the handle with both hands hanging in front of you and take a wide stance with toes out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6149,8 +5668,7 @@ class ExerciseLibraryCatalog {
       id: 'superman',
       category: ExerciseCategory.hinge,
       name: 'Superman',
-      description:
-          'Straddle the bar and grip the handles with a flat back and your torso hinged forward.',
+      description: 'Lie face down with your arms extended overhead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6162,8 +5680,7 @@ class ExerciseLibraryCatalog {
       id: 'swimming',
       category: ExerciseCategory.other,
       name: 'Swimming',
-      description:
-          'Hold the bar in a front rack across your shoulders and squat down to at least parallel.',
+      description: 'Swim continuous lengths at a pace you can hold, breathing on a regular rhythm.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6176,8 +5693,7 @@ class ExerciseLibraryCatalog {
       id: 't_bar_row',
       category: ExerciseCategory.horizontalPull,
       name: 'T Bar Row',
-      description:
-          'Hold two kettlebells racked at your shoulders, feet shoulder-width.',
+      description: 'Straddle the bar and grip the handles with a flat back and your torso hinged forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6189,8 +5705,7 @@ class ExerciseLibraryCatalog {
       id: 'thruster_barbell',
       category: ExerciseCategory.other,
       name: 'Thruster (Barbell)',
-      description:
-          'Lie on your back with your legs raised straight toward the ceiling and your arms reaching up.',
+      description: 'Hold the bar in a front rack across your shoulders and squat down to at least parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6202,7 +5717,7 @@ class ExerciseLibraryCatalog {
       id: 'thruster_kettlebell',
       category: ExerciseCategory.other,
       name: 'Thruster (Kettlebell)',
-      description: 'Hang from the bar with the shoulders active.',
+      description: 'Hold two kettlebells racked at your shoulders, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6214,8 +5729,7 @@ class ExerciseLibraryCatalog {
       id: 'toe_touch',
       category: ExerciseCategory.core,
       name: 'Toe Touch',
-      description:
-          'Sit or stand with the pad or handle against your torso and your hips locked in place.',
+      description: 'Lie on your back with your legs raised straight toward the ceiling and your arms reaching up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6227,8 +5741,7 @@ class ExerciseLibraryCatalog {
       id: 'toes_to_bar',
       category: ExerciseCategory.core,
       name: 'Toes to Bar',
-      description:
-          'Set a pace and incline you can hold and run or walk in the middle of the belt.',
+      description: 'Hang from the bar with the shoulders active.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6240,8 +5753,7 @@ class ExerciseLibraryCatalog {
       id: 'torso_rotation',
       category: ExerciseCategory.core,
       name: 'Torso Rotation',
-      description:
-          'Support yourself on parallel bars with straight arms and your torso close to upright.',
+      description: 'Sit or stand with the pad or handle against your torso and your hips locked in place.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6253,8 +5765,7 @@ class ExerciseLibraryCatalog {
       id: 'treadmill',
       category: ExerciseCategory.other,
       name: 'Treadmill',
-      description:
-          'Kneel on the assist pad or loop a band under your knees on the parallel bars and stay upright.',
+      description: 'Set a pace and incline you can hold and run or walk in the middle of the belt.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6267,8 +5778,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Triceps Dip',
-      description:
-          'Add load with a dip belt or vest and support yourself upright on the parallel bars.',
+      description: 'Support yourself on parallel bars with straight arms and your torso close to upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6280,8 +5790,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_dip_assisted',
       category: ExerciseCategory.verticalPush,
       name: 'Triceps Dip (Assisted)',
-      description:
-          'Lie back on an incline bench set between 45 and 75 degrees, holding a barbell with an overhand grip just inside shoulder width.',
+      description: 'Kneel on the assist pad or loop a band under your knees on the parallel bars and stay upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6293,8 +5802,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_dip_weighted',
       category: ExerciseCategory.verticalPush,
       name: 'Triceps Dip (Weighted)',
-      description:
-          'Lie on a flat bench at the end of a low pulley and hold the straight bar with a narrow overhand grip.',
+      description: 'Add load with a dip belt or vest and support yourself upright on the parallel bars.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6307,8 +5815,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_barbell',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Barbell)',
-      description:
-          'Stand with feet shoulder width and hold one dumbbell overhead with both hands, arms extended.',
+      description: 'Lie back on an incline bench set between 45 and 75 degrees, holding a barbell with an overhand grip just inside shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6321,8 +5828,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_cable',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Cable)',
-      description:
-          'Adjust the seat and set your upper arms against the pads, grasping the handles.',
+      description: 'Lie on a flat bench at the end of a low pulley and hold the straight bar with a narrow overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6335,8 +5841,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_dumbbell',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Dumbbell)',
-      description:
-          'Hold the handles and lean forward with your body straight and your hands in front of your forehead.',
+      description: 'Stand with feet shoulder width and hold one dumbbell overhead with both hands, arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6349,8 +5854,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_machine',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Machine)',
-      description:
-          'Hinge forward holding a low cable handle with your upper arm pinned against your side.',
+      description: 'Adjust the seat and set your upper arms against the pads, grasping the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6363,8 +5867,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_suspension',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Suspension)',
-      description:
-          'Hinge forward with a flat back holding a dumbbell with your upper arm against your side.',
+      description: 'Hold the handles and lean forward with your body straight and your hands in front of your forehead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6376,8 +5879,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_kickback_cable',
       category: ExerciseCategory.other,
       name: 'Triceps Kickback (Cable)',
-      description:
-          'Stand facing a high pulley holding a bar or rope with your elbows tucked at your sides.',
+      description: 'Hinge forward holding a low cable handle with your upper arm pinned against your side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6390,8 +5892,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_kickback_dumbbell',
       category: ExerciseCategory.other,
       name: 'Triceps Kickback (Dumbbell)',
-      description:
-          'Stand at a high pulley with the elbows pinned to the sides.',
+      description: 'Hinge forward with a flat back holding a dumbbell with your upper arm against your side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6404,8 +5905,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_pressdown',
       category: ExerciseCategory.other,
       name: 'Triceps Pressdown',
-      description:
-          'Attach a rope to a high pulley and grip it with palms facing each other.',
+      description: 'Stand facing a high pulley holding a bar or rope with your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6417,8 +5917,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_pushdown',
       category: ExerciseCategory.other,
       name: 'Triceps Pushdown',
-      description:
-          'Grip a barbell with an overhand grip slightly narrower than shoulder width, arms hanging so the bar rests on your thighs and your back straight.',
+      description: 'Stand at a high pulley with the elbows pinned to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6431,8 +5930,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_rope_pushdown',
       category: ExerciseCategory.other,
       name: 'Triceps Rope Pushdown',
-      description:
-          'Stand facing a low pulley holding a straight bar with an overhand grip at about shoulder width.',
+      description: 'Attach a rope to a high pulley and grip it with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6445,7 +5943,7 @@ class ExerciseLibraryCatalog {
       id: 'upright_row_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Upright Row (Barbell)',
-      description: 'Hold the dumbbells in front of the thighs.',
+      description: 'Grip a barbell with an overhand grip slightly narrower than shoulder width, arms hanging so the bar rests on your thighs and your back straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6458,7 +5956,7 @@ class ExerciseLibraryCatalog {
       id: 'upright_row_cable',
       category: ExerciseCategory.horizontalPull,
       name: 'Upright Row (Cable)',
-      description: 'Lie flat with your arms overhead and your legs straight.',
+      description: 'Stand facing a low pulley holding a straight bar with an overhand grip at about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6471,8 +5969,7 @@ class ExerciseLibraryCatalog {
       id: 'upright_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Upright Row (Dumbbell)',
-      description:
-          'From an L-sit, compress the hips and lift the straight legs above horizontal into a V shape.',
+      description: 'Hold the dumbbells in front of the thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6485,8 +5982,7 @@ class ExerciseLibraryCatalog {
       id: 'v_up',
       category: ExerciseCategory.core,
       name: 'V Up',
-      description:
-          'Walk at a brisk pace you can hold for the session, standing tall with the shoulders relaxed.',
+      description: 'Lie flat with your arms overhead and your legs straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6498,8 +5994,7 @@ class ExerciseLibraryCatalog {
       id: 'v_sit_hold',
       category: ExerciseCategory.core,
       name: 'V-Sit Hold',
-      description:
-          'Step forward into a long stride and lower until the back knee is just above the floor.',
+      description: 'From an L-sit, compress the hips and lift the straight legs above horizontal into a V shape.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6513,8 +6008,7 @@ class ExerciseLibraryCatalog {
       id: 'walking',
       category: ExerciseCategory.other,
       name: 'Walking',
-      description:
-          'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
+      description: 'Walk at a brisk pace you can hold for the session, standing tall with the shoulders relaxed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6527,8 +6021,7 @@ class ExerciseLibraryCatalog {
       id: 'walking_lunge',
       category: ExerciseCategory.squat,
       name: 'Walking Lunge',
-      description:
-          'Hold a medicine ball at your chest and squat to at least parallel facing a wall.',
+      description: 'Step forward into a long stride and lower until the back knee is just above the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6541,8 +6034,7 @@ class ExerciseLibraryCatalog {
       id: 'walking_lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Walking Lunge (Dumbbell)',
-      description:
-          'Lean your back flat against a wall and walk your feet out until your knees are bent to ninety degrees.',
+      description: 'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6555,8 +6047,7 @@ class ExerciseLibraryCatalog {
       id: 'wall_ball',
       category: ExerciseCategory.other,
       name: 'Wall Ball',
-      description:
-          'Spend five to ten minutes raising the heart rate and moving each joint through its range.',
+      description: 'Hold a medicine ball at your chest and squat to at least parallel facing a wall.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6568,7 +6059,7 @@ class ExerciseLibraryCatalog {
       id: 'wall_sit',
       category: ExerciseCategory.squat,
       name: 'Wall Sit',
-      description: 'Take an overhand grip wider than shoulder width.',
+      description: 'Lean your back flat against a wall and walk your feet out until your knees are bent to ninety degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6581,8 +6072,7 @@ class ExerciseLibraryCatalog {
       id: 'warm_up',
       category: ExerciseCategory.other,
       name: 'Warm Up',
-      description:
-          'Stand tall gripping a loaded wrist roller with both hands, palms down.',
+      description: 'Spend five to ten minutes raising the heart rate and moving each joint through its range.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6595,8 +6085,7 @@ class ExerciseLibraryCatalog {
       id: 'wide_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Wide Pull Up',
-      description:
-          'Move through a sequence of postures, holding each while you breathe steadily and keeping the transitions controlled.',
+      description: 'Take an overhand grip wider than shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6608,8 +6097,7 @@ class ExerciseLibraryCatalog {
       id: 'wrist_roller',
       category: ExerciseCategory.other,
       name: 'Wrist Roller',
-      description:
-          'Hold a barbell in the crooks of your elbows against your body and stand with your feet shoulder width.',
+      description: 'Stand tall gripping a loaded wrist roller with both hands, palms down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6621,7 +6109,7 @@ class ExerciseLibraryCatalog {
       id: 'yoga',
       category: ExerciseCategory.other,
       name: 'Yoga',
-      description: 'Curl a dumbbell in each hand up with the palms facing up.',
+      description: 'Move through a sequence of postures, holding each while you breathe steadily and keeping the transitions controlled.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6634,7 +6122,7 @@ class ExerciseLibraryCatalog {
       id: 'zercher_squat',
       category: ExerciseCategory.squat,
       name: 'Zercher Squat',
-      description: 'Zercher Squat',
+      description: 'Hold a barbell in the crooks of your elbows against your body and stand with your feet shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6646,7 +6134,7 @@ class ExerciseLibraryCatalog {
       id: 'zottman_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Zottman Curl (Dumbbell)',
-      description: 'Zottman Curl (Dumbbell)',
+      description: 'Curl a dumbbell in each hand up with the palms facing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6671,8 +6159,7 @@ class ExerciseLibraryCatalog {
       id: 'nordic_hamstring_curl_banded_eccentric',
       category: ExerciseCategory.hinge,
       name: 'Nordic Hamstring Curl (Banded, Eccentric)',
-      description:
-          'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+      description: 'Kneel with your feet securely anchored and a resistance band assisting your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6684,8 +6171,7 @@ class ExerciseLibraryCatalog {
       id: 'nordic_hamstring_curl_banded',
       category: ExerciseCategory.hinge,
       name: 'Nordic Hamstring Curl (Banded)',
-      description:
-          'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+      description: 'Kneel with your feet securely anchored and a resistance band assisting your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6693,6 +6179,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Calves'],
       isLoaded: true,
     ),
+
   ];
 
   static const Map<String, ExerciseCoaching> _coaching = {
@@ -8090,6 +7577,21 @@ class ExerciseLibraryCatalog {
     ),
     'dumbbell_row': ExerciseCoaching(
       howTo: [
+        'Hold a dumbbell in each hand and hinge forward at the hips with your knees slightly bent and back flat.',
+        'Let the dumbbells hang at arm\'s length.',
+        'Pull the dumbbells toward your torso by driving your elbows back, squeeze your upper back, then lower under control.',
+      ],
+      formChecks: [
+        'Hinge at the hips with a neutral back',
+        'Keep the torso still',
+        'Drive the elbows back toward the ribs',
+        'Lower under control to a full stretch',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=6gvmcqr226U',
+      imageUrl: '',
+    ),
+    'dumbbell_snatch': ExerciseCoaching(
+      howTo: [
         'Set a dumbbell on the floor between your feet and hinge down to grip it.',
         'Drive hard through the legs and hips to pull it up close to your body, then punch the hand through to lock it out overhead.',
       ],
@@ -8101,7 +7603,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=gY7awqQmWlg',
       imageUrl: '',
     ),
-    'dumbbell_snatch': ExerciseCoaching(
+    'dumbbell_squeeze_press': ExerciseCoaching(
       howTo: [
         'Lie on a bench holding two dumbbells pressed hard together over your chest, palms facing each other.',
         'Keeping them squeezed together, lower to the chest and press back up while the pressure never lets off.',
@@ -8114,7 +7616,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Aq_wwRslKas',
       imageUrl: '',
     ),
-    'dumbbell_squeeze_press': ExerciseCoaching(
+    'dumbbell_step_up': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand and place one whole foot on a box at about knee height.',
         'Drive through that heel to stand up on the box, then lower back down under control with the same leg.',
@@ -8127,7 +7629,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=DxUNi119Qzs',
       imageUrl: '',
     ),
-    'dumbbell_step_up': ExerciseCoaching(
+    'elbow_to_knee': ExerciseCoaching(
       howTo: [
         'Lie on your back and cross one ankle over the opposite bent knee, hands behind your head.',
         'Flex your spine and rotate to bring the opposite elbow toward the crossed knee until your obliques squeeze.',
@@ -8140,7 +7642,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=z8roFB6MwOU',
       imageUrl: '',
     ),
-    'elbow_to_knee': ExerciseCoaching(
+    'elliptical_trainer': ExerciseCoaching(
       howTo: [
         'Step onto the pedals and take hold of the moving handles.',
         'Push down and around through the balls of your feet, driving each pedal through a smooth oval stride.',
@@ -8153,7 +7655,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=buM-3DkM6GI',
       imageUrl: '',
     ),
-    'elliptical_trainer': ExerciseCoaching(
+    'ez_bar_biceps_curl': ExerciseCoaching(
       howTo: [
         'Stand tall holding an EZ bar at the wide outer handles with palms facing forward and elbows close to your torso.',
         'Curl the bar up toward your shoulders by flexing the biceps, then lower it slowly back to a full stretch.',
@@ -8165,7 +7667,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=kfRZ-wys0E8',
       imageUrl: '',
     ),
-    'ez_bar_biceps_curl': ExerciseCoaching(
+    'face_pull': ExerciseCoaching(
       howTo: [
         'Set a rope on a high pulley and grab both ends with palms facing in.',
         'Pull the rope toward your face, separating your hands and flaring your elbows out until your hands reach your ears.',
@@ -8179,7 +7681,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=C0XHJJ4dZQ4',
       imageUrl: '',
     ),
-    'face_pull': ExerciseCoaching(
+    'farmers_walk': ExerciseCoaching(
       howTo: [
         'Pick up a heavy dumbbell or kettlebell in each hand with a flat back and stand tall.',
         'Walk with short quick steps for the set distance or time, keeping the shoulders back and the ribs down.',
@@ -8192,7 +7694,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8OtwXwrJizk',
       imageUrl: '',
     ),
-    'farmers_walk': ExerciseCoaching(
+    'fire_hydrants': ExerciseCoaching(
       howTo: [
         'Start on hands and knees with a flat back.',
         'Keeping the knee bent at ninety degrees, lift one leg out to the side as high as you can without tipping the hips, then lower it under control.',
@@ -8205,7 +7707,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=12whZWUANRY',
       imageUrl: '',
     ),
-    'fire_hydrants': ExerciseCoaching(
+    'floor_press_barbell': ExerciseCoaching(
       howTo: [
         'Lie on the floor under a barbell with your knees bent and unrack it over your chest.',
         'Lower until the backs of your upper arms touch the floor, pause, then press back to straight arms.',
@@ -8218,7 +7720,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=kqg6nkByPqk',
       imageUrl: '',
     ),
-    'floor_press_barbell': ExerciseCoaching(
+    'floor_press_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie on the floor with a dumbbell in each hand at chest height and knees bent.',
         'Press the dumbbells up until the arms are straight, then lower until the upper arms rest on the floor and pause.',
@@ -8231,7 +7733,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=T0Y3OBF1bNI',
       imageUrl: '',
     ),
-    'floor_press_dumbbell': ExerciseCoaching(
+    'floor_triceps_dip': ExerciseCoaching(
       howTo: [
         'Sit on the floor with your knees bent and your hands beside your hips, fingers pointing forward.',
         'Press through the palms to lift your hips off the floor, then bend the elbows to lower and press back up.',
@@ -8244,7 +7746,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ufJ08eTsB80',
       imageUrl: '',
     ),
-    'floor_triceps_dip': ExerciseCoaching(
+    'flutter_kicks': ExerciseCoaching(
       howTo: [
         'Lie facedown on a bench with your hips at the edge and hold the front for support.',
         'Straighten your legs so your toes hang off the floor.',
@@ -8257,7 +7759,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=bfMYh_-o8qA',
       imageUrl: '',
     ),
-    'flutter_kicks': ExerciseCoaching(
+    'frog_jumps': ExerciseCoaching(
       howTo: [
         'Squat down low with your hands between your feet.',
         'Jump forward and up as far as you can, land softly in the same low squat, then reset and repeat.',
@@ -8270,7 +7772,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=E6Q0kMCSPxw',
       imageUrl: '',
     ),
-    'frog_jumps': ExerciseCoaching(
+    'frog_pumps_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie on your back with the soles of your feet together and knees dropped out to the sides, holding a dumbbell on your hips.',
         'Drive the hips up by squeezing the glutes, then lower almost to the floor.',
@@ -8283,7 +7785,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=N6t2Fv0SKGc',
       imageUrl: '',
     ),
-    'frog_pumps_dumbbell': ExerciseCoaching(
+    'front_lever_hold': ExerciseCoaching(
       howTo: [
         'Hang from the bar and pull your shoulders down and back, then raise your body until it is horizontal and facing up.',
         'Hold that straight line for time without letting the hips drop.',
@@ -8296,7 +7798,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ivIJmRNniRo',
       imageUrl: '',
     ),
-    'front_lever_hold': ExerciseCoaching(
+    'front_lever_hold_tuck': ExerciseCoaching(
       howTo: [
         'Hang from a bar and pull the knees to the chest while rotating back so the back faces the floor and the shins point forward.',
         'Hold with the arms straight.',
@@ -8309,7 +7811,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=BQXsRxfYOUQ',
       imageUrl: '',
     ),
-    'front_lever_hold_tuck': ExerciseCoaching(
+    'front_lever_raise': ExerciseCoaching(
       howTo: [
         'From a hang, pull your shoulders down and lift your straight body up to horizontal, then lower it back to the hang under control.',
         'Keep the arms straight for the whole movement.',
@@ -8322,7 +7824,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=UJpP-PPsPRw',
       imageUrl: '',
     ),
-    'front_lever_raise': ExerciseCoaching(
+    'front_lever_row': ExerciseCoaching(
       howTo: [
         'Hold a full front lever with straight legs together and pull the chest to the bar.',
         'Lower to straight arms while holding the flat body line.',
@@ -8335,7 +7837,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8rBKnOcS8nw',
       imageUrl: '',
     ),
-    'front_lever_row': ExerciseCoaching(
+    'front_lever_row_advanced_tuck': ExerciseCoaching(
       howTo: [
         'Row while holding an advanced tuck front lever with the knees opened away from the chest and the hips high.',
       ],
@@ -8347,7 +7849,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=2vFvu-KOimY',
       imageUrl: '',
     ),
-    'front_lever_row_advanced_tuck': ExerciseCoaching(
+    'front_lever_row_one_leg': ExerciseCoaching(
       howTo: [
         'Row from a front lever with one leg extended and the other tucked.',
         'Swap which leg extends between sets.',
@@ -8360,7 +7862,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=6fkwhX1OVs4',
       imageUrl: '',
     ),
-    'front_lever_row_one_leg': ExerciseCoaching(
+    'front_lever_row_straddle': ExerciseCoaching(
       howTo: [
         'Hold a straddle front lever with the legs wide and row the chest toward the bar.',
         'Keep the body flat and the arms straight at the bottom.',
@@ -8373,7 +7875,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=PCDWbh7tkgI',
       imageUrl: '',
     ),
-    'front_lever_row_straddle': ExerciseCoaching(
+    'front_lever_row_tuck': ExerciseCoaching(
       howTo: [
         'Hold a tuck front lever and pull the chest toward the bar while keeping the knees tucked and the back flat.',
         'Lower to straight arms without losing the shape.',
@@ -8386,7 +7888,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=VUe3M0iLPG0',
       imageUrl: '',
     ),
-    'front_lever_row_tuck': ExerciseCoaching(
+    'front_raise_band': ExerciseCoaching(
       howTo: [
         'Stand on the middle of the band holding an end in each hand in front of your thighs.',
         'Raise the arms straight out in front to shoulder height, then lower slowly against the band.',
@@ -8399,7 +7901,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=EoUMLtzGrmU',
       imageUrl: '',
     ),
-    'front_raise_band': ExerciseCoaching(
+    'front_raise_barbell': ExerciseCoaching(
       howTo: [
         'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
         'Raise it straight out in front to shoulder height with nearly straight arms, then lower under control.',
@@ -8412,7 +7914,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=_ikCPws1mbE',
       imageUrl: '',
     ),
-    'front_raise_barbell': ExerciseCoaching(
+    'front_raise_cable': ExerciseCoaching(
       howTo: [
         'Face away from a low pulley gripping the single handle with one hand, arm hanging straight in front of your thigh.',
         'Raise the cable forward and up to shoulder height with a slight elbow bend.',
@@ -8426,7 +7928,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=vtH93qBItdk',
       imageUrl: '',
     ),
-    'front_raise_cable': ExerciseCoaching(
+    'front_raise_dumbbell': ExerciseCoaching(
       howTo: [
         'Sit against an incline bench set to 30 to 60 degrees, holding a dumbbell in each hand with arms straight down and palms facing back.',
         'Raise both arms forward to shoulder height.',
@@ -8439,7 +7941,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hRJ6tR5-if0',
       imageUrl: '',
     ),
-    'front_raise_dumbbell': ExerciseCoaching(
+    'front_raise_suspension': ExerciseCoaching(
       howTo: [
         'Hold the handles and lean back with your arms in front of you and your body straight.',
         'Raise your arms overhead to pull yourself upright, then lower back to the lean under control.',
@@ -8452,7 +7954,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hNDZ7PqA4pw',
       imageUrl: '',
     ),
-    'front_raise_suspension': ExerciseCoaching(
+    'front_squat': ExerciseCoaching(
       howTo: [
         'Rack the bar across the front of the shoulders with the elbows high, take a shoulder-width stance and brace.',
         'Sit straight down between the hips keeping the torso as upright as possible, then drive up through the mid-foot.',
@@ -8466,7 +7968,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Q1Ypb8ZNzI4',
       imageUrl: '',
     ),
-    'front_squat': ExerciseCoaching(
+    'full_squat': ExerciseCoaching(
       howTo: [
         'Stand with feet a little wider than your hips and toes turned slightly out.',
         'Sit down between your heels as deep as you can while keeping the back flat and heels down, then stand back up.',
@@ -8479,7 +7981,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8qt4ZysoyaA',
       imageUrl: '',
     ),
-    'full_squat': ExerciseCoaching(
+    'glute_bridge': ExerciseCoaching(
       howTo: [
         'Lie on your back with knees bent and feet flat, heels close to your hips.',
         'Drive through the heels to lift the hips until your body forms a straight line from knees to shoulders, then lower slowly.',
@@ -8492,7 +7994,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=tqp5XQPpTxY',
       imageUrl: '',
     ),
-    'glute_bridge': ExerciseCoaching(
+    'glute_ham_raise': ExerciseCoaching(
       howTo: [
         'Set your feet against the footplate between the rollers and lie facedown with your knees just behind the pad.',
         'Keep your back arched and body straight from knees to head.',
@@ -8506,7 +8008,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=SBGYSfoqyfU',
       imageUrl: '',
     ),
-    'glute_ham_raise': ExerciseCoaching(
+    'glute_kickback_machine': ExerciseCoaching(
       howTo: [
         'Set the pad against the back of one thigh and hold the handles with your torso upright.',
         'Push the leg back and up by squeezing the glute, then return under control without letting the stack drop.',
@@ -8519,7 +8021,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=NLDBFtSNhqg',
       imageUrl: '',
     ),
-    'glute_kickback_machine': ExerciseCoaching(
+    'glute_kickback_on_floor': ExerciseCoaching(
       howTo: [
         'Start on hands and knees with a flat back.',
         'Drive one heel toward the ceiling by squeezing the glute, keeping the knee bent, then lower it back without touching down.',
@@ -8532,7 +8034,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=54b5RMqeW1s',
       imageUrl: '',
     ),
-    'glute_kickback_on_floor': ExerciseCoaching(
+    'goblet_squat': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell or kettlebell vertically against the chest.',
         'Sit straight down between the hips until the elbows brush the inside of the knees, then stand back up tall.',
@@ -8546,7 +8048,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=MWHIs0zxkCU',
       imageUrl: '',
     ),
-    'goblet_squat': ExerciseCoaching(
+    'good_morning_barbell': ExerciseCoaching(
       howTo: [
         'Set a light bar across your upper back and stand with feet hip width and knees slightly bent.',
         'Push the hips straight back and fold forward until you feel the hamstrings load, then drive the hips forward to stand.',
@@ -8559,7 +8061,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=nWyx81AfTos',
       imageUrl: '',
     ),
-    'good_morning_barbell': ExerciseCoaching(
+    'gorilla_row_kettlebell': ExerciseCoaching(
       howTo: [
         'Stand over two kettlebells with a wide stance and hinge down with a flat back to grip both.',
         'Row one to your hip while the other stays on the floor supporting you, then lower it and switch sides.',
@@ -8572,7 +8074,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ljzLtsz63YM',
       imageUrl: '',
     ),
-    'gorilla_row_kettlebell': ExerciseCoaching(
+    'hack_squat': ExerciseCoaching(
       howTo: [
         'Set your shoulders and back against the pad with feet shoulder-width on the platform.',
         'Lower under control until the thighs are at least parallel, then press up through the heels without locking the knees hard.',
@@ -8586,7 +8088,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=rYgNArpwE7E',
       imageUrl: '',
     ),
-    'hack_squat': ExerciseCoaching(
+    'hack_squat_machine': ExerciseCoaching(
       howTo: [
         'Set your shoulders under the pads with your feet mid platform and release the safeties.',
         'Lower until your thighs are at least parallel by bending the knees, then press back up without locking out hard.',
@@ -8599,7 +8101,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=scs5XcsZuc8',
       imageUrl: '',
     ),
-    'hack_squat_machine': ExerciseCoaching(
+    'hammer_curl_band': ExerciseCoaching(
       howTo: [
         'Stand on the band holding an end in each hand with palms facing each other.',
         'Curl the hands to shoulder height keeping the thumbs up, then lower slowly against the band.',
@@ -8612,7 +8114,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=JlQ9GfFNqZI',
       imageUrl: '',
     ),
-    'hammer_curl_band': ExerciseCoaching(
+    'hammer_curl_cable': ExerciseCoaching(
       howTo: [
         'Attach a rope to a low pulley and hold one end in each hand with palms facing each other.',
         'Curl the rope up to shoulder height keeping the thumbs up, then lower against the cable.',
@@ -8625,7 +8127,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=zv6grQkxuG0',
       imageUrl: '',
     ),
-    'hammer_curl_cable': ExerciseCoaching(
+    'hammer_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
         'Lower the dumbbells until your arms are fully extended, then curl them up until your biceps contract.',
@@ -8638,7 +8140,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=BbxA1QF3TxY',
       imageUrl: '',
     ),
-    'hammer_curl_dumbbell': ExerciseCoaching(
+    'handstand_hold': ExerciseCoaching(
       howTo: [
         'Kick or press up into a handstand against a wall with your hands about shoulder width.',
         'Push the floor away, stack the hips over the shoulders and hold, breathing steadily.',
@@ -8651,7 +8153,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=YAvSMC_BFkM',
       imageUrl: '',
     ),
-    'handstand_hold': ExerciseCoaching(
+    'handstand_push_up': ExerciseCoaching(
       howTo: [
         'Kick up to a wall handstand with the hands on parallettes or blocks.',
         'Lower until the head passes below the hands, then press all the way back to a locked out handstand.',
@@ -8664,7 +8166,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WxgJS48wf1M',
       imageUrl: '',
     ),
-    'handstand_push_up': ExerciseCoaching(
+    'handstand_push_up_freestanding': ExerciseCoaching(
       howTo: [
         'Hold a freestanding handstand, lower to full depth, and press back to straight arms with no wall support.',
         'Correct the balance with the fingers through the whole rep.',
@@ -8677,7 +8179,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Y5f1M0Y3POs',
       imageUrl: '',
     ),
-    'handstand_push_up_freestanding': ExerciseCoaching(
+    'hang_clean': ExerciseCoaching(
       howTo: [
         'Hold the bar at mid-thigh with a shoulder-width overhand or hook grip, back flat and torso leaning slightly forward.',
         'Aggressively extend the hips, knees, and ankles, then pull under the bar and catch it in a front-rack squat.',
@@ -8691,7 +8193,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=n6lRtVV7LYY',
       imageUrl: '',
     ),
-    'hang_clean': ExerciseCoaching(
+    'hang_snatch': ExerciseCoaching(
       howTo: [
         'Take a wide overhand or hook grip with the bar at the hips, feet under the hips and turned out, spine extended and chest up.',
         'Violently extend the hips, knees, and ankles, then pull under and catch the bar overhead in a squat.',
@@ -8705,7 +8207,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Bo9dza4AD9Q',
       imageUrl: '',
     ),
-    'hang_snatch': ExerciseCoaching(
+    'hanging_bent_leg_raise': ExerciseCoaching(
       howTo: [
         'From a hang, straighten the legs a little and lift the thighs above hip height.',
         'Tuck the pelvis at the top, then lower with control and stop any swing before the next rep.',
@@ -8718,7 +8220,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Kn9RZUWCnLw',
       imageUrl: '',
     ),
-    'hanging_bent_leg_raise': ExerciseCoaching(
+    'hanging_knee_raise': ExerciseCoaching(
       howTo: [
         'Hang from a bar with straight arms and pull the shoulders down away from the ears.',
         'Lift the knees toward the chest and lower them under control without swinging.',
@@ -8731,7 +8233,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=RD_A-Z15ER4',
       imageUrl: '',
     ),
-    'hanging_knee_raise': ExerciseCoaching(
+    'hanging_leg_raise': ExerciseCoaching(
       howTo: [
         'Hang from the bar with straight arms and the shoulders pulled down.',
         'Raise your straight legs until they are at least parallel with the floor, then lower them under control without swinging.',
@@ -8744,7 +8246,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Yrtvs-nEnk0',
       imageUrl: '',
     ),
-    'hanging_leg_raise': ExerciseCoaching(
+    'hanging_straight_leg_raise': ExerciseCoaching(
       howTo: [
         'Hang with straight legs together and lift them until they are at least parallel to the floor.',
         'Lower slowly and let the swing settle before starting the next rep.',
@@ -8757,7 +8259,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=7FwGZ8qY5OU',
       imageUrl: '',
     ),
-    'hanging_straight_leg_raise': ExerciseCoaching(
+    'headstand_push_up_freestanding': ExerciseCoaching(
       howTo: [
         'Kick up to a freestanding handstand and lower under control until the head touches the floor.',
         'Press back up while making small balance corrections with the fingers.',
@@ -8770,7 +8272,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=DKU5UXiAvdY',
       imageUrl: '',
     ),
-    'headstand_push_up_freestanding': ExerciseCoaching(
+    'headstand_push_up_wall': ExerciseCoaching(
       howTo: [
         'Set up in a wall handstand and lower until the head touches the floor between the hands.',
         'Press back to straight arms while the wall keeps you upright.',
@@ -8783,7 +8285,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=7TDsXo4-taM',
       imageUrl: '',
     ),
-    'headstand_push_up_wall': ExerciseCoaching(
+    'headstand_push_up_wall_eccentric': ExerciseCoaching(
       howTo: [
         'Kick up to a handstand with the heels on the wall.',
         'Lower slowly until the head touches the floor between the hands, then come down from the wall and reset instead of pressing back up.',
@@ -8796,7 +8298,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=_vo5z37K1t8',
       imageUrl: '',
     ),
-    'headstand_push_up_wall_eccentric': ExerciseCoaching(
+    'heel_taps': ExerciseCoaching(
       howTo: [
         'Lie on your back with knees bent, feet flat and shoulder-width apart, and arms extended at your sides.',
         'Crunch your torso up and to one side, reaching your hand toward that heel.',
@@ -8809,7 +8311,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=w2Um9ULrcBI',
       imageUrl: '',
     ),
-    'heel_taps': ExerciseCoaching(
+    'hex_press_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie on a bench holding two hexagonal dumbbells pressed together over your chest.',
         'Keeping them squeezed together, lower to the chest and press straight back up while maintaining the pressure.',
@@ -8822,7 +8324,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=CkjF7hy_xYw',
       imageUrl: '',
     ),
-    'hex_press_dumbbell': ExerciseCoaching(
+    'high_knee_skips': ExerciseCoaching(
       howTo: [
         'Skip forward driving one knee up to hip height while the opposite arm swings up.',
         'Stay on the balls of your feet and alternate legs in a steady rhythm.',
@@ -8835,7 +8337,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=GKMOJgDsdu0',
       imageUrl: '',
     ),
-    'high_knee_skips': ExerciseCoaching(
+    'high_knees': ExerciseCoaching(
       howTo: [
         'Run on the spot bringing each knee up to hip height as fast as you can.',
         'Stay on the balls of your feet and pump the arms in time with the legs.',
@@ -8848,7 +8350,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=sTvekaq6vOU',
       imageUrl: '',
     ),
-    'high_knees': ExerciseCoaching(
+    'hiit': ExerciseCoaching(
       howTo: [
         'Alternate hard intervals with easy recovery periods on any cardio machine or with bodyweight moves.',
         'Work close to your limit during the hard interval, then recover fully before the next one.',
@@ -8861,7 +8363,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=7R6HRYiRY40',
       imageUrl: '',
     ),
-    'hiit': ExerciseCoaching(
+    'hiking': ExerciseCoaching(
       howTo: [
         'Walk a route with varied terrain and elevation at a pace you can hold for the whole session.',
         'Shorten the stride going uphill and control the descent through the legs.',
@@ -8874,7 +8376,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=XziSvo_6XV4',
       imageUrl: '',
     ),
-    'hiking': ExerciseCoaching(
+    'hip_abduction_machine': ExerciseCoaching(
       howTo: [
         'Sit in the machine with the pads against the outside of your knees and your back flat on the seat.',
         'Push the knees apart against the resistance, pause at the widest point, then return slowly.',
@@ -8887,7 +8389,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=H98IP8rARy4',
       imageUrl: '',
     ),
-    'hip_abduction_machine': ExerciseCoaching(
+    'hip_adduction_machine': ExerciseCoaching(
       howTo: [
         'Sit with the pads against the inside of your knees and your legs open at a comfortable stretch.',
         'Squeeze the knees together, pause, then let them open slowly back to the stretch.',
@@ -8900,7 +8402,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=CjAVezAggkI',
       imageUrl: '',
     ),
-    'hip_adduction_machine': ExerciseCoaching(
+    'hip_thrust': ExerciseCoaching(
       howTo: [
         'Sit with your upper back against a bench and your feet flat on the floor about shoulder width.',
         'Drive through the heels to lift the hips until your torso is parallel to the floor, then lower under control.',
@@ -8913,7 +8415,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pF17m_CXfL0',
       imageUrl: '',
     ),
-    'hip_thrust': ExerciseCoaching(
+    'hip_thrust_barbell': ExerciseCoaching(
       howTo: [
         'Sit with the upper back on a bench and the bar across the hips.',
         'Drive through the heels to lift the hips to a straight line from knees to shoulders, then lower under control.',
@@ -8927,7 +8429,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=EF7jXP17DPE',
       imageUrl: '',
     ),
-    'hip_thrust_barbell': ExerciseCoaching(
+    'hip_thrust_machine': ExerciseCoaching(
       howTo: [
         'Sit in the machine with the pad across your hips and your feet flat on the platform.',
         'Drive the hips up until the body is level, squeeze at the top, then lower under control.',
@@ -8940,7 +8442,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ZSPmIyX9RZs',
       imageUrl: '',
     ),
-    'hip_thrust_machine': ExerciseCoaching(
+    'hollow_rock': ExerciseCoaching(
       howTo: [
         'Lie on your back and press the lower back into the floor, then lift the shoulders and legs to make a shallow banana shape.',
         'Rock back and forth along the spine without losing that shape.',
@@ -8953,7 +8455,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=7QMpN9uFHeI',
       imageUrl: '',
     ),
-    'hollow_rock': ExerciseCoaching(
+    'incline_bench_press_barbell': ExerciseCoaching(
       howTo: [
         'Lie back on an incline bench and grip the bar at medium width.',
         'Unrack it and hold it straight over your upper chest with arms locked.',
@@ -8967,7 +8469,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=2jFFCy8JBU8',
       imageUrl: '',
     ),
-    'incline_bench_press_barbell': ExerciseCoaching(
+    'incline_bench_press_dumbbell': ExerciseCoaching(
       howTo: [
         'On a 30-45 degree incline, start with the dumbbells at the upper chest, palms forward.',
         'Press up and slightly together until the arms are extended, then lower under control to a full stretch.',
@@ -8981,7 +8483,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=oZVCBM9f8Eo',
       imageUrl: '',
     ),
-    'incline_bench_press_dumbbell': ExerciseCoaching(
+    'incline_bench_press_smith_machine': ExerciseCoaching(
       howTo: [
         'Set an incline bench under the Smith machine, with the bar set where your arms are almost fully extended.',
         'Lie back and grip slightly wider than shoulder width, then unrack.',
@@ -8995,7 +8497,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=4gz7KkoauYI',
       imageUrl: '',
     ),
-    'incline_bench_press_smith_machine': ExerciseCoaching(
+    'incline_chest_fly_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie back on a bench set to around thirty degrees holding dumbbells above your chest with a soft elbow bend.',
         'Open the arms in a wide arc until you feel the stretch, then bring them back together.',
@@ -9008,7 +8510,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=JSDpq14vCZ8',
       imageUrl: '',
     ),
-    'incline_chest_fly_dumbbell': ExerciseCoaching(
+    'incline_chest_press_machine': ExerciseCoaching(
       howTo: [
         'Sit in the incline press with your back flat on the pad and the handles level with your upper chest.',
         'Press forward and up until your arms are almost straight, then return to a stretch.',
@@ -9021,7 +8523,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=TrTSvn5-MTk',
       imageUrl: '',
     ),
-    'incline_chest_press_machine': ExerciseCoaching(
+    'incline_push_ups': ExerciseCoaching(
       howTo: [
         'Put the hands on a bench, box or bar with the body in a straight line.',
         'Lower the chest to the surface and press back up, lowering the hand height as you get stronger.',
@@ -9034,7 +8536,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=TdaVgnWOPY0',
       imageUrl: '',
     ),
-    'incline_push_ups': ExerciseCoaching(
+    'inverted_row_archer': ExerciseCoaching(
       howTo: [
         'Set up with the body fully parallel to the floor under the bar or rings.',
         'Pull the chest to the bar, pause, then lower to straight arms.',
@@ -9047,7 +8549,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=KOaCM1HMwU0',
       imageUrl: '',
     ),
-    'inverted_row_archer': ExerciseCoaching(
+    'inverted_row_bent_legs': ExerciseCoaching(
       howTo: [
         'Hang under a bar with the knees bent and the feet flat on the floor.',
         'Pull the chest to the bar keeping the body in one line, then lower to straight arms.',
@@ -9060,7 +8562,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-shmmb8j88Q',
       imageUrl: '',
     ),
-    'inverted_row_bent_legs': ExerciseCoaching(
+    'inverted_row_feet_elevated': ExerciseCoaching(
       howTo: [
         'Put the feet on a box so the body sits close to horizontal under the bar.',
         'Pull the chest to the bar and lower slowly without letting the hips drop.',
@@ -9073,7 +8575,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=NeaONUgPfWk',
       imageUrl: '',
     ),
-    'inverted_row_feet_elevated': ExerciseCoaching(
+    'inverted_row_incline': ExerciseCoaching(
       howTo: [
         'Set a bar or rings at chest height and hold on with the body almost upright.',
         'Walk the feet forward a little and pull the chest to the bar, then lower under control.',
@@ -9086,7 +8588,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=0AsxBmXeOIo',
       imageUrl: '',
     ),
-    'inverted_row_incline': ExerciseCoaching(
+    'inverted_row_one_arm': ExerciseCoaching(
       howTo: [
         'Set up horizontally under the bar and row with a single arm while the body stays rigid and square.',
         'Switch arms between sets.',
@@ -9099,7 +8601,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=FNprjakix-I',
       imageUrl: '',
     ),
-    'inverted_row_one_arm': ExerciseCoaching(
+    'inverted_row_one_arm_assisted': ExerciseCoaching(
       howTo: [
         'Row horizontally with most of the load on one arm while the other hand gives light support on the bar or a strap.',
         'Switch sides between sets.',
@@ -9112,7 +8614,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HbrCJan886M',
       imageUrl: '',
     ),
-    'inverted_row_one_arm_assisted': ExerciseCoaching(
+    'inverted_row_straight_legs': ExerciseCoaching(
       howTo: [
         'Hang under the bar with straight legs and the heels on the floor at roughly forty five degrees.',
         'Pull the chest to the bar and lower with control.',
@@ -9125,7 +8627,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IQ6BAiH4bXM',
       imageUrl: '',
     ),
-    'inverted_row_straight_legs': ExerciseCoaching(
+    'inverted_row_weighted': ExerciseCoaching(
       howTo: [
         'Add external load with a vest or plates while keeping the body rigid.',
         'Pull the chest to the bar or rings, then lower to straight arms.',
@@ -9139,7 +8641,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ANo7wslfhrQ',
       imageUrl: '',
     ),
-    'inverted_row_weighted': ExerciseCoaching(
+    'inverted_row_wide_grip': ExerciseCoaching(
       howTo: [
         'Row from the horizontal position with the hands set wider than shoulder width.',
         'Pull the chest to the bar and squeeze the shoulder blades together at the top.',
@@ -9152,7 +8654,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8XLoq0GHktQ',
       imageUrl: '',
     ),
-    'inverted_row_wide_grip': ExerciseCoaching(
+    'iso_lateral_chest_press_machine': ExerciseCoaching(
       howTo: [
         'Sit with your back on the pad and grip both handles at chest height.',
         'Press one arm at a time or both together, keeping the torso square, then return under control to a chest stretch.',
@@ -9165,7 +8667,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=0Wa9CfRXUkA',
       imageUrl: '',
     ),
-    'iso_lateral_chest_press_machine': ExerciseCoaching(
+    'iso_lateral_high_row_machine': ExerciseCoaching(
       howTo: [
         'Sit with your chest against the pad and reach up to grip the high handles.',
         'Pull one handle down and back toward your hip, driving the elbow low, then return to a full stretch overhead.',
@@ -9178,7 +8680,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=UDd5rTtNut8',
       imageUrl: '',
     ),
-    'iso_lateral_high_row_machine': ExerciseCoaching(
+    'iso_lateral_low_row': ExerciseCoaching(
       howTo: [
         'Sit with your chest on the pad and grip the low handles with your arms extended.',
         'Pull one handle back to your ribs by driving the elbow behind you, then return to a full stretch.',
@@ -9191,7 +8693,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=OH_nMOdeF9E',
       imageUrl: '',
     ),
-    'iso_lateral_low_row': ExerciseCoaching(
+    'iso_lateral_row_machine': ExerciseCoaching(
       howTo: [
         'Sit with your chest against the pad and take one handle in each hand at arms length.',
         'Row one side back until the elbow passes your torso, then return under control and repeat on the other side.',
@@ -9204,7 +8706,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=JwbRwT_oWP0',
       imageUrl: '',
     ),
-    'iso_lateral_row_machine': ExerciseCoaching(
+    'jack_knife_suspension': ExerciseCoaching(
       howTo: [
         'Set up in a push up position with both feet in the suspension cradles and your body straight.',
         'Draw the knees toward your chest by folding at the hips, then extend the legs back to the straight plank.',
@@ -9217,7 +8719,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=M9aPSjX3YxA',
       imageUrl: '',
     ),
-    'jack_knife_suspension': ExerciseCoaching(
+    'jackknife_sit_up': ExerciseCoaching(
       howTo: [
         'Lie flat with your arms extended overhead and legs straight.',
         'Exhale and raise your legs and torso at the same time, reaching your hands toward your feet so your body forms a V.',
@@ -9231,7 +8733,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hc07Ig8YBFo',
       imageUrl: '',
     ),
-    'jackknife_sit_up': ExerciseCoaching(
+    'jm_press_barbell': ExerciseCoaching(
       howTo: [
         'Lie on a bench holding the bar over your chest with a close grip.',
         'Lower it toward your chin by letting the elbows travel forward, stopping just above the collarbone, then press back up with the triceps.',
@@ -9244,7 +8746,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=aNMGE1UFukE',
       imageUrl: '',
     ),
-    'jm_press_barbell': ExerciseCoaching(
+    'jump_rope': ExerciseCoaching(
       howTo: [
         'Hold the handles at hip height and turn the rope with the wrists rather than the arms.',
         'Jump just high enough to clear the rope, landing on the balls of your feet with soft knees.',
@@ -9257,7 +8759,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=m9MccH7mWO0',
       imageUrl: '',
     ),
-    'jump_rope': ExerciseCoaching(
+    'jump_shrug': ExerciseCoaching(
       howTo: [
         'Hold a barbell at arms length in front of your thighs.',
         'Dip slightly, then extend the hips and ankles explosively and shrug the shoulders hard so you leave the floor, landing softly in the same stance.',
@@ -9270,7 +8772,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=dGmS8KLgoNc',
       imageUrl: '',
     ),
-    'jump_shrug': ExerciseCoaching(
+    'jump_squat': ExerciseCoaching(
       howTo: [
         'Stand with feet shoulder width and squat down to around parallel.',
         'Jump straight up as high as you can, then land softly and absorb straight back into the next squat.',
@@ -9283,7 +8785,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=BRfxI2Es2lE',
       imageUrl: '',
     ),
-    'jump_squat': ExerciseCoaching(
+    'jumping_jack': ExerciseCoaching(
       howTo: [
         'Start standing with feet together and arms at your sides.',
         'Jump the feet out wide while sweeping the arms overhead, then jump back to the start in a steady rhythm.',
@@ -9296,7 +8798,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=uLVt6u15L98',
       imageUrl: '',
     ),
-    'jumping_jack': ExerciseCoaching(
+    'jumping_lunge': ExerciseCoaching(
       howTo: [
         'Drop into a lunge with the front knee bent over your foot and the rear knee nearly touching the floor.',
         'Extend explosively through both legs to jump as high as you can, swinging the arms up.',
@@ -9311,7 +8813,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=O-rntsAALBo',
       imageUrl: '',
     ),
-    'jumping_lunge': ExerciseCoaching(
+    'kettlebell_clean': ExerciseCoaching(
       howTo: [
         'Place a kettlebell between your feet, push your hips back, and grip it one-handed with eyes forward.',
         'Extend through the legs and hips to pull the bell up, rotating your hand around it to catch cleanly at the shoulder.',
@@ -9324,7 +8826,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=fGKMchSmj7c',
       imageUrl: '',
     ),
-    'kettlebell_clean': ExerciseCoaching(
+    'kettlebell_curl': ExerciseCoaching(
       howTo: [
         'Hold a kettlebell in each hand by the handle with your elbows tucked at your sides.',
         'Curl them up to shoulder height, letting the bells rest against the forearms, then lower under control.',
@@ -9337,7 +8839,23 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=u5eS2ns5cek',
       imageUrl: '',
     ),
-    'kettlebell_curl': ExerciseCoaching(
+    'kettlebell_goblet_squat': ExerciseCoaching(
+      howTo: [
+        'Stand with your feet around shoulder-width apart and hold a kettlebell close to your chest with both hands.',
+        'Brace your core and squat down by bending the hips and knees while keeping your chest upright.',
+        'Descend as far as you can with good control, then drive through the whole foot to stand back up.',
+      ],
+      formChecks: [
+        'Keep the kettlebell close to the chest',
+        'Chest stays upright',
+        'Knees track over the toes',
+        'Keep the whole foot planted',
+        'Do not let the lower back round at the bottom',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=nfX7IFK9UNI',
+      imageUrl: '',
+    ),
+    'kettlebell_high_pull': ExerciseCoaching(
       howTo: [
         'Stand in a wide sumo stance with a kettlebell between your feet and grip it with both hands, hips set back and chest up.',
         'Drive through your legs and hips to pull the kettlebell explosively up to chest height, leading with high elbows.',
@@ -9352,7 +8870,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=mP1BHxBeAEM',
       imageUrl: '',
     ),
-    'kettlebell_goblet_squat': ExerciseCoaching(
+    'kettlebell_shoulder_press': ExerciseCoaching(
       howTo: [
         'Clean the kettlebell to the rack position at your shoulder with the bell resting on the forearm.',
         'Press it overhead until the arm locks, then lower back to the rack under control.',
@@ -9365,7 +8883,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=X-uFqWtjpGI',
       imageUrl: '',
     ),
-    'kettlebell_high_pull': ExerciseCoaching(
+    'kettlebell_snatch': ExerciseCoaching(
       howTo: [
         'Set a kettlebell between your feet, bend the knees, and sit the hips back with eyes forward.',
         'Swing the bell back between your legs, then reverse hard and drive through the hips to punch it straight to lockout overhead in one motion.',
@@ -9378,7 +8896,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=AHtr-W53KtI',
       imageUrl: '',
     ),
-    'kettlebell_shoulder_press': ExerciseCoaching(
+    'kettlebell_swing': ExerciseCoaching(
       howTo: [
         'Stand with the kettlebell a step in front of you and hinge down to grip it with both hands.',
         'Hike it back between your legs, then snap the hips forward to float it up to chest height and let it swing back down.',
@@ -9391,7 +8909,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=1cVT3ee9mgU',
       imageUrl: '',
     ),
-    'kettlebell_snatch': ExerciseCoaching(
+    'kettlebell_turkish_get_up': ExerciseCoaching(
       howTo: [
         'Lie on your back and press one kettlebell to a locked-out arm above your shoulder.',
         'Keeping the elbow locked and eyes on the bell, rise to your feet through a series of controlled steps.',
@@ -9406,7 +8924,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=sgd8n917Zv0',
       imageUrl: '',
     ),
-    'kettlebell_swing': ExerciseCoaching(
+    'kipping_pull_up': ExerciseCoaching(
       howTo: [
         'Hang from the bar and swing between a hollow and an arch position.',
         'Time the hip drive with the pull so the momentum carries your chin over the bar, then return to the swing and repeat.',
@@ -9419,7 +8937,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=7IvJAkFTsxo',
       imageUrl: '',
     ),
-    'kettlebell_turkish_get_up': ExerciseCoaching(
+    'knee_raise_parallel_bars': ExerciseCoaching(
       howTo: [
         'Support yourself on the raise station with your forearms on the pads and back against the rest, legs hanging straight down.',
         'Raise your knees up toward your chest by curling your hips and contracting your abs.',
@@ -9432,7 +8950,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=0jaGpK-tfSA',
       imageUrl: '',
     ),
-    'kipping_pull_up': ExerciseCoaching(
+    'kneeling_pulldown_band': ExerciseCoaching(
       howTo: [
         'Anchor the band overhead and kneel underneath it holding one end in each hand.',
         'Pull the band down to your chest by driving the elbows to your ribs, then let it rise back under control.',
@@ -9445,7 +8963,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=RdT8bs2nKNM',
       imageUrl: '',
     ),
-    'knee_raise_parallel_bars': ExerciseCoaching(
+    'kneeling_push_up': ExerciseCoaching(
       howTo: [
         'Set up on your hands and knees with your hands under your shoulders and your body straight from knees to head.',
         'Lower the chest toward the floor, then press back up without letting the hips sag.',
@@ -9458,7 +8976,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hsOLUBz1l1Q',
       imageUrl: '',
     ),
-    'kneeling_pulldown_band': ExerciseCoaching(
+    'l_sit_hold': ExerciseCoaching(
       howTo: [
         'Support on parallettes or bars with straight arms, then lift straight legs until they are parallel to the floor.',
         'Point the toes and hold with the shoulders pushed away from the ears.',
@@ -9471,7 +8989,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=LhxDoFSH4Vw',
       imageUrl: '',
     ),
-    'kneeling_push_up': ExerciseCoaching(
+    'l_sit_hold_advanced_tuck': ExerciseCoaching(
       howTo: [
         'From the tuck position, open the knees to roughly a right angle so the thighs move away from the chest.',
         'Hold with a flat back and the hips level with the shoulders.',
@@ -9484,7 +9002,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=YG90dDJyhhA',
       imageUrl: '',
     ),
-    'l_sit_hold': ExerciseCoaching(
+    'l_sit_hold_foot_supported': ExerciseCoaching(
       howTo: [
         'Sit with straight legs and press your hands into the floor or parallettes beside the hips.',
         'Push the shoulders down and lift the body so the heels rest lightly on the ground and carry almost no weight.',
@@ -9497,7 +9015,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=lcRr4NCPidM',
       imageUrl: '',
     ),
-    'l_sit_hold_advanced_tuck': ExerciseCoaching(
+    'l_sit_hold_straddle': ExerciseCoaching(
       howTo: [
         'Hold an L-sit and open the legs into a wide straddle.',
         'Keep both legs at hip height or higher and press the shoulders down for the whole hold.',
@@ -9510,7 +9028,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=onSPk23hbK0',
       imageUrl: '',
     ),
-    'l_sit_hold_foot_supported': ExerciseCoaching(
+    'l_sit_hold_tuck': ExerciseCoaching(
       howTo: [
         'Support yourself on parallettes or bars with straight arms and pull both knees tightly to the chest.',
         'Hold with the shoulders pressed down and the hips lifted clear of the floor.',
@@ -9523,7 +9041,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Kmc5H3EP2V8',
       imageUrl: '',
     ),
-    'l_sit_hold_straddle': ExerciseCoaching(
+    'landmine_180': ExerciseCoaching(
       howTo: [
         'Hold the end of a landmine barbell overhead with both hands and your arms nearly straight.',
         'Rotate the bar from one side to the other in an arc, turning through the hips and pivoting the feet.',
@@ -9536,7 +9054,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=AEhQK1bqlME',
       imageUrl: '',
     ),
-    'l_sit_hold_tuck': ExerciseCoaching(
+    'landmine_row': ExerciseCoaching(
       howTo: [
         'Straddle a landmine barbell and hinge forward with a flat back, gripping the bar with both hands or a V handle.',
         'Row it to your chest by driving the elbows back, then lower to a full stretch.',
@@ -9549,7 +9067,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hYo72r8Ivso',
       imageUrl: '',
     ),
-    'landmine_180': ExerciseCoaching(
+    'landmine_squat_and_press': ExerciseCoaching(
       howTo: [
         'Hold the end of a landmine bar at your chest with both hands.',
         'Squat down keeping the chest tall, then stand and press the bar up and forward in one continuous movement.',
@@ -9562,7 +9080,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=S9h1n8az61o',
       imageUrl: '',
     ),
-    'landmine_row': ExerciseCoaching(
+    'lat_pulldown_band': ExerciseCoaching(
       howTo: [
         'Anchor the band overhead and hold one end in each hand with your arms extended above you.',
         'Pull the band down until your hands reach shoulder height, then let it rise back under control.',
@@ -9575,7 +9093,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ZA2NEQGPfpU',
       imageUrl: '',
     ),
-    'landmine_squat_and_press': ExerciseCoaching(
+    'lat_pulldown_cable': ExerciseCoaching(
       howTo: [
         'Sit with your thighs under the pads and grip the bar wider than your shoulders.',
         'Pull it down to your upper chest by driving the elbows down, then let it rise back to a full overhead stretch.',
@@ -9588,7 +9106,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=JGeRYIZdojU',
       imageUrl: '',
     ),
-    'lat_pulldown_band': ExerciseCoaching(
+    'lat_pulldown_machine': ExerciseCoaching(
       howTo: [
         'Sit with your thighs secured and grip the handles overhead.',
         'Pull them down toward your upper chest by driving the elbows down and back, then return to a full stretch.',
@@ -9601,7 +9119,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=cCH-kpNydyQ',
       imageUrl: '',
     ),
-    'lat_pulldown_cable': ExerciseCoaching(
+    'lat_pulldown_close_grip_cable': ExerciseCoaching(
       howTo: [
         'Sit with your thighs under the pads and take a narrow neutral grip on the handle.',
         'Pull it to your upper chest keeping the elbows close to the body, then return to a full stretch overhead.',
@@ -9614,7 +9132,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IjoFCmLX7z0',
       imageUrl: '',
     ),
-    'lat_pulldown_machine': ExerciseCoaching(
+    'lateral_band_walks': ExerciseCoaching(
       howTo: [
         'Place a band around your legs just above the knees or ankles and sink into a quarter squat.',
         'Step sideways against the band, keeping tension the whole way, then step the trailing foot in.',
@@ -9627,7 +9145,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=MZ1HbVflLUI',
       imageUrl: '',
     ),
-    'lat_pulldown_close_grip_cable': ExerciseCoaching(
+    'lateral_box_jump': ExerciseCoaching(
       howTo: [
         'Stand tall beside a short box with feet hip-width.',
         'Dip quickly into a quarter squat to load, then explode up and sideways to land on top of the box.',
@@ -9641,7 +9159,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=t7jNRsr4Bmg',
       imageUrl: '',
     ),
-    'lateral_band_walks': ExerciseCoaching(
+    'lateral_leg_raises': ExerciseCoaching(
       howTo: [
         'Lie on your side with your body in a straight line and your lower arm supporting your head.',
         'Raise the top leg as high as you can without tipping the hips back, then lower it under control.',
@@ -9654,7 +9172,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=PAD7sMmIgts',
       imageUrl: '',
     ),
-    'lateral_box_jump': ExerciseCoaching(
+    'lateral_lunge': ExerciseCoaching(
       howTo: [
         'Stand tall and take a wide step out to one side.',
         'Sit the hips back and bend that knee while the other leg stays straight, then push off to return to standing.',
@@ -9667,7 +9185,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=apsp_uuXZTU',
       imageUrl: '',
     ),
-    'lateral_leg_raises': ExerciseCoaching(
+    'lateral_raise_band': ExerciseCoaching(
       howTo: [
         'Stand on the middle of the band with an end in each hand at your sides.',
         'Raise the arms out to the sides to shoulder height with a slight elbow bend, then lower slowly against the band.',
@@ -9680,7 +9198,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ytHbFfi5VWU',
       imageUrl: '',
     ),
-    'lateral_lunge': ExerciseCoaching(
+    'lateral_raise_cable': ExerciseCoaching(
       howTo: [
         'Place a flat bench between two opposing low pulleys and sit on it.',
         'Grab each handle with the opposite hand so the cables cross under your knees.',
@@ -9693,7 +9211,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Z5FA9aq3L6A',
       imageUrl: '',
     ),
-    'lateral_raise_band': ExerciseCoaching(
+    'lateral_raise_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand holding a dumbbell in each hand at your sides with a slight bend in the elbows.',
         'Raise the arms out to the sides until they reach shoulder height, then lower them slowly.',
@@ -9706,7 +9224,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=XPPfnSEATJA',
       imageUrl: '',
     ),
-    'lateral_raise_cable': ExerciseCoaching(
+    'lateral_raise_machine': ExerciseCoaching(
       howTo: [
         'Sit with the pads against the outside of your upper arms and your torso upright.',
         'Raise the arms out to the sides until they reach shoulder height, then lower under control.',
@@ -9719,7 +9237,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=0o07iGKUarI',
       imageUrl: '',
     ),
-    'lateral_raise_dumbbell': ExerciseCoaching(
+    'lateral_squat': ExerciseCoaching(
       howTo: [
         'Stand with your feet much wider than your shoulders and your toes forward.',
         'Shift your weight to one side and sit that hip back into a squat while the other leg stays straight, then shift across.',
@@ -9732,7 +9250,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=0lLIWWSmMm4',
       imageUrl: '',
     ),
-    'lateral_raise_machine': ExerciseCoaching(
+    'leg_extension_machine': ExerciseCoaching(
       howTo: [
         'Sit with the pad resting on the front of your ankles and your knees in line with the machine pivot.',
         'Straighten the legs until they are locked out, pause, then lower under control.',
@@ -9745,7 +9263,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ebjD98gZd8E',
       imageUrl: '',
     ),
-    'lateral_squat': ExerciseCoaching(
+    'leg_press_machine': ExerciseCoaching(
       howTo: [
         'Sit in the sled with your feet shoulder width on the platform and release the safeties.',
         'Lower until your knees reach about ninety degrees, then press back without locking the knees hard.',
@@ -9758,7 +9276,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=qCR9bN3G1t4',
       imageUrl: '',
     ),
-    'leg_extension_machine': ExerciseCoaching(
+    'leg_press_horizontal_machine': ExerciseCoaching(
       howTo: [
         'Sit with your back against the pad and your feet flat on the platform in front of you.',
         'Press the platform away until the legs are nearly straight, then let it return until the knees reach ninety degrees.',
@@ -9771,7 +9289,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8Uaqn7rLz6c',
       imageUrl: '',
     ),
-    'leg_press_machine': ExerciseCoaching(
+    'leg_raise_parallel_bars': ExerciseCoaching(
       howTo: [
         'Support yourself on the parallel bars or a captains chair with your back against the pad.',
         'Raise your straight legs to at least parallel with the floor, then lower them slowly without swinging.',
@@ -9784,7 +9302,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=R6mM-jV0yiE',
       imageUrl: '',
     ),
-    'leg_press_horizontal_machine': ExerciseCoaching(
+    'low_cable_fly_crossovers': ExerciseCoaching(
       howTo: [
         'Stand between two low pulleys with a handle in each hand and your palms facing forward.',
         'Sweep the arms up and together in front of your chest, then lower them back out to a stretch.',
@@ -9797,7 +9315,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=wnFEC_34Bls',
       imageUrl: '',
     ),
-    'leg_raise_parallel_bars': ExerciseCoaching(
+    'low_row_suspension': ExerciseCoaching(
       howTo: [
         'Hold the handles and walk your feet forward so you hang back with your body straight.',
         'Pull your chest to your hands by driving the elbows past your ribs, then lower back to straight arms.',
@@ -9810,7 +9328,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pL9CmLZ_9M4',
       imageUrl: '',
     ),
-    'low_cable_fly_crossovers': ExerciseCoaching(
+    'lunge': ExerciseCoaching(
       howTo: [
         'Stand tall and step forward into a long stride.',
         'Lower until both knees reach about ninety degrees and the back knee is just above the floor, then push through the front heel to stand.',
@@ -9823,7 +9341,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=g8-Ge9S0aUw',
       imageUrl: '',
     ),
-    'low_row_suspension': ExerciseCoaching(
+    'lunge_barbell': ExerciseCoaching(
       howTo: [
         'With the bar on the upper back, step forward and lower until the back knee is just off the floor and the front thigh is parallel.',
         'Drive through the front heel back to standing.',
@@ -9837,7 +9355,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=QPI0VymY6tA',
       imageUrl: '',
     ),
-    'lunge': ExerciseCoaching(
+    'lunge_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
         'Lower until the back knee is just above the floor, then drive through the front heel to stand back up.',
@@ -9850,7 +9368,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=9gglI77Kzq8',
       imageUrl: '',
     ),
-    'lunge_barbell': ExerciseCoaching(
+    'lying_bent_leg_raise': ExerciseCoaching(
       howTo: [
         'Lie on your back and extend the shins so the legs are only slightly bent.',
         'Raise them until the hips are fully flexed, then lower under control with the lower back pinned down.',
@@ -9863,7 +9381,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WaqN0ikjAzc',
       imageUrl: '',
     ),
-    'lunge_dumbbell': ExerciseCoaching(
+    'lying_knee_raise': ExerciseCoaching(
       howTo: [
         'Lie on your back with the hands beside the hips and press the lower back into the floor.',
         'Draw the knees toward the chest, then lower them slowly without letting the back arch.',
@@ -9876,7 +9394,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=aK8Rm_tv3WM',
       imageUrl: '',
     ),
-    'lying_bent_leg_raise': ExerciseCoaching(
+    'lying_leg_curl_machine': ExerciseCoaching(
       howTo: [
         'Lie face down with the pad resting just above your heels and your knees just off the end of the bench.',
         'Curl the heels toward your glutes as far as they go, then lower under control.',
@@ -9889,7 +9407,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=SbSNUXPRkc8',
       imageUrl: '',
     ),
-    'lying_knee_raise': ExerciseCoaching(
+    'lying_leg_raise': ExerciseCoaching(
       howTo: [
         'Lie on your back with your hands under your hips and your legs straight.',
         'Raise the legs until they are vertical, then lower them slowly without letting the lower back lift off the floor.',
@@ -9902,7 +9420,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HPXqFqBK728',
       imageUrl: '',
     ),
-    'lying_leg_curl_machine': ExerciseCoaching(
+    'lying_neck_curls': ExerciseCoaching(
       howTo: [
         'Lie face up on a bench with your head hanging just off the end.',
         'Curl the chin toward your chest through the full range, then lower the head back down slowly.',
@@ -9915,7 +9433,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WSfy5wpU_Io',
       imageUrl: '',
     ),
-    'lying_leg_raise': ExerciseCoaching(
+    'lying_neck_curls_weighted': ExerciseCoaching(
       howTo: [
         'Lie face up with your head off the end of a bench and hold a light plate on your forehead with a towel underneath.',
         'Curl the chin to the chest, then lower the head slowly.',
@@ -9928,7 +9446,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=nfHrt0-zBwg',
       imageUrl: '',
     ),
-    'lying_neck_curls': ExerciseCoaching(
+    'lying_neck_extension': ExerciseCoaching(
       howTo: [
         'Lie face down on a bench with your head hanging off the end.',
         'Raise the head by looking forward and up through the full comfortable range, then lower it back down slowly.',
@@ -9941,7 +9459,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=nJtIvMjTSVA',
       imageUrl: '',
     ),
-    'lying_neck_curls_weighted': ExerciseCoaching(
+    'lying_neck_extension_weighted': ExerciseCoaching(
       howTo: [
         'Lie face down with your head off the end of a bench and hold a light plate on the back of your head with a towel underneath.',
         'Raise the head up, then lower it slowly.',
@@ -9954,7 +9472,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=11tf5XZseN8',
       imageUrl: '',
     ),
-    'lying_neck_extension': ExerciseCoaching(
+    'lying_straight_leg_raise': ExerciseCoaching(
       howTo: [
         'Lie flat with straight legs held together.',
         'Lift them until they point at the ceiling, then lower slowly until the heels hover just above the floor with the back still flat.',
@@ -9967,7 +9485,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=qvi8aM02_GY',
       imageUrl: '',
     ),
-    'lying_neck_extension_weighted': ExerciseCoaching(
+    'meadows_rows_barbell': ExerciseCoaching(
       howTo: [
         'Stand side on at the loaded end of a landmine barbell and hinge over with a flat back, gripping the sleeve with the outside hand.',
         'Row it up to your hip, then lower to a full stretch.',
@@ -9980,7 +9498,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=MJWibub6jgw',
       imageUrl: '',
     ),
-    'lying_straight_leg_raise': ExerciseCoaching(
+    'mountain_climber': ExerciseCoaching(
       howTo: [
         'Set up in a push up position with your hands under your shoulders and your body straight.',
         'Drive one knee toward your chest, then switch legs quickly while the hips stay level.',
@@ -9993,7 +9511,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=kLh-uczlPLg',
       imageUrl: '',
     ),
-    'meadows_rows_barbell': ExerciseCoaching(
+    'muscle_up': ExerciseCoaching(
       howTo: [
         'Pull explosively until the bar or rings reach the lower chest.',
         'Roll the shoulders forward over the top and press out to a locked support with no leg swing.',
@@ -10006,7 +9524,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=zvo4A-h5WcE',
       imageUrl: '',
     ),
-    'mountain_climber': ExerciseCoaching(
+    'muscle_up_eccentric': ExerciseCoaching(
       howTo: [
         'Start at the top in a straight arm support and lower slowly through the transition until you finish in a hang.',
         'Take the transition as slowly as you can control it.',
@@ -10019,7 +9537,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ZRojhiL0f5k',
       imageUrl: '',
     ),
-    'muscle_up': ExerciseCoaching(
+    'muscle_up_kipping': ExerciseCoaching(
       howTo: [
         'From a hang, swing the legs forward and drive the hips up while pulling the bar toward the waist.',
         'Roll the shoulders over the top and press out to a straight arm support.',
@@ -10032,7 +9550,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=k1Lkbi8nl64',
       imageUrl: '',
     ),
-    'muscle_up_eccentric': ExerciseCoaching(
+    'negative_pull_up': ExerciseCoaching(
       howTo: [
         'Jump or step so your chin starts above the bar.',
         'Lower yourself for three to five seconds until the arms are straight, then step down and reset for the next rep.',
@@ -10045,7 +9563,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=jBSMDqs7OzM',
       imageUrl: '',
     ),
-    'muscle_up_kipping': ExerciseCoaching(
+    'nordic_hamstrings_curls': ExerciseCoaching(
       howTo: [
         'Anchor the heels under a bar or have a partner hold them.',
         'Keep the hips straight and lower the body toward the floor as slowly as you can, catching with the hands.',
@@ -10058,7 +9576,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Wo746janD2E',
       imageUrl: '',
     ),
-    'negative_pull_up': ExerciseCoaching(
+    'oblique_crunch': ExerciseCoaching(
       howTo: [
         'Lie on your back with your knees bent and dropped to one side and your hands light beside your head.',
         'Curl the shoulders off the floor toward the ceiling, then lower under control and switch sides.',
@@ -10071,7 +9589,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ABWPCPgquWw',
       imageUrl: '',
     ),
-    'nordic_hamstrings_curls': ExerciseCoaching(
+    'one_arm_push_up': ExerciseCoaching(
       howTo: [
         'Set the feet wide and put one hand under the chest with the other behind the back.',
         'Lower the chest to the floor and press up while keeping the hips square.',
@@ -10084,7 +9602,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=JiHkxqbhNuw',
       imageUrl: '',
     ),
-    'oblique_crunch': ExerciseCoaching(
+    'one_arm_one_leg_plank': ExerciseCoaching(
       howTo: [
         'From a forearm plank, lift one arm and the opposite leg a few inches off the floor.',
         'Hold without letting the hips rotate, then set them down and switch sides.',
@@ -10097,7 +9615,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=yLn_zX3-BfE',
       imageUrl: '',
     ),
-    'one_arm_push_up': ExerciseCoaching(
+    'overhead_curl_cable': ExerciseCoaching(
       howTo: [
         'Set both pulleys high and grab a handle in each hand.',
         'Stand tall between them with arms extended out at shoulder height, palms up.',
@@ -10111,7 +9629,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=URD0GDXI5g0',
       imageUrl: '',
     ),
-    'one_arm_one_leg_plank': ExerciseCoaching(
+    'overhead_dumbbell_lunge': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell locked out overhead with one or both arms and step forward into a long stride.',
         'Lower until the back knee nearly touches, then drive back to standing with the weight still overhead.',
@@ -10124,7 +9642,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=eRZEREd2MhI',
       imageUrl: '',
     ),
-    'overhead_curl_cable': ExerciseCoaching(
+    'overhead_press_barbell': ExerciseCoaching(
       howTo: [
         'Hold the bar at shoulder height with your grip just outside your shoulders and your elbows slightly in front.',
         'Press it overhead in a straight line, moving your head back out of the way, then lower to the shoulders.',
@@ -10137,7 +9655,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=cGnhixvC8uA',
       imageUrl: '',
     ),
-    'overhead_dumbbell_lunge': ExerciseCoaching(
+    'overhead_press_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand at shoulder height with your palms facing forward.',
         'Press them overhead until the arms lock out, then lower back to shoulder height under control.',
@@ -10150,7 +9668,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=qGtDCtYeRQM',
       imageUrl: '',
     ),
-    'overhead_press_barbell': ExerciseCoaching(
+    'overhead_press_smith_machine': ExerciseCoaching(
       howTo: [
         'Set a bench with back support under the Smith bar and sit so the bar sits just above your shoulders.',
         'Unrack it with a overhand grip and press the bar straight up until your arms extend.',
@@ -10163,7 +9681,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=xSU-_wgAgig',
       imageUrl: '',
     ),
-    'overhead_press_dumbbell': ExerciseCoaching(
+    'overhead_squat': ExerciseCoaching(
       howTo: [
         'Take a wide snatch grip and press the barbell to full lockout overhead, feet slightly wider than the shoulders.',
         'Push the bar back so it sits over your midfoot.',
@@ -10178,7 +9696,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=BYi-TBOtNTo',
       imageUrl: '',
     ),
-    'overhead_press_smith_machine': ExerciseCoaching(
+    'pause_squat_barbell': ExerciseCoaching(
       howTo: [
         'Squat down with the bar on your back until your thighs are at least parallel and hold that bottom position for two to three seconds.',
         'Stay tight through the pause, then drive up out of the hole.',
@@ -10191,7 +9709,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WVe5Q51H5AU',
       imageUrl: '',
     ),
-    'overhead_squat': ExerciseCoaching(
+    'pendlay_row_barbell': ExerciseCoaching(
       howTo: [
         'Set your torso parallel to the floor with the bar resting on the ground.',
         'Row it explosively to your lower chest, then return it all the way to the floor and reset before the next rep.',
@@ -10204,7 +9722,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Wv7f0uIKh8o',
       imageUrl: '',
     ),
-    'pause_squat_barbell': ExerciseCoaching(
+    'pendulum_squat_machine': ExerciseCoaching(
       howTo: [
         'Set your shoulders under the pads and your feet on the platform, then release the safeties.',
         'Lower along the machine arc until your thighs pass parallel, then drive back up through the whole foot.',
@@ -10217,7 +9735,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=jowktly2MyY',
       imageUrl: '',
     ),
-    'pendlay_row_barbell': ExerciseCoaching(
+    'pike_push_up_feet_elevated': ExerciseCoaching(
       howTo: [
         'Put the feet on a box so the hips stack higher over the shoulders.',
         'Lower the head toward the floor between the hands and press back up with the elbows tracking forward.',
@@ -10230,7 +9748,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8URA3YSur2M',
       imageUrl: '',
     ),
-    'pendulum_squat_machine': ExerciseCoaching(
+    'pike_pushup': ExerciseCoaching(
       howTo: [
         'Start in a pushup position and walk the feet in so the hips lift high and the body makes an upside down V.',
         'Bend the elbows to lower the crown of the head toward the floor, then press back up.',
@@ -10243,7 +9761,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=XckEEwa1BPI',
       imageUrl: '',
     ),
-    'pike_push_up_feet_elevated': ExerciseCoaching(
+    'pilates': ExerciseCoaching(
       howTo: [
         'Move through a sequence of controlled mat exercises that work the deep core, breathing steadily with each movement.',
         'Keep the pace slow and precise rather than chasing repetitions.',
@@ -10256,7 +9774,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Go6UA7SHdoE',
       imageUrl: '',
     ),
-    'pike_pushup': ExerciseCoaching(
+    'pinwheel_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand holding a dumbbell in each hand with your palms facing your body.',
         'Curl one dumbbell up across your chest toward the opposite shoulder, then lower it and repeat on the other side.',
@@ -10269,7 +9787,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=mzUEIqJiRpM',
       imageUrl: '',
     ),
-    'pilates': ExerciseCoaching(
+    'pistol_squat': ExerciseCoaching(
       howTo: [
         'Stand on one leg with the other held straight out in front.',
         'Lower all the way to the bottom and stand back up with no support and no bouncing.',
@@ -10282,7 +9800,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=J19cXMqJ43o',
       imageUrl: '',
     ),
-    'pinwheel_curl_dumbbell': ExerciseCoaching(
+    'pistol_squat_box': ExerciseCoaching(
       howTo: [
         'Stand on one leg in front of a box, hold the free leg forward, and lower until the hips lightly touch the box before standing on the same leg.',
         'Reduce box height as strength improves.',
@@ -10296,7 +9814,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=FHSNof-NnPQ',
       imageUrl: '',
     ),
-    'pistol_squat': ExerciseCoaching(
+    'pistol_squat_counterweighted': ExerciseCoaching(
       howTo: [
         'Hold a light plate or dumbbell out in front of the chest to balance the load.',
         'Lower on one leg to the bottom and stand back up.',
@@ -10309,7 +9827,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=5pl6zRmDYlc',
       imageUrl: '',
     ),
-    'pistol_squat_box': ExerciseCoaching(
+    'planche': ExerciseCoaching(
       howTo: [
         'Hold the body horizontal with the legs together and the arms locked straight.',
         'The whole body stays in one line parallel to the floor.',
@@ -10322,7 +9840,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=M9vRJAd4NOo',
       imageUrl: '',
     ),
-    'pistol_squat_counterweighted': ExerciseCoaching(
+    'planche_advanced_tuck': ExerciseCoaching(
       howTo: [
         'From the tuck planche, open the knees so the thighs move away from the chest and flatten the back.',
         'Hold with the hips level and the arms locked straight.',
@@ -10335,7 +9853,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=UnXkSMlG9wQ',
       imageUrl: '',
     ),
-    'planche': ExerciseCoaching(
+    'planche_straddle': ExerciseCoaching(
       howTo: [
         'Hold a straight-arm planche with the legs separated to shorten the lever.',
         'Keep the body horizontal and gradually narrow the straddle as strength improves.',
@@ -10349,7 +9867,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Xo_OP5FYsp8',
       imageUrl: '',
     ),
-    'planche_advanced_tuck': ExerciseCoaching(
+    'planche_tuck': ExerciseCoaching(
       howTo: [
         'Support on the floor or parallettes with straight arms, lean forward, and pull both knees to the chest with the hips lifted to shoulder height.',
         'Hold with a rounded upper back.',
@@ -10362,7 +9880,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8fQQJs8VrqM',
       imageUrl: '',
     ),
-    'planche_straddle': ExerciseCoaching(
+    'planche_lean': ExerciseCoaching(
       howTo: [
         'Start in a straight-arm push-up position with the hands slightly turned out.',
         'Lean the shoulders forward past the wrists while keeping the body rigid and the shoulder blades protracted.',
@@ -10376,7 +9894,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Dg2kiaaT5J4',
       imageUrl: '',
     ),
-    'planche_tuck': ExerciseCoaching(
+    'planche_lean_tuck': ExerciseCoaching(
       howTo: [
         'Hold a deep planche lean and lift one knee at a time toward the chest so both feet leave the floor briefly.',
         'Keep the shoulders forward and the arms locked.',
@@ -10389,7 +9907,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=K2CHxTCpWAs',
       imageUrl: '',
     ),
-    'planche_lean': ExerciseCoaching(
+    'planche_push_up': ExerciseCoaching(
       howTo: [
         'Hold a full planche with the legs together and the body horizontal.',
         'Lower the chest toward the floor and press back to straight arms with the feet never touching down.',
@@ -10402,7 +9920,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Cdmg0CfMZeo',
       imageUrl: '',
     ),
-    'planche_lean_tuck': ExerciseCoaching(
+    'planche_push_up_advanced_tuck': ExerciseCoaching(
       howTo: [
         'Hold an advanced tuck planche with the back flat and the knees away from the chest.',
         'Lower under control and press back up while keeping the hips level.',
@@ -10415,7 +9933,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hxmqiYCamIg',
       imageUrl: '',
     ),
-    'planche_push_up': ExerciseCoaching(
+    'planche_push_up_straddle': ExerciseCoaching(
       howTo: [
         'Hold a straddle planche with the legs wide and the body horizontal.',
         'Bend the arms to lower, then press back to straight arms without dropping the hips.',
@@ -10428,7 +9946,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=x8R0pO-nxVk',
       imageUrl: '',
     ),
-    'planche_push_up_advanced_tuck': ExerciseCoaching(
+    'planche_push_up_tuck': ExerciseCoaching(
       howTo: [
         'Hold a tuck planche with the knees at the chest and the hips high.',
         'Bend the arms to lower the chest, then press back up without letting the feet touch down.',
@@ -10441,7 +9959,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=d979_qlKCyM',
       imageUrl: '',
     ),
-    'planche_push_up_straddle': ExerciseCoaching(
+    'plank': ExerciseCoaching(
       howTo: [
         'Rest on the forearms and toes with the elbows under the shoulders.',
         'Brace the abdominals and glutes to hold a straight line from head to heels for the prescribed time.',
@@ -10455,7 +9973,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=mwlp75MS6Rg',
       imageUrl: '',
     ),
-    'planche_push_up_tuck': ExerciseCoaching(
+    'plank_pushup': ExerciseCoaching(
       howTo: [
         'Start in a forearm plank with your body straight.',
         'Press up onto one hand at a time until you are in a push up position, then lower back to the forearms one arm at a time, alternating the lead.',
@@ -10468,7 +9986,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=56vUOad6Irs',
       imageUrl: '',
     ),
-    'plank': ExerciseCoaching(
+    'plate_curl': ExerciseCoaching(
       howTo: [
         'Hold a weight plate by the edges in front of your thighs with your elbows tucked at your sides.',
         'Curl it up to shoulder height, squeeze, then lower under control.',
@@ -10481,7 +9999,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-DWJLKoHFK8',
       imageUrl: '',
     ),
-    'plank_pushup': ExerciseCoaching(
+    'plate_front_raise': ExerciseCoaching(
       howTo: [
         'Stand tall gripping a weight plate at the 3 and 9 o\'clock edges, palms facing each other, arms extended down with a slight elbow bend.',
         'Raise the plate forward to shoulder height.',
@@ -10494,7 +10012,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HN8HYJTOl8c',
       imageUrl: '',
     ),
-    'plate_curl': ExerciseCoaching(
+    'plate_press': ExerciseCoaching(
       howTo: [
         'Hold a weight plate flat between both palms at chest height with your elbows out.',
         'Press it straight forward until the arms are extended, then bring it back to the chest while squeezing the whole time.',
@@ -10507,7 +10025,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=eXRy3KBbz_0',
       imageUrl: '',
     ),
-    'plate_front_raise': ExerciseCoaching(
+    'plate_squeeze_svend_press': ExerciseCoaching(
       howTo: [
         'Press two plates together between your palms at chest height.',
         'Push them straight out in front of you while squeezing hard, hold briefly, then bring them back to the chest.',
@@ -10520,7 +10038,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=BHjvH78-XbY',
       imageUrl: '',
     ),
-    'plate_press': ExerciseCoaching(
+    'power_clean': ExerciseCoaching(
       howTo: [
         'From a deadlift setup, pull the bar explosively past the knees, extend the hips, ankles and knees, then whip the elbows through to catch the bar on the front of the shoulders in a partial squat.',
       ],
@@ -10533,7 +10051,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=e8TpDdMYq4Y',
       imageUrl: '',
     ),
-    'plate_squeeze_svend_press': ExerciseCoaching(
+    'power_snatch': ExerciseCoaching(
       howTo: [
         'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
         'Pull the bar from the floor and accelerate it past your hips with a powerful snap of the hips and knees.',
@@ -10548,7 +10066,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=z1j2QMBJF6c',
       imageUrl: '',
     ),
-    'power_clean': ExerciseCoaching(
+    'preacher_curl_barbell': ExerciseCoaching(
       howTo: [
         'Sit at the preacher bench with your upper arms flat on the pad and grip an EZ or straight bar.',
         'Curl the bar up to shoulder height, then lower until the arms are almost straight.',
@@ -10561,7 +10079,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=j5nBqhRFf1w',
       imageUrl: '',
     ),
-    'power_snatch': ExerciseCoaching(
+    'preacher_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
         'Lower the dumbbells until your arms are fully extended, then curl them up until your biceps contract.',
@@ -10574,7 +10092,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=fuK3nFvwgXk',
       imageUrl: '',
     ),
-    'preacher_curl_barbell': ExerciseCoaching(
+    'preacher_curl_machine': ExerciseCoaching(
       howTo: [
         'Sit with your upper arms flat on the pad and grip the handles with the arms extended.',
         'Curl up to shoulder height, squeeze, then lower until the arms are nearly straight again.',
@@ -10587,7 +10105,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Ja6ZlIDONac',
       imageUrl: '',
     ),
-    'preacher_curl_dumbbell': ExerciseCoaching(
+    'press_under': ExerciseCoaching(
       howTo: [
         'Hold a light barbell at your shoulders.',
         'Dip the knees and punch the bar overhead while dropping your body underneath it into a partial squat, then stand tall with the bar locked out.',
@@ -10600,7 +10118,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Cl0Rn1hMWcU',
       imageUrl: '',
     ),
-    'preacher_curl_machine': ExerciseCoaching(
+    'pull_up': ExerciseCoaching(
       howTo: [
         'Hang from the bar with an overhand grip at shoulder width.',
         'Pull until the chin clears the bar, then lower all the way to straight arms under control.',
@@ -10613,7 +10131,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=y_wuwEMQi-8',
       imageUrl: '',
     ),
-    'press_under': ExerciseCoaching(
+    'pull_up_archer': ExerciseCoaching(
       howTo: [
         'Pull up with a wide grip and travel toward one hand while the opposite arm stays straight along the bar.',
         'Alternate sides each rep.',
@@ -10626,7 +10144,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Z7GdTkOEe5Y',
       imageUrl: '',
     ),
-    'pull_up': ExerciseCoaching(
+    'pull_up_assisted': ExerciseCoaching(
       howTo: [
         'Set the assist machine or loop a band under your knee and grip the bar overhand, wider than your shoulders.',
         'Pull until your chin clears the bar, then lower to fully straight arms.',
@@ -10639,7 +10157,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=BOqrRMjxkj8',
       imageUrl: '',
     ),
-    'pull_up_archer': ExerciseCoaching(
+    'pull_up_band': ExerciseCoaching(
       howTo: [
         'Loop a band under the knee or foot, or rest one foot on a low box.',
         'Pull to full range with the chin over the bar and use only as much help as you need.',
@@ -10652,7 +10170,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=B_VkNQS5YLs',
       imageUrl: '',
     ),
-    'pull_up_assisted': ExerciseCoaching(
+    'pull_up_belly_button': ExerciseCoaching(
       howTo: [
         'Pull as high as you can while leaning back hard so the bar travels toward the navel.',
         'Keep the pull smooth rather than kipping into position.',
@@ -10665,7 +10183,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-XXuIwW56Zw',
       imageUrl: '',
     ),
-    'pull_up_band': ExerciseCoaching(
+    'pull_up_chest_to_bar': ExerciseCoaching(
       howTo: [
         'Pull explosively while leaning back so the bar meets the lower chest.',
         'Keep the elbows driving down and behind you at the top.',
@@ -10678,7 +10196,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=YYaQMQtiCjI',
       imageUrl: '',
     ),
-    'pull_up_belly_button': ExerciseCoaching(
+    'pull_up_close_grip': ExerciseCoaching(
       howTo: [
         'Take an overhand grip narrower than shoulder width.',
         'Pull to the bar keeping the elbows close to the body, then lower to a full hang.',
@@ -10691,7 +10209,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=3a6DasUHLFM',
       imageUrl: '',
     ),
-    'pull_up_chest_to_bar': ExerciseCoaching(
+    'pull_up_false_grip': ExerciseCoaching(
       howTo: [
         'Hook the wrists over the rings or bar so the heel of the hand sits on top of the grip.',
         'Pull until the rings reach the lower chest while holding that wrist position throughout.',
@@ -10704,7 +10222,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=sMJNXNl3E3Q',
       imageUrl: '',
     ),
-    'pull_up_close_grip': ExerciseCoaching(
+    'pull_up_l_sit': ExerciseCoaching(
       howTo: [
         'Hold both legs straight out in front at hip height, then perform full pull ups without letting the legs drop.',
       ],
@@ -10716,7 +10234,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IQ8pKBGq3ao',
       imageUrl: '',
     ),
-    'pull_up_false_grip': ExerciseCoaching(
+    'pull_up_one_arm_eccentric': ExerciseCoaching(
       howTo: [
         'Start at the top with one arm and the chin over the bar.',
         'Lower as slowly as you can through the full range until the arm is straight.',
@@ -10729,7 +10247,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=d0cc7GiIZ68',
       imageUrl: '',
     ),
-    'pull_up_l_sit': ExerciseCoaching(
+    'pull_up_typewriter': ExerciseCoaching(
       howTo: [
         'Pull to the top with a wide grip, then shift sideways over one hand while the other arm straightens.',
         'Move back across the bar and lower under control.',
@@ -10742,7 +10260,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=TVT5Ro_g1Go',
       imageUrl: '',
     ),
-    'pull_up_one_arm_eccentric': ExerciseCoaching(
+    'pull_up_weighted': ExerciseCoaching(
       howTo: [
         'Attach additional load with a belt or vest.',
         'Start from a full hang, pull until the chin clears the bar, and lower under control.',
@@ -10756,7 +10274,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=CQX8tDQdMlo',
       imageUrl: '',
     ),
-    'pull_up_typewriter': ExerciseCoaching(
+    'pullover_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie on a bench holding one dumbbell over your chest with both hands and a soft elbow bend.',
         'Lower it back behind your head until you feel the stretch, then pull it back over your chest.',
@@ -10769,7 +10287,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=jQjWlIwG4sI',
       imageUrl: '',
     ),
-    'pull_up_weighted': ExerciseCoaching(
+    'pullover_machine': ExerciseCoaching(
       howTo: [
         'Sit in the machine with the pads on your upper arms and the belt fastened.',
         'Pull the arms down and forward until the elbows reach your ribs, then let them rise back to a full stretch.',
@@ -10782,7 +10300,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=oxpAl14EYyc',
       imageUrl: '',
     ),
-    'pullover_dumbbell': ExerciseCoaching(
+    'push_press': ExerciseCoaching(
       howTo: [
         'Hold the bar on the front of the shoulders with a shoulder-width grip and elbows up.',
         'Dip briefly at the knees, then drive explosively through the legs to launch the bar overhead and lock the arms out.',
@@ -10797,7 +10315,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HKx22sWywxc',
       imageUrl: '',
     ),
-    'pullover_machine': ExerciseCoaching(
+    'push_up': ExerciseCoaching(
       howTo: [
         'Set the hands slightly wider than the shoulders with the body in a straight line.',
         'Lower until the chest is just off the floor, then press back to locked arms.',
@@ -10810,7 +10328,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WDIpL0pjun0',
       imageUrl: '',
     ),
-    'push_press': ExerciseCoaching(
+    'push_up_weighted': ExerciseCoaching(
       howTo: [
         'Have a partner set a plate on your upper back or wear a weight vest, then set up in a push up position.',
         'Lower the chest to just above the floor and press back up without the hips sagging.',
@@ -10823,7 +10341,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ad4gF84rj8A',
       imageUrl: '',
     ),
-    'push_up': ExerciseCoaching(
+    'push_up_close_grip': ExerciseCoaching(
       howTo: [
         'Perform pushups keeping the elbows tucked close to the ribs the whole way down.',
         'The hands sit under the lower chest rather than out wide.',
@@ -10836,7 +10354,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=2cdIRe5tcqI',
       imageUrl: '',
     ),
-    'push_up_weighted': ExerciseCoaching(
+    'push_up_archer': ExerciseCoaching(
       howTo: [
         'Take a wide hand position and lower toward one hand while the other arm straightens out to the side.',
         'Press back up and alternate sides.',
@@ -10849,7 +10367,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=wJKLatFY-aU',
       imageUrl: '',
     ),
-    'push_up_close_grip': ExerciseCoaching(
+    'push_up_one_arm_incline': ExerciseCoaching(
       howTo: [
         'Place one hand on a bench or box with the other behind the back and the feet wide.',
         'Lower the chest to the surface and press back up, then switch sides.',
@@ -10862,7 +10380,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=efchxULAT6M',
       imageUrl: '',
     ),
-    'push_up_archer': ExerciseCoaching(
+    'push_up_pseudo_planche': ExerciseCoaching(
       howTo: [
         'Place the hands lower beside the torso, lean the shoulders forward past the hands, and perform push-ups without losing the forward lean.',
       ],
@@ -10875,7 +10393,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Cdmg0CfMZeo',
       imageUrl: '',
     ),
-    'push_up_one_arm_incline': ExerciseCoaching(
+    'push_up_rings_turned_out': ExerciseCoaching(
       howTo: [
         'Set the rings just off the floor and turn them out so the palms face forward at the top.',
         'Lower to the chest and press back up, restoring the turnout each rep.',
@@ -10888,7 +10406,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=aoiWsmqXA_U',
       imageUrl: '',
     ),
-    'push_up_pseudo_planche': ExerciseCoaching(
+    'push_up_rings_turned_out_archer': ExerciseCoaching(
       howTo: [
         'Perform archer pushups on rings turned out at the top.',
         'Lower toward one ring while the other arm straightens, then press back and turn the rings out again.',
@@ -10901,7 +10419,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Xvz6g_op08g',
       imageUrl: '',
     ),
-    'push_up_rings_turned_out': ExerciseCoaching(
+    'push_up_rings_turned_out_pseudo_planche': ExerciseCoaching(
       howTo: [
         'On rings turned out, lean the shoulders forward and perform push-ups while keeping the rings stable and the forward lean consistent.',
       ],
@@ -10914,7 +10432,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=GuUx1IxiaQ4',
       imageUrl: '',
     ),
-    'push_up_rings_turned_out_archer': ExerciseCoaching(
+    'push_up_rings': ExerciseCoaching(
       howTo: [
         'Set the rings just off the floor and hold them at shoulder width.',
         'Lower the chest to ring height and press back up while keeping the rings from wobbling.',
@@ -10927,7 +10445,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=_ATX_OLs1qY',
       imageUrl: '',
     ),
-    'push_up_rings_turned_out_pseudo_planche': ExerciseCoaching(
+    'push_up_rings_wide': ExerciseCoaching(
       howTo: [
         'Set the rings a few inches off the floor and take a wide hand position.',
         'Lower the chest between the rings and press back up while stopping them from drifting.',
@@ -10940,7 +10458,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=PLS2-32rAp0',
       imageUrl: '',
     ),
-    'push_up_rings': ExerciseCoaching(
+    'push_up_uneven': ExerciseCoaching(
       howTo: [
         'Put one hand on a low block or ball and the other on the floor.',
         'Perform pushups so the lower arm takes most of the load, then switch sides.',
@@ -10953,7 +10471,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=1PVcSHW9DkM',
       imageUrl: '',
     ),
-    'push_up_rings_wide': ExerciseCoaching(
+    'push_up_wall': ExerciseCoaching(
       howTo: [
         'Stand an arm length from a wall and place the hands on it at chest height.',
         'Bend the elbows to bring the chest to the wall, then press back to straight arms.',
@@ -10966,7 +10484,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=G_c3QztMZNQ',
       imageUrl: '',
     ),
-    'push_up_uneven': ExerciseCoaching(
+    'rack_pull': ExerciseCoaching(
       howTo: [
         'Set the barbell in a rack at about knee height and grip it with your shins close to the bar.',
         'Stand up by driving the hips forward and squeezing the glutes, then lower it back to the pins.',
@@ -10979,7 +10497,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=_u6dwwYIsx0',
       imageUrl: '',
     ),
-    'push_up_wall': ExerciseCoaching(
+    'rear_delt_reverse_fly_cable': ExerciseCoaching(
       howTo: [
         'Set both pulleys above head height and grab the left handle with your right hand and the right handle with your left so the cables cross in front.',
         'Pull your arms apart and back in a wide arc until they reach out to your sides.',
@@ -10993,7 +10511,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=er15V96hG5U',
       imageUrl: '',
     ),
-    'rack_pull': ExerciseCoaching(
+    'rear_delt_reverse_fly_dumbbell': ExerciseCoaching(
       howTo: [
         'Hinge forward with a flat back holding a dumbbell in each hand below your chest.',
         'Raise the arms out to the sides until level with your shoulders, then lower them slowly.',
@@ -11006,7 +10524,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=3gJXpfwg_go',
       imageUrl: '',
     ),
-    'rear_delt_reverse_fly_cable': ExerciseCoaching(
+    'rear_delt_reverse_fly_machine': ExerciseCoaching(
       howTo: [
         'Sit facing the pad and grip the handles with your arms extended in front of you.',
         'Pull them out and back until your arms are level with your shoulders, then return under control.',
@@ -11019,7 +10537,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=H4s9t4zbjAs',
       imageUrl: '',
     ),
-    'rear_delt_reverse_fly_dumbbell': ExerciseCoaching(
+    'renegade_row_dumbbell': ExerciseCoaching(
       howTo: [
         'Set up in a push up position gripping a dumbbell in each hand with your feet wide.',
         'Row one dumbbell to your hip while keeping the hips square to the floor, then lower it and switch sides.',
@@ -11032,7 +10550,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Q28cLuweLv4',
       imageUrl: '',
     ),
-    'rear_delt_reverse_fly_machine': ExerciseCoaching(
+    'reverse_crunch': ExerciseCoaching(
       howTo: [
         'Lie on your back with your hands by your sides and your knees bent over your hips.',
         'Curl the hips off the floor by pulling the knees toward your chest, then lower them slowly back down.',
@@ -11045,7 +10563,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=XY8KzdDcMFg',
       imageUrl: '',
     ),
-    'renegade_row_dumbbell': ExerciseCoaching(
+    'reverse_curl_barbell': ExerciseCoaching(
       howTo: [
         'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
         'Curl it up to shoulder height keeping the knuckles up, then lower under control.',
@@ -11058,7 +10576,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=TUX58GM5fRQ',
       imageUrl: '',
     ),
-    'reverse_crunch': ExerciseCoaching(
+    'reverse_curl_cable': ExerciseCoaching(
       howTo: [
         'Attach a straight bar to a low pulley and grip it at shoulder width with palms facing down.',
         'Stand tall with elbows tucked to your sides.',
@@ -11072,7 +10590,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=KHC9toCk_j0',
       imageUrl: '',
     ),
-    'reverse_curl_barbell': ExerciseCoaching(
+    'reverse_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand tall with a dumbbell in each hand and your palms facing down, arms fully extended.',
         'Keep your elbows close to your sides and curl the weights up until your biceps contract.',
@@ -11085,7 +10603,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=u5DWQbPUcY8',
       imageUrl: '',
     ),
-    'reverse_curl_cable': ExerciseCoaching(
+    'reverse_fly_single_arm_cable': ExerciseCoaching(
       howTo: [
         'Stand side on to a cable set at chest height and take the handle in the far hand across your body.',
         'Sweep the arm out and back until level with the shoulder, then return under control.',
@@ -11098,7 +10616,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=1u2LbQBx6Vc',
       imageUrl: '',
     ),
-    'reverse_curl_dumbbell': ExerciseCoaching(
+    'reverse_grip_concentration_curl': ExerciseCoaching(
       howTo: [
         'Sit with your legs apart and brace the back of your upper arm against the inside of your thigh, holding the dumbbell with an overhand grip.',
         'Curl it up keeping the knuckles high, then lower slowly.',
@@ -11111,7 +10629,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=qf9XOmPwbAQ',
       imageUrl: '',
     ),
-    'reverse_fly_single_arm_cable': ExerciseCoaching(
+    'reverse_grip_lat_pulldown_cable': ExerciseCoaching(
       howTo: [
         'Sit with your thighs under the pads and take an underhand grip about shoulder width.',
         'Pull the bar to your upper chest keeping the elbows close to your body, then return to a full stretch.',
@@ -11124,7 +10642,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=SNiwpA13ZLU',
       imageUrl: '',
     ),
-    'reverse_grip_concentration_curl': ExerciseCoaching(
+    'reverse_hyperextension': ExerciseCoaching(
       howTo: [
         'Lie face down on a bench or hyperextension machine with your hips at the edge and your legs hanging.',
         'Raise the straight legs until they line up with your torso, then lower them under control.',
@@ -11137,7 +10655,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WCha157af1E',
       imageUrl: '',
     ),
-    'reverse_grip_lat_pulldown_cable': ExerciseCoaching(
+    'reverse_lunge': ExerciseCoaching(
       howTo: [
         'Stand tall and step one leg back into a long stride.',
         'Lower until the back knee is just above the floor, then push through the front heel to bring the back leg forward to standing.',
@@ -11150,7 +10668,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=xrPteyQLGAo',
       imageUrl: '',
     ),
-    'reverse_hyperextension': ExerciseCoaching(
+    'reverse_lunge_barbell': ExerciseCoaching(
       howTo: [
         'Set a barbell across your upper back and step one leg back into a long stride.',
         'Lower until the back knee nearly touches the floor, then drive through the front heel to stand.',
@@ -11163,7 +10681,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=fFdI96yZI18',
       imageUrl: '',
     ),
-    'reverse_lunge': ExerciseCoaching(
+    'reverse_lunge_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand tall holding a dumbbell in each hand at your sides.',
         'Step backward with one leg and lower your hips until both knees bend near 90 degrees and the back knee nearly touches the floor.',
@@ -11176,7 +10694,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Q2k3kYbtOcI',
       imageUrl: '',
     ),
-    'reverse_lunge_barbell': ExerciseCoaching(
+    'reverse_plank': ExerciseCoaching(
       howTo: [
         'Sit with your legs straight and your hands on the floor behind your hips, fingers pointing forward.',
         'Lift the hips until your body forms a straight line from heels to shoulders and hold.',
@@ -11189,7 +10707,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=gxz8EKgOLXs',
       imageUrl: '',
     ),
-    'reverse_lunge_dumbbell': ExerciseCoaching(
+    'ring_dip_rings_turned_out': ExerciseCoaching(
       howTo: [
         'Perform ring dips and finish each press by turning the rings out so the palms face forward at the top.',
         'Hold that turnout for a moment before the next rep.',
@@ -11202,7 +10720,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=YEVNj_camq8',
       imageUrl: '',
     ),
-    'reverse_plank': ExerciseCoaching(
+    'ring_dips': ExerciseCoaching(
       howTo: [
         'Support on rings with straight arms and the rings held close to the hips.',
         'Lower under control to the bottom, then press back up while stopping the rings from drifting out.',
@@ -11215,7 +10733,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=3rNC0b2Vt9w',
       imageUrl: '',
     ),
-    'ring_dip_rings_turned_out': ExerciseCoaching(
+    'romanian_deadlift_barbell': ExerciseCoaching(
       howTo: [
         'Stand tall holding a barbell at your thighs with your knees slightly bent.',
         'Push the hips back and lower the bar along your legs until you feel the hamstrings stretch, then drive the hips forward to stand.',
@@ -11228,7 +10746,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=xgusDooVfKU',
       imageUrl: '',
     ),
-    'ring_dips': ExerciseCoaching(
+    'romanian_deadlift_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand in front of your thighs with your knees slightly bent.',
         'Push the hips back and lower the weights down the front of your legs, then stand tall by driving the hips forward.',
@@ -11241,7 +10759,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=xAL7lHwj30E',
       imageUrl: '',
     ),
-    'romanian_deadlift_barbell': ExerciseCoaching(
+    'rope_cable_curl': ExerciseCoaching(
       howTo: [
         'Attach a rope to a low pulley and hold one end in each hand with your elbows at your sides.',
         'Curl the rope up, turning the palms slightly out at the top, then lower against the cable.',
@@ -11254,7 +10772,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=nv27NqhllOc',
       imageUrl: '',
     ),
-    'romanian_deadlift_dumbbell': ExerciseCoaching(
+    'rope_straight_arm_pulldown': ExerciseCoaching(
       howTo: [
         'Attach a rope to a high pulley and stand a couple feet back with a staggered stance.',
         'Hinge forward from the hips with a straight back and take the rope with arms extended overhead.',
@@ -11267,7 +10785,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=CqsO1bQl9QI',
       imageUrl: '',
     ),
-    'rope_cable_curl': ExerciseCoaching(
+    'rowing_machine': ExerciseCoaching(
       howTo: [
         'Strap in with your shins vertical and your arms straight.',
         'Drive with the legs first, then swing the torso back and finish by pulling the handle to your ribs, and reverse that order on the return.',
@@ -11280,7 +10798,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=6_eLpWiNijE',
       imageUrl: '',
     ),
-    'rope_straight_arm_pulldown': ExerciseCoaching(
+    'running': ExerciseCoaching(
       howTo: [
         'Run at a pace you can hold for the whole session, landing under your hips rather than reaching out in front.',
         'Keep the shoulders relaxed and let the arms swing forward and back, not across the body.',
@@ -11293,7 +10811,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=7j8wrUQ2Smc',
       imageUrl: '',
     ),
-    'rowing_machine': ExerciseCoaching(
+    'russian_twist_bodyweight': ExerciseCoaching(
       howTo: [
         'Sit with the knees bent and torso leaned back, feet up or down.',
         'Rotate the torso to touch the weight or hands to each side under control.',
@@ -11307,7 +10825,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=r7qlYt4xm-o',
       imageUrl: '',
     ),
-    'running': ExerciseCoaching(
+    'russian_twist_weighted': ExerciseCoaching(
       howTo: [
         'Sit with your knees bent and lean your torso back to about forty five degrees, holding a plate or dumbbell at your chest.',
         'Rotate the weight to one side, then the other, turning through the ribs.',
@@ -11320,7 +10838,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=A6gYNC1NwZM',
       imageUrl: '',
     ),
-    'russian_twist_bodyweight': ExerciseCoaching(
+    'scapular_pull_ups': ExerciseCoaching(
       howTo: [
         'Hang from the bar with straight arms.',
         'Without bending the elbows, pull the shoulder blades down and together so the body rises an inch or two, then lower back to a relaxed hang.',
@@ -11333,7 +10851,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=iKnjSB9VIGo',
       imageUrl: '',
     ),
-    'russian_twist_weighted': ExerciseCoaching(
+    'seated_cable_row_bar_grip': ExerciseCoaching(
       howTo: [
         'Sit at the cable row with your feet on the platform and a slight knee bend, gripping the straight bar.',
         'Pull it to your lower ribs by driving the elbows back, then return to a full stretch.',
@@ -11346,7 +10864,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=jDeA1MYu_BE',
       imageUrl: '',
     ),
-    'scapular_pull_ups': ExerciseCoaching(
+    'seated_cable_row_bar_wide_grip': ExerciseCoaching(
       howTo: [
         'Sit at the cable row and take a wide overhand grip on the long bar.',
         'Pull it to your upper stomach with the elbows flaring out to the sides, then return to a full stretch.',
@@ -11359,7 +10877,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=FXo1YuL1XeM',
       imageUrl: '',
     ),
-    'seated_cable_row_bar_grip': ExerciseCoaching(
+    'seated_cable_row_v_grip_cable': ExerciseCoaching(
       howTo: [
         'Sit with your feet planted and a slight knee bend, holding the V handle with both hands.',
         'Pull it to your stomach keeping the elbows close to your body, then return to a full stretch.',
@@ -11372,7 +10890,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=lJoozxC0Rns',
       imageUrl: '',
     ),
-    'seated_cable_row_bar_wide_grip': ExerciseCoaching(
+    'seated_calf_raise': ExerciseCoaching(
       howTo: [
         'Sit with the pad on the lower thighs and the balls of the feet on the block.',
         'Lower the heels to a stretch, then press up as high as possible onto the toes.',
@@ -11386,7 +10904,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=3ZRe_QpvRPg',
       imageUrl: '',
     ),
-    'seated_cable_row_v_grip_cable': ExerciseCoaching(
+    'seated_chest_flys_cable': ExerciseCoaching(
       howTo: [
         'Sit on a bench between two cable pulleys set at chest height with a handle in each hand.',
         'Bring the handles together in front of your chest with a soft elbow bend, then open back to a stretch.',
@@ -11399,7 +10917,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=VgKCIZgca58',
       imageUrl: '',
     ),
-    'seated_calf_raise': ExerciseCoaching(
+    'seated_dip_machine': ExerciseCoaching(
       howTo: [
         'Sit with your back against the pad and grip the handles beside your hips.',
         'Press down until your arms are almost straight, squeezing the triceps, then let the handles rise back to a stretch.',
@@ -11412,7 +10930,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ajWW13UWsmo',
       imageUrl: '',
     ),
-    'seated_chest_flys_cable': ExerciseCoaching(
+    'seated_incline_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Sit on a flat bench holding a dumbbell in each hand at arm\'s length with elbows close to your sides.',
         'Curl the weights up while rotating your palms to face up, until your biceps contract.',
@@ -11426,7 +10944,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=aTYlqC_JacQ',
       imageUrl: '',
     ),
-    'seated_dip_machine': ExerciseCoaching(
+    'seated_lateral_raise_dumbbell': ExerciseCoaching(
       howTo: [
         'Sit on the end of a bench with a dumbbell in each hand at your sides and a slight elbow bend.',
         'Raise the arms out to the sides to shoulder height, then lower them slowly.',
@@ -11439,7 +10957,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=g_7iXXBrCkY',
       imageUrl: '',
     ),
-    'seated_incline_curl_dumbbell': ExerciseCoaching(
+    'seated_leg_curl_machine': ExerciseCoaching(
       howTo: [
         'Sit with the pad on the lower calves and thighs secured.',
         'Curl the heels down and back under the seat, squeeze, then return under control.',
@@ -11453,7 +10971,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Orxowest56U',
       imageUrl: '',
     ),
-    'seated_lateral_raise_dumbbell': ExerciseCoaching(
+    'seated_overhead_press_barbell': ExerciseCoaching(
       howTo: [
         'Sit on an upright bench with the bar at shoulder height and your grip just outside your shoulders.',
         'Press it overhead until the arms lock, then lower back to the shoulders under control.',
@@ -11466,7 +10984,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=U-LRZmC_oD8',
       imageUrl: '',
     ),
-    'seated_leg_curl_machine': ExerciseCoaching(
+    'seated_overhead_press_dumbbell': ExerciseCoaching(
       howTo: [
         'Sit on a bench with back support and bring a dumbbell to each shoulder, palms facing forward.',
         'Press both dumbbells overhead until your arms extend and the weights nearly meet.',
@@ -11479,7 +10997,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=SSXS4Z8OkCg',
       imageUrl: '',
     ),
-    'seated_overhead_press_barbell': ExerciseCoaching(
+    'seated_palms_up_wrist_curl': ExerciseCoaching(
       howTo: [
         'Sit on a flat bench holding a dumbbell in each hand with your palms facing up.',
         'Rest your forearms along your thighs so the wrists hang just past your knees.',
@@ -11492,7 +11010,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=8cvfc68P51g',
       imageUrl: '',
     ),
-    'seated_overhead_press_dumbbell': ExerciseCoaching(
+    'seated_row_machine': ExerciseCoaching(
       howTo: [
         'Sit with your chest against the pad and grip the handles at arms length.',
         'Pull them back until your elbows pass your torso, squeeze the shoulder blades, then return to a full stretch.',
@@ -11505,7 +11023,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=RPxM76cp0Y8',
       imageUrl: '',
     ),
-    'seated_palms_up_wrist_curl': ExerciseCoaching(
+    'seated_shoulder_press_machine': ExerciseCoaching(
       howTo: [
         'Sit with your back flat against the pad and the handles level with your shoulders.',
         'Press them overhead until the arms are almost straight, then lower back to shoulder height.',
@@ -11518,7 +11036,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=OLqZDUUD2b0',
       imageUrl: '',
     ),
-    'seated_row_machine': ExerciseCoaching(
+    'seated_triceps_press': ExerciseCoaching(
       howTo: [
         'Sit on a bench with back support and hold one dumbbell overhead with both hands, arms locked out.',
         'Keep your elbows pointing forward and lower the weight behind your head by bending the elbows.',
@@ -11531,7 +11049,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=NWw7lqQAodc',
       imageUrl: '',
     ),
-    'seated_shoulder_press_machine': ExerciseCoaching(
+    'seated_wrist_extension_barbell': ExerciseCoaching(
       howTo: [
         'Sit with your forearms resting on your thighs and your wrists past the knees, holding a light barbell with an overhand grip.',
         'Raise the backs of the hands toward you, then lower slowly.',
@@ -11544,7 +11062,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=PMdkUNXrB9Q',
       imageUrl: '',
     ),
-    'seated_triceps_press': ExerciseCoaching(
+    'shoulder_press_dumbbell': ExerciseCoaching(
       howTo: [
         'Seated or standing, start with the dumbbells at shoulder height, palms forward.',
         'Press overhead until the arms extend, then lower under control to the shoulders.',
@@ -11558,7 +11076,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HzIiNhHhhtA',
       imageUrl: '',
     ),
-    'seated_wrist_extension_barbell': ExerciseCoaching(
+    'shoulder_press_machine_plates': ExerciseCoaching(
       howTo: [
         'Sit with your back against the pad and grip the handles at shoulder height.',
         'Press them overhead until the arms are nearly straight, then lower back under control without letting the plates drop.',
@@ -11571,7 +11089,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=GcY6TZxfS0k',
       imageUrl: '',
     ),
-    'shoulder_press_dumbbell': ExerciseCoaching(
+    'shoulder_taps': ExerciseCoaching(
       howTo: [
         'Set up in a push up position with your feet wide and your body straight.',
         'Lift one hand to tap the opposite shoulder, then set it down and switch, keeping the hips as still as you can.',
@@ -11584,7 +11102,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=nUCOhPkkPQ8',
       imageUrl: '',
     ),
-    'shoulder_press_machine_plates': ExerciseCoaching(
+    'shrimp_squat_advanced': ExerciseCoaching(
       howTo: [
         'Hold the rear foot behind you and lower until the back knee touches, keeping the torso upright and the balance steady with no assistance.',
       ],
@@ -11596,7 +11114,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=3zS6axi4aak',
       imageUrl: '',
     ),
-    'shoulder_taps': ExerciseCoaching(
+    'shrimp_squat_beginner': ExerciseCoaching(
       howTo: [
         'Hold one foot behind you with the same side hand and lower on the other leg until the back knee touches a pad.',
         'Use a light support with the free hand.',
@@ -11609,7 +11127,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=1x5iajDgE9I',
       imageUrl: '',
     ),
-    'shrimp_squat_advanced': ExerciseCoaching(
+    'shrimp_squat_intermediate': ExerciseCoaching(
       howTo: [
         'Hold the rear foot with the same side hand and lower to the back knee without any hand support.',
         'Stand back up on the working leg.',
@@ -11622,7 +11140,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=It9nKt0BFlM',
       imageUrl: '',
     ),
-    'shrimp_squat_beginner': ExerciseCoaching(
+    'shrug_barbell': ExerciseCoaching(
       howTo: [
         'Hold the bar in front of the thighs with straight arms.',
         'Shrug the shoulders straight up toward the ears, hold briefly, then lower under control.',
@@ -11636,7 +11154,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=M_MjF5Nm_h4',
       imageUrl: '',
     ),
-    'shrimp_squat_intermediate': ExerciseCoaching(
+    'shrug_cable': ExerciseCoaching(
       howTo: [
         'Stand facing away from or beside a low pulley holding the handle or bar at arms length.',
         'Lift the shoulders straight up toward your ears, pause, then lower them fully.',
@@ -11649,7 +11167,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=YykmcX2b-LY',
       imageUrl: '',
     ),
-    'shrug_barbell': ExerciseCoaching(
+    'shrug_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand tall holding a dumbbell in each hand at your sides with the arms straight.',
         'Lift the shoulders straight up toward your ears as high as you can, pause, then lower them fully.',
@@ -11662,7 +11180,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=_t3lrPI6Ns4',
       imageUrl: '',
     ),
-    'shrug_cable': ExerciseCoaching(
+    'shrug_machine': ExerciseCoaching(
       howTo: [
         'Stand or sit in the machine gripping the handles with your arms straight.',
         'Lift the shoulders straight up toward your ears, hold briefly, then lower them all the way down.',
@@ -11675,7 +11193,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=hXW5QIlThKw',
       imageUrl: '',
     ),
-    'shrug_dumbbell': ExerciseCoaching(
+    'shrug_smith_machine': ExerciseCoaching(
       howTo: [
         'Stand inside the Smith machine holding the bar at arms length in front of your thighs.',
         'Lift the shoulders straight up toward your ears, pause, then lower them fully.',
@@ -11688,7 +11206,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=jSvSu_p_uUE',
       imageUrl: '',
     ),
-    'shrug_machine': ExerciseCoaching(
+    'side_bend': ExerciseCoaching(
       howTo: [
         'Stand tall with your feet hip width and one hand behind your head.',
         'Bend sideways at the waist toward the free hand, then contract the opposite side to pull yourself back upright.',
@@ -11701,7 +11219,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=wY9nQ-yfRwo',
       imageUrl: '',
     ),
-    'shrug_smith_machine': ExerciseCoaching(
+    'side_bend_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand holding a dumbbell in one hand at your side with the other hand behind your head.',
         'Bend sideways toward the weight, then pull back up using the opposite side of your waist.',
@@ -11714,7 +11232,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=4KELpk9p8iE',
       imageUrl: '',
     ),
-    'side_bend': ExerciseCoaching(
+    'side_plank': ExerciseCoaching(
       howTo: [
         'Lie on your side and prop yourself on one forearm with the elbow under the shoulder and your feet stacked.',
         'Lift the hips until your body is a straight line and hold, then switch sides.',
@@ -11727,7 +11245,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=44ND4bOB-T0',
       imageUrl: '',
     ),
-    'side_bend_dumbbell': ExerciseCoaching(
+    'single_arm_cable_crossover': ExerciseCoaching(
       howTo: [
         'Set the pulley high and take the handle in one hand, stepping forward so the arm is extended out and back.',
         'Keep your chest up and pull the handle down and across your body toward the opposite hip.',
@@ -11740,7 +11258,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Ob5vbpJShKU',
       imageUrl: '',
     ),
-    'side_plank': ExerciseCoaching(
+    'single_arm_cable_row': ExerciseCoaching(
       howTo: [
         'Sit or stand facing a cable set at chest height and take the handle in one hand with the arm extended.',
         'Pull it to your ribs by driving the elbow back, then return to a full stretch.',
@@ -11753,7 +11271,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IyMz3mDmnGA',
       imageUrl: '',
     ),
-    'single_arm_cable_crossover': ExerciseCoaching(
+    'single_arm_curl_cable': ExerciseCoaching(
       howTo: [
         'Grab a single handle at the low pulley and step back so the cable stays taut.',
         'Pin your upper arm to your side and keep it still.',
@@ -11766,7 +11284,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=9ZUCFkp-5BI',
       imageUrl: '',
     ),
-    'single_arm_cable_row': ExerciseCoaching(
+    'single_arm_landmine_press_barbell': ExerciseCoaching(
       howTo: [
         'Hold the end of a landmine barbell at your shoulder with one hand and stand square.',
         'Press it up and slightly forward until the arm locks out, then lower it back to the shoulder.',
@@ -11779,7 +11297,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WMkebvu4exo',
       imageUrl: '',
     ),
-    'single_arm_curl_cable': ExerciseCoaching(
+    'single_arm_lat_pulldown': ExerciseCoaching(
       howTo: [
         'Attach a single handle to a high pulley and sit with the knee pad snug against your thighs.',
         'Grip the handle with your palm facing forward and arm extended overhead.',
@@ -11793,7 +11311,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HBC5s98wXko',
       imageUrl: '',
     ),
-    'single_arm_landmine_press_barbell': ExerciseCoaching(
+    'single_arm_lateral_raise_cable': ExerciseCoaching(
       howTo: [
         'Stand side on to a low pulley and take the handle in the outside hand across your body.',
         'Raise the arm out to the side to shoulder height, then lower it slowly against the cable.',
@@ -11806,7 +11324,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=yau1cttEMdY',
       imageUrl: '',
     ),
-    'single_arm_lat_pulldown': ExerciseCoaching(
+    'single_arm_tricep_extension_dumbbell': ExerciseCoaching(
       howTo: [
         'Sit or stand tall and raise a dumbbell overhead in one hand with the arm fully extended.',
         'Keep your upper arm close to your head and pointing up.',
@@ -11819,7 +11337,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=kZ-ReOdn2qk',
       imageUrl: '',
     ),
-    'single_arm_lateral_raise_cable': ExerciseCoaching(
+    'single_arm_triceps_pushdown_cable': ExerciseCoaching(
       howTo: [
         'Stand facing a high pulley with a single handle and your elbow tucked at your side.',
         'Press the handle down until the arm is straight, squeeze the triceps, then let it rise back to a bent elbow.',
@@ -11832,7 +11350,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Cp_bShvMY4c',
       imageUrl: '',
     ),
-    'single_arm_tricep_extension_dumbbell': ExerciseCoaching(
+    'single_leg_extensions': ExerciseCoaching(
       howTo: [
         'Sit on a bench or chair with one leg hanging.',
         'Straighten that leg until it is fully extended, squeeze the quad at the top, then lower it under control and repeat before switching.',
@@ -11845,7 +11363,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=82IuSLk5zNc',
       imageUrl: '',
     ),
-    'single_arm_triceps_pushdown_cable': ExerciseCoaching(
+    'single_leg_glute_bridge': ExerciseCoaching(
       howTo: [
         'Lie on your back with feet flat and knees bent, then lift one knee toward your chest.',
         'Drive through the heel of your planted foot and extend your hip to raise your hips off the floor until your body forms a straight line.',
@@ -11858,7 +11376,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=sVfp4LN9niA',
       imageUrl: '',
     ),
-    'single_leg_extensions': ExerciseCoaching(
+    'single_leg_hip_thrust': ExerciseCoaching(
       howTo: [
         'Rest your upper back on a bench with one foot flat on the floor and the other leg lifted.',
         'Drive through the planted heel to raise the hips until level, then lower under control.',
@@ -11871,7 +11389,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=lzDgRRuBdqY',
       imageUrl: '',
     ),
-    'single_leg_glute_bridge': ExerciseCoaching(
+    'single_leg_hip_thrust_dumbbell': ExerciseCoaching(
       howTo: [
         'Rest your upper back on a bench with a dumbbell across your hips and one foot planted.',
         'Raise the hips until your body is level, squeeze, then lower under control and repeat on the other side.',
@@ -11884,7 +11402,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pWgVRFuxhoA',
       imageUrl: '',
     ),
-    'single_leg_hip_thrust': ExerciseCoaching(
+    'single_leg_press_machine': ExerciseCoaching(
       howTo: [
         'Sit in the leg press and place one foot in the middle of the platform.',
         'Lower until the knee reaches about ninety degrees, then press back up without locking the knee hard.',
@@ -11897,7 +11415,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WFHc3NVGesU',
       imageUrl: '',
     ),
-    'single_leg_hip_thrust_dumbbell': ExerciseCoaching(
+    'single_leg_romanian_deadlift_barbell': ExerciseCoaching(
       howTo: [
         'Hold a barbell in front of your thighs and shift your weight onto one leg.',
         'Hinge forward letting the free leg travel back as a counterweight, then drive the hips forward to stand tall.',
@@ -11910,7 +11428,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ly35vxXH56s',
       imageUrl: '',
     ),
-    'single_leg_press_machine': ExerciseCoaching(
+    'single_leg_romanian_deadlift_bodyweight': ExerciseCoaching(
       howTo: [
         'Stand on one leg with a soft knee and hinge at the hips, letting the free leg travel back as the chest lowers.',
         'Return by driving the hips forward.',
@@ -11923,7 +11441,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=JQZqPsmeesc',
       imageUrl: '',
     ),
-    'single_leg_romanian_deadlift_barbell': ExerciseCoaching(
+    'single_leg_romanian_deadlift_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in one or both hands and stand on one leg with a soft knee bend.',
         'Hinge forward lowering the weight toward the floor as the free leg lifts behind, then stand back up.',
@@ -11936,7 +11454,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pJewPISyHjw',
       imageUrl: '',
     ),
-    'single_leg_romanian_deadlift_bodyweight': ExerciseCoaching(
+    'single_leg_standing_calf_raise': ExerciseCoaching(
       howTo: [
         'Stand on one foot on the edge of a step with the heel hanging off, holding something for balance.',
         'Press up onto the toes as high as you can, then lower the heel below the step.',
@@ -11949,7 +11467,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IphGZ8OlfYg',
       imageUrl: '',
     ),
-    'single_leg_romanian_deadlift_dumbbell': ExerciseCoaching(
+    'single_leg_standing_calf_raise_barbell': ExerciseCoaching(
       howTo: [
         'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
         'Rise up onto your toes as high as possible, squeezing the calves hard.',
@@ -11962,7 +11480,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Rm-K4hmsaCg',
       imageUrl: '',
     ),
-    'single_leg_standing_calf_raise': ExerciseCoaching(
+    'single_leg_standing_calf_raise_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
         'Rise onto your toes as high as you can by squeezing the calves.',
@@ -11975,7 +11493,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=KcTEGifMTDY',
       imageUrl: '',
     ),
-    'single_leg_standing_calf_raise_barbell': ExerciseCoaching(
+    'single_leg_standing_calf_raise_machine': ExerciseCoaching(
       howTo: [
         'Set the shoulder pads and stand on the platform with one foot, the heel hanging off the edge.',
         'Press up onto the toes, pause at the top, then lower the heel for a full stretch.',
@@ -11988,7 +11506,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=RQRN_pmhfwM',
       imageUrl: '',
     ),
-    'single_leg_standing_calf_raise_dumbbell': ExerciseCoaching(
+    'sissy_squat_weighted': ExerciseCoaching(
       howTo: [
         'Grip a squat rack upright with one hand and hold a weight plate against your chest with the other, feet shoulder-width and up on your toes.',
         'Lower by driving your knees forward and leaning your torso back in a straight line.',
@@ -12001,7 +11519,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=DjKzACI2dzI',
       imageUrl: '',
     ),
-    'single_leg_standing_calf_raise_machine': ExerciseCoaching(
+    'sit_up': ExerciseCoaching(
       howTo: [
         'Lie on your back with knees bent, feet anchored, and hands behind your head.',
         'Curl your torso up off the floor toward your knees, leading with your chest.',
@@ -12015,7 +11533,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=onaQ0v_J5uU',
       imageUrl: '',
     ),
-    'sissy_squat_weighted': ExerciseCoaching(
+    'sit_up_weighted': ExerciseCoaching(
       howTo: [
         'Lie on your back with your knees bent and hold a plate against your chest.',
         'Sit all the way up until your torso is upright, then lower back down under control.',
@@ -12028,7 +11546,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pTZL-Hirhwg',
       imageUrl: '',
     ),
-    'sit_up': ExerciseCoaching(
+    'skullcrusher_barbell': ExerciseCoaching(
       howTo: [
         'Lie on a bench holding an EZ bar over your chest with a close grip.',
         'Bend only at the elbows to lower the bar toward your forehead, then extend back to straight arms.',
@@ -12041,7 +11559,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=l3rHYPtMUo8',
       imageUrl: '',
     ),
-    'sit_up_weighted': ExerciseCoaching(
+    'skullcrusher_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie on a bench holding a dumbbell in each hand over your chest with palms facing each other.',
         'Bend the elbows to lower the weights beside your head, then press back to straight arms.',
@@ -12054,7 +11572,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=jPjhQ2hsAds',
       imageUrl: '',
     ),
-    'skullcrusher_barbell': ExerciseCoaching(
+    'sled_push': ExerciseCoaching(
       howTo: [
         'Load the sled and grip the handles with your arms fully extended.',
         'Set an athletic stance with a forward body lean and a flat back.',
@@ -12068,7 +11586,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=QwscR2BhdEg',
       imageUrl: '',
     ),
-    'skullcrusher_dumbbell': ExerciseCoaching(
+    'snatch': ExerciseCoaching(
       howTo: [
         'From a wide grip, pull the bar explosively from the floor, extend the hips and pull under to catch it overhead in a full squat, then stand to lockout.',
       ],
@@ -12081,7 +11599,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Iy0vPROslAA',
       imageUrl: '',
     ),
-    'sled_push': ExerciseCoaching(
+    'snowboarding': ExerciseCoaching(
       howTo: [
         'Ride at a pace and terrain that keeps you working continuously, staying low with the knees bent and the weight centered over the board.',
         'Link turns smoothly rather than skidding to a stop.',
@@ -12094,7 +11612,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=imE4pJIHQYM',
       imageUrl: '',
     ),
-    'snatch': ExerciseCoaching(
+    'spider_curl_barbell': ExerciseCoaching(
       howTo: [
         'Lie chest down on an incline bench with your arms hanging straight below you holding an EZ bar.',
         'Curl it up toward your shoulders without moving the upper arms, then lower to straight.',
@@ -12107,7 +11625,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=tWYg1zUj1cU',
       imageUrl: '',
     ),
-    'snowboarding': ExerciseCoaching(
+    'spider_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Lie face down on an incline bench with your chest supported and shoulders near the top.',
         'Let your arms hang straight down holding a dumbbell in each hand.',
@@ -12120,7 +11638,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ke2shAeQ0O8',
       imageUrl: '',
     ),
-    'spider_curl_barbell': ExerciseCoaching(
+    'spiderman': ExerciseCoaching(
       howTo: [
         'Set up in a push up position with your body straight.',
         'Drive one knee up toward the same side elbow, hold briefly, then return it and switch sides.',
@@ -12133,7 +11651,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=MrkvrtDrEkY',
       imageUrl: '',
     ),
-    'spider_curl_dumbbell': ExerciseCoaching(
+    'spinning': ExerciseCoaching(
       howTo: [
         'Ride a stationary bike through changes of pace and resistance, staying seated or standing as the session calls for.',
         'Keep the pedal stroke smooth and the upper body relaxed.',
@@ -12146,7 +11664,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=z2wCIlJAQVw',
       imageUrl: '',
     ),
-    'spiderman': ExerciseCoaching(
+    'split_jerk': ExerciseCoaching(
       howTo: [
         'Rack the bar across your front delts, feet under your hips.',
         'Dip straight down by bending the knees, then drive up explosively and punch the bar overhead.',
@@ -12161,7 +11679,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=0ARGp-XotkE',
       imageUrl: '',
     ),
-    'spinning': ExerciseCoaching(
+    'split_squat_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand and set your feet in a long split stance.',
         'Lower straight down until the back knee is just above the floor, then drive through the front heel to stand.',
@@ -12174,7 +11692,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=lHa6aCpFndo',
       imageUrl: '',
     ),
-    'split_jerk': ExerciseCoaching(
+    'sprints': ExerciseCoaching(
       howTo: [
         'Run at close to maximum effort for a short distance or time, then walk or jog until you have recovered.',
         'Drive the knees and pump the arms hard through each sprint.',
@@ -12187,7 +11705,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=VgJCaUSd5fs',
       imageUrl: '',
     ),
-    'split_squat_dumbbell': ExerciseCoaching(
+    'squat_assisted': ExerciseCoaching(
       howTo: [
         'Hold a doorframe, pole or suspension strap and sit back into a squat.',
         'Use the hands for balance and only as much pull as you need to reach depth.',
@@ -12200,7 +11718,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=i1ge-244WSM',
       imageUrl: '',
     ),
-    'sprints': ExerciseCoaching(
+    'squat_assisted_deep': ExerciseCoaching(
       howTo: [
         'Using the same light support, lower all the way until the hamstrings meet the calves.',
         'Hold the bottom briefly, then stand back up.',
@@ -12213,7 +11731,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=UqnCCmzMpdE',
       imageUrl: '',
     ),
-    'squat_assisted': ExerciseCoaching(
+    'squat_band': ExerciseCoaching(
       howTo: [
         'Stand on the band with your feet shoulder width and bring the top of the loop over your shoulders.',
         'Squat down until the thighs are at least parallel, then stand up against the band.',
@@ -12226,7 +11744,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=QaTMOqDL6s8',
       imageUrl: '',
     ),
-    'squat_assisted_deep': ExerciseCoaching(
+    'squat_barbell': ExerciseCoaching(
       howTo: [
         'Set the bar just below shoulder height, step under it and rest it across your upper back.',
         'Drive through your legs to unrack, step back to a shoulder-width stance with toes slightly out.',
@@ -12242,7 +11760,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=rrJIyZGlK8c',
       imageUrl: '',
     ),
-    'squat_band': ExerciseCoaching(
+    'squat_bodyweight': ExerciseCoaching(
       howTo: [
         'Stand with the feet about shoulder width and the toes turned slightly out.',
         'Sit back and down until the thighs pass parallel, then drive through the whole foot to stand.',
@@ -12255,7 +11773,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=l83R5PblSMA',
       imageUrl: '',
     ),
-    'squat_barbell': ExerciseCoaching(
+    'squat_deep': ExerciseCoaching(
       howTo: [
         'Squat all the way to the bottom so the hamstrings rest on the calves and hold there comfortably.',
         'Stand back up without letting the heels lift.',
@@ -12268,7 +11786,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ZR7XApOTREw',
       imageUrl: '',
     ),
-    'squat_bodyweight': ExerciseCoaching(
+    'squat_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand at your sides or one at your chest, feet about shoulder width.',
         'Squat down until your thighs are at least parallel, then drive through the floor to stand.',
@@ -12281,7 +11799,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=OtOayZUX370',
       imageUrl: '',
     ),
-    'squat_deep': ExerciseCoaching(
+    'squat_machine': ExerciseCoaching(
       howTo: [
         'Set the shoulder pads and place your feet on the platform about shoulder width.',
         'Lower until your thighs are at least parallel, then press back up through the whole foot.',
@@ -12294,7 +11812,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=LoW6ZIBJWHg',
       imageUrl: '',
     ),
-    'squat_dumbbell': ExerciseCoaching(
+    'squat_smith_machine': ExerciseCoaching(
       howTo: [
         'Set the bar across your upper back in the Smith machine with your feet slightly forward.',
         'Lower until your thighs are at least parallel, then drive back up and re-engage the hooks at the end.',
@@ -12307,7 +11825,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ntRzKF4UKBg',
       imageUrl: '',
     ),
-    'squat_machine': ExerciseCoaching(
+    'squat_suspension': ExerciseCoaching(
       howTo: [
         'Hold the handles and stand with your feet shoulder width and the straps taut.',
         'Sit back into a squat using the straps for balance, then drive through the heels to stand.',
@@ -12320,7 +11838,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HN64r7kucok',
       imageUrl: '',
     ),
-    'squat_smith_machine': ExerciseCoaching(
+    'squat_row': ExerciseCoaching(
       howTo: [
         'Hold the suspension handles or a band and sink into a squat with your arms extended.',
         'Stand up while pulling the handles to your ribs, then squat back down as the arms extend.',
@@ -12333,7 +11851,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=cjNi69LNC78',
       imageUrl: '',
     ),
-    'squat_suspension': ExerciseCoaching(
+    'stair_machine_floors': ExerciseCoaching(
       howTo: [
         'Step onto the machine and climb at a steady pace, standing tall rather than leaning on the rails.',
         'Place the whole foot on each step and let the legs do the work.',
@@ -12346,7 +11864,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=y0zGTCPk3mA',
       imageUrl: '',
     ),
-    'squat_row': ExerciseCoaching(
+    'stair_machine_steps': ExerciseCoaching(
       howTo: [
         'Climb at a steady step rate, standing upright with a light touch on the rails for balance only.',
         'Drive through the whole foot on each step rather than the toes alone.',
@@ -12359,7 +11877,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=y0zGTCPk3mA',
       imageUrl: '',
     ),
-    'stair_machine_floors': ExerciseCoaching(
+    'standing_cable_glute_kickbacks': ExerciseCoaching(
       howTo: [
         'Attach an ankle strap to a low pulley and face the machine holding on for balance.',
         'Drive the strapped leg back and up by squeezing the glute, then return under control.',
@@ -12372,7 +11890,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-QjWnf6qeNs',
       imageUrl: '',
     ),
-    'stair_machine_steps': ExerciseCoaching(
+    'standing_calf_raise': ExerciseCoaching(
       howTo: [
         'Set a loaded barbell across your upper back inside a squat rack and step out.',
         'Rise up onto the balls of your feet as high as you can, squeezing the calves.',
@@ -12386,7 +11904,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Lpu-WNNU_J4',
       imageUrl: '',
     ),
-    'standing_cable_glute_kickbacks': ExerciseCoaching(
+    'standing_calf_raise_barbell': ExerciseCoaching(
       howTo: [
         'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
         'Rise up onto your toes as high as possible, squeezing the calves hard.',
@@ -12399,7 +11917,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=EZR7Bs9WCVM',
       imageUrl: '',
     ),
-    'standing_calf_raise': ExerciseCoaching(
+    'standing_calf_raise_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
         'Rise onto your toes as high as you can by squeezing the calves.',
@@ -12412,7 +11930,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ADIDoYt_ko4',
       imageUrl: '',
     ),
-    'standing_calf_raise_barbell': ExerciseCoaching(
+    'standing_calf_raise_machine': ExerciseCoaching(
       howTo: [
         'Set the shoulder pads and stand with the balls of your feet on the platform edge.',
         'Press up onto the toes as high as you can, pause, then lower the heels below the platform.',
@@ -12425,7 +11943,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=u8-wLlBxFE4',
       imageUrl: '',
     ),
-    'standing_calf_raise_dumbbell': ExerciseCoaching(
+    'standing_calf_raise_smith': ExerciseCoaching(
       howTo: [
         'Set the bar across your upper back in the Smith machine and stand with the balls of your feet on a block.',
         'Press up onto the toes, pause, then lower the heels for a full stretch.',
@@ -12438,7 +11956,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=RQHGeGCCL1k',
       imageUrl: '',
     ),
-    'standing_calf_raise_machine': ExerciseCoaching(
+    'standing_leg_curls': ExerciseCoaching(
       howTo: [
         'Stand tall holding something for balance and shift your weight onto one leg.',
         'Curl the other heel toward your glute as far as it goes, then lower it under control.',
@@ -12451,7 +11969,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=CusyCbRlttM',
       imageUrl: '',
     ),
-    'standing_calf_raise_smith': ExerciseCoaching(
+    'standing_military_press_barbell': ExerciseCoaching(
       howTo: [
         'Hold the bar at the front of the shoulders, feet hip-width, glutes and abs braced.',
         'Press the bar overhead, moving the head back slightly to clear it, then push through to a locked-out finish over the mid-foot.',
@@ -12465,7 +11983,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=G2qpTG1Eh40',
       imageUrl: '',
     ),
-    'standing_leg_curls': ExerciseCoaching(
+    'step_up': ExerciseCoaching(
       howTo: [
         'Place one whole foot on a box at about knee height.',
         'Drive through that heel to stand up on the box without pushing off the back foot, then lower back down under control.',
@@ -12478,7 +11996,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=wfhXnLILqdk',
       imageUrl: '',
     ),
-    'standing_military_press_barbell': ExerciseCoaching(
+    'sternum_pull_up_gironda': ExerciseCoaching(
       howTo: [
         'Hang from the bar and pull while leaning your head back and arching the upper back.',
         'Keep pulling until your sternum touches the bar and your body finishes close to horizontal, then lower under control.',
@@ -12491,7 +12009,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=rroBJ8zHi0Q',
       imageUrl: '',
     ),
-    'step_up': ExerciseCoaching(
+    'straight_arm_lat_pulldown_cable': ExerciseCoaching(
       howTo: [
         'Grab a wide bar on a high pulley with an overhand grip wider than shoulder width and step back about two feet.',
         'Hinge your torso forward about 30 degrees with arms extended toward the pulley.',
@@ -12504,7 +12022,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=ey9Fv3FGrRg',
       imageUrl: '',
     ),
-    'sternum_pull_up_gironda': ExerciseCoaching(
+    'straight_leg_deadlift': ExerciseCoaching(
       howTo: [
         'Stand with your feet hip width and your knees nearly locked.',
         'Hinge at the hips to lower your hands toward the floor until the hamstrings stop you, then drive the hips forward to stand.',
@@ -12517,7 +12035,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=mQE3wjSLeTc',
       imageUrl: '',
     ),
-    'straight_arm_lat_pulldown_cable': ExerciseCoaching(
+    'stretching': ExerciseCoaching(
       howTo: [
         'Move into each position until you feel a mild stretch, then hold it while you breathe steadily.',
         'Ease off if the sensation turns sharp and give both sides the same time.',
@@ -12530,7 +12048,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=XWJgzixqFH4',
       imageUrl: '',
     ),
-    'straight_leg_deadlift': ExerciseCoaching(
+    'sumo_deadlift': ExerciseCoaching(
       howTo: [
         'Stand with a wide stance and your toes turned out, hands inside your knees.',
         'Push the knees out, keep the chest up and drive through the floor to stand tall, then lower under control.',
@@ -12543,7 +12061,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pfSMst14EFk',
       imageUrl: '',
     ),
-    'stretching': ExerciseCoaching(
+    'sumo_squat': ExerciseCoaching(
       howTo: [
         'Stand with your feet much wider than your shoulders and your toes turned out.',
         'Squat straight down between your heels keeping the chest tall, then drive through the floor to stand.',
@@ -12556,7 +12074,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=4eDJa5MnAmY',
       imageUrl: '',
     ),
-    'sumo_deadlift': ExerciseCoaching(
+    'sumo_squat_barbell': ExerciseCoaching(
       howTo: [
         'Set a barbell across your upper back and take a wide stance with your toes turned out.',
         'Squat straight down until the thighs pass parallel, then drive up through the whole foot.',
@@ -12569,7 +12087,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=aywobXlcTmU',
       imageUrl: '',
     ),
-    'sumo_squat': ExerciseCoaching(
+    'sumo_squat_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a single dumbbell with both hands hanging between your legs and take a wide stance with toes out.',
         'Squat straight down until the thighs pass parallel, then stand and squeeze the glutes.',
@@ -12582,7 +12100,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=vBA3vyOxJv0',
       imageUrl: '',
     ),
-    'sumo_squat_barbell': ExerciseCoaching(
+    'sumo_squat_kettlebell': ExerciseCoaching(
       howTo: [
         'Hold a kettlebell by the handle with both hands hanging in front of you and take a wide stance with toes out.',
         'Squat down between your heels, then drive up to standing.',
@@ -12595,7 +12113,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=WepILpVDm4Y',
       imageUrl: '',
     ),
-    'sumo_squat_dumbbell': ExerciseCoaching(
+    'superman': ExerciseCoaching(
       howTo: [
         'Lie face down with your arms extended overhead.',
         'Lift your arms, chest and legs off the floor at the same time, hold briefly, then lower everything back down under control.',
@@ -12608,7 +12126,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=kTMBsUwEGPM',
       imageUrl: '',
     ),
-    'sumo_squat_kettlebell': ExerciseCoaching(
+    'swimming': ExerciseCoaching(
       howTo: [
         'Swim continuous lengths at a pace you can hold, breathing on a regular rhythm.',
         'Keep the body long and flat in the water and let the legs stay near the surface.',
@@ -12621,7 +12139,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=mFFxTuaMpDQ',
       imageUrl: '',
     ),
-    'superman': ExerciseCoaching(
+    't_bar_row': ExerciseCoaching(
       howTo: [
         'Straddle the bar and grip the handles with a flat back and your torso hinged forward.',
         'Row the weight to your chest by driving the elbows back, then lower it to a full stretch.',
@@ -12634,7 +12152,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=yPis7nlbqdY',
       imageUrl: '',
     ),
-    'swimming': ExerciseCoaching(
+    'thruster_barbell': ExerciseCoaching(
       howTo: [
         'Hold the bar in a front rack across your shoulders and squat down to at least parallel.',
         'Drive up out of the squat and use that momentum to press the bar overhead in one motion.',
@@ -12647,7 +12165,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-seu3IbP81k',
       imageUrl: '',
     ),
-    't_bar_row': ExerciseCoaching(
+    'thruster_kettlebell': ExerciseCoaching(
       howTo: [
         'Hold two kettlebells racked at your shoulders, feet shoulder-width.',
         'Squat down until your thighs are parallel, then drive up through the legs and press both bells overhead as you stand.',
@@ -12662,7 +12180,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=6QuhpfShOuM',
       imageUrl: '',
     ),
-    'thruster_barbell': ExerciseCoaching(
+    'toe_touch': ExerciseCoaching(
       howTo: [
         'Lie on your back with your legs raised straight toward the ceiling and your arms reaching up.',
         'Curl the shoulders off the floor to reach for your toes, then lower back under control.',
@@ -12675,7 +12193,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=9iEI95-eZWk',
       imageUrl: '',
     ),
-    'thruster_kettlebell': ExerciseCoaching(
+    'toes_to_bar': ExerciseCoaching(
       howTo: [
         'Hang from the bar with the shoulders active.',
         'Swing into a slight arch, then drive the legs up until your toes touch the bar, and control the way back down into the next rep.',
@@ -12688,7 +12206,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=pFQnC1zXtik',
       imageUrl: '',
     ),
-    'toe_touch': ExerciseCoaching(
+    'torso_rotation': ExerciseCoaching(
       howTo: [
         'Sit or stand with the pad or handle against your torso and your hips locked in place.',
         'Rotate your upper body to one side against the resistance, then return under control.',
@@ -12701,7 +12219,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IHIEp_2D_Dg',
       imageUrl: '',
     ),
-    'toes_to_bar': ExerciseCoaching(
+    'treadmill': ExerciseCoaching(
       howTo: [
         'Set a pace and incline you can hold and run or walk in the middle of the belt.',
         'Stand tall and let the arms swing naturally rather than holding the rails.',
@@ -12714,7 +12232,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=LsswRe8_I3g',
       imageUrl: '',
     ),
-    'torso_rotation': ExerciseCoaching(
+    'triceps_dip': ExerciseCoaching(
       howTo: [
         'Support yourself on parallel bars with straight arms and your torso close to upright.',
         'Lower until the elbows reach about ninety degrees, then press back to straight arms.',
@@ -12727,7 +12245,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=qrS6aa0aQ9I',
       imageUrl: '',
     ),
-    'treadmill': ExerciseCoaching(
+    'triceps_dip_assisted': ExerciseCoaching(
       howTo: [
         'Kneel on the assist pad or loop a band under your knees on the parallel bars and stay upright.',
         'Lower until the elbows reach ninety degrees, then press back to straight arms.',
@@ -12740,7 +12258,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=md_xgPQBCKY',
       imageUrl: '',
     ),
-    'triceps_dip': ExerciseCoaching(
+    'triceps_dip_weighted': ExerciseCoaching(
       howTo: [
         'Add load with a dip belt or vest and support yourself upright on the parallel bars.',
         'Lower until the elbows reach ninety degrees, then press back to a full lockout.',
@@ -12753,7 +12271,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=fjcbsSnrjKc',
       imageUrl: '',
     ),
-    'triceps_dip_assisted': ExerciseCoaching(
+    'triceps_extension_barbell': ExerciseCoaching(
       howTo: [
         'Lie back on an incline bench set between 45 and 75 degrees, holding a barbell with an overhand grip just inside shoulder width.',
         'Extend your arms to bring the bar overhead with elbows in.',
@@ -12766,7 +12284,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=q5X9thiKofE',
       imageUrl: '',
     ),
-    'triceps_dip_weighted': ExerciseCoaching(
+    'triceps_extension_cable': ExerciseCoaching(
       howTo: [
         'Lie on a flat bench at the end of a low pulley and hold the straight bar with a narrow overhand grip.',
         'Start with your arms extended and the bar over your face.',
@@ -12779,7 +12297,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=1u18yJELsh0',
       imageUrl: '',
     ),
-    'triceps_extension_barbell': ExerciseCoaching(
+    'triceps_extension_dumbbell': ExerciseCoaching(
       howTo: [
         'Stand with feet shoulder width and hold one dumbbell overhead with both hands, arms extended.',
         'Keep your elbows in and pointing up as you lower the weight behind your head.',
@@ -12792,7 +12310,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=a9oPnZReIRE',
       imageUrl: '',
     ),
-    'triceps_extension_cable': ExerciseCoaching(
+    'triceps_extension_machine': ExerciseCoaching(
       howTo: [
         'Adjust the seat and set your upper arms against the pads, grasping the handles.',
         'Extend your elbows to push the handles down until your arms are straight.',
@@ -12805,7 +12323,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Bx8ga1BLHLE',
       imageUrl: '',
     ),
-    'triceps_extension_dumbbell': ExerciseCoaching(
+    'triceps_extension_suspension': ExerciseCoaching(
       howTo: [
         'Hold the handles and lean forward with your body straight and your hands in front of your forehead.',
         'Straighten the arms to press yourself back up, then bend the elbows to lower under control.',
@@ -12818,7 +12336,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-BvHfRf7an0',
       imageUrl: '',
     ),
-    'triceps_extension_machine': ExerciseCoaching(
+    'triceps_kickback_cable': ExerciseCoaching(
       howTo: [
         'Hinge forward holding a low cable handle with your upper arm pinned against your side.',
         'Straighten the arm behind you, squeeze the triceps, then return to a bent elbow.',
@@ -12831,7 +12349,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=DYsQWSbj7UM',
       imageUrl: '',
     ),
-    'triceps_extension_suspension': ExerciseCoaching(
+    'triceps_kickback_dumbbell': ExerciseCoaching(
       howTo: [
         'Hinge forward with a flat back holding a dumbbell with your upper arm against your side.',
         'Extend the arm straight back until it locks, squeeze, then lower to a bent elbow.',
@@ -12844,7 +12362,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=m_UlDFNX4mk',
       imageUrl: '',
     ),
-    'triceps_kickback_cable': ExerciseCoaching(
+    'triceps_pressdown': ExerciseCoaching(
       howTo: [
         'Stand facing a high pulley holding a bar or rope with your elbows tucked at your sides.',
         'Press down until the arms are straight, squeeze, then let the handle rise back to a bent elbow.',
@@ -12857,7 +12375,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=RaGoUm29gXc',
       imageUrl: '',
     ),
-    'triceps_kickback_dumbbell': ExerciseCoaching(
+    'triceps_pushdown': ExerciseCoaching(
       howTo: [
         'Stand at a high pulley with the elbows pinned to the sides.',
         'Extend the arms fully down, then return under control without letting the elbows drift.',
@@ -12871,7 +12389,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=t99Ea1wQCKM',
       imageUrl: '',
     ),
-    'triceps_pressdown': ExerciseCoaching(
+    'triceps_rope_pushdown': ExerciseCoaching(
       howTo: [
         'Attach a rope to a high pulley and grip it with palms facing each other.',
         'Keep your upper arms pinned to your sides and lean the torso slightly forward.',
@@ -12884,7 +12402,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=FgXQdSOhpL0',
       imageUrl: '',
     ),
-    'triceps_pushdown': ExerciseCoaching(
+    'upright_row_barbell': ExerciseCoaching(
       howTo: [
         'Grip a barbell with an overhand grip slightly narrower than shoulder width, arms hanging so the bar rests on your thighs and your back straight.',
         'Pull the bar straight up along your body toward your collarbone, leading with your elbows.',
@@ -12897,7 +12415,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=um3VVzqunPU',
       imageUrl: '',
     ),
-    'triceps_rope_pushdown': ExerciseCoaching(
+    'upright_row_cable': ExerciseCoaching(
       howTo: [
         'Stand facing a low pulley holding a straight bar with an overhand grip at about shoulder width.',
         'Pull it up along your body to chest height, leading with the elbows, then lower under control.',
@@ -12910,7 +12428,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=qr3ziolhjvQ',
       imageUrl: '',
     ),
-    'upright_row_barbell': ExerciseCoaching(
+    'upright_row_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold the dumbbells in front of the thighs.',
         'Pull them straight up along the body by leading with the elbows to about chest height, then lower under control.',
@@ -12924,7 +12442,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Ub6QruNKfbY',
       imageUrl: '',
     ),
-    'upright_row_cable': ExerciseCoaching(
+    'v_up': ExerciseCoaching(
       howTo: [
         'Lie flat with your arms overhead and your legs straight.',
         'Lift the arms and legs at the same time so they meet above your hips in a V, then lower everything back under control.',
@@ -12937,7 +12455,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Mk4zCq9b6hU',
       imageUrl: '',
     ),
-    'upright_row_dumbbell': ExerciseCoaching(
+    'v_sit_hold': ExerciseCoaching(
       howTo: [
         'From an L-sit, compress the hips and lift the straight legs above horizontal into a V shape.',
         'Lean the shoulders slightly back to balance the weight of the legs.',
@@ -12950,7 +12468,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=dPun-dGuzBQ',
       imageUrl: '',
     ),
-    'v_up': ExerciseCoaching(
+    'walking': ExerciseCoaching(
       howTo: [
         'Walk at a brisk pace you can hold for the session, standing tall with the shoulders relaxed.',
         'Let the arms swing naturally and roll through the whole foot with each step.',
@@ -12963,7 +12481,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=Uj197XGRmis',
       imageUrl: '',
     ),
-    'v_sit_hold': ExerciseCoaching(
+    'walking_lunge': ExerciseCoaching(
       howTo: [
         'Step forward into a long stride and lower until the back knee is just above the floor.',
         'Drive through the front heel to stand and bring the back leg through into the next stride.',
@@ -12976,7 +12494,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=mAgbXQdd4LM',
       imageUrl: '',
     ),
-    'walking': ExerciseCoaching(
+    'walking_lunge_dumbbell': ExerciseCoaching(
       howTo: [
         'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
         'Lower until the back knee nearly touches, then drive through the front heel into the next stride.',
@@ -12989,7 +12507,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=eFWCn5iEbTU',
       imageUrl: '',
     ),
-    'walking_lunge': ExerciseCoaching(
+    'wall_ball': ExerciseCoaching(
       howTo: [
         'Hold a medicine ball at your chest and squat to at least parallel facing a wall.',
         'Drive up out of the squat and throw the ball at the target, then catch it and absorb straight into the next squat.',
@@ -13002,7 +12520,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-M7bVR-0Pu4',
       imageUrl: '',
     ),
-    'walking_lunge_dumbbell': ExerciseCoaching(
+    'wall_sit': ExerciseCoaching(
       howTo: [
         'Lean your back flat against a wall and walk your feet out until your knees are bent to ninety degrees.',
         'Hold that position with the thighs parallel to the floor and breathe steadily.',
@@ -13015,7 +12533,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=-cdph8hv0O0',
       imageUrl: '',
     ),
-    'wall_ball': ExerciseCoaching(
+    'warm_up': ExerciseCoaching(
       howTo: [
         'Spend five to ten minutes raising the heart rate and moving each joint through its range.',
         'Finish with a few light sets of the first exercise you plan to do.',
@@ -13028,7 +12546,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=aeSKMNeoV5o',
       imageUrl: '',
     ),
-    'wall_sit': ExerciseCoaching(
+    'wide_pull_up': ExerciseCoaching(
       howTo: [
         'Take an overhand grip wider than shoulder width.',
         'Pull the chest toward the bar while keeping the shoulders pulled down, then lower to straight arms.',
@@ -13041,7 +12559,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=IK3sH7wOAWE',
       imageUrl: '',
     ),
-    'warm_up': ExerciseCoaching(
+    'wrist_roller': ExerciseCoaching(
       howTo: [
         'Stand tall gripping a loaded wrist roller with both hands, palms down.',
         'Raise your arms straight in front until they are parallel to the floor.',
@@ -13055,7 +12573,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=C4urEGe0zsQ',
       imageUrl: '',
     ),
-    'wide_pull_up': ExerciseCoaching(
+    'yoga': ExerciseCoaching(
       howTo: [
         'Move through a sequence of postures, holding each while you breathe steadily and keeping the transitions controlled.',
         'Work to your own range rather than forcing any position.',
@@ -13068,7 +12586,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=_ZX_zTOBgp8',
       imageUrl: '',
     ),
-    'wrist_roller': ExerciseCoaching(
+    'zercher_squat': ExerciseCoaching(
       howTo: [
         'Hold a barbell in the crooks of your elbows against your body and stand with your feet shoulder width.',
         'Squat down keeping the chest tall and elbows inside the knees, then drive up to stand.',
@@ -13081,7 +12599,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=eDf49a4Vx5k',
       imageUrl: '',
     ),
-    'yoga': ExerciseCoaching(
+    'zottman_curl_dumbbell': ExerciseCoaching(
       howTo: [
         'Curl a dumbbell in each hand up with the palms facing up.',
         'At the top rotate the palms to face down, then lower slowly in that overhand position and rotate back at the bottom.',
@@ -13138,6 +12656,7 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HUXS3S2xSX4',
       imageUrl: '',
     ),
+
   };
 
   static List<Exercise> all() => _all;
