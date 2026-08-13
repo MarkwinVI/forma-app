@@ -19,6 +19,11 @@ class _PerfGroupStyle {
   const _PerfGroupStyle(this.label, this.color, this.icon);
 }
 
+/// How trends start — leads the panel before anything has a baseline,
+/// trails the BUILDING BASELINE group once trends exist.
+const _baselineExplainer =
+    'Trends appear after an exercise is trained on two separate days.';
+
 const _perfGroupStyles = {
   PerformanceTrend.improving: _PerfGroupStyle(
     'IMPROVING',
@@ -83,25 +88,37 @@ class PerformancePanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 7),
-          Text(
-            !overview.hasComparisons
-                ? 'TRAIN AN EXERCISE ON TWO SEPARATE DAYS'
-                : overview.comparesRecentSessions
-                    ? 'LATEST SESSION VS PREV. SESSIONS'
-                    : 'LAST 14 DAYS VS PREV. 14 DAYS',
-            style: GoogleFonts.robotoMono(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.35,
-              color: AppColors.textMuted,
+          // Before anything has a baseline the how-trends-start line leads
+          // the panel; once trends exist it trails the baseline group and
+          // the eyebrow names the comparison window instead.
+          if (!overview.hasComparisons)
+            const Text(
+              _baselineExplainer,
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.5,
+                color: AppColors.textMuted,
+              ),
+            )
+          else
+            Text(
+              overview.comparesRecentSessions
+                  ? 'LATEST SESSION VS PREV. SESSIONS'
+                  : 'LAST 14 DAYS VS PREV. 14 DAYS',
+              style: GoogleFonts.robotoMono(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.35,
+                color: AppColors.textMuted,
+              ),
             ),
-          ),
-          // Before anything has a baseline the trend groups are empty, so
-          // the panel is just the BUILDING BASELINE group with its counters.
+          // The trend groups are empty pre-baseline, so the panel is just
+          // the BUILDING BASELINE group with its counters.
           for (final trend in _perfGroupStyles.keys)
             ..._group(trend, overview.rowsFor(trend)),
           ..._baselineGroup(
             overview.rowsFor(PerformanceTrend.buildingBaseline),
+            withFooter: overview.hasComparisons,
           ),
         ],
       ),
@@ -204,8 +221,13 @@ class PerformancePanel extends StatelessWidget {
   }
 
   /// The quiet trailing group: exercises still short of the two separate
-  /// trained days a trend needs, each with its day counter.
-  List<Widget> _baselineGroup(List<PerformanceRowData> rows) {
+  /// trained days a trend needs, each with its day counter. [withFooter]
+  /// appends the how-trends-start line — off when that line already leads
+  /// the panel.
+  List<Widget> _baselineGroup(
+    List<PerformanceRowData> rows, {
+    required bool withFooter,
+  }) {
     if (rows.isEmpty) return const [];
     return [
       const SizedBox(height: 20),
@@ -275,15 +297,17 @@ class PerformancePanel extends StatelessWidget {
             ],
           ),
         ),
-      const SizedBox(height: 12),
-      const Text(
-        'Trends appear after an exercise is trained on two separate days.',
-        style: TextStyle(
-          fontSize: 12.5,
-          height: 1.5,
-          color: AppColors.textMuted,
+      if (withFooter) ...[
+        const SizedBox(height: 12),
+        const Text(
+          _baselineExplainer,
+          style: TextStyle(
+            fontSize: 12.5,
+            height: 1.5,
+            color: AppColors.textMuted,
+          ),
         ),
-      ),
+      ],
     ];
   }
 

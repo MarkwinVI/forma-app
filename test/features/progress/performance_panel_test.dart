@@ -84,11 +84,14 @@ void main() {
 
     expect(
       find.text('TRAIN AN EXERCISE ON TWO SEPARATE DAYS'),
-      findsOneWidget,
-    );
-    expect(
-      find.text('Forma compares your last 14 days against the 14 before.'),
       findsNothing,
+    );
+    // The how-trends-start line leads the panel — and only appears once.
+    expect(
+      find.text(
+        'Trends appear after an exercise is trained on two separate days.',
+      ),
+      findsOneWidget,
     );
     expect(find.text('BUILDING BASELINE'), findsOneWidget);
     expect(find.text('Handstand'), findsOneWidget);
