@@ -30,6 +30,8 @@
 	<true/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>com.posthog.posthog.AUTO_INIT</key>
+	<false/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_dartVmService._tcp</string>

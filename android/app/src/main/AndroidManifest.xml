@@ -3,6 +3,9 @@
     <!-- The rest-over alert is the app's core timer function, so the
          auto-granted exact-alarm permission applies (no user toggle). -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Debug builds inherit this from the debug manifest; release builds
+         need it stated here for Supabase and PostHog to reach the network. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Forma"
         android:name="${applicationName}"
@@ -38,6 +41,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- PostHog is configured in Dart (AnalyticsService.setup), so the
+             native SDK must not start itself from manifest values. -->
+        <meta-data
+            android:name="com.posthog.posthog.AUTO_INIT"
+            android:value="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

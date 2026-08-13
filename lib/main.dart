@@ -6,6 +6,7 @@ import 'core/config/app_config.dart';
 import 'core/theme/app_colors.dart';
 import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
+import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/onboarding_service.dart';
 import 'data/services/weight_unit_service.dart';
@@ -32,6 +33,9 @@ Future<void> main() async {
     // The remembered kg/lbs choice, restored before any weight is rendered.
     WeightUnitService.load(),
   ]);
+
+  // After Supabase: identify reads the restored auth session. Never throws.
+  await AnalyticsService.setup();
 
   _warmStartupData();
 

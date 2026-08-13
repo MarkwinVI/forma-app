@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   supabase_flutter: ^2.5.0
+  posthog_flutter: ^5.36.1
   sign_in_with_apple: ^6.1.0
   crypto: ^3.0.3
   cupertino_icons: ^1.0.8
