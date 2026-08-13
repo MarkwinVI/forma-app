@@ -107,14 +107,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    // The lock note names the prerequisite, and the CTA softens to a
-    // warned "Start anyway".
+    // The lock note names the prerequisite; the CTA keeps the plain
+    // "Start here" label (its amber tint carries the warning).
     expect(
       find.textContaining('Locked tree.', findRichText: true),
       findsOneWidget,
     );
-    expect(find.text('Start anyway'), findsOneWidget);
-    expect(find.text('Start here'), findsNothing);
+    expect(find.text('Start here'), findsOneWidget);
   });
 
   testWidgets(
@@ -138,14 +137,11 @@ void main() {
     expect(find.text('Train this exercise'), findsNothing);
 
     // Walk the selector onto the locked step via its list row — a step not
-    // yet reached gets the amber jump with its skipped-steps warning.
+    // yet reached gets the amber jump, with no helper text above it.
     await tester.tap(find.text('Pullups step 2'));
     await tester.pump(const Duration(milliseconds: 1200));
     expect(find.text('Jump here'), findsOneWidget);
-    expect(
-      find.textContaining('Skips the steps before it'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Skips the steps before it'), findsNothing);
   });
 
   testWidgets('program card is the plain door into the trees',

@@ -158,15 +158,11 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       final showCta = widget.editable &&
           (isCurrent ? widget.onStopTraining != null : true);
       final lockedNode = node.state == WheelNodeState.locked;
-      // The tree lock's warning wins over the skipped-steps one — starting
-      // the whole tree early is the bigger call.
+      // Amber marks the calls that skip ahead — a locked step, or a whole
+      // tree still behind its prerequisite.
       final warn = !isCurrent && (lock != null || lockedNode);
-      final panelBottomPad = MediaQuery.of(context).padding.bottom +
-          (widget.editable ? 14 : 90);
-      bottomPanelAllowance = 146 +
-          (showCta ? 66 : 0) +
-          (warn ? 30 : 0) +
-          (widget.editable ? 0 : 76);
+      final panelBottomPad = MediaQuery.of(context).padding.bottom + 14;
+      bottomPanelAllowance = 146 + (showCta ? 66 : 0);
       bottomPanel = Container(
         padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
         decoration: const BoxDecoration(
@@ -192,44 +188,20 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       ? null
                       : () => _act(() => widget.onStopTraining!(family)),
                 )
-              else ...[
-                if (warn)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      lock != null
-                          ? 'Not advised yet — master '
-                              '${lock.prereqExerciseName} '
-                              '(${lock.prereqTreeTitle} tree) before '
-                              'starting this one.'
-                          : 'Skips the steps before it'
-                              '${familyActive ? ' and moves the progression here' : ''}.',
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        height: 1.35,
-                        color:
-                            lock != null ? AppColors.amber : AppColors.textMuted,
-                      ),
-                    ),
-                  ),
+              else
                 _WheelCta(
                   label: _acting
                       ? 'Saving…'
                       : lockedNode && familyActive
                           ? 'Jump here'
                           : !familyActive
-                              ? (lock != null ? 'Start anyway' : 'Start here')
+                              ? 'Start here'
                               : 'Train this exercise',
                   color: warn ? AppColors.amber : AppColors.accentPrimary,
                   onTap: _acting
                       ? null
                       : () => _act(() => widget.onTrainNode!(family, node)),
                 ),
-              ],
             ],
           ],
         ),

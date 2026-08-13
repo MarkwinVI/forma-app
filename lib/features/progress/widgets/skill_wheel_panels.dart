@@ -617,15 +617,13 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
           color: AppColors.green.withValues(alpha: 0.6),
         );
       case WheelNodeState.available:
+        // The same solid white the node wears on the wheel.
         glyph = Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
+          width: 10,
+          height: 10,
+          decoration: const BoxDecoration(
+            color: AppColors.textPrimary,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1.7,
-            ),
           ),
         );
       case WheelNodeState.locked:
