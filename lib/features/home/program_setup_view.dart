@@ -148,12 +148,13 @@ const _repStrengthExercises = [
   ),
 ];
 
-/// Asked with access to weights: the bar weight squatted for five reps, in
-/// the display unit the wizard is running in.
+/// Asked with access to weights: the heaviest bar weight squatted for a
+/// single rep, in the display unit the wizard is running in. The planner
+/// starts the weighted squat branch at 80% of it.
 _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
       id: 'squat',
       label: 'Barbell squat',
-      hint: 'Bar weight × 5 reps',
+      hint: 'Best single rep — bar weight',
       icon: Icons.accessibility_new_rounded,
       isWeight: true,
       step: 5,

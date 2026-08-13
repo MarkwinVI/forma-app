@@ -14,12 +14,14 @@ void main() {
     bool hasGym = false,
     List<String> goals = const [],
     Map<String, int?> strength = const {},
+    double? bodyweightKg = 80,
     Map<String, ExerciseStatus> progress = const {},
   }) {
     return ProgramStartPlanner.planFor(
       hasGym: hasGym,
       goalSkillIds: goals,
       startingStrength: strength,
+      bodyweightKg: bodyweightKg,
       existingProgress: progress,
     );
   }
@@ -47,11 +49,12 @@ void main() {
       });
     });
 
-    test('with a gym: the barbell squat and the Romanian deadlift', () {
+    test('with a gym: the weighted squat branch and the Romanian deadlift',
+        () {
       final tracks = planFor(hasGym: true).tracks;
 
-      expect(tracks[SkillCategoryCatalog.barbellSquatId], 'main');
-      expect(tracks.containsKey(SkillCategoryCatalog.squatId), isFalse);
+      expect(tracks[SkillCategoryCatalog.squatId], 'weighted');
+      expect(tracks.containsKey(SkillCategoryCatalog.barbellSquatId), isFalse);
       expect(tracks[SkillCategoryCatalog.hingeId], 'rdl');
       expect(tracks[SkillCategoryCatalog.coreId], 'l_sit');
     });
@@ -175,19 +178,64 @@ void main() {
       );
     });
 
-    test('the barbell squat opens at 3 × 5 on the reported 5-rep weight', () {
-      final plan = planFor(hasGym: true, strength: {'squat': 100});
-      final target = plan.targets['barbell_squat_barbell_squat']!;
+    test('the weighted squat starts on the deepest rung inside 80% of the '
+        'reported max', () {
+      // 80% of a 100 kg max is 80 kg; at 80 kg bodyweight the +100% rung
+      // asks for exactly that, and the +125% rung is past it.
+      final plan = planFor(
+        hasGym: true,
+        strength: {'squat': 100},
+        bodyweightKg: 80,
+      );
 
-      expect(target.sets, 3);
-      expect(target.value, 5);
-      expect(target.weightKg, 100);
+      expect(plan.statuses['squat_barbell_plus_100'], ExerciseStatus.active);
+      expect(
+        [
+          for (final id in const [
+            'squat_assisted_squat',
+            'squat_deep_assisted_squat',
+            'squat_squat',
+            'squat_deep_squat',
+            'squat_barbell_squat',
+            'squat_barbell_plus_25',
+            'squat_barbell_plus_50',
+            'squat_barbell_plus_75',
+          ])
+            plan.statuses[id],
+        ],
+        everyElement(ExerciseStatus.skipped),
+      );
+      expect(plan.statuses.containsKey('squat_barbell_plus_125'), isFalse);
     });
 
-    test('the opening barbell weight is rounded to a loadable 2.5 kg', () {
-      expect(ProgramStartPlanner.barbellSquatStartKg(104), 102.5);
-      expect(ProgramStartPlanner.barbellSquatStartKg(1), 2.5);
-      expect(ProgramStartPlanner.barbellSquatStartKg(null), isNull);
+    test('a max between two rungs rounds down to the lighter one', () {
+      // 80% of 90 kg is 72 kg: past the +75% rung's 60 kg, short of the
+      // +100% rung's 80 kg.
+      final plan = planFor(
+        hasGym: true,
+        strength: {'squat': 90},
+        bodyweightKg: 80,
+      );
+
+      expect(plan.statuses['squat_barbell_plus_75'], ExerciseStatus.active);
+    });
+
+    test('a blank squat answer starts on the empty bar', () {
+      final plan = planFor(hasGym: true);
+
+      expect(plan.statuses['squat_barbell_squat'], ExerciseStatus.active);
+      expect(plan.statuses['squat_deep_squat'], ExerciseStatus.skipped);
+    });
+
+    test('without a bodyweight the rung loads cannot resolve — the bar again',
+        () {
+      final plan = planFor(
+        hasGym: true,
+        strength: {'squat': 200},
+        bodyweightKg: null,
+      );
+
+      expect(plan.statuses['squat_barbell_squat'], ExerciseStatus.active);
     });
 
     test('the Romanian deadlift opens light and the Nordic curl at 3 × 5', () {
@@ -238,7 +286,7 @@ void main() {
           'dips_bench_dips',
           'rows_vertical_rows',
           'pushups_wall_push_up',
-          'barbell_squat_barbell_squat',
+          'squat_barbell_squat',
           'hinge_romanian_deadlift',
           'core_foot_supported_l_sit',
         ],
@@ -259,7 +307,7 @@ void main() {
         [
           'dips_bench_dips',
           'pushups_wall_push_up',
-          'barbell_squat_barbell_squat',
+          'squat_barbell_squat',
           'core_foot_supported_l_sit',
           'lateral_raise_dumbbell',
         ],
@@ -305,7 +353,7 @@ void main() {
           hasGym: true,
         ),
         [
-          'barbell_squat_barbell_squat',
+          'squat_barbell_squat',
           'hinge_romanian_deadlift',
           'core_foot_supported_l_sit',
           'standing_calf_raise',
@@ -428,6 +476,7 @@ void main() {
         // Ten push-ups: starts on the push-up itself, skipping the steps
         // behind it — so the plan carries both targets and skipped statuses.
         startingStrength: const {'squat': 100, 'pushups': 10},
+        bodyweightKg: 80,
       );
 
       final positions = ProgramStartService.startingPositionsFor(
@@ -435,11 +484,18 @@ void main() {
         existing: const {},
       );
 
-      final squat = positions['barbell_squat_barbell_squat']!;
+      final rdl = positions['hinge_romanian_deadlift']!;
+      expect(rdl.status, ExerciseStatus.active);
+      expect(rdl.targetSets, ProgramStartPlanner.loadedLiftSets);
+      expect(rdl.targetValue, ProgramStartPlanner.loadedLiftStartReps);
+      expect(rdl.targetWeightKg, ProgramStartPlanner.romanianDeadliftStartKg);
+
+      // A weighted squat rung has no special opening target: its load comes
+      // from the rung's own bodyweight-relative formula.
+      final squat = positions['squat_barbell_plus_100']!;
       expect(squat.status, ExerciseStatus.active);
-      expect(squat.targetSets, ProgramStartPlanner.loadedLiftSets);
-      expect(squat.targetValue, ProgramStartPlanner.loadedLiftStartReps);
-      expect(squat.targetWeightKg, 100);
+      expect(squat.targetSets, isNull);
+      expect(squat.targetWeightKg, isNull);
 
       // A step with no special opening target still carries its status —
       // null target means the standard ladder target.
@@ -453,14 +509,15 @@ void main() {
         hasGym: true,
         goalSkillIds: const [],
         startingStrength: const {'squat': 100},
+        bodyweightKg: 80,
       );
 
       final positions = ProgramStartService.startingPositionsFor(
         plan,
-        existing: {'barbell_squat_barbell_squat'},
+        existing: {'squat_barbell_plus_100'},
       );
 
-      expect(positions.containsKey('barbell_squat_barbell_squat'), isFalse);
+      expect(positions.containsKey('squat_barbell_plus_100'), isFalse);
       expect(positions, isNotEmpty, reason: 'the rest is still written');
     });
   });

@@ -181,9 +181,11 @@ class _JourneyStageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta = _metaForStage(stage.status);
     final exercise = ExerciseCatalog.findById(stage.exerciseId);
+    // The scale is out of 5; the one difficulty-6 rung still reads 5/5.
     final difficultyLabel = exercise == null
         ? 'Goal ${stage.targetLabel}'
-        : 'Difficulty ${exercise.difficulty}/5 · Goal ${stage.targetLabel}';
+        : 'Difficulty ${exercise.difficulty.clamp(1, 5)}/5 '
+            '· Goal ${stage.targetLabel}';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

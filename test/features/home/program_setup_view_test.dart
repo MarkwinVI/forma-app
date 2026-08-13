@@ -87,7 +87,7 @@ void main() {
     // Step 4: starting strength — unset by default, "+" adds a number.
     expect(find.text('Where are you starting?'), findsOneWidget);
     expect(find.text('Barbell squat'), findsOneWidget);
-    expect(find.text('Bar weight × 5 reps'), findsOneWidget);
+    expect(find.text('Best single rep — bar weight'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.add_rounded).at(1));
     await tester.pump();
     expect(find.text('3'), findsOneWidget); // pull-ups default

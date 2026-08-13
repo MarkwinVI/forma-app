@@ -249,6 +249,7 @@ class SkillCategoryCatalog {
       SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(id: 'pistol', label: 'Pistol', lane: -1),
       SkillCategoryBranch(id: 'shrimp', label: 'Shrimp', lane: 1),
+      SkillCategoryBranch(id: 'weighted', label: 'Weighted', lane: 2),
     ],
     trainingPaths: {
       'pistol': [
@@ -272,6 +273,21 @@ class SkillCategoryCatalog {
         'squat_beginner_shrimp_squat',
         'squat_intermediate_shrimp_squat',
         'squat_advanced_shrimp_squat',
+      ],
+      'weighted': [
+        'squat_assisted_squat',
+        'squat_deep_assisted_squat',
+        'squat_squat',
+        'squat_deep_squat',
+        'squat_barbell_squat',
+        'squat_barbell_plus_25',
+        'squat_barbell_plus_50',
+        'squat_barbell_plus_75',
+        'squat_barbell_plus_100',
+        'squat_barbell_plus_125',
+        'squat_barbell_plus_150',
+        'squat_barbell_plus_175',
+        'squat_barbell_plus_200',
       ],
     },
   );
@@ -416,8 +432,10 @@ class SkillCategoryCatalog {
     },
   );
 
-  /// The knee-dominant slot when the user has a gym and no squat-tree goal:
-  /// one loaded lift rather than a progression to climb.
+  /// Legacy only: the invisible one-lift tree gym programs used to run in
+  /// the knee-dominant slot before the squat tree grew its visible weighted
+  /// branch. Kept so programs built back then keep training what they were
+  /// training; nothing plans it anymore.
   static const SkillCategory barbellSquat = SkillCategory(
     id: barbellSquatId,
     title: 'Barbell Squat',

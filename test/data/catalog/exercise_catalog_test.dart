@@ -14,9 +14,9 @@ void main() {
 
   group('what the sheet became', () {
     test('every tree step and every library movement is here', () {
-      expect(steps, hasLength(134));
+      expect(steps, hasLength(143));
       expect(library, hasLength(488));
-      expect(ExerciseCatalog.everything(), hasLength(134 + 488));
+      expect(ExerciseCatalog.everything(), hasLength(143 + 488));
     });
 
     test('picking lists a movement once, as the step performed with it', () {
@@ -24,7 +24,7 @@ void main() {
       final performedWith = steps.map((step) => step.libraryId).toSet();
 
       expect(performedWith, hasLength(107));
-      expect(searchable, hasLength(134 + 488 - 107));
+      expect(searchable, hasLength(143 + 488 - 107));
       expect(
         searchable.where((e) => e.isLibrary && performedWith.contains(e.id)),
         isEmpty,

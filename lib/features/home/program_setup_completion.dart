@@ -36,6 +36,9 @@ Future<void> completeProgramSetup({
     // them next; it just has none to work from here.
     goalSkillIds: const [],
     startingStrength: result.startingStrength,
+    // The weighted squat branch's rung loads scale from bodyweight, so the
+    // starting rung can only be placed with it.
+    bodyweightKg: result.bodyweightKg,
   );
 
   await store.updateProgramLogic(

@@ -371,10 +371,11 @@ class ExerciseProgressionService {
     );
   }
 
-  /// Added load required by a weighted skill rung. Catalog formulas express
-  /// total system load (`bodyweight + bodyweight * factor`), while the live
-  /// workout's kg field records only the external load, so the bodyweight
-  /// portion is subtracted here.
+  /// Added load required by a weighted skill rung, straight from the
+  /// catalog's formula: `user_bodyweight * factor` (or bare `user_bodyweight`)
+  /// is the external load itself, and a `0…` setting ("0", "0kg, just the
+  /// bar") means the movement is done unloaded — the empty bar for a barbell
+  /// step.
   static double? requiredExternalWeightKg(
     Exercise exercise,
     double? bodyweightKg,
@@ -382,14 +383,15 @@ class ExerciseProgressionService {
     if (!exercise.isWeighted) return 0;
     final formula = exercise.weightFormula?.replaceAll(' ', '');
     if (formula == null) return null;
-    if (formula == '0') return 0;
-    if (bodyweightKg == null || bodyweightKg <= 0) return null;
+    if (formula.startsWith('0')) return 0;
 
     final match = RegExp(
-      r'^user_bodyweight\+user_bodyweight\*([0-9]+(?:\.[0-9]+)?)$',
+      r'^user_bodyweight(?:\*([0-9]+(?:\.[0-9]+)?))?$',
     ).firstMatch(formula);
     if (match == null) return null;
-    return bodyweightKg * double.parse(match.group(1)!);
+    final factor = match.group(1);
+    if (bodyweightKg == null || bodyweightKg <= 0) return null;
+    return bodyweightKg * (factor == null ? 1 : double.parse(factor));
   }
 
   static bool _meetsManualShortcutMinimum(

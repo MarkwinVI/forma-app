@@ -1074,6 +1074,16 @@ class TrainingProgramService {
           ),
           _branchOptionFromCategory(
             track: track,
+            category: SkillCategoryCatalog.squat,
+            pathId: 'weighted',
+            rationale:
+                'Best with a gym and no single-leg squat goal: the barbell carries the knee-dominant slot.',
+          ),
+          // Legacy: the invisible one-lift tree gym programs ran before the
+          // squat tree grew its weighted branch. Kept so those programs keep
+          // resolving; nothing offers it anymore.
+          _branchOptionFromCategory(
+            track: track,
             category: SkillCategoryCatalog.barbellSquat,
             pathId: 'main',
             rationale:
