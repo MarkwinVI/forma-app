@@ -456,9 +456,9 @@ class _TreeLockBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: AppColors.amber.withValues(alpha: 0.07),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.amber.withValues(alpha: 0.35)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,7 +468,7 @@ class _TreeLockBanner extends StatelessWidget {
             child: Icon(
               Icons.lock_rounded,
               size: 14,
-              color: AppColors.amber,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(width: 9),
@@ -480,7 +480,7 @@ class _TreeLockBanner extends StatelessWidget {
                     text: 'Locked tree. ',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.amber,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const TextSpan(text: 'Unlocks when you master '),
