@@ -1,5 +1,6 @@
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/program_start_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
@@ -41,7 +42,7 @@ Future<void> completeProgramSetup({
     bodyweightKg: result.bodyweightKg,
   );
 
-  await store.updateProgramLogic(
+  final snapshot = await store.updateProgramLogic(
     userId: userId,
     programType: result.split,
     // The legacy per-lane bridge mirrors the planned tracks — and only the
@@ -67,4 +68,15 @@ Future<void> completeProgramSetup({
     userId: userId,
     plan: plan,
   );
+
+  AnalyticsService.capture('program_created', properties: {
+    'program_id': snapshot.program.id,
+    'days_per_week': result.daysPerWeek,
+    'split': result.split.dbValue,
+    'equipment': result.equipment.dbValue,
+    'bodyweight_kg': result.bodyweightKg,
+    // The wizard's reported strength, one property per answered exercise.
+    for (final entry in result.startingStrength.entries)
+      if (entry.value != null) 'starting_${entry.key}': entry.value!,
+  });
 }

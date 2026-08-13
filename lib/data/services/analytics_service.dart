@@ -46,8 +46,28 @@ class AnalyticsService {
     });
   }
 
-  static void capture(String event, {Map<String, Object>? properties}) {
+  /// [personProperties] ride along as `$set`, so the event also writes those
+  /// values onto the PostHog person — answers become filterable user traits.
+  static void capture(
+    String event, {
+    Map<String, Object>? properties,
+    Map<String, Object>? personProperties,
+  }) {
     if (!_enabled) return;
-    unawaited(Posthog().capture(eventName: event, properties: properties));
+    unawaited(Posthog().capture(eventName: event, properties: {
+      ...?properties,
+      if (personProperties != null) r'$set': personProperties,
+    }));
+  }
+
+  /// Pushes queued events out now. For moments the queue won't get another
+  /// chance — the last event before an account disappears.
+  static Future<void> flush() async {
+    if (!_enabled) return;
+    try {
+      await Posthog().flush();
+    } catch (error) {
+      debugPrint('PostHog flush failed: $error');
+    }
   }
 }

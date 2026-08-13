@@ -12,6 +12,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/progression_event_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
@@ -46,6 +47,10 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
 
   bool _saving = true;
   bool _saveFailed = false;
+
+  /// A failed save can be retried, and a retry that gets further than the
+  /// last attempt would otherwise report the same workout twice.
+  bool _analyticsCaptured = false;
   int _stepIndex = 0;
   List<_CelebrationStep> _steps = const [_CelebrationStep.summary()];
 
@@ -231,6 +236,11 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         }
       }
 
+      if (!_analyticsCaptured) {
+        _analyticsCaptured = true;
+        _captureWorkoutAnalytics(sessionId, events);
+      }
+
       if (!mounted) return;
       setState(() {
         _saving = false;
@@ -242,6 +252,61 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       setState(() {
         _saving = false;
         _saveFailed = true;
+      });
+    }
+  }
+
+  /// One `workout_finished` for the session, then one `exercise_progressed`
+  /// per ladder move it earned: a raised rep target is a rep progression, a
+  /// mastery is a level-up (the follow-up `activated` event is the same
+  /// level-up seen from the new exercise, so it is not reported again).
+  void _captureWorkoutAnalytics(String? sessionId, List<ProgressionEvent> events) {
+    var plannedSets = 0;
+    var plannedReps = 0;
+    for (final exerciseEntry in widget.workout.exercises) {
+      final sets = exerciseEntry.targetSets ??
+          ExerciseProgressionService.setCountForExercise(exerciseEntry.exercise);
+      final value = exerciseEntry.targetValue ??
+          ExerciseProgressionService.targetValueForExercise(
+            exerciseEntry.exercise,
+          );
+      plannedSets += sets;
+      if (!exerciseEntry.isTimed) plannedReps += sets * value;
+    }
+
+    AnalyticsService.capture('workout_finished', properties: {
+      if (sessionId != null) 'workout_id': sessionId,
+      if (widget.workout.analyticsId != null)
+        'workout_client_id': widget.workout.analyticsId!,
+      'session_type': widget.workout.sessionType.dbValue,
+      'duration_seconds': widget.workout.totalDuration.inSeconds,
+      'exercise_count': widget.workout.exercises.length,
+      'completed_sets': widget.workout.totalSets,
+      'planned_sets': plannedSets,
+      'completed_reps': widget.workout.totalReps,
+      'planned_reps': plannedReps,
+      if (widget.workout.totalTimedSeconds > 0)
+        'completed_timed_seconds': widget.workout.totalTimedSeconds,
+    });
+
+    for (final event in events) {
+      final progressionType = switch (event.kind) {
+        ProgressionEventKind.targetIncrease => 'rep_progression',
+        ProgressionEventKind.mastered => 'level_up',
+        _ => null,
+      };
+      if (progressionType == null) continue;
+      final skillTreeId =
+          ExerciseCatalog.findById(event.exerciseId)?.skillCategoryId;
+      AnalyticsService.capture('exercise_progressed', properties: {
+        if (sessionId != null) 'workout_id': sessionId,
+        'exercise_id': event.exerciseId,
+        'progression_type': progressionType,
+        if (skillTreeId != null && skillTreeId.isNotEmpty)
+          'skill_tree_id': skillTreeId,
+        if (event.trackId != null) 'track_id': event.trackId!,
+        if (event.valueFrom != null) 'value_from': event.valueFrom!,
+        if (event.valueTo != null) 'value_to': event.valueTo!,
       });
     }
   }

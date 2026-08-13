@@ -1,4 +1,5 @@
 import '../models/onboarding_profile_model.dart';
+import 'analytics_service.dart';
 import 'supabase_service.dart';
 
 /// Reads and writes the post-signup onboarding answers
@@ -43,5 +44,28 @@ class OnboardingService {
         .from('user_onboarding_profiles')
         .upsert(profile.toMap(), onConflict: 'user_id');
     _completedCache[profile.userId] = Future.value(true);
+
+    AnalyticsService.capture(
+      'onboarding_finished',
+      properties: {
+        'archetype': profile.archetype,
+        'radar_balanced': profile.radarBalanced,
+        if (profile.radarAngleDeg != null)
+          'radar_angle_deg': profile.radarAngleDeg!,
+        'age': profile.age,
+        if (profile.gender != null) 'gender': profile.gender!,
+        if (profile.trainingFrequency != null)
+          'training_frequency': profile.trainingFrequency!,
+      },
+      // The durable traits, kept on the person so any event can be
+      // segmented by them.
+      personProperties: {
+        'archetype': profile.archetype,
+        'age': profile.age,
+        if (profile.gender != null) 'gender': profile.gender!,
+        if (profile.trainingFrequency != null)
+          'training_frequency': profile.trainingFrequency!,
+      },
+    );
   }
 }

@@ -11,6 +11,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
@@ -82,6 +83,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   final _profileService = UserProfileService();
 
   late final DateTime _startedAt;
+
+  /// Ties this session's analytics start and finish events together; the
+  /// database session id is only born when the finish screen saves.
+  late final String _analyticsWorkoutId;
   late List<TrainingRecommendationItem> _sessionItems;
   late Map<String, List<_WorkoutSetDraft>> _setDrafts;
   late Map<String, int> _restSecondsByExercise;
@@ -122,7 +127,16 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     UserProfileService.bodyweightKgNotifier.addListener(_onBodyweightChanged);
     _devClockService.loadOffset();
     _startedAt = DateTime.now();
+    _analyticsWorkoutId =
+        '${DateTime.now().microsecondsSinceEpoch}-${identityHashCode(this)}';
     _sessionItems = List.of(widget.recommendation.items);
+    AnalyticsService.capture('workout_started', properties: {
+      'workout_client_id': _analyticsWorkoutId,
+      'session_type': widget.recommendation.sessionType.dbValue,
+      'program_type': widget.recommendation.programType.dbValue,
+      'is_planned': widget.recommendation.affectsSchedule,
+      'exercise_count': widget.recommendation.items.length,
+    });
     _setDrafts = {
       for (final item in _sessionItems)
         item.exercise.id: _initialSetDrafts(item),
@@ -981,6 +995,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       plannedDate: widget.recommendation.plannedDate,
       plannedStepIndex: widget.recommendation.plannedStepIndex,
       affectsSchedule: widget.recommendation.affectsSchedule,
+      analyticsId: _analyticsWorkoutId,
     );
   }
 

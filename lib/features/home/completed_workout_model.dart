@@ -11,6 +11,11 @@ class CompletedWorkout {
   final int? plannedStepIndex;
   final bool affectsSchedule;
 
+  /// Id minted when the session began, so the analytics start and finish
+  /// events describe the same workout. The saved session's database id does
+  /// not exist until the finish screen writes it.
+  final String? analyticsId;
+
   const CompletedWorkout({
     required this.sessionLabel,
     required this.sessionType,
@@ -20,6 +25,7 @@ class CompletedWorkout {
     this.plannedDate,
     this.plannedStepIndex,
     this.affectsSchedule = true,
+    this.analyticsId,
   });
 
   String get historyTitle {

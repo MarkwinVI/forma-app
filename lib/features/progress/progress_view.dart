@@ -6,6 +6,7 @@ import '../../core/widgets/no_program_state.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
@@ -113,6 +114,12 @@ class _ProgressViewState extends State<ProgressView> {
   void _openExercise(WheelNode node) {
     final exercise = ExerciseCatalog.findById(node.exerciseId);
     if (exercise == null) return;
+    AnalyticsService.capture('skill_tree_exercise_opened', properties: {
+      'exercise_id': node.exerciseId,
+      'node_state': node.state.name,
+      if (exercise.skillCategoryId.isNotEmpty)
+        'skill_tree_id': exercise.skillCategoryId,
+    });
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ExerciseDetailView(

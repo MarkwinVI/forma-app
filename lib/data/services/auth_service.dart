@@ -6,6 +6,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/user_model.dart';
+import 'analytics_service.dart';
 import 'supabase_service.dart';
 
 class AuthService {
@@ -59,6 +60,10 @@ class AuthService {
   /// every user-owned table, so all server data is removed. The local
   /// session is cleared afterwards, which sends the app to the login view.
   Future<void> deleteAccount() async {
+    // Captured (and pushed out) while the account still exists — after the
+    // sign-out below, reset() has already cut the person link.
+    AnalyticsService.capture('account_deleted');
+    await AnalyticsService.flush();
     await _client.rpc('delete_account');
     // The server-side sign-out may 4xx because the user no longer exists;
     // gotrue clears the local session regardless of those responses.
@@ -80,12 +85,24 @@ class AuthService {
       credential.familyName,
     ].where((part) => part != null && part.isNotEmpty).join(' ');
 
+    // A missing row is what makes this sign-in a registration — including
+    // re-registration after an account deletion, which issues a new user id.
+    final existing = await _client
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
     await _client.from('users').upsert({
       'id': user.id,
       'email': user.email ?? credential.email,
       'full_name': fullName.isEmpty ? null : fullName,
       'created_at': DateTime.now().toIso8601String(),
     });
+
+    if (existing == null) {
+      AnalyticsService.capture('account_created');
+    }
   }
 
   String _generateNonce([int length = 32]) {
