@@ -340,7 +340,7 @@ class WheelExercisePreview extends StatelessWidget {
       case WheelNodeState.active:
         final data = journey;
         if (data == null) {
-          text = 'Training now';
+          text = 'Training';
         } else {
           final unit = data.isTimed ? 'sec' : 'reps';
           text = 'Last ${data.lastSessionVolume} of '
