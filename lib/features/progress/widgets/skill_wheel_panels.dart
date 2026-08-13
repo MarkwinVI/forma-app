@@ -438,9 +438,6 @@ class WheelExerciseCard extends StatefulWidget {
 
 class _WheelExerciseCardState extends State<WheelExerciseCard> {
   static const double _rowHeight = 42;
-
-  /// The training-now row carries a subtitle, so it runs taller.
-  static const double _activeRowHeight = 59;
   static const double _groupHeaderHeight = 33;
 
   final _scrollController = ScrollController();
@@ -532,9 +529,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
       for (var i = start; i <= end; i++) {
         offsets[i] = y;
         children.add(_stepRow(flat, i, index));
-        y += flat[i].state == WheelNodeState.active
-            ? _activeRowHeight
-            : _rowHeight;
+        y += _rowHeight;
       }
     }
     _rowOffsets = offsets;
@@ -655,7 +650,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
       behavior: HitTestBehavior.opaque,
       onTap: focused ? null : () => widget.onPickStep(i),
       child: Container(
-        height: isActive ? _activeRowHeight : _rowHeight,
+        height: _rowHeight,
         // The ring is drawn inside the box, so the focused row gives its
         // border width back — the text must not shift when the ring lands.
         padding: EdgeInsets.symmetric(horizontal: focused ? 8.5 : 10),
@@ -678,32 +673,16 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
             _lead(state),
             const SizedBox(width: 13),
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    node.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                      letterSpacing: -0.15,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                      color: titleColor,
-                    ),
-                  ),
-                  if (isActive) ...[
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Training now',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: kWheelTrainingBlue,
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                node.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  letterSpacing: -0.15,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                  color: titleColor,
+                ),
               ),
             ),
           ],
