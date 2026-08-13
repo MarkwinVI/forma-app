@@ -187,15 +187,18 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 )
               else
                 // A locked step — a locked tree's steps included — offers a
-                // quiet gray Unlock; a reachable step gets the blue verb.
+                // quiet gray Unlock; a reachable step gets the blue verb. A
+                // white (available) step always says Start training, on an
+                // idle tree too.
                 _WheelCta(
                   label: _acting
                       ? 'Saving…'
                       : lockedNode
                           ? 'Unlock'
-                          : !familyActive
-                              ? 'Start here'
-                              : 'Start training',
+                          : node.state == WheelNodeState.available ||
+                                  familyActive
+                              ? 'Start training'
+                              : 'Start here',
                   color: lockedNode
                       ? AppColors.textSecondary
                       : AppColors.accentPrimary,
