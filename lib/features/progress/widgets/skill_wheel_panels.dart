@@ -343,8 +343,8 @@ class WheelExercisePreview extends StatelessWidget {
           text = 'Training now';
         } else {
           final unit = data.isTimed ? 'sec' : 'reps';
-          text = 'Training now · ${data.lastSessionVolume} / '
-              '${data.targetVolume} $unit';
+          text = 'Last ${data.lastSessionVolume} of '
+              '${data.targetVolume} $unit (total)';
         }
         color = kWheelTrainingBlue;
       case WheelNodeState.available:
