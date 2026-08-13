@@ -330,6 +330,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                           ? _ProgressionsPanel(
                               families: widget.families,
                               activeCategoryIds: widget.activeCategoryIds,
+                              lockedCategoryIds: widget.treeLocks.keys.toSet(),
                               bottomInset: bottomInset,
                               onOpenFamily: (index) => _wheelController.goTo(
                                 index,
@@ -537,23 +538,120 @@ class _TreeLockBanner extends StatelessWidget {
 class _ProgressionsPanel extends StatelessWidget {
   final List<WheelFamily> families;
   final Set<String> activeCategoryIds;
+  final Set<String> lockedCategoryIds;
   final double bottomInset;
   final void Function(int familyIndex) onOpenFamily;
 
   const _ProgressionsPanel({
     required this.families,
     required this.activeCategoryIds,
+    required this.lockedCategoryIds,
     required this.bottomInset,
     required this.onOpenFamily,
   });
 
+  Widget _sectionLabel(String label, {bool first = false}) {
+    return Padding(
+      padding: EdgeInsets.only(top: first ? 0 : 26),
+      child: Text(
+        label,
+        style: GoogleFonts.robotoMono(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.65,
+          color: AppColors.textMuted,
+        ),
+      ),
+    );
+  }
+
+  Widget _treeRow(
+    int index,
+    WheelFamily family, {
+    required bool active,
+    required bool last,
+  }) {
+    // The running marker is the wheel's blue dot; an inactive tree wears a
+    // hollow ring instead, or the padlock while its prerequisite is unmet.
+    final Widget marker;
+    if (active) {
+      marker = Container(
+        width: 8,
+        height: 8,
+        decoration: const BoxDecoration(
+          color: AppColors.accentBright,
+          shape: BoxShape.circle,
+        ),
+      );
+    } else if (lockedCategoryIds.contains(family.categoryId)) {
+      marker = const Icon(
+        Icons.lock_rounded,
+        size: 13,
+        color: Color(0xFF4A4B52),
+      );
+    } else {
+      marker = Container(
+        width: 9,
+        height: 9,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            width: 1.6,
+          ),
+        ),
+      );
+    }
+
+    return Pressable(
+      onTap: () => onOpenFamily(index),
+      child: Container(
+        padding: const EdgeInsets.only(top: 17, bottom: 19),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : const Border(bottom: BorderSide(color: AppColors.divider)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 14, child: Center(child: marker)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                family.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
+                  height: 1.15,
+                  color:
+                      active ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final running = <(int, WheelFamily)>[
-      for (var i = 0; i < families.length; i++)
-        if (activeCategoryIds.contains(families[i].categoryId))
-          (i, families[i]),
-    ];
+    final running = <(int, WheelFamily)>[];
+    final idle = <(int, WheelFamily)>[];
+    for (var i = 0; i < families.length; i++) {
+      final family = families[i];
+      (activeCategoryIds.contains(family.categoryId) ? running : idle)
+          .add((i, family));
+    }
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -562,23 +660,13 @@ class _ProgressionsPanel extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.fromLTRB(22, 14, 22, bottomInset),
         children: [
-          Text(
-            'ACTIVE SKILL TREES',
-            style: GoogleFonts.robotoMono(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.65,
-              color: AppColors.textMuted,
-            ),
-          ),
+          _sectionLabel('ACTIVE SKILL TREES', first: true),
           if (running.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 12),
               child: Text(
-                'No progression is running yet. Trees named in blue are '
-                'running; padlocked trees unlock after you master their '
-                'prerequisite. Tap a tree, pick an exercise, and start '
-                'there — your workouts follow.',
+                'No progression is running yet. Tap a tree below, pick an '
+                'exercise, and start there — your workouts follow.',
                 style: TextStyle(
                   fontSize: 13.5,
                   height: 1.55,
@@ -588,54 +676,22 @@ class _ProgressionsPanel extends StatelessWidget {
             )
           else
             for (final (i, (index, family)) in running.indexed)
-              Pressable(
-                onTap: () => onOpenFamily(index),
-                child: Container(
-                  padding: const EdgeInsets.only(top: 17, bottom: 19),
-                  decoration: BoxDecoration(
-                    border: i == running.length - 1
-                        ? null
-                        : const Border(
-                            bottom: BorderSide(color: AppColors.divider),
-                          ),
-                  ),
-                  child: Row(
-                    children: [
-                      // The running marker: the same blue dot the wheel's
-                      // language uses for an active progression.
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.accentBright,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          family.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
-                            height: 1.15,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: AppColors.textMuted,
-                      ),
-                    ],
-                  ),
-                ),
+              _treeRow(
+                index,
+                family,
+                active: true,
+                last: i == running.length - 1,
               ),
+          if (idle.isNotEmpty) ...[
+            _sectionLabel('INACTIVE SKILL TREES'),
+            for (final (i, (index, family)) in idle.indexed)
+              _treeRow(
+                index,
+                family,
+                active: false,
+                last: i == idle.length - 1,
+              ),
+          ],
         ],
       ),
     );

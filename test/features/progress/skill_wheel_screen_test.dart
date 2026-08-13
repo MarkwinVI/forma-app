@@ -61,8 +61,15 @@ void main() {
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Now: Pullups step 1'), findsNothing);
     expect(find.text('Pushups'), findsOneWidget);
-    // A tree that isn't running stays off the list.
-    expect(find.text('Squat'), findsNothing);
+
+    // A tree that isn't running lists under its own section below.
+    await tester.scrollUntilVisible(
+      find.text('Squat'),
+      120,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('INACTIVE SKILL TREES'), findsOneWidget);
+    expect(find.text('Squat'), findsOneWidget);
   });
 
   testWidgets(
