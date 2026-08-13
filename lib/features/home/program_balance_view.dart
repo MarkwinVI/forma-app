@@ -421,16 +421,7 @@ class _CategoryDetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _PageHeader(
-              title: entry.label,
-              // Blocks, not days — a movement can sit on three days and
-              // still be doubled up on one of them.
-              sub: verdict == BalanceVerdict.optional
-                  ? 'Optional · $times ${times == 1 ? 'day' : 'days'} a week'
-                  : '$blocks ${blocks == 1 ? 'block' : 'blocks'} a week',
-              subColor: verdict.color,
-              subWeight: FontWeight.w600,
-            ),
+            _PageHeader(title: entry.label),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(22, 24, 22, 40),
@@ -444,12 +435,38 @@ class _CategoryDetailView extends StatelessWidget {
                       ],
                     ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 22),
+                    padding: const EdgeInsets.only(top: 24),
+                    child: Text.rich(
+                      TextSpan(
+                        // Blocks, not days — a movement can sit on three
+                        // days and still be doubled up on one of them.
+                        text: verdict == BalanceVerdict.optional
+                            ? '$times ${times == 1 ? 'day' : 'days'} '
+                                'a week · '
+                            : '$blocks ${blocks == 1 ? 'block' : 'blocks'} '
+                                'a week · ',
+                        children: [
+                          TextSpan(
+                            text: verdict.label,
+                            style: TextStyle(color: verdict.color),
+                          ),
+                        ],
+                      ),
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.25,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       balanceStatusCopy(entry),
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textPrimary,
                         height: 1.6,
                       ),
                     ),
@@ -483,17 +500,7 @@ class _CategoryDetailView extends StatelessWidget {
 class _PageHeader extends StatelessWidget {
   final String title;
 
-  /// Optional — the balance list needs no line under its title.
-  final String? sub;
-  final Color subColor;
-  final FontWeight subWeight;
-
-  const _PageHeader({
-    required this.title,
-    this.sub,
-    this.subColor = AppColors.textSecondary,
-    this.subWeight = FontWeight.w400,
-  });
+  const _PageHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -524,18 +531,6 @@ class _PageHeader extends StatelessWidget {
               height: 1.05,
             ),
           ),
-          if (sub != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              sub!,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: subWeight,
-                color: subColor,
-                height: 1.45,
-              ),
-            ),
-          ],
         ],
       ),
     );
