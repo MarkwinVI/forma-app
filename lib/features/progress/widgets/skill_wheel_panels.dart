@@ -348,7 +348,7 @@ class WheelExercisePreview extends StatelessWidget {
         }
         color = kWheelTrainingBlue;
       case WheelNodeState.available:
-        text = 'Available to start';
+        text = 'Unlocked';
         color = AppColors.textSecondary;
       case WheelNodeState.locked:
         text = 'Locked';
