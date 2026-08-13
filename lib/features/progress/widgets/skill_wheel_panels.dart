@@ -85,7 +85,7 @@ class PerformancePanel extends StatelessWidget {
           const SizedBox(height: 7),
           Text(
             !overview.hasComparisons
-                ? 'NOTHING TO COMPARE YET'
+                ? 'TRAIN AN EXERCISE ON TWO SEPARATE DAYS'
                 : overview.comparesRecentSessions
                     ? 'LATEST SESSION VS PREV. SESSIONS'
                     : 'LAST 14 DAYS VS PREV. 14 DAYS',
@@ -97,27 +97,15 @@ class PerformancePanel extends StatelessWidget {
             ),
           ),
           // Nothing has a baseline yet: state the rule plainly — no rows,
-          // just the one-line rule and its plain-language reason.
+          // the eyebrow is the rule and one line explains it.
           if (!overview.hasComparisons) ...[
-            const SizedBox(height: 22),
+            const SizedBox(height: 14),
             const Text(
-              'Train an exercise on two separate days',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.32,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Forma compares your last 14 days against the 14 before. '
-              'One session isn’t a trend — progress starts '
-              'showing here after the second.',
+              'Forma compares your last 14 days against the 14 before.',
               style: TextStyle(
                 fontSize: 13.5,
                 height: 1.5,
-                color: AppColors.textSecondary,
+                color: AppColors.textPrimary,
               ),
             ),
           ] else ...[

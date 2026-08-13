@@ -82,13 +82,12 @@ void main() {
       comparesRecentSessions: true,
     )));
 
-    expect(find.text('NOTHING TO COMPARE YET'), findsOneWidget);
     expect(
-      find.text('Train an exercise on two separate days'),
+      find.text('TRAIN AN EXERCISE ON TWO SEPARATE DAYS'),
       findsOneWidget,
     );
     expect(
-      find.textContaining('One session isn’t a trend'),
+      find.text('Forma compares your last 14 days against the 14 before.'),
       findsOneWidget,
     );
     expect(find.text('BUILDING BASELINE'), findsNothing);
