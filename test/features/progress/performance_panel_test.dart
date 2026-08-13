@@ -75,8 +75,8 @@ void main() {
     expect(find.text('Best set:'), findsOneWidget);
   });
 
-  testWidgets('without any baseline the panel is just the rule and the '
-      'reason — no rows', (tester) async {
+  testWidgets('without any baseline the panel shows the building-baseline '
+      'group instead of an explainer', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [_RowsFixture.oneDay, _RowsFixture.neverTrained],
       comparesRecentSessions: true,
@@ -88,11 +88,13 @@ void main() {
     );
     expect(
       find.text('Forma compares your last 14 days against the 14 before.'),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(find.text('BUILDING BASELINE'), findsNothing);
-    expect(find.text('Handstand'), findsNothing);
-    expect(find.text('Ring Row'), findsNothing);
+    expect(find.text('BUILDING BASELINE'), findsOneWidget);
+    expect(find.text('Handstand'), findsOneWidget);
+    expect(find.text('Ring Row'), findsOneWidget);
+    expect(find.text('1 OF 2 DAYS'), findsOneWidget);
+    expect(find.text('0 OF 2 DAYS'), findsOneWidget);
   });
 }
 

@@ -96,25 +96,13 @@ class PerformancePanel extends StatelessWidget {
               color: AppColors.textMuted,
             ),
           ),
-          // Nothing has a baseline yet: state the rule plainly — no rows,
-          // the eyebrow is the rule and one line explains it.
-          if (!overview.hasComparisons) ...[
-            const SizedBox(height: 14),
-            const Text(
-              'Forma compares your last 14 days against the 14 before.',
-              style: TextStyle(
-                fontSize: 13.5,
-                height: 1.5,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ] else ...[
-            for (final trend in _perfGroupStyles.keys)
-              ..._group(trend, overview.rowsFor(trend)),
-            ..._baselineGroup(
-              overview.rowsFor(PerformanceTrend.buildingBaseline),
-            ),
-          ],
+          // Before anything has a baseline the trend groups are empty, so
+          // the panel is just the BUILDING BASELINE group with its counters.
+          for (final trend in _perfGroupStyles.keys)
+            ..._group(trend, overview.rowsFor(trend)),
+          ..._baselineGroup(
+            overview.rowsFor(PerformanceTrend.buildingBaseline),
+          ),
         ],
       ),
     );
