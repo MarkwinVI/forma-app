@@ -72,9 +72,14 @@ class WheelFamily {
     required this.branches,
   });
 
+  /// Where the selector lands on fly-in: the step being trained, or on an
+  /// idle tree the first step a start would land on.
   int get activeFlatIndex {
-    final index = flat.indexWhere((n) => n.state == WheelNodeState.active);
-    return index < 0 ? 0 : index;
+    final active = flat.indexWhere((n) => n.state == WheelNodeState.active);
+    if (active >= 0) return active;
+    final available =
+        flat.indexWhere((n) => n.state == WheelNodeState.available);
+    return available < 0 ? 0 : available;
   }
 }
 

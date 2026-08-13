@@ -84,7 +84,7 @@ void main() {
 
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
     expect(find.text('Stop training'), findsNothing);
-    expect(find.text('Train this exercise'), findsNothing);
+    expect(find.text('Start training'), findsNothing);
   });
 
   testWidgets('a locked tree shows the padlock note and Start anyway',
@@ -134,7 +134,7 @@ void main() {
 
     // Initial focus is the active step — its CTA is the red stop.
     expect(find.text('Stop training'), findsOneWidget);
-    expect(find.text('Train this exercise'), findsNothing);
+    expect(find.text('Start training'), findsNothing);
 
     // Walk the selector onto the locked step via its list row — a step not
     // yet reached gets the amber jump, with no helper text above it.

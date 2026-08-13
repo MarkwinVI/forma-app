@@ -335,7 +335,7 @@ class WheelExercisePreview extends StatelessWidget {
         text = 'Mastered';
         color = AppColors.green;
       case WheelNodeState.skipped:
-        text = 'Skipped — come back to it any time';
+        text = 'Skipped';
         color = AppColors.green;
       case WheelNodeState.active:
         final data = journey;

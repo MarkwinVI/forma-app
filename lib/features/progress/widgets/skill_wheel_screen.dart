@@ -196,7 +196,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                           ? 'Jump here'
                           : !familyActive
                               ? 'Start here'
-                              : 'Train this exercise',
+                              : 'Start training',
                   color: warn ? AppColors.amber : AppColors.accentPrimary,
                   onTap: _acting
                       ? null

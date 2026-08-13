@@ -125,6 +125,12 @@ List<WheelFamily> buildWheelFamilies({
   final families = <WheelFamily>[];
   for (final category in categories) {
     final goalBranchId = _branchFor(category, skillTracks);
+    // Only a tree with a running progression trains anything — on an idle
+    // tree the "current" step is merely where a start would land, so it
+    // reads as available (white), not as training now.
+    final working = skillTracks.any(
+      (track) => track.included && track.skillCategoryId == category.id,
+    );
     final nodeStates = skillTreeNodeStates(
       category: category,
       progressMap: progressMap,
@@ -139,7 +145,7 @@ List<WheelFamily> buildWheelFamilies({
       } else if (tree == TreeNodeState.done) {
         state = WheelNodeState.mastered;
       } else if (tree == TreeNodeState.cur) {
-        state = WheelNodeState.active;
+        state = working ? WheelNodeState.active : WheelNodeState.available;
       } else if (tree == TreeNodeState.unlocked) {
         state = WheelNodeState.available;
       } else {
