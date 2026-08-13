@@ -7,7 +7,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/reorder_exercises_page.dart';
 import '../../core/widgets/type_led.dart';
-import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_progress_model.dart';
@@ -18,8 +17,6 @@ import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/live_activity_service.dart';
 import '../../data/services/progress_service.dart';
-import '../../data/services/skill_track_service.dart';
-import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/user_profile_service.dart';
 import '../../data/services/weight_unit_service.dart';
@@ -80,7 +77,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   final _devClockService = DevClockService();
   final _restPreferencesService = WorkoutRestPreferencesService();
   final _liveActivityService = LiveActivityService.instance;
-  final _programService = TrainingProgramService();
   final _programStoreService = TrainingProgramStoreService();
   final _exerciseLogService = ExerciseLogService();
   final _profileService = UserProfileService();
@@ -108,15 +104,11 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   /// Number of reps fields currently focused; drives the hide-keyboard button.
   int _repFocusCount = 0;
 
-  /// Set when the session's exercises or sets no longer match the planned day
-  /// — used to offer updating the program plan on finish. Rest-timer changes
-  /// deliberately do NOT set this: rest is a standalone per-exercise
-  /// preference, saved immediately, and never part of the plan-update prompt.
+  /// Set when the session's exercises or sets no longer match the planned day.
+  /// Edits live only for this session — the program plan is never written —
+  /// but the flag still guards the user's drafts against being rebuilt when
+  /// ladder targets arrive late.
   bool _planEdited = false;
-
-  /// Exercises added or swapped in as standalone lifts this session; they are
-  /// written to the plan as single exercises, not skill-path progressions.
-  final Set<String> _singleExerciseIds = {};
 
   String? _toast;
   Timer? _toastTimer;
@@ -680,7 +672,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
 
     _planEdited = true;
-    _singleExerciseIds.add(exercise.id);
     setState(() {
       _sessionItems = [..._sessionItems, nextItem];
       _setDrafts = {
@@ -751,7 +742,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       wasManuallyAdded: true,
     );
 
-    _singleExerciseIds.add(replacement.id);
     _replaceItemInSession(currentItem, nextItem);
   }
 
@@ -1021,140 +1011,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _liveActivityService.end();
     WorkoutNotificationService.instance.cancelRestOver();
 
-    await _maybeUpdateDayPlan();
-    if (!mounted) return;
-
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => FinishedWorkoutView(workout: workout),
       ),
-    );
-  }
-
-  /// When the session drifted from the planned day (sets added or removed,
-  /// exercises added, removed, replaced, or reordered), offer to write the
-  /// changes back to the program plan for this day.
-  Future<void> _maybeUpdateDayPlan() async {
-    if (!_planEdited) return;
-    if (widget.recommendation.isRestDay) return;
-    // Blank workouts don't come from a planned day — nothing to update.
-    if (widget.recommendation.items.isEmpty) return;
-
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    TrainingProgramLogicSnapshot? logic;
-    try {
-      logic = await _programStoreService.fetchProgramLogic(userId);
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load program for plan update: $error\n$stackTrace');
-      return;
-    }
-    if (logic == null || !mounted) return;
-
-    final plannedDate = widget.recommendation.plannedDate;
-    final dayTitle = plannedDate == null
-        ? programDayTitle(widget.recommendation.sessionType)
-        : kWeekdayNames[plannedDate.weekday - 1];
-    final update = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _UpdateDayPlanSheet(dayTitle: dayTitle),
-    );
-    if (update != true || !mounted) return;
-
-    try {
-      await _saveDayPlan(userId, logic);
-      if (mounted) _showToast('$dayTitle day plan updated');
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update $dayTitle day: $error')),
-      );
-    }
-  }
-
-  Future<void> _saveDayPlan(
-    String userId,
-    TrainingProgramLogicSnapshot logic,
-  ) async {
-    final sessionType = widget.recommendation.sessionType;
-    // Plans belong to the workout type, so the changes land on every day
-    // running this session — one list, however many days share it.
-    final config = Map<String, dynamic>.from(
-      logic.program.variationRules['session_items_v1'] as Map? ?? const {},
-    );
-    // The baseline plan must be the one the program actually runs — its
-    // skill tracks — or matching would run against lane defaults and carry
-    // exercises the program never trained into the saved day.
-    final skillTracks = await SkillTrackService().fetchAll(userId);
-    final planItems = ProgramSessionPlan.loadDay(
-      service: _programService,
-      sessionItemsConfig: config,
-      programType: logic.program.programType,
-      sessionType: sessionType,
-      branchSelections: logic.branchSelections,
-      progressMap: _progressMap,
-      skillTracks: skillTracks,
-      hasGym: programUsesGym(logic.program.variationRules),
-    );
-
-    final unmatched = List.of(planItems);
-    ProgramDayItem? takeMatch(TrainingRecommendationItem item) {
-      var index = unmatched.indexWhere(
-        (plan) => plan.exerciseId == item.exercise.id,
-      );
-      if (index < 0 && item.sourceSkillCategoryId.isNotEmpty) {
-        index = unmatched.indexWhere(
-          (plan) =>
-              plan.kind == ProgramDayItemKind.progression &&
-              plan.skillCategoryId == item.sourceSkillCategoryId,
-        );
-      }
-      if (index < 0) return null;
-      return unmatched.removeAt(index);
-    }
-
-    final updated = <ProgramDayItem>[];
-    for (final item in _sessionItems) {
-      final sets = _setsFor(item).length;
-      final match = takeMatch(item);
-      if (match != null) {
-        updated.add(match.copyWith(sets: sets));
-        continue;
-      }
-
-      final asProgression = !_singleExerciseIds.contains(item.exercise.id) &&
-          item.exercise.skillCategoryId.isNotEmpty &&
-          SkillCategoryCatalog.findById(item.sourceSkillCategoryId) != null;
-      updated.add(
-        ProgramDayItem(
-          id: newProgramItemId(),
-          kind: asProgression
-              ? ProgramDayItemKind.progression
-              : ProgramDayItemKind.exercise,
-          name: item.exercise.name,
-          skillCategoryId: asProgression ? item.sourceSkillCategoryId : null,
-          branchId: asProgression ? item.exercise.branchId : null,
-          exerciseId: item.exercise.id,
-          sets: sets,
-        ),
-      );
-    }
-
-    writeProgramDayConfig(
-      config,
-      sessionType,
-      ProgramSessionPlan.serializeDay(updated),
-    );
-
-    await _programStoreService.updateProgramLogic(
-      userId: userId,
-      programType: logic.program.programType,
-      branchSelections: logic.branchSelections,
-      repGoalProfile: logic.repGoalProfile,
-      sessionItemsConfig: config,
     );
   }
 
@@ -2895,58 +2755,6 @@ class _SheetStat extends StatelessWidget {
             letterSpacing: -0.19,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _UpdateDayPlanSheet extends StatelessWidget {
-  final String dayTitle;
-
-  const _UpdateDayPlanSheet({required this.dayTitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return _SheetShell(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Update your $dayTitle day?',
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.38,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'You changed the exercises or sets this session. Apply the '
-                'same changes to your plan so every $dayTitle day matches.',
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        PillButton(
-          label: 'Update $dayTitle day',
-          onTap: () => Navigator.of(context).pop(true),
-        ),
-        const SizedBox(height: 10),
-        PillButton(
-          label: 'Keep current plan',
-          tonal: true,
-          onTap: () => Navigator.of(context).pop(false),
         ),
       ],
     );
