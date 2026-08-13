@@ -16,7 +16,6 @@ void main() {
         _RowsFixture.up,
         _RowsFixture.flat,
         _RowsFixture.down,
-        _RowsFixture.fresh,
       ],
       comparesRecentSessions: false,
     )));
@@ -36,9 +35,6 @@ void main() {
     expect(find.text('NEEDS ATTENTION'), findsOneWidget);
     expect(find.text('9s'), findsOneWidget);
     expect(find.text('−2'), findsOneWidget);
-
-    expect(find.text('NEW'), findsOneWidget);
-    expect(find.text('Handstand'), findsOneWidget);
   });
 
   testWidgets('empty groups stay off the panel', (tester) async {
@@ -50,24 +46,54 @@ void main() {
     expect(find.text('IMPROVING'), findsOneWidget);
     expect(find.text('NO CHANGE'), findsNothing);
     expect(find.text('NEEDS ATTENTION'), findsNothing);
-    expect(find.text('NEW'), findsNothing);
+    expect(find.text('BUILDING BASELINE'), findsNothing);
   });
 
-  testWidgets('without comparisons everything is NEW plus the train-first '
-      'note', (tester) async {
+  testWidgets('exercises without a baseline sit in a quiet group with day '
+      'counters', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
-      rows: [_RowsFixture.fresh, _RowsFixture.neverTrained],
+      rows: [
+        _RowsFixture.up,
+        _RowsFixture.oneDay,
+        _RowsFixture.neverTrained,
+      ],
+      comparesRecentSessions: false,
+    )));
+
+    expect(find.text('IMPROVING'), findsOneWidget);
+    expect(find.text('BUILDING BASELINE'), findsOneWidget);
+    expect(find.text('Handstand'), findsOneWidget);
+    expect(find.text('1 OF 2 DAYS'), findsOneWidget);
+    expect(find.text('0 OF 2 DAYS'), findsOneWidget);
+    expect(
+      find.text(
+        'Trends appear after an exercise is trained on two separate days.',
+      ),
+      findsOneWidget,
+    );
+    // Baseline rows show no best-set value.
+    expect(find.text('Best set:'), findsOneWidget);
+  });
+
+  testWidgets('without any baseline the panel is just the rule and the '
+      'reason — no rows', (tester) async {
+    await tester.pumpWidget(_host(const PerformanceOverview(
+      rows: [_RowsFixture.oneDay, _RowsFixture.neverTrained],
       comparesRecentSessions: true,
     )));
 
-    expect(find.text('LATEST SESSION VS PREV. SESSIONS'), findsOneWidget);
+    expect(find.text('NOTHING TO COMPARE YET'), findsOneWidget);
     expect(
-      find.textContaining("Once you've trained a bit"),
+      find.text('Train an exercise on two separate days'),
       findsOneWidget,
     );
-    expect(find.text('NEW'), findsOneWidget);
-    // A never-trained exercise shows no best-set value.
-    expect(find.text('—'), findsOneWidget);
+    expect(
+      find.textContaining('One session isn’t a trend'),
+      findsOneWidget,
+    );
+    expect(find.text('BUILDING BASELINE'), findsNothing);
+    expect(find.text('Handstand'), findsNothing);
+    expect(find.text('Ring Row'), findsNothing);
   });
 }
 
@@ -78,6 +104,7 @@ abstract final class _RowsFixture {
     isTimed: false,
     bestValue: 21,
     delta: 4,
+    daysTrained: 2,
   );
   static const flat = PerformanceRowData(
     exerciseId: 'pushup',
@@ -85,6 +112,7 @@ abstract final class _RowsFixture {
     isTimed: false,
     bestValue: 12,
     delta: 0,
+    daysTrained: 2,
   );
   static const down = PerformanceRowData(
     exerciseId: 'planche',
@@ -92,12 +120,14 @@ abstract final class _RowsFixture {
     isTimed: true,
     bestValue: 9,
     delta: -2,
+    daysTrained: 2,
   );
-  static const fresh = PerformanceRowData(
+  static const oneDay = PerformanceRowData(
     exerciseId: 'handstand',
     exerciseName: 'Handstand',
     isTimed: true,
     bestValue: 15,
+    daysTrained: 1,
   );
   static const neverTrained = PerformanceRowData(
     exerciseId: 'row',

@@ -1,7 +1,9 @@
 import '../../data/models/workout_history_model.dart';
 
 /// Where an exercise's best set is heading: last 14 days vs the 14 before.
-enum PerformanceTrend { improving, noChange, needsAttention, fresh }
+/// [buildingBaseline] means the exercise hasn't been trained on two separate
+/// days inside the 28-day span yet, so there is nothing to compare.
+enum PerformanceTrend { improving, noChange, needsAttention, buildingBaseline }
 
 /// One exercise currently in the workout list, as the MY PERFORMANCE panel
 /// needs it — identity plus how its sets are counted.
@@ -25,13 +27,18 @@ class PerformanceRowData {
   final bool isTimed;
 
   /// Best single-set value (reps or seconds) shown on the row — the current
-  /// window's best, or the most recent logged best for a [fresh] exercise.
-  /// 0 when the exercise has never been logged.
+  /// window's best, or the most recent logged best for an exercise still
+  /// building its baseline. 0 when the exercise has never been logged.
   final int bestValue;
 
-  /// Best-set movement against the previous window; null when there is
-  /// nothing to compare against — the row files under NEW.
+  /// Best-set movement against the comparison; null when the exercise has
+  /// no baseline yet — the row files under BUILDING BASELINE.
   final int? delta;
+
+  /// Distinct days the exercise was trained inside the 28-day span, capped
+  /// at the two a baseline needs — drives the day counter on
+  /// BUILDING BASELINE rows.
+  final int daysTrained;
 
   const PerformanceRowData({
     required this.exerciseId,
@@ -39,11 +46,12 @@ class PerformanceRowData {
     required this.isTimed,
     required this.bestValue,
     this.delta,
+    this.daysTrained = 0,
   });
 
   PerformanceTrend get trend {
     final delta = this.delta;
-    if (delta == null) return PerformanceTrend.fresh;
+    if (delta == null) return PerformanceTrend.buildingBaseline;
     if (delta > 0) return PerformanceTrend.improving;
     if (delta < 0) return PerformanceTrend.needsAttention;
     return PerformanceTrend.noChange;
@@ -56,7 +64,7 @@ class PerformanceOverview {
   final List<PerformanceRowData> rows;
 
   /// True when history is shorter than a full comparison window, so rows
-  /// compare the latest session against the sessions before it instead of
+  /// compare the latest training day against the days before it instead of
   /// 14-day windows.
   final bool comparesRecentSessions;
 
@@ -68,7 +76,7 @@ class PerformanceOverview {
   bool get isEmpty => rows.isEmpty;
 
   /// Whether any exercise has two points to compare. When false the panel
-  /// shows everything under NEW with the "train a bit first" note.
+  /// drops the list entirely and explains how trends start.
   bool get hasComparisons => rows.any((row) => row.delta != null);
 
   List<PerformanceRowData> rowsFor(PerformanceTrend trend) =>
@@ -76,9 +84,10 @@ class PerformanceOverview {
 }
 
 /// Classifies every exercise currently in the workout list by how its best
-/// set moved: last 14 days vs the previous 14 days. Users whose whole history
-/// fits inside one window get their latest session compared against all the
-/// sessions before it instead.
+/// set moved: last 14 days vs the previous 14 days. An exercise trained on
+/// two separate days inside that 28-day span but not in both windows still
+/// gets a trend — its latest trained day against the days before it. Fewer
+/// than two trained days in the span leaves it building its baseline.
 PerformanceOverview buildPerformanceOverview({
   required List<ActivePerformanceExercise> activeExercises,
   required List<PastWorkout> workouts,
@@ -86,6 +95,8 @@ PerformanceOverview buildPerformanceOverview({
 }) {
   final today = _dateOnly(now);
   final currentWindowStart = today.subtract(const Duration(days: 13));
+  final previousWindowStart =
+      currentWindowStart.subtract(const Duration(days: 14));
 
   // Every logged appearance of each active exercise, oldest first.
   final ids = {for (final exercise in activeExercises) exercise.exerciseId};
@@ -107,42 +118,37 @@ PerformanceOverview buildPerformanceOverview({
     }
   }
 
-  // History shorter than a full window can't fill the previous window for
-  // anything — fall back to latest-session-vs-earlier within what exists.
-  final comparesRecentSessions = !hasHistoryBeforeWindow;
-
   final rows = <PerformanceRowData>[
     for (final exercise in activeExercises)
-      comparesRecentSessions
-          ? _recentSessionsRow(
-              exercise,
-              sessionsByExercise[exercise.exerciseId] ?? const [],
-            )
-          : _windowedRow(
-              exercise,
-              sessionsByExercise[exercise.exerciseId] ?? const [],
-              currentWindowStart: currentWindowStart,
-            ),
+      _rowFor(
+        exercise,
+        sessionsByExercise[exercise.exerciseId] ?? const [],
+        currentWindowStart: currentWindowStart,
+        previousWindowStart: previousWindowStart,
+      ),
   ];
 
   return PerformanceOverview(
     rows: rows,
-    comparesRecentSessions: comparesRecentSessions,
+    comparesRecentSessions: !hasHistoryBeforeWindow,
   );
 }
 
-/// The standard comparison: best set in the last 14 days vs the 14 before.
-/// No sessions in either window files the exercise under NEW.
-PerformanceRowData _windowedRow(
+/// One exercise's row. The standard comparison is best set in the last
+/// 14 days vs the 14 before; when only one window holds sessions but the
+/// exercise still has two separate trained days in the span, the latest day
+/// compares against the best of the earlier ones. Fewer than two trained
+/// days files it under BUILDING BASELINE with its day count.
+PerformanceRowData _rowFor(
   ActivePerformanceExercise exercise,
   List<_LoggedSession> sessions, {
   required DateTime currentWindowStart,
+  required DateTime previousWindowStart,
 }) {
-  final previousWindowStart =
-      currentWindowStart.subtract(const Duration(days: 14));
-
   var currentBest = 0, previousBest = 0;
   var inCurrent = false, inPrevious = false;
+  final inSpan = <_LoggedSession>[];
+  final days = <DateTime>{};
   for (final session in sessions) {
     if (!session.date.isBefore(currentWindowStart)) {
       inCurrent = true;
@@ -150,49 +156,56 @@ PerformanceRowData _windowedRow(
     } else if (!session.date.isBefore(previousWindowStart)) {
       inPrevious = true;
       if (session.best > previousBest) previousBest = session.best;
+    } else {
+      continue;
     }
+    inSpan.add(session);
+    days.add(session.date);
   }
 
-  if (!inCurrent || !inPrevious) {
-    // Untrained these 14 days, or nothing in the window before them —
-    // show the most recent best it ever logged, with no delta.
+  if (inCurrent && inPrevious) {
     return _row(
       exercise,
-      bestValue: inCurrent
-          ? currentBest
-          : (sessions.isEmpty ? 0 : sessions.last.best),
+      bestValue: currentBest,
+      delta: currentBest - previousBest,
+      daysTrained: 2,
     );
   }
+
+  if (days.length >= 2) {
+    // Both trained days sit in one window — the latest day still compares
+    // against the best of the days before it.
+    final latestDay =
+        days.reduce((a, b) => a.isAfter(b) ? a : b);
+    var latestBest = 0, earlierBest = 0;
+    for (final session in inSpan) {
+      if (session.date == latestDay) {
+        if (session.best > latestBest) latestBest = session.best;
+      } else if (session.best > earlierBest) {
+        earlierBest = session.best;
+      }
+    }
+    return _row(
+      exercise,
+      bestValue: latestBest,
+      delta: latestBest - earlierBest,
+      daysTrained: 2,
+    );
+  }
+
+  // Still building a baseline — show the most recent best it ever logged.
   return _row(
     exercise,
-    bestValue: currentBest,
-    delta: currentBest - previousBest,
+    bestValue: sessions.isEmpty ? 0 : sessions.last.best,
+    daysTrained: days.length,
   );
-}
-
-/// The short-history fallback: the latest session's best set against the
-/// best across every session before it.
-PerformanceRowData _recentSessionsRow(
-  ActivePerformanceExercise exercise,
-  List<_LoggedSession> sessions,
-) {
-  if (sessions.length < 2) {
-    return _row(
-      exercise,
-      bestValue: sessions.isEmpty ? 0 : sessions.last.best,
-    );
-  }
-  final latest = sessions.last.best;
-  final earlierBest = sessions
-      .take(sessions.length - 1)
-      .fold<int>(0, (best, session) => session.best > best ? session.best : best);
-  return _row(exercise, bestValue: latest, delta: latest - earlierBest);
 }
 
 PerformanceRowData _row(
   ActivePerformanceExercise exercise, {
   required int bestValue,
   int? delta,
+  required int daysTrained,
 }) {
   return PerformanceRowData(
     exerciseId: exercise.exerciseId,
@@ -200,6 +213,7 @@ PerformanceRowData _row(
     isTimed: exercise.isTimed,
     bestValue: bestValue,
     delta: delta,
+    daysTrained: daysTrained,
   );
 }
 

@@ -10,12 +10,11 @@ import 'skill_wheel.dart';
 
 // ── MY PERFORMANCE ────────────────────────────────────────────────────
 
-/// Look of one trend section: label, tint, and the trailing trend icon
-/// (none for NEW — there is nothing to compare yet).
+/// Look of one trend section: label, tint, and the trailing trend icon.
 class _PerfGroupStyle {
   final String label;
   final Color color;
-  final IconData? icon;
+  final IconData icon;
 
   const _PerfGroupStyle(this.label, this.color, this.icon);
 }
@@ -35,11 +34,6 @@ const _perfGroupStyles = {
     'NEEDS ATTENTION',
     AppColors.amber,
     Icons.trending_down_rounded,
-  ),
-  PerformanceTrend.fresh: _PerfGroupStyle(
-    'NEW',
-    AppColors.accentBright,
-    null,
   ),
 };
 
@@ -90,9 +84,11 @@ class PerformancePanel extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            overview.comparesRecentSessions
-                ? 'LATEST SESSION VS PREV. SESSIONS'
-                : 'LAST 14 DAYS VS PREV. 14 DAYS',
+            !overview.hasComparisons
+                ? 'NOTHING TO COMPARE YET'
+                : overview.comparesRecentSessions
+                    ? 'LATEST SESSION VS PREV. SESSIONS'
+                    : 'LAST 14 DAYS VS PREV. 14 DAYS',
             style: GoogleFonts.robotoMono(
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
@@ -100,20 +96,37 @@ class PerformancePanel extends StatelessWidget {
               color: AppColors.textMuted,
             ),
           ),
+          // Nothing has a baseline yet: state the rule plainly — no rows,
+          // just the one-line rule and its plain-language reason.
           if (!overview.hasComparisons) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 22),
             const Text(
-              'Once you\'ve trained a bit, you\'ll start seeing how '
-              'you\'re progressing in each exercise.',
+              'Train an exercise on two separate days',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.32,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Forma compares your last 14 days against the 14 before. '
+              'One session isn’t a trend — progress starts '
+              'showing here after the second.',
               style: TextStyle(
                 fontSize: 13.5,
-                height: 1.45,
+                height: 1.5,
                 color: AppColors.textSecondary,
               ),
             ),
+          ] else ...[
+            for (final trend in _perfGroupStyles.keys)
+              ..._group(trend, overview.rowsFor(trend)),
+            ..._baselineGroup(
+              overview.rowsFor(PerformanceTrend.buildingBaseline),
+            ),
           ],
-          for (final trend in PerformanceTrend.values)
-            ..._group(trend, overview.rowsFor(trend)),
         ],
       ),
     );
@@ -187,10 +200,10 @@ class PerformancePanel extends StatelessWidget {
                 ),
               ),
               // Fixed-width trailing box so the best-set values line up
-              // across groups; NEW rows leave it blank.
+              // across groups.
               SizedBox(
                 width: 52,
-                child: row.delta == null || style.icon == null
+                child: row.delta == null
                     ? null
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -214,6 +227,90 @@ class PerformancePanel extends StatelessWidget {
     ];
   }
 
+  /// The quiet trailing group: exercises still short of the two separate
+  /// trained days a trend needs, each with its day counter.
+  List<Widget> _baselineGroup(List<PerformanceRowData> rows) {
+    if (rows.isEmpty) return const [];
+    return [
+      const SizedBox(height: 20),
+      Row(
+        children: [
+          const CustomPaint(
+            size: Size(7, 7),
+            painter: _DashedRingPainter(),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'BUILDING BASELINE',
+            style: GoogleFonts.robotoMono(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.35,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      for (final row in rows)
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.divider)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  row.exerciseName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    letterSpacing: -0.15,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              for (var day = 0; day < 2; day++) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: EdgeInsets.only(left: day == 0 ? 0 : 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(
+                      alpha: day < row.daysTrained ? 0.4 : 0.12,
+                    ),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ],
+              const SizedBox(width: 10),
+              Text(
+                '${row.daysTrained} OF 2 DAYS',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.95,
+                  color: const Color(0xFF4A4B52),
+                ),
+              ),
+            ],
+          ),
+        ),
+      const SizedBox(height: 12),
+      const Text(
+        'Trends appear after an exercise is trained on two separate days.',
+        style: TextStyle(
+          fontSize: 12.5,
+          height: 1.5,
+          color: AppColors.textMuted,
+        ),
+      ),
+    ];
+  }
+
   static String _bestLabel(PerformanceRowData row) {
     if (row.bestValue <= 0) return '—';
     if (row.isTimed) return '${row.bestValue}s';
@@ -226,6 +323,37 @@ class PerformancePanel extends StatelessWidget {
     if (delta < 0) return '−${-delta}';
     return '0';
   }
+}
+
+/// The BUILDING BASELINE group's marker: the same 7px dot the trend groups
+/// wear, drawn as a dashed outline — a baseline still being traced.
+class _DashedRingPainter extends CustomPainter {
+  const _DashedRingPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = Colors.white.withValues(alpha: 0.25);
+    final center = size.center(Offset.zero);
+    final radius = (size.shortestSide - paint.strokeWidth) / 2;
+    // Four dashes around the ring, gaps matching the dashes.
+    const dashes = 4;
+    const sweep = 3.14159265 * 2 / (dashes * 2);
+    for (var i = 0; i < dashes; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        i * sweep * 2,
+        sweep,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRingPainter oldDelegate) => false;
 }
 
 // ── Focused exercise: shared status metadata ──────────────────────────

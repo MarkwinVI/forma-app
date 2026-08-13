@@ -117,7 +117,7 @@ void main() {
       expect(row.delta, 1);
     });
 
-    test('no history in the previous window files under NEW', () {
+    test('one trained day in the span is still building its baseline', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [
@@ -130,13 +130,55 @@ void main() {
       );
 
       final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.fresh);
+      expect(row.trend, PerformanceTrend.buildingBaseline);
       expect(row.bestValue, 8);
       expect(row.delta, isNull);
+      expect(row.daysTrained, 1);
     });
 
-    test('not trained in the last 14 days files under NEW with its last best',
-        () {
+    test('two trained days in the current window alone make a trend', () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
+          anchor,
+          _workout('2026-08-02', {
+            'a': [8],
+          }),
+          _workout('2026-08-09', {
+            'a': [11],
+          }),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.trend, PerformanceTrend.improving);
+      expect(row.bestValue, 11);
+      expect(row.delta, 3);
+    });
+
+    test('two sessions on the same day do not make a baseline', () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
+          anchor,
+          _workout('2026-08-05T08:00:00', {
+            'a': [8],
+          }),
+          _workout('2026-08-05T18:00:00', {
+            'a': [10],
+          }),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.trend, PerformanceTrend.buildingBaseline);
+      expect(row.daysTrained, 1);
+    });
+
+    test('a trained day older than the 28-day span does not count toward '
+        'the baseline', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [
@@ -152,12 +194,14 @@ void main() {
       );
 
       final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.fresh);
+      expect(row.trend, PerformanceTrend.buildingBaseline);
       expect(row.bestValue, 10);
       expect(row.delta, isNull);
+      expect(row.daysTrained, 1);
     });
 
-    test('never-trained active exercise files under NEW with no best', () {
+    test('never-trained active exercise builds its baseline from zero days',
+        () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [anchor],
@@ -165,8 +209,9 @@ void main() {
       );
 
       final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.fresh);
+      expect(row.trend, PerformanceTrend.buildingBaseline);
       expect(row.bestValue, 0);
+      expect(row.daysTrained, 0);
     });
 
     test('removed exercises simply are not passed in', () {
@@ -236,7 +281,8 @@ void main() {
       expect(row.delta, -1);
     });
 
-    test('a single logged session is NEW — nothing to compare yet', () {
+    test('a single logged session is still building — nothing to compare yet',
+        () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [
@@ -248,12 +294,13 @@ void main() {
       );
 
       final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.fresh);
+      expect(row.trend, PerformanceTrend.buildingBaseline);
       expect(row.bestValue, 10);
+      expect(row.daysTrained, 1);
       expect(overview.hasComparisons, isFalse);
     });
 
-    test('a completely new user has only NEW rows and no comparisons', () {
+    test('a completely new user is all building baseline, no comparisons', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a'), _active('b')],
         workouts: const [],
@@ -264,7 +311,7 @@ void main() {
       expect(overview.hasComparisons, isFalse);
       expect(
         overview.rows.map((row) => row.trend),
-        everyElement(PerformanceTrend.fresh),
+        everyElement(PerformanceTrend.buildingBaseline),
       );
     });
   });
