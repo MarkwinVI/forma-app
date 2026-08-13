@@ -1547,7 +1547,6 @@ class HomeDashboardMetricsCalculator {
     );
     final status = switch (progressMap[exerciseId] ?? ExerciseStatus.inactive) {
       ExerciseStatus.mastered => JourneySkillStageStatus.cleared,
-      ExerciseStatus.skipped => JourneySkillStageStatus.cleared,
       ExerciseStatus.active => JourneySkillStageStatus.inProgress,
       ExerciseStatus.inactive => stageIndex == currentIndex
           ? JourneySkillStageStatus.inProgress

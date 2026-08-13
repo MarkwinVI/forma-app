@@ -26,21 +26,22 @@ create policy "Users can update their own profile"
   using (auth.uid() = id);
 
 -- ── Exercise Progress ─────────────────────────────────────────────────────
--- Tracks each user's status (inactive / active / mastered / skipped) per
--- exercise, plus their current incremental target on the progression ladder.
+-- Tracks each user's status (inactive / active / mastered) per exercise,
+-- plus their current incremental target on the progression ladder.
 -- Null targets mean "never advanced": the app falls back to the initial
 -- ladder target (3 × 6 reps / 3 × 10s timed). The mastery target is a live
 -- global program setting and is intentionally not stored here.
 --
--- 'skipped' is a step program setup cleared without training it: the
--- reported one-set maximum started the user further up the tree. It counts
--- as cleared, and logging the mastery target masters it for real.
+-- There is no 'skipped' status (retired 2026-08): placement marks the steps
+-- behind the start mastered outright, and a manual jump ahead leaves the
+-- steps in between inactive until the jumped-to exercise is mastered —
+-- which then masters them too.
 
 create table public.user_exercise_progress (
   id                       uuid default gen_random_uuid() primary key,
   user_id                  uuid references auth.users(id) on delete cascade not null,
   exercise_id              text not null,  -- matches Exercise.id in the local catalog
-  status                   text not null default 'inactive', -- 'inactive' | 'active' | 'mastered' | 'skipped'
+  status                   text not null default 'inactive', -- 'inactive' | 'active' | 'mastered'
   current_target_sets      int,     -- set count of the current incremental target
   current_target_value     int,     -- per-set reps (or seconds when timed)
   current_target_weight_kg numeric, -- working weight for loaded lifts; null = bodyweight
@@ -144,7 +145,7 @@ create policy "Users manage own workout exercise logs"
 
 -- ── Progression Events ────────────────────────────────────────────────────
 -- One row per progression change a saved workout earned: target increases,
--- masteries, skipped nodes, newly activated exercises, and personal bests. Powers the
+-- masteries, newly activated exercises, and personal bests. Powers the
 -- "what changed" feed (seen_at), achievements, deletion rollback, and makes
 -- progression application idempotent per session.
 
@@ -154,13 +155,13 @@ create table public.progression_events (
   workout_session_id  uuid references public.workout_sessions(id) on delete cascade,
   exercise_id         text not null,
   track_id            text,     -- progression track; null for standalone PBs
-  kind                text not null, -- 'target_increase' | 'mastered' | 'activated' | 'skipped' | 'personal_best' | 'branch_choice' | 'load_increase'
-  value_from          int,      -- prior value/PB; prior status index for shortcut rollback
+  kind                text not null, -- 'target_increase' | 'mastered' | 'activated' | 'personal_best' | 'branch_choice' | 'load_increase'
+  value_from          int,      -- prior value/PB; prior status index for mastery rollback
   value_to            int,      -- per-set value after; new best for PBs
   target_sets         int,      -- set count the target values apply to
   weight_from         numeric,  -- for 'load_increase': working weight before, in kg
   weight_to           numeric,  -- for 'load_increase': working weight after, in kg
-  related_exercise_id text,     -- activation source, or shortcut destination for skipped nodes
+  related_exercise_id text,     -- activation source
   created_at          timestamptz default now() not null,
   seen_at             timestamptz -- null until the user has seen it in the feed
 );

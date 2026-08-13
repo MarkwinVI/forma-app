@@ -138,9 +138,10 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       };
 
   /// Makes [node] the trained exercise of its tree. Steps on the route
-  /// before it become skipped (mastered ones stay mastered); every step
-  /// after it locks again — so jumping ahead skips, and stepping back onto
-  /// a cleared node re-locks what follows.
+  /// before it are left exactly as they are — jumping ahead keeps the
+  /// unfinished ones locked until [node] is mastered, which masters them —
+  /// and every step after it locks again, so stepping back onto a cleared
+  /// node re-locks what follows.
   Future<void> _trainNode(WheelFamily family, WheelNode node) async {
     final userId = AuthService().currentUser?.id;
     final bundle = _bundle;
@@ -172,7 +173,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       desired[id] = i < idx
           ? (existing == ExerciseStatus.mastered
               ? ExerciseStatus.mastered
-              : ExerciseStatus.skipped)
+              : ExerciseStatus.inactive)
           : i == idx
               ? ExerciseStatus.active
               : ExerciseStatus.inactive;

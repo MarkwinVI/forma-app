@@ -205,8 +205,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Jump ahead to Pullups step 2?'), findsOneWidget);
-    await tester.tap(find.text('Jump ahead'));
+    expect(find.text('Start Pullups step 2?'), findsOneWidget);
+    expect(
+      find.textContaining(
+        'the earlier exercises in this path will also be marked as mastered',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Start exercise'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(trained, isTrue);

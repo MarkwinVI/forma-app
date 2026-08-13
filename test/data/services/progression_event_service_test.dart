@@ -133,7 +133,7 @@ void main() {
       expect(events, isEmpty);
     });
 
-    test('manual fast-forward records skipped nodes and changed exercise', () {
+    test('manual fast-forward records only the changed exercise', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
       )!;
@@ -172,16 +172,12 @@ void main() {
         progressRows: rows,
       );
 
-      final skipped = events
-          .where((event) => event.kind == ProgressionEventKind.skipped)
-          .toList();
-      expect(skipped, hasLength(2));
-      expect(skipped.first.valueFrom, ExerciseStatus.active.index);
-      expect(skipped.first.trackId, 'horizontal_push');
-
+      // The jumped-over steps stay locked and produce no events; the only
+      // record is the destination's activation.
       final activated = events.singleWhere(
         (event) => event.kind == ProgressionEventKind.activated,
       );
+      expect(events, hasLength(1));
       expect(activated.exerciseId, destination.id);
       expect(activated.relatedExerciseId, activeId);
       expect(activated.valueFrom, 6);
@@ -276,24 +272,24 @@ void main() {
       expect(deactivate.status, ExerciseStatus.inactive);
     });
 
-    test('shortcut rollback restores skipped and directly mastered statuses',
-        () {
+    test('a backfilled mastery rolls back to the status it replaced', () {
       final actions = ExerciseProgressionService.rollbackActionsFor([
-        event(
-          exerciseId: 'pushups_incline_push_up',
-          kind: ProgressionEventKind.skipped,
-          valueFrom: ExerciseStatus.active.index,
-        ),
+        // A step a jump's mastery backfilled: it was inactive before.
         event(
           exerciseId: 'pushups_diamond_push_up',
           kind: ProgressionEventKind.mastered,
           valueFrom: ExerciseStatus.inactive.index,
         ),
+        // An ordinary mastery carries no before-status and returns to active.
+        event(
+          exerciseId: 'pushups_incline_push_up',
+          kind: ProgressionEventKind.mastered,
+        ),
       ]);
 
       expect(actions, hasLength(2));
-      expect(actions[0].status, ExerciseStatus.active);
-      expect(actions[1].status, ExerciseStatus.inactive);
+      expect(actions[0].status, ExerciseStatus.inactive);
+      expect(actions[1].status, ExerciseStatus.active);
     });
   });
 

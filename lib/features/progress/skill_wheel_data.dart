@@ -79,8 +79,8 @@ String? goalTipKey(String goalId, List<WheelFamily> families) {
 
 /// The trees still behind an unmet prerequisite, keyed by category id —
 /// muscle-up until the pull-up is mastered, handstand pushups and planche
-/// until the diamond pushup is. A cleared (mastered or skipped)
-/// prerequisite removes the lock entirely.
+/// until the diamond pushup is. A mastered prerequisite removes the lock
+/// entirely.
 Map<String, WheelTreeLock> computeTreeLocks(
   Map<String, ExerciseStatus> progressMap,
 ) {
@@ -141,9 +141,7 @@ List<WheelFamily> buildWheelFamilies({
     WheelNode node(String exerciseId) {
       final tree = nodeStates[exerciseId];
       final WheelNodeState state;
-      if (progressMap[exerciseId] == ExerciseStatus.skipped) {
-        state = WheelNodeState.skipped;
-      } else if (tree == TreeNodeState.done) {
+      if (tree == TreeNodeState.done) {
         state = WheelNodeState.mastered;
       } else if (tree == TreeNodeState.cur) {
         state = working ? WheelNodeState.active : WheelNodeState.available;

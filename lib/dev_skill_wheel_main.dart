@@ -15,21 +15,20 @@ import 'features/progress/widgets/skill_wheel_screen.dart';
 void main() => runApp(const _WheelProbeApp());
 
 /// A believable mid-journey state: several trees under way, one on a branch,
-/// one with skipped steps, planche/HSPU/dips still gated or untouched.
+/// planche/HSPU/dips still gated or untouched.
 Map<String, ExerciseStatus> _mockProgress() {
   const mastered = ExerciseStatus.mastered;
   const active = ExerciseStatus.active;
-  const skipped = ExerciseStatus.skipped;
 
   final map = <String, ExerciseStatus>{};
 
   void walk(String categoryId, String branchId, int cleared,
-      {bool thenActive = true, Set<int> skip = const {}}) {
+      {bool thenActive = true}) {
     final category = SkillCategoryCatalog.findById(categoryId)!;
     final path = category.pathFor(branchId);
     for (var i = 0; i < path.length; i++) {
       if (i < cleared) {
-        map[path[i]] = skip.contains(i) ? skipped : mastered;
+        map[path[i]] = mastered;
       } else if (i == cleared && thenActive) {
         map[path[i]] = active;
         break;
@@ -39,9 +38,8 @@ Map<String, ExerciseStatus> _mockProgress() {
     }
   }
 
-  // Pullups: foundation cleared (one step skipped), working the weighted
-  // branch.
-  walk(SkillCategoryCatalog.pullupsId, 'weighted', 6, skip: {3});
+  // Pullups: foundation cleared, working the weighted branch.
+  walk(SkillCategoryCatalog.pullupsId, 'weighted', 6);
   // Rows: deep into the front lever path.
   walk(SkillCategoryCatalog.rowsId, 'front_lever', 6);
   // Pushups: mid-foundation.

@@ -6,16 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-/// How one step of a tree reads on the wheel. Skipped counts as cleared
-/// everywhere (same rule as the rest of the app); the wheel only tells the
-/// two apart in the focused card's status line.
+/// How one step of a tree reads on the wheel.
 /// [available] is a step whose prerequisite is cleared but which is not the
 /// step being trained — reachable right now, drawn as a white node.
-enum WheelNodeState { mastered, skipped, active, available, locked }
+enum WheelNodeState { mastered, active, available, locked }
 
 extension WheelNodeStateX on WheelNodeState {
-  bool get isCleared =>
-      this == WheelNodeState.mastered || this == WheelNodeState.skipped;
+  bool get isCleared => this == WheelNodeState.mastered;
 }
 
 class WheelNode {
@@ -799,8 +796,7 @@ class _WheelPainter extends CustomPainter {
     }
     return switch (st) {
       WheelNodeState.active => _SkillWheelState._accent,
-      WheelNodeState.mastered || WheelNodeState.skipped =>
-        _SkillWheelState._green,
+      WheelNodeState.mastered => _SkillWheelState._green,
       WheelNodeState.available => AppColors.textPrimary,
       WheelNodeState.locked => _SkillWheelState._lock,
     };

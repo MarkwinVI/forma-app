@@ -1307,7 +1307,6 @@ class TrainingProgramService {
       final status = progressMap[exercise.id];
       switch (status) {
         case ExerciseStatus.mastered:
-        case ExerciseStatus.skipped:
           score += 2;
         case ExerciseStatus.active:
           score += 1;

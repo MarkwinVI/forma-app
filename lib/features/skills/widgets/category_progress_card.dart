@@ -501,7 +501,6 @@ void _drawPreviewNode(
     ExerciseStatus.inactive => AppColors.textMuted,
     ExerciseStatus.active => AppColors.accentBright,
     ExerciseStatus.mastered => _kMastered,
-    ExerciseStatus.skipped => _kMastered,
   };
   final snappedCenter = _snapOffset(center);
 

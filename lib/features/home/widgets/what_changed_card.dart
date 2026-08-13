@@ -471,8 +471,6 @@ _InsightItem? _itemFor(ProgressionEvent event) {
         noun: (count) =>
             _plural(count, 'exercise unlocked', 'exercises unlocked'),
       );
-    case ProgressionEventKind.skipped:
-      return null; // The destination's activation tells the useful story.
     case ProgressionEventKind.personalBest:
       return null; // Shown as an achievement on the Progress tab.
     case ProgressionEventKind.branchChoice:

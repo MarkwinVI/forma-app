@@ -63,18 +63,16 @@ extension ExerciseCategoryX on ExerciseCategory {
 
 /// Where an exercise stands for a user.
 ///
-/// [skipped] is a cleared-but-unproven step: program setup started the user
-/// further up a tree, so the steps behind the starting node were never
-/// trained here. They read as cleared everywhere a mastered step does — the
-/// path is open past them — but they say "Skipped", and logging the mastery
-/// target for one still masters it for real.
-enum ExerciseStatus { inactive, active, mastered, skipped }
+/// There is no "skipped" state: placement (setup answers, or tapping where
+/// you are on a path) marks the steps behind the start mastered outright,
+/// and a manual jump to a later step leaves the steps in between inactive
+/// until the jumped-to exercise is mastered — which then masters them too.
+enum ExerciseStatus { inactive, active, mastered }
 
 extension ExerciseStatusX on ExerciseStatus {
-  /// Whether the step is behind the user: mastered outright, or skipped at
-  /// setup. Everything that asks "is this step done" asks this.
-  bool get isCleared =>
-      this == ExerciseStatus.mastered || this == ExerciseStatus.skipped;
+  /// Whether the step is behind the user. Everything that asks "is this step
+  /// done" asks this.
+  bool get isCleared => this == ExerciseStatus.mastered;
 }
 
 enum ExerciseProgramSection {

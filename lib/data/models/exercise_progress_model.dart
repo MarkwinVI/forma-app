@@ -30,7 +30,11 @@ class ExerciseProgress {
   factory ExerciseProgress.fromMap(Map<String, dynamic> map) {
     return ExerciseProgress(
       exerciseId: ExerciseIdMigration.resolve(map['exercise_id'] as String),
-      status: ExerciseStatus.values.byName(map['status'] as String),
+      // 'skipped' predates the migration that retired it; it read as cleared,
+      // so a row the migration has not converted yet reads as mastered.
+      status: map['status'] == 'skipped'
+          ? ExerciseStatus.mastered
+          : ExerciseStatus.values.byName(map['status'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
       currentTargetSets: map['current_target_sets'] as int?,
       currentTargetValue: map['current_target_value'] as int?,

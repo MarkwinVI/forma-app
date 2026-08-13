@@ -73,9 +73,10 @@ class SessionProgressionOutcome {
   /// the old one. This maps the node being left to the newly active node.
   final Map<String, String> shortcutActivationsBySource;
 
-  /// Statuses before a shortcut changed them, used to write reversible ledger
-  /// events for skipped and directly-mastered nodes.
-  final Map<String, ExerciseStatus> shortcutPreviousStatuses;
+  /// Statuses before an out-of-band change — a manual shortcut, or the
+  /// backfill that masters a jumped-over step when its destination masters —
+  /// used to write reversible ledger events.
+  final Map<String, ExerciseStatus> previousStatuses;
 
   /// Branches chosen by goal-driven fork resolution (skill category id →
   /// branch id), to be saved so future workouts follow the new branch.
@@ -94,7 +95,7 @@ class SessionProgressionOutcome {
     required this.targetChanges,
     this.activationsByMastered = const {},
     this.shortcutActivationsBySource = const {},
-    this.shortcutPreviousStatuses = const {},
+    this.previousStatuses = const {},
     this.branchesToPersist = const {},
     this.branchChoicesNeeded = const [],
     this.suggestions = const [],
@@ -239,11 +240,14 @@ class ExerciseProgressionService {
 
   /// Pure progression rule, separated from persistence so it is testable.
   ///
-  /// For each result (mastered exercises are skipped, so a session can never
+  /// For each result (mastered exercises are left out, so a session can never
   /// be applied to them again):
   /// 1. Mastery first: volume ≥ sets × mastery value masters the exercise —
   ///    overshooting the current target masters early — and activates the
-  ///    next move in its skill path (fork resolution below).
+  ///    next move in its skill path (fork resolution below). Mastery also
+  ///    masters every step still uncleared earlier on the exercise's path:
+  ///    a manual jump leaves the steps it cleared past locked, and mastering
+  ///    the jumped-to exercise is what proves them.
   /// 2. Otherwise, volume ≥ the current target's volume raises the target by
   ///    one increment, capped at the mastery value.
   /// 3. Otherwise nothing changes: the target holds and no progress is lost.
@@ -269,7 +273,7 @@ class ExerciseProgressionService {
     final targetChanges = <String, ExerciseTarget>{};
     final activationsByMastered = <String, String>{};
     final shortcutActivationsBySource = <String, String>{};
-    final shortcutPreviousStatuses = <String, ExerciseStatus>{};
+    final previousStatuses = <String, ExerciseStatus>{};
     final branchesToPersist = <String, String>{};
     final branchChoicesNeeded = <String>[];
     final suggestions = <ProgressionSuggestion>[];
@@ -289,7 +293,7 @@ class ExerciseProgressionService {
             progressRows: progressRows,
             statusChanges: statusChanges,
             shortcutActivationsBySource: shortcutActivationsBySource,
-            shortcutPreviousStatuses: shortcutPreviousStatuses,
+            previousStatuses: previousStatuses,
             branchesToPersist: branchesToPersist,
             activeBranchByCategory: activeBranchByCategory,
             masterySettings: masterySettings,
@@ -300,8 +304,7 @@ class ExerciseProgressionService {
 
       // A manually added inactive node only changes progression when it
       // qualifies for the explicit shortcut above. Manually adding the
-      // already-active node (or revisiting a skipped node) still uses the
-      // ordinary ladder rules below.
+      // already-active node still uses the ordinary ladder rules below.
       if (result.wasManuallyAdded &&
           statusOf(exercise.id) == ExerciseStatus.inactive) {
         continue;
@@ -330,6 +333,18 @@ class ExerciseProgressionService {
 
       if (result.volume >= masteryVolume) {
         statusChanges[exercise.id] = ExerciseStatus.mastered;
+
+        // Mastering proves the whole route here: steps a manual jump left
+        // locked earlier on this path master along with it. On an ordinary
+        // mastery everything earlier is already cleared, so nothing changes.
+        for (final id in _unclearedPredecessors(
+          exercise,
+          statusOf: statusOf,
+          activeBranchByCategory: activeBranchByCategory,
+        )) {
+          previousStatuses.putIfAbsent(id, () => statusOf(id));
+          statusChanges[id] = ExerciseStatus.mastered;
+        }
 
         final resolution = _resolveSuccessor(
           exercise,
@@ -364,7 +379,7 @@ class ExerciseProgressionService {
       targetChanges: targetChanges,
       activationsByMastered: activationsByMastered,
       shortcutActivationsBySource: shortcutActivationsBySource,
-      shortcutPreviousStatuses: shortcutPreviousStatuses,
+      previousStatuses: previousStatuses,
       branchesToPersist: branchesToPersist,
       branchChoicesNeeded: branchChoicesNeeded,
       suggestions: suggestions,
@@ -422,7 +437,7 @@ class ExerciseProgressionService {
     required Map<String, ExerciseProgress> progressRows,
     required Map<String, ExerciseStatus> statusChanges,
     required Map<String, String> shortcutActivationsBySource,
-    required Map<String, ExerciseStatus> shortcutPreviousStatuses,
+    required Map<String, ExerciseStatus> previousStatuses,
     required Map<String, String> branchesToPersist,
     required Map<String, String> activeBranchByCategory,
     required MasteryTargetSettings masterySettings,
@@ -484,45 +499,35 @@ class ExerciseProgressionService {
     final destinationIndex = destinationPath.indexOf(destination.id);
     final activeOnDestinationIndex = destinationPath.indexOf(activeId);
 
-    final nodesToSkip = <String>[];
     var switchedFromFoundation = false;
     if (activeOnDestinationIndex >= 0 &&
         destinationIndex > activeOnDestinationIndex) {
-      nodesToSkip.addAll(
-        destinationPath.sublist(activeOnDestinationIndex, destinationIndex),
-      );
       if (destinationPathId != selectedPathId) {
         final commonLength = _commonPrefixLength(selectedPath, destinationPath);
         switchedFromFoundation = activeOnDestinationIndex < commonLength;
       }
     } else {
-      // Different post-foundation branch: leave the selected branch intact,
-      // retire its active node, and clear only the destination branch's
-      // uncleared lead-in.
+      // Different post-foundation branch: the jump is only valid forward of
+      // the shared foundation on both sides.
       final commonLength = _commonPrefixLength(selectedPath, destinationPath);
       if (!selectedPath.contains(activeId) ||
           selectedPath.indexOf(activeId) < commonLength ||
           destinationIndex < commonLength) {
         return false;
       }
-      nodesToSkip.add(activeId);
-      nodesToSkip.addAll(
-        destinationPath.sublist(commonLength, destinationIndex),
-      );
     }
 
     void changeStatus(String id, ExerciseStatus status) {
       final before = currentStatus(id);
       if (before == status) return;
-      shortcutPreviousStatuses.putIfAbsent(id, () => before);
+      previousStatuses.putIfAbsent(id, () => before);
       statusChanges[id] = status;
     }
 
-    for (final id in nodesToSkip.toSet()) {
-      if (!currentStatus(id).isCleared) {
-        changeStatus(id, ExerciseStatus.skipped);
-      }
-    }
+    // One tree trains one exercise: the step being left stops being active.
+    // The steps jumped over are not touched — they stay locked until the
+    // destination is mastered, which masters them too.
+    changeStatus(activeId, ExerciseStatus.inactive);
 
     final mastery = masteryTargetForExercise(
       destination,
@@ -532,6 +537,13 @@ class ExerciseProgressionService {
     final mastered = result.volume >= mastery.volume;
     if (mastered) {
       changeStatus(destination.id, ExerciseStatus.mastered);
+      // Mastering the destination proves the whole route to it: everything
+      // still uncleared earlier on its path masters along with it.
+      for (final id in destinationPath.sublist(0, destinationIndex)) {
+        if (!currentStatus(id).isCleared) {
+          changeStatus(id, ExerciseStatus.mastered);
+        }
+      }
       if (destinationIndex + 1 < destinationPath.length) {
         final successorId = destinationPath[destinationIndex + 1];
         if (currentStatus(successorId) == ExerciseStatus.inactive) {
@@ -548,6 +560,50 @@ class ExerciseProgressionService {
       branchesToPersist[category.id] = destinationPathId;
     }
     return true;
+  }
+
+  /// Steps earlier on [exercise]'s path that are not yet cleared — the debt a
+  /// manual jump leaves behind, settled when the jumped-to exercise masters.
+  ///
+  /// The path is resolved the way the manual shortcut resolves a destination:
+  /// the exercise's own branch when it declares one that contains it, the
+  /// track's active branch otherwise, any path containing it as a last
+  /// resort. Sibling branches are never touched — only the route to the
+  /// exercise itself.
+  static List<String> _unclearedPredecessors(
+    Exercise exercise, {
+    required ExerciseStatus Function(String id) statusOf,
+    required Map<String, String> activeBranchByCategory,
+  }) {
+    if (exercise.skillCategoryId.isEmpty) return const [];
+    final category = SkillCategoryCatalog.findById(exercise.skillCategoryId);
+    if (category == null) return const [];
+
+    List<String>? path;
+    final declared = category.trainingPaths[exercise.branchId];
+    if (declared?.contains(exercise.id) ?? false) {
+      path = declared;
+    } else {
+      final selectedId = activeBranchByCategory[category.id] ??
+          category.defaultTrainingPathId;
+      final selected = category.pathFor(selectedId);
+      if (selected.contains(exercise.id)) {
+        path = selected;
+      } else {
+        for (final candidate in category.trainingPaths.values) {
+          if (candidate.contains(exercise.id)) {
+            path = candidate;
+            break;
+          }
+        }
+      }
+    }
+    if (path == null) return const [];
+
+    return [
+      for (final id in path.sublist(0, path.indexOf(exercise.id)))
+        if (!statusOf(id).isCleared) id,
+    ];
   }
 
   static int _commonPrefixLength(List<String> a, List<String> b) {
@@ -874,45 +930,6 @@ class ExerciseProgressionService {
     };
     final events = <ProgressionEventInput>[];
 
-    final shortcutDestinationIds =
-        outcome.shortcutActivationsBySource.values.toSet();
-    String? shortcutDestinationFor(String exerciseId) {
-      final direct = outcome.shortcutActivationsBySource[exerciseId];
-      if (direct != null) return direct;
-      final exercise = ExerciseCatalog.findById(exerciseId);
-      if (exercise == null) {
-        return shortcutDestinationIds.isEmpty
-            ? null
-            : shortcutDestinationIds.first;
-      }
-      for (final id in shortcutDestinationIds) {
-        if (ExerciseCatalog.findById(id)?.skillCategoryId ==
-            exercise.skillCategoryId) {
-          return id;
-        }
-      }
-      return null;
-    }
-
-    for (final entry in outcome.shortcutPreviousStatuses.entries) {
-      if (outcome.statusChanges[entry.key] != ExerciseStatus.skipped) continue;
-      final destinationId = shortcutDestinationFor(entry.key);
-      final exercise = ExerciseCatalog.findById(entry.key);
-      events.add(
-        ProgressionEventInput(
-          exerciseId: entry.key,
-          trackId:
-              (destinationId == null ? null : trackByExercise[destinationId]) ??
-                  (exercise == null
-                      ? null
-                      : trackByCategory[exercise.skillCategoryId]),
-          kind: ProgressionEventKind.skipped,
-          valueFrom: entry.value.index,
-          relatedExerciseId: destinationId,
-        ),
-      );
-    }
-
     for (final entry in outcome.targetChanges.entries) {
       final exercise = ExerciseCatalog.findById(entry.key);
       if (exercise == null) continue;
@@ -950,9 +967,12 @@ class ExerciseProgressionService {
       events.add(
         ProgressionEventInput(
           exerciseId: exerciseId,
-          trackId: trackByExercise[exerciseId],
+          // Backfilled masteries (steps a jump left behind) were not in the
+          // session's results, so their track comes from their category.
+          trackId: trackByExercise[exerciseId] ??
+              trackByCategory[exercise.skillCategoryId],
           kind: ProgressionEventKind.mastered,
-          valueFrom: outcome.shortcutPreviousStatuses[exerciseId]?.index,
+          valueFrom: outcome.previousStatuses[exerciseId]?.index,
           valueTo: mastery.value,
           targetSets: mastery.sets,
         ),
@@ -1036,8 +1056,7 @@ class ExerciseProgressionService {
       for (final event in events)
         if (event.kind == ProgressionEventKind.targetIncrease ||
             event.kind == ProgressionEventKind.mastered ||
-            event.kind == ProgressionEventKind.activated ||
-            event.kind == ProgressionEventKind.skipped)
+            event.kind == ProgressionEventKind.activated)
           event,
     ];
     if (progressionEvents.isEmpty) {
@@ -1089,8 +1108,9 @@ class ExerciseProgressionService {
 
   /// What undoing each event means:
   /// - a target increase restores the target to its before-value;
-  /// - a mastery makes the exercise active again (its stored target was
-  ///   untouched by mastering, so it resumes where it was);
+  /// - a mastery restores the status it replaced — active for an ordinary
+  ///   mastery (the stored target was untouched by mastering, so it resumes
+  ///   where it was), inactive for a step a jump's mastery backfilled;
   /// - an activation returns the unlocked exercise to inactive, removing it
   ///   from future workouts.
   static List<RollbackAction> rollbackActionsFor(
@@ -1121,15 +1141,6 @@ class ExerciseProgressionService {
             exerciseId: event.exerciseId,
             status: ExerciseStatus.inactive,
           ));
-        case ProgressionEventKind.skipped:
-          if (event.valueFrom != null &&
-              event.valueFrom! >= 0 &&
-              event.valueFrom! < ExerciseStatus.values.length) {
-            actions.add(RollbackAction.status(
-              exerciseId: event.exerciseId,
-              status: ExerciseStatus.values[event.valueFrom!],
-            ));
-          }
         case ProgressionEventKind.personalBest:
         case ProgressionEventKind.branchChoice:
           break; // Nothing was written to progression state.

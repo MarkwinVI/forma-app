@@ -462,9 +462,6 @@ class WheelExercisePreview extends StatelessWidget {
       case WheelNodeState.mastered:
         text = 'Mastered';
         color = AppColors.green;
-      case WheelNodeState.skipped:
-        text = 'Skipped';
-        color = AppColors.green;
       case WheelNodeState.active:
         final data = journey;
         if (data == null) {
@@ -765,12 +762,6 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
           size: 16,
           color: AppColors.green,
         );
-      case WheelNodeState.skipped:
-        glyph = Icon(
-          Icons.arrow_outward_rounded,
-          size: 14,
-          color: AppColors.green.withValues(alpha: 0.6),
-        );
       case WheelNodeState.available:
         // The same solid white the node wears on the wheel.
         glyph = Container(
@@ -800,9 +791,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     final titleColor = switch (state) {
       WheelNodeState.active => AppColors.accentBright,
       WheelNodeState.locked => AppColors.textMuted,
-      WheelNodeState.mastered ||
-      WheelNodeState.skipped =>
-        const Color(0xFF9A9BA1),
+      WheelNodeState.mastered => const Color(0xFF9A9BA1),
       WheelNodeState.available => AppColors.textPrimary,
     };
 

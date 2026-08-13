@@ -155,8 +155,7 @@ class _SkillTreeViewState extends State<SkillTreeView> {
   ExerciseStatus _statusOf(Exercise exercise) =>
       _localProgress[exercise.id] ?? ExerciseStatus.inactive;
 
-  /// A branch stays shut until every foundation step is cleared — mastered,
-  /// or skipped when setup started the user past it.
+  /// A branch stays shut until every foundation step is mastered.
   bool _routeIsOpen(_TreeRoute route) {
     if (route.isFoundation || !_hasFoundation) return true;
     return _sharedFoundationExerciseIds.every(
@@ -296,7 +295,6 @@ class _SkillTreeViewState extends State<SkillTreeView> {
                               stateOf: (exercise) =>
                                   nodeStates[exercise.id] ??
                                   TreeNodeState.locked,
-                              statusOf: _statusOf,
                               onExerciseTap: _openExercise,
                             ),
                           // Room to scroll the last route up to the line.
@@ -407,16 +405,13 @@ class _TreeRoute {
 
 /// Where an exercise stands in its route — the list's reading of the states
 /// the map draws: cleared, being trained, open to train, or still shut.
-enum _StepState { done, skipped, now, unlocked, locked }
+enum _StepState { done, now, unlocked, locked }
 
 extension on _StepState {
-  /// Skipped steps are cleared — green, and the path runs past them — but
-  /// they were never trained here, so they never claim mastery.
-  bool get isCleared => this == _StepState.done || this == _StepState.skipped;
+  bool get isCleared => this == _StepState.done;
 
   String get label => switch (this) {
         _StepState.done => 'Mastered',
-        _StepState.skipped => 'Skipped',
         _StepState.now => 'Active',
         _StepState.unlocked => 'Unlocked',
         _StepState.locked => 'Locked',
@@ -424,7 +419,6 @@ extension on _StepState {
 
   Color get color => switch (this) {
         _StepState.done => AppColors.green,
-        _StepState.skipped => AppColors.green,
         _StepState.now => AppColors.accentBright,
         _StepState.unlocked => AppColors.textSecondary,
         _StepState.locked => AppColors.textMuted,
@@ -440,7 +434,6 @@ class _RouteSection extends StatelessWidget {
   final bool open;
   final int masteredCount;
   final TreeNodeState Function(Exercise exercise) stateOf;
-  final ExerciseStatus Function(Exercise exercise) statusOf;
   final void Function(Exercise exercise) onExerciseTap;
 
   const _RouteSection({
@@ -451,19 +444,13 @@ class _RouteSection extends StatelessWidget {
     required this.open,
     required this.masteredCount,
     required this.stateOf,
-    required this.statusOf,
     required this.onExerciseTap,
   });
 
   _StepState _stateFor(int index) {
     final exercise = route.exercises[index];
     return switch (stateOf(exercise)) {
-      // The map draws cleared steps one way; only this list distinguishes a
-      // step you mastered from one program setup started you past.
-      TreeNodeState.done =>
-        statusOf(exercise) == ExerciseStatus.skipped
-            ? _StepState.skipped
-            : _StepState.done,
+      TreeNodeState.done => _StepState.done,
       TreeNodeState.cur => _StepState.now,
       TreeNodeState.unlocked => _StepState.unlocked,
       TreeNodeState.locked => _StepState.locked,
@@ -561,7 +548,6 @@ class _ExerciseRow extends StatelessWidget {
   Widget _buildNode() {
     switch (state) {
       case _StepState.done:
-      case _StepState.skipped:
         return Container(
           width: 9,
           height: 9,

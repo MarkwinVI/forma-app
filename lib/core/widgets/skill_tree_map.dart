@@ -142,8 +142,6 @@ Map<String, TreeNodeState> skillTreeNodeStates({
     return states;
   }
 
-  // Skipped steps read exactly like mastered ones here: the path is open
-  // past them. Only the lists that name a step say which of the two it is.
   bool cleared(String id) => progressMap[id]?.isCleared ?? false;
 
   // The step the tree is on: whatever is marked active along the goal route,

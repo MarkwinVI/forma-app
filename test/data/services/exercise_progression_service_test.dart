@@ -336,7 +336,12 @@ void main() {
       test('goals pointing at different branches ask the user instead', () {
         final outcome = resolve(goals: ['oap', 'lsitpull']);
 
-        expect(outcome.statusChanges, {pullUp.id: ExerciseStatus.mastered});
+        expect(outcome.statusChanges[pullUp.id], ExerciseStatus.mastered);
+        // The fork stays undecided: nothing new starts training.
+        expect(
+          outcome.statusChanges.values.contains(ExerciseStatus.active),
+          isFalse,
+        );
         expect(outcome.branchChoicesNeeded, [pullUp.id]);
         expect(outcome.branchesToPersist, isEmpty);
       });
@@ -412,8 +417,8 @@ void main() {
       expect(outcome.statusChanges, isEmpty);
     });
 
-    test('skips the active and intermediate nodes and activates destination',
-        () {
+    test('a jump retires the active node, leaves the rest locked, and '
+        'activates the destination', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
       )!;
@@ -429,8 +434,11 @@ void main() {
         activeBranchByCategory: {category.id: 'one_arm'},
       );
 
-      for (final id in path.sublist(1, 4)) {
-        expect(outcome.statusChanges[id], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[active], ExerciseStatus.inactive);
+      // The jumped-over steps are untouched: still locked until the
+      // destination is mastered.
+      for (final id in path.sublist(2, 4)) {
+        expect(outcome.statusChanges.containsKey(id), isFalse);
       }
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.shortcutActivationsBySource[active], destination.id);
@@ -452,7 +460,7 @@ void main() {
         activeBranchByCategory: {category.id: 'weighted'},
       );
 
-      expect(outcome.statusChanges[active], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[active], ExerciseStatus.inactive);
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.branchesToPersist, {category.id: 'one_arm'});
     });
@@ -472,14 +480,21 @@ void main() {
         activeBranchByCategory: {category.id: 'weighted'},
       );
 
-      expect(outcome.statusChanges[active], ExerciseStatus.skipped);
-      expect(outcome.statusChanges[destinationPath[4]], ExerciseStatus.skipped);
-      expect(outcome.statusChanges[destinationPath[5]], ExerciseStatus.skipped);
+      expect(outcome.statusChanges[active], ExerciseStatus.inactive);
+      expect(
+        outcome.statusChanges.containsKey(destinationPath[4]),
+        isFalse,
+      );
+      expect(
+        outcome.statusChanges.containsKey(destinationPath[5]),
+        isFalse,
+      );
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.branchesToPersist, isEmpty);
     });
 
-    test('mastering the manual destination activates its successor', () {
+    test('mastering the manual destination masters the route to it and '
+        'activates its successor', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
       )!;
@@ -494,11 +509,53 @@ void main() {
       );
 
       expect(outcome.statusChanges[destination.id], ExerciseStatus.mastered);
+      // The steps the jump cleared past are proven along with it.
+      expect(outcome.statusChanges[path[0]], ExerciseStatus.mastered);
+      expect(outcome.statusChanges[path[1]], ExerciseStatus.mastered);
+      expect(outcome.previousStatuses[path[0]], ExerciseStatus.active);
+      expect(outcome.previousStatuses[path[1]], ExerciseStatus.inactive);
       expect(outcome.statusChanges[path[3]], ExerciseStatus.active);
       expect(
         outcome.shortcutActivationsBySource[destination.id],
         path[3],
       );
+    });
+
+    test('mastering a jumped-to node later masters the steps it left locked',
+        () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final path = category.pathFor('one_arm');
+      // A jump already happened: path[3] is being trained, path[0..2] were
+      // never cleared. The session now reaches the mastery target through
+      // the ordinary ladder (not manually added).
+      final destination = ExerciseCatalog.findById(path[3])!;
+      final masteryVolume = 3 *
+          ExerciseProgressionService.masteryValueForExercise(
+            destination,
+            MasteryTargetSettings.defaults,
+          );
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: destination, volume: masteryVolume),
+        ],
+        progressRows: {
+          destination.id: progressWith(
+            exerciseId: destination.id,
+            status: ExerciseStatus.active,
+          ),
+        },
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      expect(outcome.statusChanges[destination.id], ExerciseStatus.mastered);
+      for (final id in path.sublist(0, 3)) {
+        expect(outcome.statusChanges[id], ExerciseStatus.mastered);
+        expect(outcome.previousStatuses[id], ExerciseStatus.inactive);
+      }
+      expect(outcome.statusChanges[path[4]], ExerciseStatus.active);
     });
 
     test('timed nodes require three sets of at least ten seconds', () {

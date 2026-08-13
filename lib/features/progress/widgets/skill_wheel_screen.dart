@@ -225,37 +225,25 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         const TextSpan(text: ' to your workouts.'),
       ];
     } else if (node.state == WheelNodeState.locked) {
+      // 7 — a step ahead of the current progression. The earlier steps stay
+      // locked until this one is mastered, which then masters them too.
       icon = Icons.move_up;
       caution = true;
-      if (familyActive) {
-        // 7A — jump ahead past the step being trained.
-        title = 'Jump ahead to ${node.name}?';
-        confirmLabel = 'Jump ahead';
-        body = [
-          const TextSpan(
-            text: 'This exercise is further ahead in the progression. Only '
-                'jump ahead if you feel confident you can already perform '
-                'it with good form.\n\nThis will replace ',
-          ),
+      title = 'Start ${node.name}?';
+      confirmLabel = 'Start exercise';
+      body = [
+        const TextSpan(
+          text: 'This exercise is ahead of your current progression. Only '
+              'continue if you’re confident you can perform it with '
+              'good form.\n\nOnce you master it, the earlier exercises in '
+              'this path will also be marked as mastered.',
+        ),
+        if (familyActive) ...[
+          const TextSpan(text: '\n\nThis will replace '),
           skillTreeConfirmBold(current!),
           const TextSpan(text: ' in your workouts.'),
-        ];
-      } else {
-        // 7B — start an idle tree past its available step.
-        title = 'Start at ${node.name}?';
-        confirmLabel = 'Start here';
-        body = [
-          const TextSpan(
-            text: 'This exercise is further ahead in the progression. Only '
-                'start here if you feel confident you can already perform '
-                'it with good form.\n\nThis will activate ',
-          ),
-          skillTreeConfirmBold(tree),
-          const TextSpan(text: ' and add '),
-          skillTreeConfirmBold(node.name),
-          const TextSpan(text: ' to your workouts.'),
-        ];
-      }
+        ],
+      ];
     } else if (_isBackward(family, node)) {
       if (familyActive) {
         // 8A — an earlier step of a running tree: later steps re-lock.

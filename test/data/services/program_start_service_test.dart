@@ -1,11 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
-import 'package:forma_app/data/models/exercise_progress_model.dart';
 import 'package:forma_app/data/models/skill_track_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
-import 'package:forma_app/data/services/exercise_progression_service.dart';
 import 'package:forma_app/data/services/program_start_service.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
 
@@ -92,10 +89,10 @@ void main() {
       );
     });
 
-    test('a step skipped at setup unlocks a gated goal like mastery does', () {
+    test('a step placement mastered unlocks a gated goal', () {
       final tracks = planFor(
         goals: ['hspu'],
-        progress: {'pushups_diamond_push_up': ExerciseStatus.skipped},
+        progress: {'pushups_diamond_push_up': ExerciseStatus.mastered},
       ).tracks;
 
       expect(tracks[SkillCategoryCatalog.handstandPushupsId], 'main');
@@ -146,7 +143,7 @@ void main() {
       expect(plan.statuses['squat_squat'], ExerciseStatus.active);
     });
 
-    test('everything behind the starting node is skipped, never mastered', () {
+    test('everything behind the starting node is mastered', () {
       final plan = planFor(strength: {'pushups': 12, 'pullups': 10});
 
       expect(
@@ -160,11 +157,7 @@ void main() {
           ])
             plan.statuses[id],
         ],
-        everyElement(ExerciseStatus.skipped),
-      );
-      expect(
-        plan.statuses.values.contains(ExerciseStatus.mastered),
-        isFalse,
+        everyElement(ExerciseStatus.mastered),
       );
     });
 
@@ -203,7 +196,7 @@ void main() {
           ])
             plan.statuses[id],
         ],
-        everyElement(ExerciseStatus.skipped),
+        everyElement(ExerciseStatus.mastered),
       );
       expect(plan.statuses.containsKey('squat_barbell_plus_125'), isFalse);
     });
@@ -224,7 +217,7 @@ void main() {
       final plan = planFor(hasGym: true);
 
       expect(plan.statuses['squat_barbell_squat'], ExerciseStatus.active);
-      expect(plan.statuses['squat_deep_squat'], ExerciseStatus.skipped);
+      expect(plan.statuses['squat_deep_squat'], ExerciseStatus.mastered);
     });
 
     test('without a bodyweight the rung loads cannot resolve — the bar again',
@@ -258,7 +251,7 @@ void main() {
           ])
             plan.statuses[id],
         ],
-        everyElement(ExerciseStatus.skipped),
+        everyElement(ExerciseStatus.mastered),
       );
       expect(plan.statuses.containsKey('hinge_rdl_125_bw'), isFalse);
     });
@@ -463,48 +456,6 @@ void main() {
     });
   });
 
-  group('a skipped step is cleared, not claimed', () {
-    test('logging the mastery target masters it for real', () {
-      final outcome = ExerciseProgressionService.computeSessionOutcome(
-        results: [
-          SessionExerciseResult(
-            exercise: ExerciseCatalog.findById('pushups_push_up')!,
-            volume: 24, // 3 × 8, the default mastery target.
-          ),
-        ],
-        progressRows: {
-          'pushups_push_up': ExerciseProgress(
-            exerciseId: 'pushups_push_up',
-            status: ExerciseStatus.skipped,
-            updatedAt: DateTime(2026, 7, 28),
-          ),
-        },
-      );
-
-      expect(outcome.statusChanges['pushups_push_up'], ExerciseStatus.mastered);
-    });
-
-    test('falling short of the target leaves it skipped', () {
-      final outcome = ExerciseProgressionService.computeSessionOutcome(
-        results: [
-          SessionExerciseResult(
-            exercise: ExerciseCatalog.findById('pushups_push_up')!,
-            volume: 9,
-          ),
-        ],
-        progressRows: {
-          'pushups_push_up': ExerciseProgress(
-            exerciseId: 'pushups_push_up',
-            status: ExerciseStatus.skipped,
-            updatedAt: DateTime(2026, 7, 28),
-          ),
-        },
-      );
-
-      expect(outcome.statusChanges, isEmpty);
-    });
-  });
-
   group('the rows applyPlan writes', () {
     test('status and target arrive joined, as one position per exercise', () {
       // The planner itself no longer sets opening targets — every rung's
@@ -514,7 +465,7 @@ void main() {
         tracks: {},
         statuses: {
           'hinge_romanian_deadlift_barbell': ExerciseStatus.active,
-          'hinge_romanian_deadlift_bodyweight': ExerciseStatus.skipped,
+          'hinge_romanian_deadlift_bodyweight': ExerciseStatus.mastered,
         },
         targets: {
           'hinge_romanian_deadlift_barbell':
@@ -535,9 +486,9 @@ void main() {
 
       // A step with no special opening target still carries its status —
       // null target means the standard ladder target.
-      final skipped = positions['hinge_romanian_deadlift_bodyweight']!;
-      expect(skipped.status, ExerciseStatus.skipped);
-      expect(skipped.targetSets, isNull);
+      final behind = positions['hinge_romanian_deadlift_bodyweight']!;
+      expect(behind.status, ExerciseStatus.mastered);
+      expect(behind.targetSets, isNull);
     });
 
     test('a weighted rung placed by setup has no special opening target — '

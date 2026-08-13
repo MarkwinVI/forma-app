@@ -203,7 +203,6 @@ class _MiniWheelPainter extends CustomPainter {
     void node(Offset p, WheelNodeState state) {
       final color = switch (state) {
         WheelNodeState.mastered => AppColors.green,
-        WheelNodeState.skipped => AppColors.green.withValues(alpha: 0.4),
         WheelNodeState.active => AppColors.textPrimary,
         WheelNodeState.available =>
           AppColors.textPrimary.withValues(alpha: 0.85),

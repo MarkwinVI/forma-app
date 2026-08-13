@@ -28,7 +28,7 @@ class ProgramStartPlan {
   final Map<String, String> tracks;
 
   /// exercise id → status. Only starting nodes ([ExerciseStatus.active]) and
-  /// the steps setup jumped over ([ExerciseStatus.skipped]) appear.
+  /// the steps setup placed behind them ([ExerciseStatus.mastered]) appear.
   final Map<String, ExerciseStatus> statuses;
 
   /// exercise id → opening target, for exercises that do not start on the
@@ -63,9 +63,10 @@ class ProgramStartPlan {
 ///    pull-up, parallel-bar dip or bodyweight squat, not the last step of
 ///    the shared foundation. Nothing starts at the beginner node, ten or
 ///    more reps start on that named step, and 1–9 reps start two steps
-///    before it. Everything behind the starting node is marked skipped, not
-///    mastered — it was never trained here. Rows always start at the first
-///    step. A weighted branch starts on the deepest barbell rung whose load
+///    before it. Everything behind the starting node is marked mastered —
+///    the assessment placed the user past it, so the tree opens from the
+///    starting node with nothing owed behind it. Rows always start at the
+///    first step. A weighted branch starts on the deepest barbell rung whose load
 ///    fits inside 80% of the reported one-rep max — rounded down, so an
 ///    answer between rungs lands on the lighter one. Without an answer the
 ///    squat opens on the empty bar and the hinge on the tree's first step,
@@ -242,7 +243,7 @@ class ProgramStartPlanner {
     return _StartingPosition(
       statuses: {
         for (var index = 0; index < startIndex; index++)
-          path[index]: ExerciseStatus.skipped,
+          path[index]: ExerciseStatus.mastered,
         path[startIndex]: ExerciseStatus.active,
       },
       targets: const {},
