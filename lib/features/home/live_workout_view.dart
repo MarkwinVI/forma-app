@@ -916,6 +916,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   Future<void> _pickRestInterval(TrainingRecommendationItem item) async {
     final selected = await showModalBottomSheet<int>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => _RestPickerSheet(
@@ -1009,6 +1010,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
     final save = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _FinishWorkoutSheet(
@@ -1036,6 +1038,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   Future<void> _showNoDataSheet() async {
     final discard = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => const _ConfirmSheet(
@@ -1053,6 +1056,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   Future<void> _confirmLeaveWorkout() async {
     final discard = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => const _ConfirmSheet(
@@ -1180,6 +1184,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final canReorder = _sessionItems.length > 1;
     final action = await showModalBottomSheet<_ExerciseAction>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _ExerciseMenuSheet(

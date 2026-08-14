@@ -38,6 +38,7 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
   Future<void> _openActionsSheet() async {
     final action = await showModalBottomSheet<String>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ActionsSheet(workout: workout),
     );
@@ -73,6 +74,7 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
 
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ConfirmDeleteSheet(
         message: _deleteMessageFor(assessment),

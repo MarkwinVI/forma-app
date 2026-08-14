@@ -381,7 +381,8 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _openProgramSetup() async {
     var created = false;
-    await Navigator.of(context).push(
+    // The setup wizard takes over the whole screen, above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
           onComplete: (result) async {
@@ -413,7 +414,8 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _startWorkout(DailyTrainingRecommendation recommendation) async {
-    await Navigator.of(context).push(
+    // The workout flow takes over the whole screen, above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => recommendation.isRestDay
             ? SessionOverviewView(recommendation: recommendation)
@@ -431,11 +433,12 @@ class _HomeViewState extends State<HomeView> {
         ? TrainingSessionType.fullBody
         : recommendation.sessionType;
 
-    await Navigator.of(context).push(
+    // Part of starting a workout — the whole flow runs above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => AlternateWorkoutOptionsView(
           onOpenBlankWorkout: () {
-            Navigator.of(context).push(
+            Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(
                 builder: (_) => LiveWorkoutView(
                   recommendation: DailyTrainingRecommendation(

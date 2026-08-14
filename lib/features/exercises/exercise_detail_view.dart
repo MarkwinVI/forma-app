@@ -1012,7 +1012,10 @@ class _DemoMediaState extends State<_DemoMedia> {
       await controller.pauseVideo();
       if (!mounted) return;
 
-      final resumeAt = await Navigator.of(context).push<double>(
+      // Fullscreen video must cover the tab bar too, so it goes on the
+      // root navigator even when this page lives inside a tab's stack.
+      final resumeAt =
+          await Navigator.of(context, rootNavigator: true).push<double>(
         MaterialPageRoute(
           fullscreenDialog: true,
           builder: (_) => _FullscreenDemoPage(

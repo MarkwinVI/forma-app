@@ -323,6 +323,7 @@ class _JourneyStageRow extends StatelessWidget {
   ) {
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.bgTertiary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

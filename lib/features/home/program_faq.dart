@@ -120,6 +120,7 @@ const FaqItem kHowTargetsAreSetFaq = FaqItem(
 Future<void> showFaqSheet(BuildContext context, FaqItem item) {
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.55),

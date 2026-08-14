@@ -118,6 +118,7 @@ class _CalendarPanelState extends State<CalendarPanel> {
   Future<PastWorkout?> _pickWorkout(List<PastWorkout> workouts) {
     return showModalBottomSheet<PastWorkout>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.bgTertiary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

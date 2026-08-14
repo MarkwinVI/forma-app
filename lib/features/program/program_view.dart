@@ -135,7 +135,8 @@ class _ProgramViewState extends State<ProgramView> {
 
   Future<void> _openProgramSetup() async {
     var created = false;
-    await Navigator.of(context).push(
+    // The setup wizard takes over the whole screen, above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
           onComplete: (result) async {

@@ -88,7 +88,8 @@ class _ProgressViewState extends State<ProgressView> {
   }
 
   Future<void> _openProgramSetup() async {
-    await Navigator.of(context).push(
+    // The setup wizard takes over the whole screen, above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ProgramSetupView(
           onComplete: _completeProgramSetup,

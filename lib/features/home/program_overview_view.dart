@@ -181,6 +181,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   Future<void> _openDaysSheet() async {
     final picked = await showModalBottomSheet<List<int>>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
@@ -209,6 +210,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   Future<void> _openSplitSheet() async {
     final picked = await showModalBottomSheet<TrainingProgramType>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
@@ -232,6 +234,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   Future<void> _openEquipmentSheet() async {
     final picked = await showModalBottomSheet<SetupEquipment>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
@@ -266,6 +269,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
 
     final picked = await showModalBottomSheet<SkillCategory>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
@@ -302,6 +306,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
 
     final result = await showModalBottomSheet<_AdjustTrackResult>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),

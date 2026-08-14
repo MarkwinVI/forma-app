@@ -55,6 +55,7 @@ Future<double?> showBodyweightSheet(
 }) {
   return showModalBottomSheet<double>(
     context: context,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (_) => _BodyweightSheet(kg: kg),

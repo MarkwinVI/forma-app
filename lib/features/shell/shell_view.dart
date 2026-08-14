@@ -27,6 +27,26 @@ class _ShellViewState extends State<ShellView> {
   /// would show one tab and then jump to another, so the shell waits.
   int? _currentIndex;
 
+  /// Mirrors [_currentIndex] for the tab index pages. They live inside their
+  /// tab's [Navigator] route, which is built once and never re-runs on a
+  /// shell rebuild, so `isActive` has to reach them through a listenable.
+  final _activeIndex = ValueNotifier<int>(_progressTab);
+
+  /// One navigator per tab: pushes inside a tab keep the bottom bar visible,
+  /// the stack survives switching tabs, and re-tapping the active tab can
+  /// unwind it back to the tab's index page. Flows that must take over the
+  /// whole screen (workout, program setup wizard, fullscreen video) opt out
+  /// by pushing on the root navigator instead.
+  final _tabNavigatorKeys = [
+    for (var i = 0; i < 4; i++) GlobalKey<NavigatorState>(),
+  ];
+
+  /// Rebuilds the shell whenever a tab's stack changes so the [PopScope]
+  /// around the scaffold always knows whether the active tab can pop.
+  late final _tabStackObservers = [
+    for (var i = 0; i < 4; i++) _TabStackObserver(_onTabStackChanged),
+  ];
+
   /// One scroll controller per tab, handed down as each tab's
   /// [PrimaryScrollController] so a tap on the tab you are already on can
   /// send it back to the top. The tab's own scroll view opts in with
@@ -46,18 +66,32 @@ class _ShellViewState extends State<ShellView> {
     for (final controller in _tabScrollControllers) {
       controller.dispose();
     }
+    _activeIndex.dispose();
     super.dispose();
+  }
+
+  void _selectTab(int index) {
+    _activeIndex.value = index;
+    setState(() => _currentIndex = index);
   }
 
   void _onTabTapped(int index) {
     if (index != _currentIndex) {
-      setState(() => _currentIndex = index);
+      _selectTab(index);
       return;
     }
 
-    // Re-tapping the tab you are on means "take me back to the top". The
-    // positions are animated one by one because a tab can host more than one
-    // attached scrollable across its states.
+    // Re-tapping the tab you are on while deeper in it means "take me back
+    // to this tab's index page".
+    final navigator = _tabNavigatorKeys[index].currentState;
+    if (navigator != null && navigator.canPop()) {
+      navigator.popUntil((route) => route.isFirst);
+      return;
+    }
+
+    // Already on the index page, so the re-tap means "take me back to the
+    // top". The positions are animated one by one because a tab can host
+    // more than one attached scrollable across its states.
     for (final position in _tabScrollControllers[index].positions) {
       position.animateTo(
         0,
@@ -67,6 +101,14 @@ class _ShellViewState extends State<ShellView> {
     }
   }
 
+  /// Route changes can land at setState-hostile moments (e.g. a pop driven
+  /// from [PopScope]'s callback), so the rebuild waits for the next frame.
+  void _onTabStackChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   /// Without a program the app opens on the Program tab, whose whole empty
   /// state is about building one. Anything that goes wrong lands on
   /// Progress, the normal home — a failed lookup should not strand people
@@ -74,7 +116,7 @@ class _ShellViewState extends State<ShellView> {
   Future<void> _resolveLandingTab() async {
     final userId = AuthService().currentUser?.id;
     if (userId == null) {
-      if (mounted) setState(() => _currentIndex = _progressTab);
+      if (mounted) _selectTab(_progressTab);
       return;
     }
 
@@ -86,7 +128,31 @@ class _ShellViewState extends State<ShellView> {
     } catch (error, stackTrace) {
       debugPrint('Failed to resolve the landing tab: $error\n$stackTrace');
     }
-    if (mounted) setState(() => _currentIndex = landing);
+    if (mounted) _selectTab(landing);
+  }
+
+  // Every tab's "Create my program" opens the setup wizard right where the
+  // user is, and a freshly built program lands them on Progress, the tab
+  // the app treats as home once a program exists. Progress hosts its own
+  // completion — the wizard already leaves the user there.
+  Widget _tabPage(int tab, int activeIndex) {
+    switch (tab) {
+      case _trainTab:
+        return HomeView(
+          isActive: activeIndex == _trainTab,
+          onProgramCreated: () => _selectTab(_progressTab),
+        );
+      case _programTab:
+        return ProgramView(
+          isActive: activeIndex == _programTab,
+          onProgramCreated: () => _selectTab(_progressTab),
+        );
+      case _profileTab:
+        return DataView(isActive: activeIndex == _profileTab);
+      case _progressTab:
+      default:
+        return ProgressView(isActive: activeIndex == _progressTab);
+    }
   }
 
   @override
@@ -99,39 +165,67 @@ class _ShellViewState extends State<ShellView> {
       );
     }
 
-    // Every tab's "Create my program" opens the setup wizard right where the
-    // user is, and a freshly built program lands them on Progress, the tab
-    // the app treats as home once a program exists. Progress hosts its own
-    // completion — the wizard already leaves the user there.
-    final pages = [
-      ProgressView(isActive: currentIndex == _progressTab),
-      HomeView(
-        isActive: currentIndex == _trainTab,
-        onProgramCreated: () => setState(() => _currentIndex = _progressTab),
-      ),
-      ProgramView(
-        isActive: currentIndex == _programTab,
-        onProgramCreated: () => setState(() => _currentIndex = _progressTab),
-      ),
-      DataView(isActive: currentIndex == _profileTab),
-    ];
+    final activeTabCanPop =
+        _tabNavigatorKeys[currentIndex].currentState?.canPop() ?? false;
 
-    return Scaffold(
-      extendBody: true,
-      body: IndexedStack(
-        index: currentIndex,
-        children: [
-          for (var i = 0; i < pages.length; i++)
-            PrimaryScrollController(
-              controller: _tabScrollControllers[i],
-              child: pages[i],
-            ),
-        ],
-      ),
-      bottomNavigationBar: AppNavBar(
-        currentIndex: currentIndex,
-        onTap: _onTabTapped,
+    // The system back gesture unwinds the active tab's stack before it is
+    // allowed to leave the app.
+    return PopScope(
+      canPop: !activeTabCanPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _tabNavigatorKeys[currentIndex].currentState?.maybePop();
+      },
+      child: Scaffold(
+        extendBody: true,
+        body: IndexedStack(
+          index: currentIndex,
+          children: [
+            for (var i = 0; i < 4; i++)
+              Navigator(
+                key: _tabNavigatorKeys[i],
+                observers: [_tabStackObservers[i]],
+                onGenerateRoute: (settings) => MaterialPageRoute(
+                  settings: settings,
+                  builder: (_) => PrimaryScrollController(
+                    controller: _tabScrollControllers[i],
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _activeIndex,
+                      builder: (_, activeIndex, __) =>
+                          _tabPage(i, activeIndex),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        bottomNavigationBar: AppNavBar(
+          currentIndex: currentIndex,
+          onTap: _onTabTapped,
+        ),
       ),
     );
   }
+}
+
+class _TabStackObserver extends NavigatorObserver {
+  _TabStackObserver(this.onStackChanged);
+
+  final VoidCallback onStackChanged;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onStackChanged();
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onStackChanged();
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onStackChanged();
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      onStackChanged();
 }

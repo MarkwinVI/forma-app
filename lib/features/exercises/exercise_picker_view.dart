@@ -157,6 +157,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   Future<void> _openPatternFilter() async {
     final picked = await showModalBottomSheet<Set<ExerciseCategory>>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
@@ -180,6 +181,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   Future<void> _openMuscleFilter() async {
     final picked = await showModalBottomSheet<Set<String>>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),

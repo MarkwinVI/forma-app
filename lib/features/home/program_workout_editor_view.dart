@@ -173,6 +173,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   Future<void> _openItemActions(ProgramDayItem item) async {
     final action = await showModalBottomSheet<_ItemAction>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
