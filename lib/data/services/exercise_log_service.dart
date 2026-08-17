@@ -1,5 +1,4 @@
 import '../catalog/exercise_catalog.dart';
-import '../catalog/exercise_id_migration.dart';
 import '../models/exercise_log_model.dart';
 import '../models/workout_history_model.dart';
 import 'supabase_service.dart';
@@ -9,11 +8,11 @@ class WorkoutExerciseLogInput {
   final List<ExerciseSet> sets;
 
   /// Whether the exercise was a skill-tree progression item at save time.
-  /// Standalone/custom exercises are false and are never auto-progressed.
+  /// Accessory/custom exercises are false and are never auto-progressed.
   final bool isProgression;
 
   /// Progression track the exercise was trained under (TrainingTrack
-  /// dbValue). Null for standalone exercises.
+  /// dbValue). Null for accessory exercises.
   final String? trackId;
 
   /// Prescribed target shown to the user for this session: set count and
@@ -119,7 +118,7 @@ class ExerciseLogService {
 
     final byExercise = <String, List<ExerciseSet>>{};
     for (final row in rows) {
-      final id = ExerciseIdMigration.resolve(row['exercise_id'] as String);
+      final id = row['exercise_id'] as String;
       if (byExercise.containsKey(id)) continue;
       byExercise[id] = (row['sets'] as List<dynamic>? ?? [])
           .map((s) => ExerciseSet.fromJson(s as Map<String, dynamic>))

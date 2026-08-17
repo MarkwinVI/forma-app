@@ -1,4 +1,3 @@
-import '../catalog/exercise_id_migration.dart';
 
 enum ProgressionEventKind {
   /// The exercise's incremental target was raised (valueFrom → valueTo).
@@ -106,7 +105,7 @@ class ProgressionEvent {
     return ProgressionEvent(
       id: map['id'] as String,
       workoutSessionId: map['workout_session_id'] as String?,
-      exerciseId: ExerciseIdMigration.resolve(map['exercise_id'] as String),
+      exerciseId: map['exercise_id'] as String,
       trackId: map['track_id'] as String?,
       kind: kind,
       valueFrom: map['value_from'] as int?,
@@ -114,11 +113,7 @@ class ProgressionEvent {
       targetSets: map['target_sets'] as int?,
       weightFrom: (map['weight_from'] as num?)?.toDouble(),
       weightTo: (map['weight_to'] as num?)?.toDouble(),
-      relatedExerciseId: map['related_exercise_id'] == null
-          ? null
-          : ExerciseIdMigration.resolve(
-              map['related_exercise_id'] as String,
-            ),
+      relatedExerciseId: map['related_exercise_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
       seenAt: map['seen_at'] == null
           ? null

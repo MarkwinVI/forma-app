@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/data/catalog/exercise_coaching_catalog.dart';
-import 'package:forma_app/data/catalog/exercise_id_migration.dart';
 import 'package:forma_app/data/catalog/exercise_library_catalog.dart';
 import 'package:forma_app/data/catalog/skill_category_catalog.dart';
-import 'package:forma_app/data/models/exercise_model.dart';
 
 /// Both halves of the exercise sheet, and the line between them: the skill
 /// trees, which are stepped through, and the library, which is not.
@@ -237,28 +235,6 @@ void main() {
           reason: '${step.id} vs ${movement.id}',
         );
       }
-    });
-  });
-
-  group('ids that were already written down', () {
-    test('every old id still resolves to a step', () {
-      final ids = steps.map((exercise) => exercise.id).toSet();
-      for (final old in ExerciseIdMigration.renamedIds) {
-        expect(ids, contains(ExerciseIdMigration.resolve(old)), reason: old);
-      }
-    });
-
-    test('an id that was never renamed is left alone', () {
-      expect(ExerciseIdMigration.resolve('pullups_pull_up'), 'pullups_pull_up');
-      expect(ExerciseIdMigration.resolve('bench_press_barbell'),
-          'bench_press_barbell');
-    });
-
-    test('stored progress is re-keyed onto the steps it meant', () {
-      final moved = ExerciseIdMigration.resolveKeys(
-        const {'pull_up': ExerciseStatus.mastered},
-      );
-      expect(moved, {'pullups_pull_up': ExerciseStatus.mastered});
     });
   });
 }

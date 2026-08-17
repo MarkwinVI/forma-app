@@ -1,5 +1,3 @@
-import '../catalog/exercise_id_migration.dart';
-
 class ExerciseSet {
   final int reps;
   final int durationSeconds;
@@ -54,7 +52,7 @@ class ExerciseLog {
         .toList();
     return ExerciseLog(
       id: map['id'] as String,
-      exerciseId: ExerciseIdMigration.resolve(map['exercise_id'] as String),
+      exerciseId: map['exercise_id'] as String,
       loggedAt: DateTime.parse(map['logged_at'] as String),
       sets: sets,
       totalReps: map['total_reps'] as int? ?? 0,
