@@ -353,7 +353,7 @@ class TrainingRecommendationItem {
   });
 
   /// Whether this item is the current exercise of a skill-tree progression.
-  /// Standalone/custom exercises are never auto-progressed.
+  /// Accessory/custom exercises are never auto-progressed.
   bool get isProgression => progressionExerciseIds.isNotEmpty;
 
   /// A manually selected catalog node can fast-forward its skill tree when

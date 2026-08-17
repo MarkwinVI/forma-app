@@ -88,7 +88,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
   }
 
   /// The library, and only the library — browsing and picking alike. Tree
-  /// steps are rungs on a progression, not standalone movements: a picker
+  /// steps are rungs on a progression, not accessory movements: a picker
   /// offering ten pullup variants next to "Weighted Pull-Up" is noise, and
   /// progressions enter a workout through their skill track, not from here.
   List<Exercise> get _catalogue => ExerciseLibraryCatalog.all();

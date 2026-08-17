@@ -10,7 +10,7 @@ import '../../data/services/training_program_service.dart';
 
 /// Flat per-day exercise plan used by the Program Overview screen and the
 /// per-day editor. Each item is either a skill-path progression (the shown
-/// exercise advances automatically with the user's level) or a standalone
+/// exercise advances automatically with the user's level) or a accessory
 /// exercise that progresses by load / reps.
 
 enum ProgramDayItemKind { progression, exercise }
@@ -65,7 +65,7 @@ class ProgramDayItem {
   }
 
   /// Movement pattern this item trains, derived from its skill category (for
-  /// progressions) or the catalog exercise (for standalone exercises).
+  /// progressions) or the catalog exercise (for accessory exercises).
   ExerciseCategory get category {
     if (kind == ProgramDayItemKind.progression && skillCategoryId != null) {
       final skillCategory = SkillCategoryCatalog.findById(skillCategoryId!);
@@ -157,8 +157,24 @@ class ProgramSessionPlan {
           if (track.included) track.skillCategoryId: track.branchId,
       };
 
-      return [
-        for (final item in recommendation.items)
+      final items = <ProgramDayItem>[];
+      for (final item in recommendation.items) {
+        // The gym accessories ride along with the day but belong to no tree —
+        // nothing schedules or advances them, so they are accessory work and
+        // must not wear a progression's chip or offer to edit a branch.
+        if (SkillCategoryCatalog.findById(item.sourceSkillCategoryId) == null) {
+          items.add(
+            ProgramDayItem(
+              id: 'strength-${item.exercise.id}',
+              kind: ProgramDayItemKind.exercise,
+              name: item.exercise.name,
+              exerciseId: item.exercise.id,
+            ),
+          );
+          continue;
+        }
+
+        items.add(
           ProgramDayItem(
             id: 'track-${item.sourceSkillCategoryId}-${item.exercise.id}',
             kind: ProgramDayItemKind.progression,
@@ -168,7 +184,9 @@ class ProgramSessionPlan {
                 item.exercise.branchId,
             exerciseId: item.exercise.id,
           ),
-      ];
+        );
+      }
+      return items;
     }
 
     return _defaultDay(
@@ -296,8 +314,12 @@ class ProgramSessionPlan {
     final sets = rawSets is int ? rawSets : kProgramDefaultSets;
     final reps = rawReps is String ? rawReps : kProgramDefaultReps;
 
-    if (kind == ProgramDayItemKind.progression) {
-      final skillCategoryId = map['skill_category_id'] as String? ?? '';
+    final skillCategoryId = map['skill_category_id'] as String? ?? '';
+    // A row saved as a progression whose tree does not resolve is accessory
+    // work — days written before the accessories were classified correctly
+    // read back that way rather than as a progression with no tree behind it.
+    if (kind == ProgramDayItemKind.progression &&
+        SkillCategoryCatalog.findById(skillCategoryId) != null) {
       final branchId = map['branch_id'] as String? ?? 'main';
       final current = currentExerciseForPath(
         skillCategoryId: skillCategoryId,
