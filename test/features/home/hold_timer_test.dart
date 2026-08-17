@@ -132,7 +132,8 @@ void main() {
     expect(tester.widget<TextField>(field).controller!.text, '00:13');
   });
 
-  testWidgets('closing the timer mid-hold changes nothing', (tester) async {
+  testWidgets('closing the timer mid-hold logs what was on the clock',
+      (tester) async {
     await pumpWorkout(tester);
     final pillCount = find.byIcon(Icons.play_arrow_rounded).evaluate().length;
 
@@ -141,6 +142,28 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(seconds: 2));
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Two seconds were held, so two seconds are logged and the set ticked.
+    expect(find.byType(HoldTimerView), findsNothing);
+    final field = find.byType(TextField);
+    expect(field, findsOneWidget);
+    expect(tester.widget<TextField>(field).controller!.text, '00:02');
+    expect(
+      find.byIcon(Icons.play_arrow_rounded),
+      findsNWidgets(pillCount - 1),
+    );
+  });
+
+  testWidgets('closing the timer at zero changes nothing', (tester) async {
+    await pumpWorkout(tester);
+    final pillCount = find.byIcon(Icons.play_arrow_rounded).evaluate().length;
+
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));

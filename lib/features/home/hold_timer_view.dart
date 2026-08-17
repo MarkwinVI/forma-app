@@ -15,9 +15,9 @@ import '../../core/widgets/polished.dart';
 /// the seconds the stopwatch caught late or ran past. Log hands the seconds
 /// back to the workout, which records and ticks the set.
 ///
-/// Returns the logged seconds. Closing while paused counts as logging —
-/// the hold is over and the seconds are what they are — so that returns
-/// them too; only closing mid-hold, or at zero, returns null.
+/// Returns the logged seconds. Closing counts as logging too, running or
+/// paused — the hold is over and the seconds on the clock are what it was
+/// — so only closing at zero returns null.
 class HoldTimerView extends StatefulWidget {
   final String exerciseName;
   final int setNumber;
@@ -99,11 +99,11 @@ class _HoldTimerViewState extends State<HoldTimerView>
     });
   }
 
-  /// Leaving the timer. A paused hold is a finished hold, so its seconds
-  /// are logged on the way out; a hold still running is abandoned.
+  /// Leaving the timer ends the hold, and what was on the clock is what
+  /// gets logged — whether it was still running or already paused. Only a
+  /// hold that never got off zero leaves nothing behind.
   void _close() {
-    final result = !_running && _seconds > 0 ? _seconds : null;
-    Navigator.of(context).pop(result);
+    Navigator.of(context).pop(_seconds > 0 ? _seconds : null);
   }
 
   void _adjust(int delta) {
