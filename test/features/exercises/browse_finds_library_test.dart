@@ -123,4 +123,33 @@ void main() {
     expect(find.text('Core'), findsOneWidget);
     expect(find.text('Skill'), findsNothing);
   });
+
+  // The muscle groups read as the sheet's own list, laid out in the three
+  // sections the design draws: upper body, lower body, then the catch-alls.
+  testWidgets('the muscle group filter is grouped into body sections',
+      (tester) async {
+    tester.view.physicalSize = const Size(393 * 3, 1400 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(home: ExercisePickerView.browse()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('All muscles'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Muscle group'), findsOneWidget);
+    for (final title in ['Upper Body', 'Lower Body']) {
+      expect(find.text(title), findsOneWidget);
+    }
+    // 'Other' is both a section heading and a chip.
+    expect(find.text('Other'), findsNWidgets(2));
+    for (final chip in ['Abdominals', 'Upper Back', 'Adductors', 'Cardio']) {
+      expect(find.text(chip), findsOneWidget, reason: chip);
+    }
+    // The old spellings are gone.
+    expect(find.text('Upper back'), findsNothing);
+    expect(find.text('front deltoids'), findsNothing);
+    expect(find.text('Cardiovascular system'), findsNothing);
+  });
 }

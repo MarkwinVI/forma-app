@@ -23,12 +23,24 @@ void main() {
     });
 
     test('no exercise invents a group the sheet does not use', () {
-      const known = {...kExerciseMuscleGroups};
+      final known = {...kExerciseMuscleGroups};
       for (final exercise in everything) {
         for (final group in exercise.muscles) {
           expect(known, contains(group), reason: '${exercise.id}: $group');
         }
       }
+    });
+
+    test('the sections are the flat list, cut up, with no group twice', () {
+      final fromSections = [
+        for (final section in kExerciseMuscleGroupSections) ...section.groups,
+      ];
+      expect(fromSections, kExerciseMuscleGroups);
+      expect(fromSections.toSet(), hasLength(fromSections.length));
+      expect(
+        kExerciseMuscleGroupSections.map((s) => s.title),
+        ['Upper Body', 'Lower Body', 'Other'],
+      );
     });
 
     test('every group the filter offers is used by something', () {
@@ -46,16 +58,17 @@ void main() {
     test('the sheet is quoted, not paraphrased', () {
       expect(
         ExerciseCatalog.findById('bench_press_barbell')!.muscles,
-        ['Chest', 'Triceps', 'front deltoids'],
+        ['Chest', 'Triceps', 'Shoulders'],
       );
       expect(
         ExerciseCatalog.findById('core_plank')!.muscles,
-        ['Abdominals', 'Glutes', 'Lower back'],
+        ['Abdominals', 'Glutes', 'Lower Back'],
       );
     });
 
     test('the primary muscle leads', () {
-      expect(ExerciseCatalog.findById('pullups_pull_up')!.muscles.first, 'Lats');
+      expect(
+          ExerciseCatalog.findById('pullups_pull_up')!.muscles.first, 'Lats');
     });
   });
 
@@ -73,17 +86,15 @@ void main() {
     test('every back muscle counts as back', () {
       expect(
         ProgramSessionPlan.coarseMusclesFor(
-          ['Lats', 'Upper back', 'Middle Back', 'Lower back', 'Traps'],
+          ['Lats', 'Upper Back', 'Lower Back', 'Traps'],
         ),
         ['Back'],
       );
     });
 
-    test('the deltoids count as shoulders', () {
+    test('the neck counts as shoulders', () {
       expect(
-        ProgramSessionPlan.coarseMusclesFor(
-          ['front deltoids', 'rear deltoids', 'rotator cuff'],
-        ),
+        ProgramSessionPlan.coarseMusclesFor(['Shoulders', 'Neck']),
         ['Shoulders'],
       );
     });
@@ -91,18 +102,19 @@ void main() {
     test('what is not one muscle folds to nothing', () {
       expect(
         ProgramSessionPlan.coarseMusclesFor(
-          ['Full body', 'Cardiovascular system', 'Other'],
+          ['Full Body', 'Cardio', 'Other'],
         ),
         isEmpty,
       );
     });
 
     test('a lift that names a real muscle always folds to something', () {
-      const notAMuscle = {'Full body', 'Cardiovascular system', 'Other'};
+      const notAMuscle = {'Full Body', 'Cardio', 'Other'};
       final liftable =
           everything.where((e) => !e.muscles.every(notAMuscle.contains));
       for (final exercise in liftable) {
-        expect(ProgramSessionPlan.coarseMusclesFor(exercise.muscles), isNotEmpty,
+        expect(
+            ProgramSessionPlan.coarseMusclesFor(exercise.muscles), isNotEmpty,
             reason: exercise.id);
       }
     });

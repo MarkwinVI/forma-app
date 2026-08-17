@@ -125,8 +125,12 @@ class ProgramSessionPlan {
     final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
     if (sessionMap != null) {
       final items = <ProgramDayItem>[];
-      for (final component
-          in const ['warmup', 'skill', 'strength', 'cooldown']) {
+      for (final component in const [
+        'warmup',
+        'skill',
+        'strength',
+        'cooldown'
+      ]) {
         final rawItems = sessionMap[component];
         if (rawItems is! List) continue;
         for (final rawItem in rawItems.whereType<Map>()) {
@@ -211,8 +215,8 @@ class ProgramSessionPlan {
   /// The same work read in the six groups the weekly volume chart is built
   /// on. Balancing a week is a coarser question than picking an exercise, so
   /// the detailed groups fold up rather than crowding that chart with
-  /// seventeen bars. Cardio and Other fold to nothing: they are not volume
-  /// for any muscle.
+  /// twenty bars. Cardio, Full Body and Other fold to nothing: they are not
+  /// volume for any muscle.
   static List<String> coarseMusclesFor(Iterable<String> detailed) {
     final coarse = <String>[];
     for (final group in detailed) {
@@ -224,32 +228,24 @@ class ProgramSessionPlan {
 
   static const Map<String, String> _coarseByDetailed = {
     'Chest': 'Chest',
-    'upper chest': 'Chest',
     'Lats': 'Back',
-    'Upper back': 'Back',
-    'Middle Back': 'Back',
-    'Lower back': 'Back',
+    'Upper Back': 'Back',
+    'Lower Back': 'Back',
     'Traps': 'Back',
     'Shoulders': 'Shoulders',
-    'front deltoids': 'Shoulders',
-    'rear deltoids': 'Shoulders',
-    'rotator cuff': 'Shoulders',
     'Neck': 'Shoulders',
     'Biceps': 'Arms',
     'Triceps': 'Arms',
     'Forearms': 'Arms',
     'Abdominals': 'Core',
-    'obliques': 'Core',
-    'Hip flexors': 'Core',
     'Glutes': 'Legs / glutes',
     'Quadriceps': 'Legs / glutes',
     'Hamstrings': 'Legs / glutes',
     'Calves': 'Legs / glutes',
-    'adductors': 'Legs / glutes',
-    'Hip adductors': 'Legs / glutes',
-    'Hip abductors': 'Legs / glutes',
-    // 'Full body', 'Cardiovascular system' and 'Other' fold to nothing: they
-    // are not volume for any one group.
+    'Adductors': 'Legs / glutes',
+    'Abductors': 'Legs / glutes',
+    // 'Full Body', 'Cardio' and 'Other' fold to nothing: they are not volume
+    // for any one group.
   };
 
   static const Map<ExerciseCategory, List<String>> _musclesForCategory = {
@@ -292,10 +288,9 @@ class ProgramSessionPlan {
     Map<String, dynamic> map,
     Map<String, ExerciseStatus> progressMap,
   ) {
-    final kind =
-        (map['kind'] as String?) == ProgramDayItemKind.progression.name
-            ? ProgramDayItemKind.progression
-            : ProgramDayItemKind.exercise;
+    final kind = (map['kind'] as String?) == ProgramDayItemKind.progression.name
+        ? ProgramDayItemKind.progression
+        : ProgramDayItemKind.exercise;
     final rawSets = map['sets'];
     final rawReps = map['reps'];
     final sets = rawSets is int ? rawSets : kProgramDefaultSets;
@@ -381,7 +376,8 @@ class ProgramSessionPlan {
     for (final item in recommendation.items) {
       if (item.track == TrainingTrack.skillWork) continue;
 
-      final category = SkillCategoryCatalog.findById(item.sourceSkillCategoryId);
+      final category =
+          SkillCategoryCatalog.findById(item.sourceSkillCategoryId);
       final selectedOption = resolvedBranches[item.track];
       final selectedBranchId =
           selectedOption?.sourceSkillCategoryId == item.sourceSkillCategoryId
@@ -415,8 +411,7 @@ class ProgramSessionPlan {
   }
 }
 
-String newProgramItemId() =>
-    DateTime.now().microsecondsSinceEpoch.toString();
+String newProgramItemId() => DateTime.now().microsecondsSinceEpoch.toString();
 
 /// The workout type as its row and editor name it — the full-word version of
 /// [programDayTitle], for where the type is the headline rather than a tag.
@@ -505,11 +500,10 @@ void sortExerciseResults(
   final queryNorm = normalizeExerciseSearch(query);
   final libraryFirst = queryNorm.isEmpty && !isFiltered;
 
-  int rank(Exercise exercise) =>
-      queryNorm.isNotEmpty &&
-              normalizeExerciseSearch(exercise.name).startsWith(queryNorm)
-          ? 0
-          : 1;
+  int rank(Exercise exercise) => queryNorm.isNotEmpty &&
+          normalizeExerciseSearch(exercise.name).startsWith(queryNorm)
+      ? 0
+      : 1;
   int origin(Exercise exercise) => exercise.isLibrary ? 0 : 1;
 
   exercises.sort((a, b) {

@@ -181,7 +181,11 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
             : 'Narrow the catalogue to what this day needs',
         options: [
           for (final category in _filterPatterns)
-            (value: category, label: programPatternLabel(category)),
+            (
+              value: category,
+              label: programPatternLabel(category),
+              section: ''
+            ),
         ],
         selected: _patterns,
         resultCount: (selection) => _countFor(patterns: selection),
@@ -202,8 +206,9 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
         title: 'Muscle group',
         sub: 'Filter by what the exercise trains',
         options: [
-          for (final group in kExerciseMuscleGroups)
-            (value: group, label: group),
+          for (final section in kExerciseMuscleGroupSections)
+            for (final group in section.groups)
+              (value: group, label: group, section: section.title),
         ],
         selected: _muscles,
         resultCount: (selection) => _countFor(muscles: selection),
@@ -648,7 +653,10 @@ class _ExerciseResultRow extends StatelessWidget {
 class _FilterSheet<T> extends StatefulWidget {
   final String title;
   final String sub;
-  final List<({T value, String label})> options;
+
+  /// Options with the same non-empty [section] sit under a heading of that
+  /// name, in first-seen order; an empty section is the plain grid.
+  final List<({T value, String label, String section})> options;
   final Set<T> selected;
   final int Function(Set<T> selection) resultCount;
 
@@ -702,27 +710,64 @@ class _FilterSheetState<T> extends State<_FilterSheet<T>> {
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-        child: Wrap(
-          spacing: 9,
-          runSpacing: 9,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final option in widget.options)
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 32 - 9) / 2,
-                child: _FilterOption(
-                  label: option.label,
-                  selected: _selected.contains(option.value),
-                  onTap: () => setState(() {
-                    if (!_selected.remove(option.value)) {
-                      _selected.add(option.value);
-                    }
-                  }),
+            for (final (index, section) in _sections.indexed) ...[
+              if (section.title.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(2, index == 0 ? 0 : 22, 2, 12),
+                  child: Text(
+                    section.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
                 ),
+              Wrap(
+                spacing: 9,
+                runSpacing: 9,
+                children: [
+                  for (final option in section.options)
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 32 - 9) / 2,
+                      child: _FilterOption(
+                        label: option.label,
+                        selected: _selected.contains(option.value),
+                        onTap: () => setState(() {
+                          if (!_selected.remove(option.value)) {
+                            _selected.add(option.value);
+                          }
+                        }),
+                      ),
+                    ),
+                ],
               ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  /// The options cut into their sections, in the order the sections first
+  /// appear.
+  List<
+      ({
+        String title,
+        List<({T value, String label, String section})> options
+      })> get _sections {
+    final byTitle = <String, List<({T value, String label, String section})>>{};
+    for (final option in widget.options) {
+      byTitle.putIfAbsent(option.section, () => []).add(option);
+    }
+    return [
+      for (final entry in byTitle.entries)
+        (title: entry.key, options: entry.value),
+    ];
   }
 }
 

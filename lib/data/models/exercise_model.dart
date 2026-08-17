@@ -102,38 +102,53 @@ extension ExerciseProgramSectionX on ExerciseProgramSection {
 /// what the filter offers, so a term that reads wrong is fixed in the sheet
 /// rather than translated somewhere you cannot see.
 ///
-/// The one liberty taken is case: the sheet writes some muscles in title case
-/// in the primary column and lower case in the secondary one, and the same
-/// muscle spelled twice would be two filters.
-const List<String> kExerciseMuscleGroups = [
-  'Biceps',
-  'Glutes',
-  'Forearms',
-  'Hamstrings',
-  'Triceps',
-  'front deltoids',
-  'Calves',
-  'Shoulders',
-  'Quadriceps',
-  'Chest',
-  'Upper back',
-  'Abdominals',
-  'Lower back',
-  'obliques',
-  'Lats',
-  'rear deltoids',
-  'Full body',
-  'Hip flexors',
-  'Traps',
-  'adductors',
-  'Cardiovascular system',
-  'rotator cuff',
-  'upper chest',
-  'Middle Back',
-  'Hip abductors',
-  'Neck',
-  'Hip adductors',
-  'Other',
+/// The one liberty taken is case: the same muscle spelled twice would be two
+/// filters, so the sheet's spelling is matched case-insensitively.
+///
+/// Flat, in the order the filter shows them: [kExerciseMuscleGroupSections]
+/// is the same list cut into the sections the filter sheet is laid out in.
+final List<String> kExerciseMuscleGroups = List.unmodifiable([
+  for (final section in kExerciseMuscleGroupSections) ...section.groups,
+]);
+
+/// One section of the muscle-group filter — a heading and the groups under
+/// it, in display order.
+class ExerciseMuscleGroupSection {
+  final String title;
+  final List<String> groups;
+
+  const ExerciseMuscleGroupSection(this.title, this.groups);
+}
+
+/// The muscle groups as the filter lays them out: upper body, lower body,
+/// then the catch-alls that are not a muscle at all.
+const List<ExerciseMuscleGroupSection> kExerciseMuscleGroupSections = [
+  ExerciseMuscleGroupSection('Upper Body', [
+    'Abdominals',
+    'Biceps',
+    'Chest',
+    'Forearms',
+    'Lats',
+    'Lower Back',
+    'Neck',
+    'Shoulders',
+    'Traps',
+    'Triceps',
+    'Upper Back',
+  ]),
+  ExerciseMuscleGroupSection('Lower Body', [
+    'Abductors',
+    'Adductors',
+    'Calves',
+    'Glutes',
+    'Hamstrings',
+    'Quadriceps',
+  ]),
+  ExerciseMuscleGroupSection('Other', [
+    'Cardio',
+    'Full Body',
+    'Other',
+  ]),
 ];
 
 class Exercise {
