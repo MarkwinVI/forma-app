@@ -12,8 +12,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// A timed set is a hold waiting to happen: until something is logged for
 /// it, its value cell is a play pill into the full-screen stopwatch — which
 /// starts at once, with no count-in — and logging from there records the
-/// seconds and ticks the set. From then on the cell is the ordinary number
-/// field, so the seconds can be corrected the way reps are.
+/// seconds and ticks the set. From then on the cell is an mm:ss field, so
+/// the time can be corrected the way reps are.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -64,10 +64,13 @@ void main() {
       (tester) async {
     await pumpWorkout(tester);
 
-    // Every set is a hold waiting: one pill per set, no editable field.
+    // Every set is a hold waiting: one pill per set, no editable field, and
+    // the goal on the pill and in the GOAL column reads mm:ss.
     final pills = find.byIcon(Icons.play_arrow_rounded);
     expect(pills, findsWidgets);
     expect(find.byType(TextField), findsNothing);
+    expect(find.textContaining(RegExp(r'^\d\d:\d\d$')), findsWidgets);
+    expect(find.textContaining(RegExp(r'^\d+s$')), findsNothing);
   });
 
   testWidgets(
@@ -99,21 +102,34 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(HoldTimerView), findsNothing);
 
-    // The set carries the held seconds in an editable field, ticked — and
-    // is no longer a pill. The others still are.
+    // The set carries the held time as mm:ss in an editable field, ticked —
+    // and is no longer a pill. The others still are.
     final field = find.byType(TextField);
     expect(field, findsOneWidget);
-    expect(tester.widget<TextField>(field).controller!.text, '3');
-    // Read as seconds, not a bare count — and the unit is on screen.
-    expect(tester.widget<TextField>(field).decoration!.suffixText, 's');
-    expect(
-      find.descendant(of: find.byType(TextField), matching: find.text('s')),
-      findsOneWidget,
-    );
+    expect(tester.widget<TextField>(field).controller!.text, '00:03');
     expect(
       find.byIcon(Icons.play_arrow_rounded),
       findsNWidgets(pillCount - 1),
     );
+
+    // Editing fills in from the right, microwave-style: the first digit
+    // replaces the time, the next ones shift it left.
+    await tester.tap(field);
+    await tester.pump();
+    await tester.enterText(field, '1');
+    await tester.pump();
+    expect(tester.widget<TextField>(field).controller!.text, '00:01');
+    // enterText replaces the whole text; type on as a keyboard would.
+    await tester.enterText(field, '00:013');
+    await tester.pump();
+    expect(tester.widget<TextField>(field).controller!.text, '00:13');
+    await tester.enterText(field, '00:130');
+    await tester.pump();
+    expect(tester.widget<TextField>(field).controller!.text, '01:30');
+    // Backspace shifts back right.
+    await tester.enterText(field, '01:3');
+    await tester.pump();
+    expect(tester.widget<TextField>(field).controller!.text, '00:13');
   });
 
   testWidgets('closing the timer mid-hold changes nothing', (tester) async {
@@ -152,7 +168,7 @@ void main() {
     expect(find.byType(HoldTimerView), findsNothing);
     final field = find.byType(TextField);
     expect(field, findsOneWidget);
-    expect(tester.widget<TextField>(field).controller!.text, '7');
+    expect(tester.widget<TextField>(field).controller!.text, '00:07');
     expect(
       find.byIcon(Icons.play_arrow_rounded),
       findsNWidgets(pillCount - 1),

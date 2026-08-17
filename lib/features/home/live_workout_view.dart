@@ -1525,6 +1525,7 @@ class _HoldStartPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(9),
         ),
         alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1534,13 +1535,20 @@ class _HoldStartPill extends StatelessWidget {
               color: AppColors.accentPrimary,
             ),
             const SizedBox(width: 3),
-            Text(
-              label,
-              maxLines: 1,
-              style: monoStyle(
-                size: 13.5,
-                letterSpacing: 0,
-                color: AppColors.textPrimary,
+            // mm:ss fits the cell at full size; the scale-down is only a
+            // guard against a font that runs wider.
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: monoStyle(
+                    size: 13.5,
+                    letterSpacing: 0,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
             ),
           ],
@@ -1557,10 +1565,6 @@ class _RepField extends StatefulWidget {
   final ValueChanged<int> onChanged;
   final ValueChanged<bool> onFocusChanged;
 
-  /// Written after the number — "s" on a timed set, so a logged hold reads
-  /// as seconds. Empty for reps.
-  final String unit;
-
   const _RepField({
     super.key,
     required this.value,
@@ -1568,7 +1572,6 @@ class _RepField extends StatefulWidget {
     required this.isEdited,
     required this.onChanged,
     required this.onFocusChanged,
-    this.unit = '',
   });
 
   @override
@@ -1660,12 +1663,126 @@ class _RepFieldState extends State<_RepField> {
         border: InputBorder.none,
         hintText: '${widget.value}',
         hintStyle: monoStyle(size: 16, letterSpacing: 0),
-        suffixText: widget.unit.isEmpty ? null : widget.unit,
-        suffixStyle: monoStyle(
-          size: 16,
-          letterSpacing: 0,
-          color: AppColors.textPrimary,
-        ),
+      ),
+    );
+  }
+}
+
+/// The value cell of a timed set once it carries a time: mm:ss, edited the
+/// way a microwave is set — digits fill in from the right, so typing 1, 3, 0
+/// reads 00:01, 00:13, 01:30. The colon is drawn, never typed, and the
+/// keyboard is the number pad.
+class _TimeField extends StatefulWidget {
+  final int seconds;
+  final ValueChanged<int> onChanged;
+  final ValueChanged<bool> onFocusChanged;
+
+  const _TimeField({
+    super.key,
+    required this.seconds,
+    required this.onChanged,
+    required this.onFocusChanged,
+  });
+
+  @override
+  State<_TimeField> createState() => _TimeFieldState();
+}
+
+class _TimeFieldState extends State<_TimeField> {
+  late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: formatHoldTime(widget.seconds));
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(_TimeField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reflect external changes — but never while the user types.
+    if (!_focusNode.hasFocus) _syncText();
+  }
+
+  void _syncText() {
+    final text = formatHoldTime(widget.seconds);
+    if (_controller.text != text) {
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+  }
+
+  void _onFocusChange() {
+    widget.onFocusChanged(_focusNode.hasFocus);
+    if (_focusNode.hasFocus) {
+      // Everything selected, so the first digit starts a fresh time and the
+      // ones after it fill in from the right.
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      );
+    } else {
+      _syncText();
+    }
+  }
+
+  /// Whatever the edit was — a digit typed, one deleted, a paste — the
+  /// field is rebuilt from the digits now in it (the newest four), so the
+  /// colon is always in the right place and the caret always at the end.
+  void _handleChanged(String text) {
+    var digits = text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length > 4) digits = digits.substring(digits.length - 4);
+    final seconds = _secondsFromDigits(digits);
+    final shown = formatHoldTime(seconds);
+    _controller.value = TextEditingValue(
+      text: shown,
+      selection: TextSelection.collapsed(offset: shown.length),
+    );
+    widget.onChanged(seconds);
+  }
+
+  /// "130" → 1 minute 30 seconds: the last two digits are seconds, whatever
+  /// comes before is minutes. Seconds past 59 spill into the minutes.
+  static int _secondsFromDigits(String digits) {
+    if (digits.isEmpty) return 0;
+    final padded = digits.padLeft(4, '0');
+    final minutes = int.parse(padded.substring(0, padded.length - 2));
+    final seconds = int.parse(padded.substring(padded.length - 2));
+    return minutes * 60 + seconds;
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      onChanged: _handleChanged,
+      contextMenuBuilder: _noContextMenu,
+      cursorColor: AppColors.accentPrimary,
+      style: monoStyle(
+        size: 16,
+        letterSpacing: 0,
+        color: AppColors.textPrimary,
+      ),
+      decoration: const InputDecoration(
+        isDense: true,
+        isCollapsed: true,
+        contentPadding: EdgeInsets.zero,
+        border: InputBorder.none,
       ),
     );
   }
@@ -2074,7 +2191,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
   /// Null when there is no ladder behind this exercise, and the column goes.
   String? get _goalLabel {
     if (goalValue == null) return null;
-    final value = '$goalValue${isTimed ? 's' : ''}';
+    final value = isTimed ? formatHoldTime(goalValue!) : '$goalValue';
     return isWeighted
         ? '${_weightText(goalWeightKg ?? 0)}${WeightUnitService.unit.suffix} '
             'x $value'
@@ -2272,18 +2389,24 @@ class _WorkoutExerciseCard extends StatelessWidget {
         // its cell is a play pill into the timer. Once it carries a time —
         // logged or typed — the cell is the ordinary number field, so the
         // seconds can be corrected the way reps are.
-        value: isTimed && !set.completed && !set.isEdited
-            ? _HoldStartPill(
-                key: ValueKey('hold-${item.exercise.id}-${set.number}'),
-                label: '${set.target}s',
-                onTap: () => onStartHold(set.number),
-              )
+        value: isTimed
+            ? !set.completed && !set.isEdited
+                ? _HoldStartPill(
+                    key: ValueKey('hold-${item.exercise.id}-${set.number}'),
+                    label: formatHoldTime(set.target),
+                    onTap: () => onStartHold(set.number),
+                  )
+                : _TimeField(
+                    key: ValueKey('time-${item.exercise.id}-${set.number}'),
+                    seconds: set.target,
+                    onChanged: (value) => onValueChanged(set.number, value),
+                    onFocusChanged: onRepFocusChanged,
+                  )
             : _RepField(
                 key: ValueKey('rep-${item.exercise.id}-${set.number}'),
                 value: set.target,
                 completed: set.completed,
                 isEdited: set.isEdited,
-                unit: isTimed ? 's' : '',
                 onChanged: (value) => onValueChanged(set.number, value),
                 onFocusChanged: onRepFocusChanged,
               ),
@@ -3305,9 +3428,21 @@ class _WorkoutSetDraft {
 /// column is already headed KG or LBS.
 String _weightText(double weightKg) => WeightUnitService.displayText(weightKg);
 
+/// A hold's length as every cell of the workout writes it: mm:ss, minutes
+/// padded too, so 20 seconds is "00:20" and a minute and a half "01:30".
+/// One shape for goal, last, logged and typed, so the eye never has to
+/// re-parse a bare number as seconds.
+String formatHoldTime(int seconds) {
+  final safe = seconds.clamp(0, 99 * 60 + 59);
+  final minutes = safe ~/ 60;
+  final remainder = safe % 60;
+  return '${minutes.toString().padLeft(2, '0')}:'
+      '${remainder.toString().padLeft(2, '0')}';
+}
+
 /// What the last session's matching set read as, for the LAST column. Reps
-/// are a count and holds are seconds; anything carrying load leads with it —
-/// "60kg x 8", or "20kg x 30s" for a loaded hold.
+/// are a count and holds are mm:ss; anything carrying load leads with it —
+/// "60kg x 8", or "20kg x 00:30" for a loaded hold.
 String previousSetLabel(Exercise exercise, ExerciseSet? set) {
   if (set == null) return _noPreviousLabel;
   final load = exercise.isWeighted
@@ -3316,7 +3451,7 @@ String previousSetLabel(Exercise exercise, ExerciseSet? set) {
 
   if (exercise.isTimed) {
     return set.durationSeconds > 0
-        ? '$load${set.durationSeconds}s'
+        ? '$load${formatHoldTime(set.durationSeconds)}'
         : _noPreviousLabel;
   }
   return set.reps > 0 ? '$load${set.reps}' : _noPreviousLabel;

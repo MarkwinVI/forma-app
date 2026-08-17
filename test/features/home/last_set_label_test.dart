@@ -49,17 +49,17 @@ void main() {
           _exercise(isTimed: true, isWeighted: true),
           const ExerciseSet(durationSeconds: 40, weightKg: 20),
         ),
-        '20kg x 40s',
+        '20kg x 00:40',
       );
     });
 
-    test('a hold reads in seconds', () {
+    test('a hold reads as mm:ss', () {
       expect(
         previousSetLabel(
           _exercise(isTimed: true),
           const ExerciseSet(durationSeconds: 30),
         ),
-        '30s',
+        '00:30',
       );
     });
 
