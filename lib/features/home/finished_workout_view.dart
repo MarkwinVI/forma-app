@@ -260,12 +260,14 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   /// per ladder move it earned: a raised rep target is a rep progression, a
   /// mastery is a level-up (the follow-up `activated` event is the same
   /// level-up seen from the new exercise, so it is not reported again).
-  void _captureWorkoutAnalytics(String? sessionId, List<ProgressionEvent> events) {
+  void _captureWorkoutAnalytics(
+      String? sessionId, List<ProgressionEvent> events) {
     var plannedSets = 0;
     var plannedReps = 0;
     for (final exerciseEntry in widget.workout.exercises) {
       final sets = exerciseEntry.targetSets ??
-          ExerciseProgressionService.setCountForExercise(exerciseEntry.exercise);
+          ExerciseProgressionService.setCountForExercise(
+              exerciseEntry.exercise);
       final value = exerciseEntry.targetValue ??
           ExerciseProgressionService.targetValueForExercise(
             exerciseEntry.exercise,
@@ -531,47 +533,53 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             SafeArea(
               child: Column(
                 children: [
-                  // Progress bars + skip
+                  // Progress bars + skip. The row is one bar until the save
+                  // reports what the session earned, then the real set — a
+                  // crossfade rather than a snap between the two.
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                    child: Row(
-                      children: [
-                        for (var i = 0; i < _steps.length; i++) ...[
-                          if (i > 0) const SizedBox(width: 8),
-                          Expanded(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 350),
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: i <= _stepIndex
-                                    ? AppColors.accentPrimary
-                                    : Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(2),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Row(
+                        key: ValueKey((_steps.length, _saving, _saveFailed)),
+                        children: [
+                          for (var i = 0; i < _steps.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            Expanded(
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 350),
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: i <= _stepIndex
+                                      ? AppColors.accentPrimary
+                                      : Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                        if (!_saving && !_saveFailed) ...[
-                          const SizedBox(width: 12),
-                          Pressable(
-                            onTap: _skip,
-                            child: Container(
-                              width: 30,
-                              height: 30,
-                              decoration: const BoxDecoration(
-                                color: AppColors.surface,
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: const Icon(
-                                Icons.close_rounded,
-                                size: 15,
-                                color: AppColors.textSecondary,
+                          ],
+                          if (!_saving && !_saveFailed) ...[
+                            const SizedBox(width: 12),
+                            Pressable(
+                              onTap: _skip,
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.surface,
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 15,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                   Expanded(
@@ -1643,14 +1651,18 @@ class _ConfettiPainter extends CustomPainter {
       AppColors.green,
     ];
 
+    // One loop of the controller must land every piece exactly where it
+    // started, or the wrap reads as the whole sky jumping. So each piece
+    // falls a whole number of laps of the wrap distance per loop — the
+    // speed variety comes from how many laps.
+    final lap = size.height + 70;
     for (var i = 0; i < 54; i++) {
       final baseX = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
-      final speed = 0.55 + random.nextDouble() * 0.9;
+      final baseY = random.nextDouble() * lap;
+      final laps = 1 + random.nextInt(2);
       final sway = math.sin((progress * math.pi * 2) + i) * 16;
       final x = baseX + sway;
-      final y =
-          ((baseY + progress * size.height * speed) % (size.height + 70)) - 35;
+      final y = ((baseY + progress * lap * laps) % lap) - 35;
       final width = 4 + random.nextDouble() * 3;
       final height = 9 + random.nextDouble() * 6;
       final paint = Paint()
