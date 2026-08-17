@@ -948,8 +948,8 @@ class _LevelUpContent extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
                 child: Text(
-                  'You hit ${data.sets} × ${data.from}$suffix — the program '
-                  'just raised your target.',
+                  'You hit the target goal of ${data.sets} × '
+                  '${data.from}$suffix. Your target has been raised.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,
