@@ -143,13 +143,13 @@ class _HoldTimerViewState extends State<HoldTimerView>
       },
       child: Scaffold(
         backgroundColor: AppColors.bg,
-        // A tap anywhere that is not a control pauses the hold — hands come
-        // off the bar and reach for the phone, and the nearest thing to hit
-        // should be the right one. The controls sit above and take their own
-        // taps first.
+        // A tap anywhere that is not a control pauses the hold, and another
+        // resumes it — hands come off the bar and reach for the phone, and
+        // the nearest thing to hit should be the right one. The controls sit
+        // above and take their own taps first.
         body: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: _running ? _togglePause : null,
+          onTap: _togglePause,
           child: SafeArea(
             child: Column(
               children: [

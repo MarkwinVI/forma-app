@@ -104,6 +104,12 @@ void main() {
     final field = find.byType(TextField);
     expect(field, findsOneWidget);
     expect(tester.widget<TextField>(field).controller!.text, '3');
+    // Read as seconds, not a bare count — and the unit is on screen.
+    expect(tester.widget<TextField>(field).decoration!.suffixText, 's');
+    expect(
+      find.descendant(of: find.byType(TextField), matching: find.text('s')),
+      findsOneWidget,
+    );
     expect(
       find.byIcon(Icons.play_arrow_rounded),
       findsNWidgets(pillCount - 1),
@@ -191,7 +197,8 @@ void main() {
     expect(find.text('Log set'), findsOneWidget);
   });
 
-  testWidgets('a tap anywhere off the controls pauses the hold',
+  testWidgets(
+      'a tap anywhere off the controls pauses the hold, another resumes',
       (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
@@ -218,12 +225,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 150));
     expect(find.text('3'), findsOneWidget);
 
-    // Another background tap does not resume; the play button does.
+    // Another background tap resumes, and the count runs on from where it
+    // stopped.
     await tester.tapAt(const Offset(40, 300));
     await tester.pump(const Duration(milliseconds: 250));
-    expect(find.text('Paused'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
-    await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('Holding…'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text('5'), findsOneWidget);
   });
 }

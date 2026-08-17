@@ -1557,6 +1557,10 @@ class _RepField extends StatefulWidget {
   final ValueChanged<int> onChanged;
   final ValueChanged<bool> onFocusChanged;
 
+  /// Written after the number — "s" on a timed set, so a logged hold reads
+  /// as seconds. Empty for reps.
+  final String unit;
+
   const _RepField({
     super.key,
     required this.value,
@@ -1564,6 +1568,7 @@ class _RepField extends StatefulWidget {
     required this.isEdited,
     required this.onChanged,
     required this.onFocusChanged,
+    this.unit = '',
   });
 
   @override
@@ -1655,6 +1660,12 @@ class _RepFieldState extends State<_RepField> {
         border: InputBorder.none,
         hintText: '${widget.value}',
         hintStyle: monoStyle(size: 16, letterSpacing: 0),
+        suffixText: widget.unit.isEmpty ? null : widget.unit,
+        suffixStyle: monoStyle(
+          size: 16,
+          letterSpacing: 0,
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }
@@ -2272,6 +2283,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 value: set.target,
                 completed: set.completed,
                 isEdited: set.isEdited,
+                unit: isTimed ? 's' : '',
                 onChanged: (value) => onValueChanged(set.number, value),
                 onFocusChanged: onRepFocusChanged,
               ),
