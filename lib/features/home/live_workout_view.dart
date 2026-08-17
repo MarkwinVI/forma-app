@@ -69,12 +69,6 @@ class LiveWorkoutView extends StatefulWidget {
 
 class _LiveWorkoutViewState extends State<LiveWorkoutView>
     with WidgetsBindingObserver {
-  static const _sectionOrder = [
-    ExerciseProgramSection.warmup,
-    ExerciseProgramSection.skillWork,
-    ExerciseProgramSection.mainExercises,
-    ExerciseProgramSection.coolDown,
-  ];
   final _progressService = ProgressService();
   final _devClockService = DevClockService();
   final _restPreferencesService = WorkoutRestPreferencesService();
@@ -423,17 +417,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   // ── Set drafts ────────────────────────────────────────────────────
 
-  List<TrainingRecommendationItem> _itemsForSection(
-    ExerciseProgramSection section,
-  ) {
-    return _sessionItems
-        .where((item) => item.exercise.programSection == section)
-        .toList();
-  }
-
   /// Prescribed target for an item: the progression ladder target (stored
   /// state, else 3 × 6 / 3 × 10s, clamped to the live mastery target) for
-  /// progression items, the catalog formula for standalone exercises.
+  /// progression items, and for an accessory the catalog formula — or where
+  /// auto progression has carried it, when Forma is managing it.
   ExerciseTarget _prescribedTargetFor(TrainingRecommendationItem item) {
     if (item.hasProgressionContext) {
       return ExerciseProgressionService.currentTargetForExercise(
@@ -442,10 +429,25 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         masterySettings: _masterySettings,
       );
     }
+    if (_autoProgressed(item)) {
+      return ExerciseProgressionService.accessoryTargetFor(
+        item.exercise,
+        progress: _progressRows[item.exercise.id],
+      );
+    }
     return ExerciseTarget(
       sets: ExerciseProgressionService.setCountForExercise(item.exercise),
       value: ExerciseProgressionService.targetValueForExercise(item.exercise),
     );
+  }
+
+  /// Whether Forma is managing this accessory's reps and weight.
+  bool _autoProgressed(TrainingRecommendationItem item) {
+    return !item.hasProgressionContext &&
+        ExerciseProgressionService.autoProgressionEnabled(
+          item.exercise,
+          progress: _progressRows[item.exercise.id],
+        );
   }
 
   /// Last session's set at [index], or its final set once this session has run
@@ -459,6 +461,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
 
   List<_WorkoutSetDraft> _initialSetDrafts(TrainingRecommendationItem item) {
     final target = _prescribedTargetFor(item);
+    // A managed accessory opens on the weight Forma set for it — the point of
+    // auto progression is that the step it took is what shows up next time,
+    // rather than last session's weight.
+    final managedWeight = _autoProgressed(item) ? target.weightKg : null;
     // The set count the user last saved for this exercise on this day wins;
     // reps still come from where they are on the progression.
     return List.generate(
@@ -469,7 +475,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           number: index + 1,
           target: target.value,
           weightKg: item.exercise.isWeighted
-              ? (last?.weightKg ?? _goalWeightFor(item) ?? 0)
+              ? (managedWeight ?? last?.weightKg ?? _goalWeightFor(item) ?? 0)
               : 0,
           previousLabel: previousSetLabel(item.exercise, last),
         );
@@ -481,10 +487,13 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final stored = _progressRows[item.exercise.id]?.currentTargetWeightKg;
     if (stored != null) return stored;
     if (!item.exercise.isWeighted) return null;
-    return ExerciseProgressionService.requiredExternalWeightKg(
-      item.exercise,
-      _bodyweightKg,
-    );
+    // An accessory the program added opens on its stated weight; a rung
+    // opens on what its formula asks for.
+    return ExerciseProgressionService.accessoryOpeningWeightKg(item.exercise) ??
+        ExerciseProgressionService.requiredExternalWeightKg(
+          item.exercise,
+          _bodyweightKg,
+        );
   }
 
   List<_WorkoutSetDraft> _setsFor(TrainingRecommendationItem item) {
@@ -795,15 +804,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _replaceItemInSession(currentItem, nextItem);
   }
 
-  void _applyReorderedSections(
-    Map<ExerciseProgramSection, List<TrainingRecommendationItem>> reordered,
-  ) {
-    final next = <TrainingRecommendationItem>[];
-    for (final section in _sectionOrder) {
-      next.addAll(reordered[section] ?? _itemsForSection(section));
-    }
+  void _applyReorderedItems(List<TrainingRecommendationItem> reordered) {
     _planEdited = true;
-    _replaceSessionItems(next);
+    _replaceSessionItems(reordered);
     _showToast('Order updated');
   }
 
@@ -881,16 +884,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
         }
       }
     }
-    for (final section in _sectionOrder) {
-      for (final item in _itemsForSection(section)) {
-        if (_setsFor(item).any((set) => !set.completed)) return item;
-      }
+    for (final item in _sessionItems) {
+      if (_setsFor(item).any((set) => !set.completed)) return item;
     }
-    for (final section in _sectionOrder.reversed) {
-      final items = _itemsForSection(section);
-      if (items.isNotEmpty) return items.last;
-    }
-    return null;
+    return _sessionItems.isEmpty ? null : _sessionItems.last;
   }
 
   LiveWorkoutActivityState _liveActivityState() {
@@ -1183,46 +1180,39 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
+  /// One list, in the order the workout runs — the same single-section page
+  /// the program's workout editor uses, so a day reorders the same way in
+  /// both places.
   Future<void> _openReorderExercises() async {
-    final sections = _visibleSections();
-    if (sections.fold<int>(0, (sum, entry) => sum + entry.items.length) < 2) {
-      return;
-    }
+    if (_sessionItems.length < 2) return;
 
     final order = await Navigator.of(context).push<List<List<String>>>(
       MaterialPageRoute(
         builder: (_) => ReorderExercisesPage(
           sections: [
-            for (final entry in sections)
-              ReorderExercisesSection(
-                title: entry.section.label,
-                entries: [
-                  for (final item in entry.items)
-                    ReorderExerciseEntry(
-                      id: item.exercise.id,
-                      name: item.exercise.name,
-                      subtitle: item.track.label,
-                      icon: programPatternIcon(item.exercise.category),
-                    ),
-                ],
-              ),
+            ReorderExercisesSection(
+              entries: [
+                for (final item in _sessionItems)
+                  ReorderExerciseEntry(
+                    id: item.exercise.id,
+                    name: item.exercise.name,
+                    icon: programPatternIcon(item.exercise.category),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
     );
-    if (order == null || !mounted) return;
+    if (order == null || order.isEmpty || !mounted) return;
 
     final byId = {
-      for (final entry in sections)
-        for (final item in entry.items) item.exercise.id: item,
+      for (final item in _sessionItems) item.exercise.id: item,
     };
-    _applyReorderedSections({
-      for (var i = 0; i < sections.length; i++)
-        sections[i].section: [
-          for (final id in order[i])
-            if (byId[id] != null) byId[id]!,
-        ],
-    });
+    _applyReorderedItems([
+      for (final id in order.first)
+        if (byId[id] != null) byId[id]!,
+    ]);
   }
 
   /// Replacing goes straight to the search — the same page adding uses, and
@@ -1318,22 +1308,11 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     return '${item.track.label} · $target';
   }
 
-  List<_SectionEntry> _visibleSections() {
-    return _sectionOrder
-        .map(
-          (section) =>
-              _SectionEntry(section: section, items: _itemsForSection(section)),
-        )
-        .where((entry) => entry.items.isNotEmpty)
-        .toList();
-  }
-
   // ── Build ─────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom;
-    final visibleSections = _visibleSections();
     final restRemaining = _activeRestRemainingSeconds();
 
     // The session isn't saved until the user finishes, so an iOS edge-swipe
@@ -1375,62 +1354,68 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                             : 40,
                       ),
                       children: [
-                        if (visibleSections.isEmpty)
+                        if (_sessionItems.isEmpty)
                           _EmptyWorkoutState(onAddExercise: _openAddExercise)
                         else
-                          // No section headings: the sets under each name
-                          // already separate one exercise from the next, and
-                          // grouping them said nothing you act on.
-                          for (final entry in visibleSections)
-                            for (var i = 0; i < entry.items.length; i++) ...[
-                              if (i > 0 || entry != visibleSections.first)
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 26),
-                                  child: Divider(
-                                    height: 1,
-                                    thickness: 1,
-                                    color: AppColors.divider,
-                                  ),
+                          // The workout runs the day in the order the program
+                          // plans it. No section headings either: the sets
+                          // under each name already separate one exercise from
+                          // the next, and grouping them said nothing you act
+                          // on — it only moved exercises away from their slot.
+                          for (var i = 0; i < _sessionItems.length; i++) ...[
+                            if (i > 0)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 26),
+                                child: Divider(
+                                  height: 1,
+                                  thickness: 1,
+                                  color: AppColors.divider,
                                 ),
-                              const SizedBox(height: 24),
-                              _WorkoutExerciseCard(
-                                key: ValueKey(entry.items[i].exercise.id),
-                                item: entry.items[i],
-                                sets: _setsFor(entry.items[i]),
-                                isTimed:
-                                    _isTimedExercise(entry.items[i].exercise),
-                                goalValue: entry.items[i].hasProgressionContext
-                                    ? _prescribedTargetFor(entry.items[i]).value
-                                    : null,
-                                goalWeightKg: _goalWeightFor(entry.items[i]),
-                                restSeconds: _restSecondsByExercise[
-                                        entry.items[i].exercise.id] ??
-                                    0,
-                                onToggleSet: (number) =>
-                                    _toggleSet(entry.items[i], number),
-                                onValueChanged: (number, value) =>
-                                    _setSetValue(entry.items[i], number, value),
-                                onWeightChanged: (number, weightKg) =>
-                                    _setSetWeight(
-                                  entry.items[i],
-                                  number,
-                                  weightKg,
-                                ),
-                                onRemoveSet: (number) =>
-                                    _removeSet(entry.items[i], number),
-                                onRepFocusChanged: _onRepFocusChanged,
-                                onAddSet: () => _addSet(entry.items[i]),
-                                onRestTap: () =>
-                                    _pickRestInterval(entry.items[i]),
-                                onMenu: () =>
-                                    _openExerciseActions(entry.items[i]),
-                                onOpenDetail: () =>
-                                    _openExerciseDetail(entry.items[i]),
-                                onStartHold: (number) =>
-                                    _startHold(entry.items[i], number),
                               ),
-                            ],
-                        if (visibleSections.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            _WorkoutExerciseCard(
+                              key: ValueKey(_sessionItems[i].exercise.id),
+                              item: _sessionItems[i],
+                              sets: _setsFor(_sessionItems[i]),
+                              isTimed:
+                                  _isTimedExercise(_sessionItems[i].exercise),
+                              // A goal wherever there is a ladder behind the
+                              // exercise: a skill-tree step, or an accessory
+                              // Forma is progressing.
+                              goalValue: _sessionItems[i]
+                                          .hasProgressionContext ||
+                                      _autoProgressed(_sessionItems[i])
+                                  ? _prescribedTargetFor(_sessionItems[i]).value
+                                  : null,
+                              goalWeightKg: _goalWeightFor(_sessionItems[i]),
+                              restSeconds: _restSecondsByExercise[
+                                      _sessionItems[i].exercise.id] ??
+                                  0,
+                              onToggleSet: (number) =>
+                                  _toggleSet(_sessionItems[i], number),
+                              onValueChanged: (number, value) =>
+                                  _setSetValue(_sessionItems[i], number, value),
+                              onWeightChanged: (number, weightKg) =>
+                                  _setSetWeight(
+                                _sessionItems[i],
+                                number,
+                                weightKg,
+                              ),
+                              onRemoveSet: (number) =>
+                                  _removeSet(_sessionItems[i], number),
+                              onRepFocusChanged: _onRepFocusChanged,
+                              onAddSet: () => _addSet(_sessionItems[i]),
+                              onRestTap: () =>
+                                  _pickRestInterval(_sessionItems[i]),
+                              onMenu: () =>
+                                  _openExerciseActions(_sessionItems[i]),
+                              onOpenDetail: () =>
+                                  _openExerciseDetail(_sessionItems[i]),
+                              onStartHold: (number) =>
+                                  _startHold(_sessionItems[i], number),
+                            ),
+                          ],
+                        if (_sessionItems.isNotEmpty) ...[
                           const SizedBox(height: 22),
                           _AddExerciseButton(onTap: _openAddExercise),
                         ],
@@ -1489,13 +1474,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       ),
     );
   }
-}
-
-class _SectionEntry {
-  final ExerciseProgramSection section;
-  final List<TrainingRecommendationItem> items;
-
-  const _SectionEntry({required this.section, required this.items});
 }
 
 /// Inline, editable reps/seconds cell for a set row. Owns its controller and
@@ -2141,7 +2119,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final List<_WorkoutSetDraft> sets;
   final bool isTimed;
 
-  /// Per-set goal from the progression ladder; null for standalone
+  /// Per-set goal from the progression ladder; null for accessory
   /// exercises, which drop the GOAL column altogether.
   final int? goalValue;
 

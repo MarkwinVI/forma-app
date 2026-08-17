@@ -110,6 +110,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'around_the_world',
@@ -234,6 +235,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'bench_dip',
@@ -259,6 +261,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'bench_press_cable',
@@ -285,6 +288,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'bench_press_smith_machine',
@@ -311,6 +315,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'bench_press_wide_grip_barbell',
@@ -324,6 +329,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'bent_over_row_band',
@@ -349,6 +355,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'bent_over_row_dumbbell',
@@ -362,6 +369,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'bicep_curl_barbell',
@@ -375,6 +383,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'bicep_curl_cable',
@@ -401,6 +410,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'bicep_curl_machine',
@@ -487,6 +497,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'boxing',
@@ -724,6 +735,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders', 'Biceps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'chest_fly_machine',
@@ -787,6 +799,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'chest_supported_reverse_fly_dumbbell',
@@ -800,6 +813,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'chest_supported_y_raise_dumbbell',
@@ -813,6 +827,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'chin_up',
@@ -923,6 +938,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'clean_and_jerk',
@@ -936,6 +952,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'clean_and_press',
@@ -949,6 +966,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'clean_pull',
@@ -962,6 +980,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'climbing',
@@ -1000,6 +1019,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'crunch',
@@ -1051,6 +1071,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'cycling',
@@ -1114,6 +1135,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'deadlift_dumbbell',
@@ -1127,6 +1149,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'deadlift_smith_machine',
@@ -1153,6 +1176,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'deadlift_high_pull',
@@ -1177,6 +1201,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'decline_bench_press_dumbbell',
@@ -1190,6 +1215,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'decline_bench_press_machine',
@@ -1229,6 +1255,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders', 'Biceps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'decline_crunch',
@@ -1303,6 +1330,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'dragon_flag',
@@ -1340,6 +1368,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'dumbbell_snatch',
@@ -1353,6 +1382,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'dumbbell_squeeze_press',
@@ -1366,6 +1396,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'dumbbell_step_up',
@@ -1379,6 +1410,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'elbow_to_knee',
@@ -1417,6 +1449,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'face_pull',
@@ -1468,6 +1501,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'floor_press_dumbbell',
@@ -1481,6 +1515,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'floor_triceps_dip',
@@ -1530,6 +1565,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'front_lever_hold',
@@ -1651,6 +1687,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'front_raise_cable',
@@ -1677,6 +1714,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'front_raise_suspension',
@@ -1702,6 +1740,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'full_squat',
@@ -1790,6 +1829,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'gorilla_row_kettlebell',
@@ -1816,6 +1856,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hack_squat_machine',
@@ -1867,6 +1908,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'handstand_hold',
@@ -1917,6 +1959,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hang_snatch',
@@ -1930,6 +1973,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hanging_bent_leg_raise',
@@ -2039,6 +2083,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'high_knee_skips',
@@ -2140,6 +2185,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hip_thrust_machine',
@@ -2178,6 +2224,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'incline_bench_press_dumbbell',
@@ -2191,6 +2238,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'incline_bench_press_smith_machine',
@@ -2217,6 +2265,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders', 'Biceps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'incline_chest_press_machine',
@@ -2439,6 +2488,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'jump_rope',
@@ -2733,6 +2783,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Other'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'landmine_row',
@@ -2746,6 +2797,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'landmine_squat_and_press',
@@ -2759,6 +2811,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'lat_pulldown_band',
@@ -2896,6 +2949,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'lateral_raise_machine',
@@ -3022,6 +3076,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'lunge_dumbbell',
@@ -3035,6 +3090,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'lying_bent_leg_raise',
@@ -3155,6 +3211,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'mountain_climber',
@@ -3289,6 +3346,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'overhead_press_barbell',
@@ -3302,6 +3360,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'overhead_press_dumbbell',
@@ -3315,6 +3374,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'overhead_press_smith_machine',
@@ -3340,6 +3400,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Full Body'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'pause_squat_barbell',
@@ -3353,6 +3414,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'pendlay_row_barbell',
@@ -3366,6 +3428,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'pendulum_squat_machine',
@@ -3429,6 +3492,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'pistol_squat',
@@ -3466,6 +3530,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'planche',
@@ -3689,6 +3754,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'power_snatch',
@@ -3702,6 +3768,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'preacher_curl_barbell',
@@ -3715,6 +3782,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'preacher_curl_dumbbell',
@@ -3728,6 +3796,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'preacher_curl_machine',
@@ -3912,6 +3981,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'pullover_machine',
@@ -3938,6 +4008,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'push_up',
@@ -4133,6 +4204,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'rear_delt_reverse_fly_machine',
@@ -4159,6 +4231,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'reverse_crunch',
@@ -4184,6 +4257,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'reverse_curl_cable',
@@ -4210,6 +4284,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'reverse_fly_single_arm_cable',
@@ -4285,6 +4360,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'reverse_lunge_dumbbell',
@@ -4298,6 +4374,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'reverse_plank',
@@ -4348,6 +4425,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'romanian_deadlift_dumbbell',
@@ -4361,6 +4439,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'rope_cable_curl',
@@ -4501,6 +4580,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'seated_chest_flys_cable',
@@ -4540,6 +4620,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'seated_lateral_raise_dumbbell',
@@ -4553,6 +4634,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'seated_leg_curl_machine',
@@ -4579,6 +4661,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'seated_overhead_press_dumbbell',
@@ -4592,6 +4675,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'seated_palms_up_wrist_curl',
@@ -4605,6 +4689,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'seated_row_machine',
@@ -4644,6 +4729,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'seated_wrist_extension_barbell',
@@ -4657,6 +4743,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'shoulder_press_dumbbell',
@@ -4670,6 +4757,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'shoulder_press_machine_plates',
@@ -4744,6 +4832,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'shrug_cable',
@@ -4770,6 +4859,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'shrug_machine',
@@ -4821,6 +4911,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Lower Back'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'side_plank',
@@ -4886,6 +4977,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'single_arm_lat_pulldown',
@@ -4925,6 +5017,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'single_arm_triceps_pushdown_cable',
@@ -4987,6 +5080,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'single_leg_press_machine',
@@ -5013,6 +5107,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'single_leg_romanian_deadlift_bodyweight',
@@ -5038,6 +5133,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Lower Back', 'Adductors'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise',
@@ -5061,6 +5157,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise_dumbbell',
@@ -5073,6 +5170,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise_machine',
@@ -5098,6 +5196,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'sit_up',
@@ -5136,6 +5235,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'skullcrusher_dumbbell',
@@ -5149,6 +5249,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'sled_push',
@@ -5176,6 +5277,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'snowboarding',
@@ -5202,6 +5304,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'spider_curl_dumbbell',
@@ -5215,6 +5318,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'spiderman',
@@ -5253,6 +5357,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'split_squat_dumbbell',
@@ -5266,6 +5371,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'sprints',
@@ -5328,6 +5434,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_bodyweight',
@@ -5365,6 +5472,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'squat_machine',
@@ -5466,6 +5574,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'standing_calf_raise_barbell',
@@ -5478,6 +5587,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'standing_calf_raise_dumbbell',
@@ -5490,6 +5600,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'standing_calf_raise_machine',
@@ -5538,6 +5649,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'step_up',
@@ -5637,6 +5749,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'sumo_squat_dumbbell',
@@ -5650,6 +5763,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'sumo_squat_kettlebell',
@@ -5712,6 +5826,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Full Body'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'thruster_kettlebell',
@@ -5823,6 +5938,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'triceps_extension_cable',
@@ -5849,6 +5965,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'triceps_extension_machine',
@@ -5900,6 +6017,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'triceps_pressdown',
@@ -5951,6 +6069,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'upright_row_cable',
@@ -5977,6 +6096,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'v_up',
@@ -6142,6 +6262,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'romanian_deadlift_bodyweight',

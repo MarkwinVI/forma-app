@@ -6,6 +6,7 @@ import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
 import '../models/progression_event_model.dart';
 import '../models/training_program_model.dart';
+import 'achievable_load.dart';
 import 'exercise_log_service.dart';
 import 'progress_service.dart';
 import 'weight_unit_service.dart';
@@ -22,6 +23,11 @@ class SessionExerciseResult {
   final List<SessionSetResult> sets;
   final bool wasManuallyAdded;
 
+  /// True when the exercise is an accessory rather than a step of a skill
+  /// tree: nothing is mastered and nothing is activated, and the only thing
+  /// a session can move is its own reps and weight.
+  final bool isAccessory;
+
   /// Progression track the exercise was trained under (TrainingTrack
   /// dbValue); recorded on the events this result produces.
   final String? trackId;
@@ -31,6 +37,7 @@ class SessionExerciseResult {
     required this.volume,
     this.sets = const [],
     this.wasManuallyAdded = false,
+    this.isAccessory = false,
     this.trackId,
   });
 }
@@ -49,7 +56,15 @@ class ExerciseTarget {
   final int sets;
   final int value;
 
-  const ExerciseTarget({required this.sets, required this.value});
+  /// Working weight the target is to be performed at, where the exercise
+  /// carries one. Null leaves whatever weight is already stored alone.
+  final double? weightKg;
+
+  const ExerciseTarget({
+    required this.sets,
+    required this.value,
+    this.weightKg,
+  });
 
   /// Total volume the target requires. Reaching a target is evaluated on
   /// total volume: 18 total reps satisfies 3 × 6 regardless of how the reps
@@ -199,9 +214,14 @@ class ExerciseProgressionService {
         '${WeightUnitService.unit.suffix}';
   }
 
-  /// Per-set target for standalone (non-progression) exercises, derived from
+  /// Per-set target for accessory (non-progression) exercises, derived from
   /// the catalog. Progression exercises use [currentTargetForExercise].
+  ///
+  /// A reps × weight accessory opens at the floor of the auto-progression
+  /// window whether or not it is being managed: 3 × 6 is the prescription,
+  /// and the switch decides only whether it moves from there.
   static int targetValueForExercise(Exercise exercise) {
+    if (supportsAutoProgression(exercise)) return accessoryRepFloor;
     if (isTimedExercise(exercise)) {
       if (exercise.difficulty <= 1) return 30;
       if (exercise.difficulty <= 3) return 20;
@@ -213,7 +233,75 @@ class ExerciseProgressionService {
     return 5;
   }
 
-  /// Prescribed set count for standalone (non-progression) exercises.
+  /// Where a managed accessory's reps start — the same 3 × 6 a skill-tree
+  /// step opens on. The top of the window is the live global mastery target,
+  /// exactly as it is for the tree: reach it and the weight takes a step and
+  /// the reps start again here.
+  static const int accessoryRepFloor = initialTargetReps;
+
+  /// Whether Forma can manage this movement's reps and weight for the user.
+  /// Only accessories measured in reps × weight: a movement counted in reps
+  /// alone has no weight to step, a hold is not counted in reps, and a
+  /// skill-tree step already climbs a ladder of its own.
+  static bool supportsAutoProgression(Exercise exercise) =>
+      exercise.isLibrary && exercise.isWeighted && !exercise.isTimed;
+
+  /// Whether Forma is managing this accessory right now. Absent state reads
+  /// as on: auto progression is the default, and the flag is only stored
+  /// once the user turns it off.
+  static bool autoProgressionEnabled(
+    Exercise exercise, {
+    ExerciseProgress? progress,
+  }) =>
+      supportsAutoProgression(exercise) &&
+      (progress?.autoProgression ?? true);
+
+  /// Where the accessories a program adds on its own open, per exercise:
+  /// a metric gym and an imperial gym start on different plates, so each
+  /// carries both rather than one converted into the other. A dumbbell
+  /// weight is per hand; a cable weight is the whole stack.
+  static const Map<String, ({double kg, double lb})> _accessoryOpeningWeights =
+      {
+    'lateral_raise_dumbbell': (kg: 2.5, lb: 5),
+    'face_pull': (kg: 10, lb: 20),
+    // Bodyweight to begin with; the user adds load when it stops being work.
+    'standing_calf_raise': (kg: 0, lb: 0),
+  };
+
+  /// The weight an accessory opens on when the program added it and nothing
+  /// has been lifted yet, in stored kilograms — or null for one that has no
+  /// stated start and waits for the user's first weight.
+  static double? accessoryOpeningWeightKg(Exercise exercise) {
+    final opening = _accessoryOpeningWeights[exercise.id];
+    if (opening == null) return null;
+    return WeightUnitService.unit == WeightUnit.lb
+        ? opening.lb * WeightUnitService.kgPerLb
+        : opening.kg;
+  }
+
+  /// What an accessory prescribes: where auto progression has got to when it
+  /// has moved at all, the catalog formula otherwise. The weight is the
+  /// working weight to lift: what was last set, else the exercise's stated
+  /// opening weight, else null until something sets one.
+  static ExerciseTarget accessoryTargetFor(
+    Exercise exercise, {
+    ExerciseProgress? progress,
+  }) {
+    return ExerciseTarget(
+      sets: progress?.currentTargetSets ?? setCountForExercise(exercise),
+      value: progress?.currentTargetValue ?? targetValueForExercise(exercise),
+      weightKg:
+          progress?.currentTargetWeightKg ?? accessoryOpeningWeightKg(exercise),
+    );
+  }
+
+  /// The load an accessory should ask for next: the equipment's next rung
+  /// above the weight it is at, not a fixed number of kilograms — a dumbbell
+  /// rack and a barbell do not climb the same way.
+  static double nextAccessoryWeightKg(Exercise exercise, double fromKg) =>
+      AchievableLoad.nextKg(fromKg, exercise.loadType);
+
+  /// Prescribed set count for accessory (non-progression) exercises.
   static int setCountForExercise(Exercise exercise) {
     return switch (exercise.programSection) {
       ExerciseProgramSection.warmup => 2,
@@ -269,6 +357,19 @@ class ExerciseProgressionService {
 
     for (final result in results) {
       final exercise = result.exercise;
+
+      // An accessory is not on any path: it is never mastered, activates
+      // nothing, and moves only its own reps and weight.
+      if (result.isAccessory) {
+        final change = accessoryTargetChange(
+          result: result,
+          progress: progressRows[exercise.id],
+          masterySettings: masterySettings,
+        );
+        if (change != null) targetChanges[exercise.id] = change;
+        continue;
+      }
+
       if (statusOf(exercise.id) == ExerciseStatus.mastered) continue;
 
       if (result.wasManuallyAdded &&
@@ -317,22 +418,57 @@ class ExerciseProgressionService {
           statusChanges[id] = ExerciseStatus.mastered;
         }
 
-        final resolution = _resolveSuccessor(
-          exercise,
-          activeBranchByCategory: activeBranchByCategory,
-          goalSkillIds: goalSkillIds,
-        );
-        if (resolution.choiceNeeded) {
-          branchChoicesNeeded.add(exercise.id);
-        } else if (resolution.nextExerciseId != null &&
-            statusOf(resolution.nextExerciseId!) == ExerciseStatus.inactive) {
-          statusChanges[resolution.nextExerciseId!] = ExerciseStatus.active;
-          activationsByMastered[exercise.id] = resolution.nextExerciseId!;
+        // The load this mastery proved. A rung further up that resolves to
+        // the same weight — 25% of a light user's bodyweight is the empty
+        // bar, and so was the rung before it — asks for nothing new, so it
+        // is proved too, and the next thing to train is the first rung that
+        // is actually heavier.
+        var mastered = exercise;
+        var provenLoadKg = requiredExternalWeightKg(exercise, bodyweightKg);
+        while (true) {
+          final resolution = _resolveSuccessor(
+            mastered,
+            activeBranchByCategory: activeBranchByCategory,
+            goalSkillIds: goalSkillIds,
+          );
+          if (resolution.choiceNeeded) {
+            branchChoicesNeeded.add(mastered.id);
+            break;
+          }
+          final nextId = resolution.nextExerciseId;
+          if (nextId == null || statusOf(nextId) == ExerciseStatus.mastered) {
+            break;
+          }
           if (resolution.persistCategoryId != null &&
               resolution.persistBranchId != null) {
             branchesToPersist[resolution.persistCategoryId!] =
                 resolution.persistBranchId!;
           }
+
+          final next = ExerciseCatalog.findById(nextId);
+          final nextLoadKg =
+              next == null ? null : requiredExternalWeightKg(next, bodyweightKg);
+          final sameLoad = next != null &&
+              next.isWeighted &&
+              next.weightFormula != null &&
+              provenLoadKg != null &&
+              provenLoadKg > 0 &&
+              nextLoadKg != null &&
+              nextLoadKg <= provenLoadKg + 1e-9;
+
+          if (!sameLoad) {
+            if (statusOf(nextId) == ExerciseStatus.inactive) {
+              statusChanges[nextId] = ExerciseStatus.active;
+              activationsByMastered[mastered.id] = nextId;
+            }
+            break;
+          }
+
+          // Proved, not activated: it was never the thing to train, so the
+          // feed shows it cleared and rollback returns it to where it was.
+          previousStatuses.putIfAbsent(nextId, () => statusOf(nextId));
+          statusChanges[nextId] = ExerciseStatus.mastered;
+          mastered = next;
         }
       } else if (result.volume >= current.volume) {
         targetChanges[exercise.id] = ExerciseTarget(
@@ -356,11 +492,79 @@ class ExerciseProgressionService {
     );
   }
 
-  /// Added load required by a weighted skill rung, straight from the
-  /// catalog's formula: `user_bodyweight * factor` (or bare `user_bodyweight`)
-  /// is the external load itself, and a `0…` setting ("0", "0kg, just the
-  /// bar") means the movement is done unloaded — the empty bar for a barbell
-  /// step.
+  /// What one session moves for an accessory Forma is managing, or null when
+  /// nothing about it changes.
+  ///
+  /// Two things happen here, and the first happens whether or not the session
+  /// went well:
+  ///
+  /// 1. **The weight the user actually lifted becomes the baseline.** Editing
+  ///    an accessory's weight mid-session is how people say what it should be
+  ///    — so it is taken as said, rather than read as a reason to stop
+  ///    managing the exercise.
+  /// 2. **Reaching the target moves it**, the way a skill-tree step moves:
+  ///    reaching the ceiling — the global mastery target, 3 × 8 by default —
+  ///    is checked first, from wherever the goal is, and takes the next load
+  ///    the equipment can make with the reps back at 3 × 6. Short of that,
+  ///    reaching the current goal adds one rep. Falling short changes nothing
+  ///    but the baseline.
+  ///
+  /// Returns null when auto progression is off, when the movement cannot have
+  /// it, and when the session leaves both reps and weight where they were.
+  static ExerciseTarget? accessoryTargetChange({
+    required SessionExerciseResult result,
+    ExerciseProgress? progress,
+    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+  }) {
+    final exercise = result.exercise;
+    if (!autoProgressionEnabled(exercise, progress: progress)) return null;
+
+    final current = accessoryTargetFor(exercise, progress: progress);
+    final ceiling = masterySettings.repsPerSet;
+    final lifted = result.sets.fold<double>(
+      0,
+      (heaviest, set) => set.weightKg > heaviest ? set.weightKg : heaviest,
+    );
+    final baseline = lifted > 0 ? lifted : (current.weightKg ?? 0);
+    final movedBaseline = baseline != (current.weightKg ?? 0);
+
+    // The ceiling first, so a session that overshoots the goal is not held
+    // to climbing one rep at a time.
+    if (result.volume >= current.sets * ceiling) {
+      return ExerciseTarget(
+        sets: current.sets,
+        value: accessoryRepFloor,
+        weightKg: nextAccessoryWeightKg(exercise, baseline),
+      );
+    }
+
+    if (result.volume < current.volume) {
+      // The target held. Only a hand-set weight is worth writing.
+      return movedBaseline
+          ? ExerciseTarget(
+              sets: current.sets,
+              value: current.value,
+              weightKg: baseline,
+            )
+          : null;
+    }
+
+    return ExerciseTarget(
+      sets: current.sets,
+      value: math.min(
+        current.value + targetIncrementForExercise(exercise),
+        ceiling,
+      ),
+      weightKg: movedBaseline ? baseline : null,
+    );
+  }
+
+  /// Added load required by a weighted skill rung: the catalog's formula —
+  /// `user_bodyweight * factor` (or bare `user_bodyweight`) is the external
+  /// load itself, and a `0…` setting means the movement is done unloaded —
+  /// snapped to what the rung's equipment can actually make. A quarter of
+  /// 74 kg is 18.6 kg, and the answer is the 20 kg bar; a quarter of 86 kg is
+  /// 21.5 kg, and the answer is 22.5 kg.
   static double? requiredExternalWeightKg(
     Exercise exercise,
     double? bodyweightKg,
@@ -376,7 +580,10 @@ class ExerciseProgressionService {
     if (match == null) return null;
     final factor = match.group(1);
     if (bodyweightKg == null || bodyweightKg <= 0) return null;
-    return bodyweightKg * (factor == null ? 1 : double.parse(factor));
+    return AchievableLoad.snapKg(
+      bodyweightKg * (factor == null ? 1 : double.parse(factor)),
+      exercise.loadType,
+    );
   }
 
   static bool _meetsManualShortcutMinimum(
@@ -707,6 +914,9 @@ class ExerciseProgressionService {
         entry.key,
         targetSets: entry.value.sets,
         targetValue: entry.value.value,
+        // Only an accessory's target carries a weight; a null one leaves any
+        // stored working weight alone.
+        targetWeightKg: entry.value.weightKg,
       );
     }
     for (final entry in outcome.branchesToPersist.entries) {
@@ -764,11 +974,16 @@ class ExerciseProgressionService {
       final exercise = ExerciseCatalog.findById(entry.key);
       if (exercise == null) continue;
 
-      final before = currentTargetForExercise(
-        exercise,
-        progress: progressRows[entry.key],
-        masterySettings: masterySettings,
-      );
+      // An accessory's target is read its own way — the catalog formula
+      // until auto progression has moved it — so the event says what the
+      // user was actually working to.
+      final before = exercise.isLibrary
+          ? accessoryTargetFor(exercise, progress: progressRows[entry.key])
+          : currentTargetForExercise(
+              exercise,
+              progress: progressRows[entry.key],
+              masterySettings: masterySettings,
+            );
       events.add(
         ProgressionEventInput(
           exerciseId: entry.key,

@@ -157,7 +157,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         // Auto-progression: progression exercises whose logged volume reached
         // their current target climb the ladder, and reaching the live
         // mastery target masters them and unlocks the next move in their
-        // skill path. Standalone/custom exercises are never auto-progressed.
+        // skill path. Accessory/custom exercises are never auto-progressed.
         try {
           final progress = await ProgressService().fetchAll(userId);
           final logic =
@@ -192,13 +192,19 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             goalSkillIds: goalIds,
             bodyweightKg: bodyweightKg,
             results: [
+              // Accessories come through too now: they master nothing, but
+              // an accessory Forma manages moves its own reps and weight.
               for (final exerciseEntry in widget.workout.exercises)
-                if (exerciseEntry.item.hasProgressionContext)
+                if (exerciseEntry.item.hasProgressionContext ||
+                    ExerciseProgressionService.supportsAutoProgression(
+                      exerciseEntry.exercise,
+                    ))
                   SessionExerciseResult(
                     exercise: exerciseEntry.exercise,
                     volume: exerciseEntry.sets
                         .fold<int>(0, (sum, set) => sum + set.value),
                     trackId: exerciseEntry.track.dbValue,
+                    isAccessory: !exerciseEntry.item.hasProgressionContext,
                     wasManuallyAdded:
                         exerciseEntry.item.isManualSkillTreeExercise,
                     sets: [
@@ -219,7 +225,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         }
 
         // Personal bests: compare this session's best single-set values
-        // against earlier history (any exercise, progression or standalone).
+        // against earlier history (any exercise, progression or accessory).
         try {
           await _recordPersonalBests(userId, sessionId);
         } catch (error, stackTrace) {
@@ -343,7 +349,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     );
   }
 
-  /// Summary first, then level-ups, standalone masteries, and unlocks —
+  /// Summary first, then level-ups, accessory masteries, and unlocks —
   /// the order the story reads best in. PBs live on the Progress tab.
   List<_CelebrationStep> _buildSteps(List<ProgressionEvent> events) {
     final activatedByRelated = {

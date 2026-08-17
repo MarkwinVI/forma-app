@@ -78,6 +78,27 @@ class ProgressService {
     );
   }
 
+  /// Turns auto progression on or off for one accessory. Status and target
+  /// are absent from the payload, so an existing row keeps both; a fresh row
+  /// gets the database default status ('inactive'), which is what an
+  /// accessory has always had — nothing about a library movement is
+  /// activated or mastered.
+  Future<void> setAutoProgression(
+    String userId,
+    String exerciseId, {
+    required bool enabled,
+  }) async {
+    await _client.from('user_exercise_progress').upsert(
+      {
+        'user_id': userId,
+        'exercise_id': exerciseId,
+        'auto_progression': enabled,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      onConflict: 'user_id,exercise_id',
+    );
+  }
+
   /// Writes the current incremental target for an exercise. Status is absent
   /// from the payload, so an existing row keeps its status; a fresh row gets
   /// the database default ('inactive'). [targetWeightKg] is only written when

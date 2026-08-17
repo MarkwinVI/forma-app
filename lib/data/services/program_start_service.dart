@@ -293,7 +293,9 @@ class ProgramStartPlanner {
       }
     }
     if (oneRepMaxKg == null || oneRepMaxKg <= 0) {
-      return blankStartsOnBar ? barIndex : 0;
+      return blankStartsOnBar
+          ? _lastRungAtSameLoad(path, barIndex, bodyweightKg)
+          : 0;
     }
 
     var startIndex = barIndex;
@@ -310,6 +312,40 @@ class ProgramStartPlanner {
       startIndex = index;
     }
     return startIndex;
+  }
+
+  /// The last rung from [index] on that asks for the same load as the rung at
+  /// [index]. Two rungs can resolve to one weight once loads are snapped to
+  /// what the bar can hold — 25% of a light user's bodyweight is the empty
+  /// bar, and so is 10% — and starting on the first of them would only mean
+  /// lifting the same thing twice.
+  static int _lastRungAtSameLoad(
+    List<String> path,
+    int index,
+    double? bodyweightKg,
+  ) {
+    final first = ExerciseCatalog.findById(path[index]);
+    final loadKg = first == null
+        ? null
+        : ExerciseProgressionService.requiredExternalWeightKg(
+            first,
+            bodyweightKg,
+          );
+    if (loadKg == null) return index;
+
+    var last = index;
+    for (var next = index + 1; next < path.length; next++) {
+      final exercise = ExerciseCatalog.findById(path[next]);
+      final nextLoadKg = exercise == null
+          ? null
+          : ExerciseProgressionService.requiredExternalWeightKg(
+              exercise,
+              bodyweightKg,
+            );
+      if (nextLoadKg == null || nextLoadKg > loadKg + 1e-9) break;
+      last = next;
+    }
+    return last;
   }
 }
 

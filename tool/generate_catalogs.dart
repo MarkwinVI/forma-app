@@ -59,6 +59,27 @@ const _openEndedNodes = <String>{
   'barbell_squat_barbell_squat',
 };
 
+/// What a weighted movement's load goes on, from the sheet's equipment
+/// column. A bar of any kind — straight, EZ, trap, or a bar in a landmine —
+/// starts at the bar's own weight; a dumbbell comes off a rack of fixed
+/// pieces; everything else (a belt, a stack, a kettlebell, a Smith machine,
+/// whose bar is counterbalanced and starts near nothing) starts at zero and
+/// climbs by the smallest plate pair.
+String? _loadType(Map<String, String> row) {
+  final type = _type(row);
+  if (!type.contains('weight')) return null;
+  final equipment = row['Equipment']!.trim().toLowerCase();
+  final first = equipment.split(';').first.trim();
+  if (first == 'smith machine') return 'plates';
+  if (first.contains('barbell') ||
+      first.contains('ez bar') ||
+      first.contains('trap bar')) {
+    return 'barbell';
+  }
+  if (first == 'dumbbell') return 'dumbbell';
+  return 'plates';
+}
+
 /// The library is outside the progressions, so every movement in it is
 /// open-ended, and none of them is a rung with a difficulty or a place in a
 /// tree. The sheet has no column for any of that.
@@ -147,6 +168,10 @@ String _steps(
     if (weightFormula.isNotEmpty) {
       buffer.writeln('      weightFormula: ${dartString(weightFormula)},');
     }
+    final loadType = _loadType(movement);
+    if (loadType != null && loadType != 'plates') {
+      buffer.writeln('      loadType: LoadType.$loadType,');
+    }
     buffer.writeln('    ),');
   }
   return buffer.toString();
@@ -174,6 +199,10 @@ String _movements(Iterable<Map<String, String>> rows) {
     if (type.startsWith('timed')) buffer.writeln('      isTimed: true,');
     buffer.writeln('      isLoaded: true,');
     if (type.contains('weight')) buffer.writeln('      isWeighted: true,');
+    final loadType = _loadType(row);
+    if (loadType != null && loadType != 'plates') {
+      buffer.writeln('      loadType: LoadType.$loadType,');
+    }
     buffer.writeln('    ),');
   }
   return buffer.toString();

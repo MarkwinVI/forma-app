@@ -151,6 +151,18 @@ const List<ExerciseMuscleGroupSection> kExerciseMuscleGroupSections = [
   ]),
 ];
 
+/// How a weighted movement takes its load — which decides what weights can
+/// actually be put on it. A bar starts at the bar and climbs a plate pair at
+/// a time; a dumbbell rack is a row of fixed pieces; plates on a belt, a pin
+/// in a stack, or a kettlebell start at nothing and climb by the smallest
+/// plate pair. Read from the sheet's equipment column, and meaningless for
+/// anything trained at bodyweight.
+enum LoadType {
+  barbell,
+  dumbbell,
+  plates,
+}
+
 class Exercise {
   final String id;
   final ExerciseCategory category;
@@ -209,6 +221,11 @@ class Exercise {
   /// `user_bodyweight`.
   final String? weightFormula;
 
+  /// What the load goes on, for a weighted movement — see [LoadType]. Only
+  /// stated where [isWeighted]; a bodyweight movement keeps the default and
+  /// never reads it.
+  final LoadType loadType;
+
   const Exercise({
     required this.id,
     required this.category,
@@ -229,5 +246,34 @@ class Exercise {
     this.isLoaded = false,
     this.libraryId = '',
     this.weightFormula,
+    this.loadType = LoadType.plates,
   });
+
+  /// The same movement in a different place in the program. Every fact
+  /// about the movement — what it is measured in, what it loads, where it
+  /// came from — travels with it; only its section changes.
+  Exercise copyWith({ExerciseProgramSection? programSection}) {
+    return Exercise(
+      id: id,
+      category: category,
+      skillCategoryId: skillCategoryId,
+      branchId: branchId,
+      name: name,
+      description: description,
+      difficulty: difficulty,
+      treeOrder: treeOrder,
+      prerequisiteIds: prerequisiteIds,
+      programSection: programSection ?? this.programSection,
+      imageUrl: imageUrl,
+      isLibrary: isLibrary,
+      primaryMuscles: primaryMuscles,
+      secondaryMuscles: secondaryMuscles,
+      isTimed: isTimed,
+      isWeighted: isWeighted,
+      isLoaded: isLoaded,
+      libraryId: libraryId,
+      weightFormula: weightFormula,
+      loadType: loadType,
+    );
+  }
 }

@@ -590,14 +590,16 @@ void main() {
       final path = category.pathFor('weighted');
       final active = path[3];
       final destination = ExerciseCatalog.findById(path[4])!;
+      // 15% of 80 kg is 12 kg; on a belt that loads by the plate pair, the
+      // nearest thing to it is 12.5 kg — and that is what the rung asks for.
       expect(
         ExerciseProgressionService.requiredExternalWeightKg(destination, 80),
-        closeTo(12, 0.001),
+        closeTo(12.5, 0.001),
       );
       final rows = {active: progressWith(exerciseId: active)};
 
       final below = ExerciseProgressionService.computeSessionOutcome(
-        results: [manualResult(destination, weightKg: 11.5)],
+        results: [manualResult(destination, weightKg: 12)],
         progressRows: rows,
         activeBranchByCategory: {category.id: 'weighted'},
         bodyweightKg: 80,
@@ -605,7 +607,7 @@ void main() {
       expect(below.isEmpty, isTrue);
 
       final met = ExerciseProgressionService.computeSessionOutcome(
-        results: [manualResult(destination, weightKg: 12)],
+        results: [manualResult(destination, weightKg: 12.5)],
         progressRows: rows,
         activeBranchByCategory: {category.id: 'weighted'},
         bodyweightKg: 80,

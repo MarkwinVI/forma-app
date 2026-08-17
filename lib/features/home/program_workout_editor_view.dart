@@ -15,6 +15,7 @@ import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
@@ -73,6 +74,10 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   late Map<String, ExerciseStatus> _progress = widget.progressMap;
   late List<SkillTrack> _skillTracks = widget.skillTracks;
 
+  /// exercise id → whether the user has turned auto progression off. Only
+  /// what they have said is here; everything else is the default, on.
+  Map<String, bool> _autoProgression = const {};
+
   String get _typeName => programWorkoutTypeName(widget.sessionType);
 
   @override
@@ -80,6 +85,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     super.initState();
     _items = _loadDay();
     _initialSerialized = _serialized();
+    _loadAutoProgression();
   }
 
   List<ProgramDayItem> _loadDay() => ProgramSessionPlan.loadDay(
@@ -182,6 +188,14 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         subtitle: _itemSubtitle(item),
         isProgression: item.kind == ProgramDayItemKind.progression,
         canReorder: _items.length > 1,
+        autoProgression: _autoProgressionFor(item),
+        autoProgressionEditable: switch (_accessoryExercise(item)) {
+          final exercise? =>
+            ExerciseProgressionService.supportsAutoProgression(exercise),
+          null => false,
+        },
+        onAutoProgressionChanged: (enabled) =>
+            _setAutoProgression(item, enabled),
       ),
     );
     if (action == null || !mounted) return;
@@ -238,6 +252,71 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     }
   }
 
+  /// Reads which accessories the user has taken off auto progression. Until
+  /// it lands every accessory reads as managed, which is the default anyway,
+  /// so the sheet is never wrong for long and never blocks on a fetch.
+  Future<void> _loadAutoProgression() async {
+    try {
+      // Everything is inside the guard, the session lookup included: the page
+      // opens with or without this, so nothing here may take it down.
+      final userId = AuthService().currentUser?.id;
+      if (userId == null) return;
+      final rows = await ProgressService().fetchAll(userId);
+      if (!mounted) return;
+      setState(() {
+        _autoProgression = {
+          for (final row in rows)
+            if (row.autoProgression != null) row.exerciseId: row.autoProgression!,
+        };
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Failed to read auto progression: $error\n$stackTrace');
+    }
+  }
+
+  /// The catalog exercise behind an accessory row, or null for a progression
+  /// (its tree owns the exercise) and for a row whose movement is unknown.
+  Exercise? _accessoryExercise(ProgramDayItem item) {
+    if (item.kind == ProgramDayItemKind.progression) return null;
+    final exerciseId = item.exerciseId;
+    return exerciseId == null ? null : ExerciseCatalog.findById(exerciseId);
+  }
+
+  /// Whether Forma is managing this row between sessions. A progression
+  /// always is; an accessory is unless it cannot be, or the user said stop.
+  bool _autoProgressionFor(ProgramDayItem item) {
+    final exercise = _accessoryExercise(item);
+    if (exercise == null) return item.kind == ProgramDayItemKind.progression;
+    if (!ExerciseProgressionService.supportsAutoProgression(exercise)) {
+      return false;
+    }
+    return _autoProgression[exercise.id] ?? true;
+  }
+
+  Future<void> _setAutoProgression(ProgramDayItem item, bool enabled) async {
+    final exercise = _accessoryExercise(item);
+    if (exercise == null) return;
+    setState(
+        () => _autoProgression = {..._autoProgression, exercise.id: enabled});
+
+    try {
+      final userId = AuthService().currentUser?.id;
+      if (userId == null) return;
+      await ProgressService().setAutoProgression(
+        userId,
+        exercise.id,
+        enabled: enabled,
+      );
+    } catch (error, stackTrace) {
+      // Put the switch back rather than show a saved setting that is not.
+      if (mounted) {
+        setState(() =>
+            _autoProgression = {..._autoProgression, exercise.id: !enabled});
+      }
+      debugPrint('Failed to save auto progression: $error\n$stackTrace');
+    }
+  }
+
   Future<void> _openReorder() async {
     if (_items.length < 2) return;
 
@@ -251,14 +330,11 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
                   ReorderExerciseEntry(
                     id: item.id,
                     name: item.name,
-                    subtitle: _itemSubtitle(item),
                     icon: programPatternIcon(item.category),
                   ),
               ],
             ),
           ],
-          footnote: 'Exercises run in this order every time this workout '
-              'comes up.',
         ),
       ),
     );
@@ -391,7 +467,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   /// the row behaves, so it is what the row says.
   String _itemSubtitle(ProgramDayItem item) {
     if (item.kind != ProgramDayItemKind.progression) {
-      return 'Standalone exercise';
+      return 'Accessory exercise';
     }
 
     final category = item.skillCategoryId == null
@@ -479,7 +555,7 @@ class _ItemRow extends StatelessWidget {
 }
 
 /// Where the exercise came from, worn as a tag: an accent "progression" chip
-/// linking it to its skill tree, or a muted "standalone" chip for hand-added
+/// linking it to its skill tree, or a muted "accessory" chip for supporting
 /// work that nothing schedules or advances.
 class _SourceChip extends StatelessWidget {
   final ProgramDayItem item;
@@ -494,7 +570,7 @@ class _SourceChip extends StatelessWidget {
         : SkillCategoryCatalog.findById(item.skillCategoryId!);
     final label = fromTree
         ? '${category?.title ?? 'Skill Tree'} Progression'
-        : 'Standalone';
+        : 'Accessory';
     final color =
         fromTree ? const Color(0xFF9DB9FF) : AppColors.textSecondary;
 
@@ -543,18 +619,52 @@ enum _ItemAction { editProgression, reorder, remove }
 /// The row's options: what you can do to the workout. What the exercise *is*
 /// belongs to its own page, which the row's name opens. A progression also
 /// offers its tree — the progression itself is edited there, not here.
-class _ItemMenuSheet extends StatelessWidget {
+class _ItemMenuSheet extends StatefulWidget {
   final String title;
   final String subtitle;
   final bool isProgression;
   final bool canReorder;
+
+  /// Whether Forma manages this exercise's reps and weight. A skill-tree
+  /// step always does — its ladder is the whole point — so the row states
+  /// that rather than hiding it.
+  final bool autoProgression;
+
+  /// Only a reps × weight accessory is the user's to decide. Everything else
+  /// shows the row and cannot touch it.
+  final bool autoProgressionEditable;
+  final ValueChanged<bool> onAutoProgressionChanged;
 
   const _ItemMenuSheet({
     required this.title,
     required this.subtitle,
     required this.isProgression,
     required this.canReorder,
+    required this.autoProgression,
+    required this.autoProgressionEditable,
+    required this.onAutoProgressionChanged,
   });
+
+  @override
+  State<_ItemMenuSheet> createState() => _ItemMenuSheetState();
+}
+
+class _ItemMenuSheetState extends State<_ItemMenuSheet> {
+  late bool _autoProgression = widget.autoProgression;
+
+  String get title => widget.title;
+  String get subtitle => widget.subtitle;
+  bool get isProgression => widget.isProgression;
+  bool get canReorder => widget.canReorder;
+  bool get autoProgression => _autoProgression;
+  bool get autoProgressionEditable => widget.autoProgressionEditable;
+
+  /// Flipped here and saved by the editor, so the switch answers at once and
+  /// the sheet stays open — turning it off is not a reason to leave.
+  void onAutoProgressionChanged(bool value) {
+    setState(() => _autoProgression = value);
+    widget.onAutoProgressionChanged(value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -593,8 +703,77 @@ class _ItemMenuSheet extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            SurfaceCard(
+              child: _AutoProgressionRow(
+                enabled: autoProgressionEditable,
+                value: autoProgression,
+                onChanged: onAutoProgressionChanged,
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Auto progression, stated rather than buried: what Forma does to this
+/// exercise between sessions, and — for a reps × weight accessory — the
+/// switch that stops it.
+class _AutoProgressionRow extends StatelessWidget {
+  final bool enabled;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _AutoProgressionRow({
+    required this.enabled,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 14, 8, 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Auto progression',
+                  style: TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                    color:
+                        enabled ? AppColors.textPrimary : AppColors.textMuted,
+                    letterSpacing: -0.25,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Forma automatically manages your reps and weight as you '
+                  'progress.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    color: enabled
+                        ? AppColors.textSecondary
+                        : AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch(
+            value: value,
+            activeTrackColor: AppColors.accentPrimary,
+            onChanged: enabled ? onChanged : null,
+          ),
+        ],
       ),
     );
   }
@@ -687,7 +866,7 @@ class _AddExerciseRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             const Text(
-              'Add standalone exercise',
+              'Add accessory exercise',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w700,

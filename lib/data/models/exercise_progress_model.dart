@@ -1,5 +1,4 @@
 import 'exercise_model.dart';
-import '../catalog/exercise_id_migration.dart';
 
 class ExerciseProgress {
   final String exerciseId;
@@ -14,9 +13,16 @@ class ExerciseProgress {
   /// Per-set value of the current target: reps, or seconds when timed.
   final int? currentTargetValue;
 
-  /// Working weight for the loaded lifts (barbell squat, Romanian deadlift).
-  /// Null for everything trained at bodyweight.
+  /// Working weight for the loaded lifts (barbell squat, Romanian deadlift),
+  /// and for an accessory Forma progresses. Null for everything trained at
+  /// bodyweight.
   final double? currentTargetWeightKg;
+
+  /// Whether Forma manages this accessory's reps and weight. Null is the
+  /// default and reads as on — the flag is only written when the user turns
+  /// auto progression off, and it says nothing about exercises that cannot
+  /// have it in the first place.
+  final bool? autoProgression;
 
   const ExerciseProgress({
     required this.exerciseId,
@@ -25,11 +31,12 @@ class ExerciseProgress {
     this.currentTargetSets,
     this.currentTargetValue,
     this.currentTargetWeightKg,
+    this.autoProgression,
   });
 
   factory ExerciseProgress.fromMap(Map<String, dynamic> map) {
     return ExerciseProgress(
-      exerciseId: ExerciseIdMigration.resolve(map['exercise_id'] as String),
+      exerciseId: map['exercise_id'] as String,
       // 'skipped' predates the migration that retired it; it read as cleared,
       // so a row the migration has not converted yet reads as mastered.
       status: map['status'] == 'skipped'
@@ -40,6 +47,7 @@ class ExerciseProgress {
       currentTargetValue: map['current_target_value'] as int?,
       currentTargetWeightKg:
           (map['current_target_weight_kg'] as num?)?.toDouble(),
+      autoProgression: map['auto_progression'] as bool?,
     );
   }
 
@@ -48,6 +56,7 @@ class ExerciseProgress {
     int? currentTargetSets,
     int? currentTargetValue,
     double? currentTargetWeightKg,
+    bool? autoProgression,
     DateTime? updatedAt,
   }) {
     return ExerciseProgress(
@@ -58,6 +67,7 @@ class ExerciseProgress {
       currentTargetValue: currentTargetValue ?? this.currentTargetValue,
       currentTargetWeightKg:
           currentTargetWeightKg ?? this.currentTargetWeightKg,
+      autoProgression: autoProgression ?? this.autoProgression,
     );
   }
 }

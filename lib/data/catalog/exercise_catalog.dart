@@ -1206,6 +1206,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 0.25',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_50',
@@ -1222,6 +1223,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 0.50',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_75',
@@ -1238,6 +1240,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 0.75',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_100',
@@ -1254,6 +1257,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_125',
@@ -1270,6 +1274,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.25',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_150',
@@ -1286,6 +1291,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.5',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_175',
@@ -1302,6 +1308,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.75',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_barbell_plus_200',
@@ -1318,6 +1325,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 2',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'squat_box_pistol_squat_knee_height',
@@ -1375,6 +1383,7 @@ class ExerciseCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       libraryId: 'pistol_squat_counterweighted',
       isWeighted: true,
+      loadType: LoadType.dumbbell,
     ),
     Exercise(
       id: 'squat_pistol_squat',
@@ -2025,6 +2034,7 @@ class ExerciseCatalog {
       libraryId: 'squat_barbell',
       isLoaded: true,
       isWeighted: true,
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_romanian_deadlift_bodyweight',
@@ -2110,6 +2120,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 0.25',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_50_bw',
@@ -2126,6 +2137,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 0.50',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_75_bw',
@@ -2142,6 +2154,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 0.75',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_100_bw',
@@ -2158,6 +2171,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.00',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_125_bw',
@@ -2174,6 +2188,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.25',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_150_bw',
@@ -2190,6 +2205,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.50',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_175_bw',
@@ -2206,6 +2222,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 1.75',
+      loadType: LoadType.barbell,
     ),
     Exercise(
       id: 'hinge_rdl_200_bw',
@@ -2222,6 +2239,7 @@ class ExerciseCatalog {
       libraryId: 'romanian_deadlift_barbell',
       isWeighted: true,
       weightFormula: 'user_bodyweight * 2.00',
+      loadType: LoadType.barbell,
     ),
 
   ];
