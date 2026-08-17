@@ -433,7 +433,10 @@ class WheelExercisePreview extends StatelessWidget {
                         duration: const Duration(milliseconds: 400),
                         curve: Curves.easeOut,
                         widthFactor: barPct,
-                        child: DecoratedBox(
+                        // A Container, not a bare DecoratedBox: with no child
+                        // a DecoratedBox takes the smallest size it is
+                        // offered — zero high — and the fill vanishes.
+                        child: Container(
                           decoration: BoxDecoration(
                             color: barColor,
                             borderRadius: BorderRadius.circular(99),
@@ -467,9 +470,11 @@ class WheelExercisePreview extends StatelessWidget {
         if (data == null) {
           text = 'Training';
         } else {
+          // "18 of 24 reps (total reps)": where the last session landed
+          // against the target, counted across the whole session.
           final unit = data.isTimed ? 'sec' : 'reps';
-          text = 'Training · Last ${data.lastSessionVolume} of '
-              '${data.targetVolume} $unit (total)';
+          text = 'Training · ${data.lastSessionVolume} of '
+              '${data.targetVolume} $unit (total $unit)';
         }
         color = kWheelTrainingBlue;
       case WheelNodeState.available:

@@ -8,13 +8,11 @@ class ReorderExerciseEntry {
   /// Stable identity — returned to the caller in the new order.
   final String id;
   final String name;
-  final String subtitle;
   final IconData icon;
 
   const ReorderExerciseEntry({
     required this.id,
     required this.name,
-    required this.subtitle,
     required this.icon,
   });
 }
@@ -35,14 +33,13 @@ class ReorderExercisesSection {
 /// them — or null when nothing was saved.
 class ReorderExercisesPage extends StatefulWidget {
   final List<ReorderExercisesSection> sections;
-  final String footnote;
 
-  const ReorderExercisesPage({
-    super.key,
-    required this.sections,
-    this.footnote = 'Exercises stay inside their block — skill work always '
-        'comes before the main lifts.',
-  });
+  /// A line under the list, where there is something the order needs said
+  /// about it. Most of the time the list speaks for itself.
+  final String? footnote;
+
+  const ReorderExercisesPage(
+      {super.key, required this.sections, this.footnote});
 
   /// Total rows across every section; fewer than two means there is nothing
   /// to reorder and the page is not worth opening.
@@ -153,17 +150,18 @@ class _ReorderExercisesPageState extends State<ReorderExercisesPage> {
                       ),
                     ),
                   ],
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(2, 14, 2, 0),
-                    child: Text(
-                      widget.footnote,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textMuted,
-                        height: 1.5,
+                  if (widget.footnote case final footnote?)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(2, 14, 2, 0),
+                      child: Text(
+                        footnote,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                          height: 1.5,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -203,7 +201,7 @@ class _ReorderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
+      height: 56,
       decoration: BoxDecoration(
         border: index > 0
             ? const Border(top: BorderSide(color: AppColors.divider))
@@ -215,32 +213,16 @@ class _ReorderRow extends StatelessWidget {
           IconTile(icon: entry.icon, size: 38),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.15,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  entry.subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            child: Text(
+              entry.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.15,
+              ),
             ),
           ),
           ReorderableDragStartListener(

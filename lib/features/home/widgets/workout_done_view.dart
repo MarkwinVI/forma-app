@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
 
 /// Post-workout "session complete" state of the Train tab — a celebratory
 /// burst (expanding rings, twinkling sparks, a popping check) over a green
-/// glow, a mono status line, a "view workout" action, and the next session.
-/// The insight block is rendered separately by the caller.
+/// glow, a mono status line, and the next session. The way into the record
+/// is pinned under it by the caller, where every day keeps its actions, so
+/// the burst is sized to leave the whole thing sitting just above that.
 class WorkoutDoneView extends StatefulWidget {
   /// Next training session title (e.g. "Upper Day") and how far away it is
   /// (e.g. "tomorrow"). Both null hides the "next up" row.
   final String? nextTitle;
   final String? nextWhen;
-  final VoidCallback? onViewWorkout;
 
   const WorkoutDoneView({
     super.key,
     this.nextTitle,
     this.nextWhen,
-    this.onViewWorkout,
   });
 
   @override
@@ -66,7 +64,7 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
         // week strip above.
         const SizedBox(height: 8),
         SizedBox(
-          height: 244,
+          height: 176,
           child: AnimatedBuilder(
             animation: Listenable.merge([_pop, _rings, _sparks]),
             builder: (context, _) => _Burst(
@@ -83,29 +81,6 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
           'SESSION COMPLETE',
           style: monoStyle(size: 11, letterSpacing: 1.65, color: AppColors.green),
         ),
-        const SizedBox(height: 30),
-        if (widget.onViewWorkout != null)
-          Pressable(
-            onTap: widget.onViewWorkout,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.divider),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'View workout',
-                style: TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.17,
-                ),
-              ),
-            ),
-          ),
         if (widget.nextTitle != null) _nextUpRow(),
       ],
     );
@@ -115,7 +90,7 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
   /// not somewhere to go from here.
   Widget _nextUpRow() {
     return Padding(
-      padding: const EdgeInsets.only(top: 22, bottom: 2),
+      padding: const EdgeInsets.only(top: 18, bottom: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,

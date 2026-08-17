@@ -197,6 +197,35 @@ void main() {
       }
     });
 
+    test('a configured accessory keeps what the catalog says it is', () {
+      // A saved day names its exercises by id; what comes back must be the
+      // catalog movement whole — a face pull is lifted for reps × weight, a
+      // plank is held for time — or the live workout draws the wrong row.
+      final recommendation = service.buildToday(
+        progressMap: const {},
+        sessionItemsConfig: {
+          'full_body': {
+            'strength': [
+              {'kind': 'exercise', 'exercise_id': 'face_pull'},
+              {'kind': 'exercise', 'exercise_id': 'plank'},
+            ],
+          },
+        },
+      );
+
+      final facePull = recommendation.items
+          .firstWhere((item) => item.exercise.id == 'face_pull')
+          .exercise;
+      final plank = recommendation.items
+          .firstWhere((item) => item.exercise.id == 'plank')
+          .exercise;
+
+      expect(facePull.isWeighted, isTrue);
+      expect(facePull.isLibrary, isTrue);
+      expect(facePull.primaryMuscles, isNotEmpty);
+      expect(plank.isTimed, isTrue);
+    });
+
     test('configured progression picks the current exercise from the path',
         () {
       final recommendation = service.buildToday(

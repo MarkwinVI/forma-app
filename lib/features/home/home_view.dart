@@ -168,7 +168,7 @@ class _HomeViewState extends State<HomeView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            "Couldn't load your training data. Pull down to retry.",
+            "Couldn't load your training data. Switch tabs and back to retry.",
           ),
         ),
       );
@@ -391,6 +391,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _startWorkout(DailyTrainingRecommendation recommendation) async {
+    final openedAt = _devClockService.now();
     // The workout flow takes over the whole screen, above the tab bar.
     await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
@@ -401,6 +402,15 @@ class _HomeViewState extends State<HomeView> {
     );
     // A finished workout changes today's card — re-fetch.
     await _loadHomeData();
+    // A day started early is done, and there is nothing left to read on it:
+    // the tab comes back to today, where the next thing to do is. Leaving the
+    // workout unfinished stays where it was.
+    final finished = _pastWorkouts.any(
+      (workout) => workout.loggedAt.isAfter(openedAt),
+    );
+    if (finished && _selectedDate != null && mounted) {
+      setState(() => _selectedDate = null);
+    }
   }
 
   Future<void> _openAlternateWorkoutOptions(
@@ -448,14 +458,7 @@ class _HomeViewState extends State<HomeView> {
         child: _loading
             ? const Center(child: LoadingIndicator())
             : !_hasProgram || snapshot == null
-                ? RefreshIndicator(
-                    color: AppColors.accentPrimary,
-                    backgroundColor: AppColors.surface,
-                    onRefresh: _loadHomeData,
-                    child: HomeEmptyState(
-                      onCreateProgram: _openProgramSetup,
-                    ),
-                  )
+                ? HomeEmptyState(onCreateProgram: _openProgramSetup)
                 : _buildTab(snapshot),
       ),
     );
@@ -539,33 +542,30 @@ class _HomeViewState extends State<HomeView> {
       return _restBody(snapshot, presentation);
     }
 
-    return RefreshIndicator(
-      color: AppColors.accentPrimary,
-      backgroundColor: AppColors.surface,
-      onRefresh: _loadHomeData,
-      child: SingleChildScrollView(
-        // Attached to the shell's per-tab controller, so re-tapping the tab
-        // scrolls back to the top.
-        primary: true,
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (presentation.eyebrow != null)
-                DayEyebrow(
-                  text: presentation.eyebrow!,
-                  color: presentation.view == TrainDayView.missed
-                      ? AppColors.red
-                      : AppColors.textMuted,
-                ),
-              if (presentation.isToday)
-                _buildContent(snapshot)
-              else
-                ..._dayContent(snapshot, presentation, workout),
-            ],
-          ),
+    // No pull-to-refresh: the tab re-reads itself after every workout and
+    // every edit, and a pulled list only ever left the day hanging off the
+    // ribbon with a black band under it.
+    return SingleChildScrollView(
+      // Attached to the shell's per-tab controller, so re-tapping the tab
+      // scrolls back to the top.
+      primary: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (presentation.eyebrow != null)
+              DayEyebrow(
+                text: presentation.eyebrow!,
+                color: presentation.view == TrainDayView.missed
+                    ? AppColors.red
+                    : AppColors.textMuted,
+              ),
+            if (presentation.isToday)
+              _buildContent(snapshot)
+            else
+              ..._dayContent(snapshot, presentation, workout),
+          ],
         ),
       ),
     );
@@ -615,7 +615,15 @@ class _HomeViewState extends State<HomeView> {
   ) {
     if (presentation.isToday) {
       if (snapshot.metrics.today.isRestDay) return null;
-      if (snapshot.metrics.today.completed != null) return null;
+      // Done: the one thing left is the record, pinned where Start was so
+      // the finished day keeps a normal day's shape.
+      if (snapshot.metrics.today.completed != null) {
+        if (_pastWorkouts.isEmpty) return null;
+        return DayActions(
+          primaryLabel: 'View workout',
+          onPrimary: _openSelectedWorkoutDetail,
+        );
+      }
       return TodayWorkoutActions(
         summary: snapshot.metrics.today,
         onStart: () => _startWorkout(snapshot.recommendation),
@@ -703,14 +711,10 @@ class _HomeViewState extends State<HomeView> {
           snapshot.selectedDay.date,
           snapshot.ribbonDays,
         );
-        // The same screen the day itself ended on: the burst and the way
-        // into the record.
+        // The same screen the day itself ended on; the way into the record
+        // is pinned under it, as it is on the day itself.
         return [
-          WorkoutDoneView(
-            nextTitle: nextTitle,
-            nextWhen: nextWhen,
-            onViewWorkout: () => _openPastWorkout(workout),
-          ),
+          WorkoutDoneView(nextTitle: nextTitle, nextWhen: nextWhen),
         ];
       case TrainDayView.rest:
       case TrainDayView.today:
@@ -731,9 +735,18 @@ class _HomeViewState extends State<HomeView> {
           secondaryLabel: 'Back to today',
           onSecondary: _backToToday,
         );
-      // The finished screen carries its own way into the record, so the only
-      // thing pinned under it is the way back.
+      // A finished day pins its way into the record over the way back.
       case TrainDayView.logged:
+        final workout = _workoutForDate(
+          snapshot.selectedDay.date,
+          plannedOnly: true,
+        );
+        return DayActions(
+          primaryLabel: workout == null ? null : 'View workout',
+          onPrimary: workout == null ? null : () => _openPastWorkout(workout),
+          secondaryLabel: 'Back to today',
+          onSecondary: _backToToday,
+        );
       // A missed day is read, not acted on: the band already says where its
       // session went, so the only thing left to do here is leave.
       case TrainDayView.missed:
@@ -842,12 +855,7 @@ class _HomeViewState extends State<HomeView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (completed != null) ...[
-          WorkoutDoneView(
-            nextTitle: nextTitle,
-            nextWhen: nextWhen,
-            onViewWorkout:
-                _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
-          ),
+          WorkoutDoneView(nextTitle: nextTitle, nextWhen: nextWhen),
         ] else ...[
           // No spacer: the eyebrow sets the gap above the title, the same
           // gap every other day of the week gets.

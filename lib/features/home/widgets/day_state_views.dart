@@ -174,15 +174,19 @@ class DayNameList extends StatelessWidget {
 class DayActions extends StatelessWidget {
   final String? primaryLabel;
   final VoidCallback? onPrimary;
-  final String secondaryLabel;
-  final VoidCallback onSecondary;
+
+  /// The quiet text action under the button, or null when the day has
+  /// nowhere else to send you — today, once it is done, pins only its way
+  /// into the record.
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   const DayActions({
     super.key,
     this.primaryLabel,
     this.onPrimary,
-    required this.secondaryLabel,
-    required this.onSecondary,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   @override
@@ -193,11 +197,12 @@ class DayActions extends StatelessWidget {
       children: [
         if (primaryLabel != null)
           _QuietButton(label: primaryLabel!, onTap: onPrimary),
-        _TextAction(
-          label: secondaryLabel,
-          onTap: onSecondary,
-          topPadding: primaryLabel == null ? 0 : 14,
-        ),
+        if (secondaryLabel != null)
+          _TextAction(
+            label: secondaryLabel!,
+            onTap: onSecondary ?? () {},
+            topPadding: primaryLabel == null ? 0 : 14,
+          ),
       ],
     );
   }

@@ -422,24 +422,15 @@ class TrainingProgramService {
     }
   }
 
+  /// The catalog movement, placed in this part of the program. Built field by
+  /// field once, this used to drop everything it did not name — a configured
+  /// face pull came out unweighted, a configured hold came out counted in
+  /// reps — so it goes through the model's own copy now.
   Exercise _copyExercise(
     Exercise exercise, {
     required ExerciseProgramSection programSection,
-  }) {
-    return Exercise(
-      id: exercise.id,
-      category: exercise.category,
-      skillCategoryId: exercise.skillCategoryId,
-      branchId: exercise.branchId,
-      name: exercise.name,
-      description: exercise.description,
-      difficulty: exercise.difficulty,
-      treeOrder: exercise.treeOrder,
-      prerequisiteIds: exercise.prerequisiteIds,
-      programSection: programSection,
-      imageUrl: exercise.imageUrl,
-    );
-  }
+  }) =>
+      exercise.copyWith(programSection: programSection);
 
   List<TrainingSessionType> scheduleCycleFor({
     required TrainingProgramType programType,

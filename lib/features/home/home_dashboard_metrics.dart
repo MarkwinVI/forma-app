@@ -1075,6 +1075,10 @@ class HomeDashboardMetricsCalculator {
           _latestSessionVolumeForExercise(currentExercise.id, workouts);
       final previousSessionVolume =
           latestVolumes.length > 1 ? latestVolumes[1] : lastSessionVolume;
+      // The catalog says what the movement is measured in. History only
+      // confirms it — and a hold nobody has logged yet is still a hold, so
+      // its "0 of 60" reads in seconds, not reps.
+      final isTimed = currentExercise.isTimed || performance.isTimed;
       final progressPercent = targetVolume <= 0
           ? 0.0
           : (lastSessionVolume / targetVolume).clamp(0.0, 1.0);
@@ -1096,23 +1100,23 @@ class HomeDashboardMetricsCalculator {
           lastSessionVolume: lastSessionVolume,
           targetLabel: _volumeLabel(
             value: targetVolume,
-            isTimed: performance.isTimed,
+            isTimed: isTimed,
           ),
           lastLabel: _volumeLabel(
             value: lastSessionVolume,
-            isTimed: performance.isTimed,
+            isTimed: isTimed,
           ),
           lastSessionDeltaLabel: _sessionDeltaLabel(
             current: lastSessionVolume,
             previous: previousSessionVolume,
-            isTimed: performance.isTimed,
+            isTimed: isTimed,
           ),
           lastSessionTrend: _sessionTrend(
             current: lastSessionVolume,
             previous: previousSessionVolume,
           ),
           progressPercent: progressPercent,
-          isTimed: performance.isTimed,
+          isTimed: isTimed,
           stages: _buildJourneySkillStages(
             exerciseIds: option.exerciseIds,
             progressMap: progressMap,
@@ -1379,7 +1383,7 @@ class HomeDashboardMetricsCalculator {
       ExerciseProgressionService.isTimedExercise(exercise);
 
   /// Prescribed target for a planned item: the progression ladder target for
-  /// progression items, the catalog formula for standalone exercises.
+  /// progression items, the catalog formula for accessory exercises.
   static ExerciseTarget _prescribedTargetFor(
     TrainingRecommendationItem item, {
     Map<String, ExerciseProgress> progressEntries = const {},
