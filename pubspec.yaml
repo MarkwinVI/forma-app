@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  clock: ^1.1.1
   supabase_flutter: ^2.5.0
   posthog_flutter: ^5.36.1
   sign_in_with_apple: ^6.1.0

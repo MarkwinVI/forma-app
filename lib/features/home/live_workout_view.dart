@@ -27,6 +27,7 @@ import '../exercises/exercise_detail_view.dart';
 import '../exercises/exercise_picker_view.dart';
 import 'completed_workout_model.dart';
 import 'finished_workout_view.dart';
+import 'hold_timer_view.dart';
 import 'program_day_items.dart';
 
 const _workoutDanger = Color(0xFFF2564A);
@@ -585,6 +586,30 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     } else if (_activeRestTimer?.exerciseId == item.exercise.id) {
       _clearActiveRestTimer();
     }
+  }
+
+  /// Opens the full-screen hold timer for a timed set and, if the user logs
+  /// from it, records the held seconds and ticks the set — which starts
+  /// rest, the way ticking any set does.
+  Future<void> _startHold(TrainingRecommendationItem item, int number) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final sets = _setsFor(item);
+    final set = sets.firstWhere((set) => set.number == number);
+    final seconds = await Navigator.of(context, rootNavigator: true).push<int>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => HoldTimerView(
+          exerciseName: item.exercise.name,
+          setNumber: number,
+          totalSets: sets.length,
+          goalSeconds: set.target,
+        ),
+      ),
+    );
+    if (seconds == null || !mounted) return;
+    _setSetValue(item, number, seconds);
+    final current = _setsFor(item).firstWhere((set) => set.number == number);
+    if (!current.completed) _toggleSet(item, number);
   }
 
   /// Reps fields report focus so the "hide keyboard" button can appear only
@@ -1401,6 +1426,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                                     _openExerciseActions(entry.items[i]),
                                 onOpenDetail: () =>
                                     _openExerciseDetail(entry.items[i]),
+                                onStartHold: (number) =>
+                                    _startHold(entry.items[i], number),
                               ),
                             ],
                         if (visibleSections.isNotEmpty) ...[
@@ -1479,6 +1506,50 @@ class _SectionEntry {
 /// Until the set is logged (typed into or checked off), the prescribed value
 /// shows as a faded placeholder and the field is empty — so typing replaces
 /// it rather than appending. Once logged, the value renders fully white.
+/// The value cell of a timed set that has not been held yet: a small play
+/// mark and the prescribed seconds. Tapping opens the hold timer.
+class _HoldStartPill extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _HoldStartPill({super.key, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: 32,
+        decoration: BoxDecoration(
+          color: AppColors.surface2,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.play_arrow_rounded,
+              size: 15,
+              color: AppColors.accentPrimary,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              label,
+              maxLines: 1,
+              style: monoStyle(
+                size: 13.5,
+                letterSpacing: 0,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RepField extends StatefulWidget {
   final int value;
   final bool completed;
@@ -1959,6 +2030,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final VoidCallback onMenu;
   final VoidCallback onOpenDetail;
 
+  /// A timed set with nothing logged yet opens the full-screen hold timer
+  /// from its value cell instead of a number field.
+  final void Function(int number) onStartHold;
+
   const _WorkoutExerciseCard({
     super.key,
     required this.item,
@@ -1976,6 +2051,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.onRestTap,
     required this.onMenu,
     required this.onOpenDetail,
+    required this.onStartHold,
   });
 
   /// A reps-and-weight lift logs a load alongside its reps, so the grid takes
@@ -2181,14 +2257,24 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 onFocusChanged: onRepFocusChanged,
               )
             : null,
-        value: _RepField(
-          key: ValueKey('rep-${item.exercise.id}-${set.number}'),
-          value: set.target,
-          completed: set.completed,
-          isEdited: set.isEdited,
-          onChanged: (value) => onValueChanged(set.number, value),
-          onFocusChanged: onRepFocusChanged,
-        ),
+        // A timed set you have not logged yet is a hold waiting to happen:
+        // its cell is a play pill into the timer. Once it carries a time —
+        // logged or typed — the cell is the ordinary number field, so the
+        // seconds can be corrected the way reps are.
+        value: isTimed && !set.completed && !set.isEdited
+            ? _HoldStartPill(
+                key: ValueKey('hold-${item.exercise.id}-${set.number}'),
+                label: '${set.target}s',
+                onTap: () => onStartHold(set.number),
+              )
+            : _RepField(
+                key: ValueKey('rep-${item.exercise.id}-${set.number}'),
+                value: set.target,
+                completed: set.completed,
+                isEdited: set.isEdited,
+                onChanged: (value) => onValueChanged(set.number, value),
+                onFocusChanged: onRepFocusChanged,
+              ),
         trailing: Align(
           alignment: Alignment.centerRight,
           child: Pressable(
