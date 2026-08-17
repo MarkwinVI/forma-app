@@ -43,7 +43,7 @@ struct WorkoutLiveActivity: Widget {
                 FormaMark()
                     .frame(height: 11)
             } compactTrailing: {
-                if context.state.allSetsCompleted {
+                if context.state.allSetsCompleted || context.state.setJustCompleted {
                     Image(systemName: "checkmark")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(formaGreen)
@@ -69,6 +69,9 @@ struct WorkoutLiveActivity: Widget {
 private func subtitle(for state: LiveWorkoutActivityAttributes.ContentState) -> String {
     if state.allSetsCompleted {
         return "All sets completed"
+    }
+    if state.setJustCompleted {
+        return "Set \(state.setNumber) of \(state.totalSets) done"
     }
     if state.isResting {
         return "Next: set \(state.setNumber) of \(state.totalSets) "
@@ -173,7 +176,10 @@ private struct WorkoutClock: View {
     }
 }
 
-/// Big rep goal on the left, complete-set button on the right.
+/// Big rep goal on the left, complete-set button on the right. For the
+/// beat after that button is tapped the check fills green and stops
+/// taking taps — the system animates the colour there and back across the
+/// two updates.
 private struct ActiveSetRow: View {
     let state: LiveWorkoutActivityAttributes.ContentState
 
@@ -182,7 +188,14 @@ private struct ActiveSetRow: View {
             Text(state.repGoalLabel)
                 .font(.headline)
             Spacer()
-            if #available(iOS 17.0, *) {
+            if state.setJustCompleted {
+                Image(systemName: "checkmark")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.black)
+                    .frame(width: 20, height: 20)
+                    .padding(6)
+                    .background(formaGreen, in: Circle())
+            } else if #available(iOS 17.0, *) {
                 Button(intent: CompleteSetIntent()) {
                     Image(systemName: "checkmark")
                         .font(.footnote.weight(.bold))

@@ -134,7 +134,8 @@ final class LiveWorkoutActivityController {
             pausedElapsedLabel: args["pausedElapsedLabel"] as? String,
             restStartedAt: date("restStartedAtMs"),
             restEndsAt: date("restEndsAtMs"),
-            allSetsCompleted: args["allSetsCompleted"] as? Bool ?? false
+            allSetsCompleted: args["allSetsCompleted"] as? Bool ?? false,
+            setJustCompleted: args["setJustCompleted"] as? Bool ?? false
         )
     }
     #endif

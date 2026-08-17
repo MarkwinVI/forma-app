@@ -31,6 +31,10 @@ struct LiveWorkoutActivityAttributes: ActivityAttributes {
         /// for the next set and says so, until the workout is finished in
         /// the app.
         var allSetsCompleted: Bool
+        /// The set shown was just ticked from the activity's own button:
+        /// hold it with a green filled check for a beat, so the tap visibly
+        /// landed, before the next update moves on.
+        var setJustCompleted: Bool
 
         var isResting: Bool { restEndsAt != nil }
     }

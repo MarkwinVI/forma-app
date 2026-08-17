@@ -22,6 +22,11 @@ class LiveWorkoutActivityState {
   /// of asking for a next set.
   final bool allSetsCompleted;
 
+  /// A set was just ticked from the activity's own button. For a moment
+  /// the activity keeps showing that set, with its check filled green, so
+  /// the tap visibly landed — then the next update moves it on.
+  final bool setJustCompleted;
+
   const LiveWorkoutActivityState({
     required this.exerciseName,
     required this.setNumber,
@@ -33,6 +38,7 @@ class LiveWorkoutActivityState {
     this.restStartedAt,
     this.restEndsAt,
     this.allSetsCompleted = false,
+    this.setJustCompleted = false,
   });
 
   Map<String, Object?> toMap() => {
@@ -46,6 +52,7 @@ class LiveWorkoutActivityState {
         'restStartedAtMs': restStartedAt?.millisecondsSinceEpoch,
         'restEndsAtMs': restEndsAt?.millisecondsSinceEpoch,
         'allSetsCompleted': allSetsCompleted,
+        'setJustCompleted': setJustCompleted,
       };
 }
 

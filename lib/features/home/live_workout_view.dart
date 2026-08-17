@@ -118,6 +118,16 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   String? _toast;
   Timer? _toastTimer;
 
+  /// The set the Live Activity's own button just ticked, held on the
+  /// activity with a green check for a beat before the state moves on.
+  ({
+    String exerciseName,
+    int setNumber,
+    int totalSets,
+    String repGoalLabel
+  })? _activityFlash;
+  Timer? _activityFlashTimer;
+
   @override
   void initState() {
     super.initState();
@@ -186,6 +196,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
     _ticker?.cancel();
     _toastTimer?.cancel();
+    _activityFlashTimer?.cancel();
     for (final notifier in _liveSetNotifiers.values) {
       notifier.dispose();
     }
@@ -883,6 +894,23 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final restTimer = _activeRestTimer;
     final resting = _isRunning && _hasActiveRestTimer;
 
+    // A set just ticked from the lock screen holds the activity on that
+    // set, check filled, until the flash timer moves it on — no rest, no
+    // next set yet, so the tap is seen to land before anything changes.
+    final flash = _activityFlash;
+    if (flash != null) {
+      return LiveWorkoutActivityState(
+        exerciseName: flash.exerciseName,
+        setNumber: flash.setNumber,
+        totalSets: flash.totalSets,
+        repGoalLabel: flash.repGoalLabel,
+        workoutStartedAt: DateTime.now().subtract(_elapsedDuration()),
+        isPaused: !_isRunning,
+        pausedElapsedLabel: _isRunning ? null : _formatElapsed(),
+        setJustCompleted: true,
+      );
+    }
+
     return LiveWorkoutActivityState(
       exerciseName: allDone
           ? widget.recommendation.sessionLabel
@@ -902,18 +930,44 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
   }
 
+  /// Ticks the set the activity is showing, and flashes it green there for
+  /// a second before the activity moves on to rest or the next set.
+  void _completeSetFromActivity() {
+    final item = _currentItemForActivity();
+    if (item == null) return;
+    final sets = _setsFor(item);
+    _WorkoutSetDraft? openSet;
+    for (final set in sets) {
+      if (!set.completed) {
+        openSet = set;
+        break;
+      }
+    }
+    if (openSet == null) return;
+
+    final isTimed = _isTimedExercise(item.exercise);
+    _activityFlash = (
+      exerciseName: item.exercise.name,
+      setNumber: openSet.number,
+      totalSets: sets.length,
+      repGoalLabel: isTimed ? '${openSet.target}s' : '${openSet.target} reps',
+    );
+    // _toggleSet syncs the activity through _replaceSets, so the flash is
+    // what that sync sends.
+    _toggleSet(item, openSet.number);
+
+    _activityFlashTimer?.cancel();
+    _activityFlashTimer = Timer(const Duration(seconds: 1), () {
+      _activityFlash = null;
+      if (mounted) _syncLiveActivity();
+    });
+  }
+
   void _handleLiveActivityAction(String action) {
     if (!mounted) return;
     switch (action) {
       case 'completeSet':
-        final item = _currentItemForActivity();
-        if (item == null) return;
-        for (final set in _setsFor(item)) {
-          if (!set.completed) {
-            _toggleSet(item, set.number);
-            return;
-          }
-        }
+        _completeSetFromActivity();
       case 'restPlus10':
         _adjustRestTimer(10);
       case 'restMinus10':
