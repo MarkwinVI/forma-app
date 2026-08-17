@@ -18,7 +18,6 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../progress/skill_wheel_data.dart';
-import 'program_balance_view.dart';
 import 'program_setup_view.dart';
 import 'program_day_items.dart';
 import 'program_faq.dart';
@@ -123,7 +122,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         ..._programService.defaultBranchSelections(),
         ..._logic.branchSelections,
         // Lane-keyed view of the skill tracks for lane-based consumers
-        // (day editor, weekly balance).
+        // (the day editor).
         ..._programService.laneSelectionsFromTracks(_skillTracks),
       };
 
@@ -333,23 +332,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
-  /// What the balance copy needs to know about the program itself — the split
-  /// it can schedule around, the equipment it can suggest for, and the trees
-  /// it must not suggest adding when they already run.
-  BalanceProgramContext get _balanceContext => BalanceProgramContext(
-        programType: _logic.program.programType,
-        trainingDaysPerWeek: _trainingDaysPerWeek,
-        hasGym: _hasGym,
-        skillTracks: _skillTracks,
-        progressMap: _progress,
-        goalSkillCategoryIds: {
-          for (final goalId in _logic.program.setupGoalIds)
-            if (TrainingProgramService.goalBranchIds[goalId]
-                case final branchId?)
-              branchId.split(':').first,
-        },
-      );
-
   /// Opens the skill-tree map (the editable wheel), then re-reads progress
   /// and tracks — a progression started, moved, or stopped there must show
   /// here the moment the user comes back.
@@ -414,20 +396,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
           ),
         ),
     ];
-    final itemsByType = {
-      for (final workout in workouts) workout.sessionType: workout.items,
-    };
-    final week = [
-      for (var i = 0; i < weekCycle.length; i++)
-        if (weekCycle[i] != TrainingSessionType.rest)
-          ProgramWeekDay(
-            weekday: i,
-            sessionType: weekCycle[i],
-            items: itemsByType[weekCycle[i]]!,
-          ),
-    ];
-    final balance = balanceFromWeek(week, context: _balanceContext);
-
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
@@ -477,23 +445,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                   _ProgramRow(
                     label: 'Split',
                     value: programType.label,
-                    onTap: _openSplitSheet,
-                  ),
-                  _ProgramRow(
-                    label: 'Weekly balance',
-                    value: balanceSummary(balance),
-                    // The only settings value that can carry a warning — an
-                    // off-target week is the one thing here worth colouring.
-                    warn: balance.any((entry) => !entry.verdict.onTarget),
                     last: true,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ProgramBalanceView(
-                          week: week,
-                          program: _balanceContext,
-                        ),
-                      ),
-                    ),
+                    onTap: _openSplitSheet,
                   ),
                   if (_showSkillTracksSection) ...[
                     _ProgramSectionLabel(
@@ -654,14 +607,12 @@ class _ProgramRow extends StatelessWidget {
   final String value;
 
   /// Colours the value amber — the row is telling you something is off.
-  final bool warn;
   final bool last;
   final VoidCallback onTap;
 
   const _ProgramRow({
     required this.label,
     required this.value,
-    this.warn = false,
     this.last = false,
     required this.onTap,
   });
@@ -697,9 +648,9 @@ class _ProgramRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
-                  color: warn ? AppColors.amber : AppColors.textSecondary,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -1724,7 +1675,7 @@ class _SplitSheetState extends State<_SplitSheet> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(2, 2, 2, 0),
                 child: Text(
-                  'Changing your split removes any standalone exercises '
+                  'Changing your split removes any accessory exercises '
                   'you’ve added. Your skill tree progress is saved.',
                   style: TextStyle(
                     fontSize: 12.5,
