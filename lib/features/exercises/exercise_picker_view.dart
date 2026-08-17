@@ -104,7 +104,8 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
     final matches = _catalogue.where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (_isLocked(exercise)) return false;
-      if (_patterns.isNotEmpty && !_patterns.contains(exercise.category)) {
+      if (_patterns.isNotEmpty &&
+          !_patterns.contains(_filterPattern(exercise.category))) {
         return false;
       }
       if (_muscles.isNotEmpty &&
@@ -154,6 +155,18 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
     });
   }
 
+  /// The patterns the filter offers. Skill work is not a movement pattern
+  /// of its own here — those exercises file under Other alongside the rest
+  /// of the library.
+  static final _filterPatterns = [
+    for (final category in ExerciseCategory.values)
+      if (category != ExerciseCategory.skill) category,
+  ];
+
+  /// The filter bucket an exercise's category falls into.
+  static ExerciseCategory _filterPattern(ExerciseCategory category) =>
+      category == ExerciseCategory.skill ? ExerciseCategory.other : category;
+
   Future<void> _openPatternFilter() async {
     final picked = await showModalBottomSheet<Set<ExerciseCategory>>(
       context: context,
@@ -167,7 +180,7 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
             ? 'Narrow the catalogue to one kind of movement'
             : 'Narrow the catalogue to what this day needs',
         options: [
-          for (final category in ExerciseCategory.values)
+          for (final category in _filterPatterns)
             (value: category, label: programPatternLabel(category)),
         ],
         selected: _patterns,
@@ -210,7 +223,8 @@ class ExercisePickerViewState extends State<ExercisePickerView> {
     return _catalogue.where((exercise) {
       if (widget.excludedIds.contains(exercise.id)) return false;
       if (_isLocked(exercise)) return false;
-      if (byPattern.isNotEmpty && !byPattern.contains(exercise.category)) {
+      if (byPattern.isNotEmpty &&
+          !byPattern.contains(_filterPattern(exercise.category))) {
         return false;
       }
       if (byMuscle.isNotEmpty &&

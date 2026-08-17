@@ -105,4 +105,22 @@ void main() {
 
     expect(find.text('nverted Row (Bodyweight)'), findsNothing);
   });
+
+  // Skill work is not a movement pattern of its own in the filter — anything
+  // that would have filed there sits under Other with the rest of the
+  // library.
+  testWidgets('the movement pattern filter offers no Skill option',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: ExercisePickerView.browse()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('All patterns'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Movement pattern'), findsOneWidget);
+    expect(find.text('Other'), findsOneWidget);
+    expect(find.text('Core'), findsOneWidget);
+    expect(find.text('Skill'), findsNothing);
+  });
 }
