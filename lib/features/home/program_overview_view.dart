@@ -1727,7 +1727,8 @@ class _SplitSheetState extends State<_SplitSheet> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(2, 2, 2, 0),
                 child: Text(
-                  'Changing the split resets your day plans to a fresh default — you can fine-tune each day afterwards.',
+                  'Changing your split removes any standalone exercises '
+                  'you’ve added. Your skill tree progress is saved.',
                   style: TextStyle(
                     fontSize: 12.5,
                     color: AppColors.textMuted,
