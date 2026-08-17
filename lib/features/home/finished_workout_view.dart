@@ -533,51 +533,72 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             SafeArea(
               child: Column(
                 children: [
-                  // Progress bars + skip. The row is one bar until the save
-                  // reports what the session earned, then the real set — a
-                  // crossfade rather than a snap between the two.
+                  // Progress bars + skip. The row keeps its full height and
+                  // the close button's slot from the first frame — while the
+                  // save is running the button is merely invisible — so
+                  // nothing below moves when the save lands. The bars
+                  // themselves crossfade from the lone placeholder to the
+                  // real set rather than snapping.
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+                    child: SizedBox(
+                      height: 30,
                       child: Row(
-                        key: ValueKey((_steps.length, _saving, _saveFailed)),
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          for (var i = 0; i < _steps.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 8),
-                            Expanded(
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 350),
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: i <= _stepIndex
-                                      ? AppColors.accentPrimary
-                                      : Colors.white.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(2),
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: Row(
+                                key: ValueKey(_steps.length),
+                                children: [
+                                  for (var i = 0; i < _steps.length; i++) ...[
+                                    if (i > 0) const SizedBox(width: 8),
+                                    Expanded(
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 350),
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: i <= _stepIndex
+                                              ? AppColors.accentPrimary
+                                              : Colors.white
+                                                  .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          IgnorePointer(
+                            ignoring: _saving || _saveFailed,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 300),
+                              opacity: _saving || _saveFailed ? 0 : 1,
+                              child: Pressable(
+                                onTap: _skip,
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.surface,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    size: 15,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                          if (!_saving && !_saveFailed) ...[
-                            const SizedBox(width: 12),
-                            Pressable(
-                              onTap: _skip,
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.surface,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: const Icon(
-                                  Icons.close_rounded,
-                                  size: 15,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
