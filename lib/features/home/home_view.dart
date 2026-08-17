@@ -5,17 +5,13 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
-import '../../data/models/progression_event_model.dart';
-import '../../data/models/progression_suggestion_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
-import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
-import '../../data/services/progression_event_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
@@ -27,13 +23,11 @@ import 'live_workout_view.dart';
 import 'program_setup_completion.dart';
 import 'program_setup_view.dart';
 import 'session_overview_view.dart';
-import 'widgets/needs_approval_card.dart';
 import 'train_day_view.dart';
 import 'widgets/day_ribbon.dart';
 import 'widgets/day_state_views.dart';
 import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
-import 'widgets/what_changed_card.dart';
 import 'widgets/workout_done_view.dart';
 import '../data/past_workout_detail_view.dart';
 
@@ -63,8 +57,6 @@ class _HomeViewState extends State<HomeView> {
   final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
   final _trainingScheduleService = TrainingScheduleService();
-  final _progressionEventService = ProgressionEventService();
-  final _progressionService = ExerciseProgressionService();
   final _skillTrackService = SkillTrackService();
 
   bool _loading = true;
@@ -72,14 +64,6 @@ class _HomeViewState extends State<HomeView> {
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
-  List<ProgressionEvent> _whatChanged = const [];
-
-  /// Loaded-lift changes the program has proposed and is waiting on.
-  List<ProgressionSuggestion> _needsApproval = const [];
-
-  /// What each past session changed, once a logged day has been opened —
-  /// the newest session's changes already live in [_whatChanged].
-  final Map<String, List<ProgressionEvent>> _eventsBySession = {};
 
   /// The day the tab is looking at, or null while it is looking at today.
   /// Selecting a day never leaves the tab: the same screen re-reads itself
@@ -121,32 +105,6 @@ class _HomeViewState extends State<HomeView> {
         _exerciseLogService.fetchPastWorkouts(userId),
       ]);
       final pastWorkouts = results[2] as List<PastWorkout>;
-      // The insight reflects only the most recently finished session (past
-      // workouts come back newest first). It clears once a newer workout is
-      // logged — that session becomes the source, and if it produced no
-      // changes there's simply nothing to show.
-      var whatChanged = const <ProgressionEvent>[];
-      final latestSessionId =
-          pastWorkouts.isEmpty ? null : pastWorkouts.first.id;
-      if (latestSessionId != null) {
-        try {
-          whatChanged = (await _progressionEventService.fetchForSession(
-                  userId, latestSessionId))
-              .where((event) => event.kind != ProgressionEventKind.personalBest)
-              .toList();
-        } catch (error, stackTrace) {
-          debugPrint('Failed to load progression feed: $error\n$stackTrace');
-        }
-      }
-
-      // Waiting on the user, and not tied to the latest session: a proposal
-      // stands until it is approved or turned down.
-      var needsApproval = const <ProgressionSuggestion>[];
-      try {
-        needsApproval = await _progressionService.fetchOpenSuggestions(userId);
-      } catch (error, stackTrace) {
-        debugPrint('Failed to load pending approvals: $error\n$stackTrace');
-      }
 
       final logic = results[1] as TrainingProgramLogicSnapshot?;
       // Skills-as-tracks: seeded on first use from the legacy lane
@@ -179,8 +137,6 @@ class _HomeViewState extends State<HomeView> {
         _logicSnapshot = logic;
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = pastWorkouts;
-        _whatChanged = whatChanged;
-        _needsApproval = needsApproval;
         _skillTracks = skillTracks;
         _loading = false;
       });
@@ -684,9 +640,7 @@ class _HomeViewState extends State<HomeView> {
           TodayWorkoutCard(
             summary: summary,
             rows: TodayWorkoutContent.rows(snapshot.metrics),
-            // The note takes the slot the UPDATED line has on today, so a
-            // day only ever carries one band of explanation.
-            updatedLine: note == null ? null : DayNoteBand(note: note),
+            note: note == null ? null : DayNoteBand(note: note),
           ),
         ];
       case TrainDayView.distant:
@@ -727,16 +681,14 @@ class _HomeViewState extends State<HomeView> {
           snapshot.selectedDay.date,
           snapshot.ribbonDays,
         );
-        final changes = _changesFor(workout);
-        // The same screen the day itself ended on: the burst, the way into
-        // the record, and what the session moved.
+        // The same screen the day itself ended on: the burst and the way
+        // into the record.
         return [
           WorkoutDoneView(
             nextTitle: nextTitle,
             nextWhen: nextWhen,
             onViewWorkout: () => _openPastWorkout(workout),
           ),
-          if (changes.isNotEmpty) TrainInsight(events: changes),
         ];
       case TrainDayView.rest:
       case TrainDayView.today:
@@ -834,38 +786,8 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Future<void> _selectDay(HomeWeekStripDay day) async {
-    final date = TrainingScheduleService.dateOnly(day.date);
-    setState(() => _selectedDate = date);
-
-    // A logged day reads back as the session-complete screen, receipt and
-    // all — which means fetching what that session changed, unless it is the
-    // newest one (already loaded) or has been opened before.
-    final workout = _workoutForDate(date, plannedOnly: true);
-    if (workout == null || _eventsBySession.containsKey(workout.id)) return;
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      final events = (await _progressionEventService.fetchForSession(
-        userId,
-        workout.id,
-      ))
-          .where((event) => event.kind != ProgressionEventKind.personalBest)
-          .toList();
-      if (!mounted) return;
-      setState(() => _eventsBySession[workout.id] = events);
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load session changes: $error\n$stackTrace');
-    }
-  }
-
-  /// What a finished session changed, from whichever source already has it.
-  List<ProgressionEvent> _changesFor(PastWorkout workout) {
-    if (_pastWorkouts.isNotEmpty && _pastWorkouts.first.id == workout.id) {
-      return _whatChanged;
-    }
-    return _eventsBySession[workout.id] ?? const [];
+  void _selectDay(HomeWeekStripDay day) {
+    setState(() => _selectedDate = TrainingScheduleService.dateOnly(day.date));
   }
 
   void _backToToday() => setState(() => _selectedDate = null);
@@ -885,62 +807,16 @@ class _HomeViewState extends State<HomeView> {
             onViewWorkout:
                 _pastWorkouts.isEmpty ? null : _openSelectedWorkoutDetail,
           ),
-          // Finished: the changes read as a receipt under the session, with
-          // anything still waiting on the user above it.
-          if (_needsApproval.isNotEmpty)
-            NeedsApprovalLine(
-              suggestions: _needsApproval,
-              onTap: _openNeedsApproval,
-            ),
-          if (_whatChanged.isNotEmpty) TrainInsight(events: _whatChanged),
         ] else ...[
           // No spacer: the eyebrow sets the gap above the title, the same
           // gap every other day of the week gets.
           TodayWorkoutCard(
             summary: metrics.today,
             rows: TodayWorkoutContent.rows(metrics),
-            // Still to train: the same changes compress to one line, so they
-            // never become a second list beside today's. A pending approval
-            // outranks a report of what already happened — it is the only
-            // one of the two the user has to answer.
-            updatedLine: _needsApproval.isNotEmpty
-                ? NeedsApprovalLine(
-                    suggestions: _needsApproval,
-                    onTap: _openNeedsApproval,
-                  )
-                : _whatChanged.isEmpty
-                    ? null
-                    : WhatChangedLine(
-                        events: _whatChanged,
-                        onTap: () =>
-                            showWhatChangedSheet(context, _whatChanged),
-                      ),
           ),
         ],
       ],
     );
-  }
-
-  Future<void> _openNeedsApproval() async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    await showNeedsApprovalSheet(
-      context,
-      _needsApproval,
-      onApprove: (suggestion) => _progressionService.approveSuggestion(
-        userId: userId,
-        suggestion: suggestion,
-      ),
-      onDismiss: (suggestion) => _progressionService.dismissSuggestion(
-        userId: userId,
-        suggestion: suggestion,
-      ),
-    );
-    if (!mounted) return;
-    // Approving rewrites the lift's target, so today's card has to be rebuilt
-    // from fresh progress rows either way.
-    await _loadHomeData();
   }
 
   Future<void> _openPastWorkout(PastWorkout workout) async {

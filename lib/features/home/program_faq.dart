@@ -79,23 +79,6 @@ const List<FaqItem> kProgramFaq = [
     ],
   ),
   kHowTargetsAreSetFaq,
-  FaqItem(
-    question: 'Why do my weighted lifts ask before they change?',
-    answer: [
-      FaqBlock(
-        'Barbell squats and Romanian deadlifts have no harder variation to '
-        'unlock — they get heavier instead. So Forma never moves them on its '
-        'own: it proposes the next step and waits for you.',
-      ),
-      FaqBlock('3×5 → 3×6 → 3×7 → 3×8 → +10 kg, back to 3×5'),
-      FaqBlock(
-        'When a lift reaches its target, "Needs approval" appears on the '
-        'Train tab. Approve it and the new target applies from your next '
-        'session; turn it down and the lift keeps what it has and asks again '
-        'next time.',
-      ),
-    ],
-  ),
 ];
 
 /// How a target moves — the rule the change feed links to when it reports a

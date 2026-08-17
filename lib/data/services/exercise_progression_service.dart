@@ -5,13 +5,11 @@ import '../catalog/skill_category_catalog.dart';
 import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
 import '../models/progression_event_model.dart';
-import '../models/progression_suggestion_model.dart';
 import '../models/training_program_model.dart';
 import 'exercise_log_service.dart';
 import 'progress_service.dart';
 import 'weight_unit_service.dart';
 import 'progression_event_service.dart';
-import 'progression_suggestion_service.dart';
 import 'skill_track_service.dart';
 import 'training_program_service.dart';
 
@@ -86,10 +84,6 @@ class SessionProgressionOutcome {
   /// nor defaults decide — the user must pick the branch themselves.
   final List<String> branchChoicesNeeded;
 
-  /// Changes to loaded lifts the program wants to make but will not make on
-  /// its own — the user approves these on the Train tab.
-  final List<ProgressionSuggestion> suggestions;
-
   const SessionProgressionOutcome({
     required this.statusChanges,
     required this.targetChanges,
@@ -98,14 +92,12 @@ class SessionProgressionOutcome {
     this.previousStatuses = const {},
     this.branchesToPersist = const {},
     this.branchChoicesNeeded = const [],
-    this.suggestions = const [],
   });
 
   bool get isEmpty =>
       statusChanges.isEmpty &&
       targetChanges.isEmpty &&
-      branchChoicesNeeded.isEmpty &&
-      suggestions.isEmpty;
+      branchChoicesNeeded.isEmpty;
 }
 
 /// Advances skill-path progress after a workout is saved.
@@ -125,18 +117,11 @@ class ExerciseProgressionService {
   final _eventService = ProgressionEventService();
   final _skillTrackService = SkillTrackService();
   final _logService = ExerciseLogService();
-  final _suggestionService = ProgressionSuggestionService();
 
   /// Ladder start: 3 × 6 reps, or 3 × 10s for timed exercises.
   static const int initialTargetSets = 3;
   static const int initialTargetReps = 6;
   static const int initialTargetSeconds = 10;
-
-  /// Where a loaded lift's reps drop back to when its weight goes up.
-  static const int loadedLiftBottomReps = 5;
-
-  /// How much weight a loaded lift adds once it tops out its rep range.
-  static const double loadedLiftIncrementKg = 10;
 
   /// Per-set increase when the current target is reached.
   static const int targetIncrementReps = 1;
@@ -276,7 +261,6 @@ class ExerciseProgressionService {
     final previousStatuses = <String, ExerciseStatus>{};
     final branchesToPersist = <String, String>{};
     final branchChoicesNeeded = <String>[];
-    final suggestions = <ProgressionSuggestion>[];
 
     ExerciseStatus statusOf(String id) =>
         statusChanges[id] ??
@@ -317,19 +301,6 @@ class ExerciseProgressionService {
       );
       final masteryValue = masteryValueForExercise(exercise, masterySettings);
       final masteryVolume = current.sets * masteryValue;
-
-      // A loaded lift never advances on its own and is never mastered: it
-      // asks.
-      if (exercise.isLoaded) {
-        final suggestion = suggestionForLoadedLift(
-          exercise: exercise,
-          progress: progressRows[exercise.id],
-          volume: result.volume,
-          masterySettings: masterySettings,
-        );
-        if (suggestion != null) suggestions.add(suggestion);
-        continue;
-      }
 
       if (result.volume >= masteryVolume) {
         statusChanges[exercise.id] = ExerciseStatus.mastered;
@@ -382,7 +353,6 @@ class ExerciseProgressionService {
       previousStatuses: previousStatuses,
       branchesToPersist: branchesToPersist,
       branchChoicesNeeded: branchChoicesNeeded,
-      suggestions: suggestions,
     );
   }
 
@@ -584,8 +554,8 @@ class ExerciseProgressionService {
     if (declared?.contains(exercise.id) ?? false) {
       path = declared;
     } else {
-      final selectedId = activeBranchByCategory[category.id] ??
-          category.defaultTrainingPathId;
+      final selectedId =
+          activeBranchByCategory[category.id] ?? category.defaultTrainingPathId;
       final selected = category.pathFor(selectedId);
       if (selected.contains(exercise.id)) {
         path = selected;
@@ -612,75 +582,6 @@ class ExerciseProgressionService {
       length++;
     }
     return length;
-  }
-
-  /// What a loaded lift should do next, or null when the session did not
-  /// reach its target — in which case it repeats, unchanged.
-  ///
-  /// Reps first, then load: 3 × 5 becomes 3 × 6, and 3 × 6 becomes 3 × 7,
-  /// up to the top of the rep range (the global mastery target, 8 by
-  /// default). Reaching the top adds [loadedLiftIncrementKg] and drops the
-  /// reps back to [loadedLiftBottomReps], so the lift starts the climb again
-  /// on a heavier bar.
-  ///
-  /// Nothing here is applied. The user approves it, because only they know
-  /// whether the last session was heavy enough to be worth loading.
-  static ProgressionSuggestion? suggestionForLoadedLift({
-    required Exercise exercise,
-    required ExerciseProgress? progress,
-    required int volume,
-    MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
-  }) {
-    final current = currentTargetForExercise(
-      exercise,
-      progress: progress,
-      masterySettings: masterySettings,
-    );
-    if (volume < current.volume) return null;
-
-    final topReps = masteryValueForExercise(exercise, masterySettings);
-    final weightKg = progress?.currentTargetWeightKg;
-
-    // A hold has nowhere to put a plate: it goes forward on seconds, and once
-    // it is at the top of its seconds there is nothing to suggest.
-    if (isTimedExercise(exercise)) {
-      if (current.value >= topReps) return null;
-      return ProgressionSuggestion(
-        exerciseId: exercise.id,
-        kind: ProgressionSuggestionKind.repIncrease,
-        sets: current.sets,
-        fromValue: current.value,
-        toValue: math.min(
-          current.value + targetIncrementForExercise(exercise),
-          topReps,
-        ),
-        fromWeightKg: weightKg,
-        toWeightKg: weightKg,
-      );
-    }
-
-    if (current.value >= topReps) {
-      return ProgressionSuggestion(
-        exerciseId: exercise.id,
-        kind: ProgressionSuggestionKind.loadIncrease,
-        sets: current.sets,
-        fromValue: current.value,
-        toValue: math.min(loadedLiftBottomReps, topReps),
-        fromWeightKg: weightKg,
-        toWeightKg: weightKg == null ? null : weightKg + loadedLiftIncrementKg,
-      );
-    }
-
-    return ProgressionSuggestion(
-      exerciseId: exercise.id,
-      kind: ProgressionSuggestionKind.repIncrease,
-      sets: current.sets,
-      fromValue: current.value,
-      toValue: math.min(
-          current.value + targetIncrementForExercise(exercise), topReps),
-      fromWeightKg: weightKg,
-      toWeightKg: weightKg,
-    );
   }
 
   /// The move that follows [exercise], honoring the fork-resolution order in
@@ -822,22 +723,6 @@ class ExerciseProgressionService {
         // the right exercise; only the stored branch preference lags.
       }
     }
-    if (outcome.suggestions.isNotEmpty) {
-      try {
-        // Proposals only — nothing about the loaded lift changes until the
-        // user approves them on the Train tab.
-        await _suggestionService.replaceOpen(
-          userId,
-          [
-            for (final suggestion in outcome.suggestions)
-              suggestion.copyWith(workoutSessionId: sessionId),
-          ],
-        );
-      } catch (_) {
-        // Non-fatal: the lift simply repeats its current target until the
-        // next session earns the suggestion again.
-      }
-    }
     await _eventService.insertAll(
       userId,
       sessionId,
@@ -849,61 +734,6 @@ class ExerciseProgressionService {
       ),
     );
     return outcome;
-  }
-
-  /// The changes a loaded lift is waiting on the user for.
-  Future<List<ProgressionSuggestion>> fetchOpenSuggestions(String userId) {
-    return _suggestionService.fetchOpen(userId);
-  }
-
-  /// Approves [suggestion]: writes the proposed target and working weight,
-  /// records what happened in the ledger, and closes the suggestion.
-  ///
-  /// The event is not tied to a workout session — the user made this call,
-  /// days after the session that earned it, so deleting that workout must
-  /// not quietly undo their decision.
-  Future<void> approveSuggestion({
-    required String userId,
-    required ProgressionSuggestion suggestion,
-  }) async {
-    await _progressService.upsertTarget(
-      userId,
-      suggestion.exerciseId,
-      targetSets: suggestion.sets,
-      targetValue: suggestion.toValue,
-      targetWeightKg: suggestion.toWeightKg,
-    );
-    await _eventService.insertAll(userId, null, [
-      ProgressionEventInput(
-        exerciseId: suggestion.exerciseId,
-        kind: switch (suggestion.kind) {
-          ProgressionSuggestionKind.repIncrease =>
-            ProgressionEventKind.targetIncrease,
-          ProgressionSuggestionKind.loadIncrease =>
-            ProgressionEventKind.loadIncrease,
-        },
-        valueFrom: suggestion.fromValue,
-        valueTo: suggestion.toValue,
-        targetSets: suggestion.sets,
-        weightFrom: suggestion.fromWeightKg,
-        weightTo: suggestion.toWeightKg,
-      ),
-    ]);
-    final id = suggestion.id;
-    if (id != null) {
-      await _suggestionService.resolve(userId, id, approved: true);
-    }
-  }
-
-  /// Turns a suggestion down: the lift keeps its current target and weight,
-  /// and asks again the next time it reaches them.
-  Future<void> dismissSuggestion({
-    required String userId,
-    required ProgressionSuggestion suggestion,
-  }) async {
-    final id = suggestion.id;
-    if (id == null) return;
-    await _suggestionService.resolve(userId, id, approved: false);
   }
 
   /// Pure translation of a session outcome into ledger events, using the

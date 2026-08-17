@@ -82,15 +82,15 @@ class TodayWorkoutCard extends StatelessWidget {
   final HomeTodaySummary summary;
   final List<TodayWorkoutRow> rows;
 
-  /// The one-line note about what the program changed, if anything has. Sits
-  /// between the title and the table so it never becomes a second list.
-  final Widget? updatedLine;
+  /// A one-line note about the day, if there is one to give. Sits between
+  /// the title and the table so it never becomes a second list.
+  final Widget? note;
 
   const TodayWorkoutCard({
     super.key,
     required this.summary,
     required this.rows,
-    this.updatedLine,
+    this.note,
   });
 
   @override
@@ -100,7 +100,7 @@ class TodayWorkoutCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TypeTitle(summary.sessionTitle),
-        if (updatedLine != null) updatedLine!,
+        if (note != null) note!,
         if (rows.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 30, 0, 6),

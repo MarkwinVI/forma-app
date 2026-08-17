@@ -178,10 +178,10 @@ class Exercise {
   /// independent and a loaded hold sets both.
   final bool isWeighted;
 
-  /// True for a movement with no harder variation waiting: it is never
-  /// mastered, and the only way forward is to ask for more reps and then more
-  /// load, which the user approves. The barbell lifts, and every library
-  /// movement, since the library is outside the progressions.
+  /// True for a movement whose way forward is more load rather than a harder
+  /// variation: the legacy one-lift barbell tree, and every library movement,
+  /// since the library is outside the progressions. Progression itself treats
+  /// these like any other step — this flag only describes the movement.
   final bool isLoaded;
 
   /// The library movement this step is performed with. Several steps share
