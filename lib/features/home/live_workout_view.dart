@@ -871,13 +871,23 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final target = openSet?.target ?? (sets.isEmpty ? 0 : sets.last.target);
     final isTimed = item != null && _isTimedExercise(item.exercise);
 
+    // Every set of every exercise ticked: the activity has nothing left to
+    // ask for and says so, whatever rest timer may still be running.
+    final allDone = _sessionItems.isNotEmpty &&
+        _sessionItems.every(
+          (item) => _setsFor(item).every((set) => set.completed),
+        );
+
     // While paused the rest countdown cannot tick honestly on the lock
     // screen, so rest is simply not shown until the session resumes.
     final restTimer = _activeRestTimer;
     final resting = _isRunning && _hasActiveRestTimer;
 
     return LiveWorkoutActivityState(
-      exerciseName: item?.exercise.name ?? widget.recommendation.sessionLabel,
+      exerciseName: allDone
+          ? widget.recommendation.sessionLabel
+          : item?.exercise.name ?? widget.recommendation.sessionLabel,
+      allSetsCompleted: allDone,
       setNumber: setNumber,
       totalSets: sets.length,
       repGoalLabel: isTimed ? '${target}s' : '$target reps',

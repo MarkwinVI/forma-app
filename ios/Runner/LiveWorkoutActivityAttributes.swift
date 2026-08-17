@@ -27,6 +27,10 @@ struct LiveWorkoutActivityAttributes: ActivityAttributes {
         /// Present while a rest timer runs; drives the countdown and bar.
         var restStartedAt: Date?
         var restEndsAt: Date?
+        /// Every set of every exercise is ticked: the activity stops asking
+        /// for the next set and says so, until the workout is finished in
+        /// the app.
+        var allSetsCompleted: Bool
 
         var isResting: Bool { restEndsAt != nil }
     }

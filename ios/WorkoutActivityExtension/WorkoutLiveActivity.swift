@@ -31,7 +31,9 @@ struct WorkoutLiveActivity: Widget {
                         .frame(maxWidth: 56)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    if context.state.isResting {
+                    if context.state.allSetsCompleted {
+                        AllDoneRow()
+                    } else if context.state.isResting {
                         RestControls(state: context.state)
                     } else {
                         ActiveSetRow(state: context.state)
@@ -41,7 +43,11 @@ struct WorkoutLiveActivity: Widget {
                 FormaMark()
                     .frame(height: 11)
             } compactTrailing: {
-                if let restEndsAt = context.state.restEndsAt {
+                if context.state.allSetsCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(formaGreen)
+                } else if let restEndsAt = context.state.restEndsAt {
                     Text(
                         timerInterval: Date.now...max(Date.now, restEndsAt),
                         countsDown: true
@@ -61,6 +67,9 @@ struct WorkoutLiveActivity: Widget {
 }
 
 private func subtitle(for state: LiveWorkoutActivityAttributes.ContentState) -> String {
+    if state.allSetsCompleted {
+        return "All sets completed"
+    }
     if state.isResting {
         return "Next: set \(state.setNumber) of \(state.totalSets) "
             + "(\(state.repGoalLabel))"
@@ -95,7 +104,9 @@ private struct LockScreenView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            if state.isResting {
+            if state.allSetsCompleted {
+                AllDoneRow()
+            } else if state.isResting {
                 RestProgressBar(state: state)
                 RestControls(state: state)
             } else {
@@ -114,6 +125,7 @@ private struct LockScreenView: View {
 private let formaAccent = Color(red: 0x3D / 255, green: 0x7B / 255, blue: 0xFF / 255)
 private let formaBg = Color(red: 0x11 / 255, green: 0x11 / 255, blue: 0x14 / 255)
 private let formaTextSecondary = Color(red: 0xA0 / 255, green: 0xA1 / 255, blue: 0xA9 / 255)
+private let formaGreen = Color(red: 0x3F / 255, green: 0xD0 / 255, blue: 0x7E / 255)
 
 /// The Forma mark — filled disc, bar, ring — drawn in code so it stays
 /// crisp at every size the activity needs. Geometry mirrors
@@ -180,6 +192,23 @@ private struct ActiveSetRow: View {
                 .buttonBorderShape(.circle)
                 .tint(.white)
             }
+        }
+    }
+}
+
+/// Every set is ticked (the subtitle already says "All sets completed"):
+/// a green check and the way to wrap up. Replaces the set row and the rest
+/// controls alike — there is no next set to rest for.
+private struct AllDoneRow: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.headline)
+                .foregroundStyle(formaGreen)
+            Text("Nice work — finish up in the app")
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+            Spacer(minLength: 0)
         }
     }
 }

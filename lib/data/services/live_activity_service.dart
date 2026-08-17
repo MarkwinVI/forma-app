@@ -18,6 +18,10 @@ class LiveWorkoutActivityState {
   final DateTime? restStartedAt;
   final DateTime? restEndsAt;
 
+  /// Every set of every exercise is ticked; the activity says so instead
+  /// of asking for a next set.
+  final bool allSetsCompleted;
+
   const LiveWorkoutActivityState({
     required this.exerciseName,
     required this.setNumber,
@@ -28,6 +32,7 @@ class LiveWorkoutActivityState {
     this.pausedElapsedLabel,
     this.restStartedAt,
     this.restEndsAt,
+    this.allSetsCompleted = false,
   });
 
   Map<String, Object?> toMap() => {
@@ -40,6 +45,7 @@ class LiveWorkoutActivityState {
         'pausedElapsedLabel': pausedElapsedLabel,
         'restStartedAtMs': restStartedAt?.millisecondsSinceEpoch,
         'restEndsAtMs': restEndsAt?.millisecondsSinceEpoch,
+        'allSetsCompleted': allSetsCompleted,
       };
 }
 
