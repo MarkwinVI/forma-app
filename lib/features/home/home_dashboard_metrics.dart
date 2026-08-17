@@ -175,6 +175,8 @@ class HomeScheduleResolution {
 }
 
 class HomePlannedExerciseSummary {
+  /// Empty for a summary built without a catalog exercise behind it.
+  final String exerciseId;
   final String name;
   final String targetLabel;
 
@@ -183,6 +185,7 @@ class HomePlannedExerciseSummary {
   final List<PathNodeState> nodeStates;
 
   const HomePlannedExerciseSummary({
+    this.exerciseId = '',
     required this.name,
     required this.targetLabel,
     this.treeLabel = '',
@@ -608,9 +611,8 @@ class HomeDashboardMetricsCalculator {
       final steps = path == null
           ? <String>[goalId]
           : path.sublist(0, path.indexOf(goalId) + 1);
-      final mastered = steps
-          .where((id) => progressMap[id]?.isCleared ?? false)
-          .length;
+      final mastered =
+          steps.where((id) => progressMap[id]?.isCleared ?? false).length;
 
       goals.add(
         HomeGoalSkillData(
@@ -1299,6 +1301,7 @@ class HomeDashboardMetricsCalculator {
     }
 
     return HomePlannedExerciseSummary(
+      exerciseId: item.exercise.id,
       name: item.exercise.name,
       targetLabel: targetLabel,
       treeLabel: option == null ? '' : '${option.subtitle} tree',
@@ -1334,8 +1337,7 @@ class HomeDashboardMetricsCalculator {
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
     );
-    final trackOptions =
-        trainingProgramService.activeTrackOptions(skillTracks);
+    final trackOptions = trainingProgramService.activeTrackOptions(skillTracks);
     final options = trackOptions.isNotEmpty
         ? [...configuredOptions, ...trackOptions]
         : configuredOptions.isNotEmpty

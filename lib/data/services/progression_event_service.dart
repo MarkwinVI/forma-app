@@ -99,6 +99,19 @@ class ProgressionEventService {
     return _eventsFromRows(data);
   }
 
+  /// Every time the program moved the user onto a new exercise, newest
+  /// first. Feeds the Train tab's "Lvl up" tag.
+  Future<List<ProgressionEvent>> fetchActivations(String userId) async {
+    final data = await _client
+        .from('progression_events')
+        .select()
+        .eq('user_id', userId)
+        .eq('kind', ProgressionEventKind.activated.dbValue)
+        .order('created_at', ascending: false);
+
+    return _eventsFromRows(data);
+  }
+
   Future<void> markSeen(String userId, List<String> eventIds) async {
     if (eventIds.isEmpty) return;
 

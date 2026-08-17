@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../data/catalog/exercise_catalog.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
@@ -12,10 +13,12 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/progress_service.dart';
+import '../../data/services/progression_event_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
+import '../exercises/exercise_detail_view.dart';
 import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
@@ -58,12 +61,17 @@ class _HomeViewState extends State<HomeView> {
   final _trainingProgramStoreService = TrainingProgramStoreService();
   final _trainingScheduleService = TrainingScheduleService();
   final _skillTrackService = SkillTrackService();
+  final _progressionEventService = ProgressionEventService();
 
   bool _loading = true;
   bool _hasProgram = true;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
+
+  /// Exercises the program levelled the user up onto that have not been
+  /// trained since — they carry the "Lvl up" tag in today's list.
+  Set<String> _leveledUpExerciseIds = const {};
 
   /// The day the tab is looking at, or null while it is looking at today.
   /// Selecting a day never leaves the tab: the same screen re-reads itself
@@ -106,6 +114,18 @@ class _HomeViewState extends State<HomeView> {
       ]);
       final pastWorkouts = results[2] as List<PastWorkout>;
 
+      // Which of today's exercises are freshly levelled up. Best effort: a
+      // failed lookup just means no tags this time round.
+      var leveledUp = const <String>{};
+      try {
+        leveledUp = TodayWorkoutContent.leveledUpExerciseIds(
+          activations: await _progressionEventService.fetchActivations(userId),
+          pastWorkouts: pastWorkouts,
+        );
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load level-ups: $error\n$stackTrace');
+      }
+
       final logic = results[1] as TrainingProgramLogicSnapshot?;
       // Skills-as-tracks: seeded on first use from the legacy lane
       // selections + goals, so existing users keep what they trained.
@@ -137,6 +157,7 @@ class _HomeViewState extends State<HomeView> {
         _logicSnapshot = logic;
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = pastWorkouts;
+        _leveledUpExerciseIds = leveledUp;
         _skillTracks = skillTracks;
         _loading = false;
       });
@@ -639,8 +660,9 @@ class _HomeViewState extends State<HomeView> {
         return [
           TodayWorkoutCard(
             summary: summary,
-            rows: TodayWorkoutContent.rows(snapshot.metrics),
+            rows: _todayRows(snapshot.metrics),
             note: note == null ? null : DayNoteBand(note: note),
+            onRowTap: _openPlannedExercise,
           ),
         ];
       case TrainDayView.distant:
@@ -792,6 +814,25 @@ class _HomeViewState extends State<HomeView> {
 
   void _backToToday() => setState(() => _selectedDate = null);
 
+  List<TodayWorkoutRow> _todayRows(HomeDashboardMetrics metrics) {
+    return TodayWorkoutContent.rows(
+      metrics,
+      leveledUpExerciseIds: _leveledUpExerciseIds,
+    );
+  }
+
+  /// A row in today's list is the way into the exercise itself.
+  void _openPlannedExercise(TodayWorkoutRow row) {
+    final exercise = ExerciseCatalog.findById(row.exerciseId);
+    if (exercise == null) return;
+    openExerciseDetailView<void>(
+      context,
+      exercise: exercise,
+      skillCategoryId:
+          exercise.skillCategoryId.isEmpty ? null : exercise.skillCategoryId,
+    );
+  }
+
   Widget _buildContent(_TrainSnapshot snapshot) {
     final metrics = snapshot.metrics;
     final completed = metrics.today.completed;
@@ -812,7 +853,8 @@ class _HomeViewState extends State<HomeView> {
           // gap every other day of the week gets.
           TodayWorkoutCard(
             summary: metrics.today,
-            rows: TodayWorkoutContent.rows(metrics),
+            rows: _todayRows(metrics),
+            onRowTap: _openPlannedExercise,
           ),
         ],
       ],

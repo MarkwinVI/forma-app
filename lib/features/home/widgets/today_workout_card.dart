@@ -3,25 +3,36 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
+import '../../../data/models/progression_event_model.dart';
+import '../../../data/models/workout_history_model.dart';
 import '../home_dashboard_metrics.dart';
 
 /// One planned exercise in today's session: what it totalled in the session
 /// before last, and how the last session moved against that.
 class TodayWorkoutRow {
+  /// Empty when the row was built without a catalog exercise behind it.
+  final String exerciseId;
   final String name;
 
-  /// The session-before-last total, written with its unit ("15 reps", "18s").
+  /// The session-before-last total: a bare count, or seconds ("18s").
   final String previousLabel;
 
   /// How the last session moved against it ("+3", "−2", "—").
   final String changeLabel;
   final int changeDir;
 
+  /// The program moved the user onto this exercise by mastering the one
+  /// before it, and it has not been trained since — it wears the "Lvl up"
+  /// tag until it has.
+  final bool leveledUp;
+
   const TodayWorkoutRow({
+    this.exerciseId = '',
     required this.name,
     required this.previousLabel,
     required this.changeLabel,
     required this.changeDir,
+    this.leveledUp = false,
   });
 }
 
@@ -30,21 +41,61 @@ class TodayWorkoutRow {
 class TodayWorkoutContent {
   TodayWorkoutContent._();
 
-  static List<TodayWorkoutRow> rows(HomeDashboardMetrics metrics) {
+  static List<TodayWorkoutRow> rows(
+    HomeDashboardMetrics metrics, {
+    Set<String> leveledUpExerciseIds = const {},
+  }) {
     final perfByName = {
       for (final perf in metrics.exercisePerformance) perf.exerciseName: perf,
     };
 
     return [
       for (final planned in metrics.today.plannedExercises)
-        _rowFor(planned, perfByName[planned.name]),
+        _rowFor(
+          planned,
+          perfByName[planned.name],
+          leveledUp: leveledUpExerciseIds.contains(planned.exerciseId),
+        ),
     ];
+  }
+
+  /// The exercises the program has levelled the user up onto — activated
+  /// by mastering the step before, not by a manual jump — that have not
+  /// been logged since. Training the exercise once retires the tag, so a
+  /// finished session clears every tag it carried.
+  static Set<String> leveledUpExerciseIds({
+    required List<ProgressionEvent> activations,
+    required List<PastWorkout> pastWorkouts,
+  }) {
+    final lastLoggedAt = <String, DateTime>{};
+    for (final workout in pastWorkouts) {
+      for (final exercise in workout.exercises) {
+        final seen = lastLoggedAt[exercise.exerciseId];
+        if (seen == null || workout.loggedAt.isAfter(seen)) {
+          lastLoggedAt[exercise.exerciseId] = workout.loggedAt;
+        }
+      }
+    }
+
+    final ids = <String>{};
+    for (final event in activations) {
+      if (event.kind != ProgressionEventKind.activated) continue;
+      // A manual fast-forward carries the target it jumped from; the
+      // program's own step up does not.
+      if (event.valueFrom != null) continue;
+      final logged = lastLoggedAt[event.exerciseId];
+      if (logged == null || logged.isBefore(event.createdAt)) {
+        ids.add(event.exerciseId);
+      }
+    }
+    return ids;
   }
 
   static TodayWorkoutRow _rowFor(
     HomePlannedExerciseSummary planned,
-    HomeExercisePerformance? perf,
-  ) {
+    HomeExercisePerformance? perf, {
+    bool leveledUp = false,
+  }) {
     final history = perf?.history ?? const <int>[];
     final isTimed = perf?.isTimed ?? false;
     // The change is measured against the session before last, so that is the
@@ -53,12 +104,14 @@ class TodayWorkoutContent {
     final delta = perf?.sessionDelta;
 
     return TodayWorkoutRow(
+      exerciseId: planned.exerciseId,
       name: planned.name,
+      leveledUp: leveledUp,
       previousLabel: previous == null
           ? '—'
           : isTimed
               ? '${previous}s'
-              : '$previous reps',
+              : '$previous',
       changeLabel: delta == null
           ? '—'
           : delta == 0
@@ -76,8 +129,9 @@ class TodayWorkoutContent {
 /// and how it moved. The actions live in [TodayWorkoutActions], pinned by the
 /// tab so a long session never pushes Start below the fold.
 class TodayWorkoutCard extends StatelessWidget {
-  static const double _previousColWidth = 84;
-  static const double _changeColWidth = 58;
+  static const double _previousColWidth = 46;
+  static const double _changeColWidth = 42;
+  static const double _colGap = 10;
 
   final HomeTodaySummary summary;
   final List<TodayWorkoutRow> rows;
@@ -86,11 +140,15 @@ class TodayWorkoutCard extends StatelessWidget {
   /// the title and the table so it never becomes a second list.
   final Widget? note;
 
+  /// Tapping a row opens the exercise behind it.
+  final ValueChanged<TodayWorkoutRow>? onRowTap;
+
   const TodayWorkoutCard({
     super.key,
     required this.summary,
     required this.rows,
     this.note,
+    this.onRowTap,
   });
 
   @override
@@ -102,20 +160,33 @@ class TodayWorkoutCard extends StatelessWidget {
         TypeTitle(summary.sessionTitle),
         if (note != null) note!,
         if (rows.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 30, 0, 6),
+          Container(
+            margin: const EdgeInsets.only(top: 26),
+            padding: const EdgeInsets.only(bottom: 14),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
             child: Row(
               children: [
                 Expanded(child: Text('EXERCISES', style: _headStyle)),
+                const SizedBox(width: _colGap),
                 SizedBox(
                   width: _previousColWidth,
-                  child: Text('PREVIOUS', style: _headStyle),
+                  child: Text(
+                    'PREV',
+                    maxLines: 1,
+                    softWrap: false,
+                    textAlign: TextAlign.right,
+                    style: _headStyle,
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: _colGap),
                 SizedBox(
                   width: _changeColWidth,
                   child: Text(
                     'LAST',
+                    maxLines: 1,
+                    softWrap: false,
                     textAlign: TextAlign.right,
                     style: _headStyle,
                   ),
@@ -124,13 +195,19 @@ class TodayWorkoutCard extends StatelessWidget {
             ),
           ),
           for (var index = 0; index < rows.length; index++)
-            _ExerciseRow(row: rows[index], last: index == rows.length - 1),
+            _ExerciseRow(
+              row: rows[index],
+              last: index == rows.length - 1,
+              onTap: onRowTap == null || rows[index].exerciseId.isEmpty
+                  ? null
+                  : () => onRowTap!(rows[index]),
+            ),
         ],
       ],
     );
   }
 
-  static final _headStyle = monoStyle(size: 11, letterSpacing: 1.5);
+  static final _headStyle = monoStyle(size: 11, letterSpacing: 1.76);
 }
 
 /// The way into today's session. Pinned above the tab bar rather than sitting
@@ -213,8 +290,9 @@ class TodayWorkoutActions extends StatelessWidget {
 class _ExerciseRow extends StatelessWidget {
   final TodayWorkoutRow row;
   final bool last;
+  final VoidCallback? onTap;
 
-  const _ExerciseRow({required this.row, required this.last});
+  const _ExerciseRow({required this.row, required this.last, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -224,8 +302,8 @@ class _ExerciseRow extends StatelessWidget {
             ? AppColors.red
             : AppColors.textMuted;
 
-    return Container(
-      padding: const EdgeInsets.only(top: 13, bottom: 14),
+    final content = Container(
+      padding: const EdgeInsets.symmetric(vertical: 17),
       decoration: BoxDecoration(
         border: last
             ? null
@@ -234,47 +312,91 @@ class _ExerciseRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              row.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.36,
-                height: 1.2,
-              ),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    row.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+                if (row.leveledUp) ...[
+                  const SizedBox(width: 8),
+                  const LevelUpTag(),
+                ],
+              ],
             ),
           ),
+          const SizedBox(width: TodayWorkoutCard._colGap),
           SizedBox(
             width: TodayWorkoutCard._previousColWidth,
             child: Text(
               row.previousLabel,
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: monoStyle(
-                size: 14,
-                weight: FontWeight.w500,
-                letterSpacing: 0,
-                color: row.previousLabel == '—'
-                    ? AppColors.textMuted
-                    : AppColors.textSecondary,
-              ),
+              textAlign: TextAlign.right,
+              style: _valueStyle(AppColors.textMuted),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: TodayWorkoutCard._colGap),
           SizedBox(
             width: TodayWorkoutCard._changeColWidth,
             // The signed number carries the direction on its own — an arrow
             // beside it is the same fact twice.
             child: Text(
               row.changeLabel,
+              maxLines: 1,
               textAlign: TextAlign.right,
-              style: monoStyle(size: 14, letterSpacing: 0, color: changeColor),
+              style: _valueStyle(changeColor),
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return content;
+    return Pressable(onTap: onTap, child: content);
+  }
+
+  static TextStyle _valueStyle(Color color) => TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.2,
+      );
+}
+
+/// The pill beside an exercise the program has just levelled the user up
+/// onto. Reads "LVL UP" until the exercise has been trained once.
+class LevelUpTag extends StatelessWidget {
+  const LevelUpTag({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: AppColors.accentPrimary.withValues(alpha: 0.14),
+        border: Border.all(
+          color: AppColors.accentPrimary.withValues(alpha: 0.35),
+        ),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'LVL UP',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1,
+          color: Color(0xFF7FA0FF),
+          height: 1.3,
+        ),
       ),
     );
   }
