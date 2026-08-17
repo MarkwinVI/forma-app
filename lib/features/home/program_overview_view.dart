@@ -484,10 +484,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                     value: balanceSummary(balance),
                     // The only settings value that can carry a warning — an
                     // off-target week is the one thing here worth colouring.
-                    warn: balance.any(
-                      (entry) =>
-                          entry.group.primary && !entry.verdict.onTarget,
-                    ),
+                    warn: balance.any((entry) => !entry.verdict.onTarget),
                     last: true,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(

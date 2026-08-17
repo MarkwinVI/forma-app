@@ -77,7 +77,9 @@ void main() {
     final pillCount = find.byIcon(Icons.play_arrow_rounded).evaluate().length;
 
     await tester.tap(find.byIcon(Icons.play_arrow_rounded).first);
-    await tester.pumpAndSettle();
+    // Fixed pumps: the timer redraws every frame, so nothing ever settles.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
 
     // No count-in: the stopwatch is already holding.
     expect(find.byType(HoldTimerView), findsOneWidget);
@@ -108,13 +110,14 @@ void main() {
     );
   });
 
-  testWidgets('closing the timer without logging changes nothing',
-      (tester) async {
+  testWidgets('closing the timer mid-hold changes nothing', (tester) async {
     await pumpWorkout(tester);
     final pillCount = find.byIcon(Icons.play_arrow_rounded).evaluate().length;
 
     await tester.tap(find.byIcon(Icons.play_arrow_rounded).first);
-    await tester.pumpAndSettle();
+    // Fixed pumps: the timer redraws every frame, so nothing ever settles.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(seconds: 2));
     await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pump();
@@ -123,6 +126,31 @@ void main() {
     expect(find.byType(HoldTimerView), findsNothing);
     expect(find.byType(TextField), findsNothing);
     expect(find.byIcon(Icons.play_arrow_rounded), findsNWidgets(pillCount));
+  });
+
+  testWidgets('closing a paused timer logs the seconds', (tester) async {
+    await pumpWorkout(tester);
+    final pillCount = find.byIcon(Icons.play_arrow_rounded).evaluate().length;
+
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded).first);
+    // Fixed pumps: the timer redraws every frame, so nothing ever settles.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(seconds: 7));
+    await tester.tap(find.byIcon(Icons.pause_rounded));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(HoldTimerView), findsNothing);
+    final field = find.byType(TextField);
+    expect(field, findsOneWidget);
+    expect(tester.widget<TextField>(field).controller!.text, '7');
+    expect(
+      find.byIcon(Icons.play_arrow_rounded),
+      findsNWidgets(pillCount - 1),
+    );
   });
 
   testWidgets('pausing exposes fine adjustment, and it cannot go below zero',
@@ -151,7 +179,8 @@ void main() {
     // Past the goal reads green and says so.
     await tester.tap(find.text('+1s'));
     await tester.pump(const Duration(milliseconds: 150));
-    expect(find.text('Goal hit — keep going or log it'), findsOneWidget);
+    expect(find.text('Goal reached'), findsOneWidget);
+    expect(find.text('Goal hit — keep going or log it'), findsNothing);
 
     // Take back more than was counted: it stops at zero.
     await tester.tap(find.text('-5s'));
@@ -160,5 +189,41 @@ void main() {
     await tester.pump(const Duration(milliseconds: 150));
     expect(find.text('0'), findsOneWidget);
     expect(find.text('Log set'), findsOneWidget);
+  });
+
+  testWidgets('a tap anywhere off the controls pauses the hold',
+      (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: HoldTimerView(
+          exerciseName: 'Tuck Front Lever Hold',
+          setNumber: 1,
+          totalSets: 3,
+          goalSeconds: 20,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text('Holding…'), findsOneWidget);
+
+    // Bare background, well away from any button.
+    await tester.tapAt(const Offset(40, 300));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Paused'), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+
+    // Frozen: time passes, the count does not.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text('3'), findsOneWidget);
+
+    // Another background tap does not resume; the play button does.
+    await tester.tapAt(const Offset(40, 300));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Paused'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Holding…'), findsOneWidget);
   });
 }

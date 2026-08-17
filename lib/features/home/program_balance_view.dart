@@ -72,26 +72,18 @@ const int kBalanceMinBlocks = 3;
 /// exercise.
 const int kBalanceMinDays = 2;
 
-/// One line of the weekly balance: the movement patterns it covers, and
-/// whether it is one of the primary categories the program is judged on.
+/// One line of the weekly balance: the movement patterns it covers.
 class BalanceGroup {
   final String label;
   final Set<ExerciseCategory> categories;
 
-  /// Core and skill work support the primary categories rather than being
-  /// judged alongside them — the write-up calls them optional.
-  final bool primary;
-
-  const BalanceGroup({
-    required this.label,
-    required this.categories,
-    this.primary = true,
-  });
+  const BalanceGroup({required this.label, required this.categories});
 }
 
-/// The six primary categories, then the two optional ones. Knee-dominant and
-/// hip-dominant leg work are judged apart: squats cannot stand in for a week
-/// with no hinge in it.
+/// The six categories the program is judged on. Core and skill work support
+/// them rather than being measured alongside them, so neither is listed.
+/// Knee-dominant and hip-dominant leg work are judged apart: squats cannot
+/// stand in for a week with no hinge in it.
 const List<BalanceGroup> kBalanceGroups = [
   BalanceGroup(
     label: 'Horizontal push',
@@ -117,27 +109,17 @@ const List<BalanceGroup> kBalanceGroups = [
     label: 'Glutes & hamstrings',
     categories: {ExerciseCategory.hinge},
   ),
-  BalanceGroup(
-    label: 'Core',
-    categories: {ExerciseCategory.core},
-    primary: false,
-  ),
-  BalanceGroup(
-    label: 'Skill work',
-    categories: {ExerciseCategory.skill},
-    primary: false,
-  ),
 ];
 
 /// Where a category sits, read straight off its weekly blocks:
-/// 0 missing, 1 low, 2 good, 3 recommended, 4 and up high.
+/// 0 missing, 1 low, 2 adequate, 3 recommended, 4 high, 5 and up very high.
 enum BalanceVerdict {
   missing,
   low,
-  good,
+  adequate,
   recommended,
   high,
-  optional,
+  veryHigh,
 }
 
 extension BalanceVerdictX on BalanceVerdict {
@@ -147,23 +129,24 @@ extension BalanceVerdictX on BalanceVerdict {
         return 'Missing';
       case BalanceVerdict.low:
         return 'Low';
-      case BalanceVerdict.good:
-        return 'Good';
+      case BalanceVerdict.adequate:
+        return 'Adequate';
       case BalanceVerdict.recommended:
         return 'Recommended';
       case BalanceVerdict.high:
         return 'High';
-      case BalanceVerdict.optional:
-        return 'Optional';
+      case BalanceVerdict.veryHigh:
+        return 'Very high';
     }
   }
 
   /// Whether the settings row counts this as fine: enough weekly work
-  /// without tipping into too much.
+  /// without tipping into too much. Adequate and high are cautions rather
+  /// than faults, so neither calls the program unbalanced.
   bool get onTarget =>
-      this == BalanceVerdict.good ||
+      this == BalanceVerdict.adequate ||
       this == BalanceVerdict.recommended ||
-      this == BalanceVerdict.optional;
+      this == BalanceVerdict.high;
 
   /// How the settings row counts this verdict: "2 areas undertrained",
   /// where "Low" would read as one area speaking for two.
@@ -173,13 +156,12 @@ extension BalanceVerdictX on BalanceVerdict {
         return 'missing';
       case BalanceVerdict.low:
         return 'undertrained';
-      case BalanceVerdict.high:
+      case BalanceVerdict.veryHigh:
         return 'overtrained';
-      case BalanceVerdict.good:
+      case BalanceVerdict.adequate:
       case BalanceVerdict.recommended:
+      case BalanceVerdict.high:
         return 'balanced';
-      case BalanceVerdict.optional:
-        return 'optional';
     }
   }
 
@@ -187,16 +169,15 @@ extension BalanceVerdictX on BalanceVerdict {
     switch (this) {
       case BalanceVerdict.missing:
       case BalanceVerdict.low:
+      case BalanceVerdict.veryHigh:
         return AppColors.red;
-      // Both are cautions rather than faults: good is short of the
+      // Both are cautions rather than faults: adequate is short of the
       // recommendation, high is past it.
-      case BalanceVerdict.good:
+      case BalanceVerdict.adequate:
       case BalanceVerdict.high:
         return AppColors.amber;
       case BalanceVerdict.recommended:
         return AppColors.green;
-      case BalanceVerdict.optional:
-        return AppColors.textMuted;
     }
   }
 }
@@ -241,16 +222,14 @@ class BalanceCategory {
   int get times => {for (final block in blocks) block.weekday}.length;
 
   /// Blocks alone decide the read — every category held to the same scale.
-  BalanceVerdict get verdict {
-    if (!group.primary) return BalanceVerdict.optional;
-    return switch (weeklyBlocks) {
-      0 => BalanceVerdict.missing,
-      1 => BalanceVerdict.low,
-      2 => BalanceVerdict.good,
-      3 => BalanceVerdict.recommended,
-      _ => BalanceVerdict.high,
-    };
-  }
+  BalanceVerdict get verdict => switch (weeklyBlocks) {
+        0 => BalanceVerdict.missing,
+        1 => BalanceVerdict.low,
+        2 => BalanceVerdict.adequate,
+        3 => BalanceVerdict.recommended,
+        4 => BalanceVerdict.high,
+        _ => BalanceVerdict.veryHigh,
+      };
 }
 
 /// The sentence the detail page shows under the week: what the current
@@ -264,7 +243,7 @@ String balanceStatusCopy(BalanceCategory entry) {
     case BalanceVerdict.low:
       return 'You’re training $label once per week. Increasing it to at '
           'least twice per week should support more consistent progress.';
-    case BalanceVerdict.good:
+    case BalanceVerdict.adequate:
       return 'You’re training $label twice per week. That’s enough to make '
           'solid progress, though training it 3 times per week may help you '
           'progress faster.';
@@ -272,12 +251,13 @@ String balanceStatusCopy(BalanceCategory entry) {
       return 'You’re training $label 3 times per week — a strong frequency '
           'for progressing efficiently.';
     case BalanceVerdict.high:
-      return 'You’re training $label frequently. This can work well, but '
-          'make sure you’re recovering well and not overtraining.';
-    case BalanceVerdict.optional:
-      return '$label backs up the primary categories rather than being '
-          'judged alongside them — train it as much or as little as suits '
-          'you.';
+      return 'You’re training $label 4 times per week. That’s more than the '
+          'recommendation, which can work well as long as you’re recovering '
+          'between sessions.';
+    case BalanceVerdict.veryHigh:
+      return 'You’re training $label ${entry.weeklyBlocks} times per week. '
+          'That’s likely more than you can recover from — cutting back '
+          'towards 3 times per week should support better progress.';
   }
 }
 
@@ -328,7 +308,7 @@ double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
 String balanceSummary(List<BalanceCategory> categories) {
   final off = [
     for (final entry in categories)
-      if (entry.group.primary && !entry.verdict.onTarget) entry.verdict,
+      if (!entry.verdict.onTarget) entry.verdict,
   ];
   if (off.isEmpty) return 'Balanced';
 
@@ -407,7 +387,6 @@ class _CategoryDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final verdict = entry.verdict;
-    final times = entry.times;
     final blocks = entry.weeklyBlocks;
     final advice = verdict == BalanceVerdict.missing ||
             verdict == BalanceVerdict.low
@@ -440,11 +419,8 @@ class _CategoryDetailView extends StatelessWidget {
                       TextSpan(
                         // Blocks, not days — a movement can sit on three
                         // days and still be doubled up on one of them.
-                        text: verdict == BalanceVerdict.optional
-                            ? '$times ${times == 1 ? 'day' : 'days'} '
-                                'a week · '
-                            : '$blocks ${blocks == 1 ? 'block' : 'blocks'} '
-                                'a week · ',
+                        text: '$blocks ${blocks == 1 ? 'block' : 'blocks'} '
+                            'a week · ',
                         children: [
                           TextSpan(
                             text: verdict.label,

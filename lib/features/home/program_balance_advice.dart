@@ -60,10 +60,6 @@ const Map<ExerciseCategory, BalanceSuggestions> kBalanceSuggestions = {
       'Nordic curl'
     ],
   ),
-  ExerciseCategory.core: BalanceSuggestions(
-    gym: ['Cable crunch', 'Pallof press', 'Cable wood chop'],
-    minimal: ['Dead bug', 'Side plank', 'Reverse crunch'],
-  ),
 };
 
 class BalanceSuggestions {

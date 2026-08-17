@@ -154,14 +154,15 @@ void main() {
 
   group('weekly balance verdicts', () {
     test('weekly blocks read on the same scale for every movement', () {
-      // 0 missing, 1 low, 2 good, 3 recommended, 4 and up high — checked on
-      // a week wide enough that the split never decides the answer.
+      // 0 missing, 1 low, 2 adequate, 3 recommended, 4 high, 5 and up very
+      // high — checked on a week wide enough that the split never decides
+      // the answer.
       final verdicts = [
-        for (var blocks = 0; blocks <= 5; blocks++)
+        for (var blocks = 0; blocks <= 6; blocks++)
           _entryFor(
             'Vertical push',
             week: [
-              for (var weekday = 0; weekday < 6; weekday++)
+              for (var weekday = 0; weekday < 7; weekday++)
                 _day(
                   weekday,
                   TrainingSessionType.fullBody,
@@ -172,7 +173,7 @@ void main() {
             ],
             context: _context(
               programType: TrainingProgramType.fullBody,
-              trainingDaysPerWeek: 6,
+              trainingDaysPerWeek: 7,
             ),
           ).verdict,
       ];
@@ -180,11 +181,49 @@ void main() {
       expect(verdicts, const [
         BalanceVerdict.missing,
         BalanceVerdict.low,
-        BalanceVerdict.good,
+        BalanceVerdict.adequate,
         BalanceVerdict.recommended,
         BalanceVerdict.high,
-        BalanceVerdict.high,
+        BalanceVerdict.veryHigh,
+        BalanceVerdict.veryHigh,
       ]);
+    });
+
+    test('core and skill work are not measured against the six categories',
+        () {
+      final categories = balanceFromWeek(
+        const [],
+        context: _context(
+          programType: TrainingProgramType.fullBody,
+          trainingDaysPerWeek: 3,
+        ),
+      );
+
+      expect(categories.map((entry) => entry.label), const [
+        'Horizontal push',
+        'Vertical push',
+        'Horizontal pull',
+        'Vertical pull',
+        'Squats & lunges',
+        'Glutes & hamstrings',
+      ]);
+    });
+
+    test('only missing, low and very high count the program unbalanced', () {
+      expect(
+        {
+          for (final verdict in BalanceVerdict.values)
+            verdict: verdict.onTarget,
+        },
+        const {
+          BalanceVerdict.missing: false,
+          BalanceVerdict.low: false,
+          BalanceVerdict.adequate: true,
+          BalanceVerdict.recommended: true,
+          BalanceVerdict.high: true,
+          BalanceVerdict.veryHigh: false,
+        },
+      );
     });
 
     test('the benchmark does not move with the split', () {
