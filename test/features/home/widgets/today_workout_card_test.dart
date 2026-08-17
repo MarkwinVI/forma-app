@@ -129,6 +129,47 @@ void main() {
     expect(started, isTrue);
   });
 
+  testWidgets('the value columns never spill, however long the number',
+      (tester) async {
+    const wide = [
+      TodayWorkoutRow(
+        exerciseId: 'plank',
+        name: 'Plank',
+        previousLabel: '10000s',
+        changeLabel: '−1000',
+        changeDir: -1,
+      ),
+      TodayWorkoutRow(
+        exerciseId: 'squat',
+        name: 'Squat (Barbell)',
+        previousLabel: '15',
+        changeLabel: '+1000',
+        changeDir: 1,
+      ),
+    ];
+    await tester
+        .pumpWidget(host(TodayWorkoutCard(summary: summary(), rows: wide)));
+
+    // No render overflow was reported (the test binding rethrows them), and
+    // every value's painted box sits inside its column, flush right.
+    expect(tester.takeException(), isNull);
+    for (final (label, width) in [
+      ('10000s', 46.0),
+      ('−1000', 42.0),
+      ('15', 46.0),
+      ('+1000', 42.0),
+    ]) {
+      final text = find.text(label);
+      expect(text, findsOneWidget);
+      final textBox = tester.getRect(text);
+      final cell = find.ancestor(of: text, matching: find.byType(FittedBox));
+      final cellBox = tester.getRect(cell);
+      expect(cellBox.width, width);
+      expect(textBox.width, lessThanOrEqualTo(width + 0.01), reason: label);
+      expect(textBox.right, closeTo(cellBox.right, 0.01), reason: label);
+    }
+  });
+
   testWidgets('shows completed state instead of Start', (tester) async {
     await tester.pumpWidget(
       host(

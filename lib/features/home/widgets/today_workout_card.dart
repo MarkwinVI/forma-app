@@ -335,26 +335,18 @@ class _ExerciseRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: TodayWorkoutCard._colGap),
-          SizedBox(
+          _ValueCell(
             width: TodayWorkoutCard._previousColWidth,
-            child: Text(
-              row.previousLabel,
-              maxLines: 1,
-              textAlign: TextAlign.right,
-              style: _valueStyle(AppColors.textMuted),
-            ),
+            label: row.previousLabel,
+            color: AppColors.textMuted,
           ),
           const SizedBox(width: TodayWorkoutCard._colGap),
-          SizedBox(
+          // The signed number carries the direction on its own — an arrow
+          // beside it is the same fact twice.
+          _ValueCell(
             width: TodayWorkoutCard._changeColWidth,
-            // The signed number carries the direction on its own — an arrow
-            // beside it is the same fact twice.
-            child: Text(
-              row.changeLabel,
-              maxLines: 1,
-              textAlign: TextAlign.right,
-              style: _valueStyle(changeColor),
-            ),
+            label: row.changeLabel,
+            color: changeColor,
           ),
         ],
       ),
@@ -363,13 +355,43 @@ class _ExerciseRow extends StatelessWidget {
     if (onTap == null) return content;
     return Pressable(onTap: onTap, child: content);
   }
+}
 
-  static TextStyle _valueStyle(Color color) => TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: color,
-        height: 1.2,
-      );
+/// A right-aligned number in one of the fixed value columns. Every
+/// realistic total and delta fits at full size; the scale-down is a safety
+/// net so an outlandish one shrinks a little instead of clipping its sign.
+class _ValueCell extends StatelessWidget {
+  final double width;
+  final String label;
+  final Color color;
+
+  const _ValueCell({
+    required this.width,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
+        child: Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: color,
+            height: 1.2,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// The pill beside an exercise the program has just levelled the user up
