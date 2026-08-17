@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/core/widgets/tab_reset.dart';
 import 'package:forma_app/features/home/program_skill_trees_section.dart';
 import 'package:forma_app/features/home/progression_toast.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel.dart';
@@ -15,7 +16,8 @@ WheelFamily _family(
     title: title,
     trunk: [
       for (var i = 0; i < trunk.length; i++)
-        WheelNode(exerciseId: '$id-$i', name: '$title step $i', state: trunk[i]),
+        WheelNode(
+            exerciseId: '$id-$i', name: '$title step $i', state: trunk[i]),
     ],
     branches: const [],
   );
@@ -298,8 +300,7 @@ void main() {
     expect(trained, isTrue);
   });
 
-  testWidgets('a locked tree asks for the early start',
-      (tester) async {
+  testWidgets('a locked tree asks for the early start', (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
       activeCategoryIds: const {'a'},
@@ -330,8 +331,7 @@ void main() {
     expect(find.text('Start anyway'), findsOneWidget);
   });
 
-  testWidgets('program card is the plain door into the trees',
-      (tester) async {
+  testWidgets('program card is the plain door into the trees', (tester) async {
     await tester.pumpWidget(_host(SingleChildScrollView(
       child: ProgramSkillTreesCard(
         families: _families(),
@@ -344,8 +344,7 @@ void main() {
     expect(find.text('OPEN SKILL TREE MAP'), findsNothing);
   });
 
-  testWidgets('moved toast shows the OUT → IN pair with UNDO',
-      (tester) async {
+  testWidgets('moved toast shows the OUT → IN pair with UNDO', (tester) async {
     var undone = false;
     await tester.pumpWidget(_host(ProgressionToast(
       data: ProgressionToastData(
@@ -363,5 +362,39 @@ void main() {
     expect(find.text('Pushup'), findsOneWidget);
     await tester.tap(find.text('UNDO'));
     expect(undone, isTrue);
+  });
+
+  testWidgets(
+      'the tab reset signal pulls a focused tree back out to the overview',
+      (tester) async {
+    final reset = TabResetNotifier();
+    addTearDown(reset.dispose);
+    await tester.pumpWidget(_host(TabReset(
+      notifier: reset,
+      child: SkillWheelScreen(
+        families: _families(),
+        activeCategoryIds: const {'a'},
+        editable: true,
+        initialCategoryId: 'a',
+        onTrainNode: (_, __) async {},
+        onStopTraining: (_) async {},
+        onOpenExercise: (_) {},
+      ),
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+    // Focused on Pullups: the overview's progression list is gone.
+    expect(find.text('Stop training'), findsOneWidget);
+    expect(find.text('ACTIVE SKILL TREES'), findsNothing);
+
+    // The re-tap: the wheel claims it and flies back out.
+    expect(reset.fire(), isTrue);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(find.text('Stop training'), findsNothing);
+    expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
+
+    // Already on the overview: nothing to unwind, so the shell may scroll.
+    expect(reset.fire(), isFalse);
   });
 }

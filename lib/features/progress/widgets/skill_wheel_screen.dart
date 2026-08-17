@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
+import '../../../core/widgets/tab_reset.dart';
 import '../../home/home_dashboard_metrics.dart';
 import '../performance_overview.dart';
 import 'skill_tree_confirm.dart';
@@ -109,6 +110,32 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     }
   }
 
+  /// The shell's re-tap signal for the tab this screen is the index page
+  /// of. A focused tree counts as "deeper" even though it is not a route,
+  /// so a re-tap pulls out to the wheel overview instead of scrolling.
+  TabResetNotifier? _tabReset;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final tabReset = TabReset.maybeOf(context);
+    if (tabReset == _tabReset) return;
+    _tabReset?.removeListener(_onTabReset);
+    _tabReset = tabReset?..addListener(_onTabReset);
+  }
+
+  @override
+  void dispose() {
+    _tabReset?.removeListener(_onTabReset);
+    super.dispose();
+  }
+
+  void _onTabReset() {
+    if (_sel == null) return;
+    _tabReset?.markHandled();
+    _treeBack();
+  }
+
   @override
   void didUpdateWidget(covariant SkillWheelScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -120,10 +147,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
 
   /// What backing out of a focused tree does — pull out to the wheel, or
   /// leave the screen when the host opened straight into the tree.
-  VoidCallback get _treeBack =>
-      widget.exitOnTreeBack && widget.onBack != null
-          ? widget.onBack!
-          : _wheelController.back;
+  VoidCallback get _treeBack => widget.exitOnTreeBack && widget.onBack != null
+      ? widget.onBack!
+      : _wheelController.back;
 
   Future<void> _act(Future<void> Function() action) async {
     if (_acting) return;
@@ -139,8 +165,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   /// branch, or, for a trunk step, the rest of the trunk plus every branch
   /// (they all pass through it).
   List<WheelNode> _nodesAfter(WheelFamily family, WheelNode node) {
-    final trunkIndex = family.trunk
-        .indexWhere((step) => step.exerciseId == node.exerciseId);
+    final trunkIndex =
+        family.trunk.indexWhere((step) => step.exerciseId == node.exerciseId);
     if (trunkIndex >= 0) {
       return [
         ...family.trunk.sublist(trunkIndex + 1),
@@ -148,8 +174,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       ];
     }
     for (final branch in family.branches) {
-      final index = branch.steps
-          .indexWhere((step) => step.exerciseId == node.exerciseId);
+      final index =
+          branch.steps.indexWhere((step) => step.exerciseId == node.exerciseId);
       if (index >= 0) return branch.steps.sublist(index + 1);
     }
     return const [];
@@ -160,8 +186,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   bool _isBackward(WheelFamily family, WheelNode node) {
     if (node.state.isCleared) return true;
     return _nodesAfter(family, node).any(
-      (step) =>
-          step.state.isCleared || step.state == WheelNodeState.active,
+      (step) => step.state.isCleared || step.state == WheelNodeState.active,
     );
   }
 
@@ -323,8 +348,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   Widget build(BuildContext context) {
     final family = _sel == null ? null : widget.families[_sel!];
     final bottomInset = MediaQuery.of(context).padding.bottom + 78;
-    final familyActive = family != null &&
-        widget.activeCategoryIds.contains(family.categoryId);
+    final familyActive =
+        family != null && widget.activeCategoryIds.contains(family.categoryId);
     final lock = family == null || familyActive
         ? null
         : widget.treeLocks[family.categoryId];
@@ -342,10 +367,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       final node = flat[_focus.clamp(0, flat.length - 1)];
       // The current step of a running tree offers Stop; everything else
       // offers the verb that would make it the trained exercise.
-      final isCurrent =
-          familyActive && node.state == WheelNodeState.active;
-      final showCta = widget.editable &&
-          (isCurrent ? widget.onStopTraining != null : true);
+      final isCurrent = familyActive && node.state == WheelNodeState.active;
+      final showCta =
+          widget.editable && (isCurrent ? widget.onStopTraining != null : true);
       final lockedNode = node.state == WheelNodeState.locked;
       final panelBottomPad = MediaQuery.of(context).padding.bottom + 14;
       bottomPanelAllowance = 146 + (showCta ? 66 : 0);
@@ -370,8 +394,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 _WheelCta(
                   label: _acting ? 'Saving…' : 'Stop training',
                   color: AppColors.red,
-                  onTap:
-                      _acting ? null : () => _stopWithConfirm(family, node),
+                  onTap: _acting ? null : () => _stopWithConfirm(family, node),
                 )
               else
                 // A locked step — a locked tree's steps included — offers a
@@ -886,4 +909,3 @@ class _ProgressionsPanel extends StatelessWidget {
     );
   }
 }
-

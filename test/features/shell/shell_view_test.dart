@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/core/widgets/app_nav_bar.dart';
+import 'package:forma_app/core/widgets/tab_reset.dart';
 import 'package:forma_app/features/progress/progress_view.dart';
 import 'package:forma_app/features/shell/shell_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -96,5 +97,38 @@ void main() {
     await tester.tap(navItem('Progress'));
     await tester.pumpAndSettle();
     expect(find.text('deep page'), findsNothing);
+  });
+
+  testWidgets(
+      'with nothing to pop, a re-tap asks the index page to unwind its own '
+      'in-widget depth (the focused skill tree)', (tester) async {
+    await pumpShell(tester);
+
+    // Stand in for the skill wheel: the Progress index page listens on the
+    // tab's reset signal exactly the way SkillWheelScreen does.
+    final notifier =
+        TabReset.maybeOf(tester.element(find.byType(ProgressView)));
+    expect(notifier, isNotNull);
+    var resets = 0;
+    notifier!.addListener(() {
+      resets++;
+      notifier.markHandled();
+    });
+
+    await tester.tap(navItem('Progress'));
+    await tester.pumpAndSettle();
+    expect(resets, 1);
+
+    // A pushed page still takes precedence: it pops, and the index page is
+    // not asked to unwind until the next re-tap.
+    await pushDeepPage(tester);
+    await tester.tap(navItem('Progress'));
+    await tester.pumpAndSettle();
+    expect(find.text('deep page'), findsNothing);
+    expect(resets, 1);
+
+    await tester.tap(navItem('Progress'));
+    await tester.pumpAndSettle();
+    expect(resets, 2);
   });
 }

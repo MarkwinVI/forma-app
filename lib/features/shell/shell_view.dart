@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_nav_bar.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/tab_reset.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../data/data_view.dart';
@@ -47,6 +48,14 @@ class _ShellViewState extends State<ShellView> {
     for (var i = 0; i < 4; i++) _TabStackObserver(_onTabStackChanged),
   ];
 
+  /// One reset signal per tab, for index pages whose "deeper" state lives
+  /// inside a widget rather than on the navigator stack (the Progress
+  /// tab's focused skill tree). Fired on a re-tap once nothing is left to
+  /// pop.
+  final _tabResetNotifiers = [
+    for (var i = 0; i < 4; i++) TabResetNotifier(),
+  ];
+
   /// One scroll controller per tab, handed down as each tab's
   /// [PrimaryScrollController] so a tap on the tab you are already on can
   /// send it back to the top. The tab's own scroll view opts in with
@@ -65,6 +74,9 @@ class _ShellViewState extends State<ShellView> {
   void dispose() {
     for (final controller in _tabScrollControllers) {
       controller.dispose();
+    }
+    for (final notifier in _tabResetNotifiers) {
+      notifier.dispose();
     }
     _activeIndex.dispose();
     super.dispose();
@@ -89,9 +101,13 @@ class _ShellViewState extends State<ShellView> {
       return;
     }
 
-    // Already on the index page, so the re-tap means "take me back to the
-    // top". The positions are animated one by one because a tab can host
-    // more than one attached scrollable across its states.
+    // Nothing on the stack, but the index page itself may be "deeper" — a
+    // focused tree on the skill wheel — and unwind on its own.
+    if (_tabResetNotifiers[index].fire()) return;
+
+    // Already at the index page proper, so the re-tap means "take me back
+    // to the top". The positions are animated one by one because a tab can
+    // host more than one attached scrollable across its states.
     for (final position in _tabScrollControllers[index].positions) {
       position.animateTo(
         0,
@@ -187,12 +203,15 @@ class _ShellViewState extends State<ShellView> {
                 observers: [_tabStackObservers[i]],
                 onGenerateRoute: (settings) => MaterialPageRoute(
                   settings: settings,
-                  builder: (_) => PrimaryScrollController(
-                    controller: _tabScrollControllers[i],
-                    child: ValueListenableBuilder<int>(
-                      valueListenable: _activeIndex,
-                      builder: (_, activeIndex, __) =>
-                          _tabPage(i, activeIndex),
+                  builder: (_) => TabReset(
+                    notifier: _tabResetNotifiers[i],
+                    child: PrimaryScrollController(
+                      controller: _tabScrollControllers[i],
+                      child: ValueListenableBuilder<int>(
+                        valueListenable: _activeIndex,
+                        builder: (_, activeIndex, __) =>
+                            _tabPage(i, activeIndex),
+                      ),
                     ),
                   ),
                 ),
