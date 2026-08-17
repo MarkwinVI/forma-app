@@ -8,7 +8,6 @@ import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_schedule_service.dart';
-import 'program_balance_advice.dart';
 import 'program_day_items.dart';
 
 /// One training day of the week as the program currently stands.
@@ -51,8 +50,9 @@ class BalanceProgramContext {
 }
 
 /// One scheduled block: an exercise of the movement on a given day. Two
-/// blocks can land on the same day — that is what makes a movement doubled
-/// up rather than simply frequent.
+/// blocks can land on the same day, and the balance counts that day once —
+/// a second horizontal push in the same session is more volume, not more
+/// frequency.
 class BalanceBlock {
   final int weekday;
   final ProgramDayItem item;
@@ -60,17 +60,17 @@ class BalanceBlock {
   const BalanceBlock({required this.weekday, required this.item});
 }
 
-/// The weekly block count a primary category is recommended to sit at.
-///
-/// The same benchmark whatever the split. A split that only reaches horizontal
-/// pull twice a week does not lower what horizontal pull needs — it is the
-/// split that has to give.
-const int kBalanceMinBlocks = 3;
+/// The most weekly sessions of one movement a program is asked for. A split
+/// that could reach a movement five times a week does not make five the
+/// target — past three, the extra days stop paying for themselves.
+const int kBalanceMaxTarget = 3;
 
-/// Below this many weekly-equivalent chances, the split itself is what holds
-/// a movement back — the advice reaches for the schedule instead of an
-/// exercise.
-const int kBalanceMinDays = 2;
+/// What a split asks for however few days it is run on. Full body trains
+/// everything every session, so it asks for three whatever the week holds; a
+/// two-session split asks for two. Training fewer days than that does not
+/// lower what the movement needs — it is the schedule that has to give.
+int kBalanceMinTarget(TrainingProgramType programType) =>
+    programType == TrainingProgramType.fullBody ? 3 : 2;
 
 /// One line of the weekly balance: the movement patterns it covers.
 class BalanceGroup {
@@ -111,8 +111,9 @@ const List<BalanceGroup> kBalanceGroups = [
   ),
 ];
 
-/// Where a category sits, read straight off its weekly blocks:
-/// 0 missing, 1 low, 2 adequate, 3 recommended, 4 high, 5 and up very high.
+/// Where a category sits: 0 days missing, 1 low, 5 and up very high, and
+/// everything between read against what the split recommends — short of the
+/// target is adequate, on it recommended, past it high.
 enum BalanceVerdict {
   missing,
   low,
@@ -190,80 +191,98 @@ class BalanceCategory {
   /// Every scheduled block of this movement, in week order.
   final List<BalanceBlock> blocks;
 
-  /// How many days a week the split could train this movement. Fractional on
-  /// purpose: a three-day upper/lower split runs each session an average of
-  /// 1.5 times a week. Null when the week was read without program context.
-  final double? opportunities;
+  /// The days a week the program recommends this movement: what the split
+  /// gives it, never below what the split asks for and never above three.
+  /// Full body recommends three; both four-day splits come back to a
+  /// movement twice a week, so twice is what they recommend.
+  final int target;
+
+  /// The days this week whose session trains the movement at all — what the
+  /// generated program would cover before any exercise was added or taken
+  /// away. Three days of push/pull is two push days and one pull day, so
+  /// pull movements are expected once that week and push movements twice.
+  final int expected;
 
   const BalanceCategory({
     required this.group,
     required this.blocks,
-    this.opportunities,
+    required this.expected,
+    this.target = kBalanceMaxTarget,
   });
 
   String get label => group.label;
   bool covers(ProgramDayItem item) => group.categories.contains(item.category);
 
-  /// Exercise name → the weekdays it runs on, in the order the week lists it.
-  Map<String, List<int>> get exerciseDays {
-    final days = <String, List<int>>{};
-    for (final block in blocks) {
-      (days[block.item.name] ??= []).add(block.weekday);
-    }
-    return days;
-  }
-
-  /// Every scheduled block, however they fall across the week. Two exercises
-  /// of this movement in one session are two blocks but one day.
+  /// Every scheduled exercise of this movement, however they fall across the
+  /// week — the volume behind the frequency.
   int get weeklyBlocks => blocks.length;
 
   /// How many training days a week this category comes up on. Two exercises
   /// of the same category in one session are one go at that pattern, not two.
   int get times => {for (final block in blocks) block.weekday}.length;
 
-  /// Blocks alone decide the read — every category held to the same scale.
-  BalanceVerdict get verdict => switch (weeklyBlocks) {
-        0 => BalanceVerdict.missing,
-        1 => BalanceVerdict.low,
-        2 => BalanceVerdict.adequate,
-        3 => BalanceVerdict.recommended,
-        4 => BalanceVerdict.high,
-        _ => BalanceVerdict.veryHigh,
-      };
+  /// Days decide the read, against the target the split sets. Nothing at all
+  /// and a single day are off wherever the split lands, and so is a movement
+  /// trained five days a week.
+  BalanceVerdict get verdict {
+    if (times == 0) return BalanceVerdict.missing;
+    if (times == 1) return BalanceVerdict.low;
+    if (times > 4) return BalanceVerdict.veryHigh;
+    if (times < target) return BalanceVerdict.adequate;
+    if (times == target) return BalanceVerdict.recommended;
+    return BalanceVerdict.high;
+  }
+
+  /// A movement the week does not train often enough to leave alone. Two days
+  /// against a target of three is a nudge, not a fault, so it is not counted
+  /// here — only nothing at all, or a single day.
+  bool get isShort =>
+      verdict == BalanceVerdict.missing || verdict == BalanceVerdict.low;
+
+  /// The week trains this movement less often than the generated program
+  /// would have: exercises were taken out of workouts, or moved onto days
+  /// that already trained it.
+  bool get shortOfProgram => times < expected;
+
+  /// The program itself cannot reach the recommended frequency — whatever
+  /// the workouts hold, this split on these days does not come back to the
+  /// movement often enough.
+  bool get shortOfSplit => expected < target;
 }
 
 /// The sentence the detail page shows under the week: what the current
 /// weekly exposure means for progress.
 String balanceStatusCopy(BalanceCategory entry) {
   final label = entry.label;
+  final movement = label.toLowerCase();
   switch (entry.verdict) {
     case BalanceVerdict.missing:
-      return 'You’re not currently training $label. Add it to keep your '
-          'program balanced.';
+      return 'You’re not currently training $movement. Add a $movement '
+          'exercise to one of your workouts.';
     case BalanceVerdict.low:
-      return 'You’re training $label once per week. Increasing it to at '
-          'least twice per week should support more consistent progress.';
+      return 'You’re training $movement once per week. Add a $movement '
+          'exercise to another workout to train it more consistently.';
     case BalanceVerdict.adequate:
-      return 'You’re training $label twice per week. That’s enough to make '
-          'solid progress, though training it 3 times per week may help you '
-          'progress faster.';
+      return 'You’re training $movement twice per week. That’s enough to '
+          'make solid progress, but adding it to one more workout would '
+          'match the recommended frequency for your program.';
     case BalanceVerdict.recommended:
-      return 'You’re training $label 3 times per week — a strong frequency '
-          'for progressing efficiently.';
+      return 'You’re training $movement at the recommended frequency for '
+          'your program.';
     case BalanceVerdict.high:
-      return 'You’re training $label 4 times per week. That’s more than the '
-          'recommendation, which can work well as long as you’re recovering '
-          'between sessions.';
+      return 'You’re training $movement more often than your program '
+          'requires. This can work well if your training volume and recovery '
+          'are appropriate.';
     case BalanceVerdict.veryHigh:
-      return 'You’re training $label ${entry.weeklyBlocks} times per week. '
-          'That’s likely more than you can recover from — cutting back '
-          'towards 3 times per week should support better progress.';
+      return 'You’re training $movement very frequently. Consider removing '
+          'it from one or more workout days if recovery or performance '
+          'becomes an issue.';
   }
 }
 
-/// Reads the week into one entry per group. The verdict is the same either
-/// way — pass [context] so the advice knows how many chances the split gives
-/// a movement, which is what decides whether the split is the thing to change.
+/// Reads the week into one entry per group. Pass [context] so each entry
+/// knows how many chances the split gives its movement — that is what the
+/// verdict is measured against.
 List<BalanceCategory> balanceFromWeek(
   List<ProgramWeekDay> week, {
   BalanceProgramContext? context,
@@ -272,8 +291,13 @@ List<BalanceCategory> balanceFromWeek(
     for (final group in kBalanceGroups)
       BalanceCategory(
         group: group,
-        opportunities:
-            context == null ? null : _opportunitiesFor(group, context),
+        target: context == null ? kBalanceMaxTarget : _targetFor(group, context),
+        expected: week
+            .where(
+              (day) => TrainingProgramService.patternsForSession(day.sessionType)
+                  .any(group.categories.contains),
+            )
+            .length,
         blocks: [
           for (final day in week)
             for (final item in day.items)
@@ -282,6 +306,16 @@ List<BalanceCategory> balanceFromWeek(
         ],
       ),
   ];
+}
+
+/// The days a week the program recommends a movement: what the split gives
+/// it, held between what the split asks for and three. Six days of full body
+/// could reach a movement six times, and still recommends three.
+int _targetFor(BalanceGroup group, BalanceProgramContext context) {
+  return _opportunitiesFor(group, context).floor().clamp(
+        kBalanceMinTarget(context.programType),
+        kBalanceMaxTarget,
+      );
 }
 
 /// Weekly-equivalent chances the split gives a movement: the training days a
@@ -300,6 +334,133 @@ double _opportunitiesFor(BalanceGroup group, BalanceProgramContext context) {
       )
       .length;
   return context.trainingDaysPerWeek * covering / sequence.length;
+}
+
+/// Why the week reads the way it does, once every movement has been placed
+/// against both what the program would have covered and what the split can
+/// reach. The distinction is what makes the top-level fix the right one:
+/// another training day does nothing for a movement the user deleted, and
+/// putting exercises back does nothing for a split that never comes round.
+enum BalanceCause {
+  balanced,
+
+  /// The split on these days cannot reach the recommendation, whatever the
+  /// workouts hold.
+  schedule,
+
+  /// The generated program covered it; edits to the workouts took it away.
+  workoutEdits,
+
+  /// Both, and they compound.
+  mixed,
+
+  /// Nothing is short, but something is trained near daily.
+  veryHigh,
+}
+
+/// The read of the whole week, shown above the movement rows: what is wrong,
+/// and the highest-level thing that would fix it.
+class BalanceBanner {
+  final BalanceCause cause;
+
+  /// What the week is doing, in one sentence.
+  final String headline;
+
+  /// What to do about it.
+  final String detail;
+
+  const BalanceBanner({
+    required this.cause,
+    required this.headline,
+    required this.detail,
+  });
+}
+
+/// Reads the whole week: which movements fall short, and whether the split or
+/// the workouts put them there.
+BalanceBanner balanceBannerFor(
+  List<BalanceCategory> categories,
+  BalanceProgramContext context,
+) {
+  final short = [
+    for (final entry in categories)
+      if (entry.isShort) entry,
+  ];
+
+  if (short.isEmpty) {
+    if (categories.any((entry) => entry.verdict == BalanceVerdict.veryHigh)) {
+      return const BalanceBanner(
+        cause: BalanceCause.veryHigh,
+        headline: 'Some movement patterns are being trained very frequently.',
+        detail: 'Review the areas below and reduce training frequency if '
+            'recovery or performance becomes an issue.',
+      );
+    }
+    return const BalanceBanner(
+      cause: BalanceCause.balanced,
+      headline: 'Your weekly balance looks good.',
+      detail: 'Your main movement patterns are being trained at the '
+          'recommended frequency for your program.',
+    );
+  }
+
+  final fromSplit = short.any((entry) => entry.shortOfSplit);
+  final fromEdits = short.any((entry) => entry.shortOfProgram);
+
+  if (fromSplit && fromEdits) {
+    return const BalanceBanner(
+      cause: BalanceCause.mixed,
+      headline: 'Your weekly balance is affected by both your training '
+          'schedule and changes to your workouts.',
+      detail: 'Restore the missing movement patterns first. You can then '
+          'adjust your training days or split to improve the remaining '
+          'low-frequency areas.',
+    );
+  }
+
+  if (fromSplit) {
+    return BalanceBanner(
+      cause: BalanceCause.schedule,
+      headline: 'Your weekly balance is uneven because you’re training '
+          '${_routineName(context.programType)} '
+          '${context.trainingDaysPerWeek} days per week.',
+      detail: _scheduleFix(context),
+    );
+  }
+
+  // Nothing about the split explains it: the program covered these movements
+  // and the workouts no longer do.
+  return const BalanceBanner(
+    cause: BalanceCause.workoutEdits,
+    headline: 'Some movement patterns are missing or trained less often '
+        'because of changes to your workouts.',
+    detail: 'Add exercises back to the affected workouts or add standalone '
+        'exercises to the areas below.',
+  );
+}
+
+/// "a Push / Pull routine" — the split named as the user picked it, so the
+/// banner and the Split row read as the same thing.
+String _routineName(TrainingProgramType programType) {
+  final label = programType.label;
+  final article = 'AEIOU'.contains(label[0]) ? 'an' : 'a';
+  return '$article $label routine';
+}
+
+/// The way out of a schedule-caused imbalance: a fourth day is what makes a
+/// two-session split even, so it leads — unless the program is already there,
+/// or is full body, which has no other split to move to.
+String _scheduleFix(BalanceProgramContext context) {
+  if (context.programType == TrainingProgramType.fullBody) {
+    return 'Add another training day, or add standalone exercises to the '
+        'low-frequency areas below.';
+  }
+  if (context.trainingDaysPerWeek < 4) {
+    return 'Increase to 4 training days, switch to Full Body, or add '
+        'standalone exercises to the low-frequency areas below.';
+  }
+  return 'Add another training day, switch to Full Body, or add standalone '
+      'exercises to the low-frequency areas below.';
 }
 
 /// "2 areas undertrained", "1 area overtrained" — or all clear.
@@ -347,16 +508,14 @@ class ProgramBalanceView extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(22, 14, 22, 40),
                 children: [
+                  _BannerCard(balanceBannerFor(categories, program)),
                   for (final entry in categories)
                     _CategoryRow(
                       entry: entry,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => _CategoryDetailView(
-                            entry: entry,
-                            week: week,
-                            program: program,
-                          ),
+                          builder: (_) =>
+                              _CategoryDetailView(entry: entry, week: week),
                         ),
                       ),
                     ),
@@ -370,28 +529,19 @@ class ProgramBalanceView extends StatelessWidget {
   }
 }
 
-/// Why one category reads the way it does: the week day by day, what the
-/// current exposure means — and, only when it is missing or low, the
-/// concrete ways to improve it.
+/// Why one category reads the way it does: the week day by day, and what the
+/// current exposure means.
 class _CategoryDetailView extends StatelessWidget {
   final BalanceCategory entry;
   final List<ProgramWeekDay> week;
-  final BalanceProgramContext program;
 
-  const _CategoryDetailView({
-    required this.entry,
-    required this.week,
-    required this.program,
-  });
+  const _CategoryDetailView({required this.entry, required this.week});
 
   @override
   Widget build(BuildContext context) {
     final verdict = entry.verdict;
+    final days = entry.times;
     final blocks = entry.weeklyBlocks;
-    final advice = verdict == BalanceVerdict.missing ||
-            verdict == BalanceVerdict.low
-        ? balanceImprovementAdvice(entry: entry, week: week, context: program)
-        : const <BalanceAdvice>[];
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -417,10 +567,10 @@ class _CategoryDetailView extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 24),
                     child: Text.rich(
                       TextSpan(
-                        // Blocks, not days — a movement can sit on three
-                        // days and still be doubled up on one of them.
+                        // Volume and frequency kept apart: the exercises are
+                        // the blocks, the days are what the verdict reads.
                         text: '$blocks ${blocks == 1 ? 'block' : 'blocks'} '
-                            'a week · ',
+                            'across $days ${days == 1 ? 'day' : 'days'} · ',
                         children: [
                           TextSpan(
                             text: verdict.label,
@@ -447,21 +597,6 @@ class _CategoryDetailView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (advice.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 26, bottom: 2),
-                      child: Text(
-                        'WAYS TO IMPROVE IT',
-                        style: GoogleFonts.robotoMono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                          letterSpacing: 1.65,
-                        ),
-                      ),
-                    ),
-                    for (final fix in advice) _FixRow(fix),
-                  ],
                 ],
               ),
             ),
@@ -505,6 +640,76 @@ class _PageHeader extends StatelessWidget {
               color: AppColors.textPrimary,
               letterSpacing: -0.9,
               height: 1.05,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The whole-week read, above the movement rows: what is off, and the fix
+/// that actually addresses it.
+class _BannerCard extends StatelessWidget {
+  final BalanceBanner banner;
+
+  const _BannerCard(this.banner);
+
+  Color get _accent {
+    switch (banner.cause) {
+      case BalanceCause.balanced:
+        return AppColors.green;
+      case BalanceCause.veryHigh:
+        return AppColors.amber;
+      case BalanceCause.schedule:
+      case BalanceCause.workoutEdits:
+      case BalanceCause.mixed:
+        return AppColors.red;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 10),
+      padding: const EdgeInsets.fromLTRB(15, 14, 15, 15),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(top: 6, right: 10),
+            decoration: BoxDecoration(color: _accent, shape: BoxShape.circle),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  banner.headline,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.15,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  banner.detail,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -624,64 +829,6 @@ class _DayRow extends StatelessWidget {
                         ),
                       ),
                     ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// One suggested action: what to do, then why, so the list reads as choices
-/// rather than a wall of sentences.
-class _FixRow extends StatelessWidget {
-  final BalanceAdvice advice;
-
-  const _FixRow(this.advice);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 13),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 4,
-            height: 4,
-            margin: const EdgeInsets.only(top: 8, right: 10),
-            decoration: const BoxDecoration(
-              color: AppColors.surface3,
-              shape: BoxShape.circle,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  advice.title,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.15,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  advice.detail,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    color: AppColors.textSecondary,
-                    height: 1.5,
-                  ),
-                ),
               ],
             ),
           ),
