@@ -80,8 +80,7 @@ squat_assisted_squat,Squat (Assisted),squat,foundation,squat_assisted,,1,
 squat_deep_assisted_squat,"Squat (Assisted, Deep)",squat,foundation,squat_assisted_deep,squat_assisted_squat,1,
 squat_squat,Squat (Bodyweight),squat,foundation,squat_bodyweight,squat_deep_assisted_squat,1,
 squat_deep_squat,Squat (Deep),squat,foundation,squat_deep,squat_squat,2,
-squat_barbell_squat,Squat (Barbell),squat,weighted,squat_barbell,squat_deep_squat,2,"0kg, just the bar"
-squat_barbell_plus_25,Barbell Squat (25% Bodyweight),squat,weighted,squat_barbell,squat_barbell_squat,3,user_bodyweight * 0.25
+squat_barbell_plus_25,Barbell Squat (25% Bodyweight),squat,weighted,squat_barbell,squat_deep_squat,3,user_bodyweight * 0.25
 squat_barbell_plus_50,Barbell Squat (50% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_25,3,user_bodyweight * 0.50
 squat_barbell_plus_75,Barbell Squat (75% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_50,4,user_bodyweight * 0.75
 squat_barbell_plus_100,Barbell Squat (100% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_75,4,user_bodyweight
@@ -143,8 +142,7 @@ hinge_single_leg_rdl,Single Leg Romanian Deadlift (Bodyweight),hinge,nordic_curl
 hinge_banded_nordic_eccentric,"Nordic Hamstring Curl (Banded, Eccentric)",hinge,nordic_curls,nordic_hamstring_curl_banded_eccentric,hinge_single_leg_rdl,3,
 hinge_banded_nordic,Nordic Hamstring Curl (Banded),hinge,nordic_curls,nordic_hamstring_curl_banded,hinge_banded_nordic_eccentric,4,
 hinge_nordic_curl,Nordic Hamstrings Curls,hinge,nordic_curls,nordic_hamstrings_curls,hinge_banded_nordic,5,
-hinge_romanian_deadlift_barbell,Romanian Deadlift (Barbell),hinge,weighted,romanian_deadlift_barbell,hinge_romanian_deadlift_bodyweight,2,"0kg, just the bar"
-hinge_rdl_25_bw,Romanian Deadlift (25% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_romanian_deadlift_barbell,2,user_bodyweight * 0.25
+hinge_rdl_25_bw,Romanian Deadlift (25% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_romanian_deadlift_bodyweight,2,user_bodyweight * 0.25
 hinge_rdl_50_bw,Romanian Deadlift (50% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_25_bw,3,user_bodyweight * 0.50
 hinge_rdl_75_bw,Romanian Deadlift (75% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_50_bw,3,user_bodyweight * 0.75
 hinge_rdl_100_bw,Romanian Deadlift (100% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_75_bw,4,user_bodyweight * 1.00

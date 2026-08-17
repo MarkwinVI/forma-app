@@ -125,14 +125,19 @@ class ExerciseIdMigration {
     'bulgarian_split_squat': 'squat_bulgarian_split_squat',
     'single_leg_rdl': 'hinge_single_leg_rdl',
     'barbell_squat': 'barbell_squat_barbell_squat',
-    'romanian_deadlift': 'hinge_romanian_deadlift_barbell',
+    'romanian_deadlift': 'hinge_rdl_25_bw',
     'box_pistol_squat_knee_height': 'squat_box_pistol_squat_knee_height',
     'nordic_curl': 'hinge_nordic_curl',
     // The hinge slot's pre-tree steps, replaced when it grew into a real
-    // progression: the loaded RDL became the weighted ladder's bar step, and
-    // both Nordic steps the ladder's final curl.
-    'hinge_romanian_deadlift': 'hinge_romanian_deadlift_barbell',
+    // progression: the loaded RDL became the weighted ladder, and both Nordic
+    // steps the ladder's final curl.
+    'hinge_romanian_deadlift': 'hinge_rdl_25_bw',
     'hinge_nordic_nordic_curl': 'hinge_nordic_curl',
+    // Both weighted ladders used to open on an unloaded bar. That step is
+    // gone — the ladders start at a quarter of bodyweight — so anyone who was
+    // standing on it moves to the rung that replaced it.
+    'squat_barbell_squat': 'squat_barbell_plus_25',
+    'hinge_romanian_deadlift_barbell': 'hinge_rdl_25_bw',
     'hinge_posterior_chain_nordic_curl': 'hinge_nordic_curl',
     'box_pistol_squat_mid_calf_height':
         'squat_box_pistol_squat_mid_calf_height',

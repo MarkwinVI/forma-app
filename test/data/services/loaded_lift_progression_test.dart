@@ -9,7 +9,7 @@ import 'package:forma_app/data/services/exercise_progression_service.dart';
 /// ask-first path any more.
 void main() {
   final barbellSquat = ExerciseCatalog.findById('barbell_squat_barbell_squat')!;
-  final weightedSquat = ExerciseCatalog.findById('squat_barbell_squat')!;
+  final weightedSquat = ExerciseCatalog.findById('squat_barbell_plus_25')!;
   final pushUp = ExerciseCatalog.findById('pushups_push_up')!;
 
   ExerciseProgress progressAt(

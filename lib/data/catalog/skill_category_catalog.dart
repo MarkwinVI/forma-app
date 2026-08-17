@@ -279,7 +279,6 @@ class SkillCategoryCatalog {
         'squat_deep_assisted_squat',
         'squat_squat',
         'squat_deep_squat',
-        'squat_barbell_squat',
         'squat_barbell_plus_25',
         'squat_barbell_plus_50',
         'squat_barbell_plus_75',
@@ -483,7 +482,6 @@ class SkillCategoryCatalog {
       ],
       'weighted': [
         'hinge_romanian_deadlift_bodyweight',
-        'hinge_romanian_deadlift_barbell',
         'hinge_rdl_25_bw',
         'hinge_rdl_50_bw',
         'hinge_rdl_75_bw',

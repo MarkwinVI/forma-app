@@ -189,7 +189,6 @@ void main() {
             'squat_deep_assisted_squat',
             'squat_squat',
             'squat_deep_squat',
-            'squat_barbell_squat',
             'squat_barbell_plus_25',
             'squat_barbell_plus_50',
             'squat_barbell_plus_75',
@@ -213,14 +212,14 @@ void main() {
       expect(plan.statuses['squat_barbell_plus_75'], ExerciseStatus.active);
     });
 
-    test('a blank squat answer starts on the empty bar', () {
+    test('a blank squat answer starts on the ladder\u2019s first rung', () {
       final plan = planFor(hasGym: true);
 
-      expect(plan.statuses['squat_barbell_squat'], ExerciseStatus.active);
+      expect(plan.statuses['squat_barbell_plus_25'], ExerciseStatus.active);
       expect(plan.statuses['squat_deep_squat'], ExerciseStatus.mastered);
     });
 
-    test('without a bodyweight the rung loads cannot resolve — the bar again',
+    test('without a bodyweight the rung loads cannot resolve — the first rung',
         () {
       final plan = planFor(
         hasGym: true,
@@ -228,7 +227,7 @@ void main() {
         bodyweightKg: null,
       );
 
-      expect(plan.statuses['squat_barbell_squat'], ExerciseStatus.active);
+      expect(plan.statuses['squat_barbell_plus_25'], ExerciseStatus.active);
     });
 
     test('the weighted hinge places its rung from 80% of the RDL max', () {
@@ -244,7 +243,6 @@ void main() {
         [
           for (final id in const [
             'hinge_romanian_deadlift_bodyweight',
-            'hinge_romanian_deadlift_barbell',
             'hinge_rdl_25_bw',
             'hinge_rdl_50_bw',
             'hinge_rdl_75_bw',
@@ -264,7 +262,7 @@ void main() {
         ExerciseStatus.active,
       );
       expect(
-        plan.statuses.containsKey('hinge_romanian_deadlift_barbell'),
+        plan.statuses.containsKey('hinge_rdl_25_bw'),
         isFalse,
       );
     });
@@ -316,7 +314,7 @@ void main() {
           'dips_bench_dips',
           'rows_vertical_rows',
           'pushups_wall_push_up',
-          'squat_barbell_squat',
+          'squat_barbell_plus_25',
           'hinge_romanian_deadlift_bodyweight',
           'core_foot_supported_l_sit',
         ],
@@ -337,7 +335,7 @@ void main() {
         [
           'dips_bench_dips',
           'pushups_wall_push_up',
-          'squat_barbell_squat',
+          'squat_barbell_plus_25',
           'core_foot_supported_l_sit',
           'lateral_raise_dumbbell',
         ],
@@ -383,7 +381,7 @@ void main() {
           hasGym: true,
         ),
         [
-          'squat_barbell_squat',
+          'squat_barbell_plus_25',
           'hinge_romanian_deadlift_bodyweight',
           'core_foot_supported_l_sit',
           'standing_calf_raise',
@@ -464,12 +462,11 @@ void main() {
       const plan = ProgramStartPlan(
         tracks: {},
         statuses: {
-          'hinge_romanian_deadlift_barbell': ExerciseStatus.active,
+          'hinge_rdl_25_bw': ExerciseStatus.active,
           'hinge_romanian_deadlift_bodyweight': ExerciseStatus.mastered,
         },
         targets: {
-          'hinge_romanian_deadlift_barbell':
-              ProgramStartTarget(sets: 3, value: 5, weightKg: 60),
+          'hinge_rdl_25_bw': ProgramStartTarget(sets: 3, value: 5, weightKg: 60),
         },
       );
 
@@ -478,7 +475,7 @@ void main() {
         existing: const {},
       );
 
-      final rdl = positions['hinge_romanian_deadlift_barbell']!;
+      final rdl = positions['hinge_rdl_25_bw']!;
       expect(rdl.status, ExerciseStatus.active);
       expect(rdl.targetSets, 3);
       expect(rdl.targetValue, 5);

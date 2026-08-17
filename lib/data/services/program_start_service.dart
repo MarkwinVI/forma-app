@@ -69,8 +69,8 @@ class ProgramStartPlan {
 ///    first step. A weighted branch starts on the deepest barbell rung whose load
 ///    fits inside 80% of the reported one-rep max — rounded down, so an
 ///    answer between rungs lands on the lighter one. Without an answer the
-///    squat opens on the empty bar and the hinge on the tree's first step,
-///    the bodyweight Romanian deadlift.
+///    squat opens on the ladder's first rung, a quarter of bodyweight, and
+///    the hinge on the tree's first step, the bodyweight Romanian deadlift.
 class ProgramStartPlanner {
   ProgramStartPlanner._();
 
@@ -84,8 +84,8 @@ class ProgramStartPlanner {
   static const double weightedStartFractionOfMax = 0.8;
 
   /// Per weighted branch: the setup answer (a one-rep max in kg) that places
-  /// the starting rung, and where a blank answer starts — the first barbell
-  /// step for the squat (a gym user never starts on the bodyweight run-up),
+  /// the starting rung, and where a blank answer starts — the first loaded
+  /// rung for the squat (a gym user never starts on the bodyweight run-up),
   /// the tree's first step for the hinge (the bodyweight Romanian deadlift
   /// is where an untested hinge begins).
   static const Map<String, _WeightedGate> _weightedGates = {
@@ -274,8 +274,9 @@ class ProgramStartPlanner {
   /// Index of the starting rung along a weighted [path]: the deepest barbell
   /// step whose load fits inside [weightedStartFractionOfMax] of the
   /// reported one-rep max. An answer between two rungs rounds down to the
-  /// lighter one. A blank answer — or a missing bodyweight, which the rung
-  /// loads scale from — starts on the first barbell step when
+  /// lighter one, and never below the ladder's first rung — that rung is
+  /// what the branch is for. A blank answer — or a missing bodyweight, which
+  /// the rung loads scale from — starts on that first loaded rung when
   /// [blankStartsOnBar], and at the path's first step otherwise.
   static int weightedStartIndex({
     required List<String> path,
