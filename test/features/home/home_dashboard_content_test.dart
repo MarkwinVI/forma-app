@@ -226,7 +226,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Needs attention'), findsOneWidget);
+    expect(find.text('Declining'), findsOneWidget);
     expect(find.text('Scapular Pulls'), findsOneWidget);
     expect(find.text('Weighted Pullups'), findsWidgets);
     expect(find.text('Best 12 reps'), findsOneWidget);

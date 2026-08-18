@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../catalog/exercise_catalog.dart';
 import '../models/exercise_log_model.dart';
 import '../models/workout_history_model.dart';
@@ -29,6 +31,12 @@ class WorkoutExerciseLogInput {
     this.targetValue,
   });
 }
+
+/// Bumped once a workout session — and everything it moves — has been
+/// written. The Train tab listens and re-reads itself while the finish
+/// screens are still up, so it is already showing the finished day by the
+/// time the user comes back to it.
+final ValueNotifier<int> workoutSavedSignal = ValueNotifier(0);
 
 class ExerciseLogService {
   final _client = SupabaseService.client;
@@ -360,6 +368,7 @@ class ExerciseLogService {
           number: index + 1,
           value: isTimed ? set.durationSeconds : set.reps,
           isTimed: isTimed,
+          weightKg: set.weightKg,
         ),
       );
     }

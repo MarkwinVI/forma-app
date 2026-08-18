@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/catalog/exercise_coaching_catalog.dart';
+import '../../../data/services/weight_unit_service.dart';
 import '../../home/home_dashboard_metrics.dart';
 import '../performance_overview.dart';
 import 'skill_wheel.dart';
@@ -36,7 +37,7 @@ const _perfGroupStyles = {
     Icons.trending_flat_rounded,
   ),
   PerformanceTrend.needsAttention: _PerfGroupStyle(
-    'NEEDS ATTENTION',
+    'DECLINING',
     AppColors.amber,
     Icons.trending_down_rounded,
   ),
@@ -177,7 +178,7 @@ class PerformancePanel extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               const Text(
-                'Best set:',
+                'Best session:',
                 style: TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textMuted,
@@ -192,26 +193,33 @@ class PerformancePanel extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              // Fixed-width trailing box so the best-set values line up
-              // across groups.
+              // Fixed-width trailing box so the values line up across
+              // groups. A kilogram delta can run to four figures, so the
+              // contents scale down to the box rather than spill out of it.
               SizedBox(
-                width: 52,
+                width: 60,
                 child: row.delta == null
                     ? null
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Icon(style.icon, size: 15, color: style.color),
-                          const SizedBox(width: 2),
-                          Text(
-                            _deltaLabel(row.delta!),
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: style.color,
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(style.icon, size: 15, color: style.color),
+                            const SizedBox(width: 2),
+                            Text(
+                              _deltaLabel(row),
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: style.color,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
               ),
             ],
@@ -311,16 +319,28 @@ class PerformancePanel extends StatelessWidget {
     ];
   }
 
+  /// The session's volume in the exercise's own unit: seconds, kilograms
+  /// (or pounds) lifted, or reps. Kilogram totals climb into four figures
+  /// quickly, so they read compacted — "2.9k kg".
   static String _bestLabel(PerformanceRowData row) {
     if (row.bestValue <= 0) return '—';
     if (row.isTimed) return '${row.bestValue}s';
+    if (row.isWeighted) {
+      final shown = WeightUnitService.toDisplay(row.bestValue.toDouble());
+      return '${compactNumber(shown)} ${WeightUnitService.unit.suffix}';
+    }
     return row.bestValue == 1 ? '1 rep' : '${row.bestValue} reps';
   }
 
-  /// Signed delta, with the typographic minus the design reads best with.
-  static String _deltaLabel(int delta) {
-    if (delta > 0) return '+$delta';
-    if (delta < 0) return '−${-delta}';
+  /// Signed delta, with the typographic minus the design reads best with;
+  /// a weighted delta in the display unit, compacted the same way.
+  static String _deltaLabel(PerformanceRowData row) {
+    final delta = row.delta ?? 0;
+    final shown = row.isWeighted
+        ? compactNumber(WeightUnitService.toDisplay(delta.abs().toDouble()))
+        : '${delta.abs()}';
+    if (delta > 0) return '+$shown';
+    if (delta < 0) return '−$shown';
     return '0';
   }
 }
@@ -870,4 +890,17 @@ class _PlayBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A number the eye can take in at a glance: whole below a thousand, then
+/// thousands to one decimal — 960, 1.5k, 12k. The decimal goes once it would
+/// be a trailing zero.
+String compactNumber(double value) {
+  if (value < 1000) return value.round().toString();
+  final thousands = value / 1000;
+  final oneDecimal = (thousands * 10).round() / 10;
+  if (oneDecimal >= 10 || oneDecimal == oneDecimal.roundToDouble()) {
+    return '${oneDecimal.round()}k';
+  }
+  return '${oneDecimal.toStringAsFixed(1)}k';
 }

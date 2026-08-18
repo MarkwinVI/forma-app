@@ -10,6 +10,38 @@ Widget _host(PerformanceOverview overview) => MaterialApp(
     );
 
 void main() {
+  testWidgets('a four-figure kilogram delta fits its box', (tester) async {
+    await tester.pumpWidget(_host(const PerformanceOverview(
+      rows: [
+        PerformanceRowData(
+          exerciseId: 'row',
+          exerciseName: 'Bent Over Row (Barbell)',
+          isTimed: false,
+          isWeighted: true,
+          bestValue: 2880,
+          delta: -1520,
+          daysTrained: 2,
+        ),
+      ],
+      comparesRecentSessions: false,
+    )));
+
+    // No overflow, and the kilogram figures read compacted.
+    expect(tester.takeException(), isNull);
+    expect(find.text('2.9k kg'), findsOneWidget);
+    expect(find.text('−1.5k'), findsOneWidget);
+  });
+
+  test('compact numbers read whole under a thousand, then in thousands', () {
+    expect(compactNumber(960), '960');
+    expect(compactNumber(999.6), '1000');
+    expect(compactNumber(1000), '1k');
+    expect(compactNumber(1520), '1.5k');
+    expect(compactNumber(2880), '2.9k');
+    expect(compactNumber(9960), '10k');
+    expect(compactNumber(12400), '12k');
+  });
+
   testWidgets('groups rows by trend with best set and delta', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [
@@ -32,7 +64,7 @@ void main() {
     expect(find.text('12 reps'), findsOneWidget);
     expect(find.text('0'), findsOneWidget);
 
-    expect(find.text('NEEDS ATTENTION'), findsOneWidget);
+    expect(find.text('DECLINING'), findsOneWidget);
     expect(find.text('9s'), findsOneWidget);
     expect(find.text('−2'), findsOneWidget);
   });
@@ -45,7 +77,7 @@ void main() {
 
     expect(find.text('IMPROVING'), findsOneWidget);
     expect(find.text('NO CHANGE'), findsNothing);
-    expect(find.text('NEEDS ATTENTION'), findsNothing);
+    expect(find.text('DECLINING'), findsNothing);
     expect(find.text('BUILDING BASELINE'), findsNothing);
   });
 
@@ -72,7 +104,7 @@ void main() {
       findsOneWidget,
     );
     // Baseline rows show no best-set value.
-    expect(find.text('Best set:'), findsOneWidget);
+    expect(find.text('Best session:'), findsOneWidget);
   });
 
   testWidgets('without any baseline the panel shows the building-baseline '

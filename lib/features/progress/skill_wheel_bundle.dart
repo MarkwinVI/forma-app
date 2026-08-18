@@ -219,6 +219,7 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
           exerciseId: item.exercise.id,
           exerciseName: item.exercise.name,
           isTimed: item.exercise.isTimed,
+          isWeighted: item.exercise.isWeighted,
         ));
       }
     }

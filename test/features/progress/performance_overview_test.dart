@@ -6,17 +6,23 @@ const _now = '2026-08-12';
 
 DateTime _date(String iso) => DateTime.parse(iso);
 
-ActivePerformanceExercise _active(String id, {bool isTimed = false}) =>
+ActivePerformanceExercise _active(
+  String id, {
+  bool isTimed = false,
+  bool isWeighted = false,
+}) =>
     ActivePerformanceExercise(
       exerciseId: id,
       exerciseName: id,
       isTimed: isTimed,
+      isWeighted: isWeighted,
     );
 
 PastWorkout _workout(
   String loggedAt,
   Map<String, List<int>> setsByExercise, {
   bool timed = false,
+  Map<String, List<double>> weightsByExercise = const {},
 }) {
   return PastWorkout(
     id: loggedAt,
@@ -39,6 +45,7 @@ PastWorkout _workout(
                 number: i + 1,
                 value: entry.value[i],
                 isTimed: timed,
+                weightKg: weightsByExercise[entry.key]?[i] ?? 0,
               ),
           ],
         ),
@@ -53,7 +60,7 @@ void main() {
       'anchor': [1],
     });
 
-    test('classifies improving, no change, and needs attention', () {
+    test('classifies improving, no change, and declining', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('up'), _active('flat'), _active('down')],
         workouts: [
@@ -61,13 +68,14 @@ void main() {
           // Previous window: Jul 16 – Jul 29.
           _workout('2026-07-20', {
             'up': [17, 15],
-            'flat': [12],
+            'flat': [12, 10],
             'down': [11, 9],
           }),
           // Current window: Jul 30 – Aug 12.
           _workout('2026-08-10', {
             'up': [21, 18],
-            'flat': [12, 10],
+            // The same 22 in a different shape — flat is about the total.
+            'flat': [8, 8, 6],
             'down': [9],
           }),
         ],
@@ -77,21 +85,87 @@ void main() {
       expect(overview.comparesRecentSessions, isFalse);
       expect(overview.hasComparisons, isTrue);
 
+      // A session is its sets added up: 17 + 15 = 32, then 21 + 18 = 39.
       final up = overview.rowsFor(PerformanceTrend.improving).single;
       expect(up.exerciseId, 'up');
-      expect(up.bestValue, 21);
-      expect(up.delta, 4);
+      expect(up.bestValue, 39);
+      expect(up.delta, 7);
 
       final flat = overview.rowsFor(PerformanceTrend.noChange).single;
-      expect(flat.bestValue, 12);
+      expect(flat.bestValue, 22);
       expect(flat.delta, 0);
 
+      // 11 + 9 = 20, then 9: down by 11.
       final down = overview.rowsFor(PerformanceTrend.needsAttention).single;
       expect(down.bestValue, 9);
-      expect(down.delta, -2);
+      expect(down.delta, -11);
     });
 
-    test('best set within a window spans several sessions', () {
+    test('a session is judged on its total, not its best set', () {
+      // Day A: 4, 6, 3 = 13. Day B: 5, 3, 2 = 10 — B's best set is lower
+      // and so is its total; the row reads three reps down.
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
+          anchor,
+          _workout('2026-07-20', {
+            'a': [4, 6, 3],
+          }),
+          _workout('2026-08-10', {
+            'a': [5, 3, 2],
+          }),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.bestValue, 10);
+      expect(row.delta, -3);
+      expect(row.trend, PerformanceTrend.needsAttention);
+    });
+
+    test('a weighted movement is judged on kilograms lifted', () {
+      // 3 × 10 kg × 8 = 240 kg, then 3 × 12 kg × 8 = 288 kg: up 48.
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('row', isWeighted: true)],
+        workouts: [
+          anchor,
+          _workout(
+            '2026-07-20',
+            {'row': [8, 8, 8]},
+            weightsByExercise: {'row': [10, 10, 10]},
+          ),
+          _workout(
+            '2026-08-10',
+            {'row': [8, 8, 8]},
+            weightsByExercise: {'row': [12, 12, 12]},
+          ),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.bestValue, 288);
+      expect(row.delta, 48);
+    });
+
+    test('a hold is judged on total seconds', () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('hold', isTimed: true)],
+        workouts: [
+          anchor,
+          _workout('2026-07-20', {'hold': [20, 20, 15]}, timed: true),
+          _workout('2026-08-10', {'hold': [25, 20, 20]}, timed: true),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.bestValue, 65);
+      expect(row.delta, 10);
+    });
+
+    test('best session within a window spans several sessions', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [

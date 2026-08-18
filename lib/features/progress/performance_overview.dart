@@ -1,38 +1,46 @@
 import '../../data/models/workout_history_model.dart';
 
-/// Where an exercise's best set is heading: last 14 days vs the 14 before.
-/// [buildingBaseline] means the exercise hasn't been trained on two separate
-/// days inside the 28-day span yet, so there is nothing to compare.
+/// Where an exercise's session volume is heading: last 14 days vs the 14
+/// before. [buildingBaseline] means the exercise hasn't been trained on two
+/// separate days inside the 28-day span yet, so there is nothing to compare.
 enum PerformanceTrend { improving, noChange, needsAttention, buildingBaseline }
 
 /// One exercise currently in the workout list, as the MY PERFORMANCE panel
-/// needs it — identity plus how its sets are counted.
+/// needs it — identity plus how its sets are counted: reps, seconds, or
+/// kilograms lifted (reps × load, summed over the sets).
 class ActivePerformanceExercise {
   final String exerciseId;
   final String exerciseName;
   final bool isTimed;
+  final bool isWeighted;
 
   const ActivePerformanceExercise({
     required this.exerciseId,
     required this.exerciseName,
     required this.isTimed,
+    this.isWeighted = false,
   });
 }
 
-/// One row of the MY PERFORMANCE panel: the exercise's best set in the
-/// current comparison window and how it moved against the previous one.
+/// One row of the MY PERFORMANCE panel: the exercise's best session volume
+/// in the current comparison window and how it moved against the previous.
+///
+/// A session's volume is its sets added up — total reps, total seconds, or
+/// total kilograms lifted (reps × load per set) for a weighted movement — so
+/// 4, 6, 3 is 13 reps and 5, 3, 2 is 10, and the second reads as 3 down.
 class PerformanceRowData {
   final String exerciseId;
   final String exerciseName;
   final bool isTimed;
+  final bool isWeighted;
 
-  /// Best single-set value (reps or seconds) shown on the row — the current
-  /// window's best, or the most recent logged best for an exercise still
-  /// building its baseline. 0 when the exercise has never been logged.
+  /// The session volume shown on the row — the current window's best, or
+  /// the most recent for an exercise still building its baseline. 0 when
+  /// the exercise has never been logged.
   final int bestValue;
 
-  /// Best-set movement against the comparison; null when the exercise has
-  /// no baseline yet — the row files under BUILDING BASELINE.
+  /// Volume movement against the comparison; null when the exercise has no
+  /// baseline yet — the row files under BUILDING BASELINE.
   final int? delta;
 
   /// Distinct days the exercise was trained inside the 28-day span, capped
@@ -44,6 +52,7 @@ class PerformanceRowData {
     required this.exerciseId,
     required this.exerciseName,
     required this.isTimed,
+    this.isWeighted = false,
     required this.bestValue,
     this.delta,
     this.daysTrained = 0,
@@ -83,11 +92,12 @@ class PerformanceOverview {
       [for (final row in rows) if (row.trend == trend) row];
 }
 
-/// Classifies every exercise currently in the workout list by how its best
-/// set moved: last 14 days vs the previous 14 days. An exercise trained on
-/// two separate days inside that 28-day span but not in both windows still
-/// gets a trend — its latest trained day against the days before it. Fewer
-/// than two trained days in the span leaves it building its baseline.
+/// Classifies every exercise currently in the workout list by how its
+/// session volume moved: last 14 days vs the previous 14 days, each window
+/// read at its best session. An exercise trained on two separate days inside
+/// that 28-day span but not in both windows still gets a trend — its latest
+/// trained day against the days before it. Fewer than two trained days in
+/// the span leaves it building its baseline.
 PerformanceOverview buildPerformanceOverview({
   required List<ActivePerformanceExercise> activeExercises,
   required List<PastWorkout> workouts,
@@ -98,8 +108,12 @@ PerformanceOverview buildPerformanceOverview({
   final previousWindowStart =
       currentWindowStart.subtract(const Duration(days: 14));
 
-  // Every logged appearance of each active exercise, oldest first.
-  final ids = {for (final exercise in activeExercises) exercise.exerciseId};
+  // Every logged appearance of each active exercise, oldest first, each
+  // read as one number: the session's volume in the exercise's own unit.
+  final byId = {
+    for (final exercise in activeExercises) exercise.exerciseId: exercise,
+  };
+  final ids = byId.keys.toSet();
   final sessionsByExercise = <String, List<_LoggedSession>>{};
   final sorted = [...workouts]..sort((a, b) => a.loggedAt.compareTo(b.loggedAt));
   var hasHistoryBeforeWindow = false;
@@ -111,10 +125,9 @@ PerformanceOverview buildPerformanceOverview({
       if (!ids.contains(exercise.exerciseId) || exercise.sets.isEmpty) {
         continue;
       }
-      final bestSet = exercise.sets
-          .fold<int>(0, (best, set) => set.value > best ? set.value : best);
+      final volume = _sessionVolume(byId[exercise.exerciseId]!, exercise.sets);
       (sessionsByExercise[exercise.exerciseId] ??= [])
-          .add(_LoggedSession(loggedAt, bestSet));
+          .add(_LoggedSession(loggedAt, volume));
     }
   }
 
@@ -134,11 +147,26 @@ PerformanceOverview buildPerformanceOverview({
   );
 }
 
-/// One exercise's row. The standard comparison is best set in the last
-/// 14 days vs the 14 before; when only one window holds sessions but the
-/// exercise still has two separate trained days in the span, the latest day
-/// compares against the best of the earlier ones. Fewer than two trained
-/// days files it under BUILDING BASELINE with its day count.
+/// A session's volume in the exercise's own unit: seconds held for a timed
+/// movement, kilograms lifted (reps × load, summed) for a weighted one,
+/// reps for everything else. Whole numbers — a kilogram total is rounded.
+int _sessionVolume(
+  ActivePerformanceExercise exercise,
+  List<PastWorkoutSet> sets,
+) {
+  if (exercise.isWeighted && !exercise.isTimed) {
+    return sets
+        .fold<double>(0, (sum, set) => sum + set.value * set.weightKg)
+        .round();
+  }
+  return sets.fold<int>(0, (sum, set) => sum + set.value);
+}
+
+/// One exercise's row. The standard comparison is the best session volume in
+/// the last 14 days vs the 14 before; when only one window holds sessions
+/// but the exercise still has two separate trained days in the span, the
+/// latest day compares against the best of the earlier ones. Fewer than two
+/// trained days files it under BUILDING BASELINE with its day count.
 PerformanceRowData _rowFor(
   ActivePerformanceExercise exercise,
   List<_LoggedSession> sessions, {
@@ -211,6 +239,7 @@ PerformanceRowData _row(
     exerciseId: exercise.exerciseId,
     exerciseName: exercise.exerciseName,
     isTimed: exercise.isTimed,
+    isWeighted: exercise.isWeighted,
     bestValue: bestValue,
     delta: delta,
     daysTrained: daysTrained,

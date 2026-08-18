@@ -1308,7 +1308,7 @@ class HomeSkillPathsSection extends StatelessWidget {
           if (attention.isNotEmpty) ...[
             _SkillPathGroupHeader(
               color: AppColors.amber,
-              label: 'Needs attention',
+              label: 'Declining',
               count: attention.length,
             ),
             for (var index = 0; index < attention.length; index++)

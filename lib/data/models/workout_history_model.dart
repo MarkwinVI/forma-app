@@ -60,9 +60,13 @@ class PastWorkoutSet {
   final int value;
   final bool isTimed;
 
+  /// External load on the set, in kilograms; 0 for bodyweight work.
+  final double weightKg;
+
   const PastWorkoutSet({
     required this.number,
     required this.value,
     required this.isTimed,
+    this.weightKg = 0,
   });
 }
