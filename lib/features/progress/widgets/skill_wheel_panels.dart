@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/polished.dart';
 import '../../../data/catalog/exercise_catalog.dart';
 import '../../../data/catalog/exercise_coaching_catalog.dart';
 import '../../../data/services/weight_unit_service.dart';
+import '../../exercises/exercise_detail_view.dart';
 import '../../home/home_dashboard_metrics.dart';
 import '../performance_overview.dart';
 import 'skill_wheel.dart';
@@ -114,8 +116,9 @@ class PerformancePanel extends StatelessWidget {
           // The trend groups are empty pre-baseline, so the panel is just
           // the BUILDING BASELINE group with its counters.
           for (final trend in _perfGroupStyles.keys)
-            ..._group(trend, overview.rowsFor(trend)),
+            ..._group(context, trend, overview.rowsFor(trend)),
           ..._baselineGroup(
+            context,
             overview.rowsFor(PerformanceTrend.buildingBaseline),
             withFooter: overview.hasComparisons,
           ),
@@ -124,7 +127,11 @@ class PerformancePanel extends StatelessWidget {
     );
   }
 
-  List<Widget> _group(PerformanceTrend trend, List<PerformanceRowData> rows) {
+  List<Widget> _group(
+    BuildContext context,
+    PerformanceTrend trend,
+    List<PerformanceRowData> rows,
+  ) {
     if (rows.isEmpty) return const [];
     final style = _perfGroupStyles[trend]!;
     return [
@@ -153,74 +160,78 @@ class PerformancePanel extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       for (final row in rows)
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.divider)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: Text(
-                  row.exerciseName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        _tappable(
+          context,
+          row,
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(
+                  child: Text(
+                    row.exerciseName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      letterSpacing: -0.15,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Last session:',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  _bestLabel(row),
                   style: const TextStyle(
-                    fontSize: 15,
-                    letterSpacing: -0.15,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Last session:',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                _bestLabel(row),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              // Fixed-width trailing box so the values line up across
-              // groups. A kilogram delta can run to four figures, so the
-              // contents scale down to the box rather than spill out of it.
-              SizedBox(
-                width: 60,
-                child: row.delta == null
-                    ? null
-                    : FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(style.icon, size: 15, color: style.color),
-                            const SizedBox(width: 2),
-                            Text(
-                              _deltaLabel(row),
-                              maxLines: 1,
-                              softWrap: false,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                color: style.color,
+                // Fixed-width trailing box so the values line up across
+                // groups. A kilogram delta can run to four figures, so the
+                // contents scale down to the box rather than spill out of it.
+                SizedBox(
+                  width: 60,
+                  child: row.delta == null
+                      ? null
+                      : FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(style.icon, size: 15, color: style.color),
+                              const SizedBox(width: 2),
+                              Text(
+                                _deltaLabel(row),
+                                maxLines: 1,
+                                softWrap: false,
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: style.color,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
     ];
@@ -231,6 +242,7 @@ class PerformancePanel extends StatelessWidget {
   /// appends the how-trends-start line — off when that line already leads
   /// the panel.
   List<Widget> _baselineGroup(
+    BuildContext context,
     List<PerformanceRowData> rows, {
     required bool withFooter,
   }) {
@@ -257,50 +269,54 @@ class PerformancePanel extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       for (final row in rows)
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.divider)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  row.exerciseName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    letterSpacing: -0.15,
-                    color: AppColors.textSecondary,
+        _tappable(
+          context,
+          row,
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    row.exerciseName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      letterSpacing: -0.15,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              for (var day = 0; day < 2; day++) ...[
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: EdgeInsets.only(left: day == 0 ? 0 : 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(
-                      alpha: day < row.daysTrained ? 0.4 : 0.12,
+                const SizedBox(width: 10),
+                for (var day = 0; day < 2; day++) ...[
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: EdgeInsets.only(left: day == 0 ? 0 : 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(
+                        alpha: day < row.daysTrained ? 0.4 : 0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(99),
                     ),
-                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ],
+                const SizedBox(width: 10),
+                Text(
+                  '${row.daysTrained} OF 2 DAYS',
+                  style: GoogleFonts.robotoMono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.95,
+                    color: const Color(0xFF4A4B52),
                   ),
                 ),
               ],
-              const SizedBox(width: 10),
-              Text(
-                '${row.daysTrained} OF 2 DAYS',
-                style: GoogleFonts.robotoMono(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.95,
-                  color: const Color(0xFF4A4B52),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       if (withFooter) ...[
@@ -315,6 +331,26 @@ class PerformancePanel extends StatelessWidget {
         ),
       ],
     ];
+  }
+
+  /// A row opens its exercise — the whole row, since a name alone is a thin
+  /// target and the numbers beside it are about the same movement.
+  static Widget _tappable(
+    BuildContext context,
+    PerformanceRowData row,
+    Widget child,
+  ) {
+    final exercise = ExerciseCatalog.findById(row.exerciseId);
+    if (exercise == null) return child;
+    return Pressable(
+      onTap: () => openExerciseDetailView<void>(
+        context,
+        exercise: exercise,
+        skillCategoryId:
+            exercise.skillCategoryId.isEmpty ? null : exercise.skillCategoryId,
+      ),
+      child: child,
+    );
   }
 
   /// The session's volume in the exercise's own unit: seconds, kilograms
@@ -617,8 +653,8 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.focus != widget.focus ||
         oldWidget.family.categoryId != widget.family.categoryId) {
-      _scrollToFocus(jump: oldWidget.family.categoryId !=
-          widget.family.categoryId);
+      _scrollToFocus(
+          jump: oldWidget.family.categoryId != widget.family.categoryId);
     }
   }
 
@@ -636,8 +672,8 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
       final rowTop = widget.focus < _rowOffsets.length
           ? _rowOffsets[widget.focus]
           : widget.focus * _rowHeight;
-      final target = (rowTop - 8)
-          .clamp(0.0, _scrollController.position.maxScrollExtent);
+      final target =
+          (rowTop - 8).clamp(0.0, _scrollController.position.maxScrollExtent);
       if (jump) {
         _scrollController.jumpTo(target);
       } else {

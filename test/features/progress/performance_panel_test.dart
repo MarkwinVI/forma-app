@@ -10,6 +10,57 @@ Widget _host(PerformanceOverview overview) => MaterialApp(
     );
 
 void main() {
+  testWidgets('tapping a row pushes the exercise page', (tester) async {
+    // The exercise page reads from Supabase as it builds, so the test stops
+    // at the push: a route goes on for the row that was tapped. One tap per
+    // pump — the pushed page covers the panel afterwards.
+    Future<void> tapRow(String name) async {
+      final pushed = <Route<dynamic>>[];
+      // A fresh app per row: the first push's page would otherwise still be
+      // sitting over the panel.
+      await tester.pumpWidget(MaterialApp(
+        key: ValueKey(name),
+        navigatorObservers: [_PushRecorder(pushed)],
+        home: const Scaffold(
+          body: PerformancePanel(
+            overview: PerformanceOverview(
+              rows: [
+                PerformanceRowData(
+                  exerciseId: 'pullups_pull_up',
+                  exerciseName: 'Pull Up',
+                  isTimed: false,
+                  bestValue: 24,
+                  delta: 3,
+                  daysTrained: 2,
+                ),
+                PerformanceRowData(
+                  exerciseId: 'dips_bench_dips',
+                  exerciseName: 'Bench Dips',
+                  isTimed: false,
+                  bestValue: 10,
+                  daysTrained: 1,
+                ),
+              ],
+            ),
+            bottomInset: 0,
+          ),
+        ),
+      ));
+      pushed.clear();
+      await tester.tap(find.text(name));
+      await tester.pump();
+      expect(pushed, hasLength(1), reason: name);
+      expect(pushed.single, isA<MaterialPageRoute<void>>());
+      // The page behind the push cannot build here; the error it throws is
+      // not the subject of this test.
+      tester.takeException();
+    }
+
+    // A row with a trend, and one still building its baseline — both open.
+    await tapRow('Pull Up');
+    await tapRow('Bench Dips');
+  });
+
   testWidgets('a four-figure kilogram delta fits its box', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [
@@ -166,4 +217,15 @@ abstract final class _RowsFixture {
     isTimed: false,
     bestValue: 0,
   );
+}
+
+/// Records every route pushed onto the navigator under test.
+class _PushRecorder extends NavigatorObserver {
+  final List<Route<dynamic>> pushed;
+  _PushRecorder(this.pushed);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    pushed.add(route);
+  }
 }
