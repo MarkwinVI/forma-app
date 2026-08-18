@@ -54,24 +54,16 @@ PastWorkout _workout(
 }
 
 void main() {
-  group('14-day window comparison', () {
-    // An old workout keeps every case out of the short-history fallback.
-    final anchor = _workout('2026-06-01', {
-      'anchor': [1],
-    });
-
+  group('last session against the one before', () {
     test('classifies improving, no change, and declining', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('up'), _active('flat'), _active('down')],
         workouts: [
-          anchor,
-          // Previous window: Jul 16 – Jul 29.
           _workout('2026-07-20', {
             'up': [17, 15],
             'flat': [12, 10],
             'down': [11, 9],
           }),
-          // Current window: Jul 30 – Aug 12.
           _workout('2026-08-10', {
             'up': [21, 18],
             // The same 22 in a different shape — flat is about the total.
@@ -82,7 +74,6 @@ void main() {
         now: _date(_now),
       );
 
-      expect(overview.comparesRecentSessions, isFalse);
       expect(overview.hasComparisons, isTrue);
 
       // A session is its sets added up: 17 + 15 = 32, then 21 + 18 = 39.
@@ -102,12 +93,10 @@ void main() {
     });
 
     test('a session is judged on its total, not its best set', () {
-      // Day A: 4, 6, 3 = 13. Day B: 5, 3, 2 = 10 — B's best set is lower
-      // and so is its total; the row reads three reps down.
+      // Day A: 4, 6, 3 = 13. Day B: 5, 3, 2 = 10 — three reps down.
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [
-          anchor,
           _workout('2026-07-20', {
             'a': [4, 6, 3],
           }),
@@ -124,12 +113,73 @@ void main() {
       expect(row.trend, PerformanceTrend.needsAttention);
     });
 
+    test('the value is the last session, and the delta is against the one '
+        'before it — never a better session further back', () {
+      // 10, then a strong 15, then 12: the row reads 12, down 3 on the 15
+      // — not up 2 on the 10, and not the 15.
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
+          _workout('2026-07-28', {
+            'a': [10],
+          }),
+          _workout('2026-08-01', {
+            'a': [15],
+          }),
+          _workout('2026-08-09', {
+            'a': [12],
+          }),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.bestValue, 12);
+      expect(row.delta, -3);
+    });
+
+    test('a bigger last session than the one before is a positive delta', () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
+          _workout('2026-08-05', {
+            'a': [8, 8, 7],
+          }),
+          _workout('2026-08-11', {
+            'a': [9, 8, 8],
+          }),
+        ],
+        now: _date(_now),
+      );
+
+      expect(overview.rows.single.delta, 2);
+      expect(overview.rows.single.trend, PerformanceTrend.improving);
+    });
+
+    test('the gap between the two sessions does not matter', () {
+      // Two days apart or two months apart, it is the same comparison.
+      for (final earlier in ['2026-08-09', '2026-06-01']) {
+        final overview = buildPerformanceOverview(
+          activeExercises: [_active('a')],
+          workouts: [
+            _workout(earlier, {
+              'a': [10],
+            }),
+            _workout('2026-08-11', {
+              'a': [12],
+            }),
+          ],
+          now: _date(_now),
+        );
+        expect(overview.rows.single.delta, 2, reason: earlier);
+      }
+    });
+
     test('a weighted movement is judged on kilograms lifted', () {
       // 3 × 10 kg × 8 = 240 kg, then 3 × 12 kg × 8 = 288 kg: up 48.
       final overview = buildPerformanceOverview(
         activeExercises: [_active('row', isWeighted: true)],
         workouts: [
-          anchor,
           _workout(
             '2026-07-20',
             {'row': [8, 8, 8]},
@@ -153,7 +203,6 @@ void main() {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('hold', isTimed: true)],
         workouts: [
-          anchor,
           _workout('2026-07-20', {'hold': [20, 20, 15]}, timed: true),
           _workout('2026-08-10', {'hold': [25, 20, 20]}, timed: true),
         ],
@@ -165,20 +214,50 @@ void main() {
       expect(row.delta, 10);
     });
 
-    test('best session within a window spans several sessions', () {
+    test('two sessions on one day are that day\'s best, and one day', () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
         workouts: [
-          anchor,
-          _workout('2026-07-17', {
+          _workout('2026-08-10T09:00', {
             'a': [10],
           }),
-          _workout('2026-07-28', {
-            'a': [14],
-          }),
-          _workout('2026-08-01', {
+          _workout('2026-08-10T18:00', {
             'a': [12],
           }),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.trend, PerformanceTrend.buildingBaseline);
+      expect(row.bestValue, 12);
+      expect(row.daysTrained, 1);
+    });
+
+    test('a session dated after today is not counted', () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
+          _workout('2026-08-01', {
+            'a': [10],
+          }),
+          _workout('2026-08-20', {
+            'a': [30],
+          }),
+        ],
+        now: _date(_now),
+      );
+
+      expect(overview.rows.single.trend, PerformanceTrend.buildingBaseline);
+      expect(overview.rows.single.bestValue, 10);
+    });
+  });
+
+  group('building a baseline', () {
+    test('one trained day is still building its baseline', () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [_active('a')],
+        workouts: [
           _workout('2026-08-09', {
             'a': [15],
           }),
@@ -187,98 +266,18 @@ void main() {
       );
 
       final row = overview.rows.single;
+      expect(row.trend, PerformanceTrend.buildingBaseline);
+      expect(row.delta, isNull);
       expect(row.bestValue, 15);
-      expect(row.delta, 1);
-    });
-
-    test('one trained day in the span is still building its baseline', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a')],
-        workouts: [
-          anchor,
-          _workout('2026-08-05', {
-            'a': [8],
-          }),
-        ],
-        now: _date(_now),
-      );
-
-      final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.buildingBaseline);
-      expect(row.bestValue, 8);
-      expect(row.delta, isNull);
       expect(row.daysTrained, 1);
+      expect(overview.hasComparisons, isFalse);
     });
 
-    test('two trained days in the current window alone make a trend', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a')],
-        workouts: [
-          anchor,
-          _workout('2026-08-02', {
-            'a': [8],
-          }),
-          _workout('2026-08-09', {
-            'a': [11],
-          }),
-        ],
-        now: _date(_now),
-      );
-
-      final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.improving);
-      expect(row.bestValue, 11);
-      expect(row.delta, 3);
-    });
-
-    test('two sessions on the same day do not make a baseline', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a')],
-        workouts: [
-          anchor,
-          _workout('2026-08-05T08:00:00', {
-            'a': [8],
-          }),
-          _workout('2026-08-05T18:00:00', {
-            'a': [10],
-          }),
-        ],
-        now: _date(_now),
-      );
-
-      final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.buildingBaseline);
-      expect(row.daysTrained, 1);
-    });
-
-    test('a trained day older than the 28-day span does not count toward '
-        'the baseline', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a')],
-        workouts: [
-          anchor,
-          _workout('2026-07-05', {
-            'a': [6],
-          }),
-          _workout('2026-07-20', {
-            'a': [10],
-          }),
-        ],
-        now: _date(_now),
-      );
-
-      final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.buildingBaseline);
-      expect(row.bestValue, 10);
-      expect(row.delta, isNull);
-      expect(row.daysTrained, 1);
-    });
-
-    test('never-trained active exercise builds its baseline from zero days',
+    test('a never-trained active exercise builds its baseline from zero days',
         () {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('a')],
-        workouts: [anchor],
+        workouts: const [],
         now: _date(_now),
       );
 
@@ -292,101 +291,19 @@ void main() {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('kept')],
         workouts: [
-          anchor,
-          _workout('2026-07-20', {
+          _workout('2026-08-01', {
             'kept': [10],
-            'removed': [10],
+            'gone': [10],
           }),
-          _workout('2026-08-10', {
+          _workout('2026-08-09', {
             'kept': [12],
-            'removed': [12],
+            'gone': [12],
           }),
         ],
         now: _date(_now),
       );
 
       expect(overview.rows.map((row) => row.exerciseId), ['kept']);
-    });
-
-    test('timed exercises compare hold seconds', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('plank', isTimed: true)],
-        workouts: [
-          anchor,
-          _workout('2026-07-20', {
-            'plank': [16],
-          }, timed: true),
-          _workout('2026-08-10', {
-            'plank': [12],
-          }, timed: true),
-        ],
-        now: _date(_now),
-      );
-
-      final row = overview.rows.single;
-      expect(row.isTimed, isTrue);
-      expect(row.bestValue, 12);
-      expect(row.delta, -4);
-    });
-  });
-
-  group('short history (< 14 days of workouts)', () {
-    test('compares the latest session against all earlier ones', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a')],
-        workouts: [
-          _workout('2026-08-03', {
-            'a': [10],
-          }),
-          _workout('2026-08-06', {
-            'a': [14],
-          }),
-          _workout('2026-08-11', {
-            'a': [13],
-          }),
-        ],
-        now: _date(_now),
-      );
-
-      expect(overview.comparesRecentSessions, isTrue);
-      final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.needsAttention);
-      expect(row.bestValue, 13);
-      expect(row.delta, -1);
-    });
-
-    test('a single logged session is still building — nothing to compare yet',
-        () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a')],
-        workouts: [
-          _workout('2026-08-10', {
-            'a': [10],
-          }),
-        ],
-        now: _date(_now),
-      );
-
-      final row = overview.rows.single;
-      expect(row.trend, PerformanceTrend.buildingBaseline);
-      expect(row.bestValue, 10);
-      expect(row.daysTrained, 1);
-      expect(overview.hasComparisons, isFalse);
-    });
-
-    test('a completely new user is all building baseline, no comparisons', () {
-      final overview = buildPerformanceOverview(
-        activeExercises: [_active('a'), _active('b')],
-        workouts: const [],
-        now: _date(_now),
-      );
-
-      expect(overview.comparesRecentSessions, isTrue);
-      expect(overview.hasComparisons, isFalse);
-      expect(
-        overview.rows.map((row) => row.trend),
-        everyElement(PerformanceTrend.buildingBaseline),
-      );
     });
   });
 }

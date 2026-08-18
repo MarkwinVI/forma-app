@@ -23,7 +23,6 @@ void main() {
           daysTrained: 2,
         ),
       ],
-      comparesRecentSessions: false,
     )));
 
     // No overflow, and the kilogram figures read compacted.
@@ -49,11 +48,10 @@ void main() {
         _RowsFixture.flat,
         _RowsFixture.down,
       ],
-      comparesRecentSessions: false,
     )));
 
     expect(find.text('MY PERFORMANCE'), findsOneWidget);
-    expect(find.text('LAST 14 DAYS VS PREV. 14 DAYS'), findsOneWidget);
+    expect(find.text('LAST SESSION VS PREVIOUS SESSION'), findsOneWidget);
 
     expect(find.text('IMPROVING'), findsOneWidget);
     expect(find.text('Assisted Pull-up'), findsOneWidget);
@@ -72,7 +70,6 @@ void main() {
   testWidgets('empty groups stay off the panel', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [_RowsFixture.up],
-      comparesRecentSessions: false,
     )));
 
     expect(find.text('IMPROVING'), findsOneWidget);
@@ -89,7 +86,6 @@ void main() {
         _RowsFixture.oneDay,
         _RowsFixture.neverTrained,
       ],
-      comparesRecentSessions: false,
     )));
 
     expect(find.text('IMPROVING'), findsOneWidget);
@@ -104,14 +100,13 @@ void main() {
       findsOneWidget,
     );
     // Baseline rows show no best-set value.
-    expect(find.text('Best session:'), findsOneWidget);
+    expect(find.text('Last session:'), findsOneWidget);
   });
 
   testWidgets('without any baseline the panel shows the building-baseline '
       'group instead of an explainer', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [_RowsFixture.oneDay, _RowsFixture.neverTrained],
-      comparesRecentSessions: true,
     )));
 
     expect(

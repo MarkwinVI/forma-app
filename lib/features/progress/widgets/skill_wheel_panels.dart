@@ -44,7 +44,7 @@ const _perfGroupStyles = {
 };
 
 /// The wheel-overview panel: every exercise in the workout lists, grouped by
-/// how its best set moved — the last 14 days against the 14 before.
+/// how its last session's volume moved against the session before it.
 /// Lives in a draggable sheet — [controller] is the sheet's scroll
 /// controller, so dragging the panel raises the sheet over the wheel.
 class PerformancePanel extends StatelessWidget {
@@ -103,9 +103,7 @@ class PerformancePanel extends StatelessWidget {
             )
           else
             Text(
-              overview.comparesRecentSessions
-                  ? 'LATEST SESSION VS PREV. SESSIONS'
-                  : 'LAST 14 DAYS VS PREV. 14 DAYS',
+              'LAST SESSION VS PREVIOUS SESSION',
               style: GoogleFonts.robotoMono(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
@@ -178,7 +176,7 @@ class PerformancePanel extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               const Text(
-                'Best session:',
+                'Last session:',
                 style: TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textMuted,
