@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/exercise_progress_model.dart';
+import 'package:forma_app/data/models/progression_event_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/exercise_progression_service.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
@@ -400,6 +401,74 @@ void main() {
       );
 
       expect(outcome.isEmpty, isTrue);
+    });
+  });
+
+  group('what the finish is told', () {
+    ProgressionEventInput? eventFor({
+      required int volume,
+      required ExerciseProgress stored,
+      required List<double> setWeights,
+    }) {
+      final result = SessionExerciseResult(
+        exercise: lateralRaise,
+        volume: volume,
+        isAccessory: true,
+        sets: [
+          for (final weightKg in setWeights)
+            SessionSetResult(value: 8, weightKg: weightKg),
+        ],
+      );
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [result],
+        progressRows: {stored.exerciseId: stored},
+      );
+      final events = ExerciseProgressionService.buildSessionEvents(
+        outcome: outcome,
+        results: [result],
+        progressRows: {stored.exerciseId: stored},
+      );
+      return events.isEmpty ? null : events.single;
+    }
+
+    test('a weight step carries the load it left and the load it goes to', () {
+      final event = eventFor(
+        volume: 24,
+        stored: progress(value: 8, sets: 3, weightKg: 10),
+        setWeights: const [10, 10, 10],
+      )!;
+
+      expect(event.kind, ProgressionEventKind.targetIncrease);
+      expect(event.valueFrom, 8);
+      expect(event.valueTo, 6);
+      expect(event.weightFrom, 10);
+      expect(event.weightTo, 12);
+    });
+
+    test('a rep step carries no weight, even on a hand-set baseline', () {
+      // The user lifted 14 where 10 was stored: that is theirs, not a step,
+      // and the finish must not roll it as one.
+      final event = eventFor(
+        volume: 21,
+        stored: progress(value: 7, sets: 3, weightKg: 10),
+        setWeights: const [14, 14, 14],
+      )!;
+
+      expect(event.valueFrom, 7);
+      expect(event.valueTo, 8);
+      expect(event.weightFrom, isNull);
+      expect(event.weightTo, isNull);
+    });
+
+    test('a baseline taken on a missed target is no event at all', () {
+      expect(
+        eventFor(
+          volume: 12,
+          stored: progress(value: 7, sets: 3, weightKg: 10),
+          setWeights: const [14, 14],
+        ),
+        isNull,
+      );
     });
   });
 }

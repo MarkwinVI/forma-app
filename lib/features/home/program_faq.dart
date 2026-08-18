@@ -23,78 +23,96 @@ class FaqItem {
 /// only when one is opened.
 const List<FaqItem> kProgramFaq = [
   FaqItem(
-    question: 'Why does my program include different movement categories?',
+    question: 'Which workout split should I choose?',
     answer: [
       FaqBlock(
-        'Forma builds balanced strength programs around six primary '
-        'categories:',
+        'Full Body is the best default for most beginners. It lets you train '
+        'each movement frequently while still leaving enough time to recover.',
       ),
-      FaqBlock.bullets([
-        'Horizontal push',
-        'Vertical push',
-        'Horizontal pull',
-        'Vertical pull',
-        'Squats & lunges',
-        'Glutes & hamstrings',
-      ]),
       FaqBlock(
-        'Training every category helps you develop balanced strength and '
-        'avoids overemphasising one movement pattern.',
+        'Push/Pull and Upper/Lower can also work well if you prefer shorter '
+        'workouts or want to train 4 or more days per week.',
       ),
     ],
   ),
   FaqItem(
-    question: 'Why doesn’t every workout train every category?',
+    question: 'How many days per week should I train?',
     answer: [
+      FaqBlock('3 days per week is a strong default for Full Body.'),
       FaqBlock(
-        'Your program is evaluated across the complete repeating training '
-        'cycle, not just one workout. A full-body session usually includes '
-        'one exercise from each category, while split programs distribute '
-        'the categories across different days.',
-      ),
-      FaqBlock(
-        'The important thing is that every primary category is covered '
-        'regularly across the full program.',
-      ),
-    ],
-  ),
-  FaqItem(
-    question: 'How much should I train each category?',
-    answer: [
-      FaqBlock('Forma generally recommends:'),
-      FaqBlock.bullets([
-        'Three to four blocks per category each week',
-        'Spread across at least two training days',
-      ]),
-      FaqBlock(
-        'The same benchmark applies whatever split you train. If your split '
-        'only reaches a category twice a week, that category is still short — '
-        'Forma will suggest another block, another training day, or a '
-        'different split.',
-      ),
-      FaqBlock(
-        'These are guidelines rather than strict requirements. Your program '
-        'may differ based on your schedule, goals and current ability.',
+        'For Push/Pull or Upper/Lower, 4 days per week usually creates a more '
+        'balanced schedule, with each part of the split trained twice per '
+        'week.',
       ),
     ],
   ),
   kHowTargetsAreSetFaq,
+  FaqItem(
+    question: 'What are accessory exercises?',
+    answer: [
+      FaqBlock(
+        'Accessories are exercises that sit outside your skill trees and '
+        'supplement your main calisthenics progressions.',
+      ),
+      FaqBlock(
+        'They can be added automatically by Forma or added manually to your '
+        'workouts.',
+      ),
+      FaqBlock(
+        'Accessories don’t progress to a different exercise, but you can '
+        'enable Auto progression to automatically increase reps and weight '
+        'over time.',
+      ),
+    ],
+  ),
+  FaqItem(
+    question: 'How does Auto progression work for accessories?',
+    answer: [
+      FaqBlock(
+        'With Auto progression enabled, Forma gradually increases your target '
+        'from 3×6 to 3×8.',
+      ),
+      FaqBlock(
+        'Once you complete 3×8, Forma increases the weight to the next load '
+        'your equipment can make and starts again at 3×6.',
+      ),
+      FaqBlock(
+        'The weight you type in a workout becomes the new starting point, so '
+        'you can set an appropriate weight the first time you train an '
+        'exercise. Auto progression stays on.',
+      ),
+    ],
+  ),
+  FaqItem(
+    question: 'Can I skip ahead in a skill tree?',
+    answer: [
+      FaqBlock(
+        'Yes. You can start a harder exercise even if you haven’t reached it '
+        'normally.',
+      ),
+      FaqBlock(
+        'Only jump ahead if you’re confident you can perform the exercise '
+        'with good form.',
+      ),
+    ],
+  ),
 ];
 
 /// How a target moves — the rule the change feed links to when it reports a
 /// raise.
 const FaqItem kHowTargetsAreSetFaq = FaqItem(
-  question: 'How do I progress to a harder exercise?',
+  question: 'How does progression work?',
   answer: [
-    FaqBlock('For repetition-based exercises, the standard progression is:'),
-    FaqBlock('3×5 → 3×6 → 3×7 → 3×8'),
+    FaqBlock('Exercises in your skill trees progress automatically.'),
     FaqBlock(
-      'Once you complete 3×8 with the required quality, Forma moves you to '
-      'the next exercise progression, usually starting again at 3×5.',
+      'As you meet the target for your current exercise, Forma gradually '
+      'increases the difficulty and eventually moves you to the next exercise '
+      'in the progression.',
     ),
     FaqBlock(
-      'For timed holds, you normally progress from 3×10 seconds towards '
-      '3×30 seconds before moving to the next progression.',
+      'Accessories can also use Auto progression. When enabled, Forma '
+      'increases your reps from 3×6 to 3×8, then increases the weight and '
+      'starts again at 3×6.',
     ),
   ],
 );

@@ -60,10 +60,16 @@ class ExerciseTarget {
   /// carries one. Null leaves whatever weight is already stored alone.
   final double? weightKg;
 
+  /// True when the ladder moved the weight — a managed accessory topped its
+  /// rep window and stepped up a load. False when [weightKg] merely records
+  /// what the user lifted, which is a baseline, not a level-up.
+  final bool weightStepped;
+
   const ExerciseTarget({
     required this.sets,
     required this.value,
     this.weightKg,
+    this.weightStepped = false,
   });
 
   /// Total volume the target requires. Reaching a target is evaluated on
@@ -535,6 +541,7 @@ class ExerciseProgressionService {
         sets: current.sets,
         value: accessoryRepFloor,
         weightKg: nextAccessoryWeightKg(exercise, baseline),
+        weightStepped: true,
       );
     }
 
@@ -984,6 +991,15 @@ class ExerciseProgressionService {
               progress: progressRows[entry.key],
               masterySettings: masterySettings,
             );
+      // A target that only took the user's own weight as its baseline is not
+      // progress, so it is not an event: nothing to celebrate, nothing to
+      // roll back.
+      if (entry.value.value == before.value && !entry.value.weightStepped) {
+        continue;
+      }
+      // A managed accessory's weight step travels on the same event: the
+      // load it was at and the load it goes to, so the finish can show the
+      // weight moving the way it shows the reps moving.
       events.add(
         ProgressionEventInput(
           exerciseId: entry.key,
@@ -992,6 +1008,8 @@ class ExerciseProgressionService {
           valueFrom: before.value,
           valueTo: entry.value.value,
           targetSets: entry.value.sets,
+          weightFrom: entry.value.weightStepped ? (before.weightKg ?? 0) : null,
+          weightTo: entry.value.weightStepped ? entry.value.weightKg : null,
         ),
       );
     }

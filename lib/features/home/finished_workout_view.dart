@@ -16,6 +16,7 @@ import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/weight_unit_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
 import '../../data/services/skill_track_service.dart';
@@ -52,6 +53,9 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   /// last attempt would otherwise report the same workout twice.
   bool _analyticsCaptured = false;
   int _stepIndex = 0;
+  /// The live mastery target, read with the program when the session is
+  /// applied — what a weight step was earned against.
+  MasteryTargetSettings _masterySettings = MasteryTargetSettings.defaults;
   List<_CelebrationStep> _steps = const [_CelebrationStep.summary()];
 
   @override
@@ -162,6 +166,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
           final progress = await ProgressService().fetchAll(userId);
           final logic =
               await TrainingProgramStoreService().fetchProgramLogic(userId);
+          _masterySettings =
+              logic?.masteryTargets ?? MasteryTargetSettings.defaults;
           final goalIds = logic?.program.setupGoalIds ?? const <String>[];
           final tracks = await SkillTrackService().getOrSeed(
             userId,
@@ -246,6 +252,10 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         _analyticsCaptured = true;
         _captureWorkoutAnalytics(sessionId, events);
       }
+
+      // Everything the session changes is written: the tab behind this can
+      // re-read now, while the celebration is still up.
+      if (sessionId != null) workoutSavedSignal.value += 1;
 
       if (!mounted) return;
       setState(() {
@@ -375,13 +385,26 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         sets: event.targetSets ?? 3,
         from: event.valueFrom ?? 0,
         to: event.valueTo ?? 0,
+        weightFromKg: event.weightFrom,
+        weightToKg: event.weightTo,
+        masteryValue: ExerciseProgressionService.masteryValueForExercise(
+          exercise,
+          _masterySettings,
+        ),
       )));
     }
 
-    // Masteries without an unlock (branch points, completed paths).
+    // Masteries without an unlock (branch points, completed paths). Only
+    // for exercises the session actually trained: mastering a step the user
+    // jumped ahead to also proves the steps it jumped over, and those are
+    // bookkeeping — the user mastered the pull-up, not the assisted one.
+    final trained = {
+      for (final entry in widget.workout.exercises) entry.exercise.id,
+    };
     for (final event in events) {
       if (event.kind != ProgressionEventKind.mastered) continue;
       if (activatedByRelated.containsKey(event.exerciseId)) continue;
+      if (!trained.contains(event.exerciseId)) continue;
       final exercise = ExerciseCatalog.findById(event.exerciseId);
       if (exercise == null) continue;
       steps.add(_CelebrationStep.mastered(_MasteredData(
@@ -680,12 +703,29 @@ class _LevelUpData {
   final int from;
   final int to;
 
+  /// Where the weight went, for a managed accessory that topped its rep
+  /// window: the load it was at and the load it goes to. Null when only the
+  /// reps moved.
+  final double? weightFromKg;
+  final double? weightToKg;
+
+  /// The per-set mastery target the weight step was earned against — what
+  /// the user actually hit, which is not the goal they were on.
+  final int masteryValue;
+
   const _LevelUpData({
     required this.exercise,
     required this.sets,
     required this.from,
     required this.to,
+    this.weightFromKg,
+    this.weightToKg,
+    this.masteryValue = MasteryTargetSettings.defaultRepsPerSet,
   });
+
+  /// The weight took a step — which is what this level-up is about, the reps
+  /// having gone back to the start of the window.
+  bool get weightMoved => weightToKg != null && weightToKg != weightFromKg;
 }
 
 class _MasteredData {
@@ -932,6 +972,7 @@ class _LevelUpContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final suffix = data.exercise.isTimed ? 's' : '';
+    final unit = WeightUnitService.unit.suffix;
 
     return Center(
       child: SingleChildScrollView(
@@ -955,36 +996,66 @@ class _LevelUpContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _RiseIn(
-              delay: const Duration(milliseconds: 160),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    '${data.sets} ×',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(width: 9),
-                  _RollingValue(
-                    from: '${data.from}$suffix',
-                    to: '${data.to}$suffix',
-                  ),
-                ],
+            if (data.weightMoved) ...[
+              // The weight is the news: it rolls the way the reps do, and
+              // the reps — back at the start of the window — read under it.
+              _RiseIn(
+                delay: const Duration(milliseconds: 160),
+                child: _RollingValue(
+                  from: WeightUnitService.label(data.weightFromKg ?? 0),
+                  to: WeightUnitService.label(data.weightToKg!),
+                ),
               ),
-            ),
+              const SizedBox(height: 10),
+              _RiseIn(
+                delay: const Duration(milliseconds: 240),
+                child: Text(
+                  '${data.sets} × ${data.to}$suffix',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ] else
+              _RiseIn(
+                delay: const Duration(milliseconds: 160),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${data.sets} ×',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    _RollingValue(
+                      from: '${data.from}$suffix',
+                      to: '${data.to}$suffix',
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 24),
             _RiseIn(
               delay: const Duration(milliseconds: 650),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
                 child: Text(
-                  'You hit the target goal of ${data.sets} × '
-                  '${data.from}$suffix. Your target has been raised.',
+                  data.weightMoved
+                      ? 'You hit the mastery target of ${data.sets} × '
+                          '${data.masteryValue}$suffix. Your weight goes up to '
+                          '${WeightUnitService.displayText(data.weightToKg!)}'
+                          '$unit, and the reps start again at ${data.sets} × '
+                          '${data.to}$suffix.'
+                      : 'You hit the target goal of ${data.sets} × '
+                          '${data.from}$suffix. Your target has been raised.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 14,
