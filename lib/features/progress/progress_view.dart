@@ -127,7 +127,7 @@ class _ProgressViewState extends State<ProgressView> {
       if (exercise.skillCategoryId.isNotEmpty)
         'skill_tree_id': exercise.skillCategoryId,
     });
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ExerciseDetailView(
           exercise: exercise,

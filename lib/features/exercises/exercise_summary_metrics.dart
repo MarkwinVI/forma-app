@@ -14,7 +14,7 @@ extension ExerciseSummaryMetricX on ExerciseSummaryMetric {
   String get label => switch (this) {
         ExerciseSummaryMetric.totalReps => 'Total reps',
         ExerciseSummaryMetric.bestSet => 'Best set',
-        ExerciseSummaryMetric.heaviestWeight => 'Heaviest weight',
+        ExerciseSummaryMetric.heaviestWeight => 'Top weight',
         ExerciseSummaryMetric.totalVolume => 'Total volume',
         ExerciseSummaryMetric.bestTime => 'Best time',
         ExerciseSummaryMetric.totalTime => 'Total time',
@@ -44,9 +44,11 @@ List<ExerciseSummaryMetric> summaryMetricsFor(Exercise exercise) {
     ];
   }
   if (exercise.isWeighted) {
+    // Volume first: it is what a session's work adds up to, and what the
+    // performance panel reads.
     return const [
-      ExerciseSummaryMetric.heaviestWeight,
       ExerciseSummaryMetric.totalVolume,
+      ExerciseSummaryMetric.heaviestWeight,
       ExerciseSummaryMetric.totalReps,
     ];
   }

@@ -18,7 +18,6 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/weight_unit_service.dart';
 import '../../data/services/workout_rest_preferences_service.dart';
-import '../home/program_day_items.dart';
 import 'exercise_summary_metrics.dart';
 
 /// Which tab the exercise detail view opens on. Live workout and the skill
@@ -37,7 +36,9 @@ Future<T?> openExerciseDetailView<T>(
   ValueListenable<List<ExerciseSet>>? liveSetsListenable,
   DateTime? liveSessionStartedAt,
 }) {
-  return Navigator.of(context).push<T>(
+  // Full screen, above the tab shell: the page is a thing of its own, and
+  // the tab bar under it would only mislead about where you are.
+  return Navigator.of(context, rootNavigator: true).push<T>(
     MaterialPageRoute(
       builder: (_) => ExerciseDetailView(
         exercise: exercise,
@@ -91,15 +92,42 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
 
   late Future<List<ExerciseLog>> _logsFuture;
   late ExerciseDetailTab _tab;
+
+  /// The page's outer scroll: once the heading has gone under the bar, the
+  /// bar carries the name instead.
+  final _scrollController = ScrollController();
+  bool _headingScrolledOff = false;
   int _restSeconds = 0;
 
   @override
   void initState() {
     super.initState();
     _tab = widget.initialTab;
+    _scrollController.addListener(_onScroll);
     _logsFuture = _loadLogs();
     _loadRestPreference();
   }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// The heading is the first thing under the bar; once the page has moved
+  /// past it, the bar takes the name over.
+  void _onScroll() {
+    final scrolledOff = _scrollController.hasClients &&
+        _scrollController.offset > _headingHeight;
+    if (scrolledOff != _headingScrolledOff) {
+      setState(() => _headingScrolledOff = scrolledOff);
+    }
+  }
+
+  /// About where the exercise's name ends: the title, at its size and line
+  /// height, plus the padding above it.
+  static const double _headingHeight = 14 + 36;
 
   Future<List<ExerciseLog>> _loadLogs() async {
     final userId = AuthService().currentUser?.id;
@@ -133,6 +161,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
             Padding(
               padding: const EdgeInsets.only(top: _detailNavBarHeight),
               child: NestedScrollView(
+                controller: _scrollController,
                 headerSliverBuilder: (context, _) => [
                   SliverToBoxAdapter(
                     child: Padding(
@@ -175,7 +204,11 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
               top: 0,
               left: 0,
               right: 0,
-              child: _DetailNavBar(onBack: () => Navigator.of(context).pop()),
+              child: _DetailNavBar(
+                onBack: () => Navigator.of(context).pop(),
+                title: exercise.name,
+                showTitle: _headingScrolledOff,
+              ),
             ),
           ],
         ),
@@ -220,8 +253,8 @@ class _PinnedTabs extends SliverPersistentHeaderDelegate {
       oldDelegate.selectedIndex != selectedIndex;
 }
 
-/// What the movement is and what it works, under its name: the pattern it
-/// belongs to, the muscles it is chosen for, and the ones it takes along.
+/// What the movement works, under its name: the muscles it is chosen for,
+/// and the ones it takes along.
 class _ExerciseBrief extends StatelessWidget {
   final Exercise exercise;
 
@@ -232,15 +265,6 @@ class _ExerciseBrief extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          programPatternLabel(exercise.category),
-          style: const TextStyle(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-            height: 1.45,
-          ),
-        ),
         if (exercise.primaryMuscles.isNotEmpty)
           _MuscleLine(label: 'Primary', muscles: exercise.primaryMuscles),
         if (exercise.secondaryMuscles.isNotEmpty)
@@ -294,9 +318,12 @@ class _HowToTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coachData = _coachDataFor(exercise);
+    // The page runs under the tab bar, so the list keeps that much clear
+    // under its last line — or the end can never be scrolled into view.
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
+      padding: EdgeInsets.fromLTRB(22, 4, 22, 44 + bottomInset),
       children: [
         // The demo is not here: it sits above the tabs, where it is what the
         // page opens on whichever tab you are reading.
@@ -340,19 +367,9 @@ class _HowToTab extends StatelessWidget {
             ),
           ),
         const TypeSectionLabel('Form check'),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 4),
-          child: Text(
-            'Every rep should pass these.',
-            style: TextStyle(
-              fontSize: 14.5,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
         for (var i = 0; i < coachData.formChecks.length; i++)
           Container(
-            padding: const EdgeInsets.only(top: 16, bottom: 17),
+            padding: const EdgeInsets.only(top: 15, bottom: 16),
             decoration: BoxDecoration(
               border: i == coachData.formChecks.length - 1
                   ? null
@@ -361,11 +378,9 @@ class _HowToTab extends StatelessWidget {
             child: Text(
               coachData.formChecks[i],
               style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+                fontSize: 15.5,
                 color: AppColors.textPrimary,
-                letterSpacing: -0.34,
-                height: 1.35,
+                height: 1.5,
               ),
             ),
           ),
@@ -425,6 +440,25 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
   }
 
   String _formatValue(double value) => _formatValueFor(_metric, value);
+
+  /// "Aug 25" — the day a session was logged, as the x axis names it.
+  static String _dateLabel(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}';
+  }
 
   String _formatValueFor(ExerciseSummaryMetric metric, double value) {
     switch (metric) {
@@ -490,76 +524,60 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
           isLive: true,
         ),
     ];
-    final cutoff = DateTime.now().subtract(const Duration(days: 90));
-    var window =
-        ordered.where((session) => session.loggedAt.isAfter(cutoff)).toList();
-    var windowLabel = 'Last 3 months';
-    if (window.isEmpty && ordered.isNotEmpty) {
-      window =
-          ordered.length > 12 ? ordered.sublist(ordered.length - 12) : ordered;
-      windowLabel = 'All sessions';
-    }
-
+    // The last twelve months of sessions, all fitted to the width — a year
+    // trained three times a week is still a line the thumb can read along.
+    // Older sessions stay in the history list below.
+    final cutoff = DateTime.now().subtract(const Duration(days: 365));
+    final window =
+        ordered.where((session) => !session.loggedAt.isBefore(cutoff)).toList();
     final metrics = summaryMetricsFor(widget.exercise);
     final series = window
         .map((session) => summaryMetricValue(_metric, session.sets))
         .toList();
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 26, 22, 44),
+      padding: EdgeInsets.fromLTRB(22, 4, 22, 44 + bottomInset),
       children: [
-        // The chart keeps a surface — a plot needs a field to sit on, the
-        // way the month grid does.
-        SurfaceCard(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${_metric.label.toUpperCase()} · '
-                '${windowLabel.toUpperCase()}',
-                style: monoStyle(size: 11, letterSpacing: 1.4),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                _metric.definition,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (series.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'No completed sets yet — finish a set and this graph '
-                    'will update immediately.',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-                  ),
-                )
-              else
-                _TrendChart(
-                  values: series,
-                  sessionLabels: [
-                    for (var i = 0; i < window.length; i++)
-                      window[i].isLive ? 'Live' : 'S${i + 1}',
-                  ],
-                  formatValue: _formatValue,
-                  repaintKey: _metric,
-                ),
-              const SizedBox(height: 14),
-              SegmentedTabs(
-                labels: metrics.map((metric) => metric.label).toList(),
-                selectedIndex: metrics.indexOf(_metric),
-                onChanged: (index) => setState(() => _metric = metrics[index]),
-              ),
-            ],
+        // The chart sits on the page, not on a card — the room is the
+        // plot's, and the gridlines are field enough.
+        TypeSectionLabel(_metric.label),
+        Text(
+          _metric.definition,
+          style: const TextStyle(
+            fontSize: 12.5,
+            color: AppColors.textMuted,
           ),
+        ),
+        const SizedBox(height: 14),
+        if (series.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'No completed sets yet — finish a set and this graph '
+              'will update immediately.',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+          )
+        else
+          _TrendChart(
+            values: series,
+            sessionLabels: [
+              for (final session in window)
+                session.isLive ? 'Live' : _dateLabel(session.loggedAt),
+            ],
+            formatValue: _formatValue,
+            repaintKey: _metric,
+          ),
+        const SizedBox(height: 16),
+        SegmentedTabs(
+          labels: metrics.map((metric) => metric.label).toList(),
+          selectedIndex: metrics.indexOf(_metric),
+          onChanged: (index) => setState(() => _metric = metrics[index]),
         ),
         const TypeSectionLabel('History'),
         if (logs.isEmpty)
@@ -575,8 +593,10 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
 }
 
 /// Line chart in the polished language: soft gridlines with min/mid/max
-/// labels, accent polyline with dots, and a value chip on the last point.
-class _TrendChart extends StatelessWidget {
+/// labels and an accent polyline with dots. Every session fits the width;
+/// press and drag along it to read each point — a guide drops on the
+/// nearest session and its value and date sit above the line.
+class _TrendChart extends StatefulWidget {
   final List<double> values;
   final List<String> sessionLabels;
   final String Function(double) formatValue;
@@ -590,34 +610,67 @@ class _TrendChart extends StatelessWidget {
   });
 
   @override
+  State<_TrendChart> createState() => _TrendChartState();
+}
+
+class _TrendChartState extends State<_TrendChart> {
+  /// The session under the finger, or null when nothing is being read.
+  int? _scrubIndex;
+  double _width = 0;
+
+  void _scrubTo(Offset local) {
+    if (_width <= 0) return;
+    final index = _TrendChartPainter.indexAt(
+      local.dx,
+      width: _width,
+      count: widget.values.length,
+    );
+    if (index != _scrubIndex) setState(() => _scrubIndex = index);
+  }
+
+  void _release() {
+    if (_scrubIndex != null) setState(() => _scrubIndex = null);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TrendChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.values.length != widget.values.length) _scrubIndex = null;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Semantics(
       label: 'Exercise sessions chart',
       value: [
-        for (var i = 0; i < values.length; i++)
-          '${sessionLabels[i]} ${formatValue(values[i])}',
+        for (var i = 0; i < widget.values.length; i++)
+          '${widget.sessionLabels[i]} ${widget.formatValue(widget.values[i])}',
       ].join(', '),
       child: SizedBox(
-        height: 150,
+        height: 190,
         width: double.infinity,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final chartWidth = math.max(
-              constraints.maxWidth,
-              values.length * 54.0,
-            );
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              child: SizedBox(
-                width: chartWidth,
-                child: CustomPaint(
-                  painter: _TrendChartPainter(
-                    values: values,
-                    sessionLabels: sessionLabels,
-                    formatValue: formatValue,
-                    repaintKey: repaintKey,
-                  ),
+            _width = constraints.maxWidth;
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              // A press-and-hold reads the chart; a plain vertical drag still
+              // scrolls the page, since only the long press claims the
+              // gesture.
+              onLongPressStart: (d) => _scrubTo(d.localPosition),
+              onLongPressMoveUpdate: (d) => _scrubTo(d.localPosition),
+              onLongPressEnd: (_) => _release(),
+              onLongPressCancel: _release,
+              onTapDown: (d) => _scrubTo(d.localPosition),
+              onTapUp: (_) => _release(),
+              onTapCancel: _release,
+              child: CustomPaint(
+                painter: _TrendChartPainter(
+                  values: widget.values,
+                  sessionLabels: widget.sessionLabels,
+                  formatValue: widget.formatValue,
+                  repaintKey: widget.repaintKey,
+                  scrubIndex: _scrubIndex,
                 ),
               ),
             );
@@ -633,15 +686,30 @@ class _TrendChartPainter extends CustomPainter {
   final List<String> sessionLabels;
   final String Function(double) formatValue;
   final Object repaintKey;
+  final int? scrubIndex;
 
   _TrendChartPainter({
     required this.values,
     required this.sessionLabels,
     required this.formatValue,
     required this.repaintKey,
+    this.scrubIndex,
   });
 
-  TextPainter _text(
+  static const _padTop = 30.0;
+  static const _padBottom = 22.0;
+  static const _padRight = 14.0;
+
+  /// Room between the y-axis labels and the plot.
+  static const _labelGap = 12.0;
+
+  /// The y axis' gutter, fixed: the plot keeps its width from one metric to
+  /// the next rather than breathing with the digits in the labels. Wide
+  /// enough for "2880kg" or "12m 30s".
+  static const _axisWidth = 46.0;
+  static const _padLeft = _axisWidth + _labelGap;
+
+  static TextPainter _text(
     String value, {
     required Color color,
     double fontSize = 9.5,
@@ -661,60 +729,71 @@ class _TrendChartPainter extends CustomPainter {
     return painter;
   }
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    const padTop = 16.0;
-    const padBottom = 22.0;
-    const padRight = 14.0;
-
+  /// The plot's y-scale: the axis' three labels, and the space they take on
+  /// the left. Static so the scrub can find x positions the same way paint
+  /// lays them out.
+  static ({List<double> grid, double chartMin, double span}) _scale(
+    List<double> values,
+  ) {
     final max = values.reduce((a, b) => a > b ? a : b);
     final min = values.reduce((a, b) => a < b ? a : b);
     final isFlat = max == min;
     final flatPadding = max == 0 ? 1.0 : max.abs() * 0.1;
     final chartMax = isFlat ? max + flatPadding : max;
     final chartMin = isFlat ? math.max(0.0, min - flatPadding) : min;
-    final span = chartMax - chartMin;
-    final gridValues = [
-      chartMax,
-      (chartMax + chartMin) / 2,
-      chartMin,
-    ];
+    return (
+      grid: [chartMax, (chartMax + chartMin) / 2, chartMin],
+      chartMin: chartMin,
+      span: chartMax - chartMin,
+    );
+  }
 
-    final labelPainters = [
-      for (final value in gridValues)
-        _text(formatValue(value), color: AppColors.textMuted),
-    ];
-    final padLeft = labelPainters.fold<double>(
-          0,
-          (widest, painter) => painter.width > widest ? painter.width : widest,
-        ) +
-        10;
+  static double _xAt(int i,
+          {required double padLeft,
+          required double plotWidth,
+          required int count}) =>
+      count == 1
+          ? padLeft + plotWidth / 2
+          : padLeft + i * plotWidth / (count - 1);
 
-    final chartWidth = size.width - padLeft - padRight;
-    final chartHeight = size.height - padTop - padBottom;
-    double xAt(int i) => values.length == 1
-        ? padLeft + chartWidth / 2
-        : padLeft + i * chartWidth / (values.length - 1);
+  /// The session nearest an x position — what a finger at [dx] is reading.
+  static int indexAt(double dx, {required double width, required int count}) {
+    if (count <= 1) return 0;
+    final plotWidth = width - _padLeft - _padRight;
+    final t = ((dx - _padLeft) / plotWidth).clamp(0.0, 1.0);
+    return (t * (count - 1)).round();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = _scale(values);
+    const padLeft = _padLeft;
+    final chartWidth = size.width - padLeft - _padRight;
+    final chartHeight = size.height - _padTop - _padBottom;
+    double xAt(int i) =>
+        _xAt(i, padLeft: padLeft, plotWidth: chartWidth, count: values.length);
     double yAt(num value) =>
-        padTop + (1 - (value - chartMin) / span) * chartHeight;
+        _padTop + (1 - (value - scale.chartMin) / scale.span) * chartHeight;
 
+    // Gridlines and their labels, a gap away from the plot.
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.07)
       ..strokeWidth = 1;
-    for (var i = 0; i < gridValues.length; i++) {
-      final y = yAt(gridValues[i]);
+    for (final value in scale.grid) {
+      final y = yAt(value);
       canvas.drawLine(
         Offset(padLeft, y),
-        Offset(size.width - padRight, y),
+        Offset(size.width - _padRight, y),
         gridPaint,
       );
-      labelPainters[i].paint(
+      final label = _text(formatValue(value), color: AppColors.textMuted);
+      label.paint(
         canvas,
-        Offset(padLeft - 6 - labelPainters[i].width,
-            y - labelPainters[i].height / 2),
+        Offset(_axisWidth - label.width, y - label.height / 2),
       );
     }
 
+    // The line, then its points.
     final linePaint = Paint()
       ..color = AppColors.accentPrimary
       ..strokeWidth = 2.5
@@ -724,69 +803,50 @@ class _TrendChartPainter extends CustomPainter {
     final path = Path();
     for (var i = 0; i < values.length; i++) {
       final point = Offset(xAt(i), yAt(values[i]));
-      if (i == 0) {
-        path.moveTo(point.dx, point.dy);
-      } else {
-        path.lineTo(point.dx, point.dy);
-      }
+      i == 0
+          ? path.moveTo(point.dx, point.dy)
+          : path.lineTo(point.dx, point.dy);
     }
     canvas.drawPath(path, linePaint);
 
-    final dotFill = Paint()..color = AppColors.surface;
+    final dotFill = Paint()..color = AppColors.bg;
     final dotStroke = Paint()
       ..color = AppColors.accentPrimary
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    for (var i = 0; i < values.length; i++) {
-      final point = Offset(xAt(i), yAt(values[i]));
-      if (i == values.length - 1) {
-        canvas.drawCircle(
-          point,
-          4.5,
-          Paint()..color = AppColors.accentPrimary,
-        );
-      } else {
+    // Dots only when they have room to be dots; a dense line stays a line.
+    final drawDots =
+        values.length == 1 || chartWidth / (values.length - 1) >= 12;
+    if (drawDots) {
+      for (var i = 0; i < values.length; i++) {
+        final point = Offset(xAt(i), yAt(values[i]));
         canvas.drawCircle(point, 3, dotFill);
         canvas.drawCircle(point, 3, dotStroke);
       }
     }
 
-    // Value chip above the last point.
-    final chipText = _text(
-      formatValue(values.last),
-      color: AppColors.bg,
-      fontSize: 10,
-      fontWeight: FontWeight.w800,
-    );
-    final chipWidth = chipText.width + 14;
-    final lastPoint = Offset(xAt(values.length - 1), yAt(values.last));
-    var chipLeft = lastPoint.dx - chipWidth / 2;
-    if (chipLeft + chipWidth > size.width) chipLeft = size.width - chipWidth;
-    final chipTop =
-        (lastPoint.dy - 27).clamp(0.0, size.height - padBottom - 17);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(chipLeft, chipTop, chipWidth, 17),
-        const Radius.circular(6),
-      ),
-      Paint()..color = AppColors.accentPrimary,
-    );
-    chipText.paint(
-      canvas,
-      Offset(chipLeft + (chipWidth - chipText.width) / 2,
-          chipTop + (17 - chipText.height) / 2),
-    );
-
-    // Every point is one exercise session. A wide history scrolls so each
-    // session keeps its own readable x-axis label instead of collapsing into
-    // a date range.
-    for (var i = 0; i < sessionLabels.length; i++) {
-      final label = _text(
-        sessionLabels[i],
-        color: sessionLabels[i] == 'Live'
-            ? AppColors.accentPrimary
-            : AppColors.textMuted,
-      );
+    // The x axis: dates, as many as fit without touching. The first and last
+    // always; between them every k-th, so no label runs into its neighbour.
+    final labels = [
+      for (final s in sessionLabels)
+        _text(s,
+            color: s == 'Live' ? AppColors.accentPrimary : AppColors.textMuted),
+    ];
+    final widest = labels.map((l) => l.width).reduce(math.max) + 10;
+    final perLabel =
+        values.length == 1 ? chartWidth : chartWidth / (values.length - 1);
+    final every = math.max(1, (widest / perLabel).ceil());
+    for (var i = 0; i < labels.length; i++) {
+      final isEnd = i == 0 || i == labels.length - 1;
+      final onStep = (labels.length - 1 - i) % every == 0;
+      if (!isEnd && !onStep) continue;
+      // An end label too close to a stepped one gives way to the end.
+      if (!isEnd &&
+          (i < every ~/ 2 + 1 || labels.length - 1 - i < every ~/ 2 + 1) &&
+          every > 1) {
+        continue;
+      }
+      final label = labels[i];
       label.paint(
         canvas,
         Offset(
@@ -795,20 +855,77 @@ class _TrendChartPainter extends CustomPainter {
         ),
       );
     }
+
+    // The point being read: a guide down to the axis, the point lit, and
+    // its value and date above the line.
+    final scrub = scrubIndex;
+    if (scrub != null && scrub >= 0 && scrub < values.length) {
+      final point = Offset(xAt(scrub), yAt(values[scrub]));
+      canvas.drawLine(
+        Offset(point.dx, _padTop - 6),
+        Offset(point.dx, size.height - _padBottom),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.18)
+          ..strokeWidth = 1,
+      );
+      canvas.drawCircle(point, 5, Paint()..color = AppColors.accentPrimary);
+      canvas.drawCircle(
+          point,
+          5,
+          Paint()
+            ..color = AppColors.bg
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2);
+
+      final value = _text(
+        formatValue(values[scrub]),
+        color: AppColors.textPrimary,
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+      );
+      final date = _text(sessionLabels[scrub], color: AppColors.textSecondary);
+      final chipWidth = math.max(value.width, date.width) + 16;
+      const chipHeight = 32.0;
+      var chipLeft = point.dx - chipWidth / 2;
+      chipLeft = chipLeft.clamp(0.0, size.width - chipWidth);
+      final chipRect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(chipLeft, 0, chipWidth, chipHeight),
+        const Radius.circular(8),
+      );
+      canvas.drawRRect(chipRect, Paint()..color = AppColors.surface2);
+      value.paint(
+        canvas,
+        Offset(chipLeft + (chipWidth - value.width) / 2, 3),
+      );
+      date.paint(
+        canvas,
+        Offset(chipLeft + (chipWidth - date.width) / 2, 3 + value.height + 1),
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant _TrendChartPainter oldDelegate) =>
       oldDelegate.values != values ||
       oldDelegate.sessionLabels != sessionLabels ||
-      oldDelegate.repaintKey != repaintKey;
+      oldDelegate.repaintKey != repaintKey ||
+      oldDelegate.scrubIndex != scrubIndex;
 }
 
 /// Bare back chevron — the exercise names itself in the title below.
 class _DetailNavBar extends StatelessWidget {
   final VoidCallback onBack;
 
-  const _DetailNavBar({required this.onBack});
+  /// The exercise's name, shown in the middle of the bar once the heading
+  /// under it has scrolled away — so the page never loses its name.
+  final String title;
+  final bool showTitle;
+
+  const _DetailNavBar({
+    required this.onBack,
+    required this.title,
+    required this.showTitle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -818,16 +935,45 @@ class _DetailNavBar extends StatelessWidget {
       height: _detailNavBarHeight,
       color: AppColors.bg,
       padding: const EdgeInsets.fromLTRB(19, 10, 22, 0),
-      child: Row(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Pressable(
-            onTap: onBack,
-            child: const Padding(
-              padding: EdgeInsets.all(4),
-              child: Icon(
-                Icons.chevron_left_rounded,
-                size: 26,
-                color: AppColors.textSecondary,
+          Positioned.fill(
+            child: Center(
+              child: AnimatedOpacity(
+                opacity: showTitle ? 1 : 0,
+                duration: const Duration(milliseconds: 160),
+                child: Padding(
+                  // Clear of the back chevron on either side, so a long name
+                  // ellipsises rather than running under it.
+                  padding: const EdgeInsets.symmetric(horizontal: 44),
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Pressable(
+              onTap: onBack,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.chevron_left_rounded,
+                  size: 26,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ),
@@ -1322,78 +1468,88 @@ class _HistoryCard extends StatelessWidget {
 
   const _HistoryCard({required this.logs, required this.exercise});
 
-  String _setsLabel(ExerciseLog log) {
-    final values = log.sets.map((set) {
-      if (exercise.isTimed) {
-        final time = _formatSeconds(set.durationSeconds);
-        return exercise.isWeighted && set.weightKg > 0
-            ? '$time × ${WeightUnitService.label(set.weightKg)}'
-            : time;
-      }
-      if (exercise.isWeighted) {
-        return '${set.reps} × ${WeightUnitService.label(set.weightKg)}';
-      }
-      return '${set.reps}';
-    }).join(' · ');
-    return exercise.isTimed || exercise.isWeighted ? values : '$values reps';
-  }
+  /// The columns a set is read in, in the live workout's order: its load
+  /// where it carries one — headed KG or LBS, whichever the app is set to
+  /// — then what the exercise is measured in.
+  List<String> get _columns => [
+        if (exercise.isWeighted)
+          WeightUnitService.unit == WeightUnit.lb ? 'LBS' : 'KG',
+        if (exercise.isTimed) 'TIME' else 'REPS',
+      ];
+
+  List<String> _cells(ExerciseSet set) => [
+        if (exercise.isWeighted) WeightUnitService.displayText(set.weightKg),
+        if (exercise.isTimed)
+          _formatSeconds(set.durationSeconds)
+        else
+          '${set.reps}',
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final columns = _columns;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var i = 0; i < logs.length; i++)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              border: i == logs.length - 1
-                  ? null
-                  : const Border(bottom: BorderSide(color: AppColors.divider)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _formatShortDate(logs[i].loggedAt),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.16,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _setsLabel(logs[i]),
-                  style: monoStyle(
-                    size: 14,
-                    weight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: Text(
-            exercise.isTimed
-                ? exercise.isWeighted
-                    ? 'Time × weight per set · most recent first'
-                    : 'Time per set · most recent first'
-                : exercise.isWeighted
-                    ? 'Reps × weight per set · most recent first'
-                    : 'Reps per set · most recent first',
+        // One block per session, most recent first: the day as its heading,
+        // then a row per set under the columns it is measured in.
+        for (var i = 0; i < logs.length; i++) ...[
+          if (i > 0) const SizedBox(height: 22),
+          Text(
+            _formatShortDate(logs[i].loggedAt),
             style: const TextStyle(
-              fontSize: 12.5,
-              color: AppColors.textMuted,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.16,
             ),
           ),
-        ),
+          const SizedBox(height: 8),
+          _historyRow(
+            leading: 'SET',
+            cells: columns,
+            style: monoStyle(size: 10, letterSpacing: 1.4),
+            divider: true,
+          ),
+          for (var n = 0; n < logs[i].sets.length; n++)
+            _historyRow(
+              leading: '${n + 1}',
+              cells: _cells(logs[i].sets[n]),
+              style: monoStyle(
+                size: 14,
+                weight: FontWeight.w500,
+                letterSpacing: 0,
+                color: AppColors.textPrimary,
+              ),
+              divider: n < logs[i].sets.length - 1,
+            ),
+        ],
       ],
+    );
+  }
+
+  static Widget _historyRow({
+    required String leading,
+    required List<String> cells,
+    required TextStyle style,
+    required bool divider,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+        border: divider
+            ? const Border(bottom: BorderSide(color: AppColors.divider))
+            : null,
+      ),
+      child: Row(
+        children: [
+          SizedBox(width: 44, child: Text(leading, style: style)),
+          for (final cell in cells)
+            Expanded(
+              child: Text(cell, textAlign: TextAlign.right, style: style),
+            ),
+        ],
+      ),
     );
   }
 }

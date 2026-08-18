@@ -64,7 +64,7 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
         // week strip above.
         const SizedBox(height: 8),
         SizedBox(
-          height: 176,
+          height: 260,
           child: AnimatedBuilder(
             animation: Listenable.merge([_pop, _rings, _sparks]),
             builder: (context, _) => _Burst(
@@ -74,7 +74,7 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 32),
         // Left-aligned from here down: the finish reads as a line of the
         // page, not a certificate.
         Text(
@@ -90,7 +90,7 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
   /// not somewhere to go from here.
   Widget _nextUpRow() {
     return Padding(
-      padding: const EdgeInsets.only(top: 18, bottom: 2),
+      padding: const EdgeInsets.only(top: 22, bottom: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,

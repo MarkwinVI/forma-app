@@ -634,6 +634,10 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   /// Scroll offset of every flat step's row, rebuilt with the list — group
   /// headers make row positions non-uniform.
   List<double> _rowOffsets = const [];
+  
+  /// For the first step of each branch, the top of its header; null for
+  /// every other step.
+  List<double?> _rowHeaderTops = const [];
 
   /// One dismiss per drag: re-armed when the scroll settles.
   bool _dismissArmed = true;
@@ -665,15 +669,20 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   }
 
   /// Keeps the selector's step in view: the row lands just under the top of
-  /// the list, same as the reference's scrollTo.
+  /// the list, same as the reference's scrollTo — except the first step of
+  /// a branch, which brings its branch header with it. Scrolling that step
+  /// to the top alone left the header cut off under the list's edge.
   void _scrollToFocus({bool jump = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
       final rowTop = widget.focus < _rowOffsets.length
           ? _rowOffsets[widget.focus]
           : widget.focus * _rowHeight;
-      final target =
-          (rowTop - 8).clamp(0.0, _scrollController.position.maxScrollExtent);
+      final headerTop = widget.focus < _rowHeaderTops.length
+          ? _rowHeaderTops[widget.focus]
+          : null;
+      final target = (headerTop ?? (rowTop - 8))
+          .clamp(0.0, _scrollController.position.maxScrollExtent);
       if (jump) {
         _scrollController.jumpTo(target);
       } else {
@@ -736,9 +745,13 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
 
     final children = <Widget>[];
     final offsets = List<double>.filled(flat.length, 0);
+    final headerTops = List<double?>.filled(flat.length, null);
     var y = 0.0;
     for (final (name, start, end) in groups) {
       children.add(_groupHeader(name));
+      // The first step of a branch remembers where its header starts, so
+      // scrolling to it brings the header along rather than clipping it.
+      headerTops[start] = y;
       y += _groupHeaderHeight;
       for (var i = start; i <= end; i++) {
         offsets[i] = y;
@@ -747,6 +760,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
       }
     }
     _rowOffsets = offsets;
+    _rowHeaderTops = headerTops;
 
     // Pulling the list down past its top reads as "let go of this tree" —
     // it hands back to the wheel, like the background tap and pinch-out.

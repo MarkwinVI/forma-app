@@ -217,7 +217,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   void _openExercise(WheelNode node) {
     final exercise = ExerciseCatalog.findById(node.exerciseId);
     if (exercise == null) return;
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ExerciseDetailView(
           exercise: exercise,

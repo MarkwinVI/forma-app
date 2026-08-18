@@ -652,7 +652,7 @@ class _HomeViewState extends State<HomeView> {
       if (snapshot.metrics.today.completed != null) {
         if (_pastWorkouts.isEmpty) return null;
         return DayActions(
-          primaryLabel: 'View workout',
+          primaryLabel: 'View completed workout',
           onPrimary: _openSelectedWorkoutDetail,
         );
       }
@@ -776,7 +776,7 @@ class _HomeViewState extends State<HomeView> {
         );
         if (workout == null) return null;
         return DayActions(
-          primaryLabel: 'View workout',
+          primaryLabel: 'View completed workout',
           onPrimary: () => _openPastWorkout(workout),
         );
       // A missed day is read, not acted on: the band already says where its
