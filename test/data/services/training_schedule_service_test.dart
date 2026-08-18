@@ -6,6 +6,34 @@ void main() {
   group('TrainingScheduleService', () {
     final service = TrainingScheduleService();
 
+    test('a week laid out from today trains today', () {
+      // Three days built on a Tuesday: Tue / Thu / Sat, the template's
+      // Mon / Wed / Fri spacing carried along.
+      expect(
+        TrainingScheduleService.weekTemplateStartingOn(3, 1),
+        [0, 1, 0, 1, 0, 1, 0],
+      );
+      // Four days built on a Sunday wrap round: Sun / Mon / Wed / Thu.
+      expect(
+        TrainingScheduleService.weekTemplateStartingOn(4, 6),
+        [1, 0, 1, 1, 0, 0, 1],
+      );
+      // Built on a Monday, it is the template itself.
+      expect(
+        TrainingScheduleService.weekTemplateStartingOn(3, 0),
+        TrainingScheduleService.weekTemplates[3],
+      );
+      // Whatever the day, it trains.
+      for (var weekday = 0; weekday < 7; weekday++) {
+        for (var days = 1; days <= 7; days++) {
+          final week =
+              TrainingScheduleService.weekTemplateStartingOn(days, weekday);
+          expect(week[weekday], 1, reason: '$days days on weekday $weekday');
+          expect(week.where((d) => d == 1).length, days);
+        }
+      }
+    });
+
     test('builds frequency-aware weekly cycles', () {
       expect(
         service.cycleFor(

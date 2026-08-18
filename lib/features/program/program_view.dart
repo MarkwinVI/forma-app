@@ -49,6 +49,22 @@ class _ProgramViewState extends State<ProgramView> {
   @override
   void initState() {
     super.initState();
+    programCreatedSignal.addListener(_onProgramCreated);
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    programCreatedSignal.removeListener(_onProgramCreated);
+    super.dispose();
+  }
+
+  /// A program was written — here or on another tab. Re-read now, and while
+  /// the read is out show the loader rather than the empty state that is
+  /// about to be wrong.
+  void _onProgramCreated() {
+    if (!mounted) return;
+    if (_logicSnapshot == null) setState(() => _loading = true);
     _loadData();
   }
 

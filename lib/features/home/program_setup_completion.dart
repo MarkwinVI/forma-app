@@ -1,11 +1,22 @@
+import 'package:flutter/foundation.dart';
+
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/analytics_service.dart';
+import '../../data/services/dev_clock_service.dart';
 import '../../data/services/program_start_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import '../../data/services/user_profile_service.dart';
+import '../progress/skill_wheel_bundle.dart';
 import 'program_setup_view.dart';
+
+/// Bumped every time setup writes a program. The tabs are kept alive in the
+/// shell whether or not they are showing, so each one listens and re-reads
+/// itself at once — while the wizard's ready screen is still up — rather
+/// than waiting to be looked at and showing the empty state it last drew.
+final ValueNotifier<int> programCreatedSignal = ValueNotifier(0);
 
 /// Everything a finished "Build your program" wizard writes, in one place so
 /// the Train and Program tabs cannot drift apart on what setup means:
@@ -18,6 +29,10 @@ Future<void> completeProgramSetup({
   TrainingProgramStoreService? storeService,
   ProgramStartService? startService,
   UserProfileService? profileService,
+
+  /// The day the program is built on — the dev clock's today where there is
+  /// one, so a shifted clock lays the week out from the day it shows.
+  DateTime? now,
 }) async {
   final programService = trainingProgramService ?? TrainingProgramService();
   final store = storeService ?? TrainingProgramStoreService();
@@ -61,13 +76,29 @@ Future<void> completeProgramSetup({
     repGoalProfile: RepGoalProfile.balanced,
     sessionItemsConfig: const {},
     frequencyPerWeek: result.daysPerWeek,
-    setupAnswers: result.toMap(),
+    setupAnswers: {
+      ...result.toMap(),
+      // The week is laid out from today: whichever day the program is built
+      // on is a training day, and the rest keep the template's spacing. The
+      // schedule sheet on the Program tab can move it afterwards.
+      'training_days': TrainingScheduleService.weekTemplateStartingOn(
+        result.daysPerWeek,
+        (now ?? await DevClockService().loadNow()).weekday - 1,
+      ),
+    },
   );
 
   await (startService ?? ProgramStartService()).applyPlan(
     userId: userId,
     plan: plan,
   );
+
+  // The wizard lands on Progress next. Start that tab's load now, while its
+  // ready screen is still up, so Progress opens on the new program rather
+  // than on the empty state it last showed and then catches up — and tell
+  // the other tabs, which do the same.
+  warmSkillWheelBundle(userId);
+  programCreatedSignal.value += 1;
 
   AnalyticsService.capture('program_created', properties: {
     'program_id': snapshot.program.id,

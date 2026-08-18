@@ -96,6 +96,16 @@ class TrainingScheduleService {
       normalizeDayMask(dayMask) ??
       weekTemplates[_clampFrequency(frequencyPerWeek)]!;
 
+  /// The template for [frequencyPerWeek], turned so its first training day
+  /// falls on [weekday] (Monday-first, 0–6) and the rest keep their spacing.
+  /// A program built on a Tuesday trains on Tuesday: nobody should finish
+  /// setup to be told today is a rest day.
+  static List<int> weekTemplateStartingOn(int frequencyPerWeek, int weekday) {
+    final template = weekTemplates[_clampFrequency(frequencyPerWeek)]!;
+    final shift = weekday % 7;
+    return [for (var i = 0; i < 7; i++) template[(i - shift + 7) % 7]];
+  }
+
   List<TrainingSessionType> cycleFor({
     required TrainingProgramType programType,
     required int frequencyPerWeek,

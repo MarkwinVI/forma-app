@@ -77,12 +77,48 @@ class _HomeViewState extends State<HomeView> {
   /// Selecting a day never leaves the tab: the same screen re-reads itself
   /// for that day and says plainly what it can and cannot know about it.
   DateTime? _selectedDate;
+
+  /// True from a workout being saved until the tab has re-read itself.
+  bool _refreshingAfterWorkout = false;
   List<SkillTrack> _skillTracks = const [];
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
   @override
   void initState() {
     super.initState();
+    programCreatedSignal.addListener(_onProgramCreated);
+    workoutSavedSignal.addListener(_onWorkoutSaved);
+    _loadHomeData();
+  }
+
+  @override
+  void dispose() {
+    programCreatedSignal.removeListener(_onProgramCreated);
+    workoutSavedSignal.removeListener(_onWorkoutSaved);
+    super.dispose();
+  }
+
+  /// A workout was saved — the finish screens are still up. Come back to
+  /// today and re-read now, so the tab is already the finished day when the
+  /// user returns to it. Until the read lands, the loader stands in for a
+  /// day that is about to be wrong.
+  void _onWorkoutSaved() {
+    if (!mounted) return;
+    setState(() {
+      _selectedDate = null;
+      _refreshingAfterWorkout = true;
+    });
+    _loadHomeData().whenComplete(() {
+      if (mounted) setState(() => _refreshingAfterWorkout = false);
+    });
+  }
+
+  /// A program was written — here or on another tab. Re-read now, and while
+  /// the read is out show the loader rather than the empty state that is
+  /// about to be wrong.
+  void _onProgramCreated() {
+    if (!mounted) return;
+    if (!_hasProgram) setState(() => _loading = true);
     _loadHomeData();
   }
 
@@ -400,17 +436,13 @@ class _HomeViewState extends State<HomeView> {
             : LiveWorkoutView(recommendation: recommendation),
       ),
     );
-    // A finished workout changes today's card — re-fetch.
-    await _loadHomeData();
-    // A day started early is done, and there is nothing left to read on it:
-    // the tab comes back to today, where the next thing to do is. Leaving the
-    // workout unfinished stays where it was.
+    // A saved workout already re-read the tab and brought it back to today,
+    // from the finish screen. Anything else that happened in there — a
+    // discarded session, a rest-day overview — still deserves a re-read.
     final finished = _pastWorkouts.any(
       (workout) => workout.loggedAt.isAfter(openedAt),
     );
-    if (finished && _selectedDate != null && mounted) {
-      setState(() => _selectedDate = null);
-    }
+    if (!finished) await _loadHomeData();
   }
 
   Future<void> _openAlternateWorkoutOptions(
@@ -455,7 +487,7 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: AppColors.bg,
       body: SafeArea(
         bottom: false,
-        child: _loading
+        child: _loading || _refreshingAfterWorkout
             ? const Center(child: LoadingIndicator())
             : !_hasProgram || snapshot == null
                 ? HomeEmptyState(onCreateProgram: _openProgramSetup)
@@ -723,7 +755,10 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  Widget _dayActions(
+  /// What another day pins, or null when it asks nothing of you. The way
+  /// back to today is the ribbon — today is lit there and a tap on it
+  /// returns — so no day pins one.
+  Widget? _dayActions(
     _TrainSnapshot snapshot,
     TrainDayPresentation presentation,
   ) {
@@ -732,31 +767,25 @@ class _HomeViewState extends State<HomeView> {
         return DayActions(
           primaryLabel: 'Start this early',
           onPrimary: () => _startWorkout(snapshot.recommendation),
-          secondaryLabel: 'Back to today',
-          onSecondary: _backToToday,
         );
-      // A finished day pins its way into the record over the way back.
+      // A finished day pins its way into the record.
       case TrainDayView.logged:
         final workout = _workoutForDate(
           snapshot.selectedDay.date,
           plannedOnly: true,
         );
+        if (workout == null) return null;
         return DayActions(
-          primaryLabel: workout == null ? null : 'View workout',
-          onPrimary: workout == null ? null : () => _openPastWorkout(workout),
-          secondaryLabel: 'Back to today',
-          onSecondary: _backToToday,
+          primaryLabel: 'View workout',
+          onPrimary: () => _openPastWorkout(workout),
         );
       // A missed day is read, not acted on: the band already says where its
-      // session went, so the only thing left to do here is leave.
+      // session went.
       case TrainDayView.missed:
       case TrainDayView.distant:
       case TrainDayView.rest:
       case TrainDayView.today:
-        return DayActions(
-          secondaryLabel: 'Back to today',
-          onSecondary: _backToToday,
-        );
+        return null;
     }
   }
 
@@ -817,7 +846,6 @@ class _HomeViewState extends State<HomeView> {
       selectedDate: snapshot.selectedDay.date,
       today: TrainingScheduleService.dateOnly(snapshot.now),
       onDayTap: _selectDay,
-      onBackToToday: _backToToday,
     );
   }
 
@@ -825,7 +853,6 @@ class _HomeViewState extends State<HomeView> {
     setState(() => _selectedDate = TrainingScheduleService.dateOnly(day.date));
   }
 
-  void _backToToday() => setState(() => _selectedDate = null);
 
   List<TodayWorkoutRow> _todayRows(HomeDashboardMetrics metrics) {
     return TodayWorkoutContent.rows(

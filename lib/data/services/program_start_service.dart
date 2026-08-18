@@ -62,8 +62,9 @@ class ProgramStartPlan {
 ///    against the exercise the answer was about — the plain push-up,
 ///    pull-up, parallel-bar dip or bodyweight squat, not the last step of
 ///    the shared foundation. Nothing starts at the beginner node, ten or
-///    more reps start on that named step, and 1–9 reps start two steps
-///    before it. Everything behind the starting node is marked mastered —
+///    more reps start on that named step, 3–9 reps one step before it, and
+///    1–2 reps two steps before it. Everything behind the starting node is
+///    marked mastered —
 ///    the assessment placed the user past it, so the tree opens from the
 ///    starting node with nothing owed behind it. Rows always start at the
 ///    first step. A weighted branch starts on the deepest barbell rung whose load
@@ -77,8 +78,9 @@ class ProgramStartPlanner {
   /// Reps at or above this count start on the answer's own exercise.
   static const int repThreshold = 10;
 
-  /// Steps back from the answer's own exercise for a 1–9 rep answer.
-  static const int partialRepStepBack = 2;
+  /// Reps at or above this count — but short of [repThreshold] — start one
+  /// step before the answer's own exercise; fewer start two steps before.
+  static const int nearRepThreshold = 3;
 
   /// How much of a reported one-rep max a starting rung may ask for.
   static const double weightedStartFractionOfMax = 0.8;
@@ -251,12 +253,13 @@ class ProgramStartPlanner {
   }
 
   /// Index of the starting node along [path] for a reported one-set maximum
-  /// of [referenceExerciseId]. Ten or more reps start on that exercise, 1–9
-  /// two steps before it, and an unknown answer starts at the beginner node
-  /// — the first session finds out where the user actually is.
+  /// of [referenceExerciseId]. Ten or more reps start on that exercise, 3–9
+  /// one step before it, 1–2 two steps before it, and an unknown answer
+  /// starts at the beginner node — the first session finds out where the
+  /// user actually is.
   ///
   /// The step-back clamps at the start of the path, so on a short run-up
-  /// (push-ups and squats have two steps before their named exercise) 1–9
+  /// (push-ups and squats have two steps before their named exercise) 1–2
   /// reps land on the beginner node, same as no reps at all.
   static int startIndexFor({
     required List<String> path,
@@ -268,7 +271,8 @@ class ProgramStartPlanner {
     final referenceIndex = path.indexOf(referenceExerciseId);
     if (referenceIndex < 0) return 0;
     if (reps >= repThreshold) return referenceIndex;
-    return (referenceIndex - partialRepStepBack).clamp(0, referenceIndex);
+    final stepBack = reps >= nearRepThreshold ? 1 : 2;
+    return (referenceIndex - stepBack).clamp(0, referenceIndex);
   }
 
   /// Index of the starting rung along a weighted [path]: the deepest barbell

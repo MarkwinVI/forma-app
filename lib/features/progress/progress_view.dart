@@ -66,9 +66,15 @@ class _ProgressViewState extends State<ProgressView> {
     }
 
     try {
-      // The load main() started during the splash, when there is one — the
-      // tab then appears with its data already fetched.
+      // A load started elsewhere, when there is one — by main() during the
+      // splash, or by the setup wizard once it has written the program — so
+      // the tab appears with its data already fetched. Whatever the tab was
+      // showing before is about to be wrong, so it does not stay up while
+      // the warm bundle lands.
       final warmBundle = takeWarmSkillWheelBundle();
+      if (warmBundle != null && !_loading && mounted) {
+        setState(() => _loading = true);
+      }
       final bundle = await (warmBundle ?? loadSkillWheelBundle(userId));
       if (!mounted) return;
       setState(() {

@@ -117,9 +117,20 @@ void main() {
       expect(plan.statuses['pushups_wall_push_up'], ExerciseStatus.active);
     });
 
-    test('1–9 reps start two steps before the exercise they answer for', () {
+    test('3–9 reps start one step before the exercise they answer for', () {
       final plan = planFor(
-        strength: {'pushups': 5, 'pullups': 3, 'dips': 1, 'squat_bw': 9},
+        strength: {'pushups': 5, 'pullups': 3, 'dips': 9, 'squat_bw': 4},
+      );
+
+      expect(plan.statuses['pushups_incline_push_up'], ExerciseStatus.active);
+      expect(plan.statuses['pullups_assisted_pull_up'], ExerciseStatus.active);
+      expect(plan.statuses['dips_dip_negatives'], ExerciseStatus.active);
+      expect(plan.statuses['squat_deep_assisted_squat'], ExerciseStatus.active);
+    });
+
+    test('1–2 reps start two steps before the exercise they answer for', () {
+      final plan = planFor(
+        strength: {'pushups': 2, 'pullups': 1, 'dips': 2, 'squat_bw': 1},
       );
 
       expect(plan.statuses['pullups_pull_up_negative'], ExerciseStatus.active);
@@ -435,6 +446,7 @@ void main() {
     });
 
     test('sessions open on the starting node the answers placed', () {
+      // Three pull-ups: one step before the pull-up, the assisted one.
       final plan = planFor(strength: {'pushups': 12, 'pullups': 3});
       final items = service
           .buildToday(
@@ -449,7 +461,7 @@ void main() {
           .toList();
 
       expect(items, contains('pushups_push_up'));
-      expect(items, contains('pullups_pull_up_negative'));
+      expect(items, contains('pullups_assisted_pull_up'));
       expect(items, isNot(contains('pushups_wall_push_up')));
     });
   });

@@ -12,6 +12,11 @@ void main() {
     WeightUnitService.notifier.value = WeightUnit.kg;
   });
 
+  /// The bodyweight step opens with its caret blinking, so nothing on it
+  /// ever settles — a fixed pump stands in for pumpAndSettle there.
+  Future<void> pumpStep(WidgetTester tester) =>
+      tester.pump(const Duration(milliseconds: 400));
+
   Future<void> pumpWizard(
     WidgetTester tester, {
     required Future<void> Function(ProgramSetupResult) onComplete,
@@ -69,13 +74,16 @@ void main() {
     await tester.pump();
     expect(find.textContaining('pull-up bar'), findsOneWidget);
     await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await pumpStep(tester);
 
-    // Step 3: bodyweight — tap the number, type on the keypad.
+    // Step 3: bodyweight — the keypad is already up, the placeholder shows,
+    // and Continue holds until a number of the user's own is in the field.
     expect(find.text('Your bodyweight'), findsOneWidget);
     expect(find.text('75'), findsOneWidget);
-    await tester.tap(find.text('75'));
-    await tester.pump();
+    expect(find.text('Tap the number to change it'), findsNothing);
+    expect(find.text('8'), findsOneWidget, reason: 'the keypad is open');
+    expect(find.text('Enter your bodyweight to continue'), findsOneWidget);
+    expect(find.text('Continue'), findsNothing, reason: 'nothing typed yet');
     await tester.tap(find.text('8'));
     await tester.pump();
     await tester.tap(find.text('2'));
@@ -88,7 +96,7 @@ void main() {
     expect(find.text('Where are you starting?'), findsOneWidget);
     expect(find.text('Barbell squat'), findsOneWidget);
     expect(find.text('Romanian deadlift'), findsOneWidget);
-    expect(find.text('Best single rep — bar weight'), findsNWidgets(2));
+    expect(find.text('Best single rep — bar weight'), findsNothing);
     await tester.tap(find.byIcon(Icons.add_rounded).at(1));
     await tester.pump();
     expect(find.text('3'), findsOneWidget); // pull-ups default
@@ -109,10 +117,11 @@ void main() {
     expect(result!.toMap()['has_gym'], isTrue);
     expect(result!.toMap()['equipment'], 'barbell');
 
-    // Summary screen reflects the answers, then returns to the caller.
+    // The ready screen is the check and the one line, then the way on.
     expect(find.text('Your program is ready'), findsOneWidget);
-    expect(find.text('Your week — Full Body'), findsOneWidget);
-    expect(find.text('UP FIRST'), findsOneWidget);
+    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    expect(find.text('Built from your answers.'), findsNothing);
+    expect(find.textContaining('Your week'), findsNothing);
     await tester.tap(find.text('Let’s go'));
     await tester.pumpAndSettle();
     expect(find.text('Open wizard'), findsOneWidget);
@@ -129,7 +138,13 @@ void main() {
     await tester.tap(find.text('No equipment'));
     await tester.pump();
     await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await pumpStep(tester);
+    // Two digits from the keypad's upper rows: the bottom row sits below
+    // the test surface's fold.
+    await tester.tap(find.text('7'));
+    await tester.pump();
+    await tester.tap(find.text('5'));
+    await tester.pump();
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     // No weights: the squat question is bodyweight reps.
@@ -158,14 +173,30 @@ void main() {
     await tester.tap(find.text('Full gym'));
     await tester.pump();
     await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await pumpStep(tester);
 
-    // 75 kg becomes 165 lbs, and the choice persists for the whole app.
+    // 75 kg becomes 165 lbs, and the choice persists for the whole app —
+    // and the keypad stays up across the flip.
     await tester.tap(find.text('lbs'));
     await tester.pump();
     expect(find.text('165'), findsOneWidget);
     expect(WeightUnitService.unit, WeightUnit.lb);
+    expect(find.text('8'), findsOneWidget, reason: 'the keypad is still open');
 
+    // Type in pounds, then flip mid-entry: the typed number converts rather
+    // than the placeholder, and it stays typed.
+    await tester.tap(find.text('1'));
+    await tester.pump();
+    await tester.tap(find.text('6'));
+    await tester.pump();
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    await tester.tap(find.text('kg'));
+    await tester.pump();
+    expect(find.text('75'), findsOneWidget, reason: '165 lb is 75 kg');
+    await tester.tap(find.text('lbs'));
+    await tester.pump();
+    expect(find.text('165'), findsOneWidget);
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Build my program'));

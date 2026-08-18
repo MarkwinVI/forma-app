@@ -103,7 +103,6 @@ TrainingProgramType splitForDays(int days) =>
 class _StrengthExercise {
   final String id;
   final String label;
-  final String? hint;
   final IconData icon;
 
   /// Whether the answer is a load (kg/lbs) rather than a rep count.
@@ -115,7 +114,6 @@ class _StrengthExercise {
   const _StrengthExercise({
     required this.id,
     required this.label,
-    this.hint,
     required this.icon,
     this.isWeight = false,
     this.step = 1,
@@ -154,7 +152,6 @@ const _repStrengthExercises = [
 _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
       id: 'squat',
       label: 'Barbell squat',
-      hint: 'Best single rep — bar weight',
       icon: Icons.accessibility_new_rounded,
       isWeight: true,
       step: 5,
@@ -168,7 +165,6 @@ _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
 _StrengthExercise _romanianDeadliftFor(WeightUnit unit) => _StrengthExercise(
       id: 'rdl',
       label: 'Romanian deadlift',
-      hint: 'Best single rep — bar weight',
       icon: Icons.fitness_center_rounded,
       isWeight: true,
       step: 5,
@@ -219,6 +215,12 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   String _bwEdit = '';
   bool _bwEditing = false;
 
+  /// Whether the user has typed a bodyweight of their own. The step opens
+  /// with the keypad up and a placeholder in the field, and Continue holds
+  /// until a real number is in it — the placeholder is a suggestion, not an
+  /// answer.
+  bool _bwEntered = false;
+
   /// Starting-strength answers, unset until the user adds a number. The
   /// squat and RDL loads live in the display unit while the wizard runs.
   final Map<String, int?> _strength = {
@@ -241,18 +243,30 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   bool get _isLastStep => _step == _stepCount - 1;
 
   bool get _ctaDisabled =>
-      (_step == 0 && _days == null) || (_step == 1 && _equipment == null);
+      (_step == 0 && _days == null) ||
+      (_step == 1 && _equipment == null) ||
+      (_step == 2 && !_bwUsable);
+
+  /// A bodyweight the user typed, at or above the floor.
+  bool get _bwUsable => _bwEntered && _bw >= _bwMin;
 
   /// The wizard's unit toggle is the app-wide choice: picking lbs here flips
   /// every weight the app shows from now on.
   void _setUnit(WeightUnit unit) {
     if (unit == _unit) return;
-    _commitBodyweight();
     setState(() {
-      final kg = _unit == WeightUnit.lb ? _bw * WeightUnitService.kgPerLb : _bw;
+      // Whatever is in the field right now travels with the unit — a number
+      // half typed included, so flipping mid-entry converts it rather than
+      // rounding it up to the floor first.
+      final shown = double.tryParse(_bwEdit) ?? _bw;
+      final kg =
+          _unit == WeightUnit.lb ? shown * WeightUnitService.kgPerLb : shown;
       // The barbell answers are loads, so they travel with the unit —
       // rounded to something loadable rather than a raw conversion.
-      for (final barbell in [_barbellSquatFor(unit), _romanianDeadliftFor(unit)]) {
+      for (final barbell in [
+        _barbellSquatFor(unit),
+        _romanianDeadliftFor(unit)
+      ]) {
         final value = _strength[barbell.id];
         if (value == null) continue;
         final converted = unit == WeightUnit.lb
@@ -262,12 +276,17 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
             ((converted / 5).round() * 5).clamp(5, barbell.max).toInt();
       }
       _unit = unit;
-      _bw = _clampBw(
-        unit == WeightUnit.lb
-            ? (kg / WeightUnitService.kgPerLb).roundToDouble()
-            : kg.roundToDouble(),
-      );
+      final converted = unit == WeightUnit.lb
+          ? (kg / WeightUnitService.kgPerLb).roundToDouble()
+          : kg.roundToDouble();
+      // The placeholder is kept inside the range; a typed number is only
+      // capped, and Continue holds until it clears the floor.
+      _bw = _bwEntered
+          ? converted.clamp(0, _bwMax).toDouble()
+          : _clampBw(converted);
       _bwEdit = '';
+      // Flipping the unit converts the number; it does not close the entry.
+      if (_step == 2) _openBodyweightEntry();
     });
     WeightUnitService.set(unit);
   }
@@ -291,13 +310,29 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       _bwEdit = weightEntryPress(_bwEdit, key);
       final parsed = double.tryParse(_bwEdit);
       if (parsed != null) _bw = parsed.clamp(0, _bwMax).toDouble();
+      _bwEntered = parsed != null && parsed > 0;
     });
   }
+
+  /// The bodyweight step opens ready to type into: keypad up, and the field
+  /// showing what the user has already given — or the placeholder, dimmed,
+  /// while they have given nothing.
+  void _openBodyweightEntry() {
+    _bwEditing = true;
+    _bwEdit = _bwEntered ? _bwText : '';
+  }
+
+  String get _bwText => _bw == _bw.roundToDouble()
+      ? _bw.round().toString()
+      : _bw.toStringAsFixed(1);
 
   Future<void> _next() async {
     if (_step == 2) _commitBodyweight();
     if (!_isLastStep) {
-      setState(() => _step += 1);
+      setState(() {
+        _step += 1;
+        if (_step == 2) _openBodyweightEntry();
+      });
       return;
     }
     await _finish();
@@ -306,7 +341,10 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   void _back() {
     if (_step == 2) _commitBodyweight();
     if (_step > 0) {
-      setState(() => _step -= 1);
+      setState(() {
+        _step -= 1;
+        if (_step == 2) _openBodyweightEntry();
+      });
     } else {
       Navigator.of(context).pop();
     }
@@ -370,11 +408,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   @override
   Widget build(BuildContext context) {
     if (_ready) {
-      return _ProgramSummaryView(
-        days: _days ?? 3,
-        split: _split,
-        onDone: () => Navigator.of(context).pop(),
-      );
+      return _ProgramSummaryView(onDone: () => Navigator.of(context).pop());
     }
 
     return PopScope(
@@ -435,7 +469,9 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
                 label: _isLastStep
                     ? 'Build my program'
                     : _ctaDisabled
-                        ? 'Pick one to continue'
+                        ? _step == 2
+                            ? 'Enter your bodyweight to continue'
+                            : 'Pick one to continue'
                         : 'Continue',
                 trailingChevron: !_isLastStep && !_ctaDisabled,
                 saving: _saving,
@@ -690,19 +726,17 @@ class _WarnNote extends StatelessWidget {
   }
 }
 
-/// Radio card with a one-sentence "why" explainer under the choice.
+/// Radio card: the choice, and one line saying what it is.
 class _RadioRow extends StatelessWidget {
   final bool selected;
   final String label;
   final String sub;
-  final String? why;
   final VoidCallback onTap;
 
   const _RadioRow({
     required this.selected,
     required this.label,
     required this.sub,
-    this.why,
     required this.onTap,
   });
 
@@ -769,17 +803,6 @@ class _RadioRow extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  if (why != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      why!,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textMuted,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -925,8 +948,6 @@ class _EquipmentStep extends StatelessWidget {
           selected: equipment == SetupEquipment.fullGym,
           label: 'Full gym',
           sub: 'Pull-up bar, rings, barbells',
-          why: 'Unlocks weighted progressions — weighted pull-ups, dips and '
-              'barbell work run alongside your skill goals.',
           onTap: () => onChanged(SetupEquipment.fullGym),
         ),
         const SizedBox(height: 10),
@@ -934,8 +955,6 @@ class _EquipmentStep extends StatelessWidget {
           selected: equipment == SetupEquipment.freeWeights,
           label: 'Barbell and dumbbells',
           sub: 'A home setup with free weights',
-          why: 'Weighted progressions stay in — Forma just builds around '
-              'free weights instead of machines and cables.',
           onTap: () => onChanged(SetupEquipment.freeWeights),
         ),
         const SizedBox(height: 10),
@@ -943,8 +962,6 @@ class _EquipmentStep extends StatelessWidget {
           selected: equipment == SetupEquipment.none,
           label: 'No equipment',
           sub: 'Training at home or outdoors',
-          why: 'Progress comes from harder bodyweight variations instead of '
-              'added weight — nothing about the skills changes.',
           onTap: () => onChanged(SetupEquipment.none),
         ),
         if (equipment != null && equipment != SetupEquipment.fullGym) ...[
@@ -953,15 +970,12 @@ class _EquipmentStep extends StatelessWidget {
             icon: Icons.fitness_center_rounded,
             message: TextSpan(
               children: [
-                TextSpan(text: 'You’ll still need access to at least a '),
+                TextSpan(text: 'You’ll need access to at least a '),
                 TextSpan(
                   text: 'pull-up bar',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
-                TextSpan(
-                  text: ' — most of Forma’s pulling work hangs from one. '
-                      'A doorway bar or a park is enough.',
-                ),
+                TextSpan(text: '. A doorway bar or a park is enough.'),
               ],
             ),
           ),
@@ -1010,9 +1024,9 @@ class _WeightStep extends StatelessWidget {
       children: [
         const _StepTitle(
           title: 'Your bodyweight',
-          sub: 'Weighted skill targets — like a pull-up at +50% of '
-              'bodyweight — are calculated from it, and progressions scale '
-              'with it.',
+          sub: 'Skills like weighted pull-ups use your bodyweight to set the '
+              'weight. A close guess is fine. You can update it anytime from '
+              'your profile.',
         ),
         const SizedBox(height: 22),
         Center(child: WeightUnitToggle(unit: unit, onChanged: onUnitChanged)),
@@ -1043,24 +1057,6 @@ class _WeightStep extends StatelessWidget {
           const SizedBox(height: 16),
           WeightKeypad(onKey: onKey),
         ],
-        const SizedBox(height: 16),
-        const _InfoNote(
-          message: TextSpan(
-            children: [
-              TextSpan(
-                  text: 'A close guess is fine — you can update it '
-                      'anytime under '),
-              TextSpan(
-                text: 'Profile',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextSpan(text: ', and Forma re-scales your targets.'),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -1097,8 +1093,8 @@ class _StrengthStep extends StatelessWidget {
       children: [
         const _StepTitle(
           title: 'Where are you starting?',
-          sub: 'Max reps in one set — a rough guess is fine. Your first '
-              'session will dial it in.',
+          sub: 'What’s your best for each exercise? Enter your max reps or '
+              'one-rep max. A rough estimate is fine.',
         ),
         const SizedBox(height: 18),
         for (var index = 0; index < exercises.length; index++) ...[
@@ -1156,16 +1152,6 @@ class _StrengthCard extends StatelessWidget {
                     letterSpacing: -0.16,
                   ),
                 ),
-                if (exercise.hint != null) ...[
-                  const SizedBox(height: 1),
-                  Text(
-                    exercise.hint!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -1290,79 +1276,12 @@ class _StepperButton extends StatelessWidget {
 
 // ── Program summary ─────────────────────────────────────────
 
-class _WeekDay {
-  final String label;
-  final String sub;
-  final IconData icon;
-
-  const _WeekDay(this.label, this.sub, this.icon);
-}
-
-/// Week layout preview built from the chosen schedule and split.
-List<_WeekDay> _weekLayout(int days, TrainingProgramType split) {
-  const letters = 'ABCDE';
-  switch (split) {
-    case TrainingProgramType.fullBody:
-      const icons = [
-        Icons.trending_flat_rounded,
-        Icons.arrow_upward_rounded,
-        Icons.accessibility_new_rounded,
-        Icons.sync_alt_rounded,
-        Icons.fitness_center_rounded,
-      ];
-      return [
-        for (var index = 0; index < days; index++)
-          _WeekDay(
-            'Full body ${letters[index]}',
-            'Push · pull · squat · core',
-            icons[index % icons.length],
-          ),
-      ];
-    case TrainingProgramType.upperLower:
-      return [
-        for (var index = 0; index < days; index++)
-          index.isEven
-              ? _WeekDay(
-                  'Upper ${letters[index ~/ 2]}',
-                  'Push · pull · core',
-                  Icons.arrow_upward_rounded,
-                )
-              : _WeekDay(
-                  'Lower ${letters[index ~/ 2]}',
-                  'Squat · hinge · core',
-                  Icons.accessibility_new_rounded,
-                ),
-      ];
-    case TrainingProgramType.pushPull:
-      return [
-        for (var index = 0; index < days; index++)
-          index.isEven
-              ? _WeekDay(
-                  days > 2 ? 'Push ${letters[index ~/ 2]}' : 'Push',
-                  'Push-ups · dips',
-                  Icons.trending_flat_rounded,
-                )
-              : _WeekDay(
-                  days > 2 ? 'Pull ${letters[index ~/ 2]}' : 'Pull',
-                  'Pull-ups · rows',
-                  Icons.arrow_upward_rounded,
-                ),
-      ];
-  }
-}
-
-/// Post-wizard reveal: presents the built program's week as a motivating
-/// overview before landing back on Home.
+/// Post-wizard reveal: the check and the one line, centred, and the way on
+/// to Home under them.
 class _ProgramSummaryView extends StatefulWidget {
-  final int days;
-  final TrainingProgramType split;
   final VoidCallback onDone;
 
-  const _ProgramSummaryView({
-    required this.days,
-    required this.split,
-    required this.onDone,
-  });
+  const _ProgramSummaryView({required this.onDone});
 
   @override
   State<_ProgramSummaryView> createState() => _ProgramSummaryViewState();
@@ -1403,9 +1322,7 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
 
   @override
   Widget build(BuildContext context) {
-    final week = _weekLayout(widget.days, widget.split);
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    var step = 0;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -1413,13 +1330,13 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
         bottom: false,
         child: Column(
           children: [
+            // The whole page is the one fact: the check, and the line under
+            // it, sitting in the middle of the screen.
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              child: Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 64),
                     ScaleTransition(
                       scale: CurvedAnimation(
                         parent: _controller,
@@ -1447,74 +1364,27 @@ class _ProgramSummaryViewState extends State<_ProgramSummaryView>
                     ),
                     const SizedBox(height: 18),
                     _Reveal(
-                      animation: _segment(step++),
-                      child: const Text(
-                        'Your program is ready',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.52,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _Reveal(
-                      animation: _segment(step++),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 300,
-                          child: Text(
-                            'Built from your answers. Change anything '
-                            'you like.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
+                      animation: _segment(0),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(
+                          'Your program is ready',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.52,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 22),
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: _SummaryStat(
-                              animation: _segment(step++),
-                              value: '${widget.days}×',
-                              label: 'per week',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _SummaryStat(
-                              animation: _segment(step++),
-                              value: '8',
-                              label: 'exercises',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _SummaryLabel(
-                      animation: _segment(step++),
-                      text: 'Your week — ${widget.split.label}',
-                    ),
-                    _Reveal(
-                      animation: _segment(step++),
-                      child: _WeekCard(week: week),
                     ),
                   ],
                 ),
               ),
             ),
             _Reveal(
-              animation: _segment(step + 1),
+              animation: _segment(2),
               child: Container(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomInset),
                 decoration: const BoxDecoration(
@@ -1555,178 +1425,6 @@ class _Reveal extends AnimatedWidget {
       child: Transform.translate(
         offset: Offset(0, 16 * (1 - t)),
         child: child,
-      ),
-    );
-  }
-}
-
-class _SummaryStat extends StatelessWidget {
-  final Animation<double> animation;
-  final String value;
-  final String label;
-
-  const _SummaryStat({
-    required this.animation,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return _Reveal(
-      animation: animation,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(4, 14, 4, 13),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.44,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryLabel extends StatelessWidget {
-  final Animation<double> animation;
-  final String text;
-
-  const _SummaryLabel({
-    required this.animation,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return _Reveal(
-      animation: animation,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(2, 22, 2, 10),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _WeekCard extends StatelessWidget {
-  final List<_WeekDay> week;
-
-  const _WeekCard({required this.week});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(kCardRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var index = 0; index < week.length; index++)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: index == 0
-                  ? null
-                  : const BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: AppColors.divider),
-                      ),
-                    ),
-              child: Row(
-                children: [
-                  IconTile(icon: week[index].icon, tint: index == 0),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          week[index].label,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.15,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          week[index].sub,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (index == 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentSoft,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Text(
-                        'UP FIRST',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accentPrimary,
-                          letterSpacing: 0.33,
-                        ),
-                      ),
-                    )
-                  else
-                    Text(
-                      'Session ${index + 1}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textMuted,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-        ],
       ),
     );
   }
