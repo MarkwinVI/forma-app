@@ -129,10 +129,6 @@ class TodayWorkoutContent {
 /// and how it moved. The actions live in [TodayWorkoutActions], pinned by the
 /// tab so a long session never pushes Start below the fold.
 class TodayWorkoutCard extends StatelessWidget {
-  static const double _previousColWidth = 46;
-  static const double _changeColWidth = 42;
-  static const double _colGap = 10;
-
   final HomeTodaySummary summary;
   final List<TodayWorkoutRow> rows;
 
@@ -166,33 +162,7 @@ class TodayWorkoutCard extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.divider)),
             ),
-            child: Row(
-              children: [
-                Expanded(child: Text('EXERCISES', style: _headStyle)),
-                const SizedBox(width: _colGap),
-                SizedBox(
-                  width: _previousColWidth,
-                  child: Text(
-                    'PREV',
-                    maxLines: 1,
-                    softWrap: false,
-                    textAlign: TextAlign.right,
-                    style: _headStyle,
-                  ),
-                ),
-                const SizedBox(width: _colGap),
-                SizedBox(
-                  width: _changeColWidth,
-                  child: Text(
-                    'LAST',
-                    maxLines: 1,
-                    softWrap: false,
-                    textAlign: TextAlign.right,
-                    style: _headStyle,
-                  ),
-                ),
-              ],
-            ),
+            child: Text('EXERCISES', style: _headStyle),
           ),
           for (var index = 0; index < rows.length; index++)
             _ExerciseRow(
@@ -296,12 +266,8 @@ class _ExerciseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final changeColor = row.changeDir > 0
-        ? AppColors.green
-        : row.changeDir < 0
-            ? AppColors.red
-            : AppColors.textMuted;
-
+    // The name has the whole row: what the exercise last did and how it
+    // moved is the Progress tab's to say, not the list's.
     final content = Container(
       padding: const EdgeInsets.symmetric(vertical: 17),
       decoration: BoxDecoration(
@@ -311,86 +277,29 @@ class _ExerciseRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    row.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      height: 1.2,
-                    ),
-                  ),
-                ),
-                if (row.leveledUp) ...[
-                  const SizedBox(width: 8),
-                  const LevelUpTag(),
-                ],
-              ],
+          Flexible(
+            child: Text(
+              row.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                height: 1.2,
+              ),
             ),
           ),
-          const SizedBox(width: TodayWorkoutCard._colGap),
-          _ValueCell(
-            width: TodayWorkoutCard._previousColWidth,
-            label: row.previousLabel,
-            color: AppColors.textMuted,
-          ),
-          const SizedBox(width: TodayWorkoutCard._colGap),
-          // The signed number carries the direction on its own — an arrow
-          // beside it is the same fact twice.
-          _ValueCell(
-            width: TodayWorkoutCard._changeColWidth,
-            label: row.changeLabel,
-            color: changeColor,
-          ),
+          if (row.leveledUp) ...[
+            const SizedBox(width: 8),
+            const LevelUpTag(),
+          ],
         ],
       ),
     );
 
     if (onTap == null) return content;
     return Pressable(onTap: onTap, child: content);
-  }
-}
-
-/// A right-aligned number in one of the fixed value columns. Every
-/// realistic total and delta fits at full size; the scale-down is a safety
-/// net so an outlandish one shrinks a little instead of clipping its sign.
-class _ValueCell extends StatelessWidget {
-  final double width;
-  final String label;
-  final Color color;
-
-  const _ValueCell({
-    required this.width,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerRight,
-        child: Text(
-          label,
-          maxLines: 1,
-          softWrap: false,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: color,
-            height: 1.2,
-          ),
-        ),
-      ),
-    );
   }
 }
 

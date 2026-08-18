@@ -14,6 +14,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// starts at once, with no count-in — and logging from there records the
 /// seconds and ticks the set. From then on the cell is an mm:ss field, so
 /// the time can be corrected the way reps are.
+/// The timer's own close — the workout header carries a cross too, and it
+/// is not the one these tests mean.
+final _timerClose = find.descendant(
+  of: find.byType(HoldTimerView),
+  matching: find.byIcon(Icons.close_rounded),
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -142,7 +149,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(seconds: 2));
-    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.tap(_timerClose);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -164,7 +171,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.play_arrow_rounded).first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.tap(_timerClose);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -184,7 +191,7 @@ void main() {
     await tester.pump(const Duration(seconds: 7));
     await tester.tap(find.byIcon(Icons.pause_rounded));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.byIcon(Icons.close_rounded));
+    await tester.tap(_timerClose);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 

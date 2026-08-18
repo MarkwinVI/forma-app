@@ -28,7 +28,6 @@ class DayRibbon extends StatefulWidget {
   final DateTime today;
 
   final ValueChanged<HomeWeekStripDay> onDayTap;
-  final VoidCallback onBackToToday;
 
   const DayRibbon({
     super.key,
@@ -36,7 +35,6 @@ class DayRibbon extends StatefulWidget {
     required this.selectedDate,
     required this.today,
     required this.onDayTap,
-    required this.onBackToToday,
   });
 
   @override
@@ -100,72 +98,45 @@ class _DayRibbonState extends State<DayRibbon> {
   Widget build(BuildContext context) {
     if (widget.days.isEmpty) return const SizedBox.shrink();
 
-    final away = !_sameDay(widget.selectedDate, widget.today);
     final weeks = _weeks;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Held at a fixed height whether or not the way back is showing, so
-        // the ribbon never jumps as you move off today.
-        SizedBox(
-          height: 22,
-          child: away
-              ? Align(
-                  alignment: Alignment.centerRight,
-                  child: Pressable(
-                    onTap: widget.onBackToToday,
-                    child: Text(
-                      widget.selectedDate.isAfter(widget.today)
-                          ? '← TODAY'
-                          : 'TODAY →',
-                      style: monoStyle(
-                        size: 10.5,
-                        letterSpacing: 1.7,
-                        color: AppColors.accentPrimary,
-                      ),
-                    ),
-                  ),
-                )
-              : null,
-        ),
-        SizedBox(
-          height: 58,
-          // A week at a time: the row holds seven days and the next swipe
-          // brings the seven behind them, so the days never half-scroll into
-          // a reading that spans two weeks.
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: weeks.length,
-            itemBuilder: (context, index) {
-              final week = weeks[index];
-              return Row(
-                children: [
-                  for (var slot = 0; slot < DayRibbon.daysPerPage; slot++)
-                    Expanded(
-                      child: slot < week.length
-                          ? Pressable(
-                              onTap: () => widget.onDayTap(week[slot]),
-                              child: _RibbonDay(
-                                day: week[slot],
-                                selected: _sameDay(
-                                  week[slot].date,
-                                  widget.selectedDate,
-                                ),
-                                isToday: _sameDay(
-                                  week[slot].date,
-                                  widget.today,
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+    // No way back drawn here: today is lit in the row itself, and a tap on
+    // it is the way back.
+    return SizedBox(
+      height: 58,
+      // A week at a time: the row holds seven days and the next swipe
+      // brings the seven behind them, so the days never half-scroll into
+      // a reading that spans two weeks.
+      child: PageView.builder(
+        controller: _controller,
+        itemCount: weeks.length,
+        itemBuilder: (context, index) {
+          final week = weeks[index];
+          return Row(
+            children: [
+              for (var slot = 0; slot < DayRibbon.daysPerPage; slot++)
+                Expanded(
+                  child: slot < week.length
+                      ? Pressable(
+                          onTap: () => widget.onDayTap(week[slot]),
+                          child: _RibbonDay(
+                            day: week[slot],
+                            selected: _sameDay(
+                              week[slot].date,
+                              widget.selectedDate,
+                            ),
+                            isToday: _sameDay(
+                              week[slot].date,
+                              widget.today,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -192,9 +163,8 @@ class _RibbonDay extends StatelessWidget {
             ? Border(bottom: BorderSide(color: _ruleColor, width: 2))
             : null,
       ),
-      foregroundDecoration: selected && _isDashed
-          ? _DashedRule(color: _ruleColor)
-          : null,
+      foregroundDecoration:
+          selected && _isDashed ? _DashedRule(color: _ruleColor) : null,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

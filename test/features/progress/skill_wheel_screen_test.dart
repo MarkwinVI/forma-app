@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/core/widgets/tab_reset.dart';
 import 'package:forma_app/features/home/program_skill_trees_section.dart';
-import 'package:forma_app/features/home/progression_toast.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel_screen.dart';
 
@@ -342,26 +341,6 @@ void main() {
 
     expect(find.text('Edit Progression'), findsOneWidget);
     expect(find.text('OPEN SKILL TREE MAP'), findsNothing);
-  });
-
-  testWidgets('moved toast shows the OUT → IN pair with UNDO', (tester) async {
-    var undone = false;
-    await tester.pumpWidget(_host(ProgressionToast(
-      data: ProgressionToastData(
-        kind: ProgressionToastKind.moved,
-        outName: 'Incline Pushup',
-        inName: 'Pushup',
-        sub: 'Swapped in your workouts.',
-        onUndo: () async {},
-      ),
-      onUndoTap: () => undone = true,
-    )));
-
-    expect(find.text('PROGRESSION MOVED'), findsOneWidget);
-    expect(find.text('Incline Pushup'), findsOneWidget);
-    expect(find.text('Pushup'), findsOneWidget);
-    await tester.tap(find.text('UNDO'));
-    expect(undone, isTrue);
   });
 
   testWidgets(

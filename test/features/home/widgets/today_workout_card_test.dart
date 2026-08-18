@@ -90,16 +90,15 @@ void main() {
       ),
     );
 
-    // The day names itself, then every exercise with what it last totalled.
+    // The day names itself, then every exercise by name — what it last did
+    // is the Progress tab's to say.
     expect(find.text('Pull Day'), findsOneWidget);
     expect(find.text('EXERCISES'), findsOneWidget);
-    expect(find.text('PREV'), findsOneWidget);
-    expect(find.text('LAST'), findsOneWidget);
-    expect(find.text('PREVIOUS'), findsNothing);
+    expect(find.text('PREV'), findsNothing);
+    expect(find.text('LAST'), findsNothing);
     expect(find.text('Wall Handstand'), findsOneWidget);
-    expect(find.text('18s'), findsOneWidget);
-    expect(find.text('+2'), findsOneWidget);
-    expect(find.text('±0'), findsOneWidget);
+    expect(find.text('18s'), findsNothing);
+    expect(find.text('+2'), findsNothing);
     // The per-row target line is gone; the day names itself and nothing else.
     expect(find.textContaining('3 × 30s'), findsNothing);
     // Only the levelled-up exercise wears the tag.
@@ -127,47 +126,6 @@ void main() {
 
     await tester.tap(find.text('Start'));
     expect(started, isTrue);
-  });
-
-  testWidgets('the value columns never spill, however long the number',
-      (tester) async {
-    const wide = [
-      TodayWorkoutRow(
-        exerciseId: 'plank',
-        name: 'Plank',
-        previousLabel: '10000s',
-        changeLabel: '−1000',
-        changeDir: -1,
-      ),
-      TodayWorkoutRow(
-        exerciseId: 'squat',
-        name: 'Squat (Barbell)',
-        previousLabel: '15',
-        changeLabel: '+1000',
-        changeDir: 1,
-      ),
-    ];
-    await tester
-        .pumpWidget(host(TodayWorkoutCard(summary: summary(), rows: wide)));
-
-    // No render overflow was reported (the test binding rethrows them), and
-    // every value's painted box sits inside its column, flush right.
-    expect(tester.takeException(), isNull);
-    for (final (label, width) in [
-      ('10000s', 46.0),
-      ('−1000', 42.0),
-      ('15', 46.0),
-      ('+1000', 42.0),
-    ]) {
-      final text = find.text(label);
-      expect(text, findsOneWidget);
-      final textBox = tester.getRect(text);
-      final cell = find.ancestor(of: text, matching: find.byType(FittedBox));
-      final cellBox = tester.getRect(cell);
-      expect(cellBox.width, width);
-      expect(textBox.width, lessThanOrEqualTo(width + 0.01), reason: label);
-      expect(textBox.right, closeTo(cellBox.right, 0.01), reason: label);
-    }
   });
 
   testWidgets('shows completed state instead of Start', (tester) async {

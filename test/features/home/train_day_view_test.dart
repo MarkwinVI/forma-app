@@ -26,7 +26,7 @@ void main() {
       final presentation = resolve(today);
 
       expect(presentation.view, TrainDayView.today);
-      expect(presentation.eyebrow, 'TODAY · WED 29 JUL');
+      expect(presentation.eyebrow, 'TODAY');
       expect(presentation.note, isNull);
     });
 
@@ -34,13 +34,13 @@ void main() {
       final presentation = resolve(DateTime(2026, 7, 31));
 
       expect(presentation.view, TrainDayView.soon);
-      expect(presentation.eyebrow, 'IN 2 DAYS · FRI 31 JUL');
+      expect(presentation.eyebrow, 'IN 2 DAYS');
       // The dashed underline and the distance already say it is ahead.
       expect(presentation.note, isNull);
     });
 
     test('tomorrow says tomorrow', () {
-      expect(resolve(DateTime(2026, 7, 30)).eyebrow, 'TOMORROW · THU 30 JUL');
+      expect(resolve(DateTime(2026, 7, 30)).eyebrow, 'TOMORROW');
     });
 
     test('the last day inside the horizon still carries its exercises', () {
@@ -51,7 +51,7 @@ void main() {
       final presentation = resolve(DateTime(2026, 8, 10));
 
       expect(presentation.view, TrainDayView.distant);
-      expect(presentation.eyebrow, 'IN 12 DAYS · MON 10 AUG');
+      expect(presentation.eyebrow, 'IN 12 DAYS');
       expect(presentation.note!.tag, 'NOT BUILT YET');
     });
 
@@ -70,7 +70,7 @@ void main() {
       final presentation = resolve(DateTime(2026, 7, 27), isCompleted: true);
 
       expect(presentation.view, TrainDayView.logged);
-      expect(presentation.eyebrow, 'LOGGED · MON 27 JUL');
+      expect(presentation.eyebrow, 'LOGGED');
       expect(presentation.note, isNull);
     });
   });
@@ -84,7 +84,7 @@ void main() {
       );
 
       expect(presentation.view, TrainDayView.missed);
-      expect(presentation.eyebrow, 'MISSED · MON 27 JUL');
+      expect(presentation.eyebrow, 'MISSED');
       expect(presentation.note!.tag, 'RESCHEDULED');
       expect(presentation.note!.body, contains('Thursday 30 July'));
       // The plan slides rather than dropping the session, and says so.

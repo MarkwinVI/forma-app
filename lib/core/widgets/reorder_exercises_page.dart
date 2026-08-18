@@ -89,26 +89,14 @@ class _ReorderExercisesPageState extends State<ReorderExercisesPage> {
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Reorder exercises',
-              style: TextStyle(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              'Drag ≡ to change the order',
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+        title: const Text(
+          'Reorder exercises',
+          style: TextStyle(
+            fontSize: 17.5,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.2,
+          ),
         ),
         titleSpacing: 0,
       ),

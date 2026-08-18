@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -16,7 +15,6 @@ import '../exercises/exercise_detail_view.dart';
 import '../progress/skill_wheel_bundle.dart';
 import '../progress/widgets/skill_wheel.dart';
 import '../progress/widgets/skill_wheel_screen.dart';
-import 'progression_toast.dart';
 
 /// The Program tab's door into the skill trees: the same radial wheel the
 /// Progress tab shows, plus the verbs — start a progression at a node, move
@@ -48,8 +46,6 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   bool _loading = true;
   SkillWheelBundle? _bundle;
 
-  ProgressionToastData? _toast;
-  Timer? _toastTimer;
 
   @override
   void initState() {
@@ -59,7 +55,6 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
 
   @override
   void dispose() {
-    _toastTimer?.cancel();
     super.dispose();
   }
 
@@ -86,30 +81,6 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
         ),
       );
     }
-  }
-
-  void _showToast(ProgressionToastData data) {
-    _toastTimer?.cancel();
-    setState(() => _toast = data);
-    _toastTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) setState(() => _toast = null);
-    });
-  }
-
-  Future<void> _undo(ProgressionToastData toast) async {
-    _toastTimer?.cancel();
-    setState(() => _toast = null);
-    try {
-      await toast.onUndo?.call();
-    } catch (error, stackTrace) {
-      debugPrint('Failed to undo progression change: $error\n$stackTrace');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't undo that change.")),
-        );
-      }
-    }
-    await _load();
   }
 
   SkillTrack? _trackFor(String categoryId) {
@@ -148,18 +119,13 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
     final category = SkillCategoryCatalog.findById(family.categoryId);
     if (userId == null || bundle == null || category == null) return;
 
-    final track = _trackFor(category.id);
-    final wasRunning = track?.included ?? false;
     final branchId = _branchOf(family, node, category);
     final path = category.pathFor(branchId);
     final idx = path.indexOf(node.exerciseId);
     if (idx < 0) return;
 
-    final oldActiveName = wasRunning
-        ? family.flat[family.activeFlatIndex].name
-        : null;
-
-    // Snapshot for UNDO: every status this write can touch, plus the track.
+    // Every status this write can touch, read once so the new statuses are
+    // decided against one consistent picture.
     final touchable = _allCategoryExerciseIds(category);
     final before = {
       for (final id in touchable)
@@ -217,43 +183,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       return;
     }
 
-    Future<void> undo() async {
-      for (final entry in desired.entries) {
-        if (before[entry.key] != entry.value) {
-          await _progressService.upsert(userId, entry.key, before[entry.key]!);
-        }
-      }
-      await _skillTrackService.upsertTrack(
-        userId,
-        skillCategoryId: category.id,
-        branchId: track?.branchId ?? category.defaultTrainingPathId,
-        included: wasRunning,
-      );
-    }
-
     await _load();
-    if (!mounted) return;
-
-    if (!wasRunning) {
-      _showToast(ProgressionToastData(
-        kind: ProgressionToastKind.started,
-        title: '${node.name} added to your workouts',
-        sub: 'Your current ${family.title} exercise — it advances with '
-            'the tree.',
-        subBold: [family.title],
-        onUndo: undo,
-      ));
-    } else {
-      _showToast(ProgressionToastData(
-        kind: ProgressionToastKind.moved,
-        outName: oldActiveName,
-        inName: node.name,
-        sub: 'Swapped in your workouts · the ${family.title} tree now '
-            'trains this.',
-        subBold: [family.title],
-        onUndo: undo,
-      ));
-    }
   }
 
   /// Stops the tree's progression: the track pauses, its exercise leaves
@@ -262,8 +192,6 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
     final userId = AuthService().currentUser?.id;
     final track = _trackFor(family.categoryId);
     if (userId == null || track == null || !track.included) return;
-
-    final exerciseName = family.flat[family.activeFlatIndex].name;
 
     try {
       await _skillTrackService.setIncluded(
@@ -284,20 +212,6 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
     }
 
     await _load();
-    if (!mounted) return;
-
-    _showToast(ProgressionToastData(
-      kind: ProgressionToastKind.stopped,
-      title: '$exerciseName removed from your workouts',
-      sub: 'The ${family.title} tree is now inactive · your progress '
-          'is saved.',
-      subBold: [family.title],
-      onUndo: () => _skillTrackService.setIncluded(
-        userId,
-        family.categoryId,
-        included: true,
-      ),
-    ));
   }
 
   void _openExercise(WheelNode node) {
@@ -316,7 +230,6 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   @override
   Widget build(BuildContext context) {
     final bundle = _bundle;
-    final toast = _toast;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -326,44 +239,18 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
             ? const Center(child: LoadingIndicator())
             : bundle == null || bundle.families.isEmpty
                 ? const SizedBox.shrink()
-                : Stack(
-                    children: [
-                      SkillWheelScreen(
-                        families: bundle.families,
-                        journeyByCategory: bundle.journeyByCategory,
-                        activeCategoryIds: bundle.activeCategoryIds,
-                        treeLocks: bundle.treeLocks,
-                        editable: true,
-                        onTrainNode: _trainNode,
-                        onStopTraining: _stopTraining,
-                        onOpenExercise: _openExercise,
-                        onBack: () => Navigator.of(context).pop(),
-                        initialCategoryId: widget.initialCategoryId,
-                        exitOnTreeBack: widget.exitOnTreeBack,
-                      ),
-                      if (toast != null)
-                        Positioned(
-                          left: 16,
-                          right: 16,
-                          top: 56,
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0, end: 1),
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOutCubic,
-                            builder: (context, t, child) => Opacity(
-                              opacity: t,
-                              child: Transform.translate(
-                                offset: Offset(0, -8 * (1 - t)),
-                                child: child,
-                              ),
-                            ),
-                            child: ProgressionToast(
-                              data: toast,
-                              onUndoTap: () => _undo(toast),
-                            ),
-                          ),
-                        ),
-                    ],
+                : SkillWheelScreen(
+                    families: bundle.families,
+                    journeyByCategory: bundle.journeyByCategory,
+                    activeCategoryIds: bundle.activeCategoryIds,
+                    treeLocks: bundle.treeLocks,
+                    editable: true,
+                    onTrainNode: _trainNode,
+                    onStopTraining: _stopTraining,
+                    onOpenExercise: _openExercise,
+                    onBack: () => Navigator.of(context).pop(),
+                    initialCategoryId: widget.initialCategoryId,
+                    exitOnTreeBack: widget.exitOnTreeBack,
                   ),
       ),
     );

@@ -327,9 +327,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ];
       _progressOverrides.addAll(result.statusChanges);
     });
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('${category.title} updated')));
   }
 
   /// Opens the skill-tree map (the editable wheel), then re-reads progress

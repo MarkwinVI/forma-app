@@ -16,13 +16,13 @@ Exercise _exercise({bool isTimed = false, bool isWeighted = false}) => Exercise(
 
 void main() {
   group('previousSetLabel', () {
-    test('a loaded lift reads as its weight against its reps', () {
+    test('a loaded lift reads as its weight against its reps — no unit, the column head has it', () {
       expect(
         previousSetLabel(
           _exercise(isWeighted: true),
           const ExerciseSet(reps: 8, weightKg: 60),
         ),
-        '60kg x 8',
+        '60×8',
       );
     });
 
@@ -32,7 +32,7 @@ void main() {
           _exercise(isWeighted: true),
           const ExerciseSet(reps: 5, weightKg: 62.5),
         ),
-        '62.5kg x 5',
+        '62.5×5',
       );
     });
 
@@ -49,7 +49,7 @@ void main() {
           _exercise(isTimed: true, isWeighted: true),
           const ExerciseSet(durationSeconds: 40, weightKg: 20),
         ),
-        '20kg x 00:40',
+        '20×00:40',
       );
     });
 

@@ -352,6 +352,11 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   @override
   Widget build(BuildContext context) {
     final dirty = _dirty;
+    // The Save pill floats above the bottom inset — which, inside the tab
+    // shell, is the tab bar as well as the home indicator — so the list
+    // keeps that much clear under its last row, plus the pill and a gap.
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final listBottomPadding = bottomInset + 24 + 52 + 32;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -394,7 +399,11 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(22, 4, 22, 130),
+                    // Always scrollable: a list that just fits the screen
+                    // still gives under the thumb, rather than reading as
+                    // stuck the moment removing a row makes it fit.
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(22, 4, 22, listBottomPadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -433,7 +442,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
               Positioned(
                 left: 22,
                 right: 22,
-                bottom: MediaQuery.of(context).padding.bottom + 24,
+                bottom: bottomInset + 24,
                 child: _saving
                     ? const SizedBox(
                         height: 52,

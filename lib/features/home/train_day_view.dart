@@ -153,28 +153,28 @@ class TrainDayViewResolver {
     final distance = daysBetween(today, date);
 
     if (distance == 0) {
-      return TrainDayPresentation(
+      return const TrainDayPresentation(
         view: TrainDayView.today,
-        eyebrow: 'TODAY · ${dateLabel(date)}',
+        eyebrow: 'TODAY',
       );
     }
 
     if (distance < 0) {
       if (isCompleted) {
-        return TrainDayPresentation(
+        return const TrainDayPresentation(
           view: TrainDayView.logged,
-          eyebrow: 'LOGGED · ${dateLabel(date)}',
+          eyebrow: 'LOGGED',
         );
       }
       if (isRestDay) {
-        return TrainDayPresentation(
+        return const TrainDayPresentation(
           view: TrainDayView.rest,
-          eyebrow: 'REST · ${dateLabel(date)}',
+          eyebrow: 'REST',
         );
       }
       return TrainDayPresentation(
         view: TrainDayView.missed,
-        eyebrow: 'MISSED · ${dateLabel(date)}',
+        eyebrow: 'MISSED',
         note: rescheduledTo == null
             ? const TrainDayNote(
                 tag: 'STILL DUE',
@@ -190,7 +190,9 @@ class TrainDayViewResolver {
       );
     }
 
-    final eyebrow = '${_distanceLabel(distance)} · ${dateLabel(date)}';
+    // The distance alone: the ribbon above already shows the date, and the
+    // day being looked at is lit up in it.
+    final eyebrow = _distanceLabel(distance);
 
     if (isRestDay) {
       return TrainDayPresentation(
