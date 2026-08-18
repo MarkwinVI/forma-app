@@ -8,6 +8,7 @@ import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/skill_track_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
@@ -183,6 +184,13 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       return;
     }
 
+    AnalyticsService.capture('progression_moved', properties: {
+      'skill_tree_id': category.id,
+      'exercise_id': node.exerciseId,
+      'branch_id': branchId,
+      'step_index': idx,
+      'source': _source,
+    });
     await _load();
   }
 
@@ -211,12 +219,28 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       return;
     }
 
+    AnalyticsService.capture('progression_stopped', properties: {
+      'skill_tree_id': family.categoryId,
+      'source': _source,
+    });
     await _load();
   }
+
+  /// Where the user came in from — the Program tab's overview, or a
+  /// workout row's Edit progression.
+  String get _source =>
+      widget.exitOnTreeBack ? 'workout_editor' : 'program_tab';
 
   void _openExercise(WheelNode node) {
     final exercise = ExerciseCatalog.findById(node.exerciseId);
     if (exercise == null) return;
+    AnalyticsService.capture('skill_tree_exercise_opened', properties: {
+      'exercise_id': node.exerciseId,
+      'node_state': node.state.name,
+      if (exercise.skillCategoryId.isNotEmpty)
+        'skill_tree_id': exercise.skillCategoryId,
+      'source': _source,
+    });
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ExerciseDetailView(

@@ -14,6 +14,7 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
@@ -80,13 +81,21 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
 
   String get _typeName => programWorkoutTypeName(widget.sessionType);
 
+  /// The exercise ids the editor opened with, in order — what a saved edit
+  /// is measured against.
+  late List<String> _initialExerciseIds;
+
   @override
   void initState() {
     super.initState();
     _items = _loadDay();
     _initialSerialized = _serialized();
+    _initialExerciseIds = _exerciseIds();
     _loadAutoProgression();
   }
+
+  List<String> _exerciseIds() =>
+      [for (final item in _items) item.exerciseId ?? item.id];
 
   List<ProgramDayItem> _loadDay() => ProgramSessionPlan.loadDay(
         service: _programService,
@@ -117,6 +126,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
 
     try {
       await widget.onSave(config);
+      _captureSaved();
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (error) {
@@ -126,6 +136,36 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       );
       setState(() => _saving = false);
     }
+  }
+
+  /// What this save changed about the day, as a diff against the list the
+  /// editor opened with: which exercises came, which went, whether the
+  /// survivors moved. One event per save keeps the count honest — a row
+  /// added then removed before saving was never a change.
+  void _captureSaved() {
+    final before = _initialExerciseIds;
+    final after = _exerciseIds();
+    final added = after.where((id) => !before.contains(id)).toList();
+    final removed = before.where((id) => !after.contains(id)).toList();
+    final keptBefore = before.where(after.contains).toList();
+    final keptAfter = after.where(before.contains).toList();
+    var reordered = false;
+    for (var i = 0; i < keptBefore.length; i++) {
+      if (keptBefore[i] != keptAfter[i]) {
+        reordered = true;
+        break;
+      }
+    }
+    AnalyticsService.capture('program_workout_edited', properties: {
+      'session_type': widget.sessionType.dbValue,
+      'program_type': widget.programType.dbValue,
+      'exercise_count': after.length,
+      'added_count': added.length,
+      'removed_count': removed.length,
+      'added_exercise_ids': added,
+      'removed_exercise_ids': removed,
+      'reordered': reordered,
+    });
   }
 
   void _removeItem(String id) {
@@ -245,6 +285,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         // The re-read is the saved day, just resolved against fresh progress
         // — it must not count as an edit.
         _initialSerialized = _serialized();
+        _initialExerciseIds = _exerciseIds();
       });
     } catch (error, stackTrace) {
       debugPrint('Failed to refresh after editing a progression: '
@@ -307,6 +348,11 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         exercise.id,
         enabled: enabled,
       );
+      AnalyticsService.capture('auto_progression_toggled', properties: {
+        'exercise_id': exercise.id,
+        'enabled': enabled,
+        'session_type': widget.sessionType.dbValue,
+      });
     } catch (error, stackTrace) {
       // Put the switch back rather than show a saved setting that is not.
       if (mounted) {

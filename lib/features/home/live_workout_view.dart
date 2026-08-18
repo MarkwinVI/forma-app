@@ -26,6 +26,7 @@ import '../../data/services/workout_rest_preferences_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import '../exercises/exercise_picker_view.dart';
 import 'completed_workout_model.dart';
+import 'workout_analytics.dart';
 import 'finished_workout_view.dart';
 import 'hold_timer_view.dart';
 import 'program_day_items.dart';
@@ -1134,6 +1135,17 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       ),
     );
     if (discard != true || !mounted) return;
+    _abandonWorkout(reason: 'no_sets_logged');
+  }
+
+  /// The user chose to discard: report the same picture `workout_finished`
+  /// would have, so a session that ended early is measured against one that
+  /// was completed — then leave the live screen for good.
+  void _abandonWorkout({required String reason}) {
+    AnalyticsService.capture('workout_abandoned', properties: {
+      ...workoutOutcomeProperties(_buildCompletedWorkout()),
+      'reason': reason,
+    });
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
@@ -1152,7 +1164,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       ),
     );
     if (discard != true || !mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    _abandonWorkout(reason: 'left_workout');
   }
 
   // ── Exercise actions ──────────────────────────────────────────────

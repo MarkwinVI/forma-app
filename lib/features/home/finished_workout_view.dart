@@ -25,6 +25,7 @@ import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../../data/services/user_profile_service.dart';
 import 'completed_workout_model.dart';
+import 'workout_analytics.dart';
 
 /// Post-workout celebration flow: a summary step that saves the session,
 /// followed by one step per progression change the session earned — target
@@ -278,34 +279,10 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   /// level-up seen from the new exercise, so it is not reported again).
   void _captureWorkoutAnalytics(
       String? sessionId, List<ProgressionEvent> events) {
-    var plannedSets = 0;
-    var plannedReps = 0;
-    for (final exerciseEntry in widget.workout.exercises) {
-      final sets = exerciseEntry.targetSets ??
-          ExerciseProgressionService.setCountForExercise(
-              exerciseEntry.exercise);
-      final value = exerciseEntry.targetValue ??
-          ExerciseProgressionService.targetValueForExercise(
-            exerciseEntry.exercise,
-          );
-      plannedSets += sets;
-      if (!exerciseEntry.isTimed) plannedReps += sets * value;
-    }
-
-    AnalyticsService.capture('workout_finished', properties: {
-      if (sessionId != null) 'workout_id': sessionId,
-      if (widget.workout.analyticsId != null)
-        'workout_client_id': widget.workout.analyticsId!,
-      'session_type': widget.workout.sessionType.dbValue,
-      'duration_seconds': widget.workout.totalDuration.inSeconds,
-      'exercise_count': widget.workout.exercises.length,
-      'completed_sets': widget.workout.totalSets,
-      'planned_sets': plannedSets,
-      'completed_reps': widget.workout.totalReps,
-      'planned_reps': plannedReps,
-      if (widget.workout.totalTimedSeconds > 0)
-        'completed_timed_seconds': widget.workout.totalTimedSeconds,
-    });
+    AnalyticsService.capture(
+      'workout_finished',
+      properties: workoutOutcomeProperties(widget.workout, sessionId: sessionId),
+    );
 
     for (final event in events) {
       final progressionType = switch (event.kind) {

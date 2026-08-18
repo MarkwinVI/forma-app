@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/tab_reset.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../home/home_dashboard_metrics.dart';
 import '../performance_overview.dart';
 import 'skill_tree_confirm.dart';
@@ -150,6 +151,19 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   VoidCallback get _treeBack => widget.exitOnTreeBack && widget.onBack != null
       ? widget.onBack!
       : _wheelController.back;
+
+  /// One event each time a tree comes into focus — the wheel overview is
+  /// the tab's resting state, so a focused tree is what "explored" means.
+  void _reportTreeOpened(int index) {
+    if (index < 0 || index >= widget.families.length) return;
+    final family = widget.families[index];
+    AnalyticsService.capture('skill_tree_opened', properties: {
+      'skill_tree_id': family.categoryId,
+      'source': widget.editable ? 'program_tab' : 'progress_tab',
+      'is_active': widget.activeCategoryIds.contains(family.categoryId),
+      'is_locked': widget.treeLocks.containsKey(family.categoryId),
+    });
+  }
 
   Future<void> _act(Future<void> Function() action) async {
     if (_acting) return;
@@ -515,6 +529,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     activeCategoryIds: widget.activeCategoryIds,
                     lockedCategoryIds: widget.treeLocks.keys.toSet(),
                     onChanged: (sel, focus) => setState(() {
+                      if (sel != null && sel != _sel) _reportTreeOpened(sel);
                       _sel = sel;
                       _focus = focus;
                       // A fresh selection scrolls its row into view, so the

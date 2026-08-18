@@ -11,6 +11,7 @@ import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/progress_service.dart';
@@ -204,6 +205,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       },
       toast: 'Schedule updated',
     );
+    AnalyticsService.capture('program_schedule_changed', properties: {
+      'days_per_week': days,
+      'training_days': picked,
+    });
   }
 
   Future<void> _openSplitSheet() async {
@@ -222,12 +227,17 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
 
     // Changing the split rebuilds every day plan from the defaults for the
     // new split — an empty config makes the service fall back to them.
+    final previous = _logic.program.programType;
     await _saveLogic(
       programType: picked,
       sessionItemsConfig: const {},
       setupAnswers: {..._setupAnswers, 'split': picked.dbValue},
       toast: 'Split changed — sessions rebuilt',
     );
+    AnalyticsService.capture('program_split_changed', properties: {
+      'split': picked.dbValue,
+      'previous_split': previous.dbValue,
+    });
   }
 
   Future<void> _openEquipmentSheet() async {
@@ -252,6 +262,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       },
       toast: 'Equipment updated',
     );
+    AnalyticsService.capture('program_equipment_changed', properties: {
+      'equipment': picked.dbValue,
+    });
   }
 
   Future<void> _openAddTrackSheet() async {
@@ -292,6 +305,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       );
       return;
     }
+    AnalyticsService.capture('skill_track_added', properties: {
+      'skill_tree_id': picked.id,
+      'branch_id': picked.defaultTrainingPathId,
+    });
     await _loadSkillTracks();
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -318,6 +335,16 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     );
     if (result == null || !mounted) return;
 
+    AnalyticsService.capture('skill_track_adjusted', properties: {
+      'skill_tree_id': track.skillCategoryId,
+      'branch_id': result.track.branchId,
+      'branch_changed': result.track.branchId != track.branchId,
+      'included': result.track.included,
+      'included_changed': result.track.included != track.included,
+      'position_changed': result.statusChanges.isNotEmpty,
+      'target_changed': result.targetChanged,
+      'source': 'program_tab',
+    });
     setState(() {
       _skillTracks = [
         for (final existing in _skillTracks)
@@ -979,9 +1006,13 @@ class _AdjustTrackResult {
   final SkillTrack track;
   final Map<String, ExerciseStatus> statusChanges;
 
+  /// Whether the current exercise's rep/second target was rewritten.
+  final bool targetChanged;
+
   const _AdjustTrackResult({
     required this.track,
     required this.statusChanges,
+    this.targetChanged = false,
   });
 }
 
@@ -1126,6 +1157,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
       }
 
       final exercise = _currentExercise;
+      var targetChanged = false;
       if (exercise != null &&
           _targetValue != null &&
           _targetValue != _effectiveTarget) {
@@ -1137,6 +1169,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
           targetSets: sets,
           targetValue: _targetValue!,
         );
+        targetChanged = true;
       }
 
       if (!mounted) return;
@@ -1147,6 +1180,7 @@ class _AdjustTrackSheetState extends State<_AdjustTrackSheet> {
             included: _included,
           ),
           statusChanges: statusChanges,
+          targetChanged: targetChanged,
         ),
       );
     } catch (_) {
