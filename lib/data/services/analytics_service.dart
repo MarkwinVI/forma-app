@@ -31,9 +31,7 @@ class AnalyticsService {
     }
 
     final signedIn = AuthService().currentUser;
-    if (signedIn != null) {
-      unawaited(Posthog().identify(userId: signedIn.id));
-    }
+    if (signedIn != null) _identify(signedIn);
     AuthService().onAuthStateChange.listen((state) {
       final user = state.session?.user;
       if (state.event == AuthChangeEvent.signedOut) {
@@ -41,9 +39,19 @@ class AnalyticsService {
       } else if (user != null) {
         // Re-identifying with the same id is a no-op inside the SDK, so
         // token refreshes cost nothing.
-        unawaited(Posthog().identify(userId: user.id));
+        _identify(user);
       }
     });
+  }
+
+  /// The email rides along as a person property so a PostHog person is
+  /// recognisable by name, not just by Supabase UUID.
+  static void _identify(User user) {
+    final email = user.email;
+    unawaited(Posthog().identify(
+      userId: user.id,
+      userProperties: {if (email != null && email.isNotEmpty) 'email': email},
+    ));
   }
 
   /// [personProperties] ride along as `$set`, so the event also writes those
