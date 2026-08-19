@@ -295,12 +295,13 @@ const _footerStyle = TextStyle(
   height: 1.5,
 );
 
-/// The consent line under the sign-in button. "Privacy Policy" is a link
-/// to the published policy; it opens in the browser so the sign-in flow
-/// stays where it is.
+/// The consent line under the sign-in button. "Terms" and "Privacy Policy"
+/// link to the published pages; they open in the browser so the sign-in
+/// flow stays where it is.
 class _PrivacyFooter extends StatefulWidget {
   const _PrivacyFooter();
 
+  static final termsUrl = Uri.parse('https://tryforma.co/terms');
   static final privacyUrl = Uri.parse('https://tryforma.co/privacy');
 
   @override
@@ -308,22 +309,29 @@ class _PrivacyFooter extends StatefulWidget {
 }
 
 class _PrivacyFooterState extends State<_PrivacyFooter> {
-  late final _privacyTap = TapGestureRecognizer()..onTap = _openPrivacy;
+  late final _termsTap = TapGestureRecognizer()
+    ..onTap = () => _open(_PrivacyFooter.termsUrl, 'terms');
+  late final _privacyTap = TapGestureRecognizer()
+    ..onTap = () => _open(_PrivacyFooter.privacyUrl, 'privacy policy');
+
+  static const _linkStyle = TextStyle(
+    color: AppColors.textPrimary,
+    decoration: TextDecoration.underline,
+    decorationColor: AppColors.textMuted,
+  );
 
   @override
   void dispose() {
+    _termsTap.dispose();
     _privacyTap.dispose();
     super.dispose();
   }
 
-  Future<void> _openPrivacy() async {
-    final opened = await launchUrl(
-      _PrivacyFooter.privacyUrl,
-      mode: LaunchMode.externalApplication,
-    );
+  Future<void> _open(Uri url, String label) async {
+    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
     if (opened || !mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Couldn't open the privacy policy.")),
+      SnackBar(content: Text("Couldn't open the $label.")),
     );
   }
 
@@ -333,15 +341,13 @@ class _PrivacyFooterState extends State<_PrivacyFooter> {
       TextSpan(
         style: _footerStyle,
         children: [
-          const TextSpan(text: 'By continuing you agree to our Terms and '),
+          const TextSpan(text: 'By continuing you agree to our '),
+          TextSpan(text: 'Terms', recognizer: _termsTap, style: _linkStyle),
+          const TextSpan(text: ' and '),
           TextSpan(
             text: 'Privacy Policy',
             recognizer: _privacyTap,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              decoration: TextDecoration.underline,
-              decorationColor: AppColors.textMuted,
-            ),
+            style: _linkStyle,
           ),
           const TextSpan(text: '.'),
         ],
