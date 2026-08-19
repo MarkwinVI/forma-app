@@ -1,25 +1,29 @@
 class ExerciseSet {
   final int reps;
+  final int durationSeconds;
   final double weightKg;
   final String? notes;
 
   const ExerciseSet({
-    required this.reps,
+    this.reps = 0,
+    this.durationSeconds = 0,
     this.weightKg = 0,
     this.notes,
   });
 
   Map<String, dynamic> toJson() => {
-    'reps': reps,
-    'weight_kg': weightKg,
-    if (notes != null) 'notes': notes,
-  };
+        if (reps > 0) 'reps': reps,
+        if (durationSeconds > 0) 'duration_seconds': durationSeconds,
+        'weight_kg': weightKg,
+        if (notes != null) 'notes': notes,
+      };
 
   factory ExerciseSet.fromJson(Map<String, dynamic> json) => ExerciseSet(
-    reps: json['reps'] as int,
-    weightKg: (json['weight_kg'] as num?)?.toDouble() ?? 0,
-    notes: json['notes'] as String?,
-  );
+        reps: json['reps'] as int? ?? 0,
+        durationSeconds: json['duration_seconds'] as int? ?? 0,
+        weightKg: (json['weight_kg'] as num?)?.toDouble() ?? 0,
+        notes: json['notes'] as String?,
+      );
 }
 
 class ExerciseLog {
@@ -58,12 +62,12 @@ class ExerciseLog {
   }
 
   Map<String, dynamic> toMap(String userId) => {
-    'user_id': userId,
-    'exercise_id': exerciseId,
-    'logged_at': loggedAt.toIso8601String(),
-    'sets': sets.map((s) => s.toJson()).toList(),
-    'total_reps': totalReps,
-    'total_volume_kg': totalVolumeKg,
-    if (notes != null) 'notes': notes,
-  };
+        'user_id': userId,
+        'exercise_id': exerciseId,
+        'logged_at': loggedAt.toIso8601String(),
+        'sets': sets.map((s) => s.toJson()).toList(),
+        'total_reps': totalReps,
+        'total_volume_kg': totalVolumeKg,
+        if (notes != null) 'notes': notes,
+      };
 }

@@ -1,12 +1,981 @@
 import 'package:flutter/material.dart';
 
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/loading_indicator.dart';
+import '../../data/catalog/exercise_catalog.dart';
+import '../../core/widgets/type_led.dart';
+import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_progress_model.dart';
+import '../../data/models/skill_track_model.dart';
+import '../../data/models/training_program_model.dart';
+import '../../data/models/workout_history_model.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/dev_clock_service.dart';
+import '../../data/services/exercise_log_service.dart';
+import '../../data/services/progress_service.dart';
+import '../../data/services/progression_event_service.dart';
+import '../../data/services/skill_track_service.dart';
+import '../../data/services/training_program_service.dart';
+import '../../data/services/training_program_store_service.dart';
+import '../../data/services/training_schedule_service.dart';
+import '../exercises/exercise_detail_view.dart';
+import 'alternate_workout_options_view.dart';
+import 'home_dashboard_metrics.dart';
+import 'home_empty_state.dart';
+import 'live_workout_view.dart';
+import 'program_setup_completion.dart';
+import 'program_setup_view.dart';
+import 'session_overview_view.dart';
+import 'train_day_view.dart';
+import 'widgets/day_ribbon.dart';
+import 'widgets/day_state_views.dart';
+import 'widgets/rest_day_view.dart';
+import 'widgets/today_workout_card.dart';
+import 'widgets/workout_done_view.dart';
+import '../data/past_workout_detail_view.dart';
+
+/// Train tab — today's workout as a performance list (planned exercises with
+/// last result and change vs the previous attempt) plus a coaching tip.
+class HomeView extends StatefulWidget {
+  final bool isActive;
+
+  /// Fired after the setup wizard has written a program and been dismissed,
+  /// so the shell can move the user on to Progress, their new home tab.
+  final VoidCallback? onProgramCreated;
+
+  const HomeView({
+    super.key,
+    this.isActive = false,
+    this.onProgramCreated,
+  });
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final _progressService = ProgressService();
+  final _devClockService = DevClockService();
+  final _exerciseLogService = ExerciseLogService();
+  final _trainingProgramService = TrainingProgramService();
+  final _trainingProgramStoreService = TrainingProgramStoreService();
+  final _trainingScheduleService = TrainingScheduleService();
+  final _skillTrackService = SkillTrackService();
+  final _progressionEventService = ProgressionEventService();
+
+  bool _loading = true;
+  bool _hasProgram = true;
+  Map<String, ExerciseStatus> _progressMap = {};
+  Map<String, ExerciseProgress> _progressEntries = {};
+  List<PastWorkout> _pastWorkouts = const [];
+
+  /// Exercises the program levelled the user up onto that have not been
+  /// trained since — they carry the "Lvl up" tag in today's list.
+  Set<String> _leveledUpExerciseIds = const {};
+
+  /// The day the tab is looking at, or null while it is looking at today.
+  /// Selecting a day never leaves the tab: the same screen re-reads itself
+  /// for that day and says plainly what it can and cannot know about it.
+  DateTime? _selectedDate;
+
+  /// True from a workout being saved until the tab has re-read itself.
+  bool _refreshingAfterWorkout = false;
+  List<SkillTrack> _skillTracks = const [];
+  TrainingProgramLogicSnapshot? _logicSnapshot;
+
+  @override
+  void initState() {
+    super.initState();
+    programCreatedSignal.addListener(_onProgramCreated);
+    workoutSavedSignal.addListener(_onWorkoutSaved);
+    _loadHomeData();
+  }
+
+  @override
+  void dispose() {
+    programCreatedSignal.removeListener(_onProgramCreated);
+    workoutSavedSignal.removeListener(_onWorkoutSaved);
+    super.dispose();
+  }
+
+  /// A workout was saved — the finish screens are still up. Come back to
+  /// today and re-read now, so the tab is already the finished day when the
+  /// user returns to it. Until the read lands, the loader stands in for a
+  /// day that is about to be wrong.
+  void _onWorkoutSaved() {
+    if (!mounted) return;
+    setState(() {
+      _selectedDate = null;
+      _refreshingAfterWorkout = true;
+    });
+    _loadHomeData().whenComplete(() {
+      if (mounted) setState(() => _refreshingAfterWorkout = false);
+    });
+  }
+
+  /// A program was written — here or on another tab. Re-read now, and while
+  /// the read is out show the loader rather than the empty state that is
+  /// about to be wrong.
+  void _onProgramCreated() {
+    if (!mounted) return;
+    if (!_hasProgram) setState(() => _loading = true);
+    _loadHomeData();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
+    // this tab becomes active — e.g. after a dev reset from Settings the
+    // card would otherwise keep showing the deleted program.
+    if (!oldWidget.isActive && widget.isActive) {
+      _loadHomeData();
+    }
+  }
+
+  Future<void> _loadHomeData() async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+
+    try {
+      await _devClockService.loadOffset();
+      final results = await Future.wait([
+        _progressService.fetchAll(userId),
+        _trainingProgramStoreService.fetchProgramLogic(userId),
+        _exerciseLogService.fetchPastWorkouts(userId),
+      ]);
+      final pastWorkouts = results[2] as List<PastWorkout>;
+
+      // Which of today's exercises are freshly levelled up. Best effort: a
+      // failed lookup just means no tags this time round.
+      var leveledUp = const <String>{};
+      try {
+        leveledUp = TodayWorkoutContent.leveledUpExerciseIds(
+          activations: await _progressionEventService.fetchActivations(userId),
+          pastWorkouts: pastWorkouts,
+        );
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load level-ups: $error\n$stackTrace');
+      }
+
+      final logic = results[1] as TrainingProgramLogicSnapshot?;
+      // Skills-as-tracks: seeded on first use from the legacy lane
+      // selections + goals, so existing users keep what they trained.
+      var skillTracks = const <SkillTrack>[];
+      if (logic != null) {
+        try {
+          skillTracks = await _skillTrackService.getOrSeed(
+            userId,
+            laneSelections: {
+              ..._trainingProgramService.defaultBranchSelections(),
+              ...logic.branchSelections,
+            },
+            goalSkillIds: logic.program.setupGoalIds,
+          );
+        } catch (error, stackTrace) {
+          debugPrint('Failed to load skill tracks: $error\n$stackTrace');
+        }
+      }
+
+      if (!mounted) return;
+      final progress = results[0] as List<ExerciseProgress>;
+      setState(() {
+        _progressEntries = {
+          for (final item in progress) item.exerciseId: item,
+        };
+        _progressMap = {
+          for (final item in progress) item.exerciseId: item.status,
+        };
+        _logicSnapshot = logic;
+        _hasProgram = _logicSnapshot != null;
+        _pastWorkouts = pastWorkouts;
+        _leveledUpExerciseIds = leveledUp;
+        _skillTracks = skillTracks;
+        _loading = false;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load home data: $error\n$stackTrace');
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Couldn't load your training data. Switch tabs and back to retry.",
+          ),
+        ),
+      );
+    }
+  }
+
+  _TrainSnapshot? _buildSnapshot() {
+    final snapshot = _logicSnapshot;
+    if (snapshot == null) return null;
+
+    final programType = snapshot.program.programType;
+    final scheduleVariant = snapshot.program.scheduleVariant;
+    final now = _devClockService.now();
+    // Lane view bridges skill tracks into lane-keyed consumers (dashboards,
+    // config fallback); the actual session items come from the tracks.
+    final branchSelections = {
+      ..._trainingProgramService.defaultBranchSelections(),
+      ...snapshot.branchSelections,
+      ..._trainingProgramService.laneSelectionsFromTracks(_skillTracks),
+    };
+    final sessionItemsConfig = _sessionItemsConfigFor(snapshot.program);
+    final lastPlannedWorkout = _latestPlannedWorkout();
+    // The plan is anchored on the stored program pointer, not on workout
+    // history, so deleting an older session leaves the schedule alone —
+    // history only fills in which days already have a workout on them.
+    // History is the fallback for the case where the pointer was never
+    // written (a failed save on the very first session).
+    final anchorDate =
+        snapshot.state.lastCompletedAt ?? lastPlannedWorkout?.loggedAt;
+    final anchorSessionType = snapshot.state.lastSessionType ??
+        (lastPlannedWorkout == null
+            ? null
+            : TrainingSessionTypeX.fromDbValue(lastPlannedWorkout.sessionType));
+    final completedSessions = {
+      for (final workout in _pastWorkouts)
+        if (workout.affectsSchedule)
+          TrainingScheduleService.dateOnly(workout.loggedAt):
+              TrainingSessionTypeX.fromDbValue(workout.sessionType),
+    };
+    final dayMask =
+        TrainingScheduleService.dayMaskFrom(snapshot.program.variationRules);
+    final scheduleWindow = _trainingScheduleService.buildWindow(
+      programType: programType,
+      frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      dayMask: dayMask,
+      currentStepIndex: snapshot.state.nextStepIndex,
+      currentSessionType: snapshot.state.nextSessionType,
+      lastPlannedWorkoutAt: anchorDate,
+      lastCompletedSessionType: anchorSessionType,
+      completedSessions: completedSessions,
+      now: now,
+    );
+    // The ribbon starts at today and runs a week ahead. There is nothing
+    // behind today to scroll back to: the tab is for the session you are
+    // about to do and the ones lining up behind it, and the schedule screen
+    // is where a finished week is read. The day the ribbon has selected is
+    // what the whole screen reads from.
+    final ribbonWindow = _trainingScheduleService.buildWindow(
+      programType: programType,
+      frequencyPerWeek: snapshot.program.frequencyPerWeek,
+      dayMask: dayMask,
+      currentStepIndex: snapshot.state.nextStepIndex,
+      currentSessionType: snapshot.state.nextSessionType,
+      lastPlannedWorkoutAt: anchorDate,
+      lastCompletedSessionType: anchorSessionType,
+      completedSessions: completedSessions,
+      selectedDate: _selectedDate,
+      daysBeforeToday: 0,
+      // Two weeks exactly: the row you land on, and the one a scroll brings.
+      daysAfterToday: DayRibbon.daysPerPage * 2 - 1,
+      now: now,
+    );
+    final selectedDay = ribbonWindow.selectedDay;
+    final schedule = HomeScheduleResolution(
+      effectiveStepIndex: selectedDay.stepIndex,
+      effectiveSessionType: selectedDay.sessionType,
+      todayPosition: scheduleWindow.days.indexWhere((day) => day.isToday),
+      completedToday: selectedDay.isCompleted,
+    );
+    final recommendation = _trainingProgramService.buildToday(
+      progressMap: _progressMap,
+      programType: programType,
+      sessionType: schedule.effectiveSessionType,
+      branchSelections: branchSelections,
+      sessionItemsConfig: sessionItemsConfig,
+      skillTracks: _skillTracks,
+      hasGym: programUsesGym(snapshot.program.variationRules),
+      plannedDate: selectedDay.date,
+      plannedStepIndex: selectedDay.stepIndex,
+      affectsSchedule: !selectedDay.isRestDay,
+    );
+    final completedWorkout = selectedDay.isCompleted
+        ? _workoutForDate(selectedDay.date, plannedOnly: true)
+        : null;
+    final masterySettings = MasteryTargetSettings.fromVariationRules(
+      snapshot.program.variationRules,
+    );
+    return _TrainSnapshot(
+      recommendation: recommendation,
+      selectedDay: selectedDay,
+      ribbonDays: _calendarDaysForWindow(ribbonWindow),
+      rescheduledTo: selectedDay.isMissed
+          ? _rescheduledDateFor(ribbonWindow, selectedDay)
+          : null,
+      metrics: HomeDashboardMetricsCalculator.build(
+        recommendation: recommendation,
+        trainingProgramService: _trainingProgramService,
+        programType: programType,
+        scheduleVariant: scheduleVariant,
+        schedule: schedule,
+        branchSelections: branchSelections,
+        sessionItemsConfig: sessionItemsConfig,
+        progressMap: _progressMap,
+        progressEntries: _progressEntries,
+        workouts: _pastWorkouts,
+        skillTracks: _skillTracks,
+        goalSkillIds: snapshot.program.goalSkillIds,
+        frequencyPerWeek: snapshot.program.frequencyPerWeek,
+        dayMask: dayMask,
+        scheduleWindow: scheduleWindow,
+        completedWorkout: completedWorkout,
+        now: now,
+        masterySettings: masterySettings,
+      ),
+      now: now,
+    );
+  }
+
+  /// Where a missed day's session ended up. The plan does not drop a missed
+  /// session — it stays next in line and everything after it slides — so the
+  /// answer is the next day still carrying that session.
+  DateTime? _rescheduledDateFor(
+    TrainingScheduleWindow window,
+    PlannedScheduleDay missed,
+  ) {
+    for (final day in window.days) {
+      if (!day.date.isAfter(missed.date)) continue;
+      if (day.isRestDay || day.isMissed) continue;
+      if (day.sessionType != missed.sessionType) continue;
+      return day.date;
+    }
+    return null;
+  }
+
+  List<HomeWeekStripDay> _calendarDaysForWindow(
+    TrainingScheduleWindow scheduleWindow,
+  ) {
+    return [
+      for (final day in scheduleWindow.days)
+        HomeWeekStripDay(
+          date: day.date,
+          sessionType: day.sessionType,
+          isCurrent: day.isToday,
+          isSelected: day.isSelected,
+          isCompleted: day.isCompleted ||
+              _workoutForDate(day.date, plannedOnly: true) != null,
+          isMissed: day.isMissed,
+          stepIndex: day.stepIndex,
+        ),
+    ];
+  }
+
+  Map<String, dynamic> _sessionItemsConfigFor(UserTrainingProgram program) {
+    final raw = program.variationRules['session_items_v1'];
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return const {};
+  }
+
+  PastWorkout? _latestPlannedWorkout() {
+    for (final workout in _pastWorkouts) {
+      if (workout.affectsSchedule) return workout;
+    }
+    return null;
+  }
+
+  PastWorkout? _workoutForDate(DateTime date, {bool plannedOnly = false}) {
+    final target = TrainingScheduleService.dateOnly(date);
+    for (final workout in _pastWorkouts) {
+      if (plannedOnly && !workout.affectsSchedule) continue;
+      if (TrainingScheduleService.dateOnly(workout.loggedAt)
+          .isAtSameMomentAs(target)) {
+        return workout;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _openProgramSetup() async {
+    var created = false;
+    // The setup wizard takes over the whole screen, above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => ProgramSetupView(
+          onComplete: (result) async {
+            await _completeProgramSetup(result);
+            created = true;
+          },
+        ),
+      ),
+    );
+    // Abandoning the wizard midway must not move the user, so the redirect
+    // only fires once a program was actually written and the wizard closed.
+    if (created) widget.onProgramCreated?.call();
+    // Re-fetch so the tab reflects the freshly created program even if the
+    // user abandoned the wizard midway on a stale state.
+    await _loadHomeData();
+  }
+
+  Future<void> _completeProgramSetup(ProgramSetupResult result) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    await completeProgramSetup(
+      userId: userId,
+      result: result,
+      trainingProgramService: _trainingProgramService,
+      storeService: _trainingProgramStoreService,
+    );
+    await _loadHomeData();
+  }
+
+  Future<void> _startWorkout(DailyTrainingRecommendation recommendation) async {
+    final openedAt = _devClockService.now();
+    // The workout flow takes over the whole screen, above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => recommendation.isRestDay
+            ? SessionOverviewView(recommendation: recommendation)
+            : LiveWorkoutView(recommendation: recommendation),
+      ),
+    );
+    // A saved workout already re-read the tab and brought it back to today,
+    // from the finish screen. Anything else that happened in there — a
+    // discarded session, a rest-day overview — still deserves a re-read.
+    final finished = _pastWorkouts.any(
+      (workout) => workout.loggedAt.isAfter(openedAt),
+    );
+    if (!finished) await _loadHomeData();
+  }
+
+  Future<void> _openAlternateWorkoutOptions(
+    DailyTrainingRecommendation recommendation,
+  ) async {
+    final sessionType = recommendation.sessionType == TrainingSessionType.rest
+        ? TrainingSessionType.fullBody
+        : recommendation.sessionType;
+
+    // Part of starting a workout — the whole flow runs above the tab bar.
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => AlternateWorkoutOptionsView(
+          onOpenBlankWorkout: () {
+            Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute(
+                builder: (_) => LiveWorkoutView(
+                  recommendation: DailyTrainingRecommendation(
+                    programType: recommendation.programType,
+                    sessionType: sessionType,
+                    sessionLabel: 'Blank Workout',
+                    isRestDay: false,
+                    items: const [],
+                    affectsSchedule: false,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    // A workout may have been logged from here — re-fetch.
+    await _loadHomeData();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SizedBox.expand(),
+    final snapshot = _loading ? null : _buildSnapshot();
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        bottom: false,
+        child: _loading || _refreshingAfterWorkout
+            ? const Center(child: LoadingIndicator())
+            : !_hasProgram || snapshot == null
+                ? HomeEmptyState(onCreateProgram: _openProgramSetup)
+                : _buildTab(snapshot),
+      ),
     );
   }
+
+  /// The tab, whichever day it is reading: the ribbon fixed at the top, the
+  /// day under it, and the actions sitting directly on the tab bar. Only the
+  /// middle changes as you move across the week, so the screen never
+  /// re-shuffles itself under your thumb.
+  Widget _buildTab(_TrainSnapshot snapshot) {
+    final presentation = _presentationFor(snapshot);
+    final workout = _workoutForDate(
+      snapshot.selectedDay.date,
+      plannedOnly: true,
+    );
+    final actions = _actionsFor(snapshot, presentation);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+          child: _ribbon(snapshot),
+        ),
+        Expanded(
+          child: Padding(
+            // With nothing pinned under it, the body itself has to clear the
+            // tab bar.
+            padding: EdgeInsets.only(
+              bottom: actions == null ? _tabBarInset + _tabBarGap : 0,
+            ),
+            child: _bodyFor(snapshot, presentation, workout),
+          ),
+        ),
+        if (actions != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(22, 10, 22, _tabBarInset + _tabBarGap),
+            child: actions,
+          ),
+      ],
+    );
+  }
+
+  /// How the selected day reads.
+  TrainDayPresentation _presentationFor(_TrainSnapshot snapshot) {
+    final day = snapshot.selectedDay;
+    final workout = _workoutForDate(day.date, plannedOnly: true);
+    return TrainDayViewResolver.resolve(
+      date: day.date,
+      today: TrainingScheduleService.dateOnly(snapshot.now),
+      isCompleted: day.isCompleted || workout != null,
+      isMissed: day.isMissed,
+      isRestDay: day.isRestDay,
+      rescheduledTo: snapshot.rescheduledTo,
+    );
+  }
+
+  /// What the page has to keep clear at the bottom.
+  ///
+  /// The shell's body extends behind the floating tab bar, and Flutter
+  /// already reports that bar's height as this page's bottom padding — so
+  /// this is the tab bar, home indicator and all. Adding a nav-bar height on
+  /// top of it (as this did) counts the bar twice and floats whatever is
+  /// pinned a bar's height above where it belongs.
+  double get _tabBarInset => MediaQuery.of(context).padding.bottom;
+
+  /// Breathing room between the last thing on the page and the tab bar. The
+  /// quiet text actions sit right at the bottom edge of their block, so
+  /// without it they read as part of the bar rather than of the page.
+  static const double _tabBarGap = 20;
+
+  Widget _bodyFor(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+    PastWorkout? workout,
+  ) {
+    // A rest day never scrolls: the illustration flexes so the copy under it
+    // stays above the fold.
+    if (presentation.view == TrainDayView.rest ||
+        (presentation.isToday && snapshot.metrics.today.isRestDay)) {
+      return _restBody(snapshot, presentation);
+    }
+
+    // No pull-to-refresh: the tab re-reads itself after every workout and
+    // every edit, and a pulled list only ever left the day hanging off the
+    // ribbon with a black band under it.
+    return SingleChildScrollView(
+      // Attached to the shell's per-tab controller, so re-tapping the tab
+      // scrolls back to the top.
+      primary: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (presentation.eyebrow != null)
+              DayEyebrow(
+                text: presentation.eyebrow!,
+                color: presentation.view == TrainDayView.missed
+                    ? AppColors.red
+                    : AppColors.textMuted,
+              ),
+            if (presentation.isToday)
+              _buildContent(snapshot)
+            else
+              ..._dayContent(snapshot, presentation, workout),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Recovery, on today or on a day you are looking ahead to. What differs is
+  /// only what can be said around it: today explains why it is resting and
+  /// offers a way to train anyway; a day ahead simply says one is planned.
+  Widget _restBody(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+  ) {
+    final isToday = presentation.isToday;
+    // What comes after a rest day only matters on the rest day itself. Read
+    // from next week it is a second date on a screen whose whole point is
+    // that there is nothing to do on the one you are looking at.
+    final (nextTitle, nextWhen) =
+        isToday ? _nextSession(snapshot.metrics.weekStrip) : (null, null);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (presentation.eyebrow != null)
+            DayEyebrow(text: presentation.eyebrow!),
+          Expanded(
+            child: RestDayView(
+              title: isToday ? 'Nothing to do today' : 'Rest day planned',
+              nextTitle: nextTitle,
+              nextWhen: nextWhen,
+              onTrainSomethingElse: isToday
+                  ? () => _openAlternateWorkoutOptions(snapshot.recommendation)
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// What the tab pins on the tab bar for this day, or null when the day
+  /// asks nothing of you.
+  Widget? _actionsFor(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+  ) {
+    if (presentation.isToday) {
+      if (snapshot.metrics.today.isRestDay) return null;
+      // Done: the one thing left is the record, pinned where Start was so
+      // the finished day keeps a normal day's shape.
+      if (snapshot.metrics.today.completed != null) {
+        if (_pastWorkouts.isEmpty) return null;
+        return DayActions(
+          primaryLabel: 'View completed workout',
+          onPrimary: _openSelectedWorkoutDetail,
+        );
+      }
+      return TodayWorkoutActions(
+        summary: snapshot.metrics.today,
+        onStart: () => _startWorkout(snapshot.recommendation),
+        onTrainSomethingElse: () =>
+            _openAlternateWorkoutOptions(snapshot.recommendation),
+      );
+    }
+    return _dayActions(snapshot, presentation);
+  }
+
+  /// The next training day after [date], and how far past it that falls —
+  /// read from the day being looked at, not from today.
+  (String?, String?) _nextSessionAfter(
+    DateTime date,
+    List<HomeWeekStripDay> days,
+  ) {
+    for (final day in days) {
+      final distance = TrainDayViewResolver.daysBetween(date, day.date);
+      if (distance <= 0) continue;
+      if (day.sessionType == TrainingSessionType.rest) continue;
+      return (
+        _sessionTitle(day.sessionType),
+        distance == 1 ? 'the next day' : 'in $distance days',
+      );
+    }
+    return (null, null);
+  }
+
+  /// The body of a day, by what is known about it: real numbers for a day
+  /// close enough to have them, the shape of the day beyond that, bare names
+  /// for a day where nothing was logged and nothing is prescribed.
+  List<Widget> _dayContent(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+    PastWorkout? workout,
+  ) {
+    final summary = snapshot.metrics.today;
+    final note = presentation.note;
+
+    switch (presentation.view) {
+      case TrainDayView.soon:
+        return [
+          TodayWorkoutCard(
+            summary: summary,
+            rows: _todayRows(snapshot.metrics),
+            note: note == null ? null : DayNoteBand(note: note),
+            onRowTap: _openPlannedExercise,
+          ),
+        ];
+      case TrainDayView.distant:
+        final rows = _patternRowsFor(snapshot.recommendation);
+        return [
+          TypeTitle(
+            summary.sessionTitle,
+            sub: 'Built the morning of · '
+                '${_spelledCount(rows.length)} '
+                '${rows.length == 1 ? 'slot' : 'slots'} from your program',
+          ),
+          if (note != null) DayNoteBand(note: note),
+          const SizedBox(height: 8),
+          DayPatternList(rows: rows),
+        ];
+      case TrainDayView.missed:
+        final names = [
+          for (final item in snapshot.recommendation.items) item.exercise.name,
+        ];
+        return [
+          TypeTitle(
+            summary.sessionTitle,
+            sub: '${_spelledCount(names.length)} '
+                '${names.length == 1 ? 'exercise' : 'exercises'} · '
+                'nothing was logged',
+          ),
+          if (note != null)
+            DayNoteBand(note: note, tagColor: AppColors.accentPrimary),
+          DayNameList(names: names),
+        ];
+      case TrainDayView.logged:
+        if (workout == null) {
+          return [
+            TypeTitle(summary.sessionTitle, sub: 'Logged'),
+          ];
+        }
+        final (nextTitle, nextWhen) = _nextSessionAfter(
+          snapshot.selectedDay.date,
+          snapshot.ribbonDays,
+        );
+        // The same screen the day itself ended on; the way into the record
+        // is pinned under it, as it is on the day itself.
+        return [
+          WorkoutDoneView(nextTitle: nextTitle, nextWhen: nextWhen),
+        ];
+      case TrainDayView.rest:
+      case TrainDayView.today:
+        // Both are rendered by their own body, not by this list.
+        return const [];
+    }
+  }
+
+  /// What another day pins, or null when it asks nothing of you. The way
+  /// back to today is the ribbon — today is lit there and a tap on it
+  /// returns — so no day pins one.
+  Widget? _dayActions(
+    _TrainSnapshot snapshot,
+    TrainDayPresentation presentation,
+  ) {
+    switch (presentation.view) {
+      case TrainDayView.soon:
+        return DayActions(
+          primaryLabel: 'Start this early',
+          onPrimary: () => _startWorkout(snapshot.recommendation),
+        );
+      // A finished day pins its way into the record.
+      case TrainDayView.logged:
+        final workout = _workoutForDate(
+          snapshot.selectedDay.date,
+          plannedOnly: true,
+        );
+        if (workout == null) return null;
+        return DayActions(
+          primaryLabel: 'View completed workout',
+          onPrimary: () => _openPastWorkout(workout),
+        );
+      // A missed day is read, not acted on: the band already says where its
+      // session went.
+      case TrainDayView.missed:
+      case TrainDayView.distant:
+      case TrainDayView.rest:
+      case TrainDayView.today:
+        return null;
+    }
+  }
+
+  /// What a day trains when which exercises it trains is not settled: the
+  /// movements it covers and how many slots each one gets.
+  List<DayPatternRow> _patternRowsFor(DailyTrainingRecommendation plan) {
+    const order = ['Push', 'Pull', 'Legs', 'Core', 'Skill work', 'Other'];
+    final counts = <String, int>{};
+
+    for (final item in plan.items) {
+      final group = switch (item.exercise.category) {
+        ExerciseCategory.verticalPush ||
+        ExerciseCategory.horizontalPush =>
+          'Push',
+        ExerciseCategory.verticalPull ||
+        ExerciseCategory.horizontalPull =>
+          'Pull',
+        ExerciseCategory.squat || ExerciseCategory.hinge => 'Legs',
+        ExerciseCategory.core => 'Core',
+        ExerciseCategory.skill => 'Skill work',
+        ExerciseCategory.other => 'Other',
+      };
+      counts[group] = (counts[group] ?? 0) + 1;
+    }
+
+    return [
+      for (final group in order)
+        if (counts[group] case final count?)
+          DayPatternRow(
+            movement: group,
+            slots: '${_spelledCount(count)} '
+                '${count == 1 ? 'exercise' : 'exercises'}',
+          ),
+    ];
+  }
+
+  static String _spelledCount(int count) {
+    const words = [
+      'No',
+      'One',
+      'Two',
+      'Three',
+      'Four',
+      'Five',
+      'Six',
+      'Seven',
+      'Eight',
+      'Nine',
+    ];
+    return count >= 0 && count < words.length ? words[count] : '$count';
+  }
+
+  /// The dated ribbon, shared by every state of the tab. Tapping a day never
+  /// leaves the tab — the screen re-reads itself for that day.
+  Widget _ribbon(_TrainSnapshot snapshot) {
+    return DayRibbon(
+      days: snapshot.ribbonDays,
+      selectedDate: snapshot.selectedDay.date,
+      today: TrainingScheduleService.dateOnly(snapshot.now),
+      onDayTap: _selectDay,
+    );
+  }
+
+  void _selectDay(HomeWeekStripDay day) {
+    setState(() => _selectedDate = TrainingScheduleService.dateOnly(day.date));
+  }
+
+
+  List<TodayWorkoutRow> _todayRows(HomeDashboardMetrics metrics) {
+    return TodayWorkoutContent.rows(
+      metrics,
+      leveledUpExerciseIds: _leveledUpExerciseIds,
+    );
+  }
+
+  /// A row in today's list is the way into the exercise itself.
+  void _openPlannedExercise(TodayWorkoutRow row) {
+    final exercise = ExerciseCatalog.findById(row.exerciseId);
+    if (exercise == null) return;
+    openExerciseDetailView<void>(
+      context,
+      exercise: exercise,
+      skillCategoryId:
+          exercise.skillCategoryId.isEmpty ? null : exercise.skillCategoryId,
+    );
+  }
+
+  Widget _buildContent(_TrainSnapshot snapshot) {
+    final metrics = snapshot.metrics;
+    final completed = metrics.today.completed;
+    final (nextTitle, nextWhen) = _nextSession(metrics.weekStrip);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (completed != null) ...[
+          WorkoutDoneView(nextTitle: nextTitle, nextWhen: nextWhen),
+        ] else ...[
+          // No spacer: the eyebrow sets the gap above the title, the same
+          // gap every other day of the week gets.
+          TodayWorkoutCard(
+            summary: metrics.today,
+            rows: _todayRows(metrics),
+            onRowTap: _openPlannedExercise,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _openPastWorkout(PastWorkout workout) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PastWorkoutDetailView(workout: workout),
+      ),
+    );
+    await _loadHomeData();
+  }
+
+  Future<void> _openSelectedWorkoutDetail() async {
+    final workout = _workoutForDate(_devClockService.now()) ??
+        (_pastWorkouts.isEmpty ? null : _pastWorkouts.first);
+    if (workout == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PastWorkoutDetailView(workout: workout),
+      ),
+    );
+    await _loadHomeData();
+  }
+
+  /// The next training session after today and how far off it is, walking the
+  /// program cycle forward from today (wrapping into the next cycle). Returns
+  /// (null, null) when the cycle has no training day.
+  (String?, String?) _nextSession(HomeWeekStripData weekStrip) {
+    final days = weekStrip.days;
+    final currentIndex = days.indexWhere((day) => day.isCurrent);
+    if (currentIndex < 0) return (null, null);
+
+    for (var offset = 1; offset <= days.length; offset++) {
+      final day = days[(currentIndex + offset) % days.length];
+      if (day.sessionType == TrainingSessionType.rest) continue;
+      final title = _sessionTitle(day.sessionType);
+      final when = offset == 1 ? 'tomorrow' : 'in $offset days';
+      return (title, when);
+    }
+    return (null, null);
+  }
+
+  String _sessionTitle(TrainingSessionType type) {
+    switch (type) {
+      case TrainingSessionType.fullBody:
+        return 'Full Body';
+      case TrainingSessionType.push:
+        return 'Push Day';
+      case TrainingSessionType.pull:
+        return 'Pull Day';
+      case TrainingSessionType.upper:
+        return 'Upper Day';
+      case TrainingSessionType.lower:
+        return 'Lower Day';
+      case TrainingSessionType.rest:
+        return 'Recovery';
+    }
+  }
+}
+
+class _TrainSnapshot {
+  final DailyTrainingRecommendation recommendation;
+  final HomeDashboardMetrics metrics;
+
+  /// The day the tab is reading, resolved in the ribbon's window.
+  final PlannedScheduleDay selectedDay;
+
+  /// The dated run of days across the top.
+  final List<HomeWeekStripDay> ribbonDays;
+
+  /// Where a missed selected day's session now sits, when the plan says.
+  final DateTime? rescheduledTo;
+
+  final DateTime now;
+
+  const _TrainSnapshot({
+    required this.recommendation,
+    required this.metrics,
+    required this.selectedDay,
+    required this.ribbonDays,
+    this.rescheduledTo,
+    required this.now,
+  });
+
+  bool get isViewingToday => selectedDay.isToday;
 }

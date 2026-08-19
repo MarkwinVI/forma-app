@@ -1,0 +1,509 @@
+import 'exercise_model.dart';
+
+enum TrainingProgramType { fullBody, pushPull, upperLower }
+
+extension TrainingProgramTypeX on TrainingProgramType {
+  String get dbValue {
+    switch (this) {
+      case TrainingProgramType.fullBody:
+        return 'full_body';
+      case TrainingProgramType.pushPull:
+        return 'push_pull';
+      case TrainingProgramType.upperLower:
+        return 'upper_lower';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case TrainingProgramType.fullBody:
+        return 'Full Body';
+      case TrainingProgramType.pushPull:
+        return 'Push / Pull';
+      case TrainingProgramType.upperLower:
+        return 'Upper / Lower';
+    }
+  }
+
+  static TrainingProgramType fromDbValue(String value) {
+    switch (value) {
+      case 'push_pull':
+        return TrainingProgramType.pushPull;
+      case 'upper_lower':
+        return TrainingProgramType.upperLower;
+      case 'full_body':
+      default:
+        return TrainingProgramType.fullBody;
+    }
+  }
+}
+
+
+/// Weekday names, Monday first — the index used to key a day's own plan.
+const List<String> kWeekdayNames = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+/// Where a workout type's exercise list lives in `session_items_v1`.
+///
+/// The unit of editing is the workout type, not the day: every day running
+/// the same session shares one entry ("upper"), so there is no remembering
+/// which day you're editing.
+String programDayConfigKey(TrainingSessionType sessionType) =>
+    sessionType.dbValue;
+
+/// Equipment choice saved by program setup. Programs created before the
+/// answer was stored follow the app's original full-gym default.
+bool programUsesGym(Map<String, dynamic> variationRules) {
+  final setup = variationRules['program_setup_v1'];
+  if (setup is! Map) return true;
+  return setup['has_gym'] as bool? ?? true;
+}
+
+/// The stored plan for a workout type, or null when it still runs on
+/// generated defaults.
+Map<String, dynamic>? programDayConfig(
+  Map<String, dynamic> sessionItemsConfig,
+  TrainingSessionType sessionType,
+) {
+  final shared = sessionItemsConfig[sessionType.dbValue];
+  if (shared is Map) return Map<String, dynamic>.from(shared);
+
+  // Days used to carry plans of their own, keyed "3:upper". The earliest
+  // weekday's plan stands in for the whole type until a type-level save
+  // replaces it — see [writeProgramDayConfig].
+  for (var weekday = 0; weekday < 7; weekday++) {
+    final legacy = sessionItemsConfig['$weekday:${sessionType.dbValue}'];
+    if (legacy is Map) return Map<String, dynamic>.from(legacy);
+  }
+  return null;
+}
+
+/// Writes [dayMap] as the type's shared plan, clearing any retired per-day
+/// ("3:upper") entries for the type — left in place they would only shadow
+/// the plan being saved for readers still on the old format.
+void writeProgramDayConfig(
+  Map<String, dynamic> sessionItemsConfig,
+  TrainingSessionType sessionType,
+  Map<String, dynamic> dayMap,
+) {
+  sessionItemsConfig.removeWhere(
+    (key, _) => key.endsWith(':${sessionType.dbValue}'),
+  );
+  sessionItemsConfig[sessionType.dbValue] = dayMap;
+}
+
+enum TrainingSessionType { fullBody, push, pull, upper, lower, rest }
+
+extension TrainingSessionTypeX on TrainingSessionType {
+  String get dbValue {
+    switch (this) {
+      case TrainingSessionType.fullBody:
+        return 'full_body';
+      case TrainingSessionType.push:
+        return 'push';
+      case TrainingSessionType.pull:
+        return 'pull';
+      case TrainingSessionType.upper:
+        return 'upper';
+      case TrainingSessionType.lower:
+        return 'lower';
+      case TrainingSessionType.rest:
+        return 'rest';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case TrainingSessionType.fullBody:
+        return 'Today\'s Session';
+      case TrainingSessionType.push:
+        return 'Push Day';
+      case TrainingSessionType.pull:
+        return 'Pull Day';
+      case TrainingSessionType.upper:
+        return 'Upper Day';
+      case TrainingSessionType.lower:
+        return 'Lower Day';
+      case TrainingSessionType.rest:
+        return 'Rest Day';
+    }
+  }
+
+  static TrainingSessionType fromDbValue(String value) {
+    switch (value) {
+      case 'push':
+        return TrainingSessionType.push;
+      case 'pull':
+        return TrainingSessionType.pull;
+      case 'upper':
+        return TrainingSessionType.upper;
+      case 'lower':
+        return TrainingSessionType.lower;
+      case 'rest':
+        return TrainingSessionType.rest;
+      case 'full_body':
+      default:
+        return TrainingSessionType.fullBody;
+    }
+  }
+}
+
+enum TrainingTrack {
+  skillWork,
+  verticalPush,
+  horizontalPush,
+  verticalPull,
+  horizontalPull,
+  core,
+  squat,
+  hinge,
+}
+
+extension TrainingTrackX on TrainingTrack {
+  String get dbValue {
+    switch (this) {
+      case TrainingTrack.skillWork:
+        return 'skill_work';
+      case TrainingTrack.verticalPush:
+        return 'vertical_push';
+      case TrainingTrack.horizontalPush:
+        return 'horizontal_push';
+      case TrainingTrack.verticalPull:
+        return 'vertical_pull';
+      case TrainingTrack.horizontalPull:
+        return 'horizontal_pull';
+      case TrainingTrack.core:
+        return 'core';
+      case TrainingTrack.squat:
+        return 'squat';
+      case TrainingTrack.hinge:
+        return 'hinge';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case TrainingTrack.skillWork:
+        return 'Skill Work';
+      case TrainingTrack.verticalPush:
+        return 'Vertical Push';
+      case TrainingTrack.horizontalPush:
+        return 'Horizontal Push';
+      case TrainingTrack.verticalPull:
+        return 'Vertical Pull';
+      case TrainingTrack.horizontalPull:
+        return 'Horizontal Pull';
+      case TrainingTrack.core:
+        return 'Core';
+      case TrainingTrack.squat:
+        return 'Squat';
+      case TrainingTrack.hinge:
+        return 'Hinge';
+    }
+  }
+
+  static TrainingTrack fromDbValue(String value) {
+    switch (value) {
+      case 'skill_work':
+        return TrainingTrack.skillWork;
+      case 'vertical_push':
+        return TrainingTrack.verticalPush;
+      case 'horizontal_push':
+        return TrainingTrack.horizontalPush;
+      case 'vertical_pull':
+        return TrainingTrack.verticalPull;
+      case 'horizontal_pull':
+        return TrainingTrack.horizontalPull;
+      case 'core':
+        return TrainingTrack.core;
+      case 'squat':
+        return TrainingTrack.squat;
+      case 'hinge':
+      default:
+        return TrainingTrack.hinge;
+    }
+  }
+}
+
+enum RepGoalProfile { strength, balanced, volume }
+
+extension RepGoalProfileX on RepGoalProfile {
+  String get dbValue {
+    switch (this) {
+      case RepGoalProfile.strength:
+        return 'strength';
+      case RepGoalProfile.balanced:
+        return 'balanced';
+      case RepGoalProfile.volume:
+        return 'volume';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case RepGoalProfile.strength:
+        return 'Strength';
+      case RepGoalProfile.balanced:
+        return 'Balanced';
+      case RepGoalProfile.volume:
+        return 'Volume';
+    }
+  }
+
+  String get summary {
+    switch (this) {
+      case RepGoalProfile.strength:
+        return 'Bias harder sets and lower rep targets on main lifts.';
+      case RepGoalProfile.balanced:
+        return 'Keep a mix of skill quality, strength, and repeatable volume.';
+      case RepGoalProfile.volume:
+        return 'Bias longer sets, cleaner practice, and total reps.';
+    }
+  }
+
+  static RepGoalProfile fromDbValue(String? value) {
+    switch (value) {
+      case 'strength':
+        return RepGoalProfile.strength;
+      case 'volume':
+        return RepGoalProfile.volume;
+      case 'balanced':
+      default:
+        return RepGoalProfile.balanced;
+    }
+  }
+}
+
+/// Global mastery targets from the training-program settings. Read live at
+/// evaluation and display time — never snapshotted per exercise — so changing
+/// them applies to active and future exercises but never removes mastery,
+/// relocks exercises, or resets current incremental targets.
+class MasteryTargetSettings {
+  static const int defaultRepsPerSet = 8;
+  static const int defaultSecondsPerSet = 20;
+  static const MasteryTargetSettings defaults = MasteryTargetSettings();
+
+  /// Per-set reps a rep-based exercise must reach (as total volume) to be
+  /// mastered.
+  final int repsPerSet;
+
+  /// Per-set seconds a timed exercise must reach (as total volume) to be
+  /// mastered.
+  final int secondsPerSet;
+
+  const MasteryTargetSettings({
+    this.repsPerSet = defaultRepsPerSet,
+    this.secondsPerSet = defaultSecondsPerSet,
+  });
+
+  factory MasteryTargetSettings.fromVariationRules(
+    Map<String, dynamic> variationRules,
+  ) {
+    return MasteryTargetSettings(
+      repsPerSet:
+          variationRules['mastery_target_reps'] as int? ?? defaultRepsPerSet,
+      secondsPerSet: variationRules['mastery_target_seconds'] as int? ??
+          defaultSecondsPerSet,
+    );
+  }
+
+  Map<String, dynamic> toVariationRules() {
+    return {
+      'mastery_target_reps': repsPerSet,
+      'mastery_target_seconds': secondsPerSet,
+    };
+  }
+}
+
+class TrainingRecommendationItem {
+  final TrainingTrack track;
+  final Exercise exercise;
+  final ExerciseStatus status;
+  final ExerciseCategory sourceCategory;
+  final String sourceSkillCategoryId;
+
+  /// Ordered exercise ids of the progression this exercise was picked from.
+  /// Empty when the branch is not a skill-tree progression.
+  final List<String> progressionExerciseIds;
+
+  /// Sets saved on this exercise in the day's plan — what the user last left
+  /// it at in a workout. Null when the day runs on defaults, in which case
+  /// the progression's own set count applies.
+  final int? plannedSets;
+
+  /// Added or substituted by the user after the live session started.
+  final bool wasManuallyAdded;
+
+  const TrainingRecommendationItem({
+    required this.track,
+    required this.exercise,
+    required this.status,
+    required this.sourceCategory,
+    required this.sourceSkillCategoryId,
+    this.progressionExerciseIds = const [],
+    this.plannedSets,
+    this.wasManuallyAdded = false,
+  });
+
+  /// Whether this item is the current exercise of a skill-tree progression.
+  /// Accessory/custom exercises are never auto-progressed.
+  bool get isProgression => progressionExerciseIds.isNotEmpty;
+
+  /// A manually selected catalog node can fast-forward its skill tree when
+  /// the user proves the minimum set-by-set requirement.
+  bool get isManualSkillTreeExercise =>
+      wasManuallyAdded &&
+      sourceSkillCategoryId.isNotEmpty &&
+      !exercise.isLibrary;
+
+  bool get hasProgressionContext => isProgression || isManualSkillTreeExercise;
+}
+
+class DailyTrainingRecommendation {
+  final TrainingProgramType programType;
+  final TrainingSessionType sessionType;
+  final String sessionLabel;
+  final bool isRestDay;
+  final List<TrainingRecommendationItem> items;
+  final DateTime? plannedDate;
+  final int? plannedStepIndex;
+  final bool affectsSchedule;
+
+  const DailyTrainingRecommendation({
+    required this.programType,
+    required this.sessionType,
+    required this.sessionLabel,
+    required this.isRestDay,
+    required this.items,
+    this.plannedDate,
+    this.plannedStepIndex,
+    this.affectsSchedule = true,
+  });
+}
+
+class UserTrainingProgram {
+  final String id;
+  final String userId;
+  final TrainingProgramType programType;
+  final String? scheduleVariant;
+  final int frequencyPerWeek;
+  final Map<String, dynamic> variationRules;
+  final bool isActive;
+
+  /// Exercise ids of the long-term goal skills the user is training toward.
+  final List<String> goalSkillIds;
+
+  const UserTrainingProgram({
+    required this.id,
+    required this.userId,
+    required this.programType,
+    required this.scheduleVariant,
+    required this.frequencyPerWeek,
+    required this.variationRules,
+    required this.isActive,
+    this.goalSkillIds = const [],
+  });
+
+  factory UserTrainingProgram.fromMap(Map<String, dynamic> map) {
+    return UserTrainingProgram(
+      id: map['id'] as String,
+      userId: map['user_id'] as String,
+      programType: TrainingProgramTypeX.fromDbValue(
+        map['program_type'] as String,
+      ),
+      scheduleVariant: map['schedule_variant'] as String?,
+      frequencyPerWeek: map['frequency_per_week'] as int? ?? 3,
+      variationRules: Map<String, dynamic>.from(
+        map['variation_rules'] as Map? ?? const {},
+      ),
+      isActive: map['is_active'] as bool? ?? true,
+      goalSkillIds: (map['goal_skills'] as List<dynamic>? ?? const [])
+          .map((id) => id as String)
+          .toList(),
+    );
+  }
+
+  /// Goal-skill option ids picked during program setup (e.g. 'pistol',
+  /// 'muscleup') — the live goal source, kept in the setup answers.
+  List<String> get setupGoalIds {
+    final setup = variationRules['program_setup_v1'];
+    if (setup is! Map) return const [];
+    final raw = setup['skill_ids'];
+    if (raw is! List) return const [];
+    return raw.whereType<String>().toList();
+  }
+}
+
+class UserTrainingProgramState {
+  final String id;
+  final String programId;
+  final String userId;
+  final int nextStepIndex;
+  final TrainingSessionType nextSessionType;
+  final TrainingSessionType? lastSessionType;
+  final DateTime? lastCompletedAt;
+
+  const UserTrainingProgramState({
+    required this.id,
+    required this.programId,
+    required this.userId,
+    required this.nextStepIndex,
+    required this.nextSessionType,
+    this.lastSessionType,
+    this.lastCompletedAt,
+  });
+
+  factory UserTrainingProgramState.fromMap(Map<String, dynamic> map) {
+    final rawLastCompletedAt = map['last_completed_at'] as String?;
+    return UserTrainingProgramState(
+      id: map['id'] as String,
+      programId: map['program_id'] as String,
+      userId: map['user_id'] as String,
+      nextStepIndex: map['next_step_index'] as int? ?? 0,
+      nextSessionType: TrainingSessionTypeX.fromDbValue(
+        map['next_session_type'] as String,
+      ),
+      lastSessionType: map['last_session_type'] == null
+          ? null
+          : TrainingSessionTypeX.fromDbValue(
+              map['last_session_type'] as String,
+            ),
+      lastCompletedAt: rawLastCompletedAt == null
+          ? null
+          : DateTime.parse(rawLastCompletedAt).toLocal(),
+    );
+  }
+}
+
+class UserTrainingProgramSnapshot {
+  final UserTrainingProgram program;
+  final UserTrainingProgramState state;
+
+  const UserTrainingProgramSnapshot({
+    required this.program,
+    required this.state,
+  });
+}
+
+class TrainingProgramLogicSnapshot {
+  final UserTrainingProgram program;
+  final UserTrainingProgramState state;
+  final Map<TrainingTrack, String> branchSelections;
+  final RepGoalProfile repGoalProfile;
+  final MasteryTargetSettings masteryTargets;
+
+  const TrainingProgramLogicSnapshot({
+    required this.program,
+    required this.state,
+    required this.branchSelections,
+    required this.repGoalProfile,
+    this.masteryTargets = MasteryTargetSettings.defaults,
+  });
+}

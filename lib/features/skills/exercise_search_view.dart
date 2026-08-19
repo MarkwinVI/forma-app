@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/catalog/exercise_catalog.dart';
+import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
-import '../../data/models/exercise_progress_model.dart';
 import 'skill_tree_view.dart';
 
 const _masteredColor = Color(0xFF00FF8C);
@@ -44,7 +43,7 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
     setState(() {
       _results = q.isEmpty
           ? []
-          : ExerciseCatalog.all()
+          : ExerciseCatalog.browsable()
               .where((e) => e.name.toLowerCase().contains(q))
               .toList();
     });
@@ -55,17 +54,23 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
 
   Color _dotColor(ExerciseStatus s) {
     switch (s) {
-      case ExerciseStatus.mastered: return _masteredColor;
-      case ExerciseStatus.active:   return AppColors.accentPrimary;
-      case ExerciseStatus.inactive: return _inactiveColor;
+      case ExerciseStatus.mastered:
+        return _masteredColor;
+      case ExerciseStatus.active:
+        return AppColors.accentPrimary;
+      case ExerciseStatus.inactive:
+        return _inactiveColor;
     }
   }
 
   String _statusLabel(ExerciseStatus s) {
     switch (s) {
-      case ExerciseStatus.mastered: return 'Mastered';
-      case ExerciseStatus.active:   return 'Active';
-      case ExerciseStatus.inactive: return 'Inactive';
+      case ExerciseStatus.mastered:
+        return 'Mastered';
+      case ExerciseStatus.active:
+        return 'Active';
+      case ExerciseStatus.inactive:
+        return 'Inactive';
     }
   }
 
@@ -102,14 +107,14 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                             child: TextField(
                               controller: _controller,
                               autofocus: true,
-                              style: GoogleFonts.inter(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textPrimary,
                                 letterSpacing: -0.15,
                               ),
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Search exercises...',
-                                hintStyle: GoogleFonts.inter(
+                                hintStyle: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.textMuted,
                                   letterSpacing: -0.15,
@@ -138,11 +143,11 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                   // Cancel button
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
+                    child: const Padding(
+                      padding: EdgeInsets.only(left: 12),
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.inter(
+                        style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textPrimary,
                         ),
@@ -158,10 +163,10 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
               child: !hasQuery
                   ? const SizedBox.shrink()
                   : _results.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Text(
                             'No exercises found',
-                            style: GoogleFonts.inter(
+                            style: TextStyle(
                               fontSize: 14,
                               color: AppColors.textMuted,
                             ),
@@ -191,9 +196,13 @@ class _ExerciseSearchViewState extends State<ExerciseSearchView> {
                                 await Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => SkillTreeView(
-                                      category: exercise.category,
+                                      skillCategoryId: ExerciseCatalog
+                                          .skillCategoryIdForExercise(
+                                        exercise,
+                                      ),
                                       progressMap: widget.progressMap,
-                                      onProgressChanged: widget.onProgressChanged,
+                                      onProgressChanged:
+                                          widget.onProgressChanged,
                                     ),
                                   ),
                                 );
@@ -227,6 +236,10 @@ class _ExerciseResultRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skillCategory = SkillCategoryCatalog.findById(
+      ExerciseCatalog.skillCategoryIdForExercise(exercise),
+    );
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -254,7 +267,7 @@ class _ExerciseResultRow extends StatelessWidget {
                     children: [
                       Text(
                         exercise.name,
-                        style: GoogleFonts.inter(
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -262,8 +275,10 @@ class _ExerciseResultRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        exercise.category.label,
-                        style: GoogleFonts.inter(
+                        skillCategory == null
+                            ? exercise.category.label
+                            : '${skillCategory.title} · ${skillCategory.subtitle}',
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           color: AppColors.textMuted,
@@ -277,7 +292,7 @@ class _ExerciseResultRow extends StatelessWidget {
                 children: [
                   Text(
                     statusLabel.toUpperCase(),
-                    style: GoogleFonts.inter(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: statusLabelColor,

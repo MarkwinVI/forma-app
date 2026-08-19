@@ -1,7 +1,7 @@
 name: forma_app
 description: Forma - Flutter mobile application
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.2+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,11 +9,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  clock: ^1.1.1
   supabase_flutter: ^2.5.0
+  posthog_flutter: ^5.36.1
   sign_in_with_apple: ^6.1.0
   crypto: ^3.0.3
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
+  shared_preferences: ^2.3.2
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  # The exercise demo relies on this package rendering its web view through
+  # an OverlayPortal (6.x): the demo supplies a local Overlay to catch it, so
+  # the video stays inside its box instead of floating over the page. After
+  # any upgrade, re-check that a playing video scrolls under the pinned tabs
+  # and back bar in the exercise detail view.
+  youtube_player_iframe: ^6.0.2
+  webview_flutter: ^4.14.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -22,3 +35,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # LLDB attach on the iOS simulator stalls for minutes on this setup; the
+  # pre-LLDB debug attach works fine, so keep it.
+  config:
+    enable-lldb-debugging: false

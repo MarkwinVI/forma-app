@@ -1,0 +1,152 @@
+Node_id,Node name,Skill tree ID,Branch,Excercise id,Previous Node_id,Difficulty,(Optional) weight setting
+pullups_scapular_pull,Scapular Pull Ups,pullups,foundation,scapular_pull_ups,,1,
+pullups_pull_up_negative,Negative Pull Up,pullups,foundation,negative_pull_up,pullups_scapular_pull,2,
+pullups_assisted_pull_up,Pull Up (Assisted),pullups,foundation,pull_up_assisted,pullups_pull_up_negative,3,
+pullups_pull_up,Pull Up,pullups,foundation,pull_up,pullups_assisted_pull_up,4,
+pullups_weighted_pull_up_115,Pull Up (+15% Bodyweight),pullups,weighted,pull_up_weighted,pullups_pull_up,4,user_bodyweight * 0.15
+pullups_weighted_pull_up_135,Pull Up (+35% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_115,4,user_bodyweight * 0.35
+pullups_weighted_pull_up_150,Pull Up (+50% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_135,5,user_bodyweight * 0.50
+pullups_weighted_pull_up_165,Pull Up (+65% Bodyweight),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_150,5,user_bodyweight * 0.65
+pullups_weighted_pull_up_180,Pull Up (+80% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_165,5,user_bodyweight * 0.80
+pullups_weighted_pull_up_190,Pull Up (+90% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_180,5,user_bodyweight * 0.90
+pullups_weighted_pull_up_200,Pull Up (+100% Bodyweigh),pullups,weighted,pull_up_weighted,pullups_weighted_pull_up_190,5,user_bodyweight * 1.00
+pullups_close_grip_pull_up,Pull Up (Close Grip),pullups,close_grip,pull_up_close_grip,pullups_pull_up,4,
+pullups_wide_grip_pull_up,Wide Pull Up,pullups,close_grip,wide_pull_up,pullups_close_grip_pull_up,4,
+pullups_typewriter_pull_up,Pull Up (Typewriter),pullups,close_grip,pull_up_typewriter,pullups_wide_grip_pull_up,5,
+pullups_archer_pull_up,Pull Up (Archer),pullups,close_grip,pull_up_archer,pullups_typewriter_pull_up,5,
+pullups_sternum_pull_up,Pull Up (Chest to Bar),pullups,close_grip,pull_up_chest_to_bar,pullups_archer_pull_up,5,
+pullups_belly_button_pull_up,Pull Up (Belly Button),pullups,close_grip,pull_up_belly_button,pullups_sternum_pull_up,5,
+pullups_l_sit_pull_up,Pull Up (L-Sit),pullups,l_sit,pull_up_l_sit,pullups_pull_up,4,
+pullups_pull_over,Bar Pullover,pullups,l_sit,bar_pullover,pullups_l_sit_pull_up,5,
+pullups_one_arm_towel_assisted_chin_up,"Chin Up (One Arm, Towel Assisted)",pullups,one_arm,chin_up_one_arm_towel_assisted,pullups_pull_up,5,
+pullups_one_arm_pull_up_eccentric,"Pull Up (One Arm, Eccentric)",pullups,one_arm,pull_up_one_arm_eccentric,pullups_one_arm_towel_assisted_chin_up,5,
+pullups_half_one_arm_chin_up,"Chin Up (One Arm, Half Range)",pullups,one_arm,chin_up_one_arm_half_range,pullups_one_arm_pull_up_eccentric,5,
+pullups_one_arm_chin_up,Chin Up (One Arm),pullups,one_arm,chin_up_one_arm,pullups_half_one_arm_chin_up,5,
+rows_vertical_rows,Inverted Row (Incline),rows,foundation,inverted_row_incline,,1,
+rows_inverted_rows_bent_legs,Inverted Row (Bent Legs),rows,foundation,inverted_row_bent_legs,rows_vertical_rows,1,
+rows_inverted_rows_straight_legs,Inverted Row (Straight Legs),rows,foundation,inverted_row_straight_legs,rows_inverted_rows_bent_legs,2,
+rows_feet_elevated_rows,Inverted Row (Feet Elevated),rows,foundation,inverted_row_feet_elevated,rows_inverted_rows_straight_legs,3,
+rows_tuck_front_lever_rows_hold,Front Lever Hold (Tuck),rows,front_lever,front_lever_hold_tuck,rows_horizontal_wide_rows,4,
+rows_tuck_front_lever_rows,Front Lever Row (Tuck),rows,front_lever,front_lever_row_tuck,rows_tuck_front_lever_rows_hold,4,
+rows_advanced_tuck_front_lever_rows,Front Lever Row (Advanced Tuck),rows,front_lever,front_lever_row_advanced_tuck,rows_tuck_front_lever_rows,4,
+rows_one_leg_tuck_one_extended_front_lever_rows,Front Lever Row (One Leg),rows,front_lever,front_lever_row_one_leg,rows_advanced_tuck_front_lever_rows,5,
+rows_straddle_front_lever_rows,Front Lever Row (Straddle),rows,front_lever,front_lever_row_straddle,rows_one_leg_tuck_one_extended_front_lever_rows,5,
+rows_front_lever_rows,Front Lever Row,rows,front_lever,front_lever_row,rows_straddle_front_lever_rows,5,
+rows_horizontal_wide_rows,Inverted Row (Wide Grip),rows,one_arm,inverted_row_wide_grip,rows_feet_elevated_rows,4,
+rows_archer_rows,Inverted Row (Archer),rows,one_arm,inverted_row_archer,rows_horizontal_wide_rows,4,
+rows_bulgarian_rows,"Inverted Row (One Arm, Assisted)",rows,one_arm,inverted_row_one_arm_assisted,rows_archer_rows,5,
+rows_one_arm_rows,Inverted Row (One Arm),rows,one_arm,inverted_row_one_arm,rows_bulgarian_rows,5,
+rows_weighted_rows_bodyweight_3x10,nverted Row (Bodyweight),rows,weighted,inverted_row_weighted,rows_horizontal_wide_rows,4,0
+rows_weighted_rows_plus_10,Inverted Row (+10% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_bodyweight_3x10,4,user_bodyweight * 0.10
+rows_weighted_rows_plus_20,Inverted Row (+20% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_10,4,user_bodyweight * 0.20
+rows_weighted_rows_plus_35,Inverted Row (+35% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_20,5,user_bodyweight * 0.35
+rows_weighted_rows_plus_50,Inverted Row (+50% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_35,5,user_bodyweight * 0.50
+rows_weighted_rows_plus_75,Inverted Row (+75% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_50,5,user_bodyweight * 0.75
+rows_weighted_rows_plus_bodyweight,Inverted Row (+100% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_75,5,user_bodyweight * 1.00
+pushups_wall_push_up,Push-Up (Wall),pushups,foundation,push_up_wall,,1,
+pushups_incline_push_up,Incline Push Ups,pushups,foundation,incline_push_ups,pushups_wall_push_up,1,
+pushups_push_up,Push Up,pushups,foundation,push_up,pushups_incline_push_up,2,
+pushups_elbows_in_push_up,Push Up - Close Grip,pushups,foundation,push_up_close_grip,pushups_push_up,3,
+pushups_diamond_push_up,Diamond Push Up,pushups,foundation,diamond_push_up,pushups_elbows_in_push_up,4,
+pushups_uneven_push_up,Push-Up (Uneven),pushups,one_arm,push_up_uneven,pushups_diamond_push_up,4,
+pushups_archer_push_up,Push-Up (Archer),pushups,one_arm,push_up_archer,pushups_uneven_push_up,4,
+pushups_incline_one_arm_push_up,"Push-Up (One Arm, Incline)",pushups,one_arm,push_up_one_arm_incline,pushups_archer_push_up,5,
+pushups_one_arm_push_up,One Arm Push Up,pushups,one_arm,one_arm_push_up,pushups_incline_one_arm_push_up,5,
+pushups_ring_wide_push_up,"Push-Up (Rings, Wide)",pushups,rings,push_up_rings_wide,pushups_diamond_push_up,4,
+pushups_ring_push_up,Push-Up (Rings),pushups,rings,push_up_rings,pushups_ring_wide_push_up,4,
+pushups_rto_push_up,Push-Up (Rings Turned Out),pushups,rings,push_up_rings_turned_out,pushups_ring_push_up,4,
+pushups_rto_archer_push_up,"Push-Up (Rings Turned Out, Archer)",pushups,rings,push_up_rings_turned_out_archer,pushups_rto_push_up,5,
+pushups_rto_pseudo_planche_push_up_lower_chest,RTO Pseudo Planche Push-Up (Lower Chest),pushups,rings,push_up_rings_turned_out_pseudo_planche,pushups_rto_archer_push_up,5,
+pushups_rto_pseudo_planche_push_up_belly_button,RTO Pseudo Planche Push-Up (Belly Button),pushups,rings,push_up_rings_turned_out_pseudo_planche,pushups_rto_pseudo_planche_push_up_lower_chest,5,
+pushups_rto_pseudo_planche_push_up_hips,RTO Pseudo Planche Push-Up (Hips),pushups,rings,push_up_rings_turned_out_pseudo_planche,pushups_rto_pseudo_planche_push_up_belly_button,5,
+pushups_pseudo_planche_push_up_lower_chest,Pseudo Planche Push-Up (Lower Chest),pushups,planche,push_up_pseudo_planche,pushups_diamond_push_up,4,
+pushups_pseudo_planche_push_up_belly_button,Pseudo Planche Push-Up (Belly Button),pushups,planche,push_up_pseudo_planche,pushups_pseudo_planche_push_up_lower_chest,4,
+pushups_pseudo_planche_push_up_hips,Pseudo Planche Push-Up (Hips),pushups,planche,push_up_pseudo_planche,pushups_pseudo_planche_push_up_belly_button,5,
+pushups_tuck_planche_push_up,Planche Push-Up (Tuck),pushups,planche,planche_push_up_tuck,pushups_pseudo_planche_push_up_hips,5,
+pushups_advanced_tuck_planche_push_up,Planche Push-Up (Advanced Tuck),pushups,planche,planche_push_up_advanced_tuck,pushups_tuck_planche_push_up,5,
+pushups_straddle_planche_push_up,Planche Push-Up (Straddle),pushups,planche,planche_push_up_straddle,pushups_advanced_tuck_planche_push_up,5,
+pushups_planche_push_up,Planche Push-Up,pushups,planche,planche_push_up,pushups_straddle_planche_push_up,5,
+planche_planche_lean_just_past,Planche Lean (Slight),planche,main,planche_lean,,3,
+planche_planche_lean_moderate,Planche Lean (Moderate),planche,main,planche_lean,planche_planche_lean_just_past,3,
+planche_planche_lean_far_past,Planche Lean (Deep),planche,main,planche_lean,planche_planche_lean_moderate,4,
+planche_tuck_planche_lean,Planche Lean (Tuck),planche,main,planche_lean_tuck,planche_planche_lean_far_past,4,
+planche_tuck_planche_hold,Planche (Tuck),planche,main,planche_tuck,planche_tuck_planche_lean,4,
+planche_advanced_tuck_planche_hold,Planche (Advanced Tuck),planche,main,planche_advanced_tuck,planche_tuck_planche_hold,5,
+planche_straddle_planche_wide,Straddle Planche (Wide),planche,main,planche_straddle,planche_advanced_tuck_planche_hold,5,
+planche_straddle_planche_medium,Straddle Planche (Medium),planche,main,planche_straddle,planche_straddle_planche_wide,5,
+planche_straddle_planche_narrow,Straddle Planche (Narrow),planche,main,planche_straddle,planche_straddle_planche_medium,5,
+planche_full_planche_hold,Planche,planche,main,planche,planche_straddle_planche_narrow,5,
+squat_assisted_squat,Squat (Assisted),squat,foundation,squat_assisted,,1,
+squat_deep_assisted_squat,"Squat (Assisted, Deep)",squat,foundation,squat_assisted_deep,squat_assisted_squat,1,
+squat_squat,Squat (Bodyweight),squat,foundation,squat_bodyweight,squat_deep_assisted_squat,1,
+squat_deep_squat,Squat (Deep),squat,foundation,squat_deep,squat_squat,2,
+squat_barbell_plus_25,Barbell Squat (25% Bodyweight),squat,weighted,squat_barbell,squat_deep_squat,3,user_bodyweight * 0.25
+squat_barbell_plus_50,Barbell Squat (50% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_25,3,user_bodyweight * 0.50
+squat_barbell_plus_75,Barbell Squat (75% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_50,4,user_bodyweight * 0.75
+squat_barbell_plus_100,Barbell Squat (100% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_75,4,user_bodyweight
+squat_barbell_plus_125,Barbell Squat (125% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_100,4,user_bodyweight * 1.25
+squat_barbell_plus_150,Barbell Squat (150% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_125,5,user_bodyweight * 1.5
+squat_barbell_plus_175,Barbell Squat (175% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_150,5,user_bodyweight * 1.75
+squat_barbell_plus_200,Barbell Squat (200% Bodyweight),squat,weighted,squat_barbell,squat_barbell_plus_175,6,user_bodyweight * 2
+squat_box_pistol_squat_knee_height,Box Pistol Squat (Knee Height),squat,pistol,pistol_squat_box,squat_bulgarian_split_squat,3,
+squat_box_pistol_squat_mid_calf_height,Box Pistol Squat (Mid-Calf Height),squat,pistol,pistol_squat_box,squat_box_pistol_squat_knee_height,3,
+squat_assisted_pistol_squat,Assisted Pistol Squats,squat,pistol,assisted_pistol_squats,squat_box_pistol_squat_mid_calf_height,4,
+squat_counter_weighted_pistol_squat,Pistol Squat (Counterweighted),squat,pistol,pistol_squat_counterweighted,squat_assisted_pistol_squat,5,
+squat_pistol_squat,Pistol Squat,squat,pistol,pistol_squat,squat_counter_weighted_pistol_squat,5,
+squat_bulgarian_split_squat,Bulgarian Split Squat,squat,shrimp,bulgarian_split_squat,squat_deep_squat,2,
+squat_beginner_shrimp_squat,Shrimp Squat (Beginner),squat,shrimp,shrimp_squat_beginner,squat_bulgarian_split_squat,3,
+squat_intermediate_shrimp_squat,Shrimp Squat (Intermediate),squat,shrimp,shrimp_squat_intermediate,squat_beginner_shrimp_squat,4,
+squat_advanced_shrimp_squat,Shrimp Squat (Advanced),squat,shrimp,shrimp_squat_advanced,squat_intermediate_shrimp_squat,5,
+core_foot_supported_l_sit,L-Sit Hold (Foot-Supported),core,l_sit,l_sit_hold_foot_supported,,1,
+core_l_sit_tuck,L-Sit Hold (Tuck),core,l_sit,l_sit_hold_tuck,core_foot_supported_l_sit,2,
+core_advanced_tuck_l_sit,L-Sit Hold (Advanced Tuck),core,l_sit,l_sit_hold_advanced_tuck,core_l_sit_tuck,3,
+core_l_sit,L-Sit Hold,core,l_sit,l_sit_hold,core_advanced_tuck_l_sit,3,
+core_straddle_l_sit,L-Sit Hold (Straddle),core,l_sit,l_sit_hold_straddle,core_l_sit,4,
+core_v_sit,V-Sit Hold,core,l_sit,v_sit_hold,core_straddle_l_sit,5,
+core_plank,25s Plank,core,ab_wheel,plank,,1,
+core_plank_60s,60s Plank,core,ab_wheel,plank,core_plank,2,
+core_one_arm_one_leg_plank,One-Arm One-Leg Plank,core,ab_wheel,one_arm_one_leg_plank,core_plank_60s,3,
+core_ab_wheel_kneeling,Ab Wheel (Kneeling),core,ab_wheel,ab_wheel_kneeling,core_one_arm_one_leg_plank,3,
+core_ab_wheel_eccentric,Ab Wheel (Eccentric),core,ab_wheel,ab_wheel_eccentric,core_ab_wheel_kneeling,4,
+core_ab_wheel_standing,Ab Wheel (Standing),core,ab_wheel,ab_wheel_standing,core_ab_wheel_eccentric,4,
+core_lying_knee_raises,Lying Knee Raise,core,leg_raises,lying_knee_raise,,1,
+core_bent_leg_lying_leg_raises,Lying Bent-Leg Raise,core,leg_raises,lying_bent_leg_raise,core_lying_knee_raises,1,
+core_straight_leg_lying_leg_raises,Lying Straight-Leg Raise,core,leg_raises,lying_straight_leg_raise,core_bent_leg_lying_leg_raises,2,
+core_hanging_knee_raises,Hanging Knee Raise,core,leg_raises,hanging_knee_raise,core_straight_leg_lying_leg_raises,3,
+core_bent_leg_hanging_leg_raises,Hanging Bent-Leg Raise,core,leg_raises,hanging_bent_leg_raise,core_hanging_knee_raises,4,
+core_straight_leg_hanging_leg_raises,Hanging Straight-Leg Raise,core,leg_raises,hanging_straight_leg_raise,core_bent_leg_hanging_leg_raises,5,
+muscle_up_false_grip_pull_ups,Pull Up (False Grip),muscle_up,main,pull_up_false_grip,,3,
+muscle_up_muscle_up_negatives,Muscle Up (Eccentric),muscle_up,main,muscle_up_eccentric,muscle_up_false_grip_pull_ups,4,
+muscle_up_kipping_muscle_up,Muscle Up (Kipping),muscle_up,main,muscle_up_kipping,muscle_up_muscle_up_negatives,4,
+muscle_up_muscle_up,Muscle Up,muscle_up,main,muscle_up,muscle_up_kipping_muscle_up,5,
+handstand_pushups_pike_push_up,Pike Pushup,handstand_pushups,main,pike_pushup,,2,
+handstand_pushups_box_push_up,Pike Push-Up (Feet Elevated),handstand_pushups,main,pike_push_up_feet_elevated,handstand_pushups_pike_push_up,3,
+handstand_pushups_wall_headstand_push_up_eccentrics,"Headstand Push-Up (Wall, Eccentric)",handstand_pushups,main,headstand_push_up_wall_eccentric,handstand_pushups_box_push_up,3,
+handstand_pushups_wall_headstand_push_up,Headstand Push-Up (Wall),handstand_pushups,main,headstand_push_up_wall,handstand_pushups_wall_headstand_push_up_eccentrics,4,
+handstand_pushups_wall_handstand_push_up,Handstand Push Up,handstand_pushups,main,handstand_push_up,handstand_pushups_wall_headstand_push_up,4,
+handstand_pushups_free_headstand_push_up,Headstand Push-Up (Freestanding),handstand_pushups,main,headstand_push_up_freestanding,handstand_pushups_wall_handstand_push_up,5,
+handstand_pushups_free_handstand_push_up,Handstand Push-Up (Freestanding),handstand_pushups,main,handstand_push_up_freestanding,handstand_pushups_free_headstand_push_up,5,
+dips_bench_dips,Bench Dip,dips,foundation,bench_dip,,1,
+dips_dip_negatives,Chest Dip (Eccentric),dips,foundation,chest_dip_eccentric,dips_bench_dips,2,
+dips_parallel_bar_dips,Chest Dip,dips,foundation,chest_dip,dips_dip_negatives,3,
+dips_weighted_dips_120,Chest Dip (+20% Bodyweigh),dips,weighted,chest_dip_weighted,dips_parallel_bar_dips,4,user_bodyweight * 0.20
+dips_weighted_dips_140,Chest Dip (+40% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_120,4,user_bodyweight * 0.40
+dips_weighted_dips_160,Chest Dip (+60% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_140,4,user_bodyweight * 0.60
+dips_weighted_dips_180,Chest Dip (+80% Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_160,5,user_bodyweight * 0.80
+dips_weighted_dips_200,Chest Dip (+100% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_180,5,user_bodyweight * 1.00
+dips_ring_dips,Ring Dips,dips,rings,ring_dips,dips_parallel_bar_dips,4,
+dips_ring_dips_rto,Ring Dip (Rings Turned Out),dips,rings,ring_dip_rings_turned_out,dips_ring_dips,5,
+barbell_squat_barbell_squat,Squat (Barbell),barbell_squat,main,squat_barbell,,3,
+hinge_romanian_deadlift_bodyweight,Romanian Deadlift (Bodyweight),hinge,foundation,romanian_deadlift_bodyweight,,1,
+hinge_single_leg_rdl,Single Leg Romanian Deadlift (Bodyweight),hinge,nordic_curls,single_leg_romanian_deadlift_bodyweight,hinge_romanian_deadlift_bodyweight,2,
+hinge_banded_nordic_eccentric,"Nordic Hamstring Curl (Banded, Eccentric)",hinge,nordic_curls,nordic_hamstring_curl_banded_eccentric,hinge_single_leg_rdl,3,
+hinge_banded_nordic,Nordic Hamstring Curl (Banded),hinge,nordic_curls,nordic_hamstring_curl_banded,hinge_banded_nordic_eccentric,4,
+hinge_nordic_curl,Nordic Hamstrings Curls,hinge,nordic_curls,nordic_hamstrings_curls,hinge_banded_nordic,5,
+hinge_rdl_25_bw,Romanian Deadlift (25% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_romanian_deadlift_bodyweight,2,user_bodyweight * 0.25
+hinge_rdl_50_bw,Romanian Deadlift (50% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_25_bw,3,user_bodyweight * 0.50
+hinge_rdl_75_bw,Romanian Deadlift (75% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_50_bw,3,user_bodyweight * 0.75
+hinge_rdl_100_bw,Romanian Deadlift (100% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_75_bw,4,user_bodyweight * 1.00
+hinge_rdl_125_bw,Romanian Deadlift (125% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_100_bw,4,user_bodyweight * 1.25
+hinge_rdl_150_bw,Romanian Deadlift (150% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_125_bw,5,user_bodyweight * 1.50
+hinge_rdl_175_bw,Romanian Deadlift (175% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_150_bw,5,user_bodyweight * 1.75
+hinge_rdl_200_bw,Romanian Deadlift (200% Bodyweight),hinge,weighted,romanian_deadlift_barbell,hinge_rdl_175_bw,5,user_bodyweight * 2.00

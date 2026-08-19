@@ -3,6 +3,7 @@ class UserModel {
   final String? email;
   final String? fullName;
   final String? avatarUrl;
+  final double? bodyweightKg;
   final DateTime createdAt;
 
   const UserModel({
@@ -10,6 +11,7 @@ class UserModel {
     this.email,
     this.fullName,
     this.avatarUrl,
+    this.bodyweightKg,
     required this.createdAt,
   });
 
@@ -19,6 +21,7 @@ class UserModel {
       email: map['email'] as String?,
       fullName: map['full_name'] as String?,
       avatarUrl: map['avatar_url'] as String?,
+      bodyweightKg: (map['bodyweight_kg'] as num?)?.toDouble(),
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
@@ -29,6 +32,7 @@ class UserModel {
       'email': email,
       'full_name': fullName,
       'avatar_url': avatarUrl,
+      'bodyweight_kg': bodyweightKg,
       'created_at': createdAt.toIso8601String(),
     };
   }
