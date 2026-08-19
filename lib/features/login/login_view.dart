@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -129,18 +131,14 @@ class _LoginViewState extends State<LoginView> {
                           _signIn(() => _authService.signInWithApple()),
                     ),
                   const SizedBox(height: 14),
-                  Text(
-                    _isLoading
-                        ? 'Apple is confirming your account.'
-                        : 'By continuing you agree to our Terms and '
-                            'Privacy Policy.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: AppColors.textMuted,
-                      height: 1.5,
-                    ),
-                  ),
+                  if (_isLoading)
+                    const Text(
+                      'Apple is confirming your account.',
+                      textAlign: TextAlign.center,
+                      style: _footerStyle,
+                    )
+                  else
+                    const _PrivacyFooter(),
                 ],
               ),
             ),
@@ -287,6 +285,68 @@ class _AppleButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+const _footerStyle = TextStyle(
+  fontSize: 12.5,
+  color: AppColors.textMuted,
+  height: 1.5,
+);
+
+/// The consent line under the sign-in button. "Privacy Policy" is a link
+/// to the published policy; it opens in the browser so the sign-in flow
+/// stays where it is.
+class _PrivacyFooter extends StatefulWidget {
+  const _PrivacyFooter();
+
+  static final privacyUrl = Uri.parse('https://tryforma.co/privacy');
+
+  @override
+  State<_PrivacyFooter> createState() => _PrivacyFooterState();
+}
+
+class _PrivacyFooterState extends State<_PrivacyFooter> {
+  late final _privacyTap = TapGestureRecognizer()..onTap = _openPrivacy;
+
+  @override
+  void dispose() {
+    _privacyTap.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openPrivacy() async {
+    final opened = await launchUrl(
+      _PrivacyFooter.privacyUrl,
+      mode: LaunchMode.externalApplication,
+    );
+    if (opened || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Couldn't open the privacy policy.")),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        style: _footerStyle,
+        children: [
+          const TextSpan(text: 'By continuing you agree to our Terms and '),
+          TextSpan(
+            text: 'Privacy Policy',
+            recognizer: _privacyTap,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              decoration: TextDecoration.underline,
+              decorationColor: AppColors.textMuted,
+            ),
+          ),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 }
