@@ -1,0 +1,6 @@
+# Copy to android/key.properties (gitignored) and fill in. storeFile is an
+# absolute path, or relative to the android/ directory.
+storeFile=/Users/you/upload-keystore.jks
+storePassword=...
+keyAlias=upload
+keyPassword=...

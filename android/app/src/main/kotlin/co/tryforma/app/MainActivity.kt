@@ -1,4 +1,4 @@
-package tryforma.co.forma_app
+package co.tryforma.app
 
 import io.flutter.embedding.android.FlutterActivity
 

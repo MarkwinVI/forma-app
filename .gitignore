@@ -37,3 +37,8 @@ lib/core/config/app_config.local.dart
 # Local tool state
 .claude/
 .impeccable/
+
+# Upload keystore credentials — never commit
+android/key.properties
+*.jks
+*.keystore
