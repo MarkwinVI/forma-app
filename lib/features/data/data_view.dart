@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
@@ -264,7 +265,11 @@ class _DataViewState extends State<DataView> {
         for (var i = 0; i < recentWorkouts.length; i++)
           TypeContentRow(
             name: recentWorkouts[i].title,
-            sub: _relativeSessionLabel(recentWorkouts[i].loggedAt, now: now),
+            sub: _relativeSessionLabel(
+              context,
+              recentWorkouts[i].loggedAt,
+              now: now,
+            ),
             right: _formatElapsedShort(
               recentWorkouts[i].loggedAt.difference(
                     recentWorkouts[i].startedAt,
@@ -278,18 +283,34 @@ class _DataViewState extends State<DataView> {
       // like a session.
       if (_workouts.length > recentWorkouts.length)
         Padding(
-          padding: const EdgeInsets.only(top: 22),
+          padding: const EdgeInsets.only(top: 9),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Pressable(
+              semanticLabel: 'View all sessions',
               onTap: _openAllSessions,
-              child: const Text(
-                'View all sessions  →',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.accentPrimary,
-                  letterSpacing: -0.15,
+              child: const Padding(
+                // The line is 18pt tall; the padding brings the target to 44.
+                padding: EdgeInsets.symmetric(vertical: 13),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View all sessions',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.accentPrimary,
+                        letterSpacing: -0.15,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: AppColors.accentPrimary,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -306,12 +327,32 @@ class _DataViewState extends State<DataView> {
       TypeContentRow(
         name: 'Sign out',
         chevron: false,
-        // _AppEntry listens to auth state and swaps to the login screen
-        // once the session ends.
-        onTap: () => AuthService().signOut(),
+        onTap: _confirmSignOut,
       ),
       const _DeleteAccountRow(),
     ];
+  }
+
+  /// One step between the row and the door: the sheet asks, and only a
+  /// clear yes ends the session. _AppEntry listens to auth state and swaps
+  /// to the login screen once it does.
+  Future<void> _confirmSignOut() async {
+    final confirmed = await showSignOutConfirmSheet(context);
+    if (confirmed != true || !mounted) return;
+    try {
+      await AuthService().signOut();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to sign out: $error\n$stackTrace');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            "Couldn't sign out. Check your connection and try again.",
+          ),
+          action: SnackBarAction(label: 'Retry', onPressed: _confirmSignOut),
+        ),
+      );
+    }
   }
 }
 
@@ -367,11 +408,17 @@ class _DeleteAccountRowState extends State<_DeleteAccountRow> {
     setState(() => _busy = true);
     try {
       await AuthService().deleteAccount();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('Failed to delete account: $error\n$stackTrace');
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete account: $error')),
+        const SnackBar(
+          content: Text(
+            "Couldn't delete your account. Check your connection and try "
+            'again.',
+          ),
+        ),
       );
     }
   }
@@ -500,6 +547,7 @@ class _AllSessionsViewState extends State<_AllSessionsView> {
                       TypeContentRow(
                         name: _workouts[i].title,
                         sub: _relativeSessionLabel(
+                          context,
                           _workouts[i].loggedAt,
                           now: widget.now,
                         ),
@@ -575,26 +623,14 @@ class _DataStateMessage extends StatelessWidget {
   }
 }
 
-String _relativeSessionLabel(DateTime dateTime, {required DateTime now}) {
+String _relativeSessionLabel(
+  BuildContext context,
+  DateTime dateTime, {
+  required DateTime now,
+}) {
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(dateTime.year, dateTime.month, dateTime.day);
   final difference = today.difference(day).inDays;
-
-  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
 
   final String dayLabel;
   if (difference == 0) {
@@ -602,17 +638,12 @@ String _relativeSessionLabel(DateTime dateTime, {required DateTime now}) {
   } else if (difference == 1) {
     dayLabel = 'Yesterday';
   } else if (difference < 7 && difference > 0) {
-    dayLabel = weekdays[dateTime.weekday - 1];
+    dayLabel = FormaDates.weekdayShort(context, dateTime);
   } else {
-    dayLabel = '${months[dateTime.month - 1]} ${dateTime.day}';
+    dayLabel = FormaDates.monthDay(context, dateTime);
   }
 
-  final hour = dateTime.hour;
-  final minute = dateTime.minute.toString().padLeft(2, '0');
-  final suffix = hour >= 12 ? 'PM' : 'AM';
-  final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-
-  return '$dayLabel, $displayHour:$minute $suffix';
+  return '$dayLabel, ${FormaDates.time(context, dateTime)}';
 }
 
 String _formatElapsedShort(Duration duration) {

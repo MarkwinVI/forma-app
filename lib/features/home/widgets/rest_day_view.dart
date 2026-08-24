@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
@@ -33,13 +32,28 @@ class _RestDayViewState extends State<RestDayView>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
+  var _started = false;
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 5500),
-    )..repeat(reverse: true);
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    // Reduce Motion: the rings rest at mid-breath instead of breathing.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 0.5;
+      return;
+    }
+    _controller.repeat(reverse: true);
   }
 
   @override
@@ -80,10 +94,10 @@ class _RestDayViewState extends State<RestDayView>
           ),
         ),
         const SizedBox(height: 32),
-        Text(
+        const Text(
           'RECOVERY',
           textAlign: TextAlign.center,
-          style: GoogleFonts.robotoMono(
+          style: TextStyle(fontFamily: 'RobotoMono',
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.4,
@@ -107,9 +121,9 @@ class _RestDayViewState extends State<RestDayView>
             padding: const EdgeInsets.fromLTRB(18, 15, 16, 15),
             child: Row(
               children: [
-                Text(
+                const Text(
                   'NEXT UP',
-                  style: GoogleFonts.robotoMono(
+                  style: TextStyle(fontFamily: 'RobotoMono',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
@@ -144,34 +158,10 @@ class _RestDayViewState extends State<RestDayView>
           ),
         if (widget.onTrainSomethingElse != null) ...[
           const SizedBox(height: 4),
-          Pressable(
+          TextAction(
+            label: 'Feeling fresh? Train something else',
+            icon: Icons.swap_horiz_rounded,
             onTap: widget.onTrainSomethingElse,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.swap_horiz_rounded,
-                    size: 15,
-                    color: AppColors.textMuted,
-                  ),
-                  SizedBox(width: 7),
-                  Flexible(
-                    child: Text(
-                      'Feeling fresh? Train something else',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ],
@@ -231,10 +221,12 @@ class _BreathingRings extends StatelessWidget {
               color: AppColors.accentSoft,
             ),
             alignment: Alignment.center,
-            child: const Icon(
-              Icons.bedtime_rounded,
-              size: 28,
-              color: AppColors.accentBright,
+            child: const ExcludeSemantics(
+              child: Icon(
+                Icons.bedtime_rounded,
+                size: 28,
+                color: AppColors.accentBright,
+              ),
             ),
           ),
         ),

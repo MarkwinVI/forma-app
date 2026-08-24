@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
@@ -135,6 +136,10 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     return _exerciseLogService.fetchForExercise(userId, widget.exercise.id);
   }
 
+  void _retryLogs() {
+    setState(() => _logsFuture = _loadLogs());
+  }
+
   Future<void> _loadRestPreference() async {
     final stored = await _restPreferencesService.loadRestIntervals();
     if (!mounted) return;
@@ -193,6 +198,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                     ),
                   ExerciseDetailTab.trends => ExerciseTrendsTab(
                       logsFuture: _logsFuture,
+                      onRetry: _retryLogs,
                       exercise: exercise,
                       liveSetsListenable: widget.liveSetsListenable,
                       liveSessionStartedAt: widget.liveSessionStartedAt,
@@ -238,7 +244,9 @@ class _PinnedTabs extends SliverPersistentHeaderDelegate {
     return ColoredBox(
       color: AppColors.bg,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 26, 22, 0),
+        // The tabs are 44pt tall to the touch, bottom-aligned, so 16 on top
+        // fills the 60pt header with the words where they always sat.
+        padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
         child: TypeWordTabs(
           labels: const ['How to', 'Trends'],
           selectedIndex: selectedIndex,
@@ -327,7 +335,14 @@ class _HowToTab extends StatelessWidget {
       children: [
         // The demo is not here: it sits above the tabs, where it is what the
         // page opens on whichever tab you are reading.
-        const TypeSectionLabel('How to'),
+        TypeSectionLabel(
+          'How to',
+          // The rest the user set for this exercise, said in the eyebrow's
+          // voice where it can be read without a second heading.
+          right: restSeconds > 0
+              ? 'Rest ${_formatRest(restSeconds)} between sets'
+              : null,
+        ),
         // Numbered lines: the count is the only colour, and the step itself
         // is read at body size rather than boxed.
         for (var i = 0; i < coachData.steps.length; i++)
@@ -389,6 +404,15 @@ class _HowToTab extends StatelessWidget {
   }
 }
 
+/// "90s" under two minutes, "2:30" from there — the mono eyebrow's rest.
+String _formatRest(int seconds) {
+  if (seconds < 120) return '${seconds}s';
+  final minutes = seconds ~/ 60;
+  final rest = seconds % 60;
+  if (rest == 0) return '${minutes}m';
+  return '$minutes:${rest.toString().padLeft(2, '0')}';
+}
+
 // ── Trends tab ────────────────────────────────────────────────────────
 
 class _SummarySession {
@@ -405,6 +429,10 @@ class _SummarySession {
 
 class ExerciseTrendsTab extends StatefulWidget {
   final Future<List<ExerciseLog>> logsFuture;
+
+  /// Re-issues the history fetch after a failed one. Without it the error
+  /// state has no button, only the sentence.
+  final VoidCallback? onRetry;
   final Exercise exercise;
   final ValueListenable<List<ExerciseSet>>? liveSetsListenable;
   final DateTime? liveSessionStartedAt;
@@ -412,6 +440,7 @@ class ExerciseTrendsTab extends StatefulWidget {
   const ExerciseTrendsTab({
     super.key,
     required this.logsFuture,
+    this.onRetry,
     required this.exercise,
     this.liveSetsListenable,
     this.liveSessionStartedAt,
@@ -441,24 +470,6 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
 
   String _formatValue(double value) => _formatValueFor(_metric, value);
 
-  /// "Aug 25" — the day a session was logged, as the x axis names it.
-  static String _dateLabel(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}';
-  }
 
   String _formatValueFor(ExerciseSummaryMetric metric, double value) {
     switch (metric) {
@@ -494,13 +505,25 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
           return const Center(child: LoadingIndicator());
         }
         if (snapshot.hasError) {
+          debugPrint('Failed to load exercise history: ${snapshot.error}');
+          final onRetry = widget.onRetry;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
-            children: const [
-              _MessageCard(
-                message: 'Couldn’t load your history. Pull back and try '
-                    'again in a moment.',
+            padding: const EdgeInsets.fromLTRB(22, 16, 22, 44),
+            children: [
+              const _MessageCard(
+                message: "Couldn't load your history. Check your connection "
+                    'and try again.',
               ),
+              if (onRetry != null) ...[
+                const SizedBox(height: 12),
+                PillButton(
+                  semanticLabel: 'Retry loading history',
+                  label: 'Retry',
+                  radius: 14,
+                  tonal: true,
+                  onTap: onRetry,
+                ),
+              ],
             ],
           );
         }
@@ -568,10 +591,24 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
             values: series,
             sessionLabels: [
               for (final session in window)
-                session.isLive ? 'Live' : _dateLabel(session.loggedAt),
+                session.isLive
+                    ? 'Live'
+                    : FormaDates.monthDay(context, session.loggedAt),
             ],
             formatValue: _formatValue,
             repaintKey: _metric,
+          ),
+        if (series.isNotEmpty)
+          // The scrub is invisible until it happens; one mono line says it
+          // exists.
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: ExcludeSemantics(
+              child: Text(
+                'Hold and drag to read a session'.toUpperCase(),
+                style: monoStyle(size: 10, letterSpacing: 1.2),
+              ),
+            ),
           ),
         const SizedBox(height: 16),
         SegmentedTabs(
@@ -1496,7 +1533,7 @@ class _HistoryCard extends StatelessWidget {
         for (var i = 0; i < logs.length; i++) ...[
           if (i > 0) const SizedBox(height: 22),
           Text(
-            _formatShortDate(logs[i].loggedAt),
+            FormaDates.monthDay(context, logs[i].loggedAt),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -1716,22 +1753,4 @@ String _formatSeconds(int seconds) {
   final remainder = seconds % 60;
   if (remainder == 0) return '${minutes}m';
   return '${minutes}m ${remainder}s';
-}
-
-String _formatShortDate(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}';
 }

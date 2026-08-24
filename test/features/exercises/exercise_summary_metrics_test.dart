@@ -7,13 +7,11 @@ import 'package:forma_app/data/models/exercise_log_model.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/features/exercises/exercise_detail_view.dart';
 import 'package:forma_app/features/exercises/exercise_summary_metrics.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
   group('exercise summary metrics', () {

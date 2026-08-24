@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -129,12 +128,18 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       _captureSaved();
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save $_typeName: $error\n$stackTrace');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save $_typeName: $error')),
-      );
       setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Couldn't save $_typeName. Check your connection and try again.",
+          ),
+          action: SnackBarAction(label: 'Retry', onPressed: _save),
+        ),
+      );
     }
   }
 
@@ -198,8 +203,9 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     setState(() => _items.addAll(picked.map(_itemFor)));
   }
 
-  Exercise? _exerciseFor(ProgramDayItem item) =>
-      item.exerciseId == null ? null : ExerciseCatalog.findById(item.exerciseId!);
+  Exercise? _exerciseFor(ProgramDayItem item) => item.exerciseId == null
+      ? null
+      : ExerciseCatalog.findById(item.exerciseId!);
 
   /// The exercise's own page — how to perform it and its history both live
   /// there, which is why the row's menu no longer duplicates them.
@@ -213,6 +219,19 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       skillCategoryId: item.skillCategoryId,
     );
   }
+
+  /// Back with unsaved edits: the system pop is held and the user is asked.
+  /// Keeping is the default; discarding pops for real.
+  Future<void> _onPopInvoked(bool didPop, Object? result) async {
+    if (didPop) return;
+    final discard = await showDiscardChangesSheet(context, dayName: _typeName);
+    if (discard != true || !mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  /// The back chevron: same guard as the system gesture, via maybePop so
+  /// PopScope gets to ask first.
+  void _onBack() => Navigator.of(context).maybePop();
 
   /// Options for one row: what you can do to the workout. Reading about the
   /// exercise is a tap on its name instead.
@@ -307,7 +326,8 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       setState(() {
         _autoProgression = {
           for (final row in rows)
-            if (row.autoProgression != null) row.exerciseId: row.autoProgression!,
+            if (row.autoProgression != null)
+              row.exerciseId: row.autoProgression!,
         };
       });
     } catch (error, stackTrace) {
@@ -404,114 +424,128 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final listBottomPadding = bottomInset + 24 + 52 + 32;
 
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Pressable(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: const Padding(
-                          padding: EdgeInsets.only(right: 12, bottom: 4),
-                          child: Icon(
-                            Icons.chevron_left_rounded,
-                            size: 26,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        programWorkoutDayName(widget.sessionType),
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.9,
-                          height: 1.05,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    // Always scrollable: a list that just fits the screen
-                    // still gives under the thumb, rather than reading as
-                    // stuck the moment removing a row makes it fit.
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(22, 4, 22, listBottomPadding),
+    return PopScope(
+      canPop: !dirty && !_saving,
+      onPopInvokedWithResult: _onPopInvoked,
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    // The back chevron's 44pt hit area carries 9pt above
+                    // the glyph, so the header's own top inset drops from 14
+                    // to 5 and the glyph stays where it was.
+                    padding: const EdgeInsets.fromLTRB(22, 5, 22, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_items.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            child: Text(
-                              'Nothing planned for $_typeName yet — add your '
-                              'first exercise below.',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                                height: 1.55,
-                              ),
+                        Pressable(
+                          semanticLabel: 'Back',
+                          onTap: _onBack,
+                          child: const Padding(
+                            // 44pt hit area around a 26pt glyph.
+                            padding: EdgeInsets.only(
+                              right: 18,
+                              bottom: 9,
+                              top: 9,
                             ),
-                          )
-                        else
-                          for (final item in _items)
-                            _ItemRow(
-                              item: item,
-                              onOptions: () => _openItemActions(item),
-                              onOpenDetail: _exerciseFor(item) == null
-                                  ? null
-                                  : () => _openItemDetail(item),
+                            child: Icon(
+                              Icons.chevron_left_rounded,
+                              size: 26,
+                              color: AppColors.textSecondary,
                             ),
-                        _AddExerciseRow(onTap: _openAddPicker),
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          programWorkoutDayName(widget.sessionType),
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.9,
+                            height: 1.05,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            // Nothing to save is nothing to say — the button appears with the
-            // first edit rather than sitting there disabled.
-            if (dirty || _saving)
-              Positioned(
-                left: 22,
-                right: 22,
-                bottom: bottomInset + 24,
-                child: _saving
-                    ? const SizedBox(
-                        height: 52,
-                        child: Center(child: LoadingIndicator()),
-                      )
-                    : DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(26),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x73000000),
-                              offset: Offset(0, 10),
-                              blurRadius: 30,
-                            ),
-                          ],
-                        ),
-                        child: PillButton(
-                          label: 'Save $_typeName',
-                          onTap: _save,
-                        ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      // Always scrollable: a list that just fits the screen
+                      // still gives under the thumb, rather than reading as
+                      // stuck the moment removing a row makes it fit.
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding:
+                          EdgeInsets.fromLTRB(22, 4, 22, listBottomPadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_items.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              child: Text(
+                                'Nothing planned for $_typeName yet — add your '
+                                'first exercise below.',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                  height: 1.55,
+                                ),
+                              ),
+                            )
+                          else
+                            for (final item in _items)
+                              _ItemRow(
+                                item: item,
+                                onOptions: () => _openItemActions(item),
+                                onOpenDetail: _exerciseFor(item) == null
+                                    ? null
+                                    : () => _openItemDetail(item),
+                              ),
+                          _AddExerciseRow(onTap: _openAddPicker),
+                        ],
                       ),
+                    ),
+                  ),
+                ],
               ),
-          ],
+              // Nothing to save is nothing to say — the button appears with the
+              // first edit rather than sitting there disabled.
+              if (dirty || _saving)
+                Positioned(
+                  left: 22,
+                  right: 22,
+                  bottom: bottomInset + 24,
+                  child: _saving
+                      ? const SizedBox(
+                          height: 52,
+                          child: Center(child: LoadingIndicator()),
+                        )
+                      : DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(26),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x73000000),
+                                offset: Offset(0, 10),
+                                blurRadius: 30,
+                              ),
+                            ],
+                          ),
+                          child: PillButton(
+                            label: 'Save $_typeName',
+                            onTap: _save,
+                          ),
+                        ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -531,6 +565,25 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     if (category == null) return 'Skill tree progression';
     return '${category.title} progression';
   }
+}
+
+/// Asks whether to throw away unsaved edits to [dayName]. Resolves true to
+/// discard, false/null to keep editing — keep editing is the safe default and
+/// sits where the thumb lands; discard is the red one, second.
+Future<bool?> showDiscardChangesSheet(
+  BuildContext context, {
+  required String dayName,
+}) {
+  return ConfirmSheet.show(
+    context,
+    title: 'Discard changes?',
+    message: "Your edits to $dayName haven't been saved.",
+    primaryLabel: 'Keep editing',
+    primaryConfirms: false,
+    secondaryLabel: 'Discard',
+    secondaryColor: _dangerRed,
+    secondarySemanticLabel: 'Discard changes',
+  );
 }
 
 /// One exercise in the workout: name, where it came from, and a single options
@@ -585,21 +638,26 @@ class _ItemRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 6),
           Pressable(
+            semanticLabel: 'Options for ${item.name}',
             onTap: onOptions,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.more_horiz_rounded,
-                size: 17,
-                color: AppColors.textSecondary,
+            // The 32pt disc is the visual; the hit area is 44pt around it.
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.more_horiz_rounded,
+                  size: 17,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ),
@@ -626,8 +684,7 @@ class _SourceChip extends StatelessWidget {
     final label = fromTree
         ? '${category?.title ?? 'Skill Tree'} Progression'
         : 'Accessory';
-    final color =
-        fromTree ? const Color(0xFF9DB9FF) : AppColors.textSecondary;
+    final color = fromTree ? const Color(0xFF9DB9FF) : AppColors.textSecondary;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(11, 5, 12, 5),
@@ -655,7 +712,7 @@ class _SourceChip extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.robotoMono(
+              style: TextStyle(fontFamily: 'RobotoMono',
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,
@@ -814,9 +871,8 @@ class _AutoProgressionRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.45,
-                    color: enabled
-                        ? AppColors.textSecondary
-                        : AppColors.textMuted,
+                    color:
+                        enabled ? AppColors.textSecondary : AppColors.textMuted,
                   ),
                 ),
               ],

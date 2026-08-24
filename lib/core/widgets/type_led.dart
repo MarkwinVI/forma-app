@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
 import 'polished.dart';
@@ -17,7 +16,7 @@ TextStyle monoStyle({
   Color color = AppColors.textMuted,
   double letterSpacing = 1.65,
 }) {
-  return GoogleFonts.robotoMono(
+  return TextStyle(fontFamily: 'RobotoMono',
     fontSize: size,
     fontWeight: weight,
     color: color,
@@ -111,6 +110,9 @@ class TypeContentRow extends StatelessWidget {
   final bool dim;
   final double nameSize;
 
+  /// Long names wrap to this many lines, then ellipsize.
+  final int nameMaxLines;
+
   /// Replaces the name/sub column outright when a row needs a richer body.
   final Widget? child;
   final VoidCallback? onTap;
@@ -126,6 +128,7 @@ class TypeContentRow extends StatelessWidget {
     this.last = false,
     this.dim = false,
     this.nameSize = 21,
+    this.nameMaxLines = 2,
     this.child,
     this.onTap,
   });
@@ -150,10 +153,11 @@ class TypeContentRow extends StatelessWidget {
                     children: [
                       Text(
                         name,
+                        maxLines: nameMaxLines,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: nameSize,
-                          fontWeight:
-                              dim ? FontWeight.w600 : FontWeight.w800,
+                          fontWeight: dim ? FontWeight.w600 : FontWeight.w800,
                           color: dim
                               ? AppColors.textSecondary
                               : AppColors.textPrimary,
@@ -316,7 +320,12 @@ class TypeWordTabs extends StatelessWidget {
             if (i > 0) const SizedBox(width: 26),
             Pressable(
               onTap: () => onChanged(i),
+              selected: i == selectedIndex,
               child: Container(
+                // Tall enough to tap with a thumb: the word, its 12pt of air
+                // above the rule, and the rule itself make 44.
+                constraints: const BoxConstraints(minHeight: 44),
+                alignment: Alignment.bottomLeft,
                 padding: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   border: Border(
@@ -332,9 +341,8 @@ class TypeWordTabs extends StatelessWidget {
                   labels[i],
                   style: TextStyle(
                     fontSize: 15.5,
-                    fontWeight: i == selectedIndex
-                        ? FontWeight.w800
-                        : FontWeight.w600,
+                    fontWeight:
+                        i == selectedIndex ? FontWeight.w800 : FontWeight.w600,
                     color: i == selectedIndex
                         ? AppColors.textPrimary
                         : AppColors.textMuted,
@@ -366,7 +374,7 @@ class TypeStat extends StatelessWidget {
         Text(
           caption.toUpperCase(),
           maxLines: 2,
-          style: monoStyle(size: 10.5, letterSpacing: 1.35),
+          style: monoStyle(letterSpacing: 1.35),
         ),
         const SizedBox(height: 10),
         Text(

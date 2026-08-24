@@ -94,10 +94,27 @@ void main() {
     expect(find.text('Enter Forma'), findsOneWidget);
   });
 
-  testWidgets('there is no way to skip the flow', (tester) async {
+  testWidgets('the age slider is a real slider that announces its value',
+      (tester) async {
+    final handle = tester.ensureSemantics();
     await pumpFlow(tester);
+    for (final label in [
+      'Get started',
+      'Continue',
+      'Continue',
+      'Continue',
+      'Continue',
+    ]) {
+      await next(tester, label);
+    }
+    expect(find.text('Your profile'), findsOneWidget);
+    expect(find.text('ALMOST THERE'), findsOneWidget);
+    expect(find.text('Rather not say'), findsOneWidget);
 
-    expect(find.text('Skip'), findsNothing);
+    final slider = tester.getSemantics(find.byType(Slider));
+    expect(slider.flagsCollection.isSlider, isTrue);
+    expect(slider.value, '28 years');
+    handle.dispose();
   });
 
   testWidgets('back button steps backwards', (tester) async {

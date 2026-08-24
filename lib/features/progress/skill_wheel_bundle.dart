@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
@@ -55,26 +57,54 @@ class SkillWheelBundle {
   Map<String, WheelTreeLock> get treeLocks => computeTreeLocks(progressMap);
 }
 
-Future<SkillWheelBundle>? _warmBundle;
+/// A skill-wheel load started ahead of the Progress tab. [value] is set the
+/// moment [future] completes, so the tab can pick up a finished warm-up
+/// synchronously — no loading frame at all — and only waits when the data
+/// is still in flight.
+class WarmSkillWheelBundle {
+  WarmSkillWheelBundle(this.future) {
+    future.then<void>((bundle) => value = bundle, onError: (Object _) {});
+  }
+
+  final Future<SkillWheelBundle> future;
+  SkillWheelBundle? value;
+}
+
+WarmSkillWheelBundle? _warmBundle;
 
 /// Started by main() during the splash animation, so the landing tab's data
 /// is already in flight — usually finished — by the time the shell builds.
 void warmSkillWheelBundle(String userId) {
-  final future = loadSkillWheelBundle(userId);
-  _warmBundle = future;
+  _installWarmBundle(loadSkillWheelBundle(userId));
+}
+
+/// Seeds the warm slot with an arbitrary load — tests use it to put the
+/// Progress tab into its waiting state.
+@visibleForTesting
+void debugWarmSkillWheelBundle(Future<SkillWheelBundle> future) {
+  _installWarmBundle(future);
+}
+
+void _installWarmBundle(Future<SkillWheelBundle> future) {
+  final warm = WarmSkillWheelBundle(future);
+  _warmBundle = warm;
   // A failed warm-up quietly withdraws itself; the tab then runs its own
   // fresh load with its normal error handling.
   future.then<void>((_) {}, onError: (Object _) {
-    if (identical(_warmBundle, future)) _warmBundle = null;
+    if (identical(_warmBundle, warm)) _warmBundle = null;
   });
 }
 
 /// Hands the warmed bundle to its one consumer — the Progress tab's first
 /// load. Take-once, so a later refresh can never see startup-stale data.
-Future<SkillWheelBundle>? takeWarmSkillWheelBundle() {
-  final future = _warmBundle;
+/// The warm slot without claiming it — for gates that only need to know
+/// whether the landing data is still in flight.
+WarmSkillWheelBundle? peekWarmSkillWheelBundle() => _warmBundle;
+
+WarmSkillWheelBundle? takeWarmSkillWheelBundle() {
+  final warm = _warmBundle;
   _warmBundle = null;
-  return future;
+  return warm;
 }
 
 /// Fetches progress, program logic, workout history and skill tracks, then

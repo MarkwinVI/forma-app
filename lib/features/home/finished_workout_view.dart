@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
@@ -50,10 +52,24 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   bool _saving = true;
   bool _saveFailed = false;
 
+  /// A plain-language reason for the last failed save, when the failure is
+  /// one we can name (offline, signed out). Never raw exception text.
+  String? _saveFailureReason;
+
+  /// Whether the confetti loop may run at all — off under Reduce Motion.
+  bool _confettiAllowed = true;
+
+  /// Best single-set value per exercise before this session, and the
+  /// exercises that beat it — filled in once the session is saved, so the
+  /// summary can tag the personal bests it earned.
+  Map<String, int> _previousBests = const {};
+  Map<String, int> _personalBests = const {};
+
   /// A failed save can be retried, and a retry that gets further than the
   /// last attempt would otherwise report the same workout twice.
   bool _analyticsCaptured = false;
   int _stepIndex = 0;
+
   /// The live mastery target, read with the program when the session is
   /// applied — what a weight step was earned against.
   MasteryTargetSettings _masterySettings = MasteryTargetSettings.defaults;
@@ -65,8 +81,42 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     _confettiController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
-    )..repeat();
+    );
     _saveWorkout();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _confettiAllowed = !MediaQuery.disableAnimationsOf(context);
+    _syncConfetti();
+  }
+
+  /// The confetti runs only while there is something to celebrate: not on
+  /// a failed save, and not at all under Reduce Motion.
+  void _syncConfetti() {
+    final shouldRun = _confettiAllowed && !_saveFailed;
+    if (shouldRun && !_confettiController.isAnimating) {
+      _confettiController.repeat();
+    } else if (!shouldRun && _confettiController.isAnimating) {
+      _confettiController.stop();
+    }
+  }
+
+  /// Turns a save failure into a sentence the user can act on, or null
+  /// when the cause is not one worth naming.
+  static String? _friendlyReason(Object error) {
+    if (error is SocketException || error is TimeoutException) {
+      return 'Looks like you are offline.';
+    }
+    final text = error.toString().toLowerCase();
+    if (text.contains('socketexception') ||
+        text.contains('failed host lookup') ||
+        text.contains('connection') && text.contains('refused') ||
+        text.contains('network')) {
+      return 'Looks like you are offline.';
+    }
+    return null;
   }
 
   @override
@@ -81,6 +131,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       setState(() {
         _saving = false;
         _saveFailed = true;
+        _saveFailureReason = 'You are signed out.';
+        _syncConfetti();
       });
       return;
     }
@@ -88,6 +140,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     setState(() {
       _saving = true;
       _saveFailed = false;
+      _saveFailureReason = null;
+      _syncConfetti();
     });
 
     try {
@@ -269,6 +323,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       setState(() {
         _saving = false;
         _saveFailed = true;
+        _saveFailureReason = _friendlyReason(error);
+        _syncConfetti();
       });
     }
   }
@@ -281,7 +337,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       String? sessionId, List<ProgressionEvent> events) {
     AnalyticsService.capture(
       'workout_finished',
-      properties: workoutOutcomeProperties(widget.workout, sessionId: sessionId),
+      properties:
+          workoutOutcomeProperties(widget.workout, sessionId: sessionId),
     );
 
     for (final event in events) {
@@ -326,14 +383,20 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       {for (final candidate in candidates) candidate.exerciseId},
       excludeSessionId: sessionId,
     );
-    await ProgressionEventService().insertAll(
-      userId,
-      sessionId,
-      ProgressionEventService.computePersonalBests(
-        candidates: candidates,
-        previousBests: previousBests,
-      ),
+    final bests = ProgressionEventService.computePersonalBests(
+      candidates: candidates,
+      previousBests: previousBests,
     );
+    if (mounted) {
+      setState(() {
+        _previousBests = Map.unmodifiable(previousBests);
+        _personalBests = {
+          for (final best in bests)
+            if (best.valueTo != null) best.exerciseId: best.valueTo!,
+        };
+      });
+    }
+    await ProgressionEventService().insertAll(userId, sessionId, bests);
   }
 
   /// Summary first, then level-ups, accessory masteries, and unlocks —
@@ -497,6 +560,12 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  /// Nothing was saved: this screen sits on top of the live workout, so
+  /// popping it returns there with every set still in place.
+  void _backToWorkout() {
+    Navigator.of(context).pop();
+  }
+
   String get _ctaLabel {
     if (_saving) return 'Saving';
     if (_saveFailed) return 'Try again';
@@ -514,7 +583,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         if (didPop || _saving) return;
         if (_saveFailed) {
           // Nothing was saved — back returns to the workout to retry.
-          Navigator.of(context).pop();
+          _backToWorkout();
         } else {
           // Saved: leaving the flow means done, never back into the
           // finished workout where a second save could be triggered.
@@ -525,7 +594,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
         backgroundColor: AppColors.bg,
         body: Stack(
           children: [
-            if (_stepIndex == 0)
+            if (_stepIndex == 0 && _confettiAllowed && !_saveFailed)
               AnimatedBuilder(
                 animation: _confettiController,
                 builder: (context, _) {
@@ -546,9 +615,9 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                   // themselves crossfade from the lone placeholder to the
                   // real set rather than snapping.
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(20, 3, 13, 0),
                     child: SizedBox(
-                      height: 30,
+                      height: 44,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -580,26 +649,33 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 5),
                           IgnorePointer(
                             ignoring: _saving || _saveFailed,
                             child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 300),
                               opacity: _saving || _saveFailed ? 0 : 1,
                               child: Pressable(
+                                semanticLabel: 'Close',
                                 onTap: _skip,
+                                // Drawn at 30; the tap catches 44×44.
                                 child: Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.surface,
-                                    shape: BoxShape.circle,
-                                  ),
+                                  width: 44,
+                                  height: 44,
                                   alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons.close_rounded,
-                                    size: 15,
-                                    color: AppColors.textSecondary,
+                                  child: Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.surface,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      size: 15,
+                                      color: AppColors.textSecondary,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -610,18 +686,25 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                     ),
                   ),
                   Expanded(
-                    child: switch (step) {
-                      _SummaryStep() => _SummaryContent(
-                          workout: widget.workout,
-                          hasNext: _steps.length > 1,
-                        ),
-                      _LevelUpStep(data: final data) => _LevelUpContent(
-                          key: ValueKey(data.exercise.id), data: data),
-                      _MasteredStep(data: final data) => _MasteredContent(
-                          key: ValueKey(data.exercise.id), data: data),
-                      _UnlockStep(data: final data) => _UnlockContent(
-                          key: ValueKey(data.newExercise.id), data: data),
-                    },
+                    child: _saveFailed
+                        ? _SaveFailedContent(
+                            reason: _saveFailureReason,
+                            onBackToWorkout: _backToWorkout,
+                          )
+                        : switch (step) {
+                            _SummaryStep() => _SummaryContent(
+                                workout: widget.workout,
+                                hasNext: _steps.length > 1,
+                                previousBests: _previousBests,
+                                personalBests: _personalBests,
+                              ),
+                            _LevelUpStep(data: final data) => _LevelUpContent(
+                                key: ValueKey(data.exercise.id), data: data),
+                            _MasteredStep(data: final data) => _MasteredContent(
+                                key: ValueKey(data.exercise.id), data: data),
+                            _UnlockStep(data: final data) => _UnlockContent(
+                                key: ValueKey(data.newExercise.id), data: data),
+                          },
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
@@ -745,15 +828,100 @@ class _UnlockData {
   });
 }
 
+// ── Save failed ───────────────────────────────────────────────────────
+
+/// What the screen shows when the session could not be written: the
+/// problem, the recovery, and the way back. No check, no confetti — the
+/// workout is not done until it is saved.
+class _SaveFailedContent extends StatelessWidget {
+  final String? reason;
+  final VoidCallback onBackToWorkout;
+
+  const _SaveFailedContent({
+    required this.reason,
+    required this.onBackToWorkout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subline = reason == null
+        ? 'Your sets are still here — try again, or go back to the workout.'
+        : '$reason Your sets are still here — try again, or go back to the '
+            'workout.';
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(30, 26, 30, 12),
+      child: Column(
+        children: [
+          const _RiseIn(
+            delay: Duration.zero,
+            child: _CelebrationBadge(
+              color: AppColors.amber,
+              size: 84,
+              child: Icon(
+                Icons.cloud_off_rounded,
+                size: 36,
+                color: AppColors.amber,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          const _RiseIn(
+            delay: Duration(milliseconds: 40),
+            child: Text(
+              "Couldn't save your workout",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _RiseIn(
+            delay: const Duration(milliseconds: 80),
+            child: Text(
+              subline,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.4,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
+          _RiseIn(
+            delay: const Duration(milliseconds: 120),
+            child: TextAction(
+              label: 'Back to workout',
+              onTap: onBackToWorkout,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Summary step ──────────────────────────────────────────────────────
 
 class _SummaryContent extends StatelessWidget {
   final CompletedWorkout workout;
   final bool hasNext;
 
+  /// Best single-set value per exercise before this session, and the new
+  /// bests this session set (exercise id → new best). Both empty until the
+  /// save has compared the session against history.
+  final Map<String, int> previousBests;
+  final Map<String, int> personalBests;
+
   const _SummaryContent({
     required this.workout,
     required this.hasNext,
+    this.previousBests = const {},
+    this.personalBests = const {},
   });
 
   @override
@@ -792,7 +960,7 @@ class _SummaryContent extends StatelessWidget {
             delay: const Duration(milliseconds: 80),
             child: Text(
               '${workout.historyTitle} · '
-              '${_formatFinishedAt(workout.finishedAt)}',
+              '${_formatFinishedAt(context, workout.finishedAt)}',
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -848,18 +1016,50 @@ class _SummaryContent extends StatelessWidget {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              workout.exercises[i].exercise.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  workout.exercises[i].exercise.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                if (_deltaLine(workout.exercises[i])
+                                    case final delta?)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 3),
+                                    child: Text(
+                                      delta,
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.9,
+                                        color: personalBests.containsKey(
+                                          workout.exercises[i].exercise.id,
+                                        )
+                                            ? AppColors.green
+                                            : AppColors.textMuted,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
+                          if (personalBests
+                              .containsKey(workout.exercises[i].exercise.id))
+                            const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: _PbTag(),
+                            ),
                           Text(
                             _setsSummary(workout.exercises[i]),
                             style: const TextStyle(
@@ -898,6 +1098,47 @@ class _SummaryContent extends StatelessWidget {
     return exercise.sets
         .map((set) => set.isTimed ? '${set.value}s' : '${set.value}')
         .join(' · ');
+  }
+
+  /// The session's best set against the best before it: "BEST 8 · +2 VS
+  /// 6" on a new personal best, "BEST 8 · PREV 10" otherwise. Null until
+  /// history has been compared, or when there was no earlier best.
+  String? _deltaLine(CompletedWorkoutExercise exercise) {
+    final previous = previousBests[exercise.exercise.id];
+    if (previous == null || previous <= 0 || exercise.sets.isEmpty) {
+      return null;
+    }
+    final best = exercise.sets.fold<int>(0, (b, set) => math.max(b, set.value));
+    final unit = exercise.isTimed ? 'S' : '';
+    final delta = best - previous;
+    if (delta > 0) return 'BEST $best$unit · +$delta$unit VS $previous$unit';
+    if (delta == 0) return 'BEST $best$unit · MATCHED';
+    return 'BEST $best$unit · PREV $previous$unit';
+  }
+}
+
+/// The small green "PB" mark next to an exercise that set a personal best.
+class _PbTag extends StatelessWidget {
+  const _PbTag();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.greenSoft,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Text(
+        'PB',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.8,
+          color: AppColors.green,
+        ),
+      ),
+    );
   }
 }
 
@@ -1768,24 +2009,15 @@ class _ConfettiPainter extends CustomPainter {
 
 // ── Formatting ────────────────────────────────────────────────────────
 
-String _formatFinishedAt(DateTime dateTime) {
+String _formatFinishedAt(BuildContext context, DateTime dateTime) {
   final now = DateTime.now();
   final sameDay = now.year == dateTime.year &&
       now.month == dateTime.month &&
       now.day == dateTime.day;
   final datePrefix =
-      sameDay ? 'Today' : '${dateTime.month}/${dateTime.day}/${dateTime.year}';
+      sameDay ? 'Today' : FormaDates.mediumDate(context, dateTime);
 
-  return '$datePrefix at ${_formatTime(dateTime)}';
-}
-
-String _formatTime(DateTime dateTime) {
-  final hour = dateTime.hour;
-  final minute = dateTime.minute.toString().padLeft(2, '0');
-  final suffix = hour >= 12 ? 'PM' : 'AM';
-  final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-
-  return '$displayHour:$minute $suffix';
+  return '$datePrefix at ${FormaDates.time(context, dateTime)}';
 }
 
 String _formatDuration(Duration duration) {

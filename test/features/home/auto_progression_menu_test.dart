@@ -4,7 +4,6 @@ import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/skill_track_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/features/home/program_workout_editor_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Auto progression is stated on every exercise's menu, and editable on the
 /// ones it can actually manage: accessories measured in reps × weight. A
@@ -13,7 +12,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
   Future<void> pumpEditor(WidgetTester tester) async {

@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
@@ -19,8 +20,7 @@ import '../progress/widgets/skill_wheel_screen.dart';
 
 /// The Program tab's door into the skill trees: the same radial wheel the
 /// Progress tab shows, plus the verbs — start a progression at a node, move
-/// it to another node, or stop training a tree. Every change lands with a
-/// receipt toast and UNDO.
+/// it to another node, or stop training a tree.
 class ProgramSkillWheelView extends StatefulWidget {
   /// Fly straight into this tree on open.
   final String? initialCategoryId;
@@ -45,8 +45,8 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   final _skillTrackService = SkillTrackService();
 
   bool _loading = true;
+  bool _loadFailed = false;
   SkillWheelBundle? _bundle;
-
 
   @override
   void initState() {
@@ -71,17 +71,24 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       setState(() {
         _bundle = bundle;
         _loading = false;
+        _loadFailed = false;
       });
     } catch (error, stackTrace) {
       debugPrint('Failed to load skill trees: $error\n$stackTrace');
       if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't load your skill trees. Try again later."),
-        ),
-      );
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+      });
     }
+  }
+
+  Future<void> _retry() async {
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
+    await _load();
   }
 
   SkillTrack? _trackFor(String categoryId) {
@@ -105,8 +112,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   /// Every exercise the category can reach, across all of its branches —
   /// the set a progression move must keep consistent.
   Set<String> _allCategoryExerciseIds(SkillCategory category) => {
-        for (final branch in category.branches)
-          ...category.pathFor(branch.id),
+        for (final branch in category.branches) ...category.pathFor(branch.id),
       };
 
   /// Makes [node] the trained exercise of its tree. Steps on the route
@@ -262,7 +268,11 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
         child: _loading
             ? const Center(child: LoadingIndicator())
             : bundle == null || bundle.families.isEmpty
-                ? const SizedBox.shrink()
+                ? SkillWheelEmptyState(
+                    failed: _loadFailed,
+                    onBack: () => Navigator.of(context).pop(),
+                    onRetry: _retry,
+                  )
                 : SkillWheelScreen(
                     families: bundle.families,
                     journeyByCategory: bundle.journeyByCategory,
@@ -277,6 +287,64 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
                     exitOnTreeBack: widget.exitOnTreeBack,
                   ),
       ),
+    );
+  }
+}
+
+/// What the wheel shows when there is nothing to draw: the load failed, or
+/// there are no trees to show. Either way the way back stays on screen.
+///
+/// Public for its tests.
+class SkillWheelEmptyState extends StatelessWidget {
+  final bool failed;
+  final VoidCallback onBack;
+  final Future<void> Function() onRetry;
+
+  const SkillWheelEmptyState({
+    super.key,
+    required this.failed,
+    required this.onBack,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SubScreenHeader(title: 'Skill trees', onBack: onBack),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 0, 22, 130),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TypeTitle(
+                  failed
+                      ? "Couldn't load your skill trees"
+                      : 'No skill trees yet',
+                  size: 28,
+                  sub: failed
+                      ? 'Check your connection and try again.'
+                      : 'Create a program first — its skill trees show up '
+                          'here, ready to explore.',
+                ),
+                if (failed) ...[
+                  const SizedBox(height: 26),
+                  PillButton(
+                    semanticLabel: 'Retry loading skill trees',
+                    label: 'Retry',
+                    radius: 14,
+                    tonal: true,
+                    onTap: onRetry,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

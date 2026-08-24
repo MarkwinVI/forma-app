@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -1130,7 +1132,10 @@ class _StrengthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      // The stepper's discs sit in 44pt hit boxes (6pt around a 32pt disc),
+      // so the card gives up that 6 on the right and 2 top and bottom to
+      // keep the discs, and the card's height, where they were.
+      padding: const EdgeInsets.fromLTRB(14, 11, 8, 11),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -1156,6 +1161,7 @@ class _StrengthCard extends StatelessWidget {
             ),
           ),
           _UnsetStepper(
+            label: exercise.label,
             value: value,
             step: exercise.step,
             def: exercise.def,
@@ -1171,7 +1177,10 @@ class _StrengthCard extends StatelessWidget {
 
 /// Unset by default — "+" adds a value, and stepping below zero clears it
 /// back to unset ("—"), which the planner reads as "test it in session one".
+/// The number itself opens direct entry; ± are the fine adjust, and holding
+/// one keeps stepping.
 class _UnsetStepper extends StatelessWidget {
+  final String label;
   final int? value;
   final int step;
   final int def;
@@ -1180,6 +1189,7 @@ class _UnsetStepper extends StatelessWidget {
   final ValueChanged<int?> onChanged;
 
   const _UnsetStepper({
+    required this.label,
     required this.value,
     required this.step,
     required this.def,
@@ -1188,52 +1198,80 @@ class _UnsetStepper extends StatelessWidget {
     required this.onChanged,
   });
 
+  Future<void> _openEntry(BuildContext context) async {
+    final entered = await showModalBottomSheet<int?>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StrengthEntrySheet(
+        label: label,
+        initial: value,
+        max: max,
+        unitSuffix: unitSuffix ?? 'reps',
+      ),
+    );
+    if (entered == null) return;
+    // 0 typed in is "clear it" — the same as stepping below zero.
+    onChanged(entered == 0 ? null : entered);
+  }
+
   @override
   Widget build(BuildContext context) {
     final unset = value == null;
+    final unitWord = unitSuffix ?? 'reps';
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _StepperButton(
           icon: Icons.remove_rounded,
+          semanticLabel: 'Decrease $label',
           enabled: !unset,
           onTap: () {
             final next = value! - step;
             onChanged(next < 0 ? null : next);
           },
         ),
-        Container(
-          constraints: const BoxConstraints(minWidth: 52),
-          alignment: Alignment.center,
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: unset ? '—' : '$value',
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w800,
-                    color: unset ? AppColors.textMuted : AppColors.textPrimary,
-                    letterSpacing: -0.42,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-                if (!unset && unitSuffix != null)
+        Pressable(
+          semanticLabel: unset
+              ? '$label, not set. Tap to enter a value'
+              : '$label, $value $unitWord. Tap to enter a value',
+          onTap: () => _openEntry(context),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 52, minHeight: 44),
+            alignment: Alignment.center,
+            child: Text.rich(
+              TextSpan(
+                children: [
                   TextSpan(
-                    text: ' $unitSuffix',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
+                    text: unset ? '—' : '$value',
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                      color:
+                          unset ? AppColors.textMuted : AppColors.textPrimary,
+                      letterSpacing: -0.42,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-              ],
+                  if (!unset && unitSuffix != null)
+                    TextSpan(
+                      text: ' $unitSuffix',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
         _StepperButton(
           icon: Icons.add_rounded,
+          semanticLabel: 'Increase $label',
           enabled: unset || value! < max,
           onTap: () => onChanged(unset ? def : (value! + step).clamp(0, max)),
         ),
@@ -1242,32 +1280,207 @@ class _UnsetStepper extends StatelessWidget {
   }
 }
 
-class _StepperButton extends StatelessWidget {
+/// A 32pt disc inside a 44pt hit area. Tap steps once; press and hold keeps
+/// stepping, slowly at first and then faster, until the finger lifts or the
+/// button runs out of range.
+class _StepperButton extends StatefulWidget {
   final IconData icon;
+  final String semanticLabel;
   final bool enabled;
   final VoidCallback onTap;
 
   const _StepperButton({
     required this.icon,
+    required this.semanticLabel,
     required this.enabled,
     required this.onTap,
   });
 
   @override
+  State<_StepperButton> createState() => _StepperButtonState();
+}
+
+class _StepperButtonState extends State<_StepperButton> {
+  Timer? _repeat;
+  int _ticks = 0;
+
+  @override
+  void dispose() {
+    _repeat?.cancel();
+    super.dispose();
+  }
+
+  void _startRepeat() {
+    _repeat?.cancel();
+    _ticks = 0;
+    widget.onTap();
+    _repeat = Timer.periodic(const Duration(milliseconds: 110), (_) {
+      if (!widget.enabled) {
+        _stopRepeat();
+        return;
+      }
+      _ticks++;
+      // Every other tick for the first second, then every tick.
+      if (_ticks < 9 && _ticks.isOdd) return;
+      widget.onTap();
+    });
+  }
+
+  void _stopRepeat() {
+    _repeat?.cancel();
+    _repeat = null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Pressable(
-      onTap: enabled ? onTap : null,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.35,
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: const BoxDecoration(
-            color: AppColors.surface2,
-            shape: BoxShape.circle,
+    final enabled = widget.enabled;
+    // One node: the Pressable supplies the button trait and name, the
+    // long-press repeat folds into it instead of sitting beside it.
+    return MergeSemantics(
+      child: GestureDetector(
+        onLongPressStart: enabled ? (_) => _startRepeat() : null,
+        onLongPressEnd: enabled ? (_) => _stopRepeat() : null,
+        onLongPressCancel: enabled ? _stopRepeat : null,
+        child: Pressable(
+          onTap: enabled ? widget.onTap : null,
+          semanticLabel: widget.semanticLabel,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Opacity(
+              opacity: enabled ? 1 : 0.35,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: AppColors.surface2,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child:
+                    Icon(widget.icon, size: 16, color: AppColors.textPrimary),
+              ),
+            ),
           ),
-          alignment: Alignment.center,
-          child: Icon(icon, size: 16, color: AppColors.textPrimary),
+        ),
+      ),
+    );
+  }
+}
+
+/// Direct entry for one starting-strength value: the number, big and
+/// tappable-looking, over the bare keypad, and Done. Resolves the typed
+/// integer, or null when dismissed without a change.
+///
+/// Public for its tests.
+class StrengthEntrySheet extends StatefulWidget {
+  final String label;
+  final int? initial;
+  final int max;
+  final String unitSuffix;
+
+  const StrengthEntrySheet({
+    super.key,
+    required this.label,
+    required this.initial,
+    required this.max,
+    required this.unitSuffix,
+  });
+
+  @override
+  State<StrengthEntrySheet> createState() => _StrengthEntrySheetState();
+}
+
+class _StrengthEntrySheetState extends State<StrengthEntrySheet> {
+  String _edit = '';
+
+  int? get _typed => int.tryParse(_edit);
+
+  void _press(String key) {
+    setState(() {
+      if (key == 'del') {
+        if (_edit.isNotEmpty) _edit = _edit.substring(0, _edit.length - 1);
+        return;
+      }
+      // Whole numbers only — the decimal key is a no-op here.
+      if (key == '.') return;
+      if (_edit.length >= 3) return;
+      _edit = _edit == '0' ? key : '$_edit$key';
+    });
+  }
+
+  void _done() {
+    final typed = _typed;
+    if (typed == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+    Navigator.of(context).pop(typed.clamp(0, widget.max));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = widget.initial == null ? '0' : '${widget.initial}';
+    final showing = _edit.isEmpty ? placeholder : _edit;
+    final overMax = (_typed ?? 0) > widget.max;
+
+    return SheetShell(
+      title: widget.label,
+      sub: 'Your best — max reps or one-rep max.',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  showing,
+                  style: TextStyle(
+                    fontSize: 56,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    letterSpacing: -1.7,
+                    color: _edit.isEmpty
+                        ? AppColors.textMuted
+                        : AppColors.textPrimary,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  widget.unitSuffix,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Center(
+              child: Text(
+                overMax
+                    ? 'Maximum ${widget.max} ${widget.unitSuffix}'
+                    : 'Type a number, or 0 to leave it unset',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: overMax ? AppColors.amber : AppColors.textMuted,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            WeightKeypad(onKey: _press),
+            const SizedBox(height: 12),
+            PillButton(
+              label: 'Done',
+              radius: 14,
+              onTap: _done,
+            ),
+          ],
         ),
       ),
     );

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/no_program_state.dart';
+import '../../core/widgets/polished.dart';
+import '../../core/widgets/type_led.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/training_program_model.dart';
@@ -13,6 +15,7 @@ import '../../data/services/training_program_store_service.dart';
 import '../home/program_overview_view.dart';
 import '../home/program_setup_completion.dart';
 import '../home/program_setup_view.dart';
+import '../progress/skill_wheel_bundle.dart';
 
 /// Program tab — hosts the program overview (training days, split, sessions,
 /// goal skills) that used to be reached through "Your program" on Train.
@@ -39,6 +42,11 @@ class _ProgramViewState extends State<ProgramView> {
   final _trainingProgramStoreService = TrainingProgramStoreService();
 
   bool _loading = true;
+
+  /// The last fetch threw. Kept apart from "no program" on purpose: a
+  /// failed read must never invite the user to build over a program that
+  /// may well exist.
+  bool _loadFailed = false;
   Map<String, ExerciseStatus> _progressMap = {};
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
@@ -50,6 +58,15 @@ class _ProgramViewState extends State<ProgramView> {
   void initState() {
     super.initState();
     programCreatedSignal.addListener(_onProgramCreated);
+    // The landing gate has usually already loaded progress and program
+    // logic into the warm bundle; start from that instead of a loader, and
+    // let the fresh read below replace it quietly.
+    final warm = peekWarmSkillWheelBundle()?.value;
+    if (warm != null) {
+      _progressMap = Map.of(warm.progressMap);
+      _logicSnapshot = warm.logicSnapshot;
+      _loading = false;
+    }
     _loadData();
   }
 
@@ -97,6 +114,7 @@ class _ProgramViewState extends State<ProgramView> {
       final progress = results[0] as List<ExerciseProgress>;
       final fetched = results[1] as TrainingProgramLogicSnapshot?;
       setState(() {
+        _loadFailed = false;
         _progressMap = {
           for (final item in progress) item.exerciseId: item.status,
         };
@@ -112,13 +130,19 @@ class _ProgramViewState extends State<ProgramView> {
     } catch (error, stackTrace) {
       debugPrint('Failed to load program data: $error\n$stackTrace');
       if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't load your program. Try again later."),
-        ),
-      );
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+      });
     }
+  }
+
+  Future<void> _retryLoad() async {
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
+    await _loadData();
   }
 
   Future<TrainingProgramLogicSnapshot> _saveProgramLogic({
@@ -194,6 +218,16 @@ class _ProgramViewState extends State<ProgramView> {
       );
     }
 
+    if (snapshot == null && _loadFailed) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          bottom: false,
+          child: ProgramLoadErrorState(onRetry: _retryLoad),
+        ),
+      );
+    }
+
     if (snapshot == null) {
       // The tab that owns setup carries the detail: what it will ask for and
       // what comes back, over the program that does not exist yet.
@@ -221,6 +255,60 @@ class _ProgramViewState extends State<ProgramView> {
       initialLogic: snapshot,
       progressMap: _progressMap,
       onSave: _saveProgramLogic,
+    );
+  }
+}
+
+/// The Program tab when the fetch threw: names the problem, offers the one
+/// way out, and deliberately does not offer to build a program — the one on
+/// the server may be fine.
+///
+/// Public for its tests.
+class ProgramLoadErrorState extends StatelessWidget {
+  final Future<void> Function() onRetry;
+
+  const ProgramLoadErrorState({super.key, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return RefreshIndicator(
+          color: AppColors.accentPrimary,
+          backgroundColor: AppColors.surface,
+          onRefresh: onRetry,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 30, 22, 130),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Program', style: monoStyle()),
+                    const SizedBox(height: 10),
+                    const TypeTitle(
+                      "Couldn't load your program",
+                      sub: 'Check your connection and try again. Your '
+                          'program is still saved.',
+                    ),
+                    const SizedBox(height: 26),
+                    PillButton(
+                      semanticLabel: 'Retry loading your program',
+                      label: 'Retry',
+                      radius: 14,
+                      tonal: true,
+                      onTap: onRetry,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

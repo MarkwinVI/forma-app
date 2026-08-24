@@ -1,12 +1,18 @@
 import 'dart:async';
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/reorder_exercises_page.dart';
 import '../../core/widgets/type_led.dart';
+import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_progress_model.dart';
@@ -114,6 +120,12 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   String? _toast;
   Timer? _toastTimer;
 
+  /// Unfinished-workout draft: every edit is written to local storage under
+  /// a key for this day's workout, and an unfinished one is offered back when
+  /// the same workout is opened again. Cleared when the workout is finished
+  /// or discarded.
+  Timer? _draftSaveTimer;
+
   /// The set the Live Activity's own button just ticked, held on the
   /// activity with a green check for a beat before the state moves on.
   ({
@@ -150,6 +162,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _restSecondsByExercise = {
       for (final item in _sessionItems) item.exercise.id: 0,
     };
+    _setWakelock(true);
+    _restoreDraft();
     _loadProgressMap();
     _loadRestPreferences();
     _loadLastSessions();
@@ -170,9 +184,13 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           _activeRestTimer != null &&
           _activeRestRemainingSeconds() <= 0;
       if (!_isRunning && !shouldClearRest) return;
-      if (shouldClearRest &&
-          !WorkoutNotificationService.instance.soundHandledByNotification) {
-        SystemSound.play(SystemSoundType.alert);
+      if (shouldClearRest) {
+        // Rest is over: the phone says so in the hand as well as out loud,
+        // since it is usually face-down or in a pocket by now.
+        HapticFeedback.mediumImpact();
+        if (!WorkoutNotificationService.instance.soundHandledByNotification) {
+          SystemSound.play(SystemSoundType.alert);
+        }
       }
       setState(() {
         if (shouldClearRest) {
@@ -192,7 +210,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     );
     _ticker?.cancel();
     _toastTimer?.cancel();
+    _draftSaveTimer?.cancel();
     _activityFlashTimer?.cancel();
+    _setWakelock(false);
     for (final notifier in _liveSetNotifiers.values) {
       notifier.dispose();
     }
@@ -200,6 +220,171 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _liveActivityService.onAction = null;
     _liveActivityService.end();
     super.dispose();
+  }
+
+  /// Keeps the screen on for as long as the workout is up. The plugin needs
+  /// a platform channel, so it is guarded: where it is not registered (tests)
+  /// the failure is ignored.
+  static void _setWakelock(bool on) {
+    try {
+      final future = on ? WakelockPlus.enable() : WakelockPlus.disable();
+      future.catchError((_) {});
+    } catch (_) {
+      // Not available here; the workout does not depend on it.
+    }
+  }
+
+  // ── Local draft ───────────────────────────────────────────────────
+
+  /// One key per planned workout, so yesterday's abandoned session never
+  /// comes back on top of today's.
+  String get _draftKey {
+    final r = widget.recommendation;
+    final date = r.plannedDate;
+    final day = date == null
+        ? 'unplanned'
+        : '${date.year}-${date.month.toString().padLeft(2, '0')}-'
+            '${date.day.toString().padLeft(2, '0')}';
+    return 'live_workout_draft:${r.sessionType.dbValue}:$day:'
+        '${r.plannedStepIndex ?? '-'}';
+  }
+
+  /// Writes the draft shortly after the latest change — edits come in
+  /// bursts (typing a rep count), so they are coalesced.
+  void _scheduleDraftSave() {
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = Timer(const Duration(milliseconds: 400), _saveDraft);
+  }
+
+  Map<String, dynamic> _draftPayload() => {
+        'startedAt': _startedAt.toIso8601String(),
+        'items': [
+          for (final item in _sessionItems)
+            {
+              'exerciseId': item.exercise.id,
+              'sets': [
+                for (final set in _setsFor(item))
+                  {
+                    'number': set.number,
+                    'target': set.target,
+                    'weightKg': set.weightKg,
+                    'previousLabel': set.previousLabel,
+                    'completed': set.completed,
+                    'isEdited': set.isEdited,
+                  },
+              ],
+            },
+        ],
+      };
+
+  Future<void> _saveDraft() async {
+    if (!mounted) return;
+    // Nothing worth keeping until a set carries data: an untouched workout
+    // is rebuilt from the plan anyway.
+    final hasData = _sessionItems.any(
+      (item) => _setsFor(item).any((set) => set.hasData),
+    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!hasData) {
+        await prefs.remove(_draftKey);
+      } else {
+        await prefs.setString(_draftKey, jsonEncode(_draftPayload()));
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to save workout draft: $error\n$stackTrace');
+    }
+  }
+
+  Future<void> _clearDraft() async {
+    _draftSaveTimer?.cancel();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_draftKey);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to clear workout draft: $error\n$stackTrace');
+    }
+  }
+
+  /// Brings back an unfinished draft of this same workout, if one was left
+  /// behind: the exercises in their order (added ones included, removed ones
+  /// gone) and every set's values and ticks. Says so in a toast.
+  Future<void> _restoreDraft() async {
+    String? raw;
+    try {
+      raw = (await SharedPreferences.getInstance()).getString(_draftKey);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to read workout draft: $error\n$stackTrace');
+      return;
+    }
+    if (raw == null || !mounted) return;
+
+    try {
+      final payload = jsonDecode(raw) as Map<String, dynamic>;
+      final byId = {
+        for (final item in widget.recommendation.items) item.exercise.id: item,
+        for (final item in _sessionItems) item.exercise.id: item,
+      };
+      final items = <TrainingRecommendationItem>[];
+      final drafts = <String, List<_WorkoutSetDraft>>{};
+      for (final entry in (payload['items'] as List).cast<Map>()) {
+        final id = entry['exerciseId'] as String;
+        var item = byId[id];
+        if (item == null) {
+          final exercise = _findExercise(id);
+          if (exercise == null) continue;
+          item = TrainingRecommendationItem(
+            track: _trackForExercise(exercise),
+            exercise: exercise,
+            status: _progressMap[exercise.id] ?? ExerciseStatus.inactive,
+            sourceCategory: exercise.category,
+            sourceSkillCategoryId: exercise.skillCategoryId,
+            wasManuallyAdded: true,
+          );
+        }
+        items.add(item);
+        drafts[id] = [
+          for (final set in (entry['sets'] as List).cast<Map>())
+            _WorkoutSetDraft(
+              number: set['number'] as int,
+              target: set['target'] as int,
+              weightKg: (set['weightKg'] as num?)?.toDouble() ?? 0,
+              previousLabel:
+                  set['previousLabel'] as String? ?? _noPreviousLabel,
+              completed: set['completed'] as bool? ?? false,
+              isEdited: set['isEdited'] as bool? ?? false,
+            ),
+        ];
+      }
+      final hasData =
+          drafts.values.any((sets) => sets.any((set) => set.hasData));
+      if (items.isEmpty || !hasData || !mounted) return;
+
+      setState(() {
+        _planEdited = true;
+        _sessionItems = items;
+        _setDrafts = {..._setDrafts, ...drafts};
+        _restSecondsByExercise = {
+          for (final item in items)
+            item.exercise.id: _restSecondsByExercise[item.exercise.id] ?? 0,
+        };
+      });
+      for (final item in items) {
+        _liveSetNotifiers[item.exercise.id]?.value =
+            _completedExerciseSets(item);
+      }
+      _syncLiveActivity();
+      _showToast('Restored your unfinished sets');
+    } catch (error, stackTrace) {
+      debugPrint('Failed to restore workout draft: $error\n$stackTrace');
+    }
+  }
+
+  Exercise? _findExercise(String id) {
+    for (final item in widget.recommendation.items) {
+      if (item.exercise.id == id) return item.exercise;
+    }
+    return ExerciseCatalog.findById(id);
   }
 
   void _onBodyweightChanged() {
@@ -396,24 +581,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       );
 
   String _formatSessionSubtitle() {
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
     final startedAt = _devClockService.now().subtract(_elapsedDuration());
-    return '${weekdays[startedAt.weekday - 1]}, '
-        '${months[startedAt.month - 1]} ${startedAt.day}';
+    return FormaDates.weekdayMonthDay(context, startedAt);
   }
 
   // ── Set drafts ────────────────────────────────────────────────────
@@ -540,8 +709,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       liveNotifier.value = _completedExerciseSets(item);
     }
     // Every set edit funnels through here, so the Live Activity's set count
-    // and rep goal stay honest without per-call-site plumbing.
+    // and rep goal stay honest without per-call-site plumbing — and the
+    // local draft is written from the same spot.
     _syncLiveActivity();
+    _scheduleDraftSave();
   }
 
   void _toggleSessionRunning() {
@@ -701,6 +872,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final sets = _setsFor(item);
     if (sets.length <= 1) return;
 
+    final removedIndex = sets.indexWhere((set) => set.number == number);
+    if (removedIndex < 0) return;
+    final removed = sets[removedIndex];
     final remaining = sets.where((set) => set.number != number).toList();
     _planEdited = true;
     _replaceSets(
@@ -710,6 +884,10 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           remaining[index].copyWith(number: index + 1),
       ],
     );
+    if (_activeRestTimer?.exerciseId == item.exercise.id && removed.completed) {
+      // The set that started this rest is gone.
+      _clearActiveRestTimer();
+    }
   }
 
   // ── Session roster ────────────────────────────────────────────────
@@ -719,6 +897,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       _sessionItems = items;
     });
     _syncLiveActivity();
+    _scheduleDraftSave();
   }
 
   void _addExerciseToSession(Exercise exercise) {
@@ -745,10 +924,14 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       };
     });
     _syncLiveActivity();
+    _scheduleDraftSave();
     _showToast('${exercise.name} added');
   }
 
   void _removeExerciseFromSession(TrainingRecommendationItem item) {
+    final index =
+        _sessionItems.indexWhere((it) => it.exercise.id == item.exercise.id);
+    if (index < 0) return;
     _planEdited = true;
     _replaceSessionItems(
       _sessionItems
@@ -760,6 +943,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     }
     _showToast('${item.exercise.name} removed');
   }
+
 
   void _replaceItemInSession(
     TrainingRecommendationItem currentItem,
@@ -787,6 +971,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       }
     });
     _syncWorkoutPresence();
+    _scheduleDraftSave();
   }
 
   void _replaceExerciseInSession(
@@ -1113,11 +1298,20 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _liveActivityService.end();
     WorkoutNotificationService.instance.cancelRestOver();
 
-    Navigator.of(context).push(
+    // The draft goes the moment the session is saved (the finish screen
+    // raises the signal); a failed save pops back here with it intact.
+    workoutSavedSignal.addListener(_onWorkoutSaved);
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => FinishedWorkoutView(workout: workout),
       ),
     );
+    workoutSavedSignal.removeListener(_onWorkoutSaved);
+  }
+
+  void _onWorkoutSaved() {
+    workoutSavedSignal.removeListener(_onWorkoutSaved);
+    _clearDraft();
   }
 
   Future<void> _showNoDataSheet() async {
@@ -1146,6 +1340,8 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       ...workoutOutcomeProperties(_buildCompletedWorkout()),
       'reason': reason,
     });
+    // Discarding is a choice: the draft goes with the workout.
+    _clearDraft();
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
@@ -1375,7 +1571,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                           for (var i = 0; i < _sessionItems.length; i++) ...[
                             if (i > 0)
                               const Padding(
-                                padding: EdgeInsets.only(top: 26),
+                                // Add set's 44pt line already leaves 10pt
+                                // under its text.
+                                padding: EdgeInsets.only(top: 16),
                                 child: Divider(
                                   height: 1,
                                   thickness: 1,
@@ -1426,7 +1624,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                             ),
                           ],
                         if (_sessionItems.isNotEmpty) ...[
-                          const SizedBox(height: 22),
+                          const SizedBox(height: 12),
                           _AddExerciseButton(onTap: _openAddExercise),
                         ],
                       ],
@@ -1459,8 +1657,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                     child: AnimatedOpacity(
                       opacity: _toast == null ? 0 : 1,
                       duration: const Duration(milliseconds: 240),
-                      child:
-                          Center(child: _WorkoutToast(message: _toast ?? '')),
+                      child: Center(
+                        child: _WorkoutToast(message: _toast ?? ''),
+                      ),
                     ),
                   ),
                 ),
@@ -1506,40 +1705,45 @@ class _HoldStartPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
+      // The pill is 32pt; its tap area is the full 44pt row height.
       child: Container(
-        height: 32,
-        decoration: BoxDecoration(
-          color: AppColors.surface2,
-          borderRadius: BorderRadius.circular(9),
-        ),
+        height: 44,
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.play_arrow_rounded,
-              size: 15,
-              color: AppColors.accentPrimary,
-            ),
-            const SizedBox(width: 3),
-            // mm:ss fits the cell at full size; the scale-down is only a
-            // guard against a font that runs wider.
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: monoStyle(
-                    size: 13.5,
-                    letterSpacing: 0,
-                    color: AppColors.textPrimary,
+        child: Container(
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.surface2,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.play_arrow_rounded,
+                size: 15,
+                color: AppColors.accentPrimary,
+              ),
+              const SizedBox(width: 3),
+              // mm:ss fits the cell at full size; the scale-down is only a
+              // guard against a font that runs wider.
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: monoStyle(
+                      size: 13.5,
+                      letterSpacing: 0,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1775,8 +1979,7 @@ class _TimeFieldState extends State<_TimeField> {
       style: monoStyle(
         size: 16,
         letterSpacing: 0,
-        color:
-            widget.reachedGoal ? AppColors.green : AppColors.textPrimary,
+        color: widget.reachedGoal ? AppColors.green : AppColors.textPrimary,
       ),
       decoration: const InputDecoration(
         isDense: true,
@@ -1965,30 +2168,39 @@ class _WorkoutHeader extends StatelessWidget {
       color: AppColors.bg,
       child: Column(
         children: [
+          // Every control here draws at its own size but catches taps on
+          // a 44pt-tall slot: the paddings are trimmed by the difference so
+          // nothing moves on screen.
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 13),
+            padding: const EdgeInsets.fromLTRB(11, 5, 11, 8),
             child: Row(
               children: [
                 Pressable(
+                  semanticLabel: 'Leave workout',
                   onTap: onCollapse,
                   child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                    ),
+                    width: 44,
+                    height: 44,
                     alignment: Alignment.center,
-                    // A cross, not a chevron: leaving is what it does — the
-                    // sheet asks before anything logged is lost.
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 18,
-                      color: AppColors.textPrimary,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      // A cross, not a chevron: leaving is what it does —
+                      // the sheet asks before anything logged is lost.
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     title,
@@ -2002,54 +2214,66 @@ class _WorkoutHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
                 Pressable(
+                  semanticLabel: isRunning ? 'Pause workout' : 'Resume workout',
+                  semanticValue: elapsed,
                   onTap: onToggleRunning,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _PulsingDot(active: isRunning),
-                        const SizedBox(width: 7),
-                        Text(
-                          elapsed,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontFeatures: [FontFeature.tabularFigures()],
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _PulsingDot(active: isRunning),
+                          const SizedBox(width: 7),
+                          Text(
+                            elapsed,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
                 Pressable(
+                  semanticLabel: 'Finish workout',
                   onTap: onFinish,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 9,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentPrimary,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: const Text(
-                      'Finish',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentPrimary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'Finish',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -2236,132 +2460,159 @@ class _WorkoutExerciseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // No card: the exercise is its name, the sets are a table of numbers, and
     // nothing is drawn around either.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Stack(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Pressable(
-                onTap: onOpenDetail,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Pressable(
+                    onTap: onOpenDetail,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            item.exercise.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.42,
+                              height: 1.15,
+                            ),
+                          ),
+                        ),
+                        if (_allDone) ...[
+                          const SizedBox(width: 9),
+                          const Icon(
+                            Icons.check_rounded,
+                            size: 17,
+                            color: AppColors.green,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                // The menu's slot: the button itself is laid over the top-right
+                // corner of the section (below), so its 44pt hit area can reach
+                // past this row without growing it.
+                const SizedBox(width: 36),
+              ],
+            ),
+            if (_goalLine case final goal?)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        item.exercise.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.42,
-                          height: 1.15,
-                        ),
+                    Text('Set goal',
+                        style: monoStyle(size: 11, letterSpacing: 1.5)),
+                    const SizedBox(width: 10),
+                    Text(
+                      goal.toUpperCase(),
+                      style: monoStyle(
+                        size: 11,
+                        letterSpacing: 1.5,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                    if (_allDone) ...[
-                      const SizedBox(width: 9),
-                      const Icon(
-                        Icons.check_rounded,
-                        size: 17,
-                        color: AppColors.green,
+                  ],
+                ),
+              ),
+            // Rest stays a line of its own — it is the one thing here you set
+            // rather than log.
+            Pressable(
+              semanticLabel: 'Rest timer, ${_formatRestLabel(restSeconds)}',
+              onTap: onRestTap,
+              // The line is 11pt mono; its tap area is the full 44pt below it,
+              // and the column heads sit right under that.
+              child: Container(
+                height: 44,
+                alignment: Alignment.topLeft,
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  children: [
+                    Text(
+                      'Rest timer',
+                      style: monoStyle(size: 11, letterSpacing: 1.5),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      _formatRestLabel(restSeconds).toUpperCase(),
+                      style: monoStyle(
+                        size: 11,
+                        letterSpacing: 1.5,
+                        color: restSeconds > 0
+                            ? AppColors.accentPrimary
+                            : AppColors.textSecondary,
                       ),
-                    ],
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            // Column heads
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 0, 8),
+              child: _SetGridRow(
+                leading: _columnHead('SET'),
+                middle: _columnHead('LAST'),
+                weight: isWeighted
+                    ? _columnHead(
+                        WeightUnitService.unit == WeightUnit.lb ? 'LBS' : 'KG')
+                    : null,
+                value: _columnHead(isTimed ? 'TIME' : 'REPS'),
+                trailing: const SizedBox.shrink(),
+              ),
+            ),
+            for (final set in sets) _buildSetRow(context, set),
             Pressable(
-              onTap: onMenu,
-              child: const Padding(
-                padding: EdgeInsets.only(top: 3, left: 4),
-                child: Icon(
-                  Icons.more_horiz_rounded,
-                  size: 20,
-                  color: AppColors.textMuted,
+              semanticLabel: 'Add set',
+              onTap: onAddSet,
+              // Text only, but the line is 44pt tall to the touch.
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 44),
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(top: 12, bottom: 2),
+                child: const Text(
+                  '+  Add set',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accentPrimary,
+                  ),
                 ),
               ),
             ),
           ],
         ),
-        if (_goalLine case final goal?)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Text('Set goal', style: monoStyle(size: 11, letterSpacing: 1.5)),
-                const SizedBox(width: 10),
-                Text(
-                  goal.toUpperCase(),
-                  style: monoStyle(
-                    size: 11,
-                    letterSpacing: 1.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        // Rest stays a line of its own — it is the one thing here you set
-        // rather than log.
-        Pressable(
-          onTap: onRestTap,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Row(
-              children: [
-                Text(
-                  'Rest timer',
-                  style: monoStyle(size: 11, letterSpacing: 1.5),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  _formatRestLabel(restSeconds).toUpperCase(),
-                  style: monoStyle(
-                    size: 11,
-                    letterSpacing: 1.5,
-                    color: restSeconds > 0
-                        ? AppColors.accentPrimary
-                        : AppColors.textSecondary,
-                  ),
-                ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 15,
-                  color: AppColors.textMuted,
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Column heads
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 14, 8, 8),
-          child: _SetGridRow(
-            leading: _columnHead('SET'),
-            middle: _columnHead('LAST'),
-            weight: isWeighted
-                ? _columnHead(
-                    WeightUnitService.unit == WeightUnit.lb ? 'LBS' : 'KG')
-                : null,
-            value: _columnHead(isTimed ? 'TIME' : 'REPS'),
-            trailing: const SizedBox.shrink(),
-          ),
-        ),
-        for (final set in sets) _buildSetRow(context, set),
-        Pressable(
-          onTap: onAddSet,
-          child: const Padding(
-            padding: EdgeInsets.only(top: 14, bottom: 2),
-            child: Text(
-              '+  Add set',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.accentPrimary,
+        // The "…" menu, drawn where it always was (20pt, 3 down from the
+        // name's top) but catching taps across 44×44.
+        Positioned(
+          top: 0,
+          right: 0,
+          child: Pressable(
+            semanticLabel: 'Exercise options',
+            onTap: onMenu,
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.topRight,
+              padding: const EdgeInsets.only(top: 3),
+              child: const Icon(
+                Icons.more_horiz_rounded,
+                size: 20,
+                color: AppColors.textMuted,
               ),
             ),
           ),
@@ -2390,8 +2641,11 @@ class _WorkoutExerciseCard extends StatelessWidget {
       );
 
   Widget _buildSetRow(BuildContext context, _WorkoutSetDraft set) {
+    // The row was 50pt with 9pt of padding around 32pt fields; the tick's
+    // 44pt hit box now carries most of that height, so the padding drops to
+    // 3 and the row stays exactly where it was.
     final content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+      padding: const EdgeInsets.fromLTRB(8, 3, 0, 3),
       child: _SetGridRow(
         leading: Text(
           '${set.number}',
@@ -2451,10 +2705,19 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 onChanged: (value) => onValueChanged(set.number, value),
                 onFocusChanged: onRepFocusChanged,
               ),
-        trailing: Align(
-          alignment: Alignment.centerRight,
-          child: Pressable(
-            onTap: () => onToggleSet(set.number),
+        trailing: Pressable(
+          selected: set.completed,
+          semanticLabel: set.completed
+              ? 'Set ${set.number} done'
+              : 'Mark set ${set.number} done',
+          onTap: () => onToggleSet(set.number),
+          // A 24pt tick inside a 44×44 hit box, held to the right edge
+          // where the tick has always sat.
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 8),
             child: Container(
               width: 24,
               height: 24,
@@ -2466,9 +2729,9 @@ class _WorkoutExerciseCard extends StatelessWidget {
                     : Border.all(color: AppColors.surface3, width: 1.5),
               ),
               alignment: Alignment.center,
-              // The tick is always there — gray while the set waits, dark on
-              // green once it is logged, the way every other done-state tick
-              // in the app is drawn.
+              // The tick is always there — gray while the set waits, dark
+              // on green once it is logged, the way every other done-state
+              // tick in the app is drawn.
               child: Icon(
                 Icons.check_rounded,
                 size: 14,
@@ -2510,7 +2773,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
     if (sets.length <= 1) return row;
 
     return Dismissible(
-      key: ValueKey('dismiss-${item.exercise.id}-${set.number}'),
+      key: ObjectKey(set.identity),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -2568,8 +2831,9 @@ class _SetGridRow extends StatelessWidget {
         ],
         gap,
         SizedBox(width: loaded ? 56 : 70, child: value),
-        gap,
-        SizedBox(width: 26, child: trailing),
+        // No gap: the 44pt slot already holds the old gap and the row's
+        // right padding, with the tick drawn at their far edge.
+        SizedBox(width: 44, child: trailing),
       ],
     );
   }
@@ -3010,7 +3274,7 @@ class _FinishWorkoutSheet extends StatelessWidget {
               'logged yet — unlogged sets won’t count toward your '
               'progress.',
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: 14,
                 color: AppColors.amber,
                 height: 1.5,
               ),
@@ -3369,14 +3633,20 @@ class _WorkoutSetDraft {
   final bool completed;
   final bool isEdited;
 
-  const _WorkoutSetDraft({
+  /// Stays with the set through renumbering, so a row keeps its identity
+  /// when the set before it is removed — a key built from the number would
+  /// hand a dismissed row's state to the set that slides into its slot.
+  final Object identity;
+
+  _WorkoutSetDraft({
     required this.number,
     required this.target,
     this.weightKg = 0,
     required this.previousLabel,
     this.completed = false,
     this.isEdited = false,
-  });
+    Object? identity,
+  }) : identity = identity ?? Object();
 
   bool get hasData => (completed || isEdited) && target > 0;
 
@@ -3395,6 +3665,7 @@ class _WorkoutSetDraft {
       previousLabel: previousLabel ?? this.previousLabel,
       completed: completed ?? this.completed,
       isEdited: isEdited ?? this.isEdited,
+      identity: identity,
     );
   }
 }

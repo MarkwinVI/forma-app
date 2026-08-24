@@ -67,72 +67,6 @@ class TrainDayViewResolver {
   /// went.
   static const int builtHorizonDays = 7;
 
-  static const _monthsShort = [
-    'JAN',
-    'FEB',
-    'MAR',
-    'APR',
-    'MAY',
-    'JUN',
-    'JUL',
-    'AUG',
-    'SEP',
-    'OCT',
-    'NOV',
-    'DEC',
-  ];
-
-  static const _weekdaysShort = [
-    'MON',
-    'TUE',
-    'WED',
-    'THU',
-    'FRI',
-    'SAT',
-    'SUN',
-  ];
-
-  static const _weekdaysLong = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-
-  /// "FRI 31 JUL".
-  static String dateLabel(DateTime date) {
-    final local = date.toLocal();
-    return '${_weekdaysShort[local.weekday - 1]} '
-        '${local.day} ${_monthsShort[local.month - 1]}';
-  }
-
-  /// "Thursday 30 July" — the long form, for a sentence rather than a label.
-  static String longDateLabel(DateTime date) {
-    final local = date.toLocal();
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return '${_weekdaysLong[local.weekday - 1]} '
-        '${local.day} ${months[local.month - 1]}';
-  }
-
-  static String weekdayName(DateTime date) =>
-      _weekdaysLong[date.toLocal().weekday - 1];
-
   static int daysBetween(DateTime from, DateTime to) {
     return TrainingScheduleService.dateOnly(to)
         .difference(TrainingScheduleService.dateOnly(from))
@@ -148,6 +82,10 @@ class TrainDayViewResolver {
 
     /// Where a missed session ended up, when the plan could say.
     DateTime? rescheduledTo,
+
+    /// How a date is spelled out inside a note ("Thursday, July 30"), in
+    /// the device's language — see [FormaDates.weekdayMonthDayLong].
+    required String Function(DateTime date) formatLongDate,
     int builtHorizon = builtHorizonDays,
   }) {
     final distance = daysBetween(today, date);
@@ -184,7 +122,7 @@ class TrainDayViewResolver {
             : TrainDayNote(
                 tag: 'RESCHEDULED',
                 body: 'Forma moved this session to '
-                    '${longDateLabel(rescheduledTo)}, the next open day. '
+                    '${formatLongDate(rescheduledTo)}, the next open day. '
                     'The sessions after it slide along with it.',
               ),
       );

@@ -20,7 +20,9 @@ class AppColors {
   // Text
   static const Color textPrimary = Color(0xFFF7F7F8);
   static const Color textSecondary = Color(0xFFA0A1A9);
-  static const Color textMuted = Color(0xFF66676E);
+  // 5.9:1 on bg, 5.3:1 on surface, 4.6:1 on surface2 — the eyebrows and
+  // column heads set in it are 10–11pt, so it has to clear 4.5:1 everywhere.
+  static const Color textMuted = Color(0xFF8F9098);
 
   // Accent
   static const Color accentPrimary = Color(0xFF3D7BFF);
@@ -37,7 +39,6 @@ class AppColors {
 
   // Highlights
   static const Color surface3 = Color(0xFF3A3A40); // muted dots / tracks
-  static const Color startOrange = Color(0xFFFC5200); // start-workout CTA
 
   // Legacy aliases — older screens reference these names.
   static const Color bgPrimary = bg;

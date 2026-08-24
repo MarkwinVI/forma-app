@@ -19,17 +19,40 @@ import 'package:flutter/material.dart';
 ///   FormaSplash(onDone: () => Navigator.of(context).pushReplacement(...))
 ///
 /// Leave [onDone] null to loop forever.
+///
+/// [FormaSplash.endFrame] is the sequence's last frame held still — the lit
+/// mark with the wordmark up, nothing moving, no [onDone]. A screen that has
+/// to wait a beat right after the splash shows this instead of a spinner, so
+/// the splash reads as lingering rather than a loader appearing.
 class FormaSplash extends StatefulWidget {
   final VoidCallback? onDone;
   final Duration duration;
   final bool showWordmark;
+
+  /// Paint the end frame only: no animation runs and [onDone] never fires.
+  final bool endFrameOnly;
+
+  /// The ground behind the mark. The native splash draws on [ink]; a screen
+  /// holding the end frame passes its own background so the frame sits on
+  /// the page rather than in a slightly different rectangle.
+  final Color background;
 
   const FormaSplash({
     super.key,
     this.onDone,
     this.duration = const Duration(milliseconds: 2500),
     this.showWordmark = true,
-  });
+    this.background = ink,
+  }) : endFrameOnly = false;
+
+  /// The splash's final frame, held still.
+  const FormaSplash.endFrame({
+    super.key,
+    this.showWordmark = true,
+    this.background = ink,
+  })  : onDone = null,
+        duration = const Duration(milliseconds: 2500),
+        endFrameOnly = true;
 
   static const Color ink = Color(0xFF111016);
   static const Color blue = Color(0xFF3C7DFF);
@@ -44,9 +67,41 @@ class _FormaSplashState extends State<FormaSplash>
   late final AnimationController _run =
       AnimationController(vsync: this, duration: widget.duration);
 
+  /// Set once the first build knows whether the reader asked for reduced
+  /// motion. MediaQuery is not available in initState, so the run starts
+  /// from didChangeDependencies and only the first time through.
+  var _started = false;
+
+  /// True when the reader asked for reduced motion: the mark holds its lit
+  /// frame instead of running the sequence.
+  var _held = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+
+    if (widget.endFrameOnly) {
+      // The end frame only: lit mark, wordmark up, nothing runs.
+      _held = true;
+      _run.value = 1;
+      return;
+    }
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      // Reduce Motion: the lit mark, held still, with the wordmark up — the
+      // final frame of the sequence — then straight on into the app.
+      _held = true;
+      _run.value = 1;
+      if (widget.onDone != null) {
+        Future<void>.delayed(const Duration(milliseconds: 600)).then((_) {
+          if (mounted) widget.onDone!();
+        });
+      }
+      return;
+    }
+
     if (widget.onDone == null) {
       _run.repeat();
     } else {
@@ -76,7 +131,7 @@ class _FormaSplashState extends State<FormaSplash>
     // a Material ancestor the wordmark falls back to the framework's error
     // text style — yellow double-underline included.
     return Material(
-      color: FormaSplash.ink,
+      color: widget.background,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -111,6 +166,8 @@ class _FormaSplashState extends State<FormaSplash>
                   animation: _run,
                   builder: (_, __) {
                     final t = _run.value;
+                    // Held still (Reduce Motion), the frame keeps its wordmark.
+                    if (_held) return _wordmark(markWidth);
                     final opacity = t < 0.14
                         ? 0.0
                         : t < 0.30
@@ -120,21 +177,25 @@ class _FormaSplashState extends State<FormaSplash>
                                 : 1 - (t - 0.96) / 0.04;
                     return Opacity(
                       opacity: opacity.clamp(0.0, 1.0),
-                      child: Text(
-                        'FORMA',
-                        style: TextStyle(
-                          fontSize: markWidth * 0.078,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: markWidth * 0.028,
-                          color: const Color(0xFFFAFAFA),
-                        ),
-                      ),
+                      child: _wordmark(markWidth),
                     );
                   },
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _wordmark(double markWidth) {
+    return Text(
+      'FORMA',
+      style: TextStyle(
+        fontSize: markWidth * 0.078,
+        fontWeight: FontWeight.w800,
+        letterSpacing: markWidth * 0.028,
+        color: const Color(0xFFFAFAFA),
       ),
     );
   }

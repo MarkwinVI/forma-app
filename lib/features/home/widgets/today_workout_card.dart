@@ -233,24 +233,14 @@ class TodayWorkoutActions extends StatelessWidget {
             onTap: onStart,
           ),
         if (onTrainSomethingElse != null)
-          Pressable(
+          // A 44pt line; the top inset keeps the text where it sat when the
+          // line was only as tall as its text.
+          TextAction(
+            label: summary.isRestDay
+                ? 'Feeling fresh? Train something else'
+                : 'Train something else',
             onTap: onTrainSomethingElse,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(top: 14, bottom: 2),
-              alignment: Alignment.center,
-              child: Text(
-                summary.isRestDay
-                    ? 'Feeling fresh? Train something else'
-                    : 'Train something else',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.accentPrimary,
-                  letterSpacing: -0.15,
-                ),
-              ),
-            ),
+            padding: const EdgeInsets.only(top: 1),
           ),
       ],
     );

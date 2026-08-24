@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show debugPrint, listEquals;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -28,7 +28,7 @@ TextStyle _mono({
   double spacing = 1.5,
   FontWeight weight = FontWeight.w700,
 }) =>
-    GoogleFonts.robotoMono(
+    TextStyle(fontFamily: 'RobotoMono',
       fontSize: size,
       fontWeight: weight,
       letterSpacing: spacing,
@@ -62,27 +62,48 @@ class _Archetype {
 }
 
 const _archetypes = [
-  _Archetype('technician', -90, 'The Technician',
+  _Archetype(
+      'technician',
+      -90,
+      'The Technician',
       'More time on skill progressions and getting your form right.',
       Color(0xFFA78BFA)),
-  _Archetype('specialist', -45, 'The Specialist',
+  _Archetype(
+      'specialist',
+      -45,
+      'The Specialist',
       'Leans on static holds like the planche and front lever.',
       Color(0xFF7FA8F0)),
-  _Archetype('powerhouse', 0, 'The Powerhouse',
+  _Archetype(
+      'powerhouse',
+      0,
+      'The Powerhouse',
       'Low reps and added weight to build raw strength.',
       AppColors.accentPrimary),
-  _Archetype('heavyweight', 45, 'The Heavyweight',
+  _Archetype(
+      'heavyweight',
+      45,
+      'The Heavyweight',
       'Heavy lifting for strength, with extra sets to add size.',
       Color(0xFF7DB0FF)),
   _Archetype('builder', 90, 'The Builder',
       'Higher reps and more volume to put on muscle.', Color(0xFFF472B6)),
-  _Archetype('natural', 135, 'The Natural',
+  _Archetype(
+      'natural',
+      135,
+      'The Natural',
       'Steady strength work with enough mobility to move well.',
       Color(0xFF7EC8D6)),
-  _Archetype('mover', 180, 'The Mover',
+  _Archetype(
+      'mover',
+      180,
+      'The Mover',
       'More mobility work so you move well and stay injury-free.',
       Color(0xFF4ECDC4)),
-  _Archetype('artist', 225, 'The Artist',
+  _Archetype(
+      'artist',
+      225,
+      'The Artist',
       'Handstand and balance work, with the flexibility to match.',
       Color(0xFF7FB8E6)),
 ];
@@ -142,7 +163,7 @@ const _freqChoices = [
 const _genderChoices = [
   _Choice('f', 'Female'),
   _Choice('m', 'Male'),
-  _Choice('na', 'Prefer not to say', flex: 16),
+  _Choice('na', 'Rather not say', flex: 16),
 ];
 
 // ── Flow ────────────────────────────────────────────────────────────────────
@@ -214,10 +235,16 @@ class _OnboardingViewState extends State<OnboardingView> {
         completedAt: DateTime.now().toUtc(),
       ));
       widget.onFinished();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('Onboarding profile save failed: $error\n$stackTrace');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save your profile: $error')),
+        SnackBar(
+          content: const Text(
+            "Couldn't save your profile. Check your connection and try again.",
+          ),
+          action: SnackBarAction(label: 'Retry', onPressed: _finish),
+        ),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -281,7 +308,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      padding: const EdgeInsets.fromLTRB(14, 2, 14, 6),
       child: Row(
         children: [
           Visibility(
@@ -291,9 +318,10 @@ class _OnboardingViewState extends State<OnboardingView> {
             maintainState: true,
             child: Pressable(
               onTap: () => _go(_step - 1),
+              semanticLabel: 'Back',
               child: const SizedBox(
-                width: 32,
-                height: 32,
+                width: 44,
+                height: 44,
                 child: Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 18,
@@ -324,9 +352,10 @@ class _OnboardingViewState extends State<OnboardingView> {
               ],
             ),
           ),
+          const SizedBox(width: 12),
           // Mirror the back button's footprint so the progress bar stays
           // centred now that there is no Skip on this side.
-          const SizedBox(width: 12 + 32),
+          const SizedBox(width: 44, height: 44),
         ],
       ),
     );
@@ -353,8 +382,9 @@ class _OnboardingViewState extends State<OnboardingView> {
               _Rise(
                 index: 1,
                 child: Text(
-                  'Pick any calisthenics skill you want. Forma breaks it into '
-                  'steps and builds personalized workouts that get you there.',
+                  'Every calisthenics skill, broken into steps. Forma builds '
+                  'workouts around the ones you train and moves you up as '
+                  'you master each one.',
                   style: TextStyle(
                     fontSize: 16,
                     height: 1.6,
@@ -500,7 +530,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         children: [
           const _StepHead(
             icon: Icons.person_rounded,
-            pill: 'A LITTLE BIT ABOUT YOU',
+            pill: 'ALMOST THERE',
             title: 'Your profile',
           ),
           Expanded(
@@ -531,9 +561,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                         ),
                         const SizedBox(height: 14),
                         _ObSlider(
-                          value: (_age - 16) / 54,
-                          onChanged: (v) =>
-                              setState(() => _age = 16 + (v * 54).round()),
+                          age: _age,
+                          onChanged: (age) => setState(() => _age = age),
                         ),
                         const SizedBox(height: 8),
                         const Row(
@@ -700,13 +729,14 @@ class _OnboardingViewState extends State<OnboardingView> {
                 ),
               ),
               const SizedBox(height: 12),
-              const _Rise(
+              _Rise(
                 index: 3,
                 child: Text(
-                  'Open your home and start your first workout. Forma builds '
-                  'your program around your progress.',
+                  "You're saved as ${_archetype.name}. Next, build your "
+                  'program and start your first workout — Forma shapes it '
+                  'around your progress.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     height: 1.55,
                     color: AppColors.textSecondary,
@@ -742,7 +772,7 @@ class _RiseState extends State<_Rise> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: Duration(milliseconds: _delayMs + _riseMs),
-  )..forward();
+  );
 
   late final Animation<double> _animation = CurvedAnimation(
     parent: _controller,
@@ -752,6 +782,21 @@ class _RiseState extends State<_Rise> with SingleTickerProviderStateMixin {
       curve: Curves.easeOutCubic,
     ),
   );
+
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    // Reduce Motion: everything is simply in place, no stagger.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
 
   @override
   void dispose() {
@@ -1395,7 +1440,8 @@ class _LevelUpBeatState extends State<_LevelUpBeat> {
                       ),
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 260),
-                        transitionBuilder: (child, animation) => ScaleTransition(
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(
                           scale: animation,
                           child: FadeTransition(
                             opacity: animation,
@@ -1438,8 +1484,7 @@ class _LevelUpBeatState extends State<_LevelUpBeat> {
               value: value,
               minHeight: 8,
               backgroundColor: AppColors.surface2,
-              valueColor:
-                  const AlwaysStoppedAnimation(AppColors.accentPrimary),
+              valueColor: const AlwaysStoppedAnimation(AppColors.accentPrimary),
             ),
           ),
         ),
@@ -1782,85 +1827,114 @@ class _FieldCaption extends StatelessWidget {
 
 // ── Age slider ──────────────────────────────────────────────────────────────
 
+/// The age slider: the platform's own [Slider] under the onboarding skin —
+/// 8pt track, white 24pt thumb ringed in the accent — so it reads as a
+/// slider to assistive tech, announces "28 years", and ticks once per year.
 class _ObSlider extends StatelessWidget {
-  final double value; // 0–1
-  final ValueChanged<double> onChanged;
+  static const int minAge = 16;
+  static const int maxAge = 70;
 
-  const _ObSlider({required this.value, required this.onChanged});
+  final int age;
+  final ValueChanged<int> onChanged;
+
+  const _ObSlider({required this.age, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        void set(double dx) => onChanged((dx / width).clamp(0.0, 1.0));
-
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (d) => set(d.localPosition.dx),
-          onHorizontalDragStart: (d) => set(d.localPosition.dx),
-          onHorizontalDragUpdate: (d) => set(d.localPosition.dx),
-          child: SizedBox(
-            height: 30,
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              children: [
-                Container(
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface2,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                Container(
-                  height: 8,
-                  width: width * value,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentPrimary,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                Positioned(
-                  left: (width * value - 12).clamp(0.0, width - 24),
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.accentPrimary,
-                        width: 3,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x80000000),
-                          offset: Offset(0, 2),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    return SliderTheme(
+      data: SliderThemeData(
+        trackHeight: 8,
+        activeTrackColor: AppColors.accentPrimary,
+        inactiveTrackColor: AppColors.surface2,
+        secondaryActiveTrackColor: AppColors.accentPrimary,
+        thumbColor: Colors.white,
+        overlayColor: AppColors.accentPrimary.withValues(alpha: 0.12),
+        trackShape: const RoundedRectSliderTrackShape(),
+        thumbShape: const _ObThumb(),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+        tickMarkShape: SliderTickMarkShape.noTickMark,
+        showValueIndicator: ShowValueIndicator.never,
+      ),
+      child: Slider(
+        value: age.toDouble(),
+        min: minAge.toDouble(),
+        max: maxAge.toDouble(),
+        divisions: maxAge - minAge,
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        semanticFormatterCallback: (value) =>
+            '${value.round()}${value.round() >= maxAge ? '+' : ''} years',
+        onChanged: (value) {
+          final next = value.round();
+          if (next == age) return;
+          HapticFeedback.selectionClick();
+          onChanged(next);
+        },
+      ),
     );
   }
 }
 
+/// The slider's thumb: a white disc with the accent ring and a soft drop.
+class _ObThumb extends SliderComponentShape {
+  const _ObThumb();
+
+  static const double _radius = 12;
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) =>
+      const Size.fromRadius(_radius);
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    final canvas = context.canvas;
+    canvas.drawCircle(
+      center + const Offset(0, 2),
+      _radius,
+      Paint()
+        ..color = const Color(0x80000000)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawCircle(center, _radius, Paint()..color = Colors.white);
+    canvas.drawCircle(
+      center,
+      _radius - 1.5,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = AppColors.accentPrimary,
+    );
+  }
+}
+
+// ── Aim chips ───────────────────────────────────────────────────────────────
+
+
 // ── Radar chart ─────────────────────────────────────────────────────────────
 
 class _RadarChart extends StatelessWidget {
-  static const double _radius = 96;
+  static const double defaultRadius = 96;
   static const double _margin = 40; // room for the axis labels
 
   final bool balanced;
   final double angleDeg;
   final bool interactive;
   final void Function(bool balanced, double angleDeg)? onChanged;
+
+  /// Ring radius; the chart is a square of 2 × (radius + label margin).
+  static const double radius = defaultRadius;
 
   const _RadarChart({
     required this.balanced,
@@ -1869,9 +1943,12 @@ class _RadarChart extends StatelessWidget {
     this.onChanged,
   });
 
+  /// The chart's side for a given ring radius.
+  static double sideFor(double radius) => 2 * (radius + _margin);
+
   void _handle(Offset local, double side) {
     final delta = local - Offset(side / 2, side / 2);
-    if (delta.distance < _radius * 0.3) {
+    if (delta.distance < radius * 0.3) {
       onChanged!(true, angleDeg);
     } else {
       onChanged!(false, math.atan2(delta.dy, delta.dx) * 180 / math.pi);
@@ -1880,20 +1957,39 @@ class _RadarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const side = 2 * (_radius + _margin);
+    final side = sideFor(radius);
     final chart = SizedBox(
       width: side,
       height: side,
       child: CustomPaint(
-        painter: _RadarPainter(balanced: balanced, angleDeg: angleDeg),
+        painter: _RadarPainter(
+          balanced: balanced,
+          angleDeg: angleDeg,
+          radius: radius,
+        ),
       ),
     );
 
-    if (!interactive) return chart;
-    return GestureDetector(
-      onPanDown: (d) => _handle(d.localPosition, side),
-      onPanUpdate: (d) => _handle(d.localPosition, side),
-      child: chart,
+    final archetype = balanced
+        ? _balancedArchetype
+        : _archetypes[_nearestArchetypeIndex(angleDeg)];
+    if (!interactive) {
+      return Semantics(
+        label: 'Aim radar',
+        value: archetype.name,
+        image: true,
+        child: chart,
+      );
+    }
+    return Semantics(
+      label: 'Aim radar. Drag the dot toward what matters most, or use the '
+          'options below it.',
+      value: archetype.name,
+      child: GestureDetector(
+        onPanDown: (d) => _handle(d.localPosition, side),
+        onPanUpdate: (d) => _handle(d.localPosition, side),
+        child: chart,
+      ),
     );
   }
 }
@@ -1901,8 +1997,13 @@ class _RadarChart extends StatelessWidget {
 class _RadarPainter extends CustomPainter {
   final bool balanced;
   final double angleDeg;
+  final double radius;
 
-  _RadarPainter({required this.balanced, required this.angleDeg});
+  _RadarPainter({
+    required this.balanced,
+    required this.angleDeg,
+    required this.radius,
+  });
 
   Offset _pt(Offset c, double deg, double r) {
     final rad = deg * math.pi / 180;
@@ -1912,7 +2013,6 @@ class _RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
-    const radius = _RadarChart._radius;
     final sel = _archetypes[_nearestArchetypeIndex(angleDeg)];
     final hue = balanced ? AppColors.accentPrimary : sel.hue;
 
@@ -1960,9 +2060,8 @@ class _RadarPainter extends CustomPainter {
         _pt(c, _archetypes[i].dir, radius * 0.92),
         on ? 4 : 3,
         Paint()
-          ..color = on
-              ? _archetypes[i].hue
-              : Colors.white.withValues(alpha: 0.22),
+          ..color =
+              on ? _archetypes[i].hue : Colors.white.withValues(alpha: 0.22),
       );
     }
 
@@ -2022,7 +2121,6 @@ class _RadarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RadarPainter oldDelegate) {
-    return oldDelegate.balanced != balanced ||
-        oldDelegate.angleDeg != angleDeg;
+    return oldDelegate.balanced != balanced || oldDelegate.angleDeg != angleDeg;
   }
 }

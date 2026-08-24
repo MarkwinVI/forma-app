@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/models/training_program_model.dart';
@@ -9,20 +9,6 @@ import '../../data/models/training_program_model.dart';
 /// initial, and the week is seven columns each carrying its type's marker.
 /// Shared between the Program tab's strip and the schedule sheet so the
 /// day ↔ type mapping reads the same everywhere, without a legend.
-
-/// Monday-first day letters, matching [kWeekdayNames].
-const List<String> kWeekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
-/// Monday-first short day names, matching [kWeekdayNames].
-const List<String> kWeekdayShortNames = [
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-  'Sun',
-];
 
 /// The type's initial in its marker. Push and Pull collide on P, so they
 /// widen to two-character codes — colour helps but never carries the
@@ -98,7 +84,7 @@ class ProgramTypeNode extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         letter,
-        style: GoogleFonts.robotoMono(
+        style: TextStyle(fontFamily: 'RobotoMono',
           fontSize: size * (letter.length > 1 ? 0.36 : 0.48),
           fontWeight: FontWeight.w700,
           color: base.withValues(alpha: 0.95 * dim),
@@ -174,15 +160,14 @@ class ProgramWeekStrip extends StatelessWidget {
             : null,
       ),
       child: Row(
-        mainAxisAlignment: flush
-            ? MainAxisAlignment.spaceBetween
-            : MainAxisAlignment.start,
+        mainAxisAlignment:
+            flush ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
         children: [
           for (var i = 0; i < weekCycle.length; i++)
             if (flush)
-              SizedBox(width: nodeSize, child: _column(i))
+              SizedBox(width: nodeSize, child: _column(context, i))
             else
-              Expanded(child: _column(i)),
+              Expanded(child: _column(context, i)),
         ],
       ),
     );
@@ -190,15 +175,15 @@ class ProgramWeekStrip extends StatelessWidget {
     return onTap == null ? strip : Pressable(onTap: onTap, child: strip);
   }
 
-  Widget _column(int index) {
+  Widget _column(BuildContext context, int index) {
     final sessionType = weekCycle[index];
     final trains = sessionType != TrainingSessionType.rest;
 
     final column = Column(
       children: [
         Text(
-          kWeekdayLetters[index],
-          style: GoogleFonts.robotoMono(
+          FormaDates.weekdayLetter(context, index),
+          style: TextStyle(fontFamily: 'RobotoMono',
             fontSize: 10.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
@@ -215,6 +200,10 @@ class ProgramWeekStrip extends StatelessWidget {
     if (onDayTap == null) return column;
     return Pressable(
       onTap: () => onDayTap!(index),
+      semanticLabel:
+          '${FormaDates.weekdayLongByIndex(context, index)}, '
+          '${trains ? sessionType.label : 'Rest day'}. '
+          'Tap to ${trains ? 'make it a rest day' : 'train this day'}',
       child: Padding(
         // Breathing room so a 22px marker still makes a honest tap target.
         padding: const EdgeInsets.symmetric(vertical: 4),

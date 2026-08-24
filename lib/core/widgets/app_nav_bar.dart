@@ -23,7 +23,9 @@ class AppNavBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
         child: Container(
-          padding: EdgeInsets.fromLTRB(10, 10, 10, bottomPadding + 6),
+          // The vertical air lives inside each item (see _NavItem), so the
+          // whole 55pt band above the home indicator is tap target.
+          padding: EdgeInsets.fromLTRB(10, 0, 10, bottomPadding),
           decoration: const BoxDecoration(
             color: Color(0xD1111114), // rgba(17,17,20,0.82)
             border: Border(
@@ -65,6 +67,8 @@ class AppNavBar extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
+  static const int _tabCount = 4;
+
   final IconData icon;
   final String label;
   final int index;
@@ -85,28 +89,39 @@ class _NavItem extends StatelessWidget {
     final color = isActive ? AppColors.accentPrimary : AppColors.textMuted;
 
     return Expanded(
-      child: GestureDetector(
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: '$label, tab ${index + 1} of $_tabCount',
         onTap: () => onTap(index),
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.clip,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  height: 1.0,
+        excludeSemantics: true,
+        child: GestureDetector(
+          onTap: () => onTap(index),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            // 12 + 24 + 4 + 11 + 8 = 59pt of target above the safe area —
+            // past the 49pt a tab bar needs — with the bar drawn no taller
+            // than before.
+            constraints: const BoxConstraints(minHeight: 49),
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                    height: 1.0,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

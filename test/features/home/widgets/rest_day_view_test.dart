@@ -34,6 +34,19 @@ void main() {
     await tester.pumpWidget(host(height: 500));
     expect(find.text('Nothing to do today'), findsOneWidget);
   });
+
+  testWidgets('the rings hold still under Reduce Motion', (tester) async {
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: host(height: 577),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Nothing to do today'), findsOneWidget);
+    // Nothing is scheduled: a looping controller would leave a ticker live.
+    expect(tester.binding.transientCallbackCount, 0);
+  });
 }
 
 void _noop() {}

@@ -4,7 +4,6 @@ import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/features/home/live_workout_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,7 +14,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    GoogleFonts.config.allowRuntimeFetching = false;
     SharedPreferences.setMockInitialValues({});
     await Supabase.initialize(
       url: 'https://example.supabase.co',
@@ -23,6 +21,11 @@ void main() {
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwicm9sZSI6ImFub24iLCJpYXQiOjE1MTYyMzkwMjJ9.c2lnbmVk',
     );
   });
+
+  // The live workout keeps a local draft of its sets between openings; each
+  // test starts from a clean store so one test's sets do not come back in
+  // the next.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   TrainingRecommendationItem itemFor(String exerciseId, TrainingTrack track) {
     final exercise = ExerciseCatalog.findById(exerciseId)!;
@@ -65,8 +68,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    double topOf(String name) =>
-        tester.getTopLeft(find.text(name).first).dy;
+    double topOf(String name) => tester.getTopLeft(find.text(name).first).dy;
 
     // The L-sit is third in the plan, so it is third on the screen — not
     // lifted above the pulling work by its skill-work tag.

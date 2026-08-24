@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
@@ -464,41 +463,35 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 // wheel below gets the vertical room. The focused view takes
                 // extra breathing room under the title.
                 Padding(
-                  padding:
-                      EdgeInsets.fromLTRB(22, 10, 22, _sel == null ? 6 : 18),
+                  // With a back arrow the row starts 12pt earlier: the
+                  // arrow's 44pt box centres its glyph where the bare 22pt
+                  // glyph used to sit, and the title keeps its old left edge.
+                  padding: EdgeInsets.fromLTRB(
+                    _sel != null || widget.onBack != null ? 10 : 22,
+                    7,
+                    22,
+                    _sel == null ? 3 : 15,
+                  ),
                   child: SizedBox(
                     // Tall enough for the 30px title's full line box — a
                     // shorter row makes the paragraph overflow its height
                     // constraint, which turns ellipsis clipping on and chops
-                    // descenders (the g of "Hinge") flat.
-                    height: 38,
+                    // descenders (the g of "Hinge") flat — and for the
+                    // 44pt hit areas of the icons beside it.
+                    height: 44,
                     child: Row(
                       children: [
                         if (_sel != null)
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
+                          _HeaderIconButton(
+                            icon: Icons.arrow_back_ios_new_rounded,
+                            semanticLabel: 'Back',
                             onTap: _treeBack,
-                            child: const Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 22,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
                           )
                         else if (widget.onBack != null)
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
+                          _HeaderIconButton(
+                            icon: Icons.arrow_back_ios_new_rounded,
+                            semanticLabel: 'Back',
                             onTap: widget.onBack,
-                            child: const Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 22,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
                           ),
                         Expanded(
                           child: Text(
@@ -551,7 +544,12 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                 widget.families[index].activeFlatIndex,
                               ),
                             )
-                          : const SizedBox.shrink())
+                          : widget.performance == null
+                              // Read-only with nothing else under the
+                              // wheel: the same guidance the editable
+                              // overview gives, in one line.
+                              ? const _ReadOnlyOverviewNote()
+                              : const SizedBox.shrink())
                       : DecoratedBox(
                           decoration: const BoxDecoration(
                             border: Border(
@@ -675,15 +673,20 @@ class _WheelCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    // Disabled: the pill drains as well as the text, so the state reads at
+    // a glance and not only by the label's colour.
     return Pressable(
       onTap: onTap,
+      semanticLabel: label,
       child: Container(
         height: 46,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(13),
-          color: color.withValues(alpha: 0.13),
-          border: Border.all(color: color.withValues(alpha: 0.38)),
+          color: color.withValues(alpha: enabled ? 0.13 : 0.05),
+          border:
+              Border.all(color: color.withValues(alpha: enabled ? 0.38 : 0.14)),
         ),
         child: Text(
           label,
@@ -691,9 +694,35 @@ class _WheelCta extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.15,
-            color: onTap == null ? AppColors.textMuted : color,
+            color: enabled ? color : AppColors.textMuted,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A header icon with a full 44pt hit area around a 22–28pt glyph.
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final String semanticLabel;
+  final VoidCallback? onTap;
+
+  const _HeaderIconButton({
+    required this.icon,
+    required this.semanticLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: semanticLabel,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(icon, size: 22, color: AppColors.textSecondary),
       ),
     );
   }
@@ -749,11 +778,38 @@ class _TreeLockBanner extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 12,
                 height: 1.5,
-                color: Color(0xFFD5D6DB),
+                color: AppColors.textSecondary,
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Under the read-only wheel when no performance sheet takes the space:
+/// what the wheel is for and where a progression gets started.
+class _ReadOnlyOverviewNote extends StatelessWidget {
+  const _ReadOnlyOverviewNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(22, 14, 22, 0),
+        child: Text(
+          'Tap a tree to see its steps. Start or change a progression from '
+          'the Program tab.',
+          style: TextStyle(
+            fontSize: 13.5,
+            height: 1.55,
+            color: AppColors.textMuted,
+          ),
+        ),
       ),
     );
   }
@@ -782,7 +838,7 @@ class _ProgressionsPanel extends StatelessWidget {
       padding: EdgeInsets.only(top: first ? 0 : 26),
       child: Text(
         label,
-        style: GoogleFonts.robotoMono(
+        style: const TextStyle(fontFamily: 'RobotoMono',
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.65,
@@ -814,7 +870,7 @@ class _ProgressionsPanel extends StatelessWidget {
       marker = const Icon(
         Icons.lock_rounded,
         size: 13,
-        color: Color(0xFF4A4B52),
+        color: AppColors.textMuted,
       );
     } else {
       marker = Container(

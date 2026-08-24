@@ -4,6 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -56,17 +57,44 @@ class _HoldTimerViewState extends State<HoldTimerView>
   /// smoothly; stopped while paused, when nothing changes on its own.
   late final Ticker _ticker;
 
+  /// Whether the goal haptic has fired; it goes once per hold, the moment
+  /// the count first reaches the goal.
+  bool _goalAnnounced = false;
+
   @override
   void initState() {
     super.initState();
     _runningSince = clock.now();
-    _ticker = createTicker((_) => setState(() {}))..start();
+    _ticker = createTicker(_onTick)..start();
+    _keepAwake();
   }
 
   @override
   void dispose() {
     _ticker.dispose();
     super.dispose();
+  }
+
+  /// Keeps the screen awake while a hold is running. Only ever enables: the
+  /// live workout underneath holds the lock for the whole session and
+  /// releases it when it closes, so a hold ending must not switch the
+  /// screen off under it. The plugin needs a platform channel, so it is
+  /// guarded: in tests (and anywhere it is not registered) a failure is
+  /// simply ignored.
+  static void _keepAwake() {
+    try {
+      WakelockPlus.enable().catchError((_) {});
+    } catch (_) {
+      // Not available on this platform; nothing to do.
+    }
+  }
+
+  void _onTick(Duration _) {
+    if (_goalHit && !_goalAnnounced) {
+      _goalAnnounced = true;
+      HapticFeedback.heavyImpact();
+    }
+    setState(() {});
   }
 
   bool get _running => _runningSince != null;
@@ -95,6 +123,7 @@ class _HoldTimerViewState extends State<HoldTimerView>
       } else {
         _runningSince = clock.now();
         _ticker.start();
+        _keepAwake();
       }
     });
   }
@@ -113,6 +142,10 @@ class _HoldTimerViewState extends State<HoldTimerView>
       // counted, but not more than it counted.
       final floor = -(_countedMs ~/ 1000);
       _adjustmentSeconds = math.max(floor, _adjustmentSeconds + delta);
+      if (_goalHit && !_goalAnnounced) {
+        _goalAnnounced = true;
+        HapticFeedback.heavyImpact();
+      }
     });
   }
 
@@ -155,7 +188,7 @@ class _HoldTimerViewState extends State<HoldTimerView>
               children: [
                 // Header: what is being held, and the way out.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 11, 8),
                   child: Row(
                     children: [
                       Expanded(
@@ -188,19 +221,26 @@ class _HoldTimerViewState extends State<HoldTimerView>
                       ),
                       const SizedBox(width: 12),
                       Pressable(
+                        semanticLabel: 'Close timer',
                         onTap: _close,
+                        // Drawn at 34, but the tap catches a 44×44 area.
                         child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: const BoxDecoration(
-                            color: AppColors.surface,
-                            shape: BoxShape.circle,
-                          ),
+                          width: 44,
+                          height: 44,
                           alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.close_rounded,
-                            size: 17,
-                            color: AppColors.textPrimary,
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: const BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 17,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ),
@@ -329,6 +369,7 @@ class _HoldTimerViewState extends State<HoldTimerView>
                   child: Row(
                     children: [
                       Pressable(
+                        semanticLabel: _running ? 'Pause hold' : 'Resume hold',
                         onTap: _togglePause,
                         child: Container(
                           width: 58,

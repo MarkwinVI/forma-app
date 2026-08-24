@@ -74,7 +74,7 @@ void main() {
     expect(fill.height, track.height);
     expect(fill.width, closeTo(track.width * 0.75, 0.5));
     expect(
-      find.text('Training · 18 of 24 reps (total reps)'),
+      find.text('Training · 18 of 24 reps'),
       findsOneWidget,
     );
   });

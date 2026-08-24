@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
 import '../train_day_view.dart';
 
@@ -19,7 +20,7 @@ class DayEyebrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 10),
-      child: Text(text, style: monoStyle(size: 10.5, letterSpacing: 1.6, color: color)),
+      child: Text(text, style: monoStyle(letterSpacing: 1.6, color: color)),
     );
   }
 }
@@ -52,7 +53,7 @@ class DayNoteBand extends StatelessWidget {
         children: [
           Text(
             note.tag,
-            style: monoStyle(size: 10, letterSpacing: 1.4, color: tagColor),
+            style: monoStyle(letterSpacing: 1.4, color: tagColor),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -198,10 +199,10 @@ class DayActions extends StatelessWidget {
         if (primaryLabel != null)
           _QuietButton(label: primaryLabel!, onTap: onPrimary),
         if (secondaryLabel != null)
-          _TextAction(
+          TextAction(
             label: secondaryLabel!,
             onTap: onSecondary ?? () {},
-            topPadding: primaryLabel == null ? 0 : 14,
+            padding: EdgeInsets.only(top: primaryLabel == null ? 0 : 4),
           ),
       ],
     );
@@ -218,10 +219,12 @@ class _QuietButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
+      semanticLabel: label,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15),
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
@@ -234,39 +237,6 @@ class _QuietButton extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
             letterSpacing: -0.17,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TextAction extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final double topPadding;
-
-  const _TextAction({
-    required this.label,
-    required this.onTap,
-    required this.topPadding,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.only(top: topPadding, bottom: 2),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: AppColors.accentPrimary,
-            letterSpacing: -0.15,
           ),
         ),
       ),

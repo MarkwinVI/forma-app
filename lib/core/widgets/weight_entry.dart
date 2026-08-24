@@ -50,6 +50,7 @@ class WeightUnitToggle extends StatelessWidget {
           for (final option in WeightUnit.values)
             Pressable(
               onTap: () => onChanged(option),
+              selected: option == unit,
               child: Container(
                 constraints: const BoxConstraints(minWidth: 78),
                 padding: const EdgeInsets.symmetric(vertical: 9),
@@ -164,7 +165,19 @@ class _BlinkingCaretState extends State<_BlinkingCaret>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduce Motion: the caret stands still (value 0 is its lit half).
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+      _controller.value = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
 
   @override
   void dispose() {
@@ -219,6 +232,11 @@ class WeightKeypad extends StatelessWidget {
                   Expanded(
                     child: Pressable(
                       onTap: () => onKey(_keys[row * 3 + column]),
+                      semanticLabel: _keys[row * 3 + column] == 'del'
+                          ? 'Delete'
+                          : _keys[row * 3 + column] == '.'
+                              ? 'Decimal point'
+                              : null,
                       child: SizedBox(
                         height: 52,
                         child: Center(

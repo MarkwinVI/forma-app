@@ -1,26 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/workout_history_model.dart';
 import 'past_workout_detail_view.dart';
 import 'workout_calendar_metrics.dart';
-
-const _monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
 
 /// Embeddable training calendar: the weekly streak, then a month grid with
 /// the days that were trained. Rendered inline (for example in the Profile
@@ -267,10 +253,16 @@ class _MonthGrid extends StatelessWidget {
         Row(
           children: [
             Pressable(
+              semanticLabel: 'Previous month',
               onTap: onPrev,
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(
+              // 20pt glyph at the edge it always sat on, inside a 44pt target
+              // that grows inward rather than pushing the glyph in.
+              child: Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 4),
+                child: const Icon(
                   Icons.chevron_left_rounded,
                   size: 20,
                   color: AppColors.textMuted,
@@ -279,7 +271,7 @@ class _MonthGrid extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                '${_monthNames[month.month - 1]} ${month.year}',
+                FormaDates.monthYear(context, month),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 16,
@@ -290,10 +282,14 @@ class _MonthGrid extends StatelessWidget {
               ),
             ),
             Pressable(
+              semanticLabel: 'Next month',
               onTap: onNext,
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(
+              child: Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 4),
+                child: const Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
                   color: AppColors.textMuted,
@@ -302,20 +298,23 @@ class _MonthGrid extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        // The chevron row is 44pt now (it was 28), so the gaps either side
+        // of the weekday letters give back what the row and the 44pt cells
+        // grew by, and the letters sit where they did.
+        const SizedBox(height: 6),
         Row(
           children: [
-            for (final letter in const ['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+            for (var i = 0; i < 7; i++)
               Expanded(
                 child: Text(
-                  letter,
+                  FormaDates.weekdayLetter(context, i),
                   textAlign: TextAlign.center,
                   style: monoStyle(size: 10, letterSpacing: 1),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 5),
         for (final week in weeks)
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
@@ -324,6 +323,7 @@ class _MonthGrid extends StatelessWidget {
                 for (final day in week)
                   Expanded(
                     child: _DayCell(
+                      month: month,
                       day: day,
                       hasSession: day != null && sessionDays.contains(day),
                       isToday: day != null && day == today,
@@ -356,31 +356,52 @@ class _MonthGrid extends StatelessWidget {
 }
 
 class _DayCell extends StatelessWidget {
+  final DateTime month;
   final int? day;
   final bool hasSession;
   final bool isToday;
   final VoidCallback? onTap;
 
   const _DayCell({
+    required this.month,
     required this.day,
     required this.hasSession,
     required this.isToday,
     this.onTap,
   });
 
+  /// "Tuesday 12, trained" — the dot, said aloud. Rest days are plain text;
+  /// only trained days are buttons, which is also the only time they do
+  /// anything when tapped.
+  String _semanticsLabel(BuildContext context) {
+    final day = this.day;
+    if (day == null) return '';
+    final weekday = FormaDates.weekdayLong(
+      context,
+      DateTime(month.year, month.month, day),
+    );
+    final state = hasSession ? 'trained' : 'rest';
+    return isToday ? '$weekday $day, today, $state' : '$weekday $day, $state';
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (day == null) return const SizedBox(height: 44);
+
     // Bare numbers on a grid: today is the only one the colour picks out, and
     // a trained day is marked by the dot under it rather than a filled tile.
-    return Pressable(
+    final cell = Pressable(
+      semanticLabel: onTap == null ? null : _semanticsLabel(context),
       onTap: onTap,
       child: SizedBox(
-        height: 38,
+        // The cell is the hit area; 44pt tall so a trained day is a real
+        // target, not just a number.
+        height: 44,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              day == null ? '' : '$day',
+              '$day',
               style: monoStyle(
                 size: 13.5,
                 weight: isToday ? FontWeight.w700 : FontWeight.w500,
@@ -403,6 +424,9 @@ class _DayCell extends StatelessWidget {
         ),
       ),
     );
+    if (onTap != null) return cell;
+    return Semantics(
+        label: _semanticsLabel(context), excludeSemantics: true, child: cell);
   }
 }
 
@@ -445,7 +469,7 @@ class _DaySessionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final summaryParts = <String>[
-      _formatClock(workout.loggedAt),
+      FormaDates.time(context, workout.loggedAt),
       '${workout.totalSets} sets',
       if (workout.totalReps > 0) '${workout.totalReps} reps',
       if (workout.totalTimedSeconds > 0)
@@ -557,11 +581,4 @@ class _ActivityHeatmap extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatClock(DateTime dateTime) {
-  final minute = dateTime.minute.toString().padLeft(2, '0');
-  final suffix = dateTime.hour >= 12 ? 'PM' : 'AM';
-  final displayHour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
-  return '$displayHour:$minute $suffix';
 }

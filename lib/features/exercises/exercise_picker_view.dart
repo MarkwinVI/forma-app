@@ -428,9 +428,12 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasText = controller.text.isNotEmpty;
     return Container(
       height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      // The clear button carries its own 12pt of padding, so the field's
+      // right inset steps back to keep the disc where it was.
+      padding: EdgeInsets.only(left: 14, right: hasText ? 2 : 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.055),
         borderRadius: BorderRadius.circular(14),
@@ -467,21 +470,26 @@ class _SearchField extends StatelessWidget {
               ),
             ),
           ),
-          if (controller.text.isNotEmpty)
+          if (hasText)
             Pressable(
+              semanticLabel: 'Clear search',
               onTap: onClear,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.close_rounded,
-                  size: 12,
-                  color: AppColors.textSecondary,
+              // A 20pt disc inside a 44pt target.
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ),

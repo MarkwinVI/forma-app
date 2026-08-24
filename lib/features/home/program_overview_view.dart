@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
@@ -583,7 +582,7 @@ class _ProgramSectionLabel extends StatelessWidget {
               Expanded(
                 child: Text(
                   label.toUpperCase(),
-                  style: GoogleFonts.robotoMono(
+                  style: const TextStyle(fontFamily: 'RobotoMono',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
@@ -732,7 +731,7 @@ class _WorkoutTypeRow extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             '$timesPerWeek× week',
-            style: GoogleFonts.robotoMono(
+            style: const TextStyle(fontFamily: 'RobotoMono',
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: AppColors.textSecondary,

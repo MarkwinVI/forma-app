@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/semantics.dart' show SemanticsProperties;
 
 import '../../../core/theme/app_colors.dart';
 
@@ -161,8 +161,7 @@ class SkillWheel extends StatefulWidget {
   State<SkillWheel> createState() => _SkillWheelState();
 }
 
-class _SkillWheelState extends State<SkillWheel>
-    with TickerProviderStateMixin {
+class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
   // Geometry, verbatim from the reference design: the radial lives in a
   // 400-unit-wide user space with the hub at (240, 240). Every family is cut
   // to the same length — a short family spaces its nodes further apart.
@@ -207,6 +206,13 @@ class _SkillWheelState extends State<SkillWheel>
 
   Offset? _dragStart;
   Offset? _dragLast;
+
+  /// The sector under a finger on the overview: a faint wedge shows the
+  /// tree is tappable before the tap lands.
+  final ValueNotifier<int?> _pressedSector = ValueNotifier(null);
+
+  /// Reduce Motion: camera moves and spins jump instead of animating.
+  bool _reduceMotion = false;
 
   final Map<int, _TreeGeo> _geoCache = {};
 
@@ -259,8 +265,15 @@ class _SkillWheelState extends State<SkillWheel>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = MediaQuery.disableAnimationsOf(context);
+  }
+
+  @override
   void dispose() {
     _labelTimer?.cancel();
+    _pressedSector.dispose();
     _move.dispose();
     _labels.dispose();
     _halo.dispose();
@@ -291,8 +304,7 @@ class _SkillWheelState extends State<SkillWheel>
         : f.branches.map((b) => b.steps.length).reduce(math.max);
     // A family whose branches fork straight from the start (no shared trunk)
     // counts its fork as sitting at r0, like a one-step trunk.
-    return math.max(1, math.max(f.trunk.length, 1) - 1 + branchMax)
-        .toDouble();
+    return math.max(1, math.max(f.trunk.length, 1) - 1 + branchMax).toDouble();
   }
 
   double _pitch(WheelFamily f) => (_reach - _r0) / _depth(f);
@@ -465,8 +477,7 @@ class _SkillWheelState extends State<SkillWheel>
     // rotation uses, clamped through the overshoot.
     final q = _backOut(_move.value).clamp(0.0, 1.0);
     return [
-      for (var i = 0; i < _n; i++)
-        _fromLit[i] + (_toLit[i] - _fromLit[i]) * q,
+      for (var i = 0; i < _n; i++) _fromLit[i] + (_toLit[i] - _fromLit[i]) * q,
     ];
   }
 
@@ -491,8 +502,8 @@ class _SkillWheelState extends State<SkillWheel>
     }
 
     final toVB = _target(sel);
-    final moves =
-        List.generate(4, (i) => (fromVB[i] - toVB[i]).abs()).any((d) => d > 0.5);
+    final moves = List.generate(4, (i) => (fromVB[i] - toVB[i]).abs())
+        .any((d) => d > 0.5);
     final spins = (toRot - fromRot).abs() > 0.5;
 
     _fromLit = _liveLit();
@@ -505,7 +516,7 @@ class _SkillWheelState extends State<SkillWheel>
     _fromRot = fromRot;
     _toRot = toRot;
 
-    final durationMs = moves ? _moveMs : _spinMs;
+    final durationMs = _reduceMotion ? 0 : (moves ? _moveMs : _spinMs);
     _move.duration = Duration(milliseconds: durationMs);
     _move.forward(from: 0);
 
@@ -516,18 +527,34 @@ class _SkillWheelState extends State<SkillWheel>
     // focused tree moves no camera, and the branch names must hold steady
     // rather than blink out and back.
     if (moves || spins || sel != _sel) {
-      final delayMs = (moves || spins) ? (durationMs * 0.62).round() : 200;
+      final delayMs = _reduceMotion
+          ? 0
+          : (moves || spins)
+              ? (durationMs * 0.62).round()
+              : 200;
       _labelTimer?.cancel();
-      _labels.value = 0;
-      _labelTimer = Timer(Duration(milliseconds: delayMs), () {
-        if (mounted) _labels.forward(from: 0);
-      });
+      if (_reduceMotion) {
+        _labels.value = 1;
+      } else {
+        _labels.value = 0;
+        _labelTimer = Timer(Duration(milliseconds: delayMs), () {
+          if (mounted) _labels.forward(from: 0);
+        });
+      }
     }
 
     if (sel == null) {
       _halo.stop();
       _halo.value = 0;
-      _sector.forward();
+      if (_reduceMotion) {
+        _sector.value = 1;
+      } else {
+        _sector.forward();
+      }
+    } else if (_reduceMotion) {
+      // A still ring at mid-pulse instead of the breathing halo.
+      _halo.value = 0.5;
+      _sector.value = 0;
     } else {
       _halo.repeat();
       _sector.reverse();
@@ -554,7 +581,10 @@ class _SkillWheelState extends State<SkillWheel>
 
   void _onScaleUpdate(ScaleUpdateDetails d) {
     _dragLast = d.localFocalPoint;
-    if (!_pinchHandled && d.pointerCount >= 2 && d.scale < 0.8 && _sel != null) {
+    if (!_pinchHandled &&
+        d.pointerCount >= 2 &&
+        d.scale < 0.8 &&
+        _sel != null) {
       _pinchHandled = true;
       _go(null, 0);
     }
@@ -583,13 +613,34 @@ class _SkillWheelState extends State<SkillWheel>
       // Nothing to walk: a picker chooses destinations, not steps.
     } else {
       final count = widget.families[sel].flat.length;
-      final next =
-          (_focus + (delta.dx > 0 ? -1 : 1)).clamp(0, count - 1);
+      final next = (_focus + (delta.dx > 0 ? -1 : 1)).clamp(0, count - 1);
       if (next != _focus) _go(sel, next);
     }
   }
 
+  /// The sector under a point of the painted box, or null outside the rim.
+  int? _sectorAt(Offset local, double width) {
+    final vb = _liveVB();
+    final scale = width / vb[2];
+    final ux = vb[0] + local.dx / scale;
+    final uy = vb[1] + local.dy / scale;
+    final dx = ux - _hx, dy = uy - _hy;
+    if (math.sqrt(dx * dx + dy * dy) > _rim) return null;
+    final thetaDeg = math.atan2(dy, dx) * 180 / math.pi - _liveRot();
+    var idx = ((thetaDeg + 90) / _stepDeg).round() % _n;
+    if (idx < 0) idx += _n;
+    return idx;
+  }
+
+  void _onTapDown(TapDownDetails details, double width) {
+    if (_sel != null) return;
+    _pressedSector.value = _sectorAt(details.localPosition, width);
+  }
+
+  void _onTapCancel() => _pressedSector.value = null;
+
   void _onTapUp(TapUpDetails details, double width) {
+    _pressedSector.value = null;
     final vb = _liveVB();
     final scale = width / vb[2];
     final ux = vb[0] + details.localPosition.dx / scale;
@@ -604,10 +655,12 @@ class _SkillWheelState extends State<SkillWheel>
     }
 
     // Which wedge, in the wheel's unrotated space.
-    final thetaDeg =
-        math.atan2(dy, dx) * 180 / math.pi - _liveRot();
+    final thetaDeg = math.atan2(dy, dx) * 180 / math.pi - _liveRot();
     var idx = ((thetaDeg + 90) / _stepDeg).round() % _n;
     if (idx < 0) idx += _n;
+    // Hit radii in user units that are never under 22pt on the device.
+    final tipHit = math.max(16.0, 22 / scale);
+    final nodeHit = math.max(42.0, 22 / scale);
 
     final sel = _sel;
     final rot = _rotFor(sel ?? idx) * math.pi / 180;
@@ -618,7 +671,7 @@ class _SkillWheelState extends State<SkillWheel>
       for (final tip in _tree(sel).tips) {
         if (!widget.pickableGoals.contains(tip.id)) continue;
         final p = _rotate(tip.x, tip.y, rot);
-        if ((p - Offset(ux, uy)).distance < 16) {
+        if ((p - Offset(ux, uy)).distance < tipHit) {
           widget.onToggleGoal!(tip.id);
           return;
         }
@@ -644,7 +697,7 @@ class _SkillWheelState extends State<SkillWheel>
         best = node;
       }
     }
-    if (best != null && bestDistance < 42 && best.flat != _focus) {
+    if (best != null && bestDistance < nodeHit && best.flat != _focus) {
       _go(sel, best.flat);
     }
   }
@@ -657,7 +710,7 @@ class _SkillWheelState extends State<SkillWheel>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.families.length < 2) return const SizedBox.shrink();
+    if (widget.families.isEmpty) return const SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, constraints) {
         // The band is as wide as it is given, and its height follows the
@@ -688,6 +741,12 @@ class _SkillWheelState extends State<SkillWheel>
               heightFactor: 1,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
+                // The painter publishes one semantics button per sector (or
+                // per step, focused); the detector itself stays silent so
+                // assistive tech does not hear one anonymous "tap" over it.
+                excludeFromSemantics: true,
+                onTapDown: (d) => _onTapDown(d, width),
+                onTapCancel: _onTapCancel,
                 onTapUp: (d) => _onTapUp(d, width),
                 onScaleStart: _onScaleStart,
                 onScaleUpdate: _onScaleUpdate,
@@ -699,8 +758,9 @@ class _SkillWheelState extends State<SkillWheel>
                     child: CustomPaint(
                       painter: _WheelPainter(
                         state: this,
-                        repaint:
-                            Listenable.merge([_move, _labels, _halo, _sector]),
+                        repaint: Listenable.merge(
+                          [_move, _labels, _halo, _sector, _pressedSector],
+                        ),
                       ),
                     ),
                   ),
@@ -784,9 +844,15 @@ class _WheelPainter extends CustomPainter {
 
   // Locked steps keep the default node size — only the active one is larger.
   // A picker marks destinations, not the step being trained, so there it
-  // draws like any other step still to clear.
-  double _radiusOf(WheelNodeState st) =>
-      st == WheelNodeState.active && !state.widget.isPicker ? 4.9 : 3.5;
+  // draws like any other step still to clear. [scale] is device points per
+  // user unit: however small the camera draws the wheel, no node drops
+  // under 6pt across.
+  double _radiusOf(WheelNodeState st, double scale) {
+    final base = math.max(3.5, 3.0 / scale);
+    return st == WheelNodeState.active && !state.widget.isPicker
+        ? base * 1.4
+        : base;
+  }
 
   Color _fillOf(WheelNodeState st) {
     if (state.widget.isPicker) {
@@ -828,7 +894,7 @@ class _WheelPainter extends CustomPainter {
     // Static (the trees rotate underneath) and faded out while focused.
     final sectorFade = Curves.ease.transform(state._sector.value);
     if (sectorFade > 0.01) {
-      _paintSectors(canvas, sectorFade);
+      _paintSectors(canvas, sectorFade, scale);
     }
 
     // ── Trees, rotated about the hub ──
@@ -867,7 +933,7 @@ class _WheelPainter extends CustomPainter {
       for (final node in geo.nodes) {
         canvas.drawCircle(
           Offset(node.x, node.y),
-          _radiusOf(node.state),
+          _radiusOf(node.state, scale),
           Paint()
             ..color = Color.lerp(
               _SkillWheelState._mutedNode,
@@ -897,11 +963,38 @@ class _WheelPainter extends CustomPainter {
   /// and each family's name curved along the arc just inside the rim.
   /// Bottom sectors get a reversed arc at a slightly larger radius so the
   /// glyphs stay upright at the same optical line.
-  void _paintSectors(Canvas canvas, double opacity) {
+  void _paintSectors(Canvas canvas, double opacity, double scale) {
     const rim = _SkillWheelState._rim;
     final stepDeg = state._stepDeg;
     // Sector text is sized for the overview camera, where it lives.
     const k = 2 * (rim + 10) / _SkillWheelState._openH;
+
+    // The wedge under a finger: a faint fill from hub to rim, so a sector
+    // reads as pressed before the fly-in starts.
+    final pressed = state._pressedSector.value;
+    if (pressed != null && pressed < state._n) {
+      final start = (state._angDeg(pressed) - stepDeg / 2) * math.pi / 180;
+      final sweep = stepDeg * math.pi / 180;
+      final wedge = Path()
+        ..moveTo(_hx + 26 * math.cos(start), _hy + 26 * math.sin(start))
+        ..arcTo(
+          Rect.fromCircle(center: const Offset(_hx, _hy), radius: rim),
+          start,
+          sweep,
+          false,
+        )
+        ..arcTo(
+          Rect.fromCircle(center: const Offset(_hx, _hy), radius: 26),
+          start + sweep,
+          -sweep,
+          false,
+        )
+        ..close();
+      canvas.drawPath(
+        wedge,
+        Paint()..color = Colors.white.withValues(alpha: 0.05 * opacity),
+      );
+    }
 
     final spokePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.055 * opacity)
@@ -928,8 +1021,8 @@ class _WheelPainter extends CustomPainter {
     for (var i = 0; i < state._n; i++) {
       final categoryId = state.widget.families[i].categoryId;
       final active = state.widget.activeCategoryIds.contains(categoryId);
-      final locked = !active &&
-          state.widget.lockedCategoryIds.contains(categoryId);
+      final locked =
+          !active && state.widget.lockedCategoryIds.contains(categoryId);
       if (locked) {
         _paintPadlock(canvas, state._angRad(i), opacity);
       }
@@ -939,6 +1032,7 @@ class _WheelPainter extends CustomPainter {
         state._angDeg(i),
         k,
         opacity,
+        scale: scale,
         color: active
             ? const Color(0xFF8FB4F5)
             : locked
@@ -1053,35 +1147,52 @@ class _WheelPainter extends CustomPainter {
     double midDeg,
     double k,
     double opacity, {
+    required double scale,
     Color color = const Color(0xFF66676E),
   }) {
     final reversed = math.sin(midDeg * math.pi / 180) > 0.3;
     final r = reversed ? 245.0 : 235.0;
 
-    TextStyle style(double fontSize) => GoogleFonts.robotoMono(
+    TextStyle style(double fontSize) => TextStyle(fontFamily: 'RobotoMono',
           fontSize: fontSize,
           fontWeight: FontWeight.w700,
           letterSpacing: fontSize * 0.13,
           color: color.withValues(alpha: opacity),
         );
 
-    List<TextPainter> layout(double fontSize) => [
-          for (final ch in text.characters)
+    List<TextPainter> layout(String label, double fontSize) => [
+          for (final ch in label.characters)
             TextPainter(
               text: TextSpan(text: ch, style: style(fontSize)),
               textDirection: TextDirection.ltr,
             )..layout(),
         ];
+    double widthOf(List<TextPainter> glyphs) =>
+        glyphs.fold(0.0, (t, g) => t + g.width);
 
-    var fontSize = 10.5 * k;
-    var glyphs = layout(fontSize);
-    var total = glyphs.fold(0.0, (t, g) => t + g.width);
+    // The iOS 11pt floor, in user units: a name never shrinks below it on
+    // the device — when it will not fit its arc at that size it is
+    // shortened instead (first word, then fewer letters).
+    final floor = 11 / scale;
+    var fontSize = math.max(10.5 * k, floor);
+    var glyphs = layout(text, fontSize);
+    var total = widthOf(glyphs);
     // A long name (Handstand Pushups) must stay inside its sector's arc.
     final maxArc = r * (state._stepDeg - 5) * math.pi / 180;
     if (total > maxArc) {
-      fontSize *= maxArc / total;
-      glyphs = layout(fontSize);
-      total = glyphs.fold(0.0, (t, g) => t + g.width);
+      fontSize = math.max(fontSize * maxArc / total, floor);
+      glyphs = layout(text, fontSize);
+      total = widthOf(glyphs);
+    }
+    if (total > maxArc) {
+      var label = text.split(' ').first;
+      glyphs = layout(label, fontSize);
+      total = widthOf(glyphs);
+      while (total > maxArc && label.length > 3) {
+        label = label.substring(0, label.length - 1);
+        glyphs = layout(label, fontSize);
+        total = widthOf(glyphs);
+      }
     }
 
     final mid = midDeg * math.pi / 180;
@@ -1263,17 +1374,14 @@ class _WheelPainter extends CustomPainter {
         // each height between them — a wrapped name takes more room.
         final gap = math.max(
           17 * k,
-          (items[i - 1].painter!.height + items[i].painter!.height) / 2 +
-              4 * k,
+          (items[i - 1].painter!.height + items[i].painter!.height) / 2 + 4 * k,
         );
         if (items[i].labelY - items[i - 1].labelY < gap) {
           items[i].labelY = items[i - 1].labelY + gap;
         }
       }
-      final mean0 =
-          items.fold(0.0, (t, o) => t + o.labelY0) / items.length;
-      final mean1 =
-          items.fold(0.0, (t, o) => t + o.labelY) / items.length;
+      final mean0 = items.fold(0.0, (t, o) => t + o.labelY0) / items.length;
+      final mean1 = items.fold(0.0, (t, o) => t + o.labelY) / items.length;
       for (final item in items) {
         item.labelY += mean0 - mean1;
       }
@@ -1324,6 +1432,127 @@ class _WheelPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WheelPainter oldDelegate) => true;
+
+  // ── Accessibility ───────────────────────────────────────────────────
+  // The wheel is one canvas; assistive tech gets one button per sector on
+  // the overview and one per step while a tree is focused, each placed
+  // over the painted geometry it stands for.
+
+  static String _familyStateLabel(_SkillWheelState state, WheelFamily f) {
+    if (state.widget.activeCategoryIds.contains(f.categoryId)) {
+      return 'training';
+    }
+    if (f.flat.isNotEmpty && f.flat.every((n) => n.state.isCleared)) {
+      return 'mastered';
+    }
+    if (state.widget.lockedCategoryIds.contains(f.categoryId)) {
+      return 'locked';
+    }
+    return 'unlocked';
+  }
+
+  static String _nodeStateLabel(WheelNodeState st) => switch (st) {
+        WheelNodeState.mastered => 'mastered',
+        WheelNodeState.active => 'training',
+        WheelNodeState.available => 'available',
+        WheelNodeState.locked => 'locked',
+      };
+
+  @override
+  SemanticsBuilderCallback get semanticsBuilder => (Size size) {
+        final vb = state._liveVB();
+        final scale = size.width / vb[2];
+        Offset toDevice(double ux, double uy) =>
+            Offset((ux - vb[0]) * scale, (uy - vb[1]) * scale);
+        final bounds = Offset.zero & size;
+
+        final sel = state._sel;
+        if (sel == null) {
+          final rot = state._liveRot() * math.pi / 180;
+          return [
+            for (var i = 0; i < state._n; i++)
+              _sectorSemantics(i, rot, toDevice, bounds),
+          ];
+        }
+
+        final family = state.widget.families[sel];
+        final geo = state._tree(sel);
+        final rot = state._rotFor(sel) * math.pi / 180;
+        return [
+          for (final node in geo.nodes)
+            if (node.flat >= 0 && node.flat < family.flat.length)
+              _nodeSemantics(
+                  sel, family.flat[node.flat], node, rot, toDevice, bounds),
+        ];
+      };
+
+  CustomPainterSemantics _nodeSemantics(
+    int sel,
+    WheelNode step,
+    _GeoNode node,
+    double rot,
+    Offset Function(double, double) toDevice,
+    Rect bounds,
+  ) {
+    final rotated = _SkillWheelState._rotate(node.x, node.y, rot);
+    final p = toDevice(rotated.dx, rotated.dy);
+    // A 44pt square on the node, clipped to the painted box.
+    var rect =
+        Rect.fromCenter(center: p, width: 44, height: 44).intersect(bounds);
+    if (rect.isEmpty) rect = Rect.fromCenter(center: p, width: 1, height: 1);
+    return CustomPainterSemantics(
+      rect: rect,
+      properties: SemanticsProperties(
+        button: true,
+        textDirection: TextDirection.ltr,
+        selected: node.flat == state._focus,
+        label: '${step.name}, ${_nodeStateLabel(step.state)}',
+        onTap: () => state._go(sel, node.flat),
+      ),
+    );
+  }
+
+  CustomPainterSemantics _sectorSemantics(
+    int i,
+    double rot,
+    Offset Function(double, double) toDevice,
+    Rect bounds,
+  ) {
+    final f = state.widget.families[i];
+    final stepRad = state._stepDeg * math.pi / 180;
+    final mid = state._angRad(i) + rot;
+    const rim = _SkillWheelState._rim;
+    // The wedge's footprint: hub, both rim corners, and the arc's midpoint.
+    final pts = [
+      toDevice(_hx, _hy),
+      for (final a in [mid - stepRad / 2, mid, mid + stepRad / 2])
+        toDevice(_hx + rim * math.cos(a), _hy + rim * math.sin(a)),
+    ];
+    var left = pts.first.dx, right = pts.first.dx;
+    var top = pts.first.dy, bottom = pts.first.dy;
+    for (final p in pts) {
+      left = math.min(left, p.dx);
+      right = math.max(right, p.dx);
+      top = math.min(top, p.dy);
+      bottom = math.max(bottom, p.dy);
+    }
+    var rect = Rect.fromLTRB(left, top, right, bottom).intersect(bounds);
+    if (rect.isEmpty) rect = const Rect.fromLTWH(0, 0, 1, 1);
+    final mastered = f.flat.where((n) => n.state.isCleared).length;
+    return CustomPainterSemantics(
+      rect: rect,
+      properties: SemanticsProperties(
+        button: true,
+        textDirection: TextDirection.ltr,
+        label: '${f.title}, ${_familyStateLabel(state, f)}, '
+            '$mastered of ${f.flat.length} steps mastered',
+        onTap: () => state._go(i, f.activeFlatIndex),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuildSemantics(covariant _WheelPainter oldDelegate) => true;
 }
 
 class _TipItem {

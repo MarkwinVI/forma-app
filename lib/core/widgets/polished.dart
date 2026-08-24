@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../format/dates.dart';
 import '../theme/app_colors.dart';
 
 /// Shared building blocks for the polished design language:
@@ -88,43 +89,38 @@ class _DashedRoundedBorderPainter extends CustomPainter {
       oldDelegate.gap != gap;
 }
 
-/// "Wednesday, Jul 16" — the eyebrow date used by the tab screen headers.
-String formatHeaderDate(DateTime now) {
-  const weekdays = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
-}
+/// "Wednesday, Jul 16" — the eyebrow date used by the tab screen headers,
+/// in the device's language.
+String formatHeaderDate(BuildContext context, DateTime now) =>
+    '${FormaDates.weekdayLong(context, now)}, ${FormaDates.monthDay(context, now)}';
 
 /// Scale-down press feedback used across the polished screens.
+///
+/// Every tappable thing in the app is built on this, so it is also where the
+/// button trait lives: the child's own text becomes the accessible name, or
+/// [semanticLabel] replaces it outright (icon-only buttons must pass one).
+/// A Pressable with no [onTap] and no [semanticLabel] is plain content and
+/// exposes nothing extra; with a label it reads as a disabled button.
 class Pressable extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+
+  /// Accessible name. When set, the child's own semantics are replaced by it.
+  final String? semanticLabel;
+
+  /// A live reading next to the name — the elapsed time on a pause button.
+  final String? semanticValue;
+
+  /// For tabs and segmented options: whether this one is the active choice.
+  final bool? selected;
 
   const Pressable({
     super.key,
     required this.child,
     this.onTap,
+    this.semanticLabel,
+    this.semanticValue,
+    this.selected,
   });
 
   @override
@@ -136,22 +132,98 @@ class _PressableState extends State<Pressable> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.onTap == null) return widget.child;
+    final enabled = widget.onTap != null;
+    if (!enabled && widget.semanticLabel == null && widget.selected == null) {
+      return widget.child;
+    }
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedScale(
-        scale: _pressed ? 0.977 : 1,
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-        child: AnimatedOpacity(
-          opacity: _pressed ? 0.82 : 1,
+    Widget body = widget.child;
+    if (enabled) {
+      body = GestureDetector(
+        onTap: widget.onTap,
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedScale(
+          scale: _pressed ? 0.977 : 1,
           duration: const Duration(milliseconds: 160),
-          child: widget.child,
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            opacity: _pressed ? 0.82 : 1,
+            duration: const Duration(milliseconds: 160),
+            child: widget.child,
+          ),
+        ),
+      );
+    }
+
+    // One node per control: the child's text (or the explicit label) plus
+    // the button trait, instead of a bare tap region beside a stray label.
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        selected: widget.selected,
+        label: widget.semanticLabel,
+        value: widget.semanticValue,
+        // The tap action is declared here, not left to the GestureDetector:
+        // an explicit label excludes the child's semantics, action included.
+        onTap: widget.onTap,
+        excludeSemantics: widget.semanticLabel != null,
+        child: body,
+      ),
+    );
+  }
+}
+
+/// A quiet text action — the secondary verb under a primary button, or the
+/// one thing a small state asks of you. 15pt accent, an optional leading
+/// icon, and a 44pt tall hit area however short the line is.
+class TextAction extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final IconData? icon;
+  final EdgeInsetsGeometry padding;
+
+  const TextAction({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.padding = EdgeInsets.zero,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: padding,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: AppColors.accentPrimary),
+              const SizedBox(width: 7),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentPrimary,
+                  letterSpacing: -0.15,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -309,6 +381,155 @@ class IconTile extends StatelessWidget {
   }
 }
 
+/// The app's one confirm sheet: a question, a line of context, a filled
+/// button and a quiet text button under it. Pops `true` when the confirming
+/// answer is chosen and `false` for the other, whichever of the two is the
+/// filled one — a destructive confirm (delete, sign out) is filled with the
+/// safe way out in text below it; a "keep editing" keeps the safe answer
+/// filled and the loss in red text.
+class ConfirmSheet extends StatelessWidget {
+  final String title;
+  final String message;
+
+  /// The filled button.
+  final String primaryLabel;
+  final bool primaryConfirms;
+  final Color primaryColor;
+  final Color primaryForeground;
+
+  /// The text-only button under it. Pops the opposite of the primary.
+  final String secondaryLabel;
+  final Color secondaryColor;
+
+  /// Spoken name for the secondary when its visible word is too short on its
+  /// own ("Discard" → "Discard changes").
+  final String? secondarySemanticLabel;
+
+  const ConfirmSheet({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.primaryLabel,
+    required this.secondaryLabel,
+    this.primaryConfirms = true,
+    this.primaryColor = AppColors.accentPrimary,
+    this.primaryForeground = Colors.white,
+    this.secondaryColor = AppColors.textSecondary,
+    this.secondarySemanticLabel,
+  });
+
+  /// Shows the sheet over the root navigator and resolves to the answer, or
+  /// null when dismissed by the scrim.
+  static Future<bool?> show(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String primaryLabel,
+    required String secondaryLabel,
+    bool primaryConfirms = true,
+    Color primaryColor = AppColors.accentPrimary,
+    Color primaryForeground = Colors.white,
+    Color secondaryColor = AppColors.textSecondary,
+    String? secondarySemanticLabel,
+  }) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ConfirmSheet(
+        title: title,
+        message: message,
+        primaryLabel: primaryLabel,
+        secondaryLabel: secondaryLabel,
+        primaryConfirms: primaryConfirms,
+        primaryColor: primaryColor,
+        primaryForeground: primaryForeground,
+        secondaryColor: secondaryColor,
+        secondarySemanticLabel: secondarySemanticLabel,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface2,
+            borderRadius: BorderRadius.circular(kCardRadius),
+          ),
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Pressable(
+                semanticLabel: primaryLabel,
+                onTap: () => Navigator.of(context).pop(primaryConfirms),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    primaryLabel,
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w700,
+                      color: primaryForeground,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Pressable(
+                semanticLabel: secondarySemanticLabel ?? secondaryLabel,
+                onTap: () => Navigator.of(context).pop(!primaryConfirms),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  child: Text(
+                    secondaryLabel,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: secondaryColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Full-width pill CTA (52px tall, accent background).
 class PillButton extends StatelessWidget {
   final String label;
@@ -324,6 +545,10 @@ class PillButton extends StatelessWidget {
   /// it off so the button sits with their type rather than floating over it.
   final double radius;
 
+  /// Accessible name when the visible label is too terse on its own
+  /// ("Retry" → "Retry loading history"). Defaults to [label].
+  final String? semanticLabel;
+
   const PillButton({
     super.key,
     required this.label,
@@ -333,6 +558,7 @@ class PillButton extends StatelessWidget {
     this.tonal = false,
     this.color,
     this.radius = 26,
+    this.semanticLabel,
   });
 
   @override
@@ -354,9 +580,14 @@ class PillButton extends StatelessWidget {
 
     return Pressable(
       onTap: onTap,
+      // Named explicitly so a disabled button still reads as one.
+      semanticLabel: semanticLabel ?? label,
       child: Container(
-        height: 52,
+        // A floor, not a fixed height: at a large text size the label
+        // grows the button instead of clipping against it.
+        constraints: const BoxConstraints(minHeight: 52),
         width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(radius),
@@ -423,6 +654,7 @@ class SegmentedTabs extends StatelessWidget {
             Expanded(
               child: Pressable(
                 onTap: () => onChanged(i),
+                selected: i == selectedIndex,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
                   curve: Curves.easeOut,
@@ -481,27 +713,36 @@ class SubScreenHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      // The back target is 44pt; its drawn circle stays 36 and sits where it
+      // always did, so the outer padding gives up the 4pt the target grew by.
+      padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
       child: Row(
         children: [
           Pressable(
             onTap: onBack,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: AppColors.textPrimary,
+            semanticLabel: 'Back',
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.chevron_left_rounded,
+                    size: 24,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               title,
@@ -522,30 +763,41 @@ class SubScreenHeader extends StatelessWidget {
   }
 }
 
-/// 38px circular header button (bell / gear).
+/// 38px circular header button (bell / gear) inside a 44pt hit target.
+///
+/// Icon-only, so it needs a [semanticLabel] — "Settings", "Notifications".
 class HeaderCircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
+  final String? semanticLabel;
 
   const HeaderCircleButton({
     super.key,
     required this.icon,
     this.onTap,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
+      semanticLabel: semanticLabel,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Center(
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 19, color: AppColors.textPrimary),
+          ),
         ),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 19, color: AppColors.textPrimary),
       ),
     );
   }
@@ -604,11 +856,10 @@ class ScreenHeader extends StatelessWidget {
             ),
           ),
           for (var i = 0; i < actions.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 3),
-              child: actions[i],
-            ),
+            // The circle buttons carry 3pt of hit area on every side now, so
+            // the gap between them shrinks by that much to read the same.
+            if (i > 0) const SizedBox(width: 4),
+            actions[i],
           ],
         ],
       ),
@@ -659,7 +910,10 @@ class SheetShell extends StatelessWidget {
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+            // The close target is 44pt (its circle stays 32), so the row
+            // grew by 12: the bottom padding gives 6 of it back and the
+            // right padding the 6 the circle moved inward.
+            padding: const EdgeInsets.fromLTRB(18, 12, 12, 6),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.divider)),
             ),
@@ -705,18 +959,25 @@ class SheetShell extends StatelessWidget {
                     if (showClose)
                       Pressable(
                         onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: const BoxDecoration(
-                            color: AppColors.surface,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.close_rounded,
-                            size: 15,
-                            color: AppColors.textPrimary,
+                        semanticLabel: 'Close',
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Center(
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 15,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
                         ),
                       ),

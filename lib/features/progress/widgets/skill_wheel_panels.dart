@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
@@ -104,9 +103,9 @@ class PerformancePanel extends StatelessWidget {
               ),
             )
           else
-            Text(
+            const Text(
               'LAST SESSION VS PREVIOUS SESSION',
-              style: GoogleFonts.robotoMono(
+              style: TextStyle(fontFamily: 'RobotoMono',
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.35,
@@ -149,7 +148,7 @@ class PerformancePanel extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             style.label,
-            style: GoogleFonts.robotoMono(
+            style: TextStyle(fontFamily: 'RobotoMono',
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.35,
@@ -249,16 +248,16 @@ class PerformancePanel extends StatelessWidget {
     if (rows.isEmpty) return const [];
     return [
       const SizedBox(height: 20),
-      Row(
+      const Row(
         children: [
-          const CustomPaint(
+          CustomPaint(
             size: Size(7, 7),
             painter: _DashedRingPainter(),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'BUILDING BASELINE',
-            style: GoogleFonts.robotoMono(
+            style: TextStyle(fontFamily: 'RobotoMono',
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.35,
@@ -308,11 +307,11 @@ class PerformancePanel extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   '${row.daysTrained} OF 2 DAYS',
-                  style: GoogleFonts.robotoMono(
+                  style: const TextStyle(fontFamily: 'RobotoMono',
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.95,
-                    color: const Color(0xFF4A4B52),
+                    color: Color(0xFF4A4B52),
                   ),
                 ),
               ],
@@ -524,11 +523,11 @@ class WheelExercisePreview extends StatelessWidget {
         if (data == null) {
           text = 'Training';
         } else {
-          // "18 of 24 reps (total reps)": where the last session landed
-          // against the target, counted across the whole session.
+          // "18 of 24 reps": where the last session landed against the
+          // target, counted across the whole session.
           final unit = data.isTimed ? 'sec' : 'reps';
           text = 'Training · ${data.lastSessionVolume} of '
-              '${data.targetVolume} $unit (total $unit)';
+              '${data.targetVolume} $unit';
         }
         color = kWheelTrainingBlue;
       case WheelNodeState.available:
@@ -634,7 +633,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   /// Scroll offset of every flat step's row, rebuilt with the list — group
   /// headers make row positions non-uniform.
   List<double> _rowOffsets = const [];
-  
+
   /// For the first step of each branch, the top of its header; null for
   /// every other step.
   List<double?> _rowHeaderTops = const [];

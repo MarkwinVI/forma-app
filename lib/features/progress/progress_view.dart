@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/forma_splash.dart';
 import '../../core/widgets/no_program_state.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
@@ -43,7 +43,17 @@ class _ProgressViewState extends State<ProgressView> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // A warm-up that already landed (main() starts one during the splash)
+    // is taken synchronously: the tab's first frame is the wheel, with no
+    // waiting state in between.
+    final warm = takeWarmSkillWheelBundle();
+    final ready = warm?.value;
+    if (ready != null) {
+      _bundle = ready;
+      _loading = false;
+    } else {
+      _loadData(warm: warm);
+    }
   }
 
   @override
@@ -58,24 +68,26 @@ class _ProgressViewState extends State<ProgressView> {
     }
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({WarmSkillWheelBundle? warm}) async {
+    // A load started elsewhere, when there is one — by main() during the
+    // splash, or by the setup wizard once it has written the program — so
+    // the tab appears with its data already fetched. It was started for the
+    // signed-in user, so it stands on its own even before this tab reads
+    // the session.
+    warm ??= takeWarmSkillWheelBundle();
     final userId = AuthService().currentUser?.id;
-    if (userId == null) {
+    if (warm == null && userId == null) {
       if (mounted) setState(() => _loading = false);
       return;
     }
 
     try {
-      // A load started elsewhere, when there is one — by main() during the
-      // splash, or by the setup wizard once it has written the program — so
-      // the tab appears with its data already fetched. Whatever the tab was
-      // showing before is about to be wrong, so it does not stay up while
-      // the warm bundle lands.
-      final warmBundle = takeWarmSkillWheelBundle();
-      if (warmBundle != null && !_loading && mounted) {
+      // Whatever the tab was showing before is about to be wrong, so it
+      // does not stay up while the warm bundle lands.
+      if (warm != null && !_loading && mounted) {
         setState(() => _loading = true);
       }
-      final bundle = await (warmBundle ?? loadSkillWheelBundle(userId));
+      final bundle = await (warm?.future ?? loadSkillWheelBundle(userId!));
       if (!mounted) return;
       setState(() {
         _bundle = bundle;
@@ -149,7 +161,11 @@ class _ProgressViewState extends State<ProgressView> {
       body: SafeArea(
         bottom: false,
         child: _loading
-            ? const Center(child: LoadingIndicator())
+            // While the first load is still in flight the splash's last
+            // frame holds the page — the tab reads as the splash lingering,
+            // not a loader — and it never appears when the warm-up already
+            // landed (see initState).
+            ? const FormaSplash.endFrame(background: AppColors.bg)
             : empty
                 ? _ProgressEmptyState(onCreateProgram: _openProgramSetup)
                 : SkillWheelScreen(

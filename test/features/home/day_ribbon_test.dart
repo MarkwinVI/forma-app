@@ -107,4 +107,69 @@ void main() {
     expect(find.text('L'), findsNWidgets(7));
     expect(find.text('U'), findsNothing);
   });
+
+  testWidgets('each day tells a screen reader what it is', (tester) async {
+    final handle = tester.ensureSemantics();
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    // A Wednesday; the clock is the tab's clock, not the wall clock.
+    final today = DateTime(2026, 7, 29);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DayRibbon(
+            days: [
+              HomeWeekStripDay(
+                date: today,
+                sessionType: TrainingSessionType.upper,
+                isCurrent: true,
+                isCompleted: false,
+              ),
+              HomeWeekStripDay(
+                date: today.add(const Duration(days: 1)),
+                sessionType: TrainingSessionType.rest,
+                isCurrent: false,
+                isCompleted: false,
+              ),
+              HomeWeekStripDay(
+                date: today.add(const Duration(days: 2)),
+                sessionType: TrainingSessionType.lower,
+                isCurrent: false,
+                isCompleted: false,
+              ),
+            ],
+            selectedDate: today,
+            today: today,
+            onDayTap: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSemantics(
+        find.bySemanticsLabel('Wednesday, Jul 29, today, Upper Day').first,
+      ),
+      matchesSemantics(
+        label: 'Wednesday, Jul 29, today, Upper Day',
+        isButton: true,
+        isSelected: true,
+        hasSelectedState: true,
+        isEnabled: true,
+        hasEnabledState: true,
+        hasTapAction: true,
+      ),
+    );
+    expect(
+      find.bySemanticsLabel('Thursday, Jul 30, projected, Rest day'),
+      findsWidgets,
+    );
+    expect(
+      find.bySemanticsLabel('Friday, Jul 31, projected, Lower Day'),
+      findsWidgets,
+    );
+    handle.dispose();
+  });
 }

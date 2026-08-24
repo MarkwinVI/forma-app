@@ -23,7 +23,7 @@ class SettingsView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Profile',
+                'Account',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -82,7 +82,10 @@ class SettingsView extends StatelessWidget {
                   ),
                   // _AppEntry listens to auth state and swaps to the login
                   // screen once the session ends.
-                  onPressed: () => AuthService().signOut(),
+                  onPressed: () async {
+                    final confirmed = await showSignOutConfirmSheet(context);
+                    if (confirmed == true) await AuthService().signOut();
+                  },
                   child: const Text('Sign out'),
                 ),
               ),
@@ -94,6 +97,20 @@ class SettingsView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Asks before ending the session. Resolves true to sign out; false or null
+/// to stay. Signing out loses nothing, so neither button is red.
+Future<bool?> showSignOutConfirmSheet(BuildContext context) {
+  return ConfirmSheet.show(
+    context,
+    title: 'Sign out of Forma?',
+    message: 'Your program and history stay saved to your account.',
+    primaryLabel: 'Sign out',
+    primaryColor: AppColors.surface3,
+    primaryForeground: AppColors.textPrimary,
+    secondaryLabel: 'Cancel',
+  );
 }
 
 /// Data reset and seeding shortcuts — debug builds only, never shipped.
@@ -298,11 +315,17 @@ class _DeleteAccountButtonState extends State<_DeleteAccountButton> {
     try {
       // _AppEntry reacts to the session ending and shows the login screen.
       await AuthService().deleteAccount();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('Failed to delete account: $error\n$stackTrace');
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete account: $error')),
+        const SnackBar(
+          content: Text(
+            "Couldn't delete your account. Check your connection and try "
+            'again.',
+          ),
+        ),
       );
     }
   }

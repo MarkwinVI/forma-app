@@ -8,13 +8,11 @@ import 'package:forma_app/data/models/progression_event_model.dart';
 import 'package:forma_app/data/models/workout_history_model.dart';
 import 'package:forma_app/features/home/home_dashboard_metrics.dart';
 import 'package:forma_app/features/home/widgets/today_workout_card.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
   HomeTodaySummary summary({HomeCompletedWorkoutSummary? completed}) {

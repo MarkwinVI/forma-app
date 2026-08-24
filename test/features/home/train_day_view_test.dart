@@ -18,6 +18,9 @@ void main() {
       isMissed: isMissed,
       isRestDay: isRestDay,
       rescheduledTo: rescheduledTo,
+      // The real screen hands in FormaDates.weekdayMonthDayLong; here a
+      // stand-in shows the note carries whatever the formatter says.
+      formatLongDate: (date) => 'Thursday 30 July',
     );
   }
 

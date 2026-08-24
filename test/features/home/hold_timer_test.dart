@@ -5,7 +5,6 @@ import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/features/home/hold_timer_view.dart';
 import 'package:forma_app/features/home/live_workout_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -25,7 +24,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    GoogleFonts.config.allowRuntimeFetching = false;
     SharedPreferences.setMockInitialValues({});
     await Supabase.initialize(
       url: 'https://example.supabase.co',
@@ -33,6 +31,11 @@ void main() {
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwicm9sZSI6ImFub24iLCJpYXQiOjE1MTYyMzkwMjJ9.c2lnbmVk',
     );
   });
+
+  // The live workout keeps a local draft of its sets between openings; each
+  // test starts from a clean store so one test's sets do not come back in
+  // the next.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   DailyTrainingRecommendation timedRecommendation() {
     // A hold in the rows tree — timed, so its sets are seconds.

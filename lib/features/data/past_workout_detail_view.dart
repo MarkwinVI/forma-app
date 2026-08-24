@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
@@ -72,13 +73,13 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
     }
     if (!mounted) return;
 
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => _ConfirmDeleteSheet(
-        message: _deleteMessageFor(assessment),
-      ),
+    final confirmed = await ConfirmSheet.show(
+      context,
+      title: 'Delete this session?',
+      message: _deleteMessageFor(assessment),
+      primaryLabel: 'Delete session',
+      primaryColor: _deleteRed,
+      secondaryLabel: 'Keep it',
     );
     if (confirmed != true || !mounted) return;
     await _deleteWorkout(userId, assessment);
@@ -192,8 +193,8 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
                 children: [
                   TypeTitle(
                     workout.title,
-                    sub: '${_formatSessionDate(workout.loggedAt)} · '
-                        '${_formatTime(workout.loggedAt)}',
+                    sub: '${FormaDates.weekdayMonthDay(context, workout.loggedAt)} · '
+                        '${FormaDates.time(context, workout.loggedAt)}',
                   ),
                   TypeStatBand(
                     stats: [
@@ -419,8 +420,8 @@ class _ActionsSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          '${_formatSessionDate(workout.loggedAt)} · '
-                          '${_formatTime(workout.loggedAt)}',
+                          '${FormaDates.weekdayMonthDay(context, workout.loggedAt)} · '
+                          '${FormaDates.time(context, workout.loggedAt)}',
                           style: const TextStyle(
                             fontSize: 12.5,
                             color: AppColors.textSecondary,
@@ -486,89 +487,6 @@ class _ActionsSheet extends StatelessWidget {
   }
 }
 
-class _ConfirmDeleteSheet extends StatelessWidget {
-  final String message;
-
-  const _ConfirmDeleteSheet({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface2,
-            borderRadius: BorderRadius.circular(kCardRadius),
-          ),
-          padding: const EdgeInsets.fromLTRB(18, 20, 18, 14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Delete this session?',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                message,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Pressable(
-                onTap: () => Navigator.of(context).pop(true),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _deleteRed,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Delete session',
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Pressable(
-                onTap: () => Navigator.of(context).pop(false),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 13),
-                  child: Text(
-                    'Keep it',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Formatting helpers ──────────────────────────────────────────────────
 
 String _setValueLabel(PastWorkoutSet set) {
@@ -589,45 +507,6 @@ IconData workoutIconForSessionType(String sessionType) {
     default:
       return Icons.sports_gymnastics_rounded;
   }
-}
-
-String _formatSessionDate(DateTime dateTime) {
-  const weekdays = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  final weekday = weekdays[dateTime.weekday - 1];
-  final month = months[dateTime.month - 1];
-
-  return '$weekday, $month ${dateTime.day}';
-}
-
-String _formatTime(DateTime dateTime) {
-  final hour = dateTime.hour;
-  final minute = dateTime.minute.toString().padLeft(2, '0');
-  final suffix = hour >= 12 ? 'PM' : 'AM';
-  final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-
-  return '$displayHour:$minute $suffix';
 }
 
 String formatWorkoutSeconds(int seconds) {

@@ -82,6 +82,7 @@ class _ReorderExercisesPageState extends State<ReorderExercisesPage> {
         surfaceTintColor: AppColors.bg,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(
             Icons.chevron_left_rounded,
             size: 30,
@@ -222,6 +223,7 @@ class _ReorderRow extends StatelessWidget {
                 Icons.drag_handle_rounded,
                 size: 19,
                 color: AppColors.textMuted,
+                semanticLabel: 'Drag to reorder',
               ),
             ),
           ),

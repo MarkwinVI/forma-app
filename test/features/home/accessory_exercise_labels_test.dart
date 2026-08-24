@@ -4,7 +4,6 @@ import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/skill_track_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/features/home/program_workout_editor_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Work that no tree schedules is called an accessory exercise throughout the
 /// app — the row's tag, the row's subtitle, and the button that adds one.
@@ -12,7 +11,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
   Future<void> pumpEditor(WidgetTester tester) async {

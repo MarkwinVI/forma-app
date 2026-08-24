@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/semantics.dart';
 
 import '../theme/app_colors.dart';
 import '../../data/models/exercise_model.dart';
@@ -57,6 +57,10 @@ class SkillTreeMap extends StatelessWidget {
   void _handleTap(_TreeLayout layout, Offset position) {
     final routeId = layout.routeAt(position);
     if (routeId == null) return;
+    _handleRoute(routeId);
+  }
+
+  void _handleRoute(String routeId) {
     if (routeId == foundationRouteId) {
       onFoundationTap?.call();
       return;
@@ -76,6 +80,7 @@ class SkillTreeMap extends StatelessWidget {
           selectedRouteId: selectedRouteId,
           labelStyle: labelStyle,
         );
+        final tappable = onBranchTap != null || onFoundationTap != null;
         final map = SizedBox(
           width: double.infinity,
           height: layout.height,
@@ -84,15 +89,21 @@ class SkillTreeMap extends StatelessWidget {
               layout: layout,
               fillPct: fillPct,
               selectedRouteId: selectedRouteId,
+              // A screen reader gets one button per route — the spine and
+              // each branch tip — in place of the bare canvas.
+              onRouteTap: tappable ? _handleRoute : null,
             ),
           ),
         );
-        if (onBranchTap == null && onFoundationTap == null) return map;
+        if (!tappable) return map;
 
         // Anything belonging to a route is a handle for picking it: its nodes,
         // its tip label, or the stretch of canvas nearest to them.
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
+          // The painter's own semantics carry the routes; a second, nameless
+          // tap target over the whole map would only get in their way.
+          excludeFromSemantics: true,
           onTapUp: (details) => _handleTap(layout, details.localPosition),
           child: map,
         );
@@ -323,6 +334,7 @@ class _TreeLayout {
   late final List<_Dot> dots;
   late final List<_Label> labels;
   late final Offset? hub;
+
   /// Points the volume fill traces, in order. It follows the drawn route
   /// rather than cutting a straight line, so a fill running from the last
   /// foundation step into an angled branch bends at the fork instead of
@@ -469,7 +481,7 @@ class _TreeLayout {
   /// back, and with none the active branch keeps the old emphasis.
   TextStyle _labelStyleFor(TreeVizBranch branch, bool isActiveBranch) {
     final base = labelStyle ??
-        GoogleFonts.robotoMono(
+        const TextStyle(fontFamily: 'RobotoMono',
           fontSize: 9.5,
           fontWeight: FontWeight.w600,
         );
@@ -572,8 +584,7 @@ class _TreeLayout {
 
     final hubX = _hubXFor(scale);
     hub = _hasHub ? point(hubX, 0) : null;
-    hubReached = _hasHub &&
-        spine.every((state) => state == TreeNodeState.done);
+    hubReached = _hasHub && spine.every((state) => state == TreeNodeState.done);
     forkX = hubX - hubR;
     if (spine.isNotEmpty && branches.isNotEmpty) {
       builtSegments.add(_Segment(
@@ -715,11 +726,68 @@ class _TreeMapPainter extends CustomPainter {
   final double? fillPct;
   final String? selectedRouteId;
 
+  /// When set, the map exposes one semantic button per route.
+  final ValueChanged<String>? onRouteTap;
+
   const _TreeMapPainter({
     required this.layout,
     required this.fillPct,
     this.selectedRouteId,
+    this.onRouteTap,
   });
+
+  @override
+  SemanticsBuilderCallback? get semanticsBuilder {
+    final onTap = onRouteTap;
+    if (onTap == null) return null;
+    return (size) {
+      final viz = layout.viz;
+      String nameFor(String routeId) {
+        if (routeId == SkillTreeMap.foundationRouteId) return 'Foundation';
+        return viz.branches
+                .where((branch) => branch.id == routeId)
+                .firstOrNull
+                ?.label ??
+            routeId;
+      }
+
+      CustomPainterSemantics node(String routeId, Rect rect) {
+        return CustomPainterSemantics(
+          rect: rect,
+          properties: SemanticsProperties(
+            label: '${nameFor(routeId)} route',
+            textDirection: TextDirection.ltr,
+            button: true,
+            selected: selectedRouteId == routeId,
+            onTap: () => onTap(routeId),
+          ),
+        );
+      }
+
+      return [
+        if (viz.spine.isNotEmpty)
+          node(
+            SkillTreeMap.foundationRouteId,
+            Rect.fromLTWH(0, 0, layout.forkX, size.height),
+          ),
+        for (final label in layout.labels)
+          if (label.routeId != null)
+            node(
+              label.routeId!,
+              Rect.fromLTWH(
+                label.anchor.dx + 2,
+                label.anchor.dy - label.painter.height / 2,
+                label.painter.width,
+                label.painter.height,
+              ).inflate(6),
+            ),
+      ];
+    };
+  }
+
+  @override
+  bool shouldRebuildSemantics(covariant _TreeMapPainter oldDelegate) =>
+      shouldRepaint(oldDelegate) || oldDelegate.onRouteTap != onRouteTap;
 
   /// Routes other than the selected one step back rather than disappear.
   double _opacityFor(String? routeId) {

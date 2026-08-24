@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/exercise_model.dart';
@@ -65,6 +67,11 @@ class _HomeViewState extends State<HomeView> {
 
   bool _loading = true;
   bool _hasProgram = true;
+
+  /// True when the last read failed and there is nothing older to show — the
+  /// tab then says so in place, with Retry, rather than pretending the user
+  /// has no program.
+  bool _loadFailed = false;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
@@ -184,6 +191,7 @@ class _HomeViewState extends State<HomeView> {
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
       setState(() {
+        _loadFailed = false;
         _progressEntries = {
           for (final item in progress) item.exerciseId: item,
         };
@@ -200,15 +208,31 @@ class _HomeViewState extends State<HomeView> {
     } catch (error, stackTrace) {
       debugPrint('Failed to load home data: $error\n$stackTrace');
       if (!mounted) return;
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Couldn't load your training data. Switch tabs and back to retry.",
+      setState(() {
+        _loading = false;
+        _loadFailed = true;
+      });
+      // With an older read still on screen, the day stays up and the
+      // failure is a passing note with a way to try again; with nothing to
+      // show, the body itself becomes the error state (see build).
+      if (_logicSnapshot != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Couldn't refresh your training data."),
+            action: SnackBarAction(label: 'Retry', onPressed: _retryLoad),
           ),
-        ),
-      );
+        );
+      }
     }
+  }
+
+  void _retryLoad() {
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
+    _loadHomeData();
   }
 
   _TrainSnapshot? _buildSnapshot() {
@@ -489,9 +513,11 @@ class _HomeViewState extends State<HomeView> {
         bottom: false,
         child: _loading || _refreshingAfterWorkout
             ? const Center(child: LoadingIndicator())
-            : !_hasProgram || snapshot == null
-                ? HomeEmptyState(onCreateProgram: _openProgramSetup)
-                : _buildTab(snapshot),
+            : _loadFailed && _logicSnapshot == null
+                ? _LoadFailedState(onRetry: _retryLoad)
+                : !_hasProgram || snapshot == null
+                    ? HomeEmptyState(onCreateProgram: _openProgramSetup)
+                    : _buildTab(snapshot),
       ),
     );
   }
@@ -545,6 +571,7 @@ class _HomeViewState extends State<HomeView> {
       isMissed: day.isMissed,
       isRestDay: day.isRestDay,
       rescheduledTo: snapshot.rescheduledTo,
+      formatLongDate: (date) => FormaDates.weekdayMonthDayLong(context, date),
     );
   }
 
@@ -853,7 +880,6 @@ class _HomeViewState extends State<HomeView> {
     setState(() => _selectedDate = TrainingScheduleService.dateOnly(day.date));
   }
 
-
   List<TodayWorkoutRow> _todayRows(HomeDashboardMetrics metrics) {
     return TodayWorkoutContent.rows(
       metrics,
@@ -950,6 +976,34 @@ class _HomeViewState extends State<HomeView> {
       case TrainingSessionType.rest:
         return 'Recovery';
     }
+  }
+}
+
+/// The tab when today could not be read and there is no older day to fall
+/// back on: it says so in the tab's own voice, and Retry re-runs the read.
+class _LoadFailedState extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _LoadFailedState({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const DayEyebrow(text: 'TODAY'),
+          const TypeTitle(
+            "Couldn't load today",
+            sub: 'Your program and history did not come through. '
+                'Check your connection and try again.',
+          ),
+          const SizedBox(height: 24),
+          PillButton(label: 'Retry', onTap: onRetry, tonal: true, radius: 14),
+        ],
+      ),
+    );
   }
 }
 

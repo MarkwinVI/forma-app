@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/format/dates.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
+import '../../../data/models/training_program_model.dart';
 import '../home_dashboard_metrics.dart';
 import '../program_week_strip.dart';
 import '../train_day_view.dart';
@@ -103,6 +105,8 @@ class _DayRibbonState extends State<DayRibbon> {
     // No way back drawn here: today is lit in the row itself, and a tap on
     // it is the way back.
     return SizedBox(
+      // Fixed because a PageView fills whatever it is given; the cell is 50
+      // tall at 1.0× and still fits at the app's 1.6× text ceiling.
       height: 58,
       // A week at a time: the row holds seven days and the next swipe
       // brings the seven behind them, so the days never half-scroll into
@@ -117,19 +121,18 @@ class _DayRibbonState extends State<DayRibbon> {
               for (var slot = 0; slot < DayRibbon.daysPerPage; slot++)
                 Expanded(
                   child: slot < week.length
-                      ? Pressable(
-                          onTap: () => widget.onDayTap(week[slot]),
-                          child: _RibbonDay(
-                            day: week[slot],
-                            selected: _sameDay(
-                              week[slot].date,
-                              widget.selectedDate,
-                            ),
-                            isToday: _sameDay(
-                              week[slot].date,
-                              widget.today,
-                            ),
+                      ? _RibbonDay(
+                          day: week[slot],
+                          today: widget.today,
+                          selected: _sameDay(
+                            week[slot].date,
+                            widget.selectedDate,
                           ),
+                          isToday: _sameDay(
+                            week[slot].date,
+                            widget.today,
+                          ),
+                          onTap: () => widget.onDayTap(week[slot]),
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -142,20 +145,54 @@ class _DayRibbonState extends State<DayRibbon> {
 }
 
 class _RibbonDay extends StatelessWidget {
-  static const _letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   final HomeWeekStripDay day;
+
+  /// The clock the tab runs on — the dev clock, not the wall clock — so a
+  /// day reads as ahead or behind by the same today the rest of the tab uses.
+  final DateTime today;
   final bool selected;
   final bool isToday;
+  final VoidCallback onTap;
 
   const _RibbonDay({
     required this.day,
+    required this.today,
     required this.selected,
     required this.isToday,
+    required this.onTap,
   });
+
+  /// "Wednesday, Jul 29, today, Upper Day" — the letter and the marker
+  /// spelled out, with what happened to the day.
+  String _semanticLabel(BuildContext context) {
+    final state = isToday
+        ? 'today'
+        : day.isCompleted
+            ? 'completed'
+            : day.isMissed
+                ? 'missed'
+                : _isAhead
+                    ? 'projected'
+                    : null;
+    final kind = day.isRestDay ? 'Rest day' : day.sessionType.label;
+    return [
+      formatHeaderDate(context, day.date),
+      if (state != null) state,
+      kind,
+    ].join(', ');
+  }
 
   @override
   Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: _semanticLabel(context),
+      selected: selected,
+      child: _cell(context),
+    );
+  }
+
+  Widget _cell(BuildContext context) {
     return Container(
       padding: const EdgeInsets.only(bottom: 9),
       decoration: BoxDecoration(
@@ -169,9 +206,8 @@ class _RibbonDay extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            _letters[day.date.weekday - 1],
+            FormaDates.weekdayLetter(context, day.date.weekday - 1),
             style: monoStyle(
-              size: 10,
               letterSpacing: 1,
               // The letter is what says "you are here" — the marker below
               // stays free to carry the day's type and outcome.
@@ -199,10 +235,7 @@ class _RibbonDay extends StatelessWidget {
   /// and the underline says so before any copy does.
   bool get _isDashed => !isToday && !day.isMissed && _isAhead;
 
-  bool get _isAhead {
-    final now = DateTime.now();
-    return TrainDayViewResolver.daysBetween(now, day.date) > 0;
-  }
+  bool get _isAhead => TrainDayViewResolver.daysBetween(today, day.date) > 0;
 
   Color get _ruleColor =>
       day.isMissed ? AppColors.red : AppColors.accentPrimary;

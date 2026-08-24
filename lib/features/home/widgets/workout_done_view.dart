@@ -29,21 +29,46 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
   late final AnimationController _rings;
   late final AnimationController _sparks;
 
+  /// Whether the perpetual parts of the burst are running. Under Reduce
+  /// Motion they sit on a still frame instead.
+  bool _looping = false;
+
   @override
   void initState() {
     super.initState();
     _pop = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
-    )..forward();
+    );
     _rings = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3400),
-    )..repeat();
+    );
     _sparks = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4000),
-    )..repeat();
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (reduceMotion) {
+      // The end frame of the pop, and a mid-cycle frame of the rings and
+      // sparks so the burst still reads as a burst — just a still one.
+      _pop.value = 1;
+      _rings.stop();
+      _sparks.stop();
+      _rings.value = 0.35;
+      _sparks.value = 0.5;
+      _looping = false;
+    } else if (!_looping) {
+      _looping = true;
+      if (!_pop.isCompleted) _pop.forward();
+      _rings.repeat();
+      _sparks.repeat();
+    }
   }
 
   @override
@@ -79,7 +104,8 @@ class _WorkoutDoneViewState extends State<WorkoutDoneView>
         // page, not a certificate.
         Text(
           'SESSION COMPLETE',
-          style: monoStyle(size: 11, letterSpacing: 1.65, color: AppColors.green),
+          style:
+              monoStyle(size: 11, letterSpacing: 1.65, color: AppColors.green),
         ),
         if (widget.nextTitle != null) _nextUpRow(),
       ],
