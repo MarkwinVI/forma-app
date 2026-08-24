@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'core/theme/app_colors.dart';
+import 'core/theme/app_text_theme.dart';
 import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'data/services/analytics_service.dart';
@@ -64,6 +66,13 @@ class FormaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Forma',
       debugShowCheckedModeBanner: false,
+      // The copy is English; dates, month names and the 12/24-hour clock
+      // follow the device. Every Material locale is accepted so the device
+      // locale resolves instead of falling back to en_US.
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: [
+        for (final tag in kMaterialSupportedLanguages) Locale(tag),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.accentPrimary,
@@ -73,6 +82,15 @@ class FormaApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.bg,
         splashFactory: NoSplash.splashFactory,
+        textTheme: formaTextTheme,
+      ),
+      // Dynamic Type follows the reader's setting up to 1.6×. Past that the
+      // fixed-height rows and pinned buttons start swallowing their own
+      // text; below 1.0 the type is already as small as it is designed to go.
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        minScaleFactor: 1.0,
+        maxScaleFactor: 1.6,
+        child: child ?? const SizedBox.shrink(),
       ),
       home: const _StartupGate(),
     );
@@ -135,6 +153,10 @@ class _OnboardingGate extends StatefulWidget {
 class _OnboardingGateState extends State<_OnboardingGate> {
   late Future<bool> _completed;
 
+  /// Set when onboarding finishes right here, so the gate goes straight on
+  /// without a frame of loader while a resolved future settles.
+  var _finishedHere = false;
+
   @override
   void initState() {
     super.initState();
@@ -147,6 +169,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
 
   @override
   Widget build(BuildContext context) {
+    if (_finishedHere) return const ShellView();
     return FutureBuilder<bool>(
       future: _completed,
       builder: (context, snapshot) {
@@ -182,6 +205,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
           // of the setState callback, which setState rejects.
           onFinished: () => setState(() {
             _completed = Future.value(true);
+            _finishedHere = true;
           }),
         );
       },

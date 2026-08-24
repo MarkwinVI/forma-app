@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,6 +23,12 @@ class _LoginViewState extends State<LoginView> {
   final _authService = AuthService();
   bool _isLoading = false;
 
+  /// Apple's button on Apple's platform; everywhere else the account most
+  /// people already have on the device is Google.
+  static bool get _usesApple =>
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
   Future<void> _signIn(Future<dynamic> Function() method) async {
     setState(() => _isLoading = true);
     try {
@@ -33,7 +41,16 @@ class _LoginViewState extends State<LoginView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign in failed. Please try again.')),
       );
+    } on GoogleSignInException catch (e) {
+      // Likewise for the Google account sheet.
+      if (e.code == GoogleSignInExceptionCode.canceled) return;
+      debugPrint('Google sign in failed: ${e.code} ${e.description}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in failed. Please try again.')),
+      );
     } catch (e) {
+      debugPrint('Sign in failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign in failed. Please try again.')),
@@ -125,15 +142,22 @@ class _LoginViewState extends State<LoginView> {
                   // itself rather than opening a spinner over everything.
                   if (_isLoading)
                     const _SigningInButton()
-                  else
+                  else if (_usesApple)
                     _AppleButton(
-                      onTap: () =>
+                      onPressed: () =>
                           _signIn(() => _authService.signInWithApple()),
+                    )
+                  else
+                    _GoogleButton(
+                      onPressed: () =>
+                          _signIn(() => _authService.signInWithGoogle()),
                     ),
                   const SizedBox(height: 14),
                   if (_isLoading)
-                    const Text(
-                      'Apple is confirming your account.',
+                    Text(
+                      _usesApple
+                          ? 'Apple is confirming your account.'
+                          : 'Google is confirming your account.',
                       textAlign: TextAlign.center,
                       style: _footerStyle,
                     )
@@ -183,10 +207,10 @@ class _HeroText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text.rich(
+        Text.rich(
           TextSpan(
             style: TextStyle(
               fontSize: 44,
@@ -254,32 +278,73 @@ class _ValueRow extends StatelessWidget {
 }
 
 class _AppleButton extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback onPressed;
 
-  const _AppleButton({required this.onTap});
+  const _AppleButton({required this.onPressed});
+
+  /// The HIG's recommended height; the title is 43% of it, the logo
+  /// artwork runs the full height, and the page's pill radius is allowed.
+  static const double _height = 44;
+  static const double _fontSize = _height * 0.43;
 
   @override
   Widget build(BuildContext context) {
+    // A custom Sign in with Apple button, built to the HIG's proportions:
+    // white fill on the dark page, black system-font title at 43% of the
+    // height, the Apple logo from the official artwork (the package's
+    // painter) at the button's height, title centred, "Continue with Apple"
+    // as one of the sanctioned labels. The package's own widget sets the
+    // title in the regular weight, which reads thin next to the page's
+    // type; the HIG allows a custom button to adjust the weight.
     return Pressable(
-      onTap: onTap,
+      onTap: onPressed,
+      semanticLabel: 'Continue with Apple',
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        height: _height,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
         ),
+        padding: const EdgeInsets.only(left: 12),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.apple, size: 22, color: Colors.black),
-            SizedBox(width: 9),
-            Text(
-              'Continue with Apple',
-              style: TextStyle(
-                fontSize: 16.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-                letterSpacing: -0.17,
+            // The logo file's proportions: the glyph is 25:31 at the title
+            // size and sits a touch above the baseline.
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: _height * 4 / 44,
+                right: _fontSize * 0.3,
+              ),
+              child: SizedBox(
+                width: _fontSize * 25 / 31,
+                height: _fontSize,
+                child: CustomPaint(
+                  painter: AppleLogoPainter(color: Colors.black),
+                ),
+              ),
+            ),
+            // Titles vary in length by locale; the HIG asks for at least 8%
+            // of the width clear on the right, so a long one scales down
+            // rather than clipping.
+            Flexible(
+              child: Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Continue with Apple',
+                    maxLines: 1,
+                    style: TextStyle(
+                      inherit: false,
+                      fontFamily: '.SF Pro Text',
+                      fontSize: _fontSize,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.41,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -357,13 +422,135 @@ class _PrivacyFooterState extends State<_PrivacyFooter> {
   }
 }
 
+class _GoogleButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _GoogleButton({required this.onPressed});
+
+  static const double _height = _AppleButton._height;
+  static const double _fontSize = _AppleButton._fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    // The Apple button's twin for Android: same white pill and height, the
+    // Google "G" at the title size and a "Continue with Google" title, so
+    // the page reads the same on both platforms.
+    return Pressable(
+      onTap: onPressed,
+      semanticLabel: 'Continue with Google',
+      child: Container(
+        height: _height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        padding: const EdgeInsets.only(left: 12),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(right: _fontSize * 0.45),
+              child: SizedBox(
+                width: _fontSize,
+                height: _fontSize,
+                child: CustomPaint(painter: _GoogleLogoPainter()),
+              ),
+            ),
+            Flexible(
+              child: Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Continue with Google',
+                    maxLines: 1,
+                    style: TextStyle(
+                      inherit: false,
+                      fontFamily: 'Roboto',
+                      fontSize: _fontSize,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.2,
+                      color: Color(0xFF1F1F1F),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Google's four-colour "G", drawn as a ring in the brand colours with the
+/// blue bar across the opening, so no bitmap asset is needed.
+class _GoogleLogoPainter extends CustomPainter {
+  const _GoogleLogoPainter();
+
+  static const _blue = Color(0xFF4285F4);
+  static const _green = Color(0xFF34A853);
+  static const _yellow = Color(0xFFFBBC05);
+  static const _red = Color(0xFFEA4335);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final d = math.min(size.width, size.height);
+    final stroke = d * 0.2;
+    final rect = Rect.fromLTWH(
+      (size.width - d) / 2 + stroke / 2,
+      (size.height - d) / 2 + stroke / 2,
+      d - stroke,
+      d - stroke,
+    );
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+
+    // Degrees run clockwise from 3 o'clock. The opening at the top right
+    // (between red and the bar) is what makes it a G rather than an O.
+    void arc(Color color, double from, double to) {
+      paint.color = color;
+      canvas.drawArc(
+        rect,
+        from * math.pi / 180,
+        (to - from) * math.pi / 180,
+        false,
+        paint,
+      );
+    }
+
+    arc(_blue, 0, 48);
+    arc(_green, 48, 135);
+    arc(_yellow, 135, 225);
+    arc(_red, 225, 315);
+
+    // The bar: from the centre to the ring's outer edge, as tall as the
+    // ring is thick, sitting on the horizontal centre line.
+    final barPaint = Paint()..color = _blue;
+    canvas.drawRect(
+      Rect.fromLTRB(
+        rect.center.dx,
+        rect.center.dy - stroke / 2,
+        rect.right + stroke / 2,
+        rect.center.dy + stroke / 2,
+      ),
+      barPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _SigningInButton extends StatelessWidget {
   const _SigningInButton();
 
   @override
   Widget build(BuildContext context) {
+    // Same height as the Apple button it stands in for, so nothing jumps.
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      height: 44,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
@@ -404,21 +591,44 @@ class _ConstellationHeroState extends State<_ConstellationHero>
   late final AnimationController _halo;
   late final AnimationController _glow;
 
+  /// Whether the loops have been started (or deliberately held) — decided
+  /// once, on the first build, when MediaQuery can say if motion is reduced.
+  var _started = false;
+
   @override
   void initState() {
     super.initState();
     _run = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 7200),
-    )..repeat();
+    );
     _halo = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2800),
-    )..repeat();
+    );
     _glow = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 6000),
-    )..repeat();
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      // Reduce Motion: the graph fully drawn, the halo at mid-breath and the
+      // glow at its peak — the frame the loop keeps returning to, held.
+      _run.value = 1;
+      _halo.value = 0.5;
+      _glow.value = 0.25;
+      return;
+    }
+    _run.repeat();
+    _halo.repeat();
+    _glow.repeat();
   }
 
   @override

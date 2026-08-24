@@ -9,13 +9,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   clock: ^1.1.1
   supabase_flutter: ^2.5.0
   posthog_flutter: ^5.36.1
   sign_in_with_apple: ^6.1.0
+  google_sign_in: ^7.2.0
   crypto: ^3.0.3
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.2.1
   shared_preferences: ^2.3.2
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
@@ -27,6 +30,7 @@ dependencies:
   youtube_player_iframe: ^6.0.2
   webview_flutter: ^4.14.1
   url_launcher: ^6.3.2
+  wakelock_plus: ^1.2.10
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +39,18 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Roboto Mono is bundled (SIL OFL 1.1, assets/fonts/RobotoMono-OFL.txt) so
+  # the mono eyebrows render offline and on first launch without a fetch.
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/RobotoMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/RobotoMono-Bold.ttf
+          weight: 700
 
   # LLDB attach on the iOS simulator stalls for minutes on this setup; the
   # pre-LLDB debug attach works fine, so keep it.
