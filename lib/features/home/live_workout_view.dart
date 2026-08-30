@@ -644,12 +644,18 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
       item.plannedSets ?? target.sets,
       (index) {
         final last = _lastSetFor(item, index);
+        // A rung with a weight formula opens on the load the rung asks for —
+        // history may be a lighter sibling rung of the same movement, and a
+        // ladder's whole point is the heavier bar. Everything else opens on
+        // last session's load.
+        final weightKg = item.exercise.weightFormula != null
+            ? _goalWeightFor(item) ?? last?.weightKg
+            : last?.weightKg ?? _goalWeightFor(item);
         return _WorkoutSetDraft(
           number: index + 1,
           target: target.value,
-          weightKg: item.exercise.isWeighted
-              ? (managedWeight ?? last?.weightKg ?? _goalWeightFor(item) ?? 0)
-              : 0,
+          weightKg:
+              item.exercise.isWeighted ? (managedWeight ?? weightKg ?? 0) : 0,
           previousLabel: previousSetLabel(item.exercise, last),
         );
       },

@@ -133,15 +133,26 @@ class ExerciseLogService {
     final rows = (data as List).cast<Map<String, dynamic>>().toList()
       ..sort((a, b) => _finishedAt(b).compareTo(_finishedAt(a)));
 
+    // The exercise's own history first; the movement's other ids only fill
+    // in for an exercise never logged under its own — so an exercise that
+    // has its own last session keeps exactly that.
     final byExercise = <String, List<ExerciseSet>>{};
+    List<ExerciseSet> setsOf(Map<String, dynamic> row) =>
+        (row['sets'] as List<dynamic>? ?? [])
+            .map((s) => ExerciseSet.fromJson(s as Map<String, dynamic>))
+            .toList();
+    for (final row in rows) {
+      final rowId = row['exercise_id'] as String;
+      if (exerciseIds.contains(rowId) && !byExercise.containsKey(rowId)) {
+        byExercise[rowId] = setsOf(row);
+      }
+    }
     for (final row in rows) {
       final rowId = row['exercise_id'] as String;
       for (final id in exerciseIds) {
         if (byExercise.containsKey(id)) continue;
         if (!ExerciseCatalog.sameMovement(id, rowId)) continue;
-        byExercise[id] = (row['sets'] as List<dynamic>? ?? [])
-            .map((s) => ExerciseSet.fromJson(s as Map<String, dynamic>))
-            .toList();
+        byExercise[id] = setsOf(row);
       }
     }
     return byExercise;
