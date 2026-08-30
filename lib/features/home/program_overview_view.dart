@@ -164,7 +164,9 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
           sessionType: sessionType,
           programType: _logic.program.programType,
           branchSelections: _branchSelections,
-          progressMap: widget.progressMap,
+          // _progress, not widget.progressMap: an adjustment made in the
+          // sheet or on the wheel must reach the editor's day immediately.
+          progressMap: _progress,
           sessionItemsConfig: _sessionItemsConfig,
           hasGym: _hasGym,
           skillTracks: _skillTracks,
