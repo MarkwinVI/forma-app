@@ -305,5 +305,66 @@ void main() {
 
       expect(overview.rows.map((row) => row.exerciseId), ['kept']);
     });
+
+    test('a session logged under an alias id counts toward the exercise', () {
+      // The tree step and its library twin: logged as an accessory from the
+      // catalogue, the session lands under the library id but is the same
+      // movement.
+      final overview = buildPerformanceOverview(
+        activeExercises: [
+          const ActivePerformanceExercise(
+            exerciseId: 'core_l_sit',
+            exerciseName: 'L-Sit Hold',
+            isTimed: true,
+            aliasIds: ['l_sit_hold'],
+          ),
+        ],
+        workouts: [
+          _workout('2026-08-10', {
+            'l_sit_hold': [10, 10],
+          }, timed: true),
+        ],
+        now: _date(_now),
+      );
+
+      final row = overview.rows.single;
+      expect(row.exerciseId, 'core_l_sit');
+      expect(row.daysTrained, 1);
+      expect(row.bestValue, 20);
+    });
+
+    test('an exercise in the list keeps its own logs over an alias claim',
+        () {
+      final overview = buildPerformanceOverview(
+        activeExercises: [
+          const ActivePerformanceExercise(
+            exerciseId: 'core_l_sit',
+            exerciseName: 'L-Sit Hold',
+            isTimed: true,
+            aliasIds: ['l_sit_hold'],
+          ),
+          const ActivePerformanceExercise(
+            exerciseId: 'l_sit_hold',
+            exerciseName: 'L-Sit Hold (Library)',
+            isTimed: true,
+          ),
+        ],
+        workouts: [
+          _workout('2026-08-10', {
+            'l_sit_hold': [10],
+          }, timed: true),
+        ],
+        now: _date(_now),
+      );
+
+      // The library exercise is in the list itself, so its logs are its
+      // own — the alias never steals them.
+      final library = overview.rows
+          .singleWhere((row) => row.exerciseId == 'l_sit_hold');
+      final tree = overview.rows
+          .singleWhere((row) => row.exerciseId == 'core_l_sit');
+      expect(library.daysTrained, 1);
+      expect(tree.daysTrained, 0);
+    });
   });
 }

@@ -250,6 +250,11 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
           exerciseName: item.exercise.name,
           isTimed: item.exercise.isTimed,
           isWeighted: item.exercise.isWeighted,
+          // A session logged under the step's library twin — added from the
+          // catalogue as an accessory — is the same movement.
+          aliasIds: [
+            if (item.exercise.libraryId.isNotEmpty) item.exercise.libraryId,
+          ],
         ));
       }
     }

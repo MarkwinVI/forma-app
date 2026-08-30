@@ -14,11 +14,17 @@ class ActivePerformanceExercise {
   final bool isTimed;
   final bool isWeighted;
 
+  /// Other ids the same movement gets logged under — a tree step's library
+  /// twin, so a session logged as an accessory from the catalogue still
+  /// counts toward this exercise's days and volume.
+  final List<String> aliasIds;
+
   const ActivePerformanceExercise({
     required this.exerciseId,
     required this.exerciseName,
     required this.isTimed,
     this.isWeighted = false,
+    this.aliasIds = const [],
   });
 }
 
@@ -94,8 +100,14 @@ PerformanceOverview buildPerformanceOverview({
 }) {
   final today = _dateOnly(now);
 
-  // Each active exercise's volume per trained day, oldest day first.
-  final byId = {
+  // Each active exercise's volume per trained day, oldest day first. Logs
+  // filed under an alias id (the library twin of a tree step) count toward
+  // the exercise they are the same movement as.
+  final byId = <String, ActivePerformanceExercise>{
+    for (final exercise in activeExercises)
+      for (final alias in exercise.aliasIds) alias: exercise,
+    // Own ids written last: an exercise that is itself in the list always
+    // beats another exercise claiming its id as an alias.
     for (final exercise in activeExercises) exercise.exerciseId: exercise,
   };
   final volumeByDay = <String, Map<DateTime, int>>{};
@@ -106,7 +118,7 @@ PerformanceOverview buildPerformanceOverview({
       final active = byId[exercise.exerciseId];
       if (active == null || exercise.sets.isEmpty) continue;
       final volume = _sessionVolume(active, exercise.sets);
-      final days = volumeByDay[exercise.exerciseId] ??= {};
+      final days = volumeByDay[active.exerciseId] ??= {};
       final already = days[day];
       if (already == null || volume > already) days[day] = volume;
     }
