@@ -81,6 +81,8 @@ class ExerciseLogService {
     String userId,
     String exerciseId,
   ) async {
+    // The movement's whole id family: a session logged under the step's
+    // library twin (or a sibling rung) is this exercise's history too.
     final data = await _client.from('workout_exercise_logs').select('''
           id,
           exercise_id,
@@ -88,7 +90,10 @@ class ExerciseLogService {
           total_reps,
           total_volume_kg,
           workout_sessions!inner(title, finished_at)
-        ''').eq('user_id', userId).eq('exercise_id', exerciseId);
+        ''').eq('user_id', userId).inFilter(
+          'exercise_id',
+          ExerciseCatalog.logIdsFor(exerciseId),
+        );
 
     final logs = (data as List)
         .map((m) => _exerciseLogFromWorkoutExerciseMap(
@@ -118,7 +123,11 @@ class ExerciseLogService {
           workout_sessions!inner(finished_at)
         ''')
         .eq('user_id', userId)
-        .inFilter('exercise_id', exerciseIds);
+        .inFilter('exercise_id', [
+          // Each id's whole movement family, so a session logged under a
+          // step's library twin still pre-fills the step's row.
+          for (final id in exerciseIds) ...ExerciseCatalog.logIdsFor(id),
+        ]);
 
     // Newest first, then the first row seen per exercise is its last session.
     final rows = (data as List).cast<Map<String, dynamic>>().toList()
@@ -126,11 +135,14 @@ class ExerciseLogService {
 
     final byExercise = <String, List<ExerciseSet>>{};
     for (final row in rows) {
-      final id = row['exercise_id'] as String;
-      if (byExercise.containsKey(id)) continue;
-      byExercise[id] = (row['sets'] as List<dynamic>? ?? [])
-          .map((s) => ExerciseSet.fromJson(s as Map<String, dynamic>))
-          .toList();
+      final rowId = row['exercise_id'] as String;
+      for (final id in exerciseIds) {
+        if (byExercise.containsKey(id)) continue;
+        if (!ExerciseCatalog.sameMovement(id, rowId)) continue;
+        byExercise[id] = (row['sets'] as List<dynamic>? ?? [])
+            .map((s) => ExerciseSet.fromJson(s as Map<String, dynamic>))
+            .toList();
+      }
     }
     return byExercise;
   }
@@ -275,7 +287,11 @@ class ExerciseLogService {
         .from('workout_exercise_logs')
         .select('exercise_id, workout_session_id, sets')
         .eq('user_id', userId)
-        .inFilter('exercise_id', exerciseIds.toList());
+        .inFilter('exercise_id', [
+          // A best set under the movement's other ids is still this
+          // exercise's best — a PB has to beat the whole movement's history.
+          for (final id in exerciseIds) ...ExerciseCatalog.logIdsFor(id),
+        ]);
 
     final bests = <String, int>{};
     for (final row in data as List) {
@@ -285,12 +301,15 @@ class ExerciseLogService {
         continue;
       }
 
-      final exerciseId = map['exercise_id'] as String;
+      final rowId = map['exercise_id'] as String;
       for (final rawSet in map['sets'] as List<dynamic>? ?? const []) {
         final set = ExerciseSet.fromJson(rawSet as Map<String, dynamic>);
         final value = set.durationSeconds > 0 ? set.durationSeconds : set.reps;
-        if (value > (bests[exerciseId] ?? 0)) {
-          bests[exerciseId] = value;
+        for (final id in exerciseIds) {
+          if (ExerciseCatalog.sameMovement(id, rowId) &&
+              value > (bests[id] ?? 0)) {
+            bests[id] = value;
+          }
         }
       }
     }

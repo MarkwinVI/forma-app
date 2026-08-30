@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
@@ -250,10 +251,11 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
           exerciseName: item.exercise.name,
           isTimed: item.exercise.isTimed,
           isWeighted: item.exercise.isWeighted,
-          // A session logged under the step's library twin — added from the
-          // catalogue as an accessory — is the same movement.
+          // A session logged under any of the movement's other ids — the
+          // library twin, a sibling rung — is the same movement.
           aliasIds: [
-            if (item.exercise.libraryId.isNotEmpty) item.exercise.libraryId,
+            for (final id in ExerciseCatalog.logIdsFor(item.exercise.id))
+              if (id != item.exercise.id) id,
           ],
         ));
       }

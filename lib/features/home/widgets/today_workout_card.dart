@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../data/catalog/exercise_catalog.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
 import '../../../data/models/progression_event_model.dart';
@@ -67,12 +68,15 @@ class TodayWorkoutContent {
     required List<ProgressionEvent> activations,
     required List<PastWorkout> pastWorkouts,
   }) {
+    // Keyed by movement, so training the exercise under any of its ids
+    // (the step, or its library twin from the catalogue) retires the tag.
     final lastLoggedAt = <String, DateTime>{};
     for (final workout in pastWorkouts) {
       for (final exercise in workout.exercises) {
-        final seen = lastLoggedAt[exercise.exerciseId];
+        final movement = ExerciseCatalog.movementIdFor(exercise.exerciseId);
+        final seen = lastLoggedAt[movement];
         if (seen == null || workout.loggedAt.isAfter(seen)) {
-          lastLoggedAt[exercise.exerciseId] = workout.loggedAt;
+          lastLoggedAt[movement] = workout.loggedAt;
         }
       }
     }
@@ -83,7 +87,8 @@ class TodayWorkoutContent {
       // A manual fast-forward carries the target it jumped from; the
       // program's own step up does not.
       if (event.valueFrom != null) continue;
-      final logged = lastLoggedAt[event.exerciseId];
+      final logged =
+          lastLoggedAt[ExerciseCatalog.movementIdFor(event.exerciseId)];
       if (logged == null || logged.isBefore(event.createdAt)) {
         ids.add(event.exerciseId);
       }

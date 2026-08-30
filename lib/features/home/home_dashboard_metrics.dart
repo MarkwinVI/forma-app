@@ -559,7 +559,8 @@ class HomeDashboardMetricsCalculator {
       var isTimed = false;
       for (final workout in sorted) {
         final match = workout.exercises
-            .where((exercise) => exercise.exerciseId == item.exercise.id)
+            .where((exercise) => ExerciseCatalog.sameMovement(
+                exercise.exerciseId, item.exercise.id))
             .firstOrNull;
         if (match == null || match.sets.isEmpty) continue;
         if (values.isEmpty) {
@@ -1423,7 +1424,8 @@ class HomeDashboardMetricsCalculator {
       ..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
     for (final workout in sorted) {
       final match = workout.exercises
-          .where((item) => item.exerciseId == exerciseId)
+          .where((item) =>
+              ExerciseCatalog.sameMovement(item.exerciseId, exerciseId))
           .firstOrNull;
       if (match == null || match.sets.isEmpty) continue;
       return match.sets.fold<int>(0, (sum, set) => sum + set.value);
@@ -1441,7 +1443,8 @@ class HomeDashboardMetricsCalculator {
     final values = <int>[];
     for (final workout in sorted) {
       final match = workout.exercises
-          .where((item) => item.exerciseId == exerciseId)
+          .where((item) =>
+              ExerciseCatalog.sameMovement(item.exerciseId, exerciseId))
           .firstOrNull;
       if (match == null || match.sets.isEmpty) continue;
       values.add(match.sets.fold<int>(0, (sum, set) => sum + set.value));
@@ -1585,7 +1588,8 @@ class HomeDashboardMetricsCalculator {
       ..sort((a, b) => a.loggedAt.compareTo(b.loggedAt));
     for (final workout in sorted) {
       final match = workout.exercises
-          .where((item) => item.exerciseId == exerciseId)
+          .where((item) =>
+              ExerciseCatalog.sameMovement(item.exerciseId, exerciseId))
           .firstOrNull;
       if (match == null || match.sets.isEmpty) continue;
       matches.add(
@@ -1763,7 +1767,8 @@ class HomeDashboardMetricsCalculator {
 
     for (final workout in workouts) {
       final match = workout.exercises
-          .where((item) => item.exerciseId == exerciseId)
+          .where((item) =>
+              ExerciseCatalog.sameMovement(item.exerciseId, exerciseId))
           .firstOrNull;
       if (match == null || match.sets.isEmpty) continue;
 

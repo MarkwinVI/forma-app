@@ -237,4 +237,42 @@ void main() {
       }
     });
   });
+
+  group('movement identity for log history', () {
+    test('a step resolves to its library twin, a movement to itself', () {
+      expect(ExerciseCatalog.movementIdFor('core_l_sit'), 'l_sit_hold');
+      expect(ExerciseCatalog.movementIdFor('l_sit_hold'), 'l_sit_hold');
+      // An unknown or twinless id stands for itself.
+      expect(ExerciseCatalog.movementIdFor('not_a_real_id'), 'not_a_real_id');
+    });
+
+    test('the step and its twin are the same movement; variants are not', () {
+      expect(ExerciseCatalog.sameMovement('core_l_sit', 'l_sit_hold'), isTrue);
+      expect(ExerciseCatalog.sameMovement('l_sit_hold', 'core_l_sit'), isTrue);
+      expect(
+        ExerciseCatalog.sameMovement('core_l_sit', 'l_sit_hold_tuck'),
+        isFalse,
+      );
+    });
+
+    test('sibling rungs of a weighted ladder share one movement', () {
+      final rungs = ExerciseCatalog.all()
+          .where((step) => step.libraryId == 'squat_barbell')
+          .toList();
+      expect(rungs.length, greaterThan(1));
+      expect(
+        ExerciseCatalog.sameMovement(rungs.first.id, rungs.last.id),
+        isTrue,
+      );
+    });
+
+    test('logIdsFor returns the whole family from any member', () {
+      final fromStep = ExerciseCatalog.logIdsFor('core_l_sit').toSet();
+      final fromMovement = ExerciseCatalog.logIdsFor('l_sit_hold').toSet();
+      expect(fromStep, fromMovement);
+      expect(fromStep, containsAll(['core_l_sit', 'l_sit_hold']));
+      // A twinless id is a family of one.
+      expect(ExerciseCatalog.logIdsFor('not_a_real_id'), ['not_a_real_id']);
+    });
+  });
 }

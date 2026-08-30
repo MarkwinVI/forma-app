@@ -2297,6 +2297,40 @@ class ExerciseCatalog {
     return ExerciseLibraryCatalog.findById(id);
   }
 
+  /// The movement behind an id: a tree step resolves to its library twin,
+  /// everything else — library movements, steps without a twin — to itself.
+  ///
+  /// This is the identity log history joins on. A session can be logged
+  /// under a step's id (trained inside a program) or under its movement's
+  /// (added from the catalogue), and several rungs of a weighted ladder
+  /// share one movement — so two ids are the same exercise to history
+  /// exactly when their movements match.
+  static String movementIdFor(String id) => _movementIdById[id] ?? id;
+
+  /// Whether logs under [a] and [b] belong to the same movement.
+  static bool sameMovement(String a, String b) =>
+      a == b || movementIdFor(a) == movementIdFor(b);
+
+  /// Every id [id]'s movement gets logged under: the movement itself plus
+  /// each step performed with it. Queries filtering logs by exercise id
+  /// must filter on this set, never on the single id.
+  static List<String> logIdsFor(String id) =>
+      _idsByMovementId[movementIdFor(id)] ?? [id];
+
+  static final Map<String, String> _movementIdById = {
+    for (final step in _all)
+      if (step.libraryId.isNotEmpty) step.id: step.libraryId,
+  };
+
+  static final Map<String, List<String>> _idsByMovementId = () {
+    final members = <String, List<String>>{};
+    for (final step in _all) {
+      if (step.libraryId.isEmpty) continue;
+      (members[step.libraryId] ??= [step.libraryId]).add(step.id);
+    }
+    return members;
+  }();
+
   static String skillCategoryIdForExercise(Exercise exercise) =>
       _resolveSkillCategoryId(exercise);
 
