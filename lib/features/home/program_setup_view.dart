@@ -277,7 +277,9 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
         _romanianDeadliftFor(unit)
       ]) {
         final value = _strength[barbell.id];
-        if (value == null) continue;
+        // A 0 answer stays 0 — the loadable floor below would turn it into
+        // a phantom 5 on a unit flip.
+        if (value == null || value == 0) continue;
         final converted = unit == WeightUnit.lb
             ? value / WeightUnitService.kgPerLb
             : value * WeightUnitService.kgPerLb;
@@ -1219,8 +1221,9 @@ class _UnsetStepper extends StatelessWidget {
       ),
     );
     if (entered == null) return;
-    // 0 typed in is "clear it" — the same as stepping below zero.
-    onChanged(entered == 0 ? null : entered);
+    // A typed 0 is an answer ("I can't do one yet"), not a cleared field —
+    // stepping below zero stays the way to clear.
+    onChanged(entered);
   }
 
   @override
