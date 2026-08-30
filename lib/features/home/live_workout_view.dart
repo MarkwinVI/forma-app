@@ -272,6 +272,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                     'previousLabel': set.previousLabel,
                     'completed': set.completed,
                     'isEdited': set.isEdited,
+                    'weightEdited': set.weightEdited,
                   },
               ],
             },
@@ -354,6 +355,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
                   set['previousLabel'] as String? ?? _noPreviousLabel,
               completed: set['completed'] as bool? ?? false,
               isEdited: set['isEdited'] as bool? ?? false,
+              weightEdited: set['weightEdited'] as bool? ?? false,
             ),
         ];
       }
@@ -754,11 +756,27 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     // A set landing is the one moment in a workout worth feeling — you are
     // often not looking at the phone when you tick it.
     if (shouldComplete) HapticFeedback.lightImpact();
+
+    // A logged set with a load the user typed becomes the working weight:
+    // every set still waiting inherits it as its placeholder, so the latest
+    // logged weight always leads. Typed loads are never overwritten.
+    final propagateWeight = shouldComplete &&
+            item.exercise.isWeighted &&
+            currentSet.weightEdited &&
+            currentSet.weightKg > 0
+        ? currentSet.weightKg
+        : null;
     final sets = _setsFor(item)
         .map(
-          (set) => set.number == number
-              ? set.copyWith(completed: shouldComplete)
-              : set,
+          (set) {
+            if (set.number == number) {
+              return set.copyWith(completed: shouldComplete);
+            }
+            if (propagateWeight != null && !set.completed && !set.weightEdited) {
+              return set.copyWith(weightKg: propagateWeight);
+            }
+            return set;
+          },
         )
         .toList();
 
@@ -825,8 +843,9 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _replaceSets(item, sets);
   }
 
-  /// Applies a load typed into a set's kg field. Like reps, typing marks the
-  /// set edited so it counts toward the logged session.
+  /// Applies a load typed into a set's kg field. Only the weight is marked
+  /// edited — the reps cell keeps its placeholder until reps are typed or
+  /// the set is checked off.
   void _setSetWeight(
     TrainingRecommendationItem item,
     int number,
@@ -837,7 +856,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     final sets = _setsFor(item)
         .map(
           (set) => set.number == number
-              ? set.copyWith(weightKg: clamped, isEdited: true)
+              ? set.copyWith(weightKg: clamped, weightEdited: true)
               : set,
         )
         .toList();
@@ -2454,9 +2473,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
         color: AppColors.textSecondary,
       );
 
-  int get _doneCount => sets.where((set) => set.completed).length;
-  bool get _allDone => sets.isNotEmpty && _doneCount == sets.length;
-
   @override
   Widget build(BuildContext context) {
     // No card: the exercise is its name, the sets are a table of numbers, and
@@ -2488,14 +2504,6 @@ class _WorkoutExerciseCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (_allDone) ...[
-                          const SizedBox(width: 9),
-                          const Icon(
-                            Icons.check_rounded,
-                            size: 17,
-                            color: AppColors.green,
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -2674,7 +2682,7 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 key: ValueKey('kg-${item.exercise.id}-${set.number}'),
                 weightKg: set.weightKg,
                 completed: set.completed,
-                isEdited: set.isEdited,
+                isEdited: set.weightEdited,
                 onChanged: (value) => onWeightChanged(set.number, value),
                 onFocusChanged: onRepFocusChanged,
               )
@@ -3632,7 +3640,14 @@ class _WorkoutSetDraft {
   final double weightKg;
   final String previousLabel;
   final bool completed;
+
+  /// The reps (or seconds) were typed. Kept apart from [weightEdited] so a
+  /// load typed first cannot make the reps cell read as filled — each field
+  /// materialises only on its own edit, or when the set is checked off.
   final bool isEdited;
+
+  /// The load was typed into the kg field.
+  final bool weightEdited;
 
   /// Stays with the set through renumbering, so a row keeps its identity
   /// when the set before it is removed — a key built from the number would
@@ -3646,10 +3661,11 @@ class _WorkoutSetDraft {
     required this.previousLabel,
     this.completed = false,
     this.isEdited = false,
+    this.weightEdited = false,
     Object? identity,
   }) : identity = identity ?? Object();
 
-  bool get hasData => (completed || isEdited) && target > 0;
+  bool get hasData => (completed || isEdited || weightEdited) && target > 0;
 
   _WorkoutSetDraft copyWith({
     int? number,
@@ -3658,6 +3674,7 @@ class _WorkoutSetDraft {
     String? previousLabel,
     bool? completed,
     bool? isEdited,
+    bool? weightEdited,
   }) {
     return _WorkoutSetDraft(
       number: number ?? this.number,
@@ -3666,6 +3683,7 @@ class _WorkoutSetDraft {
       previousLabel: previousLabel ?? this.previousLabel,
       completed: completed ?? this.completed,
       isEdited: isEdited ?? this.isEdited,
+      weightEdited: weightEdited ?? this.weightEdited,
       identity: identity,
     );
   }
