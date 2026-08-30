@@ -409,12 +409,13 @@ class ExerciseProgressionService {
       final masteryValue = masteryValueForExercise(exercise, masterySettings);
       final masteryVolume = current.sets * masteryValue;
 
-      if (result.volume >= masteryVolume) {
-        statusChanges[exercise.id] = ExerciseStatus.mastered;
-
-        // Mastering proves the whole route here: steps a manual jump left
-        // locked earlier on this path master along with it. On an ordinary
-        // mastery everything earlier is already cleared, so nothing changes.
+      // Performing this exercise at the ladder's starting volume (3 × 6
+      // reps, 3 × 10s timed) proves every step below it: the debt a manual
+      // jump left locked settles the first time the jumped-to exercise is
+      // actually performed, not only when it masters. On an ordinary path
+      // everything earlier is already cleared, so nothing changes.
+      if (result.volume >=
+          initialTargetSets * initialTargetValueForExercise(exercise)) {
         for (final id in _unclearedPredecessors(
           exercise,
           statusOf: statusOf,
@@ -423,6 +424,10 @@ class ExerciseProgressionService {
           previousStatuses.putIfAbsent(id, () => statusOf(id));
           statusChanges[id] = ExerciseStatus.mastered;
         }
+      }
+
+      if (result.volume >= masteryVolume) {
+        statusChanges[exercise.id] = ExerciseStatus.mastered;
 
         // The load this mastery proved. A rung further up that resolves to
         // the same weight — 25% of a light user's bodyweight is the empty
@@ -709,9 +714,17 @@ class ExerciseProgressionService {
     }
 
     // One tree trains one exercise: the step being left stops being active.
-    // The steps jumped over are not touched — they stay locked until the
-    // destination is mastered, which masters them too.
     changeStatus(activeId, ExerciseStatus.inactive);
+
+    // The jump only registers with three sets at the ladder's starting
+    // value, and that performance already proves the whole route to the
+    // destination: everything still uncleared earlier on its path masters
+    // right away rather than waiting for the destination itself to master.
+    for (final id in destinationPath.sublist(0, destinationIndex)) {
+      if (!currentStatus(id).isCleared) {
+        changeStatus(id, ExerciseStatus.mastered);
+      }
+    }
 
     final mastery = masteryTargetForExercise(
       destination,
@@ -721,13 +734,6 @@ class ExerciseProgressionService {
     final mastered = result.volume >= mastery.volume;
     if (mastered) {
       changeStatus(destination.id, ExerciseStatus.mastered);
-      // Mastering the destination proves the whole route to it: everything
-      // still uncleared earlier on its path masters along with it.
-      for (final id in destinationPath.sublist(0, destinationIndex)) {
-        if (!currentStatus(id).isCleared) {
-          changeStatus(id, ExerciseStatus.mastered);
-        }
-      }
       if (destinationIndex + 1 < destinationPath.length) {
         final successorId = destinationPath[destinationIndex + 1];
         if (currentStatus(successorId) == ExerciseStatus.inactive) {
@@ -747,7 +753,8 @@ class ExerciseProgressionService {
   }
 
   /// Steps earlier on [exercise]'s path that are not yet cleared — the debt a
-  /// manual jump leaves behind, settled when the jumped-to exercise masters.
+  /// manual jump leaves behind, settled once the jumped-to exercise is
+  /// performed at the ladder's starting volume.
   ///
   /// The path is resolved the way the manual shortcut resolves a destination:
   /// the exercise's own branch when it declares one that contains it, the

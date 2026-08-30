@@ -36,11 +36,25 @@ void main() {
     first = ExerciseCatalog.findById(path.first)!;
     secondId = path[1];
 
+    // The plain-ladder tests need exercises with no earlier path steps, so
+    // the starting volume can never settle a predecessor as a side effect.
+    bool startsItsPaths(Exercise exercise) {
+      final category = SkillCategoryCatalog.findById(exercise.skillCategoryId);
+      if (category == null) return true;
+      return category.trainingPaths.values.every(
+        (path) => !path.contains(exercise.id) || path.first == exercise.id,
+      );
+    }
+
     repExercise = ExerciseCatalog.all().firstWhere(
-      (exercise) => !ExerciseProgressionService.isTimedExercise(exercise),
+      (exercise) =>
+          !ExerciseProgressionService.isTimedExercise(exercise) &&
+          startsItsPaths(exercise),
     );
     timedExercise = ExerciseCatalog.all().firstWhere(
-      (exercise) => ExerciseProgressionService.isTimedExercise(exercise),
+      (exercise) =>
+          ExerciseProgressionService.isTimedExercise(exercise) &&
+          startsItsPaths(exercise),
     );
   });
 
@@ -414,11 +428,15 @@ void main() {
       );
 
       expect(outcome.targetChanges[active.id]?.value, 7);
-      expect(outcome.statusChanges, isEmpty);
+      // The starting volume also settles the uncleared step below it.
+      expect(
+        outcome.statusChanges,
+        {category.pathFor('one_arm')[0]: ExerciseStatus.mastered},
+      );
     });
 
-    test('a jump retires the active node, leaves the rest locked, and '
-        'activates the destination', () {
+    test('a jump masters the route it clears past and activates the '
+        'destination', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
       )!;
@@ -434,11 +452,13 @@ void main() {
         activeBranchByCategory: {category.id: 'one_arm'},
       );
 
-      expect(outcome.statusChanges[active], ExerciseStatus.inactive);
-      // The jumped-over steps are untouched: still locked until the
-      // destination is mastered.
-      for (final id in path.sublist(2, 4)) {
-        expect(outcome.statusChanges.containsKey(id), isFalse);
+      // The jump itself required the starting volume, and that performance
+      // proves everything below the destination — the step being left and
+      // the steps jumped over master right away.
+      expect(outcome.statusChanges[active], ExerciseStatus.mastered);
+      expect(outcome.previousStatuses[active], ExerciseStatus.active);
+      for (final id in [path[0], ...path.sublist(2, 4)]) {
+        expect(outcome.statusChanges[id], ExerciseStatus.mastered);
       }
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.shortcutActivationsBySource[active], destination.id);
@@ -460,7 +480,10 @@ void main() {
         activeBranchByCategory: {category.id: 'weighted'},
       );
 
-      expect(outcome.statusChanges[active], ExerciseStatus.inactive);
+      // The active foundation step is on the destination's route, so the
+      // jump masters it along with everything else below the destination.
+      expect(outcome.statusChanges[active], ExerciseStatus.mastered);
+      expect(outcome.previousStatuses[active], ExerciseStatus.active);
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.branchesToPersist, {category.id: 'one_arm'});
     });
@@ -480,15 +503,12 @@ void main() {
         activeBranchByCategory: {category.id: 'weighted'},
       );
 
+      // The retired step is on a sibling branch, off the destination's
+      // route — it goes inactive, never mastered.
       expect(outcome.statusChanges[active], ExerciseStatus.inactive);
-      expect(
-        outcome.statusChanges.containsKey(destinationPath[4]),
-        isFalse,
-      );
-      expect(
-        outcome.statusChanges.containsKey(destinationPath[5]),
-        isFalse,
-      );
+      // The destination branch's own steps below the jump master with it.
+      expect(outcome.statusChanges[destinationPath[4]], ExerciseStatus.mastered);
+      expect(outcome.statusChanges[destinationPath[5]], ExerciseStatus.mastered);
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.branchesToPersist, isEmpty);
     });
@@ -556,6 +576,62 @@ void main() {
         expect(outcome.previousStatuses[id], ExerciseStatus.inactive);
       }
       expect(outcome.statusChanges[path[4]], ExerciseStatus.active);
+    });
+
+    test('the starting volume on a jumped-to node settles the skipped steps '
+        'without mastering it', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final path = category.pathFor('one_arm');
+      // A jump already happened: path[3] is being trained, path[0..2] were
+      // never cleared. An ordinary session now logs 3 × 6 = 18 reps — well
+      // short of mastery, but proof enough for everything below it.
+      final destination = ExerciseCatalog.findById(path[3])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: destination, volume: 18),
+        ],
+        progressRows: {
+          destination.id: progressWith(
+            exerciseId: destination.id,
+            status: ExerciseStatus.active,
+          ),
+        },
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      for (final id in path.sublist(0, 3)) {
+        expect(outcome.statusChanges[id], ExerciseStatus.mastered);
+        expect(outcome.previousStatuses[id], ExerciseStatus.inactive);
+      }
+      // The exercise itself only climbed its ladder.
+      expect(outcome.statusChanges.containsKey(destination.id), isFalse);
+      expect(outcome.targetChanges[destination.id]?.value, 7);
+    });
+
+    test('below the starting volume the skipped steps stay locked', () {
+      final category = SkillCategoryCatalog.findById(
+        SkillCategoryCatalog.pushupsId,
+      )!;
+      final path = category.pathFor('one_arm');
+      final destination = ExerciseCatalog.findById(path[3])!;
+
+      final outcome = ExerciseProgressionService.computeSessionOutcome(
+        results: [
+          SessionExerciseResult(exercise: destination, volume: 17),
+        ],
+        progressRows: {
+          destination.id: progressWith(
+            exerciseId: destination.id,
+            status: ExerciseStatus.active,
+          ),
+        },
+        activeBranchByCategory: {category.id: 'one_arm'},
+      );
+
+      expect(outcome.statusChanges, isEmpty);
     });
 
     test('timed nodes require three sets of at least ten seconds', () {

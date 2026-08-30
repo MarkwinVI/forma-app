@@ -133,7 +133,8 @@ void main() {
       expect(events, isEmpty);
     });
 
-    test('manual fast-forward records only the changed exercise', () {
+    test('manual fast-forward records the cleared route and the activation',
+        () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
       )!;
@@ -172,12 +173,24 @@ void main() {
         progressRows: rows,
       );
 
-      // The jumped-over steps stay locked and produce no events; the only
-      // record is the destination's activation.
+      // The jump proves the route below the destination, so the cleared
+      // steps each get a mastery record — carrying the track from the
+      // session's category — alongside the destination's activation.
+      final mastered = events
+          .where((event) => event.kind == ProgressionEventKind.mastered)
+          .toList();
+      expect(
+        mastered.map((event) => event.exerciseId).toSet(),
+        path.sublist(0, 3).toSet(),
+      );
+      for (final event in mastered) {
+        expect(event.trackId, 'horizontal_push');
+      }
+
       final activated = events.singleWhere(
         (event) => event.kind == ProgressionEventKind.activated,
       );
-      expect(events, hasLength(1));
+      expect(events, hasLength(4));
       expect(activated.exerciseId, destination.id);
       expect(activated.relatedExerciseId, activeId);
       expect(activated.valueFrom, 6);
