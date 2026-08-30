@@ -9133,7 +9133,7 @@ class ExerciseLibraryCatalog {
         'Heels light, not loaded',
         'Straight arms throughout',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=lcRr4NCPidM',
+      videoUrl: 'https://www.youtube.com/watch?v=iCKhB7bTK7w',
       imageUrl: '',
     ),
     'l_sit_hold_straddle': ExerciseCoaching(
