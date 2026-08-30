@@ -12,6 +12,7 @@ import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/onboarding_profile_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/onboarding_service.dart';
 
@@ -180,6 +181,17 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView> {
   static const _stepCount = 7;
 
+  /// One `$screen` name per step, in step order.
+  static const _stepScreenNames = [
+    'onboarding_welcome',
+    'onboarding_skills',
+    'onboarding_workout',
+    'onboarding_data',
+    'onboarding_radar',
+    'onboarding_about_you',
+    'onboarding_ready',
+  ];
+
   /// The step that tints the progress bar with the picked archetype.
   static const _radarStep = 4;
 
@@ -201,9 +213,16 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   bool get _isLast => _step == _stepCount - 1;
 
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.screen(_stepScreenNames[_step]);
+  }
+
   void _go(int next) {
     final clamped = next.clamp(0, _stepCount - 1);
     if (clamped == _step) return;
+    AnalyticsService.screen(_stepScreenNames[clamped]);
     setState(() {
       _dir = clamped >= _step ? 1 : -1;
       _step = clamped;

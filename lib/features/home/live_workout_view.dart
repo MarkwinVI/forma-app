@@ -148,6 +148,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _analyticsWorkoutId =
         '${DateTime.now().microsecondsSinceEpoch}-${identityHashCode(this)}';
     _sessionItems = List.of(widget.recommendation.items);
+    AnalyticsService.screen('live_workout');
     AnalyticsService.capture('workout_started', properties: {
       'workout_client_id': _analyticsWorkoutId,
       'session_type': widget.recommendation.sessionType.dbValue,

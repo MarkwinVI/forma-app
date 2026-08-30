@@ -87,6 +87,9 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.screen('program_workout_editor', properties: {
+      'session_type': widget.sessionType.dbValue,
+    });
     _items = _loadDay();
     _initialSerialized = _serialized();
     _initialExerciseIds = _exerciseIds();

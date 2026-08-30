@@ -78,6 +78,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   @override
   void initState() {
     super.initState();
+    AnalyticsService.screen('workout_summary');
     _confettiController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),

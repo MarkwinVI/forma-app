@@ -15,6 +15,7 @@ import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_coaching_catalog.dart';
 import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/weight_unit_service.dart';
@@ -103,6 +104,12 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   @override
   void initState() {
     super.initState();
+    // One screen name for every exercise — the movement itself is a
+    // property, so the screen list stays a fixed set.
+    AnalyticsService.screen('exercise_detail', properties: {
+      'exercise_id': widget.exercise.id,
+      'exercise_name': widget.exercise.name,
+    });
     _tab = widget.initialTab;
     _scrollController.addListener(_onScroll);
     _logsFuture = _loadLogs();

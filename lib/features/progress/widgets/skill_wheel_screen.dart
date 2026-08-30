@@ -162,6 +162,11 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       'is_active': widget.activeCategoryIds.contains(family.categoryId),
       'is_locked': widget.treeLocks.containsKey(family.categoryId),
     });
+    // Also a screen view: a focused tree is a page in its own right, it just
+    // never goes through a route.
+    AnalyticsService.screen('skill_tree_${family.categoryId}', properties: {
+      'source': widget.editable ? 'program_tab' : 'progress_tab',
+    });
   }
 
   Future<void> _act(Future<void> Function() action) async {

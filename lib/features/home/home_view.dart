@@ -11,6 +11,7 @@ import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/models/workout_history_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
@@ -452,6 +453,9 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _startWorkout(DailyTrainingRecommendation recommendation) async {
     final openedAt = _devClockService.now();
+    // SessionOverviewView is stateless, so its screen view is captured here;
+    // LiveWorkoutView reports its own.
+    if (recommendation.isRestDay) AnalyticsService.screen('session_overview');
     // The workout flow takes over the whole screen, above the tab bar.
     await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
@@ -476,6 +480,8 @@ class _HomeViewState extends State<HomeView> {
         ? TrainingSessionType.fullBody
         : recommendation.sessionType;
 
+    // AlternateWorkoutOptionsView is stateless: screen view captured here.
+    AnalyticsService.screen('alternate_workout_options');
     // Part of starting a workout — the whole flow runs above the tab bar.
     await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(

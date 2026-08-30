@@ -68,6 +68,15 @@ class AnalyticsService {
     }));
   }
 
+  /// Records a `$screen` view. Flutter draws every screen inside one native
+  /// view, so PostHog cannot see navigation on its own — the screens that
+  /// matter report themselves through here. Names stay a small fixed set;
+  /// anything unbounded (an exercise) rides along as a property instead.
+  static void screen(String name, {Map<String, Object>? properties}) {
+    if (!_enabled) return;
+    unawaited(Posthog().screen(screenName: name, properties: properties));
+  }
+
   /// Pushes queued events out now. For moments the queue won't get another
   /// chance — the last event before an account disappears.
   static Future<void> flush() async {

@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/weight_entry.dart';
 import '../../data/models/training_program_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/weight_unit_service.dart';
 
 /// What the user trains with, asked once during setup. Both weighted answers
@@ -205,6 +206,12 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   static const _stepCount = 4;
 
   int _step = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.screen('program_setup');
+  }
 
   /// Schedule and equipment start unanswered — the CTA holds until a pick.
   int? _days;

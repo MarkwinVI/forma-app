@@ -51,6 +51,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.screen('program_skill_wheel');
     _load();
   }
 

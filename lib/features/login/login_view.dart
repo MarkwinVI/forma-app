@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 
 class LoginView extends StatefulWidget {
@@ -22,6 +23,12 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final _authService = AuthService();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.screen('login');
+  }
 
   /// Apple's button on Apple's platform; everywhere else the account most
   /// people already have on the device is Google.

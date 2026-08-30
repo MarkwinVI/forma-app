@@ -6,6 +6,7 @@ import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/workout_history_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
@@ -33,6 +34,12 @@ class PastWorkoutDetailView extends StatefulWidget {
 class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
   final _exerciseLogService = ExerciseLogService();
   bool _deleting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.screen('past_workout');
+  }
 
   PastWorkout get workout => widget.workout;
 

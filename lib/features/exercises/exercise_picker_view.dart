@@ -5,6 +5,7 @@ import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_library_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../home/program_day_items.dart';
 import 'exercise_detail_view.dart';
 
@@ -56,6 +57,14 @@ class ExercisePickerView extends StatefulWidget {
 }
 
 class ExercisePickerViewState extends State<ExercisePickerView> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.screen('exercise_catalog', properties: {
+      'mode': widget.browsing ? 'browse' : 'pick',
+    });
+  }
+
   final _searchController = TextEditingController();
 
   String _query = '';

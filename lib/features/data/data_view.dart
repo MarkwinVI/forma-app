@@ -7,6 +7,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/workout_history_model.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
@@ -119,6 +120,8 @@ class _DataViewState extends State<DataView> {
   }
 
   Future<void> _openSettings() async {
+    // SettingsView is stateless, so its screen view is captured here.
+    AnalyticsService.screen('settings');
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SettingsView()),
     );
@@ -152,6 +155,7 @@ class _DataViewState extends State<DataView> {
   }
 
   void _openAllSessions() {
+    AnalyticsService.screen('all_sessions');
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => _AllSessionsView(

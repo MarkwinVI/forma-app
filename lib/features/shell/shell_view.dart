@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_nav_bar.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/tab_reset.dart';
+import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../data/data_view.dart';
@@ -82,7 +83,17 @@ class _ShellViewState extends State<ShellView> {
     super.dispose();
   }
 
+  static const _tabScreenNames = [
+    'tab_progress',
+    'tab_train',
+    'tab_program',
+    'tab_profile',
+  ];
+
   void _selectTab(int index) {
+    // Tabs live in an IndexedStack, so no route change ever fires for them —
+    // the switch itself is the screen view.
+    AnalyticsService.screen(_tabScreenNames[index]);
     _activeIndex.value = index;
     setState(() => _currentIndex = index);
   }
