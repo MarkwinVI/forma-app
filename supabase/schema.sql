@@ -409,22 +409,3 @@ $$;
 
 revoke execute on function public.delete_account() from public, anon;
 grant execute on function public.delete_account() to authenticated;
-
--- ── Membership Overrides ──────────────────────────────────────────────────
--- Server-granted membership. Paid membership lives with Apple/RevenueCat;
--- a live row here (expires_at null or in the future) unlocks the app
--- regardless. Written from the SQL editor only — no client insert policy.
-
-create table public.user_membership_overrides (
-  user_id     uuid references auth.users(id) on delete cascade primary key,
-  source      text not null check (source in ('grandfathered', 'comped')),
-  note        text,
-  expires_at  timestamptz, -- null = forever
-  created_at  timestamptz default now() not null
-);
-
-alter table public.user_membership_overrides enable row level security;
-
-create policy "Users read own membership override"
-  on public.user_membership_overrides for select
-  using (auth.uid() = user_id);

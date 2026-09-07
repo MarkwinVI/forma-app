@@ -28,7 +28,7 @@ enum MembershipState {
   /// Unlocked, on a paid plan.
   subscribed,
 
-  /// Unlocked by the server: grandfathered or comped.
+  /// Unlocked by a grant made in the RevenueCat dashboard, not a purchase.
   complimentary,
 }
 
@@ -47,6 +47,10 @@ extension MembershipStateX on MembershipState {
 /// and "is this the yearly plan" accepts either spelling.
 class MembershipProducts {
   MembershipProducts._();
+
+  /// The one entitlement every plan unlocks, and the thing a dashboard
+  /// grant switches on. What the app checks.
+  static const String entitlement = 'forma_pro';
 
   static const String yearly = 'forma_pro_annual';
   static const String monthly = 'forma_pro_monthly';
@@ -82,7 +86,8 @@ class Membership {
   /// Whether the active plan renews at [expiresAt]. False once cancelled.
   final bool willRenew;
 
-  /// 'grandfathered' | 'comped' for [MembershipState.complimentary].
+  /// Set for [MembershipState.complimentary]: how the access was granted
+  /// ('granted' — a promotional entitlement from the dashboard).
   final String? overrideSource;
 
   /// When this was worked out. A cached copy is only ever a fallback.
@@ -156,13 +161,41 @@ class StoreSubscription {
   });
 }
 
-/// The store's view of the user: every subscription it has seen, and
-/// whether Apple would still grant the free trial (null = unknown).
+/// The `forma_pro` entitlement as the store reports it: what unlocked it
+/// (a plan, or a grant), until when, and whether it is live now.
+class StoreEntitlement {
+  final bool isActive;
+  final String productId;
+  final DateTime? expiresAt;
+  final bool willRenew;
+
+  /// True while the entitlement runs on the free trial.
+  final bool isTrial;
+
+  /// True for a promotional grant made in the dashboard rather than a
+  /// purchase.
+  final bool isGranted;
+
+  const StoreEntitlement({
+    required this.isActive,
+    required this.productId,
+    required this.expiresAt,
+    required this.willRenew,
+    required this.isTrial,
+    required this.isGranted,
+  });
+}
+
+/// The store's view of the user: the entitlement, every subscription it
+/// has seen, and whether Apple would still grant the free trial (null =
+/// unknown).
 class StoreAccount {
+  final StoreEntitlement? entitlement;
   final List<StoreSubscription> subscriptions;
   final bool? trialEligible;
 
   const StoreAccount({
+    this.entitlement,
     required this.subscriptions,
     required this.trialEligible,
   });
@@ -170,38 +203,31 @@ class StoreAccount {
   static const empty = StoreAccount(subscriptions: [], trialEligible: null);
 }
 
-/// A live row in `user_membership_overrides`.
-class MembershipOverride {
-  final String source;
-  final DateTime? expiresAt;
-
-  const MembershipOverride({required this.source, this.expiresAt});
-
-  bool isLiveAt(DateTime now) {
-    final end = expiresAt;
-    return end == null || end.isAfter(now);
-  }
-}
-
-/// Works out the membership from what the server and the store say.
+/// Works out the membership from what the store says.
 ///
-/// A live override wins outright. Otherwise the store decides: an active
-/// subscription unlocks (trial or paid by its period type); a subscription
-/// that has run out locks with the copy for how it ended; and with no
-/// history at all the trial is offered unless Apple says it is used up.
-/// No store data and no override — offline on a fresh install, or the
-/// store SDK unavailable — reads as locked with the trial offered, the
-/// state that asks rather than assumes.
+/// A live entitlement unlocks: complimentary for a dashboard grant, else
+/// trialing or subscribed by the period it runs on. Without one, the
+/// subscription history sets the copy for how the user got locked out;
+/// and with no history at all the trial is offered unless Apple says it
+/// is used up. No store data — offline on a fresh install, or the store
+/// SDK unavailable — reads as locked with the trial offered, the state
+/// that asks rather than assumes.
 Membership resolveMembership({
   required StoreAccount? store,
-  required MembershipOverride? override,
   required DateTime now,
 }) {
-  if (override != null && override.isLiveAt(now)) {
+  final entitlement = store?.entitlement;
+  if (entitlement != null && entitlement.isActive) {
     return Membership(
-      state: MembershipState.complimentary,
-      expiresAt: override.expiresAt,
-      overrideSource: override.source,
+      state: entitlement.isGranted
+          ? MembershipState.complimentary
+          : entitlement.isTrial
+              ? MembershipState.trialing
+              : MembershipState.subscribed,
+      expiresAt: entitlement.expiresAt,
+      productId: entitlement.isGranted ? null : entitlement.productId,
+      willRenew: entitlement.willRenew,
+      overrideSource: entitlement.isGranted ? 'granted' : null,
       resolvedAt: now,
     );
   }
@@ -220,19 +246,6 @@ Membership resolveMembership({
       if (a == null || a.isAfter(b)) best = item;
     }
     return best;
-  }
-
-  final active = latest(subscriptions.where((s) => s.isActive));
-  if (active != null) {
-    return Membership(
-      state: active.isTrial
-          ? MembershipState.trialing
-          : MembershipState.subscribed,
-      expiresAt: active.expiresAt,
-      productId: active.productId,
-      willRenew: active.willRenew,
-      resolvedAt: now,
-    );
   }
 
   final past = latest(subscriptions);

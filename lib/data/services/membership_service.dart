@@ -9,41 +9,20 @@ import '../models/membership_model.dart';
 import 'analytics_service.dart';
 import 'auth_service.dart';
 import 'purchases_gateway.dart';
-import 'supabase_service.dart';
-
-/// Reads the server's membership override for a user, if any.
-typedef MembershipOverrideFetcher = Future<MembershipOverride?> Function(
-  String userId,
-);
-
-Future<MembershipOverride?> fetchMembershipOverride(String userId) async {
-  final row = await SupabaseService.client
-      .from('user_membership_overrides')
-      .select('source, expires_at')
-      .eq('user_id', userId)
-      .maybeSingle();
-  if (row == null) return null;
-  return MembershipOverride(
-    source: row['source'] as String,
-    expiresAt: DateTime.tryParse(row['expires_at'] as String? ?? '')?.toLocal(),
-  );
-}
 
 /// One membership for the whole app: resolved behind the splash, cached on
 /// device so a cold start never waits on the network, and pushed through
 /// [notifier] so the lock lifts everywhere the moment a purchase lands.
 ///
-/// The membership is worked out by [resolveMembership] from two sources
-/// fetched together — the store (RevenueCat) and the server override row.
+/// The membership is worked out by [resolveMembership] from the store
+/// (RevenueCat), which is also where free access is granted by hand.
 /// Screens read [current] or listen to [notifier]; they never talk to the
 /// store directly.
 class MembershipService {
   MembershipService({
     PurchasesGateway? gateway,
-    MembershipOverrideFetcher? fetchOverride,
     DateTime Function()? now,
   })  : _gateway = gateway ?? RevenueCatGateway(),
-        _fetchOverride = fetchOverride ?? fetchMembershipOverride,
         _now = now ?? DateTime.now;
 
   /// The app-wide instance. Tests swap it for one with a fake gateway.
@@ -56,7 +35,6 @@ class MembershipService {
   static const networkTimeout = Duration(seconds: 8);
 
   final PurchasesGateway _gateway;
-  final MembershipOverrideFetcher _fetchOverride;
   final DateTime Function() _now;
 
   /// The membership in force, null until the first resolve for a user has
@@ -84,7 +62,6 @@ class MembershipService {
   /// the anonymous identity's empty history.
   String? _storeUserId;
   Future<void>? _identifying;
-  MembershipOverride? _lastOverride;
   Future<List<MembershipPlan>>? _plans;
   StreamSubscription<StoreAccount>? _updates;
   bool _configured = false;
@@ -96,7 +73,7 @@ class MembershipService {
   /// Starts the store SDK and follows the auth session: sign-in ties the
   /// store identity to the account, sign-out drops it. Never throws — an
   /// SDK that fails to start (no StoreKit on this platform) leaves the app
-  /// resolving from the override row and the cache alone.
+  /// resolving from the cache alone.
   Future<void> setup() async {
     final signedIn = AuthService().currentUser;
     try {
@@ -105,6 +82,8 @@ class MembershipService {
       _userId = signedIn?.id;
       _storeUserId = signedIn?.id;
       _updates = _gateway.updates.listen(_onStoreUpdate);
+      // A restored session skips logIn, so the email is sent from here.
+      if (signedIn != null) _identify(signedIn.id, email: signedIn.email);
     } catch (error) {
       debugPrint('Store SDK setup failed, membership from cache only: $error');
     }
@@ -114,17 +93,18 @@ class MembershipService {
       if (state.event == AuthChangeEvent.signedOut) {
         unawaited(_signOut());
       } else if (user != null && user.id != _storeUserId) {
-        _identify(user.id);
+        _identify(user.id, email: user.email);
       }
     });
   }
 
   /// Ties the store identity to [userId]. Tracked so a resolve started in
   /// the same breath waits for it.
-  void _identify(String userId) {
+  void _identify(String userId, {String? email}) {
     _storeUserId = userId;
     if (!_configured) return;
-    final future = _gateway.logIn(userId).catchError((Object error) {
+    final future =
+        _gateway.logIn(userId, email: email).catchError((Object error) {
       debugPrint('Store logIn failed: $error');
     });
     _identifying = future;
@@ -137,7 +117,6 @@ class MembershipService {
     _userId = null;
     _storeUserId = null;
     _loads.clear();
-    _lastOverride = null;
     _setReal(null);
     if (_configured) await _gateway.logOut();
   }
@@ -174,36 +153,17 @@ class MembershipService {
     if (cached != null && _real == null) _setReal(cached);
 
     try {
-      final (override, account) = await (
-        _fetchOverrideOrLast(userId),
-        _fetchAccount(),
-      ).wait.timeout(networkTimeout);
-      _lastOverride = override;
+      final account = await _fetchAccount().timeout(networkTimeout);
       return _publish(
-          userId,
-          resolveMembership(
-            store: account,
-            override: override,
-            now: _now(),
-          ));
+        userId,
+        resolveMembership(store: account, now: _now()),
+      );
     } catch (error) {
       debugPrint('Membership resolve failed, using cache: $error');
       onFailure();
       final membership = cached ?? _fallback();
       if (_real == null) _setReal(membership);
       return membership;
-    }
-  }
-
-  /// The server's override row. A failed read is not a failed resolve —
-  /// the store's answer still stands — so it falls back to the last row
-  /// seen this session (usually none).
-  Future<MembershipOverride?> _fetchOverrideOrLast(String userId) async {
-    try {
-      return await _fetchOverride(userId);
-    } catch (error) {
-      debugPrint('Membership override read failed: $error');
-      return _lastOverride;
     }
   }
 
@@ -221,17 +181,11 @@ class MembershipService {
       );
 
   /// The store changed under us — a renewal, a cancellation, a purchase on
-  /// another device. Re-resolve against the last known override.
+  /// another device.
   void _onStoreUpdate(StoreAccount account) {
     final userId = _userId;
     if (userId == null) return;
-    _publish(
-        userId,
-        resolveMembership(
-          store: account,
-          override: _lastOverride,
-          now: _now(),
-        ));
+    _publish(userId, resolveMembership(store: account, now: _now()));
   }
 
   Membership _publish(String userId, Membership membership) {
@@ -280,13 +234,8 @@ class MembershipService {
       });
       rethrow;
     }
-    final membership = _publish(
-        userId,
-        resolveMembership(
-          store: account,
-          override: _lastOverride,
-          now: _now(),
-        ));
+    final membership =
+        _publish(userId, resolveMembership(store: account, now: _now()));
     _loads[userId] = Future.value(membership);
     AnalyticsService.capture('purchase_completed', properties: {
       'product_id': productId,
@@ -299,13 +248,8 @@ class MembershipService {
   Future<Membership> restore() async {
     final userId = _requireUser();
     final account = await _gateway.restore();
-    final membership = _publish(
-        userId,
-        resolveMembership(
-          store: account,
-          override: _lastOverride,
-          now: _now(),
-        ));
+    final membership =
+        _publish(userId, resolveMembership(store: account, now: _now()));
     _loads[userId] = Future.value(membership);
     AnalyticsService.capture('purchase_restored', properties: {
       'state': membership.state.name,
@@ -354,7 +298,7 @@ class MembershipService {
       },
       willRenew: state == MembershipState.trialing ||
           state == MembershipState.subscribed,
-      overrideSource: state == MembershipState.complimentary ? 'comped' : null,
+      overrideSource: state == MembershipState.complimentary ? 'granted' : null,
       resolvedAt: now,
     );
   }

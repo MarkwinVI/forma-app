@@ -31,7 +31,6 @@ void main() {
     // A store with nothing bought, and no server override: locked.
     MembershipService.instance = MembershipService(
       gateway: FakePurchasesGateway(),
-      fetchOverride: (_) async => null,
     );
   });
 

@@ -9,9 +9,6 @@ import '../../helpers/fake_purchases_gateway.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  /// Thrown by the override fetch while set — cleared to bring it back.
-  Object? overrideError;
-
   final now = DateTime(2026, 9, 7, 12);
   const user = 'user-1';
 
@@ -26,36 +23,13 @@ void main() {
     );
   });
 
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-    overrideError = null;
-  });
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  MembershipService service({
-    required FakePurchasesGateway gateway,
-    MembershipOverride? override,
-  }) =>
-      MembershipService(
-        gateway: gateway,
-        fetchOverride: (_) async {
-          final error = overrideError;
-          if (error != null) throw error;
-          return override;
-        },
-        now: () => now,
-      );
+  MembershipService service({required FakePurchasesGateway gateway}) =>
+      MembershipService(gateway: gateway, now: () => now);
 
-  StoreAccount activeTrial() => StoreAccount(
-        subscriptions: [
-          StoreSubscription(
-            productId: MembershipProducts.yearly,
-            isActive: true,
-            expiresAt: now.add(const Duration(days: 6)),
-            willRenew: true,
-            isTrial: true,
-          ),
-        ],
-        trialEligible: false,
+  StoreAccount activeTrial() => FakePurchasesGateway.activeAccount(
+        expiresAt: now.add(const Duration(days: 6)),
       );
 
   test('setup starts the store under the signed-in user and load resolves',
@@ -71,25 +45,35 @@ void main() {
     expect(s.notifier.value, same(membership));
   });
 
-  test('the server override wins over the store', () async {
-    final gateway = FakePurchasesGateway(account: activeTrial());
-    final s = service(
-      gateway: gateway,
-      override: const MembershipOverride(source: 'comped'),
+  test('a grant made in the dashboard reads as complimentary', () async {
+    final gateway = FakePurchasesGateway(
+      account: const StoreAccount(
+        entitlement: StoreEntitlement(
+          isActive: true,
+          productId: 'rc_promo_forma_pro_lifetime',
+          expiresAt: null,
+          willRenew: false,
+          isTrial: false,
+          isGranted: true,
+        ),
+        subscriptions: [],
+        trialEligible: true,
+      ),
     );
+    final s = service(gateway: gateway);
     await s.setup();
     expect((await s.load(user)).state, MembershipState.complimentary);
   });
 
   test('a resolve that fails falls back to the cached copy', () async {
-    final first = service(gateway: FakePurchasesGateway(account: activeTrial()));
+    final first =
+        service(gateway: FakePurchasesGateway(account: activeTrial()));
     await first.setup();
     await first.load(user);
     // The cache write is fire-and-forget; let it land.
     await Future<void>.delayed(Duration.zero);
 
     final gateway = FakePurchasesGateway()..accountError = Exception('offline');
-    overrideError = Exception('down');
     final second = service(gateway: gateway);
     await second.setup();
     final membership = await second.load(user);
@@ -98,7 +82,6 @@ void main() {
 
     // And the failure is not memoized: the next load asks again.
     gateway.accountError = null;
-    overrideError = null;
     gateway.account = StoreAccount.empty;
     final again = await second.refresh();
     expect(again.state, MembershipState.trialAvailable);
@@ -107,7 +90,6 @@ void main() {
   test('with no cache and no network, the answer asks rather than assumes',
       () async {
     final gateway = FakePurchasesGateway()..accountError = Exception('offline');
-    overrideError = Exception('down');
     final s = service(gateway: gateway);
     await s.setup();
     final membership = await s.load(user);
@@ -127,8 +109,7 @@ void main() {
     expect(s.current?.entitled, isTrue);
   });
 
-  test('a store-side change re-resolves against the last override',
-      () async {
+  test('a store-side change re-resolves in place', () async {
     final gateway = FakePurchasesGateway();
     final s = service(gateway: gateway);
     await s.setup();

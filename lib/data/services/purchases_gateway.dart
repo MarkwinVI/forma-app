@@ -20,8 +20,9 @@ abstract class PurchasesGateway {
   /// Starts the SDK. Safe to call more than once.
   Future<void> configure({String? userId});
 
-  /// Ties purchases to the signed-in account.
-  Future<void> logIn(String userId);
+  /// Ties purchases to the signed-in account. The email rides along as a
+  /// customer attribute so a person is findable by it in the dashboard.
+  Future<void> logIn(String userId, {String? email});
 
   /// Back to an anonymous store identity after sign-out.
   Future<void> logOut();
@@ -69,8 +70,9 @@ class RevenueCatGateway implements PurchasesGateway {
   }
 
   @override
-  Future<void> logIn(String userId) async {
+  Future<void> logIn(String userId, {String? email}) async {
     await Purchases.logIn(userId);
+    if (email != null && email.isNotEmpty) await Purchases.setEmail(email);
     // Eligibility is per Apple ID, not per account, but a new identity is
     // a good moment to re-ask.
     _trialEligible = null;
@@ -192,7 +194,18 @@ class RevenueCatGateway implements PurchasesGateway {
   }
 
   StoreAccount _toAccount(CustomerInfo info) {
+    final entitlement = info.entitlements.all[MembershipProducts.entitlement];
     return StoreAccount(
+      entitlement: entitlement == null
+          ? null
+          : StoreEntitlement(
+              isActive: entitlement.isActive,
+              productId: entitlement.productIdentifier,
+              expiresAt: _parseDate(entitlement.expirationDate),
+              willRenew: entitlement.willRenew,
+              isTrial: entitlement.periodType == PeriodType.trial,
+              isGranted: entitlement.store == Store.promotional,
+            ),
       subscriptions: [
         for (final sub in info.subscriptionsByProductIdentifier.values)
           if (MembershipProducts.isKnown(sub.productIdentifier))

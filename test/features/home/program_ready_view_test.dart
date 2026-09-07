@@ -86,7 +86,6 @@ void main() {
   Future<MembershipService> service({StoreAccount? account}) async {
     final s = MembershipService(
       gateway: FakePurchasesGateway(account: account ?? StoreAccount.empty),
-      fetchOverride: (_) async => null,
     );
     await s.setup();
     await s.load('user');

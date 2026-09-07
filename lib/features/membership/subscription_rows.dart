@@ -161,11 +161,9 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
                 : 'Ends $endLabel';
       case MembershipState.complimentary:
         name = 'Free access';
-        sub = membership.overrideSource == 'grandfathered'
-            ? 'Yours for good — you were here before membership'
-            : endLabel == null
-                ? 'Complimentary membership'
-                : 'Complimentary until $endLabel';
+        sub = endLabel == null
+            ? 'Complimentary membership'
+            : 'Complimentary until $endLabel';
       default:
         return const [];
     }

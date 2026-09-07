@@ -62,8 +62,13 @@ class FakePurchasesGateway implements PurchasesGateway {
     loggedIn = userId;
   }
 
+  String? email;
+
   @override
-  Future<void> logIn(String userId) async => loggedIn = userId;
+  Future<void> logIn(String userId, {String? email}) async {
+    loggedIn = userId;
+    this.email = email;
+  }
 
   @override
   Future<void> logOut() async {
@@ -90,19 +95,42 @@ class FakePurchasesGateway implements PurchasesGateway {
     final error = purchaseError;
     if (error != null) throw error;
     purchased.add(productId);
-    account = StoreAccount(
+    account = activeAccount(
+      productId: productId,
+      trial: account.trialEligible != false,
+    );
+    return account;
+  }
+
+  /// A store with the entitlement live on [productId] — a trial or a paid
+  /// period — the way a purchase leaves it.
+  static StoreAccount activeAccount({
+    String productId = MembershipProducts.yearly,
+    bool trial = true,
+    DateTime? expiresAt,
+    bool willRenew = true,
+  }) {
+    final end = expiresAt ?? DateTime.now().add(const Duration(days: 7));
+    return StoreAccount(
+      entitlement: StoreEntitlement(
+        isActive: true,
+        productId: productId,
+        expiresAt: end,
+        willRenew: willRenew,
+        isTrial: trial,
+        isGranted: false,
+      ),
       subscriptions: [
         StoreSubscription(
           productId: productId,
           isActive: true,
-          expiresAt: DateTime.now().add(const Duration(days: 7)),
-          willRenew: true,
-          isTrial: account.trialEligible != false,
+          expiresAt: end,
+          willRenew: willRenew,
+          isTrial: trial,
         ),
       ],
       trialEligible: false,
     );
-    return account;
   }
 
   @override

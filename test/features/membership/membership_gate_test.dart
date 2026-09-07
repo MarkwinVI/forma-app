@@ -31,7 +31,6 @@ void main() {
     final gateway = FakePurchasesGateway(account: account);
     final s = MembershipService(
       gateway: gateway,
-      fetchOverride: (_) async => null,
     );
     await s.setup();
     await s.load('user');
@@ -113,18 +112,9 @@ void main() {
     final (s, gateway) = await service();
     expect(await pump(tester, s, hasProgram: true), 0);
 
-    gateway.emit(StoreAccount(
-      subscriptions: [
-        StoreSubscription(
-          productId: MembershipProducts.monthly,
-          isActive: true,
-          expiresAt: DateTime.now().add(const Duration(days: 7)),
-          willRenew: true,
-          isTrial: true,
-        ),
-      ],
-      trialEligible: false,
-    ));
+    gateway.emit(
+      FakePurchasesGateway.activeAccount(productId: MembershipProducts.monthly),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.lock_rounded), findsNothing);

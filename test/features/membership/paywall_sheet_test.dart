@@ -31,7 +31,6 @@ void main() {
     final gateway = FakePurchasesGateway(account: account);
     final s = MembershipService(
       gateway: gateway,
-      fetchOverride: (_) async => null,
     );
     await s.setup();
     await s.load('user');
@@ -191,7 +190,6 @@ void main() {
     );
     final s = MembershipService(
       gateway: gateway,
-      fetchOverride: (_) async => null,
     );
     await s.setup();
     await s.load('user');
