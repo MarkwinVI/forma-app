@@ -350,7 +350,8 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
 }
 
 /// The full read-only wheel, opened over the ready screen and flown into
-/// the tapped tree. Its own back arrow returns to the ready screen.
+/// the tapped tree. Backing out of the tree returns straight to the ready
+/// screen — the wheel overview in between would be a detour.
 class _ProgramReadyWheelScreen extends StatelessWidget {
   final SkillWheelBundle bundle;
   final String initialCategoryId;
@@ -392,6 +393,7 @@ class _ProgramReadyWheelScreen extends StatelessWidget {
           activeCategoryIds: bundle.activeCategoryIds,
           treeLocks: bundle.treeLocks,
           initialCategoryId: initialCategoryId,
+          exitOnTreeBack: true,
           onBack: () => Navigator.of(context).pop(),
           onOpenExercise: (node) => _openExercise(context, node),
         ),

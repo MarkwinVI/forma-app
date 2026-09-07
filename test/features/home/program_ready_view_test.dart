@@ -182,11 +182,8 @@ void main() {
     expect(find.text('Pushups'), findsWidgets);
     expect(find.text('Your map is set.'), findsNothing);
 
-    // Back out of the focused tree to the wheel overview, then out of the
-    // screen: the ready view is where that lands.
-    await tester.tap(find.bySemanticsLabel('Back').first);
-    await settle();
-    expect(find.byType(SkillWheelScreen), findsOneWidget);
+    // Backing out of the tree lands straight on the ready view — no wheel
+    // overview in between.
     await tester.tap(find.bySemanticsLabel('Back').first);
     await settle();
     expect(find.byType(SkillWheelScreen), findsNothing);
