@@ -772,19 +772,17 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
             currentSet.weightKg > 0
         ? currentSet.weightKg
         : null;
-    final sets = _setsFor(item)
-        .map(
-          (set) {
-            if (set.number == number) {
-              return set.copyWith(completed: shouldComplete);
-            }
-            if (propagateWeight != null && !set.completed && !set.weightEdited) {
-              return set.copyWith(weightKg: propagateWeight);
-            }
-            return set;
-          },
-        )
-        .toList();
+    final sets = _setsFor(item).map(
+      (set) {
+        if (set.number == number) {
+          return set.copyWith(completed: shouldComplete);
+        }
+        if (propagateWeight != null && !set.completed && !set.weightEdited) {
+          return set.copyWith(weightKg: propagateWeight);
+        }
+        return set;
+      },
+    ).toList();
 
     _replaceSets(item, sets);
     if (shouldComplete) {
@@ -969,7 +967,6 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     }
     _showToast('${item.exercise.name} removed');
   }
-
 
   void _replaceItemInSession(
     TrainingRecommendationItem currentItem,

@@ -102,9 +102,8 @@ Future<bool> showSkillTreeConfirm(
                       child: _ConfirmButton(
                         label: confirmLabel,
                         background: tint,
-                        foreground: caution
-                            ? const Color(0xFF1A1408)
-                            : Colors.white,
+                        foreground:
+                            caution ? const Color(0xFF1A1408) : Colors.white,
                         onTap: () => Navigator.of(context).pop(true),
                       ),
                     ),

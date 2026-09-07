@@ -715,7 +715,8 @@ class _SourceChip extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontFamily: 'RobotoMono',
+              style: TextStyle(
+                fontFamily: 'RobotoMono',
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,

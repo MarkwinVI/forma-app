@@ -89,9 +89,9 @@ Map<String, WheelTreeLock> computeTreeLocks(
     final requirement = category.unlockRequirement;
     if (requirement == null || !category.isLockedFor(progressMap)) continue;
     locks[category.id] = WheelTreeLock(
-      prereqExerciseName: ExerciseCatalog.findById(requirement.exerciseId)
-              ?.name ??
-          requirement.exerciseId,
+      prereqExerciseName:
+          ExerciseCatalog.findById(requirement.exerciseId)?.name ??
+              requirement.exerciseId,
       prereqTreeTitle:
           SkillCategoryCatalog.findById(requirement.targetSkillCategoryId)
                   ?.title ??

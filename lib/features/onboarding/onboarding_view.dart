@@ -29,7 +29,8 @@ TextStyle _mono({
   double spacing = 1.5,
   FontWeight weight = FontWeight.w700,
 }) =>
-    TextStyle(fontFamily: 'RobotoMono',
+    TextStyle(
+      fontFamily: 'RobotoMono',
       fontSize: size,
       fontWeight: weight,
       letterSpacing: spacing,
@@ -505,8 +506,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                             fontSize: 23,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.4,
-                            color:
-                                _balanced ? AppColors.textPrimary : arch.hue,
+                            color: _balanced ? AppColors.textPrimary : arch.hue,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -1939,7 +1939,6 @@ class _ObThumb extends SliderComponentShape {
 }
 
 // ── Aim chips ───────────────────────────────────────────────────────────────
-
 
 // ── Radar chart ─────────────────────────────────────────────────────────────
 

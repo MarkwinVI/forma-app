@@ -139,10 +139,8 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
     ];
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final membership = widget.service.current;
-    final trial = membership?.trialOffered ?? true;
-    final copy = MembershipLockCopy.forState(
-      membership?.state ?? MembershipState.trialAvailable,
-    );
+    final trial = MembershipLockCopy.offersTrial(membership, _plans);
+    final copy = MembershipLockCopy.forMembership(membership, _plans);
 
     return Scaffold(
       backgroundColor: AppColors.bg,

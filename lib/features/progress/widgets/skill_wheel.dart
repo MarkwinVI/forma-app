@@ -1153,7 +1153,8 @@ class _WheelPainter extends CustomPainter {
     final reversed = math.sin(midDeg * math.pi / 180) > 0.3;
     final r = reversed ? 245.0 : 235.0;
 
-    TextStyle style(double fontSize) => TextStyle(fontFamily: 'RobotoMono',
+    TextStyle style(double fontSize) => TextStyle(
+          fontFamily: 'RobotoMono',
           fontSize: fontSize,
           fontWeight: FontWeight.w700,
           letterSpacing: fontSize * 0.13,

@@ -84,7 +84,8 @@ class ProgramTypeNode extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         letter,
-        style: TextStyle(fontFamily: 'RobotoMono',
+        style: TextStyle(
+          fontFamily: 'RobotoMono',
           fontSize: size * (letter.length > 1 ? 0.36 : 0.48),
           fontWeight: FontWeight.w700,
           color: base.withValues(alpha: 0.95 * dim),
@@ -183,7 +184,8 @@ class ProgramWeekStrip extends StatelessWidget {
       children: [
         Text(
           FormaDates.weekdayLetter(context, index),
-          style: TextStyle(fontFamily: 'RobotoMono',
+          style: TextStyle(
+            fontFamily: 'RobotoMono',
             fontSize: 10.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
@@ -200,8 +202,7 @@ class ProgramWeekStrip extends StatelessWidget {
     if (onDayTap == null) return column;
     return Pressable(
       onTap: () => onDayTap!(index),
-      semanticLabel:
-          '${FormaDates.weekdayLongByIndex(context, index)}, '
+      semanticLabel: '${FormaDates.weekdayLongByIndex(context, index)}, '
           '${trains ? sessionType.label : 'Rest day'}. '
           'Tap to ${trains ? 'make it a rest day' : 'train this day'}',
       child: Padding(

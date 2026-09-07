@@ -44,7 +44,7 @@ class _MembershipLockDockState extends State<MembershipLockDock> {
 
   @override
   Widget build(BuildContext context) {
-    final copy = MembershipLockCopy.forState(widget.membership.state);
+    final copy = MembershipLockCopy.forMembership(widget.membership, _plans);
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Container(

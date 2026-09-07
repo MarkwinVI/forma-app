@@ -477,7 +477,6 @@ class _ExerciseTrendsTabState extends State<ExerciseTrendsTab> {
 
   String _formatValue(double value) => _formatValueFor(_metric, value);
 
-
   String _formatValueFor(ExerciseSummaryMetric metric, double value) {
     switch (metric) {
       case ExerciseSummaryMetric.bestTime:

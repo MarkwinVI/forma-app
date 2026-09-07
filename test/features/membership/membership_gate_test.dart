@@ -80,7 +80,8 @@ void main() {
         trialEligible: false,
       );
 
-  testWidgets('with a program and no membership, the page is inert under '
+  testWidgets(
+      'with a program and no membership, the page is inert under '
       'the lock dock', (tester) async {
     final (s, _) = await service();
     final taps = await pump(tester, s, hasProgram: true);
@@ -91,7 +92,8 @@ void main() {
     expect(find.textContaining('Your program is saved'), findsOneWidget);
   });
 
-  testWidgets('without a program there is no lock — setup must stay '
+  testWidgets(
+      'without a program there is no lock — setup must stay '
       'reachable', (tester) async {
     final (s, _) = await service();
     final taps = await pump(tester, s, hasProgram: false);

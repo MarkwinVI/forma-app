@@ -20,6 +20,32 @@ class MembershipLockCopy {
     required this.sub,
   });
 
+  /// Whether the CTAs may promise a free trial: Apple would grant one
+  /// (per [Membership.trialOffered]) and the plans on sale actually carry
+  /// an intro period. Before the plans are in, the store's word stands;
+  /// once they are, a product without a free period is sold as a plan.
+  static bool offersTrial(
+    Membership? membership,
+    List<MembershipPlan>? plans,
+  ) {
+    final storeSays = membership?.trialOffered ?? true;
+    return storeSays && (plans == null || trialDays(plans) > 0);
+  }
+
+  /// The lock copy for [membership], given the plans: a trial that the
+  /// products do not carry reads as "choose a plan" instead.
+  static MembershipLockCopy forMembership(
+    Membership? membership,
+    List<MembershipPlan>? plans,
+  ) {
+    final state = membership?.state ?? MembershipState.trialAvailable;
+    if (state == MembershipState.trialAvailable &&
+        !offersTrial(membership, plans)) {
+      return forState(MembershipState.subscribeOnly);
+    }
+    return forState(state);
+  }
+
   static MembershipLockCopy forState(MembershipState state) {
     switch (state) {
       case MembershipState.trialAvailable:

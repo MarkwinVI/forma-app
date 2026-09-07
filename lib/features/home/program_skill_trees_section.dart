@@ -239,8 +239,7 @@ class _MiniWheelPainter extends CustomPainter {
       offsets = [-spread, 0, spread];
     } else {
       offsets = [
-        for (var i = 0; i < count; i++)
-          -spread + 2 * spread * i / (count - 1),
+        for (var i = 0; i < count; i++) -spread + 2 * spread * i / (count - 1),
       ];
     }
 

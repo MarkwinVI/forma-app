@@ -97,7 +97,7 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
   }
 
   List<Widget> _lockedRows(Membership membership) {
-    final trial = membership.trialOffered;
+    final trial = MembershipLockCopy.offersTrial(membership, _plans);
     final from = MembershipLockCopy.fromMonthly(_plans);
     final days = MembershipLockCopy.trialDays(_plans);
     return [

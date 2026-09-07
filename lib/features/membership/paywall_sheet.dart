@@ -71,7 +71,8 @@ class _PaywallSheetState extends State<PaywallSheet> {
     ..onTap = () => _openLink(AppLinks.privacy);
   late final _restoreTap = TapGestureRecognizer()..onTap = _restore;
 
-  bool get _trial => widget.service.current?.trialOffered ?? true;
+  bool get _trial =>
+      MembershipLockCopy.offersTrial(widget.service.current, _plans);
 
   @override
   void initState() {

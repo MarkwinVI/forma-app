@@ -173,4 +173,35 @@ void main() {
     expect(find.textContaining('No active subscription'), findsOneWidget);
     expect(find.text('Start free trial'), findsOneWidget);
   });
+
+  testWidgets('a product without a free period is never sold as a trial',
+      (tester) async {
+    final gateway = FakePurchasesGateway(
+      plans: [
+        for (final plan in FakePurchasesGateway.defaultPlans)
+          MembershipPlan(
+            productId: plan.productId,
+            price: plan.price,
+            currencyCode: plan.currencyCode,
+            priceString: plan.priceString,
+            monthlyEquivalentString: plan.monthlyEquivalentString,
+            trialDays: 0,
+          ),
+      ],
+    );
+    final s = MembershipService(
+      gateway: gateway,
+      fetchOverride: (_) async => null,
+    );
+    await s.setup();
+    await s.load('user');
+    expect(s.current?.trialOffered, isTrue,
+        reason: 'the store would grant one');
+
+    await open(tester, s);
+
+    expect(find.text('Choose your plan'), findsOneWidget);
+    expect(find.textContaining('free'), findsNothing);
+    expect(find.text(r'Subscribe · $49.99 / year'), findsOneWidget);
+  });
 }

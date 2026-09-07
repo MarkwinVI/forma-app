@@ -843,7 +843,8 @@ class _ProgressionsPanel extends StatelessWidget {
       padding: EdgeInsets.only(top: first ? 0 : 26),
       child: Text(
         label,
-        style: const TextStyle(fontFamily: 'RobotoMono',
+        style: const TextStyle(
+          fontFamily: 'RobotoMono',
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.65,

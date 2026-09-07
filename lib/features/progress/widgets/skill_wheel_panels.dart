@@ -105,7 +105,8 @@ class PerformancePanel extends StatelessWidget {
           else
             const Text(
               'LAST SESSION VS PREVIOUS SESSION',
-              style: TextStyle(fontFamily: 'RobotoMono',
+              style: TextStyle(
+                fontFamily: 'RobotoMono',
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.35,
@@ -148,7 +149,8 @@ class PerformancePanel extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             style.label,
-            style: TextStyle(fontFamily: 'RobotoMono',
+            style: TextStyle(
+              fontFamily: 'RobotoMono',
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.35,
@@ -257,7 +259,8 @@ class PerformancePanel extends StatelessWidget {
           SizedBox(width: 8),
           Text(
             'BUILDING BASELINE',
-            style: TextStyle(fontFamily: 'RobotoMono',
+            style: TextStyle(
+              fontFamily: 'RobotoMono',
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.35,
@@ -307,7 +310,8 @@ class PerformancePanel extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   '${row.daysTrained} OF 2 DAYS',
-                  style: const TextStyle(fontFamily: 'RobotoMono',
+                  style: const TextStyle(
+                    fontFamily: 'RobotoMono',
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.95,

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -448,88 +447,90 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                 ),
               ),
               Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _ProgramSectionLabel('Your program'),
-                  _ProgramRow(
-                    label: 'Equipment',
-                    value: switch (_equipment) {
-                      SetupEquipment.fullGym => 'Full gym',
-                      SetupEquipment.freeWeights => 'Barbell & dumbbells',
-                      SetupEquipment.none => 'No equipment',
-                    },
-                    onTap: _openEquipmentSheet,
-                  ),
-                  _ProgramRow(
-                    label: 'Training days',
-                    value: '$_trainingDaysPerWeek days / week',
-                    onTap: _openDaysSheet,
-                  ),
-                  _ProgramRow(
-                    label: 'Split',
-                    value: programType.label,
-                    last: true,
-                    onTap: _openSplitSheet,
-                  ),
-                  if (_showSkillTracksSection) ...[
-                    _ProgramSectionLabel(
-                      'Skill tracks',
-                      sub: 'Each skill progresses on its own — pause any '
-                          'without losing progress',
-                      action: 'Add',
-                      onAction: _openAddTrackSheet,
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _ProgramSectionLabel('Your program'),
+                    _ProgramRow(
+                      label: 'Equipment',
+                      value: switch (_equipment) {
+                        SetupEquipment.fullGym => 'Full gym',
+                        SetupEquipment.freeWeights => 'Barbell & dumbbells',
+                        SetupEquipment.none => 'No equipment',
+                      },
+                      onTap: _openEquipmentSheet,
                     ),
-                    if (_skillTracks.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 14, bottom: 2),
-                        child: Text(
-                          'No skill tracks yet — add the skills you want to '
-                          'train and each gets its own progression.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                            height: 1.55,
+                    _ProgramRow(
+                      label: 'Training days',
+                      value: '$_trainingDaysPerWeek days / week',
+                      onTap: _openDaysSheet,
+                    ),
+                    _ProgramRow(
+                      label: 'Split',
+                      value: programType.label,
+                      last: true,
+                      onTap: _openSplitSheet,
+                    ),
+                    if (_showSkillTracksSection) ...[
+                      _ProgramSectionLabel(
+                        'Skill tracks',
+                        sub: 'Each skill progresses on its own — pause any '
+                            'without losing progress',
+                        action: 'Add',
+                        onAction: _openAddTrackSheet,
+                      ),
+                      if (_skillTracks.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 14, bottom: 2),
+                          child: Text(
+                            'No skill tracks yet — add the skills you want to '
+                            'train and each gets its own progression.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                              height: 1.55,
+                            ),
                           ),
-                        ),
-                      )
-                    else
-                      for (final track in _skillTracks)
-                        _SkillTrackRow(
-                          track: track,
-                          progressMap: _progress,
-                          onTap: () => _openAdjustSheet(track),
-                        ),
-                  ],
-                  const _ProgramSectionLabel('Skill trees'),
-                  ProgramSkillTreesCard(
-                    families: buildWheelFamilies(
-                      progressMap: _progress,
-                      skillTracks: _skillTracks,
+                        )
+                      else
+                        for (final track in _skillTracks)
+                          _SkillTrackRow(
+                            track: track,
+                            progressMap: _progress,
+                            onTap: () => _openAdjustSheet(track),
+                          ),
+                    ],
+                    const _ProgramSectionLabel('Skill trees'),
+                    ProgramSkillTreesCard(
+                      families: buildWheelFamilies(
+                        progressMap: _progress,
+                        skillTracks: _skillTracks,
+                      ),
+                      activeCategoryIds: {
+                        for (final track in _skillTracks)
+                          if (track.included) track.skillCategoryId,
+                      },
+                      lockedCategoryIds:
+                          computeTreeLocks(_progress).keys.toSet(),
+                      onOpen: _openSkillWheel,
                     ),
-                    activeCategoryIds: {
-                      for (final track in _skillTracks)
-                        if (track.included) track.skillCategoryId,
-                    },
-                    lockedCategoryIds: computeTreeLocks(_progress).keys.toSet(),
-                    onOpen: _openSkillWheel,
-                  ),
-                  const _ProgramSectionLabel('Workouts'),
-                  for (var i = 0; i < workouts.length; i++)
-                    _WorkoutTypeRow(
-                      sessionType: workouts[i].sessionType,
-                      timesPerWeek: workouts[i].weekdays.length,
-                      last: i == workouts.length - 1,
-                      onTap: () => _openWorkoutEditor(workouts[i].sessionType),
-                    ),
-                  const _ProgramSectionLabel('About the program'),
-                  for (var i = 0; i < kProgramFaq.length; i++)
-                    _FaqRow(
-                      question: kProgramFaq[i].question,
-                      last: i == kProgramFaq.length - 1,
-                      onTap: () => showFaqSheet(context, kProgramFaq[i]),
-                    ),
+                    const _ProgramSectionLabel('Workouts'),
+                    for (var i = 0; i < workouts.length; i++)
+                      _WorkoutTypeRow(
+                        sessionType: workouts[i].sessionType,
+                        timesPerWeek: workouts[i].weekdays.length,
+                        last: i == workouts.length - 1,
+                        onTap: () =>
+                            _openWorkoutEditor(workouts[i].sessionType),
+                      ),
+                    const _ProgramSectionLabel('About the program'),
+                    for (var i = 0; i < kProgramFaq.length; i++)
+                      _FaqRow(
+                        question: kProgramFaq[i].question,
+                        last: i == kProgramFaq.length - 1,
+                        onTap: () => showFaqSheet(context, kProgramFaq[i]),
+                      ),
                   ],
                 ),
               ),
@@ -553,7 +554,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         _ => _hasGym ? SetupEquipment.fullGym : SetupEquipment.none,
       };
 }
-
 
 /// Mono, uppercase section eyebrow — the type-led alternative to a card
 /// header, with an optional subtitle and trailing action.
@@ -584,7 +584,8 @@ class _ProgramSectionLabel extends StatelessWidget {
               Expanded(
                 child: Text(
                   label.toUpperCase(),
-                  style: const TextStyle(fontFamily: 'RobotoMono',
+                  style: const TextStyle(
+                    fontFamily: 'RobotoMono',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textMuted,
@@ -733,7 +734,8 @@ class _WorkoutTypeRow extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             '$timesPerWeek× week',
-            style: const TextStyle(fontFamily: 'RobotoMono',
+            style: const TextStyle(
+              fontFamily: 'RobotoMono',
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: AppColors.textSecondary,

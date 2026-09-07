@@ -84,8 +84,10 @@ class PerformanceOverview {
   /// drops the list entirely and explains how trends start.
   bool get hasComparisons => rows.any((row) => row.delta != null);
 
-  List<PerformanceRowData> rowsFor(PerformanceTrend trend) =>
-      [for (final row in rows) if (row.trend == trend) row];
+  List<PerformanceRowData> rowsFor(PerformanceTrend trend) => [
+        for (final row in rows)
+          if (row.trend == trend) row
+      ];
 }
 
 /// Classifies every exercise currently in the workout list by how its last

@@ -200,7 +200,8 @@ class _PastWorkoutDetailViewState extends State<PastWorkoutDetailView> {
                 children: [
                   TypeTitle(
                     workout.title,
-                    sub: '${FormaDates.weekdayMonthDay(context, workout.loggedAt)} · '
+                    sub:
+                        '${FormaDates.weekdayMonthDay(context, workout.loggedAt)} · '
                         '${FormaDates.time(context, workout.loggedAt)}',
                   ),
                   TypeStatBand(

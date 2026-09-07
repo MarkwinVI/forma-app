@@ -33,7 +33,8 @@ class GettingStartedChecklist extends StatelessWidget {
         onTap: programDone ? onStartWorkout : null,
       ),
     ];
-    final doneCount = items.where((item) => item.state == _StepState.done).length;
+    final doneCount =
+        items.where((item) => item.state == _StepState.done).length;
 
     return SurfaceCard(
       clip: true,

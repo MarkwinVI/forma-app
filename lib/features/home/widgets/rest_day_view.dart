@@ -97,7 +97,8 @@ class _RestDayViewState extends State<RestDayView>
         const Text(
           'RECOVERY',
           textAlign: TextAlign.center,
-          style: TextStyle(fontFamily: 'RobotoMono',
+          style: TextStyle(
+            fontFamily: 'RobotoMono',
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.4,
@@ -123,7 +124,8 @@ class _RestDayViewState extends State<RestDayView>
               children: [
                 const Text(
                   'NEXT UP',
-                  style: TextStyle(fontFamily: 'RobotoMono',
+                  style: TextStyle(
+                    fontFamily: 'RobotoMono',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
