@@ -9,6 +9,7 @@ import '../../data/models/membership_model.dart';
 import '../../data/services/membership_service.dart';
 import 'membership_copy.dart';
 import 'membership_scope.dart';
+import 'membership_toast.dart';
 import 'paywall_sheet.dart';
 
 /// The Profile tab's SUBSCRIPTION section. Locked: the way in (the trial,
@@ -45,19 +46,23 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
   Future<void> _restore() async {
     if (_restoring) return;
     setState(() => _restoring = true);
-    String message;
+    String? message;
     try {
       final membership = await widget.service.restore();
-      message = membership.entitled
-          ? 'Your membership is back.'
-          : 'No active subscription found for this Apple ID.';
+      if (membership.entitled) {
+        if (mounted) showMembershipToast(context, membership);
+      } else {
+        message = 'No active subscription found for this Apple ID.';
+      }
     } catch (_) {
       message = "Couldn't reach the App Store. Try again.";
     }
     if (!mounted) return;
     setState(() => _restoring = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    if (message != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   Future<void> _manage() async {

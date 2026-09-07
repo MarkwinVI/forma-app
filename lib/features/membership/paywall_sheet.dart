@@ -13,6 +13,7 @@ import '../../data/services/analytics_service.dart';
 import '../../data/services/membership_service.dart';
 import '../../data/services/purchases_gateway.dart';
 import 'membership_copy.dart';
+import 'membership_toast.dart';
 
 /// Opens the plan sheet over everything. Resolves true once the user is a
 /// member — a purchase or a restore that found one — and false otherwise.
@@ -29,7 +30,13 @@ Future<bool> showPaywallSheet(
     backgroundColor: Colors.transparent,
     builder: (_) => PaywallSheet(service: service),
   );
-  return result ?? false;
+  final entitled = result ?? false;
+  // The one confirmation, over whatever screen the sheet closes onto.
+  final membership = service.current;
+  if (entitled && membership != null && context.mounted) {
+    showMembershipToast(context, membership);
+  }
+  return entitled;
 }
 
 /// The plans, priced by the store, with the trial spelled out when one is

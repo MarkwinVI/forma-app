@@ -109,6 +109,18 @@ void main() {
     expect(await result, isTrue);
     expect(s.current?.entitled, isTrue);
     expect(find.text('Start free trial'), findsNothing);
+
+    // The one confirmation, with no reminder promised.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Trial started'), findsOneWidget);
+    expect(find.textContaining('Full access until'), findsOneWidget);
+    expect(find.textContaining('remind'), findsNothing);
+    // And it leaves on its own (the hold and the two slides need frames).
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(find.text('Trial started'), findsNothing);
   });
 
   testWidgets('backing out of the App Store sheet keeps the paywall open',
