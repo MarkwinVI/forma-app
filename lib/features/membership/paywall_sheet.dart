@@ -484,8 +484,9 @@ class _PlanCard extends StatelessWidget {
       onTap: onTap,
       selected: selected,
       semanticLabel: '$name plan, ${plan.priceString} per ${plan.periodLabel}',
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
+      // Selection switches in one frame: an animated hand-over left the
+      // card just left behind reading as selected for a beat.
+      child: Container(
         padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
         decoration: BoxDecoration(
           color: selected ? AppColors.accentSoft : AppColors.surface,
@@ -497,8 +498,7 @@ class _PlanCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
+            Container(
               width: 22,
               height: 22,
               decoration: BoxDecoration(
