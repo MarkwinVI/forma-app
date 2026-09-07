@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/forma_splash.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/models/membership_model.dart';
 import '../../data/services/analytics_service.dart';
-import '../../data/services/auth_service.dart';
 import '../../data/services/membership_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import '../membership/membership_copy.dart';
@@ -31,16 +29,17 @@ class ProgramReadyView extends StatefulWidget {
   /// Leaves the wizard — after "Not now", or once a purchase has landed.
   final VoidCallback onDone;
 
-  /// The wheel data, for tests. Left null, the screen picks up the warm
-  /// bundle setup started, or loads its own.
-  final Future<SkillWheelBundle>? bundle;
+  /// The wheel data, loaded by the wizard while its button still says it
+  /// is working, so this screen draws complete on its first frame. Null
+  /// when the load failed: the page and its choice stand without the map.
+  final SkillWheelBundle? bundle;
 
   const ProgramReadyView({
     super.key,
     required this.daysPerWeek,
     required this.service,
     required this.onDone,
-    this.bundle,
+    required this.bundle,
   });
 
   @override
@@ -54,16 +53,15 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
   final _wheelController = SkillWheelController();
   late final AnimationController _reveal;
 
-  SkillWheelBundle? _bundle;
-  bool _loading = true;
   List<MembershipPlan>? _plans;
+
+  SkillWheelBundle? get _bundle => widget.bundle;
 
   @override
   void initState() {
     super.initState();
-    _reveal = AnimationController(vsync: this, duration: _duration);
+    _reveal = AnimationController(vsync: this, duration: _duration)..forward();
     AnalyticsService.screen('program_ready');
-    _load();
     widget.service.plans().then((plans) {
       if (mounted) setState(() => _plans = plans);
     }, onError: (Object _) {});
@@ -73,38 +71,6 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
   void dispose() {
     _reveal.dispose();
     super.dispose();
-  }
-
-  Future<void> _load() async {
-    // Setup started the wheel's load the moment it wrote the program; the
-    // Progress tab takes that warm-up later, so this only looks at it.
-    var future = widget.bundle ?? peekWarmSkillWheelBundle()?.future;
-    if (future == null) {
-      final userId = _signedInUserId();
-      if (userId != null) future = loadSkillWheelBundle(userId);
-    }
-    SkillWheelBundle? bundle;
-    try {
-      bundle = await future;
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load the program map: $error\n$stackTrace');
-    }
-    if (!mounted) return;
-    setState(() {
-      _bundle = bundle;
-      _loading = false;
-    });
-    _reveal.forward();
-  }
-
-  /// Null when nobody is signed in — or, in a widget test, when there is
-  /// no Supabase to ask.
-  static String? _signedInUserId() {
-    try {
-      return AuthService().currentUser?.id;
-    } catch (_) {
-      return null;
-    }
   }
 
   /// Staggered ease-out, one segment per block down the page.
@@ -164,13 +130,6 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        backgroundColor: AppColors.bg,
-        body: FormaSplash.endFrame(background: AppColors.bg),
-      );
-    }
-
     final bundle = _bundle;
     final families = bundle?.families ?? const <WheelFamily>[];
     final active = bundle?.activeCategoryIds ?? const <String>{};
@@ -255,7 +214,6 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                             children: [
                               const TypeSectionLabel(
                                 'Where you start',
-                                right: 'Next unlock',
                                 top: 22,
                               ),
                               for (var i = 0; i < starts.length; i++)
@@ -487,27 +445,17 @@ class _Legend extends StatelessWidget {
   }
 }
 
-/// One running tree: the step it starts on and the one after it.
+/// One running tree and the step it starts on.
 class _StartRow {
   final String treeTitle;
   final WheelNode start;
-  final WheelNode? next;
 
-  const _StartRow({
-    required this.treeTitle,
-    required this.start,
-    required this.next,
-  });
+  const _StartRow({required this.treeTitle, required this.start});
 
-  static _StartRow of(WheelFamily family) {
-    final flat = family.flat;
-    final index = family.activeFlatIndex;
-    return _StartRow(
-      treeTitle: family.title,
-      start: flat[index],
-      next: index + 1 < flat.length ? flat[index + 1] : null,
-    );
-  }
+  static _StartRow of(WheelFamily family) => _StartRow(
+        treeTitle: family.title,
+        start: family.flat[family.activeFlatIndex],
+      );
 }
 
 class _StartRowTile extends StatelessWidget {
@@ -523,7 +471,6 @@ class _StartRowTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final next = row.next;
     return Pressable(
       onTap: onTap,
       child: Container(
@@ -560,24 +507,12 @@ class _StartRowTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (next != null) ...[
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('THEN', style: monoStyle(size: 10, letterSpacing: 1.2)),
-                  const SizedBox(height: 3),
-                  Text(
-                    next.name,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            const SizedBox(width: 12),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
           ],
         ),
       ),

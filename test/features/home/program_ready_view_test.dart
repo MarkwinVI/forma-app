@@ -107,7 +107,7 @@ void main() {
         daysPerWeek: 3,
         service: service,
         onDone: onDone,
-        bundle: Future.value(_bundle()),
+        bundle: _bundle(),
       ),
     ));
     await tester.pumpAndSettle();
@@ -130,10 +130,11 @@ void main() {
 
     expect(find.text('WHERE YOU START'), findsOneWidget);
     expect(find.text('Pullups step 1'), findsOneWidget);
-    expect(find.text('Pullups step 2'), findsOneWidget); // THEN
     expect(find.text('Pushups step 0'), findsOneWidget);
-    expect(find.text('Pushups step 1'), findsOneWidget);
-    // An idle tree is not a starting point.
+    // Only the starting step of each running tree — no "next" column, and
+    // an idle tree is not a starting point.
+    expect(find.text('NEXT UNLOCK'), findsNothing);
+    expect(find.text('Pullups step 2'), findsNothing);
     expect(find.textContaining('Squat step'), findsNothing);
 
     // The trial leads, with the store's own trial length.

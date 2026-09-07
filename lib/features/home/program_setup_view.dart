@@ -7,8 +7,10 @@ import '../../core/widgets/polished.dart';
 import '../../core/widgets/weight_entry.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/analytics_service.dart';
+import '../../data/services/auth_service.dart';
 import '../../data/services/membership_service.dart';
 import '../../data/services/weight_unit_service.dart';
+import '../progress/skill_wheel_bundle.dart';
 import 'program_ready_view.dart';
 
 /// What the user trains with, asked once during setup. Both weighted answers
@@ -246,6 +248,10 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   bool _saving = false;
   bool _ready = false;
 
+  /// The map for the ready screen, fetched while the button still says it
+  /// is building — so the screen arrives whole rather than behind a wait.
+  SkillWheelBundle? _readyBundle;
+
   double get _bwMin => _unit == WeightUnit.lb ? 66 : 30;
   double get _bwMax => _unit == WeightUnit.lb ? 550 : 250;
 
@@ -401,10 +407,12 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
           },
         ),
       );
+      final bundle = await _loadReadyBundle();
       if (!mounted) return;
       setState(() {
         _saving = false;
         _ready = true;
+        _readyBundle = bundle;
       });
     } catch (error, stackTrace) {
       debugPrint('Failed to save program setup: $error\n$stackTrace');
@@ -418,6 +426,24 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
     }
   }
 
+  /// The wheel data setup started warming the moment it wrote the
+  /// program — the Progress tab takes that warm-up later, so this only
+  /// looks at it. A load that fails costs the map, not the screen.
+  Future<SkillWheelBundle?> _loadReadyBundle() async {
+    try {
+      var future = peekWarmSkillWheelBundle()?.future;
+      if (future == null) {
+        final userId = AuthService().currentUser?.id;
+        if (userId == null) return null;
+        future = loadSkillWheelBundle(userId);
+      }
+      return await future;
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load the program map: $error\n$stackTrace');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_ready) {
@@ -427,6 +453,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       return ProgramReadyView(
         daysPerWeek: _days ?? 3,
         service: MembershipService.instance,
+        bundle: _readyBundle,
         onDone: () => Navigator.of(context).pop(),
       );
     }
