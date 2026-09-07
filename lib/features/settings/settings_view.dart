@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
+import '../../data/models/membership_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_tools_service.dart';
+import '../../data/services/membership_service.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -255,8 +257,56 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
           sub: 'Test tomorrow without rewriting workout history',
           onTap: _busy ? null : _advanceDay,
         ),
+        const SizedBox(height: 10),
+        _DevToolRow(
+          icon: Icons.workspace_premium_rounded,
+          title: 'Membership: ${_membershipLabel()}',
+          sub: 'Force a membership state to see every lock and dock',
+          onTap: _busy ? null : _pickMembership,
+        ),
       ],
     );
+  }
+
+  String _membershipLabel() {
+    final forced = MembershipService.instance.debugState;
+    if (forced != null) return 'forced ${forced.name}';
+    final real = MembershipService.instance.current?.state.name;
+    return real == null ? 'real (unknown)' : 'real ($real)';
+  }
+
+  /// Every state the app distinguishes, plus the way back to the real one.
+  Future<void> _pickMembership() async {
+    final picked = await showModalBottomSheet<Object>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: const Text(
+                'Real membership',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              onTap: () => Navigator.of(context).pop('real'),
+            ),
+            for (final state in MembershipState.values)
+              ListTile(
+                title: Text(
+                  state.name,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+                onTap: () => Navigator.of(context).pop(state),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    MembershipService.instance
+        .setDebugState(picked is MembershipState ? picked : null);
+    setState(() {});
   }
 }
 

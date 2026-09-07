@@ -11,7 +11,9 @@ import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
+import '../../data/services/membership_service.dart';
 import '../../data/services/user_profile_service.dart';
+import '../membership/subscription_rows.dart';
 import '../settings/settings_view.dart';
 import '../exercises/exercise_picker_view.dart';
 import 'bodyweight_row.dart';
@@ -320,6 +322,7 @@ class _DataViewState extends State<DataView> {
             ),
           ),
         ),
+      SubscriptionRows(service: MembershipService.instance),
       const TypeSectionLabel('Library'),
       TypeContentRow(
         name: 'All exercises',

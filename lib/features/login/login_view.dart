@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config/app_links.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
@@ -373,8 +374,8 @@ const _footerStyle = TextStyle(
 class _PrivacyFooter extends StatefulWidget {
   const _PrivacyFooter();
 
-  static final termsUrl = Uri.parse('https://tryforma.co/terms');
-  static final privacyUrl = Uri.parse('https://tryforma.co/privacy');
+  static final termsUrl = AppLinks.terms;
+  static final privacyUrl = AppLinks.privacy;
 
   @override
   State<_PrivacyFooter> createState() => _PrivacyFooterState();

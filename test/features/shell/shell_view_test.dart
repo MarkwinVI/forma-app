@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/core/widgets/app_nav_bar.dart';
 import 'package:forma_app/core/widgets/tab_reset.dart';
+import 'package:forma_app/data/services/membership_service.dart';
+import 'package:forma_app/features/home/program_setup_completion.dart';
 import 'package:forma_app/features/progress/progress_view.dart';
 import 'package:forma_app/features/shell/shell_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../helpers/fake_purchases_gateway.dart';
 
 /// Each tab hosts its own navigator, so deeper pages keep the bottom bar
 /// visible, the stack survives switching tabs, and tapping the tab you are
@@ -24,6 +28,11 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    // A store with nothing bought, and no server override: locked.
+    MembershipService.instance = MembershipService(
+      gateway: FakePurchasesGateway(),
+      fetchOverride: (_) async => null,
+    );
   });
 
   Finder navItem(String label) => find.descendant(
@@ -130,5 +139,33 @@ void main() {
     await tester.tap(navItem('Progress'));
     await tester.pumpAndSettle();
     expect(resets, 2);
+  });
+
+  testWidgets(
+      'with a program and no membership the training tabs lock under the '
+      'dock, and Profile stays open', (tester) async {
+    await MembershipService.instance.load('user');
+    await pumpShell(tester);
+    // No signed-in user, so no program was found at landing; setup writing
+    // one is what turns the lock on.
+    expect(find.text('Start free trial'), findsNothing);
+    programCreatedSignal.value++;
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProgressView), findsOneWidget);
+    expect(find.text('Start free trial'), findsOneWidget);
+    expect(find.textContaining('Your program is saved'), findsOneWidget);
+
+    await tester.tap(navItem('Train'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start free trial'), findsOneWidget);
+
+    await tester.tap(navItem('Profile'));
+    await tester.pumpAndSettle();
+    // No dock and nothing dimmed: the tab is live (it asks for a sign-in
+    // here only because the test has no session).
+    expect(find.text('Profile'), findsWidgets);
+    expect(find.textContaining('Your program is saved'), findsNothing);
+    expect(find.byIcon(Icons.lock_rounded), findsNothing);
   });
 }

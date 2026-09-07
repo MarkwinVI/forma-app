@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Replace these placeholder values with your actual Supabase project credentials.
 /// Find them at: https://supabase.com/dashboard → your project → Settings → API
 class AppConfig {
@@ -17,4 +19,19 @@ class AppConfig {
   /// no Android client ID is needed here.
   static const String googleWebClientId =
       '892742802208-lplmfinelmg29vr1ov181hlsfilri0mb.apps.googleusercontent.com';
+
+  /// RevenueCat → Project → Apps → the iOS app's public API key. Safe to
+  /// ship: it only identifies the app, like the Supabase anon key.
+  static const String revenueCatAppStoreApiKey =
+      'appl_YTOjGLODthvJuPDdkxSqXLNqBpD';
+
+  /// RevenueCat's Test Store key: debug builds buy from a simulated store,
+  /// so the whole trial flow runs on a simulator with no sandbox account.
+  static const String revenueCatTestStoreApiKey =
+      'test_zIHzhmYIczwnJggkNbZkkPBnkeQ';
+
+  /// The key the build talks to RevenueCat with — the Test Store in debug
+  /// builds, the App Store everywhere else.
+  static String get revenueCatApiKey =>
+      kDebugMode ? revenueCatTestStoreApiKey : revenueCatAppStoreApiKey;
 }

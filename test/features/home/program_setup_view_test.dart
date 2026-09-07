@@ -117,12 +117,13 @@ void main() {
     expect(result!.toMap()['has_gym'], isTrue);
     expect(result!.toMap()['equipment'], 'barbell');
 
-    // The ready screen is the check and the one line, then the way on.
-    expect(find.text('Your program is ready'), findsOneWidget);
-    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
-    expect(find.text('Built from your answers.'), findsNothing);
-    expect(find.textContaining('Your week'), findsNothing);
-    await tester.tap(find.text('Let’s go'));
+    // The ready screen: the map, the trial, and "Not now" out of the
+    // wizard. Without a program on file there is no wheel to draw, but the
+    // page and its choice still stand.
+    expect(find.text('Your map is set.'), findsOneWidget);
+    expect(find.textContaining('3 days a week'), findsOneWidget);
+    expect(find.textContaining('free trial'), findsWidgets);
+    await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
     expect(find.text('Open wizard'), findsOneWidget);
   });

@@ -10,6 +10,7 @@ import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
+import 'data/services/membership_service.dart';
 import 'data/services/onboarding_service.dart';
 import 'data/services/weight_unit_service.dart';
 import 'features/login/login_view.dart';
@@ -36,8 +37,11 @@ Future<void> main() async {
     WeightUnitService.load(),
   ]);
 
-  // After Supabase: identify reads the restored auth session. Never throws.
-  await AnalyticsService.setup();
+  // After Supabase: both read the restored auth session. Neither throws.
+  await Future.wait([
+    AnalyticsService.setup(),
+    MembershipService.instance.setup(),
+  ]);
 
   _warmStartupData();
 
@@ -53,6 +57,9 @@ void _warmStartupData() {
   if (userId == null) return;
 
   OnboardingService().hasCompletedOnboarding(userId).ignore();
+  // Membership resolves behind the splash too — the shell waits for it
+  // before its first frame, so a locked tab never flashes unlocked.
+  MembershipService.instance.load(userId).ignore();
   // Also seeds TrainingProgramStoreService's logic cache, which the shell
   // reads to pick the landing tab.
   warmSkillWheelBundle(userId);

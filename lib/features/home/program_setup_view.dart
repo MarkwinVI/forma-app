@@ -7,7 +7,9 @@ import '../../core/widgets/polished.dart';
 import '../../core/widgets/weight_entry.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/analytics_service.dart';
+import '../../data/services/membership_service.dart';
 import '../../data/services/weight_unit_service.dart';
+import 'program_ready_view.dart';
 
 /// What the user trains with, asked once during setup. Both weighted answers
 /// — a full gym or just a barbell and dumbbells — count as access to weights
@@ -419,7 +421,14 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   @override
   Widget build(BuildContext context) {
     if (_ready) {
-      return _ProgramSummaryView(onDone: () => Navigator.of(context).pop());
+      // The map the answers drew, and the choice that gates the app. Both
+      // the trial landing and "Not now" leave the wizard the same way; the
+      // tab that opened it moves the user on to Progress.
+      return ProgramReadyView(
+        daysPerWeek: _days ?? 3,
+        service: MembershipService.instance,
+        onDone: () => Navigator.of(context).pop(),
+      );
     }
 
     return PopScope(
@@ -1492,162 +1501,6 @@ class _StrengthEntrySheetState extends State<StrengthEntrySheet> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ── Program summary ─────────────────────────────────────────
-
-/// Post-wizard reveal: the check and the one line, centred, and the way on
-/// to Home under them.
-class _ProgramSummaryView extends StatefulWidget {
-  final VoidCallback onDone;
-
-  const _ProgramSummaryView({required this.onDone});
-
-  @override
-  State<_ProgramSummaryView> createState() => _ProgramSummaryViewState();
-}
-
-class _ProgramSummaryViewState extends State<_ProgramSummaryView>
-    with SingleTickerProviderStateMixin {
-  static const _duration = Duration(milliseconds: 1500);
-
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: _duration)
-      ..forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  /// Staggered ease-out segment matching the mockup's 90ms cascade.
-  Animation<double> _segment(int index) {
-    final start = (150 + index * 90) / _duration.inMilliseconds;
-    final end = start + 550 / _duration.inMilliseconds;
-    return CurvedAnimation(
-      parent: _controller,
-      curve: Interval(
-        start.clamp(0.0, 1.0),
-        end.clamp(0.0, 1.0),
-        curve: Curves.easeOutCubic,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // The whole page is the one fact: the check, and the line under
-            // it, sitting in the middle of the screen.
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ScaleTransition(
-                      scale: CurvedAnimation(
-                        parent: _controller,
-                        curve:
-                            const Interval(0, 0.4, curve: Curves.easeOutBack),
-                      ),
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.accentSoft,
-                          border: Border.all(
-                            color: AppColors.accentGlow,
-                            width: 1.5,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.check_rounded,
-                          size: 33,
-                          color: AppColors.accentPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    _Reveal(
-                      animation: _segment(0),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(
-                          'Your program is ready',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.52,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            _Reveal(
-              animation: _segment(2),
-              child: Container(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomInset),
-                decoration: const BoxDecoration(
-                  color: AppColors.bg,
-                  border: Border(
-                    top: BorderSide(color: AppColors.divider),
-                  ),
-                ),
-                child: PillButton(
-                  label: 'Let’s go',
-                  icon: Icons.chevron_right_rounded,
-                  trailingIcon: true,
-                  onTap: widget.onDone,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Fade + 16px upward slide, matching the mockup's entrance animation.
-class _Reveal extends AnimatedWidget {
-  final Widget child;
-
-  const _Reveal({
-    required Animation<double> animation,
-    required this.child,
-  }) : super(listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    final t = (listenable as Animation<double>).value;
-    return Opacity(
-      opacity: t.clamp(0.0, 1.0),
-      child: Transform.translate(
-        offset: Offset(0, 16 * (1 - t)),
-        child: child,
       ),
     );
   }
