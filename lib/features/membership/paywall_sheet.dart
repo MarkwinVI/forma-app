@@ -51,7 +51,10 @@ class _PaywallSheetState extends State<PaywallSheet> {
   /// Why the plans failed to load — shown on debug builds only, where the
   /// store setup is what usually needs fixing.
   String? _plansError;
-  String _selected = MembershipProducts.yearly;
+
+  /// The chosen plan's product id. Yearly is preselected once the plans
+  /// are in, whichever id this build's store gives it.
+  String? _selected;
   bool _busy = false;
   String? _message;
 
@@ -82,7 +85,14 @@ class _PaywallSheetState extends State<PaywallSheet> {
     try {
       final plans = await widget.service.plans();
       if (!mounted) return;
-      setState(() => _plans = plans);
+      setState(() {
+        _plans = plans;
+        if (!plans.any((plan) => plan.productId == _selected)) {
+          _selected =
+              plans.where((plan) => plan.isYearly).firstOrNull?.productId ??
+                  plans.firstOrNull?.productId;
+        }
+      });
     } catch (error) {
       debugPrint('Paywall could not load the plans: $error');
       if (!mounted) return;
@@ -97,13 +107,14 @@ class _PaywallSheetState extends State<PaywallSheet> {
       _plans?.where((plan) => plan.productId == _selected).firstOrNull;
 
   Future<void> _purchase() async {
-    if (_busy || _selectedPlan == null) return;
+    final selected = _selected;
+    if (_busy || selected == null || _selectedPlan == null) return;
     setState(() {
       _busy = true;
       _message = null;
     });
     try {
-      final membership = await widget.service.purchase(_selected);
+      final membership = await widget.service.purchase(selected);
       if (!mounted) return;
       if (membership.entitled) {
         Navigator.of(context).pop(true);

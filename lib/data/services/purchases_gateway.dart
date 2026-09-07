@@ -157,8 +157,7 @@ class RevenueCatGateway implements PurchasesGateway {
         ...offerings.all.values,
       ])
         for (final package in offering.availablePackages)
-          if (MembershipProducts.all
-                  .contains(package.storeProduct.identifier) &&
+          if (MembershipProducts.isKnown(package.storeProduct.identifier) &&
               seen.add(package.storeProduct.identifier))
             package.storeProduct,
     ];
@@ -196,7 +195,7 @@ class RevenueCatGateway implements PurchasesGateway {
     return StoreAccount(
       subscriptions: [
         for (final sub in info.subscriptionsByProductIdentifier.values)
-          if (MembershipProducts.all.contains(sub.productIdentifier))
+          if (MembershipProducts.isKnown(sub.productIdentifier))
             StoreSubscription(
               productId: sub.productIdentifier,
               isActive: sub.isActive,

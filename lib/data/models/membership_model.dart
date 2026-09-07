@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// What the app knows about a user's membership, resolved from the store
 /// (RevenueCat over Apple) and the server's override table.
 ///
@@ -37,15 +39,34 @@ extension MembershipStateX on MembershipState {
       this == MembershipState.complimentary;
 }
 
-/// The two plans on sale, by App Store product id.
+/// The two plans on sale, by store product id.
+///
+/// Release builds sell the App Store products. Debug builds talk to
+/// RevenueCat's Test Store, whose copies of the same two plans carry
+/// shorter ids — so the ids the store is asked for depend on the build,
+/// and "is this the yearly plan" accepts either spelling.
 class MembershipProducts {
   MembershipProducts._();
 
   static const String yearly = 'forma_pro_annual';
   static const String monthly = 'forma_pro_monthly';
-  static const List<String> all = [yearly, monthly];
 
-  static bool isYearly(String productId) => productId == yearly;
+  static const String testStoreYearly = 'forma_test_yearly';
+  static const String testStoreMonthly = 'forma_test_monthly';
+
+  /// The ids to ask this build's store for.
+  static List<String> get all => kDebugMode
+      ? const [testStoreYearly, testStoreMonthly]
+      : const [yearly, monthly];
+
+  static bool isYearly(String productId) =>
+      productId == yearly || productId == testStoreYearly;
+
+  static bool isKnown(String productId) =>
+      productId == yearly ||
+      productId == monthly ||
+      productId == testStoreYearly ||
+      productId == testStoreMonthly;
 }
 
 class Membership {
