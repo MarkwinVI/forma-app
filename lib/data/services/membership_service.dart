@@ -175,7 +175,7 @@ class MembershipService {
 
     try {
       final (override, account) = await (
-        _fetchOverride(userId),
+        _fetchOverrideOrLast(userId),
         _fetchAccount(),
       ).wait.timeout(networkTimeout);
       _lastOverride = override;
@@ -192,6 +192,18 @@ class MembershipService {
       final membership = cached ?? _fallback();
       if (_real == null) _setReal(membership);
       return membership;
+    }
+  }
+
+  /// The server's override row. A failed read is not a failed resolve —
+  /// the store's answer still stands — so it falls back to the last row
+  /// seen this session (usually none).
+  Future<MembershipOverride?> _fetchOverrideOrLast(String userId) async {
+    try {
+      return await _fetchOverride(userId);
+    } catch (error) {
+      debugPrint('Membership override read failed: $error');
+      return _lastOverride;
     }
   }
 
