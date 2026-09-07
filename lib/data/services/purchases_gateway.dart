@@ -215,8 +215,16 @@ class RevenueCatGateway implements PurchasesGateway {
     final yearly = MembershipProducts.isYearly(product.identifier);
     String? monthly;
     if (yearly) {
-      monthly = product.pricePerMonthString ??
-          NumberFormat.simpleCurrency(name: product.currencyCode)
+      // Apple's own per-month string when it is a real twelfth; the Test
+      // Store hands back the full yearly price here, so anything not
+      // smaller than the price is recomputed.
+      final perMonth = product.pricePerMonth;
+      monthly = perMonth != null &&
+              perMonth > 0 &&
+              perMonth < product.price &&
+              product.pricePerMonthString != null
+          ? product.pricePerMonthString
+          : NumberFormat.simpleCurrency(name: product.currencyCode)
               .format(product.price / 12);
     }
     return MembershipPlan(
