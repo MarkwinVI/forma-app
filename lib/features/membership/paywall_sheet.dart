@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -46,6 +47,10 @@ class PaywallSheet extends StatefulWidget {
 class _PaywallSheetState extends State<PaywallSheet> {
   List<MembershipPlan>? _plans;
   bool _plansFailed = false;
+
+  /// Why the plans failed to load — shown on debug builds only, where the
+  /// store setup is what usually needs fixing.
+  String? _plansError;
   String _selected = MembershipProducts.yearly;
   bool _busy = false;
   String? _message;
@@ -78,9 +83,13 @@ class _PaywallSheetState extends State<PaywallSheet> {
       final plans = await widget.service.plans();
       if (!mounted) return;
       setState(() => _plans = plans);
-    } catch (_) {
+    } catch (error) {
+      debugPrint('Paywall could not load the plans: $error');
       if (!mounted) return;
-      setState(() => _plansFailed = true);
+      setState(() {
+        _plansFailed = true;
+        _plansError = kDebugMode ? error.toString() : null;
+      });
     }
   }
 
@@ -243,7 +252,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
                       child: Center(child: LoadingIndicator()),
                     )
                   else if (plans == null)
-                    _PlansFailed(onRetry: _loadPlans)
+                    _PlansFailed(detail: _plansError, onRetry: _loadPlans)
                   else
                     for (final plan in plans) ...[
                       _PlanCard(
@@ -560,9 +569,10 @@ class _PlanCard extends StatelessWidget {
 }
 
 class _PlansFailed extends StatelessWidget {
+  final String? detail;
   final VoidCallback onRetry;
 
-  const _PlansFailed({required this.onRetry});
+  const _PlansFailed({required this.detail, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -575,6 +585,18 @@ class _PlansFailed extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
+          if (detail != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              detail!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11.5,
+                color: AppColors.textMuted,
+                height: 1.4,
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           TextAction(label: 'Try again', onTap: onRetry),
         ],

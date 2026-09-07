@@ -126,7 +126,18 @@ class RevenueCatGateway implements PurchasesGateway {
 
   @override
   Future<List<MembershipPlan>> fetchPlans() async {
-    final products = await Purchases.getProducts(MembershipProducts.all);
+    var products = await Purchases.getProducts(MembershipProducts.all);
+    // A store that only exposes its products through an offering (the
+    // Test Store, an App Store Connect product not yet attached to a
+    // version) answers the direct lookup with nothing.
+    if (products.isEmpty) products = await _productsFromOfferings();
+    if (products.isEmpty) {
+      throw StateError(
+        'The store returned none of ${MembershipProducts.all.join(', ')}. '
+        'Check the products exist for this app in RevenueCat (the Test '
+        'Store app in debug builds) and in App Store Connect.',
+      );
+    }
     final plans = <MembershipPlan>[];
     for (final product in products) {
       _productsById[product.identifier] = product;
@@ -135,6 +146,22 @@ class RevenueCatGateway implements PurchasesGateway {
     // Yearly first, the way the sheet lists them.
     plans.sort((a, b) => a.isYearly ? -1 : (b.isYearly ? 1 : 0));
     return plans;
+  }
+
+  Future<List<StoreProduct>> _productsFromOfferings() async {
+    final offerings = await Purchases.getOfferings();
+    final seen = <String>{};
+    return [
+      for (final offering in [
+        if (offerings.current != null) offerings.current!,
+        ...offerings.all.values,
+      ])
+        for (final package in offering.availablePackages)
+          if (MembershipProducts.all
+                  .contains(package.storeProduct.identifier) &&
+              seen.add(package.storeProduct.identifier))
+            package.storeProduct,
+    ];
   }
 
   @override
