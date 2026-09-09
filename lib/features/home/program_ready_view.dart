@@ -63,12 +63,21 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
     widget.service.plans().then((plans) {
       if (mounted) setState(() => _plans = plans);
     }, onError: (Object _) {});
+    // Membership can land while this screen is up — a subscription
+    // carried over from a previous account arrives a few seconds after
+    // sign-in — and the dock has to follow it.
+    widget.service.notifier.addListener(_onMembershipChanged);
   }
 
   @override
   void dispose() {
+    widget.service.notifier.removeListener(_onMembershipChanged);
     _reveal.dispose();
     super.dispose();
+  }
+
+  void _onMembershipChanged() {
+    if (mounted) setState(() {});
   }
 
   /// Staggered ease-out, one segment per block down the page.
@@ -137,6 +146,9 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
     ];
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final membership = widget.service.current;
+    // Already a member — a subscriber rebuilding their program, or a
+    // subscription that followed them to a new account: nothing to ask.
+    final entitled = membership?.entitled ?? false;
     final trial = MembershipLockCopy.offersTrial(membership, _plans);
     final copy = MembershipLockCopy.forMembership(membership, _plans);
 
@@ -222,46 +234,57 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                   color: AppColors.bg,
                   border: Border(top: BorderSide(color: AppColors.divider)),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    PillButton(
-                      label: trial
-                          ? MembershipLockCopy.trialCta(_plans)
-                          : copy.cta(_plans),
-                      radius: 14,
-                      onTap: _startTrial,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      trial
-                          ? MembershipLockCopy.trialTerms(_plans)
-                          : copy.sub(_plans),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    Pressable(
-                      onTap: _notNow,
-                      semanticLabel: 'Not now',
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 13),
-                        child: Text(
-                          'Not now',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
+                child: entitled
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: PillButton(
+                          label: 'Let’s go',
+                          icon: Icons.chevron_right_rounded,
+                          trailingIcon: true,
+                          radius: 14,
+                          onTap: widget.onDone,
                         ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          PillButton(
+                            label: trial
+                                ? MembershipLockCopy.trialCta(_plans)
+                                : copy.cta(_plans),
+                            radius: 14,
+                            onTap: _startTrial,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            trial
+                                ? MembershipLockCopy.trialTerms(_plans)
+                                : copy.sub(_plans),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                          Pressable(
+                            onTap: _notNow,
+                            semanticLabel: 'Not now',
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 13),
+                              child: Text(
+                                'Not now',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],

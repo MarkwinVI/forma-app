@@ -193,4 +193,26 @@ void main() {
     expect(find.text('Not now'), findsOneWidget);
     handle.dispose();
   });
+
+  testWidgets(
+      'a member sees the way on, not a plan — including one whose '
+      'subscription lands while the screen is up', (tester) async {
+    final gateway = FakePurchasesGateway();
+    final s = MembershipService(gateway: gateway);
+    await s.setup();
+    await s.load('user');
+    var done = 0;
+    await pump(tester, service: s, onDone: () => done++);
+    expect(find.text('Start 7-day free trial'), findsOneWidget);
+
+    // The subscription carried over from a previous account arrives.
+    gateway.emit(FakePurchasesGateway.activeAccount());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Start 7-day free trial'), findsNothing);
+    expect(find.text('Not now'), findsNothing);
+    await tester.tap(find.text('Let’s go'));
+    await tester.pump();
+    expect(done, 1);
+  });
 }

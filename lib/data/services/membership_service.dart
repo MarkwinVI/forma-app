@@ -62,6 +62,10 @@ class MembershipService {
   /// the anonymous identity's empty history.
   String? _storeUserId;
   Future<void>? _identifying;
+
+  /// Accounts whose device purchases have been synced this session, so
+  /// the quiet sync runs once per account, not on every resolve.
+  final _synced = <String>{};
   Future<List<MembershipPlan>>? _plans;
   StreamSubscription<StoreAccount>? _updates;
   bool _configured = false;
@@ -129,6 +133,7 @@ class MembershipService {
     _userId = null;
     _storeUserId = null;
     _loads.clear();
+    _synced.clear();
     _setReal(null);
     if (_configured) await _gateway.logOut();
   }
@@ -169,7 +174,19 @@ class MembershipService {
     if (_storeUserId != userId) await _identify(userId);
 
     try {
-      final account = await _fetchAccount().timeout(networkTimeout);
+      var account = await _fetchAccount().timeout(networkTimeout);
+      // No entitlement on the account, on its first look this session: a
+      // subscription bought under another account on this Apple ID only
+      // follows once the device's purchases are sent under this one.
+      if (account != null &&
+          !(account.entitlement?.isActive ?? false) &&
+          _synced.add(userId)) {
+        try {
+          account = await _gateway.syncPurchases().timeout(networkTimeout);
+        } catch (error) {
+          debugPrint('Purchase sync failed: $error');
+        }
+      }
       return _publish(
         userId,
         resolveMembership(store: account, now: _now()),

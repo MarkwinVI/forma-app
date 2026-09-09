@@ -138,4 +138,17 @@ class FakePurchasesGateway implements PurchasesGateway {
     restores++;
     return account;
   }
+
+  /// What the device's purchases turn out to be once synced; null means
+  /// nothing changes.
+  StoreAccount? syncedAccount;
+  var syncs = 0;
+
+  @override
+  Future<StoreAccount> syncPurchases() async {
+    syncs++;
+    final synced = syncedAccount;
+    if (synced != null) account = synced;
+    return account;
+  }
 }

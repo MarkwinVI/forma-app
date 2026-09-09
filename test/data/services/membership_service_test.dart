@@ -131,4 +131,28 @@ void main() {
     gateway.plansError = null;
     expect(await s.plans(), hasLength(2));
   });
+
+  test(
+      'a subscription bought under a previous account follows on the '
+      'first resolve, without a restore', () async {
+    final gateway = FakePurchasesGateway()..syncedAccount = activeTrial();
+    final s = service(gateway: gateway);
+    await s.setup();
+
+    final membership = await s.load(user);
+    expect(gateway.syncs, 1);
+    expect(membership.state, MembershipState.trialing);
+
+    // Once per account: a refresh does not sync again.
+    await s.refresh();
+    expect(gateway.syncs, 1);
+  });
+
+  test('an account that is already a member is not synced', () async {
+    final gateway = FakePurchasesGateway(account: activeTrial());
+    final s = service(gateway: gateway);
+    await s.setup();
+    await s.load(user);
+    expect(gateway.syncs, 0);
+  });
 }

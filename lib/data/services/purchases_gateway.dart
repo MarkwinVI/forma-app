@@ -40,6 +40,12 @@ abstract class PurchasesGateway {
   /// Asks the store for purchases made under this Apple ID.
   Future<StoreAccount> restore();
 
+  /// Sends the purchases already on this device to the store's backend
+  /// under the current identity — the quiet half of [restore], with no
+  /// App Store prompt. How a subscription follows someone to a new
+  /// account.
+  Future<StoreAccount> syncPurchases();
+
   /// Pushed by the SDK whenever the store's view changes — a renewal, a
   /// cancellation detected in the background, a purchase on another device.
   Stream<StoreAccount> get updates;
@@ -191,6 +197,12 @@ class RevenueCatGateway implements PurchasesGateway {
   Future<StoreAccount> restore() async {
     final info = await Purchases.restorePurchases();
     return _toAccount(info);
+  }
+
+  @override
+  Future<StoreAccount> syncPurchases() async {
+    await Purchases.syncPurchases();
+    return _toAccount(await Purchases.getCustomerInfo());
   }
 
   StoreAccount _toAccount(CustomerInfo info) {
