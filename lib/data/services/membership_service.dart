@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,7 +19,7 @@ import 'purchases_gateway.dart';
 /// (RevenueCat), which is also where free access is granted by hand.
 /// Screens read [current] or listen to [notifier]; they never talk to the
 /// store directly.
-class MembershipService {
+class MembershipService with WidgetsBindingObserver {
   MembershipService({
     PurchasesGateway? gateway,
     DateTime Function()? now,
@@ -66,6 +67,11 @@ class MembershipService {
   /// Accounts whose device purchases have been synced this session, so
   /// the quiet sync runs once per account, not on every resolve.
   final _synced = <String>{};
+
+  /// A resolve older than this is re-run when the app comes back to the
+  /// foreground. The store SDK pushes changes on its own while the app is
+  /// open; this covers a period that ended while it was in the background.
+  static const staleAfter = Duration(minutes: 5);
   Future<List<MembershipPlan>>? _plans;
   StreamSubscription<StoreAccount>? _updates;
   bool _configured = false;
@@ -82,6 +88,7 @@ class MembershipService {
   /// Never throws — an SDK that fails to start (no StoreKit on this
   /// platform) leaves the app resolving from the cache alone.
   Future<void> setup() async {
+    WidgetsBinding.instance.addObserver(this);
     final signedIn = AuthService().currentUser;
     if (signedIn != null) await _identify(signedIn.id, email: signedIn.email);
 
@@ -151,6 +158,24 @@ class MembershipService {
       });
       return future;
     }();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) onResumed();
+  }
+
+  /// Back in the foreground: a membership whose period has ended, or one
+  /// not looked at for a while, is resolved again. Cheap otherwise — the
+  /// store SDK answers from its own cache when nothing changed.
+  Future<void> onResumed() async {
+    final membership = _real;
+    if (membership == null) return;
+    final now = _now();
+    final ended =
+        membership.expiresAt != null && !membership.expiresAt!.isAfter(now);
+    final stale = now.difference(membership.resolvedAt) > staleAfter;
+    if (ended || stale) await refresh();
   }
 
   /// Drops the memo and resolves again — after a purchase, a restore, or a
@@ -365,6 +390,7 @@ class MembershipService {
 
   @visibleForTesting
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _updates?.cancel();
   }
 }

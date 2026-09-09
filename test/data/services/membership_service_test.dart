@@ -10,6 +10,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   final now = DateTime(2026, 9, 7, 12);
+
+  /// The clock the service reads; tests move it.
+  var clock = now;
+
   const user = 'user-1';
 
   setUpAll(() async {
@@ -23,10 +27,13 @@ void main() {
     );
   });
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    clock = now;
+  });
 
   MembershipService service({required FakePurchasesGateway gateway}) =>
-      MembershipService(gateway: gateway, now: () => now);
+      MembershipService(gateway: gateway, now: () => clock);
 
   StoreAccount activeTrial() => FakePurchasesGateway.activeAccount(
         expiresAt: now.add(const Duration(days: 6)),
@@ -154,5 +161,39 @@ void main() {
     await s.setup();
     await s.load(user);
     expect(gateway.syncs, 0);
+  });
+
+  test(
+      'coming back to the foreground re-checks a period that has ended, '
+      'and leaves a fresh one alone', () async {
+    final gateway = FakePurchasesGateway(account: activeTrial());
+    final s = service(gateway: gateway);
+    await s.setup();
+    await s.load(user);
+    expect(s.current?.state, MembershipState.trialing);
+    final fetchesAfterLoad = gateway.fetches;
+
+    // Straight back: nothing to re-check.
+    await s.onResumed();
+    expect(gateway.fetches, fetchesAfterLoad);
+
+    // The trial's end has passed while the app was away, and the store
+    // now says it ran out.
+    clock = now.add(const Duration(days: 7));
+    gateway.account = StoreAccount(
+      subscriptions: [
+        StoreSubscription(
+          productId: MembershipProducts.yearly,
+          isActive: false,
+          expiresAt: now.add(const Duration(days: 6)),
+          willRenew: false,
+          isTrial: true,
+        ),
+      ],
+      trialEligible: false,
+    );
+    await s.onResumed();
+    expect(gateway.fetches, fetchesAfterLoad + 1);
+    expect(s.current?.state, MembershipState.trialEnded);
   });
 }

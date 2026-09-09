@@ -76,8 +76,11 @@ class FakePurchasesGateway implements PurchasesGateway {
     logOuts++;
   }
 
+  var fetches = 0;
+
   @override
   Future<StoreAccount> fetchAccount() async {
+    fetches++;
     final error = accountError;
     if (error != null) throw error;
     return account;
