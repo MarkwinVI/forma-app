@@ -103,7 +103,6 @@ void main() {
 
     await tester.pumpWidget(MaterialApp(
       home: ProgramReadyView(
-        daysPerWeek: 3,
         service: service,
         onDone: onDone,
         bundle: _bundle(),
@@ -122,9 +121,12 @@ void main() {
       'comes next', (tester) async {
     await pump(tester, service: await service(), onDone: () {});
 
-    expect(find.text('Your map is set.'), findsOneWidget);
-    expect(find.textContaining('2 skill trees'), findsOneWidget);
-    expect(find.textContaining('3 days a week'), findsOneWidget);
+    expect(find.text('Program ready'), findsOneWidget);
+    // The title stands alone: no eyebrow above it, no line under it.
+    expect(find.text('PROGRAM READY'), findsNothing);
+    expect(find.textContaining('days a week'), findsNothing);
+    expect(find.text('AVAILABLE'), findsOneWidget);
+    expect(find.text('UP NEXT'), findsNothing);
     expect(find.byType(SkillWheel), findsOneWidget);
 
     expect(find.text('WHERE YOU START'), findsOneWidget);
@@ -180,14 +182,14 @@ void main() {
 
     expect(find.byType(SkillWheelScreen), findsOneWidget);
     expect(find.text('Pushups'), findsWidgets);
-    expect(find.text('Your map is set.'), findsNothing);
+    expect(find.text('Program ready'), findsNothing);
 
     // Backing out of the tree lands straight on the ready view — no wheel
     // overview in between.
     await tester.tap(find.bySemanticsLabel('Back').first);
     await settle();
     expect(find.byType(SkillWheelScreen), findsNothing);
-    expect(find.text('Your map is set.'), findsOneWidget);
+    expect(find.text('Program ready'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
     handle.dispose();
   });

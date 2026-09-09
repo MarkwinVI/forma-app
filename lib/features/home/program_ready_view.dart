@@ -23,7 +23,6 @@ import '../progress/widgets/skill_wheel_screen.dart';
 /// same one the Progress tab shows; backing out of it lands here again, so
 /// the choice at the bottom is always where the user ends up.
 class ProgramReadyView extends StatefulWidget {
-  final int daysPerWeek;
   final MembershipService service;
 
   /// Leaves the wizard — after "Not now", or once a purchase has landed.
@@ -36,7 +35,6 @@ class ProgramReadyView extends StatefulWidget {
 
   const ProgramReadyView({
     super.key,
-    required this.daysPerWeek,
     required this.service,
     required this.onDone,
     required this.bundle,
@@ -156,29 +154,17 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                   children: [
                     _Reveal(
                       animation: _segment(0),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('PROGRAM READY', style: monoStyle()),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Your map is set.',
-                              style: TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                                letterSpacing: -0.9,
-                                height: 1.04,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _Lead(
-                              trees: starts.length,
-                              daysPerWeek: widget.daysPerWeek,
-                            ),
-                          ],
+                      child: const Padding(
+                        padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
+                        child: Text(
+                          'Program ready',
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.9,
+                            height: 1.04,
+                          ),
                         ),
                       ),
                     ),
@@ -358,53 +344,6 @@ class _ProgramReadyWheelScreen extends StatelessWidget {
   }
 }
 
-/// "6 skill trees, 3 days a week. Blue is where you start — Forma moves you
-/// outward every time you clear a node."
-class _Lead extends StatelessWidget {
-  final int trees;
-  final int daysPerWeek;
-
-  const _Lead({required this.trees, required this.daysPerWeek});
-
-  @override
-  Widget build(BuildContext context) {
-    const style = TextStyle(
-      fontSize: 15,
-      color: AppColors.textSecondary,
-      height: 1.4,
-    );
-    const bold = TextStyle(
-      color: AppColors.textPrimary,
-      fontWeight: FontWeight.w600,
-    );
-    return Text.rich(
-      TextSpan(
-        style: style,
-        children: [
-          if (trees > 0) ...[
-            TextSpan(
-              text: '$trees skill ${trees == 1 ? 'tree' : 'trees'}',
-              style: bold,
-            ),
-            TextSpan(
-              text: ', $daysPerWeek ${daysPerWeek == 1 ? 'day' : 'days'} a '
-                  'week. ',
-            ),
-          ] else
-            TextSpan(
-              text: '$daysPerWeek ${daysPerWeek == 1 ? 'day' : 'days'} a '
-                  'week. ',
-            ),
-          const TextSpan(
-            text: 'Blue is where you start — Forma moves you outward every '
-                'time you clear a node.',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Legend extends StatelessWidget {
   const _Legend();
 
@@ -435,7 +374,7 @@ class _Legend extends StatelessWidget {
         runSpacing: 6,
         children: [
           item(AppColors.accentPrimary, 'STARTING NOW'),
-          item(AppColors.textPrimary.withValues(alpha: 0.85), 'UP NEXT'),
+          item(AppColors.textPrimary.withValues(alpha: 0.85), 'AVAILABLE'),
           item(AppColors.surface, 'LOCKED', border: AppColors.surface3),
         ],
       ),

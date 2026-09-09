@@ -120,8 +120,7 @@ void main() {
     // The ready screen: the map, the trial, and "Not now" out of the
     // wizard. Without a program on file there is no wheel to draw, but the
     // page and its choice still stand.
-    expect(find.text('Your map is set.'), findsOneWidget);
-    expect(find.textContaining('3 days a week'), findsOneWidget);
+    expect(find.text('Program ready'), findsOneWidget);
     expect(find.textContaining('free trial'), findsWidgets);
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();

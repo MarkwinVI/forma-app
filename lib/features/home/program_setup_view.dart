@@ -451,7 +451,6 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       // the trial landing and "Not now" leave the wizard the same way; the
       // tab that opened it moves the user on to Progress.
       return ProgramReadyView(
-        daysPerWeek: _days ?? 3,
         service: MembershipService.instance,
         bundle: _readyBundle,
         onDone: () => Navigator.of(context).pop(),
