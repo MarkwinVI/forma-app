@@ -284,6 +284,23 @@ class _PaywallSheetState extends State<PaywallSheet> {
                       ),
                       const SizedBox(height: 10),
                     ],
+                  // Debug builds only: what the store said about each
+                  // plan, for when the trial or the period reads wrong.
+                  if (kDebugMode && plans != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, bottom: 6),
+                      child: Text(
+                        [
+                          for (final plan in plans)
+                            if (plan.debugInfo != null) plan.debugInfo!,
+                        ].join('\n'),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textMuted,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
                   if (_message != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 4, bottom: 8),

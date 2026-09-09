@@ -272,7 +272,7 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
     final forced = MembershipService.instance.debugState;
     if (forced != null) return 'forced ${forced.name}';
     final real = MembershipService.instance.current?.state.name;
-    return real == null ? 'real (unknown)' : 'real ($real)';
+    return real == null ? 'default' : 'default ($real)';
   }
 
   /// Every state the app distinguishes, plus the way back to the real one.
@@ -286,10 +286,10 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
           children: [
             ListTile(
               title: const Text(
-                'Real membership',
+                'Default — what the store says',
                 style: TextStyle(color: AppColors.textPrimary),
               ),
-              onTap: () => Navigator.of(context).pop('real'),
+              onTap: () => Navigator.of(context).pop('default'),
             ),
             for (final state in MembershipState.values)
               ListTile(

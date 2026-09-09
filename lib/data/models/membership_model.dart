@@ -281,6 +281,10 @@ class MembershipPlan {
   /// Free-trial length in days, 0 when the product carries none.
   final int trialDays;
 
+  /// What the store actually said about the product's period and offers,
+  /// for debug builds to show when the numbers above look wrong.
+  final String? debugInfo;
+
   const MembershipPlan({
     required this.productId,
     required this.price,
@@ -288,6 +292,7 @@ class MembershipPlan {
     required this.priceString,
     required this.monthlyEquivalentString,
     required this.trialDays,
+    this.debugInfo,
   });
 
   bool get isYearly => MembershipProducts.isYearly(productId);

@@ -246,20 +246,67 @@ class RevenueCatGateway implements PurchasesGateway {
       currencyCode: product.currencyCode,
       priceString: product.priceString,
       monthlyEquivalentString: monthly,
-      trialDays: _trialDays(product.introductoryPrice),
+      trialDays: _trialDays(product),
+      debugInfo: kDebugMode ? _describe(product) : null,
     );
   }
 
-  /// The free trial's length in days, 0 unless the intro offer is free.
-  static int _trialDays(IntroductoryPrice? intro) {
-    if (intro == null || intro.price != 0) return 0;
-    final units = intro.periodNumberOfUnits * intro.cycles.clamp(1, 1 << 20);
-    return switch (intro.periodUnit) {
-      PeriodUnit.day => units,
-      PeriodUnit.week => units * 7,
-      PeriodUnit.month => units * 30,
-      PeriodUnit.year => units * 365,
-      PeriodUnit.unknown => 0,
-    };
+  /// The free trial's length in days, 0 when the product carries none.
+  ///
+  /// Apple reports it as the introductory price; other stores (the Test
+  /// Store among them) as a free pricing phase on a subscription option,
+  /// or as a zero-priced discount. All three are read.
+  static int _trialDays(StoreProduct product) {
+    final intro = product.introductoryPrice;
+    if (intro != null && intro.price == 0) {
+      return _days(
+        intro.periodUnit,
+        intro.periodNumberOfUnits * intro.cycles.clamp(1, 1 << 20),
+      );
+    }
+    for (final option in [
+      if (product.defaultOption != null) product.defaultOption!,
+      ...?product.subscriptionOptions,
+    ]) {
+      final free = option.freePhase;
+      final period = free?.billingPeriod;
+      if (period != null) {
+        final days = _days(period.unit, period.value);
+        if (days > 0) return days;
+      }
+    }
+    for (final discount
+        in product.discounts ?? const <StoreProductDiscount>[]) {
+      if (discount.price != 0) continue;
+      final unit = PeriodUnit.values
+          .where((u) => u.name == discount.periodUnit.toLowerCase())
+          .firstOrNull;
+      if (unit == null) continue;
+      final days = _days(
+        unit,
+        discount.periodNumberOfUnits * discount.cycles.clamp(1, 1 << 20),
+      );
+      if (days > 0) return days;
+    }
+    return 0;
+  }
+
+  static int _days(PeriodUnit unit, int units) => switch (unit) {
+        PeriodUnit.day => units,
+        PeriodUnit.week => units * 7,
+        PeriodUnit.month => units * 30,
+        PeriodUnit.year => units * 365,
+        PeriodUnit.unknown => 0,
+      };
+
+  /// One line of what the store reported, for the debug paywall.
+  static String _describe(StoreProduct product) {
+    final intro = product.introductoryPrice;
+    final option = product.defaultOption;
+    return '${product.identifier}: period=${product.subscriptionPeriod ?? '?'}'
+        ' intro=${intro == null ? 'none' : '${intro.priceString}/${intro.periodNumberOfUnits}${intro.periodUnit.name}×${intro.cycles}'}'
+        ' free=${option?.freePhase?.billingPeriod?.iso8601 ?? 'none'}'
+        ' discounts=${product.discounts?.length ?? 0}'
+        ' options=${product.subscriptionOptions?.length ?? 0}';
   }
 }
