@@ -12,10 +12,11 @@ import 'membership_scope.dart';
 import 'membership_toast.dart';
 import 'paywall_sheet.dart';
 
-/// The Profile tab's SUBSCRIPTION section. Locked: the way in (the trial,
-/// or a plan) and Restore for someone already subscribed on another
-/// device. A member: the plan, when it renews or ends, and where to manage
-/// it — changes and cancellation happen in the App Store.
+/// The membership rows at the top of the Profile tab's ACCOUNT section.
+/// Locked: the way in (the trial, or a plan) and Restore for someone
+/// already subscribed on another device. A member: the plan, when it
+/// renews or ends, and where to manage it — changes and cancellation
+/// happen in the App Store. Sign out follows, so no row here is the last.
 class SubscriptionRows extends StatefulWidget {
   final MembershipService service;
 
@@ -83,16 +84,9 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const TypeSectionLabel('Subscription'),
-        if (membership.locked)
-          ..._lockedRows(membership)
-        else
-          ..._memberRows(
-            context,
-            membership,
-          ),
-      ],
+      children: membership.locked
+          ? _lockedRows(membership)
+          : _memberRows(context, membership),
     );
   }
 
@@ -120,7 +114,6 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
       TypeContentRow(
         name: _restoring ? 'Restoring…' : 'Restore purchase',
         sub: 'Already subscribed on another device',
-        last: true,
         onTap: _restoring ? null : _restore,
       ),
     ];
@@ -172,14 +165,12 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
     return [
       TypeContentRow(
         chevron: false,
-        last: !manageable,
         child: _AccentName(name: name, sub: sub, badge: badge, accent: false),
       ),
       if (manageable)
         TypeContentRow(
           name: 'Manage subscription',
           sub: 'Change or cancel in the App Store',
-          last: true,
           onTap: _manage,
         ),
     ];

@@ -322,7 +322,6 @@ class _DataViewState extends State<DataView> {
             ),
           ),
         ),
-      SubscriptionRows(service: MembershipService.instance),
       const TypeSectionLabel('Library'),
       TypeContentRow(
         name: 'All exercises',
@@ -331,6 +330,8 @@ class _DataViewState extends State<DataView> {
         onTap: _openExercises,
       ),
       const TypeSectionLabel('Account'),
+      // The way into (or the state of) the membership, then the session.
+      SubscriptionRows(service: MembershipService.instance),
       TypeContentRow(
         name: 'Sign out',
         chevron: false,
