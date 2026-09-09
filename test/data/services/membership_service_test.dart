@@ -32,14 +32,18 @@ void main() {
         expiresAt: now.add(const Duration(days: 6)),
       );
 
-  test('setup starts the store under the signed-in user and load resolves',
+  test('the store starts under the account being loaded, and resolves',
       () async {
     final gateway = FakePurchasesGateway(account: activeTrial());
     final s = service(gateway: gateway);
     await s.setup();
-    expect(gateway.configured, isTrue);
+    // Nobody is signed in yet, so the SDK has not started — no anonymous
+    // customer is ever created.
+    expect(gateway.configured, isFalse);
 
     final membership = await s.load(user);
+    expect(gateway.configured, isTrue);
+    expect(gateway.loggedIn, user);
     expect(membership.state, MembershipState.trialing);
     expect(s.current?.state, MembershipState.trialing);
     expect(s.notifier.value, same(membership));

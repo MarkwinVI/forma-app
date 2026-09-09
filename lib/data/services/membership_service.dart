@@ -70,47 +70,59 @@ class MembershipService {
   /// locked variant can be seen without a sandbox subscription.
   MembershipState? _debugState;
 
-  /// Starts the store SDK and follows the auth session: sign-in ties the
-  /// store identity to the account, sign-out drops it. Never throws — an
-  /// SDK that fails to start (no StoreKit on this platform) leaves the app
-  /// resolving from the cache alone.
+  /// Follows the auth session: the store SDK starts under the first
+  /// signed-in account and sign-in ties the store identity to the account
+  /// from then on; sign-out drops it. Nobody can buy anything before
+  /// signing in, so the SDK never runs anonymously — every customer the
+  /// store knows is a real account, with no anonymous ids to merge later.
+  /// Never throws — an SDK that fails to start (no StoreKit on this
+  /// platform) leaves the app resolving from the cache alone.
   Future<void> setup() async {
     final signedIn = AuthService().currentUser;
-    try {
-      await _gateway.configure(userId: signedIn?.id);
-      _configured = true;
-      _userId = signedIn?.id;
-      _storeUserId = signedIn?.id;
-      _updates = _gateway.updates.listen(_onStoreUpdate);
-      // A restored session skips logIn, so the email is sent from here.
-      if (signedIn != null) _identify(signedIn.id, email: signedIn.email);
-    } catch (error) {
-      debugPrint('Store SDK setup failed, membership from cache only: $error');
-    }
+    if (signedIn != null) await _identify(signedIn.id, email: signedIn.email);
 
     AuthService().onAuthStateChange.listen((state) {
       final user = state.session?.user;
       if (state.event == AuthChangeEvent.signedOut) {
         unawaited(_signOut());
       } else if (user != null && user.id != _storeUserId) {
-        _identify(user.id, email: user.email);
+        unawaited(_identify(user.id, email: user.email));
       }
     });
   }
 
-  /// Ties the store identity to [userId]. Tracked so a resolve started in
-  /// the same breath waits for it.
-  void _identify(String userId, {String? email}) {
+  /// Ties the store identity to [userId]: starts the SDK under it the
+  /// first time, logs the SDK in from then on. Tracked so a resolve
+  /// started in the same breath waits for it.
+  Future<void> _identify(String userId, {String? email}) {
     _storeUserId = userId;
-    if (!_configured) return;
-    final future =
-        _gateway.logIn(userId, email: email).catchError((Object error) {
-      debugPrint('Store logIn failed: $error');
-    });
+    final Future<void> future;
+    if (!_configured) {
+      future = _configure(userId, email: email);
+    } else {
+      future = _gateway.logIn(userId, email: email).catchError((Object error) {
+        debugPrint('Store logIn failed: $error');
+      });
+    }
     _identifying = future;
     future.whenComplete(() {
       if (identical(_identifying, future)) _identifying = null;
     });
+    return future;
+  }
+
+  Future<void> _configure(String userId, {String? email}) async {
+    try {
+      await _gateway.configure(userId: userId);
+      _configured = true;
+      _userId = userId;
+      _updates = _gateway.updates.listen(_onStoreUpdate);
+      // configure() takes the id but not the email; that is a logIn call,
+      // which for the same id only sets the attribute.
+      await _gateway.logIn(userId, email: email);
+    } catch (error) {
+      debugPrint('Store SDK setup failed, membership from cache only: $error');
+    }
   }
 
   Future<void> _signOut() async {
@@ -151,6 +163,10 @@ class MembershipService {
   }) async {
     final cached = await _readCache(userId);
     if (cached != null && _real == null) _setReal(cached);
+
+    // A load is always for the signed-in account; make sure the store is
+    // identified as it (the auth listener usually already has).
+    if (_storeUserId != userId) await _identify(userId);
 
     try {
       final account = await _fetchAccount().timeout(networkTimeout);
