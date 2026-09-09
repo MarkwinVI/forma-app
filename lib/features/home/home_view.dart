@@ -22,7 +22,6 @@ import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../exercises/exercise_detail_view.dart';
-import '../membership/trial_pill.dart';
 import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
 import 'home_empty_state.dart';
@@ -922,8 +921,6 @@ class _HomeViewState extends State<HomeView> {
           TodayWorkoutCard(
             summary: metrics.today,
             rows: _todayRows(metrics),
-            // Draws nothing outside a running trial.
-            note: TrialPill(now: snapshot.now),
             onRowTap: _openPlannedExercise,
           ),
         ],

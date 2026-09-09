@@ -108,17 +108,8 @@ void main() {
     expect(await result, isTrue);
     expect(s.current?.entitled, isTrue);
     expect(find.text('Start free trial'), findsNothing);
-
-    // The one confirmation, with no reminder promised.
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Trial started'), findsOneWidget);
-    expect(find.textContaining('Full access until'), findsOneWidget);
-    expect(find.textContaining('remind'), findsNothing);
-    // And it leaves on its own (the hold and the two slides need frames).
-    for (var i = 0; i < 12; i++) {
-      await tester.pump(const Duration(milliseconds: 500));
-    }
+    // Apple's own sheet has already confirmed; nothing of ours follows.
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Trial started'), findsNothing);
   });
 
