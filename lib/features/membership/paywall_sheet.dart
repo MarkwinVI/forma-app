@@ -363,7 +363,7 @@ class _TrialTimeline extends StatelessWidget {
         const _TimelineRow(
           on: true,
           title: 'Today — full access',
-          sub: 'Train, log and track every rep.',
+          sub: 'Everything unlocked.',
           last: false,
         ),
         _TimelineRow(
