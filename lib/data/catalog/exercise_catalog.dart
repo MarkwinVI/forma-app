@@ -549,7 +549,7 @@ class ExerciseCatalog {
       category: ExerciseCategory.horizontalPull,
       skillCategoryId: 'rows',
       branchId: 'weighted',
-      name: 'nverted Row (Bodyweight)',
+      name: 'Inverted Row (Bodyweight)',
       description: 'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 4,
       treeOrder: 5,

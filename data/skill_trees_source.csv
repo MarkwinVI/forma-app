@@ -36,7 +36,7 @@ rows_horizontal_wide_rows,Inverted Row (Wide Grip),rows,one_arm,inverted_row_wid
 rows_archer_rows,Inverted Row (Archer),rows,one_arm,inverted_row_archer,rows_horizontal_wide_rows,4,
 rows_bulgarian_rows,"Inverted Row (One Arm, Assisted)",rows,one_arm,inverted_row_one_arm_assisted,rows_archer_rows,5,
 rows_one_arm_rows,Inverted Row (One Arm),rows,one_arm,inverted_row_one_arm,rows_bulgarian_rows,5,
-rows_weighted_rows_bodyweight_3x10,nverted Row (Bodyweight),rows,weighted,inverted_row_weighted,rows_horizontal_wide_rows,4,0
+rows_weighted_rows_bodyweight_3x10,Inverted Row (Bodyweight),rows,weighted,inverted_row_weighted,rows_horizontal_wide_rows,4,0
 rows_weighted_rows_plus_10,Inverted Row (+10% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_bodyweight_3x10,4,user_bodyweight * 0.10
 rows_weighted_rows_plus_20,Inverted Row (+20% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_10,4,user_bodyweight * 0.20
 rows_weighted_rows_plus_35,Inverted Row (+35% Bodyweight),rows,weighted,inverted_row_weighted,rows_weighted_rows_plus_20,5,user_bodyweight * 0.35
