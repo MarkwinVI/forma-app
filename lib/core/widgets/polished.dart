@@ -882,6 +882,10 @@ class SheetShell extends StatelessWidget {
   /// handle and the scrim already offer two ways out.
   final bool showClose;
 
+  /// A sheet that swapped to a second view shows a back circle before its
+  /// title; tapping it is how the sheet returns to the first.
+  final VoidCallback? onBack;
+
   const SheetShell({
     super.key,
     required this.title,
@@ -890,6 +894,7 @@ class SheetShell extends StatelessWidget {
     this.footer,
     this.expand = false,
     this.showClose = true,
+    this.onBack,
   });
 
   @override
@@ -930,6 +935,31 @@ class SheetShell extends StatelessWidget {
                 ),
                 Row(
                   children: [
+                    if (onBack != null)
+                      Pressable(
+                        onTap: onBack,
+                        semanticLabel: 'Back',
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Center(
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                size: 16,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

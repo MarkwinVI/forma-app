@@ -41,6 +41,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # Equipment illustrations for the setup wizard and the Program tab's
+  # equipment picker, one per EquipmentItem.
+  assets:
+    - assets/equipment/
+
   # Roboto Mono is bundled (SIL OFL 1.1, assets/fonts/RobotoMono-OFL.txt) so
   # the mono eyebrows render offline and on first launch without a fetch.
   fonts:

@@ -5,34 +5,23 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/weight_entry.dart';
+import '../../data/models/equipment_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/membership_service.dart';
 import '../../data/services/weight_unit_service.dart';
 import '../progress/skill_wheel_bundle.dart';
+import 'equipment_picker.dart';
 import 'program_ready_view.dart';
-
-/// What the user trains with, asked once during setup. Both weighted answers
-/// — a full gym or just a barbell and dumbbells — count as access to weights
-/// wherever the skill trees choose between a loaded and a bodyweight lift.
-enum SetupEquipment { fullGym, freeWeights, none }
-
-extension SetupEquipmentX on SetupEquipment {
-  String get dbValue => switch (this) {
-        SetupEquipment.fullGym => 'gym',
-        SetupEquipment.freeWeights => 'barbell',
-        SetupEquipment.none => 'none',
-      };
-
-  bool get hasWeights => this != SetupEquipment.none;
-}
 
 /// Answers collected by the "Build your program" wizard.
 class ProgramSetupResult {
   final int daysPerWeek;
   final TrainingProgramType split;
-  final SetupEquipment equipment;
+
+  /// What the user trains with: a preset, or the items they ticked.
+  final EquipmentAnswer equipment;
   final double bodyweightKg;
 
   /// exercise id -> reps (or squat kg), null when the user left it blank.
@@ -47,17 +36,16 @@ class ProgramSetupResult {
   });
 
   /// Whether loaded progressions (barbell squat, weighted skills) are on the
-  /// table — true for both the full-gym and free-weights answers.
+  /// table — a full gym, or a barbell among the items.
   bool get hasWeights => equipment.hasWeights;
 
   Map<String, dynamic> toMap() {
     return {
       'days_per_week': daysPerWeek,
       'split': split.dbValue,
-      'equipment': equipment.dbValue,
-      // The pre-equipment readers of this flag all mean "can load a bar",
-      // so free weights count the same as a full gym.
-      'has_gym': hasWeights,
+      // 'equipment', 'equipment_items' and the derived 'has_gym' flag every
+      // planner reads.
+      ...equipment.toSetupAnswers(),
       'bodyweight_kg': bodyweightKg,
       'starting_strength': startingStrength,
     };
@@ -219,7 +207,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
 
   /// Schedule and equipment start unanswered — the CTA holds until a pick.
   int? _days;
-  SetupEquipment? _equipment;
+  EquipmentAnswer? _equipment;
 
   /// Bodyweight is kept in the unit being displayed; only the finish
   /// converts to canonical kilograms.
@@ -261,11 +249,19 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
 
   bool get _ctaDisabled =>
       (_step == 0 && _days == null) ||
-      (_step == 1 && _equipment == null) ||
+      (_step == 1 && !_equipmentAnswered) ||
       (_step == 2 && !_bwUsable);
 
   /// A bodyweight the user typed, at or above the floor.
   bool get _bwUsable => _bwEntered && _bw >= _bwMin;
+
+  /// A preset, or "Some equipment" with at least one item ticked. The list
+  /// is only empty while its sheet is up — closing it empty clears the pick.
+  bool get _equipmentAnswered {
+    final equipment = _equipment;
+    return equipment != null &&
+        (!equipment.isSome || equipment.items.isNotEmpty);
+  }
 
   /// The wizard's unit toggle is the app-wide choice: picking lbs here flips
   /// every weight the app shows from now on.
@@ -380,7 +376,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   }
 
   Future<void> _finish() async {
-    final equipment = _equipment ?? SetupEquipment.fullGym;
+    final equipment = _equipment ?? EquipmentAnswer.fullGym;
     final bodyweightKg = _clampBw(_bw) *
         (_unit == WeightUnit.lb ? WeightUnitService.kgPerLb : 1);
 
@@ -731,48 +727,6 @@ class _InfoNote extends StatelessWidget {
   }
 }
 
-class _WarnNote extends StatelessWidget {
-  final IconData icon;
-  final InlineSpan message;
-
-  const _WarnNote({
-    required this.icon,
-    required this.message,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
-      decoration: BoxDecoration(
-        color: AppColors.amberSoft,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 1),
-            child: Icon(icon, size: 17, color: AppColors.amber),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Text.rich(
-              message,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.amber,
-                height: 1.45,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Radio card: the choice, and one line saying what it is.
 class _RadioRow extends StatelessWidget {
   final bool selected;
   final String label;
@@ -971,17 +925,40 @@ class _DayCell extends StatelessWidget {
 
 // ── Step 2: equipment ───────────────────────────────────────
 
+/// Three presets. "Some equipment" slides up the tile-grid sheet; Done
+/// writes a summary of the ticks back onto its card, and closing the sheet
+/// with nothing ticked clears the radio again.
 class _EquipmentStep extends StatelessWidget {
-  final SetupEquipment? equipment;
-  final ValueChanged<SetupEquipment> onChanged;
+  final EquipmentAnswer? equipment;
+  final ValueChanged<EquipmentAnswer?> onChanged;
 
   const _EquipmentStep({
     required this.equipment,
     required this.onChanged,
   });
 
+  Future<void> _pickItems(BuildContext context) async {
+    final current = equipment;
+    var items = current != null && current.isSome
+        ? current.items
+        : const <EquipmentItem>{};
+    onChanged(EquipmentAnswer.some(items));
+    await EquipmentPickerSheet.show(
+      context,
+      initial: items,
+      onChanged: (picked) {
+        items = picked;
+        onChanged(EquipmentAnswer.some(picked));
+      },
+    );
+    if (items.isEmpty) onChanged(null);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final equipment = this.equipment;
+    final some = equipment != null && equipment.isSome;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -991,40 +968,27 @@ class _EquipmentStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _RadioRow(
-          selected: equipment == SetupEquipment.fullGym,
+          selected: equipment?.kind == SetupEquipment.fullGym,
           label: 'Full gym',
-          sub: 'Pull-up bar, rings, barbells',
-          onTap: () => onChanged(SetupEquipment.fullGym),
+          sub: 'Pull-up bar, rings, barbells — the works',
+          onTap: () => onChanged(EquipmentAnswer.fullGym),
         ),
         const SizedBox(height: 10),
         _RadioRow(
-          selected: equipment == SetupEquipment.freeWeights,
-          label: 'Barbell and dumbbells',
-          sub: 'A home setup with free weights',
-          onTap: () => onChanged(SetupEquipment.freeWeights),
-        ),
-        const SizedBox(height: 10),
-        _RadioRow(
-          selected: equipment == SetupEquipment.none,
+          selected: equipment?.kind == SetupEquipment.none,
           label: 'No equipment',
           sub: 'Training at home or outdoors',
-          onTap: () => onChanged(SetupEquipment.none),
+          onTap: () => onChanged(EquipmentAnswer.none),
         ),
-        if (equipment != null && equipment != SetupEquipment.fullGym) ...[
+        const SizedBox(height: 10),
+        SomeEquipmentRow(
+          selected: some,
+          items: some ? equipment.items : const {},
+          onTap: () => _pickItems(context),
+        ),
+        if (equipmentNeedsBarNote(equipment)) ...[
           const SizedBox(height: 14),
-          const _WarnNote(
-            icon: Icons.fitness_center_rounded,
-            message: TextSpan(
-              children: [
-                TextSpan(text: 'You’ll need access to at least a '),
-                TextSpan(
-                  text: 'pull-up bar',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: '. A doorway bar or a park is enough.'),
-              ],
-            ),
-          ),
+          const EquipmentBarNote(),
         ],
       ],
     );

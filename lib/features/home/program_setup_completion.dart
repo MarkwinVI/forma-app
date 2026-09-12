@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../data/models/equipment_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/analytics_service.dart';
@@ -43,9 +44,8 @@ Future<void> completeProgramSetup({
   );
 
   final plan = ProgramStartPlanner.planFor(
-    // Free weights count the same as a full gym here: everywhere the plan
-    // chooses between a loaded and a bodyweight lift, the question is only
-    // whether there is a bar to load.
+    // Everywhere the plan chooses between a loaded and a bodyweight lift,
+    // the question is only whether there is a bar to load.
     hasGym: result.hasWeights,
     // The wizard no longer asks about goal skills, so setup plans the default
     // branch of every tree. The planner still takes goals for whatever picks
@@ -104,7 +104,8 @@ Future<void> completeProgramSetup({
     'program_id': snapshot.program.id,
     'days_per_week': result.daysPerWeek,
     'split': result.split.dbValue,
-    'equipment': result.equipment.dbValue,
+    'equipment': result.equipment.kind.dbValue,
+    'equipment_items': result.equipment.itemIds,
     'bodyweight_kg': result.bodyweightKg,
     // The wizard's reported strength, one property per answered exercise.
     for (final entry in result.startingStrength.entries)

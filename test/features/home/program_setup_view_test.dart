@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
 import 'package:forma_app/features/home/getting_started_checklist.dart';
@@ -67,11 +68,26 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    // Step 2: equipment — three answers; barbell still warns about the bar.
+    // Step 2: equipment — "Some equipment" opens the tile sheet; Done writes
+    // the ticks back onto the card, and a list without a bar warns about it.
     expect(find.text('Your equipment'), findsOneWidget);
     expect(find.text('Pick one to continue'), findsOneWidget);
-    await tester.tap(find.text('Barbell and dumbbells'));
+    await tester.tap(find.text('Some equipment'));
+    await tester.pumpAndSettle();
+    expect(find.text('What do you have?'), findsOneWidget);
+    expect(find.text('Select at least one item'), findsOneWidget);
+    await tester.ensureVisible(find.text('Dumbbells'));
+    await tester.tap(find.text('Dumbbells'));
     await tester.pump();
+    expect(find.text('Done — 1 item'), findsOneWidget);
+    await tester.ensureVisible(find.text('Barbell'));
+    await tester.tap(find.text('Barbell'));
+    await tester.pump();
+    await tester.tap(find.text('Done — 2 items'));
+    await tester.pumpAndSettle();
+    expect(find.text('What do you have?'), findsNothing);
+    expect(find.text('Dumbbells, Barbell'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
     expect(find.textContaining('pull-up bar'), findsOneWidget);
     await tester.tap(find.text('Continue'));
     await pumpStep(tester);
@@ -107,7 +123,10 @@ void main() {
     expect(result, isNotNull);
     expect(result!.daysPerWeek, 3);
     expect(result!.split, TrainingProgramType.fullBody);
-    expect(result!.equipment, SetupEquipment.freeWeights);
+    expect(
+      result!.equipment,
+      EquipmentAnswer.some({EquipmentItem.dumbbells, EquipmentItem.barbell}),
+    );
     expect(result!.hasWeights, isTrue);
     expect(result!.bodyweightKg, 82);
     expect(result!.startingStrength['pushups'], isNull);
@@ -115,7 +134,8 @@ void main() {
     expect(result!.startingStrength.containsKey('squat'), isTrue);
     expect(result!.startingStrength.containsKey('squat_bw'), isFalse);
     expect(result!.toMap()['has_gym'], isTrue);
-    expect(result!.toMap()['equipment'], 'barbell');
+    expect(result!.toMap()['equipment'], 'some');
+    expect(result!.toMap()['equipment_items'], ['dumbbells', 'barbell']);
 
     // The ready screen: the map, the trial, and "Not now" out of the
     // wizard. Without a program on file there is no wheel to draw, but the
@@ -154,7 +174,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(result!.split, TrainingProgramType.pushPull);
-    expect(result!.equipment, SetupEquipment.none);
+    expect(result!.equipment, EquipmentAnswer.none);
     expect(result!.hasWeights, isFalse);
     expect(result!.toMap()['has_gym'], isFalse);
     expect(result!.startingStrength.containsKey('squat_bw'), isTrue);

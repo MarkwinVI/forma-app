@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
+import '../../data/models/equipment_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
@@ -17,7 +18,7 @@ import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../progress/skill_wheel_data.dart';
-import 'program_setup_view.dart';
+import 'equipment_picker.dart';
 import 'program_day_items.dart';
 import 'program_faq.dart';
 import 'program_skill_trees_section.dart';
@@ -241,7 +242,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   }
 
   Future<void> _openEquipmentSheet() async {
-    final picked = await showModalBottomSheet<SetupEquipment>(
+    final picked = await showModalBottomSheet<EquipmentAnswer>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -253,17 +254,18 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
     if (picked == null || picked == _equipment || !mounted) return;
 
     await _saveLogic(
-      // Both keys travel together: 'equipment' is the answer itself,
-      // 'has_gym' the derived can-load-a-bar flag every planner reads.
+      // The keys travel together: 'equipment' and 'equipment_items' are the
+      // answer itself, 'has_gym' the derived can-load-a-bar flag every
+      // planner reads.
       setupAnswers: {
         ..._setupAnswers,
-        'equipment': picked.dbValue,
-        'has_gym': picked.hasWeights,
+        ...picked.toSetupAnswers(),
       },
       toast: 'Equipment updated',
     );
     AnalyticsService.capture('program_equipment_changed', properties: {
-      'equipment': picked.dbValue,
+      'equipment': picked.kind.dbValue,
+      'equipment_items': picked.itemIds,
     });
   }
 
@@ -454,11 +456,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                     const _ProgramSectionLabel('Your program'),
                     _ProgramRow(
                       label: 'Equipment',
-                      value: switch (_equipment) {
-                        SetupEquipment.fullGym => 'Full gym',
-                        SetupEquipment.freeWeights => 'Barbell & dumbbells',
-                        SetupEquipment.none => 'No equipment',
-                      },
+                      value: _equipment.shortLabel,
                       onTap: _openEquipmentSheet,
                     ),
                     _ProgramRow(
@@ -545,14 +543,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   /// the same way here.
   bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
 
-  /// The tri-state answer when program setup stored one; programs from
-  /// before it map the old boolean onto its ends.
-  SetupEquipment get _equipment => switch (_setupAnswers['equipment']) {
-        'gym' => SetupEquipment.fullGym,
-        'barbell' => SetupEquipment.freeWeights,
-        'none' => SetupEquipment.none,
-        _ => _hasGym ? SetupEquipment.fullGym : SetupEquipment.none,
-      };
+  /// The equipment answer when program setup stored one; programs from
+  /// before it map the old boolean onto the two presets.
+  EquipmentAnswer get _equipment =>
+      EquipmentAnswer.fromSetupAnswers(_setupAnswers);
 }
 
 /// Mono, uppercase section eyebrow — the type-led alternative to a card
@@ -1725,10 +1719,12 @@ class _SplitSheetState extends State<_SplitSheet> {
   }
 }
 
-/// Where you train — the same three choices the setup wizard asks, so the
-/// answer can be revised without re-running it.
+/// What you train with — the same three choices the setup wizard asks, so
+/// the answer can be revised without re-running it. "Some equipment" swaps
+/// the sheet to the tile grid (the back arrow returns), and Save only wakes
+/// on a real change.
 class _EquipmentSheet extends StatefulWidget {
-  final SetupEquipment current;
+  final EquipmentAnswer current;
 
   const _EquipmentSheet({required this.current});
 
@@ -1737,71 +1733,122 @@ class _EquipmentSheet extends StatefulWidget {
 }
 
 class _EquipmentSheetState extends State<_EquipmentSheet> {
-  late SetupEquipment _picked;
+  late SetupEquipment _kind = widget.current.kind;
+  late final Set<EquipmentItem> _items = {...widget.current.items};
+  bool _grid = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _picked = widget.current;
+  EquipmentAnswer get _answer => _kind == SetupEquipment.some
+      ? EquipmentAnswer.some(_items)
+      : EquipmentAnswer(_kind);
+
+  /// A list with nothing ticked is no answer: Save waits for a tick.
+  bool get _dirty =>
+      _answer != widget.current &&
+      (_kind != SetupEquipment.some || _items.isNotEmpty);
+
+  void _openGrid() {
+    setState(() {
+      _kind = SetupEquipment.some;
+      _grid = true;
+    });
+  }
+
+  /// Back out of the grid with nothing ticked and the pick is undone — the
+  /// answer goes back to whatever the program had.
+  void _closeGrid() {
+    setState(() {
+      _grid = false;
+      if (_items.isEmpty) {
+        _kind = widget.current.kind;
+        _items.addAll(widget.current.items);
+      }
+    });
+  }
+
+  void _toggle(EquipmentItem item) {
+    setState(() {
+      if (!_items.remove(item)) _items.add(item);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final dirty = _picked != widget.current;
+    final dirty = _dirty;
+    final some = _kind == SetupEquipment.some;
 
     return SheetShell(
-      title: 'Equipment',
-      sub: 'What you have to train with',
-      footer: PillButton(
-        label: dirty ? 'Save changes' : 'No changes yet',
-        onTap: dirty ? () => Navigator.of(context).pop(_picked) : null,
-      ),
+      title: _grid ? 'Some equipment' : 'Equipment',
+      sub: _grid
+          ? 'Tick everything you can train with'
+          : 'What you have to train with',
+      showClose: !_grid,
+      onBack: _grid ? _closeGrid : null,
+      footer: _grid
+          ? PillButton(
+              label: equipmentDoneLabel(_items),
+              onTap: _items.isEmpty ? null : _closeGrid,
+            )
+          : PillButton(
+              label: dirty ? 'Save changes' : 'No changes yet',
+              onTap: dirty ? () => Navigator.of(context).pop(_answer) : null,
+            ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-        child: Column(
-          children: [
-            for (final option in const [
-              (
-                SetupEquipment.fullGym,
-                'Full gym',
-                'Pull-up bar, rings, barbells',
-              ),
-              (
-                SetupEquipment.freeWeights,
-                'Barbell and dumbbells',
-                'A home setup with free weights',
-              ),
-              (
-                SetupEquipment.none,
-                'No equipment',
-                'Training at home or outdoors',
-              ),
-            ])
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _SheetRadioRow(
-                  selected: _picked == option.$1,
-                  label: option.$2,
-                  sub: option.$3,
-                  onTap: () => setState(() => _picked = option.$1),
-                ),
-              ),
-            if (_picked != SetupEquipment.fullGym)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(2, 2, 2, 0),
-                child: Text(
-                  'You’ll need access to at least a pull-up bar — most of '
-                  'Forma’s pulling work hangs from one. A doorway bar or a '
-                  'park is enough.',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textMuted,
-                    height: 1.5,
+        child: _grid
+            ? Column(
+                children: [
+                  EquipmentTileGrid(picked: _items, onToggle: _toggle),
+                  if (_items.isNotEmpty &&
+                      !_items.contains(EquipmentItem.pullUpBar))
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(2, 14, 2, 0),
+                      child: Text(
+                        kPullUpBarNote,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                ],
+              )
+            : Column(
+                children: [
+                  _SheetRadioRow(
+                    selected: _kind == SetupEquipment.fullGym,
+                    label: 'Full gym',
+                    sub: 'Pull-up bar, rings, barbells',
+                    onTap: () =>
+                        setState(() => _kind = SetupEquipment.fullGym),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  _SheetRadioRow(
+                    selected: _kind == SetupEquipment.none,
+                    label: 'No equipment',
+                    sub: 'Training at home or outdoors',
+                    onTap: () => setState(() => _kind = SetupEquipment.none),
+                  ),
+                  const SizedBox(height: 10),
+                  SomeEquipmentRow(
+                    selected: some,
+                    items: _items,
+                    onTap: _openGrid,
+                  ),
+                  if (equipmentNeedsBarNote(_answer))
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(2, 12, 2, 0),
+                      child: Text(
+                        kPullUpBarNote,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
       ),
     );
   }
