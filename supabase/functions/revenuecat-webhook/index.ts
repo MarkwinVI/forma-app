@@ -10,6 +10,8 @@
 //   REVENUECAT_WEBHOOK_SECRET  the value RevenueCat sends as Authorization
 //   RESEND_API_KEY             from resend.com
 //   EMAIL_FROM                 e.g. "Forma <hello@your-verified-domain>"
+//   ALLOW_SANDBOX_EVENTS       optional; "true" lets sandbox cancels send
+//                              mail too, for testing. Unset in production.
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are injected by Supabase.
 //
 // Deploy with --no-verify-jwt: RevenueCat cannot send a Supabase JWT, so the
@@ -48,12 +50,16 @@ Deno.serve(async (req) => {
     return new Response("Bad request", { status: 400 });
   }
 
+  const allowSandbox = Deno.env.get("ALLOW_SANDBOX_EVENTS") === "true";
   const wanted =
     event.type === "CANCELLATION" &&
     event.period_type === "TRIAL" &&
     event.cancel_reason === "UNSUBSCRIBE" &&
-    event.environment === "PRODUCTION";
-  if (!wanted) return ok(`ignored ${event.type}`);
+    (event.environment === "PRODUCTION" || allowSandbox);
+  if (!wanted) {
+    console.log(`ignored ${event.type} ${event.environment} ${event.period_type ?? ""} ${event.cancel_reason ?? ""}`);
+    return ok(`ignored ${event.type}`);
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
