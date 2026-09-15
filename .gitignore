@@ -42,3 +42,6 @@ lib/core/config/app_config.local.dart
 android/key.properties
 *.jks
 *.keystore
+
+# Supabase CLI link state
+supabase/.temp/

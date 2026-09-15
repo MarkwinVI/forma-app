@@ -409,3 +409,17 @@ $$;
 
 revoke execute on function public.delete_account() from public, anon;
 grant execute on function public.delete_account() to authenticated;
+
+-- ── Webhooks ──────────────────────────────────────────────────────────────
+
+-- Dedupe log for the revenuecat-webhook edge function
+-- (supabase/functions/revenuecat-webhook). One row per RevenueCat event id;
+-- service role only, so no policies.
+
+create table public.webhook_events (
+  id          text primary key,
+  event_type  text not null,
+  received_at timestamptz default now() not null
+);
+
+alter table public.webhook_events enable row level security;
