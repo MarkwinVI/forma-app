@@ -73,6 +73,27 @@ void main() {
     });
   });
 
+  test('a full gym or a vest can add weight to a bodyweight movement', () {
+    expect(EquipmentAnswer.fullGym.canAddWeight, isTrue);
+    expect(EquipmentAnswer.none.canAddWeight, isFalse);
+    expect(
+      EquipmentAnswer.some({EquipmentItem.weightVest}).canAddWeight,
+      isTrue,
+    );
+    expect(
+      EquipmentAnswer.some({EquipmentItem.barbell, EquipmentItem.dumbbells})
+          .canAddWeight,
+      isFalse,
+    );
+    expect(
+      EquipmentAnswer.fromSetupAnswers({
+        'equipment': 'some',
+        'equipment_items': ['weight_vest'],
+      }).itemIds,
+      ['weight_vest'],
+    );
+  });
+
   test('summary names three items and counts the rest', () {
     expect(
       EquipmentAnswer.summarizeItems({

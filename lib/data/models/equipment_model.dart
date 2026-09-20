@@ -33,6 +33,7 @@ enum EquipmentItem {
   kettlebell,
   dumbbells,
   barbell,
+  weightVest,
 }
 
 extension EquipmentItemX on EquipmentItem {
@@ -46,6 +47,7 @@ extension EquipmentItemX on EquipmentItem {
         EquipmentItem.kettlebell => 'kettlebell',
         EquipmentItem.dumbbells => 'dumbbells',
         EquipmentItem.barbell => 'barbell',
+        EquipmentItem.weightVest => 'weight_vest',
       };
 
   String get label => switch (this) {
@@ -57,6 +59,7 @@ extension EquipmentItemX on EquipmentItem {
         EquipmentItem.kettlebell => 'Kettlebell',
         EquipmentItem.dumbbells => 'Dumbbells',
         EquipmentItem.barbell => 'Barbell',
+        EquipmentItem.weightVest => 'Weighted vest',
       };
 
   String get asset => 'assets/equipment/$id.png';
@@ -100,6 +103,15 @@ class EquipmentAnswer {
   bool get hasWeights => switch (kind) {
         SetupEquipment.fullGym => true,
         SetupEquipment.some => items.contains(EquipmentItem.barbell),
+        SetupEquipment.none => false,
+      };
+
+  /// Whether load can be added to a bodyweight movement — the weighted
+  /// pull-up and dip ladders hang plates off a belt or a vest. A full gym
+  /// has a belt; at home it takes a vest.
+  bool get canAddWeight => switch (kind) {
+        SetupEquipment.fullGym => true,
+        SetupEquipment.some => items.contains(EquipmentItem.weightVest),
         SetupEquipment.none => false,
       };
 

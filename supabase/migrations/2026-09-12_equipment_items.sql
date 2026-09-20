@@ -3,7 +3,8 @@
 -- stored in program_setup_v1 as
 --   equipment       'gym' | 'some' | 'none'
 --   equipment_items ['pull_up_bar' | 'rings' | 'parallettes' | 'dip_bars' |
---                    'bands' | 'kettlebell' | 'dumbbells' | 'barbell', ...]
+--                    'bands' | 'kettlebell' | 'dumbbells' | 'barbell' |
+--                    'weight_vest', ...]
 --   has_gym         boolean — derived: a full gym, or a barbell among the items
 --
 -- Programs that answered "barbell" become "Some equipment" with exactly the
