@@ -94,6 +94,17 @@ void main() {
     );
   });
 
+  test('dip bars come with a gym or the tile, nothing else', () {
+    expect(EquipmentAnswer.fullGym.hasDipBars, isTrue);
+    expect(EquipmentAnswer.none.hasDipBars, isFalse);
+    expect(EquipmentAnswer.some({EquipmentItem.dipBars}).hasDipBars, isTrue);
+    expect(
+      EquipmentAnswer.some({EquipmentItem.rings, EquipmentItem.parallettes})
+          .hasDipBars,
+      isFalse,
+    );
+  });
+
   test('summary names three items and counts the rest', () {
     expect(
       EquipmentAnswer.summarizeItems({

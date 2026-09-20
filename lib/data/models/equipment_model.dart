@@ -115,6 +115,14 @@ class EquipmentAnswer {
         SetupEquipment.none => false,
       };
 
+  /// Whether there is something to dip on. Without it the wizard shows the
+  /// two-chairs tip once — the dips tree still runs, on chairs.
+  bool get hasDipBars => switch (kind) {
+        SetupEquipment.fullGym => true,
+        SetupEquipment.some => items.contains(EquipmentItem.dipBars),
+        SetupEquipment.none => false,
+      };
+
   /// Most of Forma's pulling work hangs from a bar, so every answer short of
   /// one earns a reminder.
   bool get hasPullUpBar => switch (kind) {

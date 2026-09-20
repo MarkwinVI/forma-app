@@ -90,6 +90,19 @@ void main() {
     expect(find.text('Edit'), findsOneWidget);
     expect(find.textContaining('pull-up bar'), findsOneWidget);
     await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    // Nothing to dip on in that pick, so the two-chairs tip comes first —
+    // still on the equipment step's count, back returns to the pick.
+    expect(find.text('No dip bars? Two chairs will do.'), findsOneWidget);
+    expect(find.text('2 / 4'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('Your equipment'), findsOneWidget);
+    expect(find.text('Dumbbells, Barbell'), findsOneWidget);
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Got it'));
     await pumpStep(tester);
 
     // Step 3: bodyweight — the keypad is already up, the placeholder shows,
@@ -158,6 +171,9 @@ void main() {
     await tester.tap(find.text('No equipment'));
     await tester.pump();
     await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('Got it'), findsOneWidget, reason: 'no dip bars');
+    await tester.tap(find.text('Got it'));
     await pumpStep(tester);
     // Two digits from the keypad's upper rows: the bottom row sits below
     // the test surface's fold.
@@ -194,6 +210,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Continue'));
     await pumpStep(tester);
+    expect(find.text('Got it'), findsNothing, reason: 'a gym has dip bars');
 
     // 75 kg becomes 165 lbs, and the choice persists for the whole app —
     // and the keypad stays up across the flip.

@@ -209,6 +209,10 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   int? _days;
   EquipmentAnswer? _equipment;
 
+  /// The two-chairs tip is up: shown once, between the equipment step and
+  /// the bodyweight step, when the pick has nothing to dip on.
+  bool _dipTip = false;
+
   /// Bodyweight is kept in the unit being displayed; only the finish
   /// converts to canonical kilograms.
   WeightUnit _unit = WeightUnitService.unit;
@@ -342,6 +346,18 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       : _bw.toStringAsFixed(1);
 
   Future<void> _next() async {
+    if (_dipTip) {
+      setState(() {
+        _dipTip = false;
+        _step = 2;
+        _openBodyweightEntry();
+      });
+      return;
+    }
+    if (_step == 1 && !(_equipment?.hasDipBars ?? true)) {
+      setState(() => _dipTip = true);
+      return;
+    }
     if (_step == 2) _commitBodyweight();
     if (!_isLastStep) {
       setState(() {
@@ -354,6 +370,10 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   }
 
   void _back() {
+    if (_dipTip) {
+      setState(() => _dipTip = false);
+      return;
+    }
     if (_step == 2) _commitBodyweight();
     if (_step > 0) {
       setState(() {
@@ -474,50 +494,55 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                  child: switch (_step) {
-                    0 => _ScheduleStep(
-                        days: _days,
-                        onChanged: (value) => setState(() => _days = value),
-                      ),
-                    1 => _EquipmentStep(
-                        equipment: _equipment,
-                        onChanged: (value) =>
-                            setState(() => _equipment = value),
-                      ),
-                    2 => _WeightStep(
-                        bw: _bw,
-                        edit: _bwEdit,
-                        editing: _bwEditing,
-                        unit: _unit,
-                        min: _bwMin,
-                        onUnitChanged: _setUnit,
-                        onTapValue: () => setState(() {
-                          _bwEditing = true;
-                          _bwEdit = '';
-                        }),
-                        onKey: _pressBwKey,
-                      ),
-                    3 => _StrengthStep(
-                        strength: _strength,
-                        hasWeights: _equipment?.hasWeights ?? true,
-                        unit: _unit,
-                        onChanged: () => setState(() {}),
-                      ),
-                    _ => const SizedBox.shrink(),
-                  },
+                  child: _dipTip
+                      ? const _DipBarsTip()
+                      : switch (_step) {
+                          0 => _ScheduleStep(
+                              days: _days,
+                              onChanged: (value) =>
+                                  setState(() => _days = value),
+                            ),
+                          1 => _EquipmentStep(
+                              equipment: _equipment,
+                              onChanged: (value) =>
+                                  setState(() => _equipment = value),
+                            ),
+                          2 => _WeightStep(
+                              bw: _bw,
+                              edit: _bwEdit,
+                              editing: _bwEditing,
+                              unit: _unit,
+                              min: _bwMin,
+                              onUnitChanged: _setUnit,
+                              onTapValue: () => setState(() {
+                                _bwEditing = true;
+                                _bwEdit = '';
+                              }),
+                              onKey: _pressBwKey,
+                            ),
+                          3 => _StrengthStep(
+                              strength: _strength,
+                              hasWeights: _equipment?.hasWeights ?? true,
+                              unit: _unit,
+                              onChanged: () => setState(() {}),
+                            ),
+                          _ => const SizedBox.shrink(),
+                        },
                 ),
               ),
               _WizardFooter(
-                label: _isLastStep
-                    ? 'Build my program'
-                    : _ctaDisabled
-                        ? _step == 2
-                            ? 'Enter your bodyweight to continue'
-                            : 'Pick one to continue'
-                        : 'Continue',
-                trailingChevron: !_isLastStep && !_ctaDisabled,
+                label: _dipTip
+                    ? 'Got it'
+                    : _isLastStep
+                        ? 'Build my program'
+                        : _ctaDisabled
+                            ? _step == 2
+                                ? 'Enter your bodyweight to continue'
+                                : 'Pick one to continue'
+                            : 'Continue',
+                trailingChevron: !_dipTip && !_isLastStep && !_ctaDisabled,
                 saving: _saving,
-                onTap: _ctaDisabled ? null : _next,
+                onTap: !_dipTip && _ctaDisabled ? null : _next,
               ),
             ],
           ),
@@ -990,6 +1015,42 @@ class _EquipmentStep extends StatelessWidget {
           const SizedBox(height: 14),
           const EquipmentBarNote(),
         ],
+      ],
+    );
+  }
+}
+
+/// Shown once after the equipment step when nothing in the pick can be
+/// dipped on: the dips tree still runs, on two chairs. Same wizard chrome
+/// as the step it follows; Got it moves on, back returns to the pick.
+class _DipBarsTip extends StatelessWidget {
+  const _DipBarsTip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Image.asset(
+                'assets/equipment/chairs.png',
+                semanticLabel:
+                    'Two chairs placed back-rests out, shoulder-width apart',
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 26),
+        const _StepTitle(
+          title: 'No dip bars? Two chairs will do.',
+          sub: 'Set two sturdy chairs shoulder-width apart with the backs '
+              'facing out, and dip with a hand on each. If they feel tippy, '
+              'weigh the seats down with something heavy.',
+        ),
       ],
     );
   }
