@@ -299,16 +299,19 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
                 child: ConstrainedBox(
                   constraints:
                       const BoxConstraints(maxWidth: celebrationContentWidth),
-                  child: Text(
-                    '${data.toTitle} replaced your ${data.fromNoun} '
-                    'progression. Prefer to keep training '
-                    '${data.fromTitle.toLowerCase()}? Change it on the '
-                    'Program tab.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      height: 1.55,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      '${data.toTitle} replaced your ${data.fromNoun} '
+                      'progression. Prefer to keep training '
+                      '${data.fromTitle.toLowerCase()}? Change it on the '
+                      'Program tab.',
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.55,
+                      ),
                     ),
                   ),
                 ),
