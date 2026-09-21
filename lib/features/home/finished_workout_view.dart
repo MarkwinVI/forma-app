@@ -26,6 +26,8 @@ import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../../data/services/user_profile_service.dart';
+import 'celebration_fork.dart';
+import 'celebration_widgets.dart';
 import 'completed_workout_model.dart';
 import 'workout_analytics.dart';
 
@@ -457,11 +459,45 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
 
     for (final event in events) {
       if (event.kind != ProgressionEventKind.activated) continue;
+      // A step that opens a branch off the shared foundation is a fork:
+      // the tree splits here, so the screen shows both routes and the one
+      // the program is on. Anything else is the next step on a path.
+      final fork = _resolveFork(event, masteredById);
+      if (fork != null) {
+        steps.add(_CelebrationStep.fork(fork));
+        continue;
+      }
       final unlock = _resolveUnlock(event, masteredById);
       if (unlock != null) steps.add(_CelebrationStep.unlock(unlock));
     }
 
     return steps;
+  }
+
+  ForkUnlockData? _resolveFork(
+    ProgressionEvent event,
+    Map<String, ProgressionEvent> masteredById,
+  ) {
+    // A manual fast-forward (valueFrom set) is an exercise change, not a
+    // fork, however far it jumped.
+    if (event.valueFrom != null) return null;
+    final newExercise = ExerciseCatalog.findById(event.exerciseId);
+    final mastered = event.relatedExerciseId == null
+        ? null
+        : ExerciseCatalog.findById(event.relatedExerciseId!);
+    if (newExercise == null || mastered == null) return null;
+    final masteredEvent = masteredById[mastered.id];
+    return resolveForkUnlock(
+      mastered: mastered,
+      newExercise: newExercise,
+      masterySets: masteredEvent?.targetSets ?? 3,
+      masteryValue: masteredEvent?.valueTo ?? 0,
+      startSets: event.targetSets ?? 3,
+      startValue: event.valueTo ??
+          ExerciseProgressionService.initialTargetValueForExercise(
+            newExercise,
+          ),
+    );
   }
 
   _UnlockData? _resolveUnlock(
@@ -705,6 +741,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                                 key: ValueKey(data.exercise.id), data: data),
                             _UnlockStep(data: final data) => _UnlockContent(
                                 key: ValueKey(data.newExercise.id), data: data),
+                            _ForkStep(data: final data) => ForkUnlockContent(
+                                key: ValueKey(data.newExercise.id), data: data),
                           },
                   ),
                   Padding(
@@ -737,6 +775,7 @@ sealed class _CelebrationStep {
   const factory _CelebrationStep.levelUp(_LevelUpData data) = _LevelUpStep;
   const factory _CelebrationStep.mastered(_MasteredData data) = _MasteredStep;
   const factory _CelebrationStep.unlock(_UnlockData data) = _UnlockStep;
+  const factory _CelebrationStep.fork(ForkUnlockData data) = _ForkStep;
 }
 
 class _SummaryStep extends _CelebrationStep {
@@ -756,6 +795,11 @@ class _MasteredStep extends _CelebrationStep {
 class _UnlockStep extends _CelebrationStep {
   final _UnlockData data;
   const _UnlockStep(this.data);
+}
+
+class _ForkStep extends _CelebrationStep {
+  final ForkUnlockData data;
+  const _ForkStep(this.data);
 }
 
 class _LevelUpData {
@@ -853,7 +897,7 @@ class _SaveFailedContent extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 12),
       child: Column(
         children: [
-          const _RiseIn(
+          const RiseIn(
             delay: Duration.zero,
             child: _CelebrationBadge(
               color: AppColors.amber,
@@ -866,7 +910,7 @@ class _SaveFailedContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const _RiseIn(
+          const RiseIn(
             delay: Duration(milliseconds: 40),
             child: Text(
               "Couldn't save your workout",
@@ -880,7 +924,7 @@ class _SaveFailedContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          _RiseIn(
+          RiseIn(
             delay: const Duration(milliseconds: 80),
             child: Text(
               subline,
@@ -893,7 +937,7 @@ class _SaveFailedContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 22),
-          _RiseIn(
+          RiseIn(
             delay: const Duration(milliseconds: 120),
             child: TextAction(
               label: 'Back to workout',
@@ -931,7 +975,7 @@ class _SummaryContent extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 12),
       child: Column(
         children: [
-          const _RiseIn(
+          const RiseIn(
             delay: Duration.zero,
             child: _CelebrationBadge(
               color: AppColors.green,
@@ -944,7 +988,7 @@ class _SummaryContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const _RiseIn(
+          const RiseIn(
             delay: Duration(milliseconds: 40),
             child: Text(
               'Workout complete',
@@ -957,7 +1001,7 @@ class _SummaryContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          _RiseIn(
+          RiseIn(
             delay: const Duration(milliseconds: 80),
             child: Text(
               '${workout.historyTitle} · '
@@ -969,7 +1013,7 @@ class _SummaryContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 22),
-          _RiseIn(
+          RiseIn(
             delay: const Duration(milliseconds: 120),
             child: SurfaceCard(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -998,7 +1042,7 @@ class _SummaryContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _RiseIn(
+          RiseIn(
             delay: const Duration(milliseconds: 160),
             child: SurfaceCard(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -1079,7 +1123,7 @@ class _SummaryContent extends StatelessWidget {
           ),
           if (hasNext) ...[
             const SizedBox(height: 18),
-            const _RiseIn(
+            const RiseIn(
               delay: Duration(milliseconds: 220),
               child: Text(
                 "There's more — keep going.",
@@ -1199,9 +1243,9 @@ class _LevelUpContent extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _CelebrationTag(color: AppColors.amber, label: 'Level up'),
+            const CelebrationTag(color: AppColors.amber, label: 'Level up'),
             const SizedBox(height: 8),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 80),
               child: Text(
                 data.exercise.name,
@@ -1218,7 +1262,7 @@ class _LevelUpContent extends StatelessWidget {
             if (data.weightMoved) ...[
               // The weight is the news: it rolls the way the reps do, and
               // the reps — back at the start of the window — read under it.
-              _RiseIn(
+              RiseIn(
                 delay: const Duration(milliseconds: 160),
                 child: _RollingValue(
                   from: WeightUnitService.label(data.weightFromKg ?? 0),
@@ -1226,7 +1270,7 @@ class _LevelUpContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              _RiseIn(
+              RiseIn(
                 delay: const Duration(milliseconds: 240),
                 child: Text(
                   '${data.sets} × ${data.to}$suffix',
@@ -1239,7 +1283,7 @@ class _LevelUpContent extends StatelessWidget {
                 ),
               ),
             ] else
-              _RiseIn(
+              RiseIn(
                 delay: const Duration(milliseconds: 160),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1262,7 +1306,7 @@ class _LevelUpContent extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 24),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 650),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
@@ -1308,9 +1352,9 @@ class _MasteredContent extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _CelebrationTag(color: AppColors.green, label: 'Mastered'),
+            const CelebrationTag(color: AppColors.green, label: 'Mastered'),
             const SizedBox(height: 8),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 80),
               child: Text(
                 data.exercise.name,
@@ -1324,7 +1368,7 @@ class _MasteredContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 160),
               child: Text(
                 '${data.sets} × ${data.value}$suffix',
@@ -1337,7 +1381,7 @@ class _MasteredContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 280),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
@@ -1429,7 +1473,7 @@ class _UnlockContentState extends State<_UnlockContent> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _CelebrationTag(
+            CelebrationTag(
               color: AppColors.accentPrimary,
               label: data.isShortcut
                   ? 'Exercise changed'
@@ -1451,7 +1495,7 @@ class _UnlockContentState extends State<_UnlockContent> {
               ),
             ),
             const SizedBox(height: 18),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 80),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
@@ -1512,7 +1556,7 @@ class _UnlockContentState extends State<_UnlockContent> {
               ),
             ),
             const SizedBox(height: 16),
-            _RiseIn(
+            RiseIn(
               delay: const Duration(milliseconds: 140),
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 280),
@@ -1766,104 +1810,6 @@ class _CelebrationBadge extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: child,
-    );
-  }
-}
-
-class _CelebrationTag extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _CelebrationTag({
-    required this.color,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.bolt_rounded, size: 14, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w800,
-              color: color,
-              letterSpacing: 1.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Slide-up + fade-in entrance, staggered by [delay].
-class _RiseIn extends StatefulWidget {
-  final Duration delay;
-  final Widget child;
-
-  const _RiseIn({
-    required this.delay,
-    required this.child,
-  });
-
-  @override
-  State<_RiseIn> createState() => _RiseInState();
-}
-
-class _RiseInState extends State<_RiseIn> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  Timer? _delayTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    if (widget.delay == Duration.zero) {
-      _controller.forward();
-    } else {
-      _delayTimer = Timer(widget.delay, () {
-        if (mounted) _controller.forward();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _delayTimer?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final curve = CurvedAnimation(
-      parent: _controller,
-      curve: const Cubic(0.32, 0.72, 0, 1),
-    );
-
-    return FadeTransition(
-      opacity: curve,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.08),
-          end: Offset.zero,
-        ).animate(curve),
-        child: widget.child,
-      ),
     );
   }
 }
