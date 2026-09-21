@@ -111,7 +111,8 @@ void main() {
       final ids = steps.map((exercise) => exercise.id).toSet();
       for (final category in SkillCategoryCatalog.all()) {
         for (final entry in category.trainingPaths.entries) {
-          expect(entry.value, isNotEmpty, reason: '${category.id}/${entry.key}');
+          expect(entry.value, isNotEmpty,
+              reason: '${category.id}/${entry.key}');
           for (final id in entry.value) {
             expect(ids, contains(id), reason: '${category.id}/${entry.key}');
           }
@@ -201,8 +202,8 @@ void main() {
   group('what a movement is measured in', () {
     test('a barbell lift carries weight and a bodyweight movement does not',
         () {
-      expect(ExerciseCatalog.findById('bench_press_barbell')!.isWeighted,
-          isTrue);
+      expect(
+          ExerciseCatalog.findById('bench_press_barbell')!.isWeighted, isTrue);
       expect(ExerciseCatalog.findById('squat_barbell')!.isWeighted, isTrue);
       expect(ExerciseCatalog.findById('ab_scissors')!.isWeighted, isFalse);
       expect(ExerciseCatalog.findById('core_plank')!.isWeighted, isFalse);
@@ -224,8 +225,7 @@ void main() {
       expect(sled.isWeighted, isTrue);
     });
 
-    test('a step is measured the way the movement it is performed with is',
-        () {
+    test('a step is measured the way the movement it is performed with is', () {
       for (final step in steps) {
         final movement = ExerciseCatalog.findById(step.libraryId);
         if (movement == null) continue;

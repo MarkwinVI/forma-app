@@ -80,6 +80,64 @@ String? _loadType(Map<String, String> row) {
   return 'plates';
 }
 
+/// The sheet's equipment phrases in the picker's terms: each phrase is a
+/// list of needs, each need met by any of its items, and `gym` is what only
+/// a full gym has. A phrase the sheet uses and this map does not know stops
+/// the generator — add it here, deliberately, rather than let it default.
+const _needsForEquipment = <String, List<String>>{
+  'bodyweight': [],
+  'other': [],
+  // A chair or a step does the job of a box.
+  'plyometric box or bench': [],
+  'dumbbell': ['{EquipmentItem.dumbbells}'],
+  'barbell': ['{EquipmentItem.barbell}'],
+  'ez bar': ['{EquipmentItem.barbell}'],
+  'trap bar': ['{EquipmentItem.barbell}'],
+  'barbell and landmine attachment': ['{EquipmentItem.barbell}'],
+  'weight plate': ['{EquipmentItem.barbell}'],
+  'kettlebell': ['{EquipmentItem.kettlebell}'],
+  'resistance band': ['{EquipmentItem.bands}'],
+  'pull-up bar': ['{EquipmentItem.pullUpBar}'],
+  'bar or gymnastic rings': ['{EquipmentItem.pullUpBar, EquipmentItem.rings}'],
+  'gymnastic rings': ['{EquipmentItem.rings}'],
+  'suspension trainer': ['{EquipmentItem.rings}'],
+  'dip bars': ['{EquipmentItem.dipBars}'],
+  'weight belt or vest': ['{EquipmentItem.weightVest}'],
+  'weight vest or plates': ['{EquipmentItem.weightVest}'],
+  'machine': ['gym'],
+  'cable machine': ['gym'],
+  'smith machine': ['gym'],
+  'ab wheel': ['gym'],
+  'cardio equipment or open space': ['gym'],
+  'elliptical trainer': ['gym'],
+  'treadmill': ['gym'],
+  'stationary bike': ['gym'],
+  'weighted sled': ['gym'],
+  'battle ropes': ['gym'],
+  'jump rope': ['gym'],
+};
+
+/// The `equipment:` line for a movement, or nothing for a bodyweight one.
+String _equipmentLine(Map<String, String> row) {
+  final needs = <String>[];
+  for (final phrase in row['Equipment']!.toLowerCase().split(';')) {
+    final key = phrase.trim();
+    if (key.isEmpty) continue;
+    final mapped = _needsForEquipment[key];
+    if (mapped == null) {
+      throw StateError(
+        'The equipment "${row['Equipment']}" on "${row['id']}" is not in '
+        '_needsForEquipment (tool/generate_catalogs.dart) — add it there.',
+      );
+    }
+    for (final need in mapped) {
+      needs.add(need == 'gym' ? 'EquipmentNeed.gym' : 'EquipmentNeed($need)');
+    }
+  }
+  if (needs.isEmpty) return '';
+  return '      equipment: [${needs.join(', ')}],\n';
+}
+
 /// The library is outside the progressions, so every movement in it is
 /// open-ended, and none of them is a rung with a difficulty or a place in a
 /// tree. The sheet has no column for any of that.
@@ -97,7 +155,8 @@ void main(List<String> args) {
 /// these; the drift test compares them against what is committed.
 Map<String, String> generatedCatalogs({String prefix = ''}) {
   final library = {
-    for (final row in readCsv(File('$prefix$libraryCsvPath').readAsStringSync()))
+    for (final row
+        in readCsv(File('$prefix$libraryCsvPath').readAsStringSync()))
       row['id']!.trim(): row,
   };
   final nodes = readCsv(File('$prefix$treeCsvPath').readAsStringSync())
@@ -172,7 +231,9 @@ String _steps(
     if (loadType != null && loadType != 'plates') {
       buffer.writeln('      loadType: LoadType.$loadType,');
     }
-    buffer.writeln('    ),');
+    buffer
+      ..write(_equipmentLine(movement))
+      ..writeln('    ),');
   }
   return buffer.toString();
 }
@@ -203,7 +264,9 @@ String _movements(Iterable<Map<String, String>> rows) {
     if (loadType != null && loadType != 'plates') {
       buffer.writeln('      loadType: LoadType.$loadType,');
     }
-    buffer.writeln('    ),');
+    buffer
+      ..write(_equipmentLine(row))
+      ..writeln('    ),');
   }
   return buffer.toString();
 }
@@ -239,10 +302,10 @@ String _coaching(Iterable<Map<String, String>> rows) {
 
 /// The sheet spells the type header out in full, brackets and all, so it is
 /// found by prefix rather than repeated here and left to rot.
-String _type(Map<String, String> row) => row[
-        row.keys.firstWhere((key) => key.startsWith('Excercise type'))]!
-    .trim()
-    .toLowerCase();
+String _type(Map<String, String> row) =>
+    row[row.keys.firstWhere((key) => key.startsWith('Excercise type'))]!
+        .trim()
+        .toLowerCase();
 
 String _category(Map<String, String> row) =>
     _categoryForPlane[row['Movement plane id']!.trim()] ?? 'other';

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/catalog/skill_category_catalog.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/skill_track_model.dart';
@@ -9,13 +10,15 @@ import 'package:forma_app/data/services/training_program_service.dart';
 void main() {
   ProgramStartPlan planFor({
     bool hasGym = false,
+    EquipmentAnswer? equipment,
     List<String> goals = const [],
     Map<String, int?> strength = const {},
     double? bodyweightKg = 80,
     Map<String, ExerciseStatus> progress = const {},
   }) {
     return ProgramStartPlanner.planFor(
-      hasGym: hasGym,
+      equipment: equipment ??
+          (hasGym ? EquipmentAnswer.fullGym : EquipmentAnswer.none),
       goalSkillIds: goals,
       startingStrength: strength,
       bodyweightKg: bodyweightKg,
@@ -33,21 +36,53 @@ void main() {
           ),
       ];
 
+  group('what the equipment answer decides', () {
+    test('a vest alone puts pull-ups on the weighted branch', () {
+      final tracks = planFor(
+        equipment: EquipmentAnswer.some({EquipmentItem.weightVest}),
+      ).tracks;
+      expect(tracks[SkillCategoryCatalog.pullupsId], 'weighted');
+      // A vest loads a pull-up, not a squat.
+      expect(tracks[SkillCategoryCatalog.squatId], 'pistol');
+      expect(tracks[SkillCategoryCatalog.hingeId], 'nordic_curls');
+    });
+
+    test('a barbell alone loads the legs but not the pull-ups', () {
+      final tracks = planFor(
+        equipment: EquipmentAnswer.some({EquipmentItem.barbell}),
+      ).tracks;
+      expect(tracks[SkillCategoryCatalog.pullupsId], 'close_grip');
+      expect(tracks[SkillCategoryCatalog.squatId], 'weighted');
+      expect(tracks[SkillCategoryCatalog.hingeId], 'weighted');
+    });
+
+    test('a kettlebell and dumbbells load nothing on the trees', () {
+      final tracks = planFor(
+        equipment: EquipmentAnswer.some({
+          EquipmentItem.kettlebell,
+          EquipmentItem.dumbbells,
+        }),
+      ).tracks;
+      expect(tracks[SkillCategoryCatalog.squatId], 'pistol');
+      expect(tracks[SkillCategoryCatalog.hingeId], 'nordic_curls');
+      expect(tracks[SkillCategoryCatalog.pullupsId], 'close_grip');
+    });
+  });
+
   group('what a new program trains', () {
     test('without a gym: upper trees, squat, Nordic curls, and core', () {
       expect(planFor().tracks, {
         SkillCategoryCatalog.pushupsId: 'planche',
         SkillCategoryCatalog.dipsId: 'weighted',
         SkillCategoryCatalog.rowsId: 'front_lever',
-        SkillCategoryCatalog.pullupsId: 'weighted',
+        SkillCategoryCatalog.pullupsId: 'close_grip',
         SkillCategoryCatalog.squatId: 'pistol',
         SkillCategoryCatalog.hingeId: 'nordic_curls',
         SkillCategoryCatalog.coreId: 'l_sit',
       });
     });
 
-    test('with a gym: the weighted squat branch and the Romanian deadlift',
-        () {
+    test('with a gym: the weighted squat branch and the Romanian deadlift', () {
       final tracks = planFor(hasGym: true).tracks;
 
       expect(tracks[SkillCategoryCatalog.squatId], 'weighted');
@@ -182,7 +217,8 @@ void main() {
       );
     });
 
-    test('the weighted squat starts on the deepest rung inside 80% of the '
+    test(
+        'the weighted squat starts on the deepest rung inside 80% of the '
         'reported max', () {
       // 80% of a 100 kg max is 80 kg; at 80 kg bodyweight the +100% rung
       // asks for exactly that, and the +125% rung is past it.
@@ -304,7 +340,7 @@ void main() {
             programType: programType,
             sessionType: sessionType,
             skillTracks: tracksOf(plan),
-            hasGym: hasGym,
+            equipment: hasGym ? EquipmentAnswer.fullGym : EquipmentAnswer.none,
           )
           .items
           .map((item) => item.exercise.id)
@@ -454,7 +490,7 @@ void main() {
             programType: TrainingProgramType.fullBody,
             sessionType: TrainingSessionType.fullBody,
             skillTracks: tracksOf(plan),
-            hasGym: false,
+            equipment: EquipmentAnswer.none,
           )
           .items
           .map((item) => item.exercise.id)
@@ -478,7 +514,8 @@ void main() {
           'hinge_romanian_deadlift_bodyweight': ExerciseStatus.mastered,
         },
         targets: {
-          'hinge_rdl_25_bw': ProgramStartTarget(sets: 3, value: 5, weightKg: 60),
+          'hinge_rdl_25_bw':
+              ProgramStartTarget(sets: 3, value: 5, weightKg: 60),
         },
       );
 
@@ -500,10 +537,11 @@ void main() {
       expect(behind.targetSets, isNull);
     });
 
-    test('a weighted rung placed by setup has no special opening target — '
+    test(
+        'a weighted rung placed by setup has no special opening target — '
         'its load comes from the rung formula', () {
       final plan = ProgramStartPlanner.planFor(
-        hasGym: true,
+        equipment: EquipmentAnswer.fullGym,
         goalSkillIds: const [],
         startingStrength: const {'squat': 100, 'rdl': 100},
         bodyweightKg: 80,
@@ -523,7 +561,7 @@ void main() {
 
     test('an exercise the user already has a row for is left alone', () {
       final plan = ProgramStartPlanner.planFor(
-        hasGym: true,
+        equipment: EquipmentAnswer.fullGym,
         goalSkillIds: const [],
         startingStrength: const {'squat': 100},
         bodyweightKg: 80,

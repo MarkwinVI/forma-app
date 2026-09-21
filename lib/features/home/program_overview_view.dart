@@ -168,7 +168,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
           // sheet or on the wheel must reach the editor's day immediately.
           progressMap: _progress,
           sessionItemsConfig: _sessionItemsConfig,
-          hasGym: _hasGym,
+          equipment: _equipment,
           skillTracks: _skillTracks,
           onSave: (config) => _saveLogic(
             sessionItemsConfig: config,
@@ -417,7 +417,7 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
             sessionType: sessionType,
             branchSelections: _branchSelections,
             progressMap: _progress,
-            hasGym: _hasGym,
+            equipment: _equipment,
             skillTracks: _skillTracks,
           ),
         ),
@@ -538,10 +538,6 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
       ),
     );
   }
-
-  /// The setup wizard defaults to a full gym, so an unanswered program reads
-  /// the same way here.
-  bool get _hasGym => _setupAnswers['has_gym'] as bool? ?? true;
 
   /// The equipment answer when program setup stored one; programs from
   /// before it map the old boolean onto the two presets.
@@ -1819,8 +1815,7 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
                     selected: _kind == SetupEquipment.fullGym,
                     label: 'Full gym',
                     sub: 'Pull-up bar, rings, barbells',
-                    onTap: () =>
-                        setState(() => _kind = SetupEquipment.fullGym),
+                    onTap: () => setState(() => _kind = SetupEquipment.fullGym),
                   ),
                   const SizedBox(height: 10),
                   _SheetRadioRow(

@@ -65,7 +65,8 @@ void main() {
 
     test('items without a barbell do not', () {
       expect(
-        EquipmentAnswer.some({EquipmentItem.dumbbells, EquipmentItem.kettlebell})
+        EquipmentAnswer.some(
+                {EquipmentItem.dumbbells, EquipmentItem.kettlebell})
             .toSetupAnswers()['has_gym'],
         isFalse,
       );
@@ -103,6 +104,34 @@ void main() {
           .hasDipBars,
       isFalse,
     );
+  });
+
+  group('canDo', () {
+    const ringsOrBar =
+        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings});
+    const vest = EquipmentNeed({EquipmentItem.weightVest});
+
+    test('a full gym does everything, including what only a gym has', () {
+      expect(EquipmentAnswer.fullGym.canDo([ringsOrBar, vest]), isTrue);
+      expect(EquipmentAnswer.fullGym.canDo([EquipmentNeed.gym]), isTrue);
+    });
+
+    test('no equipment does only bodyweight', () {
+      expect(EquipmentAnswer.none.canDo(const []), isTrue);
+      expect(EquipmentAnswer.none.canDo([ringsOrBar]), isFalse);
+    });
+
+    test('a list meets a need with any one of its items, and every need', () {
+      final rings = EquipmentAnswer.some({EquipmentItem.rings});
+      expect(rings.canDo([ringsOrBar]), isTrue);
+      expect(rings.canDo([ringsOrBar, vest]), isFalse);
+      expect(
+        EquipmentAnswer.some({EquipmentItem.rings, EquipmentItem.weightVest})
+            .canDo([ringsOrBar, vest]),
+        isTrue,
+      );
+      expect(rings.canDo([EquipmentNeed.gym]), isFalse);
+    });
   });
 
   test('summary names three items and counts the rest', () {

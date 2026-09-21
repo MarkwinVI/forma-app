@@ -9,6 +9,7 @@ import '../../core/widgets/polished.dart';
 import '../../core/widgets/reorder_exercises_page.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
+import '../../data/models/equipment_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_track_model.dart';
@@ -37,7 +38,7 @@ class ProgramWorkoutEditorView extends StatefulWidget {
   final Map<TrainingTrack, String> branchSelections;
   final Map<String, ExerciseStatus> progressMap;
   final Map<String, dynamic> sessionItemsConfig;
-  final bool hasGym;
+  final EquipmentAnswer equipment;
 
   /// The program's skill tracks — the default day is built from these, so
   /// the editor opens on the session the user actually trains rather than
@@ -52,7 +53,7 @@ class ProgramWorkoutEditorView extends StatefulWidget {
     required this.branchSelections,
     required this.progressMap,
     required this.sessionItemsConfig,
-    this.hasGym = true,
+    this.equipment = EquipmentAnswer.fullGym,
     this.skillTracks = const [],
     required this.onSave,
   });
@@ -107,7 +108,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         branchSelections: widget.branchSelections,
         progressMap: _progress,
         skillTracks: _skillTracks,
-        hasGym: widget.hasGym,
+        equipment: widget.equipment,
       );
 
   String _serialized() => jsonEncode(ProgramSessionPlan.serializeDay(_items));

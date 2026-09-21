@@ -10,8 +10,7 @@ import 'package:forma_app/features/home/program_workout_editor_view.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-  });
+  setUpAll(() {});
 
   Future<void> pumpEditor(
     WidgetTester tester, {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
+import '../../data/models/equipment_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
@@ -120,7 +121,7 @@ class ProgramSessionPlan {
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
     List<SkillTrack> skillTracks = const [],
-    bool hasGym = true,
+    EquipmentAnswer equipment = EquipmentAnswer.fullGym,
   }) {
     final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
     if (sessionMap != null) {
@@ -150,7 +151,7 @@ class ProgramSessionPlan {
         programType: programType,
         sessionType: sessionType,
         skillTracks: skillTracks,
-        hasGym: hasGym,
+        equipment: equipment,
       );
       final branchByCategory = {
         for (final track in skillTracks)
@@ -195,7 +196,7 @@ class ProgramSessionPlan {
       sessionType: sessionType,
       branchSelections: branchSelections,
       progressMap: progressMap,
-      hasGym: hasGym,
+      equipment: equipment,
     );
   }
 
@@ -369,7 +370,7 @@ class ProgramSessionPlan {
     required TrainingSessionType sessionType,
     required Map<TrainingTrack, String> branchSelections,
     required Map<String, ExerciseStatus> progressMap,
-    required bool hasGym,
+    required EquipmentAnswer equipment,
   }) {
     final resolvedBranches = service.resolveSelectedBranches(branchSelections);
     final skillOption = resolvedBranches[TrainingTrack.skillWork]!;
@@ -381,7 +382,7 @@ class ProgramSessionPlan {
       programType: programType,
       sessionType: sessionType,
       branchSelections: branchSelections,
-      hasGym: hasGym,
+      equipment: equipment,
     );
 
     final items = <ProgramDayItem>[

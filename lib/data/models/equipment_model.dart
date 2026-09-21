@@ -72,6 +72,30 @@ extension EquipmentItemX on EquipmentItem {
   }
 }
 
+/// One thing a movement needs, met by any one of [anyOf]. A movement's
+/// equipment is a list of these and every entry must be met: a weighted
+/// ring row needs rings or a bar, and a vest. The empty set is the gym
+/// itself — machines, cables, a Smith rack — which only Full gym has.
+class EquipmentNeed {
+  final Set<EquipmentItem> anyOf;
+
+  const EquipmentNeed(this.anyOf);
+
+  /// Only a gym has it: a machine, a cable stack, cardio kit.
+  static const EquipmentNeed gym = EquipmentNeed({});
+
+  bool get isGymOnly => anyOf.isEmpty;
+
+  @override
+  bool operator ==(Object other) =>
+      other is EquipmentNeed &&
+      other.anyOf.length == anyOf.length &&
+      other.anyOf.containsAll(anyOf);
+
+  @override
+  int get hashCode => Object.hashAllUnordered(anyOf);
+}
+
 /// The equipment answer as a whole: the preset, and for "Some equipment"
 /// the items ticked. Immutable; the pickers build a new one per change.
 class EquipmentAnswer {
@@ -130,6 +154,17 @@ class EquipmentAnswer {
         SetupEquipment.some => items.contains(EquipmentItem.pullUpBar),
         SetupEquipment.none => false,
       };
+
+  /// Whether every one of [needs] is met: a full gym meets everything, an
+  /// item list meets a need when it holds one of the need's items, and no
+  /// equipment meets only the bodyweight movement's empty list.
+  bool canDo(List<EquipmentNeed> needs) {
+    if (kind == SetupEquipment.fullGym) return true;
+    for (final need in needs) {
+      if (need.isGymOnly || !need.anyOf.any(items.contains)) return false;
+    }
+    return true;
+  }
 
   /// The item ids in display order.
   List<String> get itemIds => [for (final item in items) item.id];

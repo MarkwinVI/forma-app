@@ -212,7 +212,7 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
     lastWorkoutAt: pastWorkouts.isEmpty ? null : pastWorkouts.first.loggedAt,
     now: now,
   );
-  final hasGym = programUsesGym(snapshot.program.variationRules);
+  final equipment = programEquipment(snapshot.program.variationRules);
   final recommendation = trainingProgramService.buildToday(
     progressMap: progressMap,
     programType: programType,
@@ -220,7 +220,7 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
     branchSelections: branchSelections,
     sessionItemsConfig: sessionItemsConfig,
     skillTracks: skillTracks,
-    hasGym: hasGym,
+    equipment: equipment,
   );
 
   // Every exercise across the program's workout lists — one build per
@@ -242,7 +242,7 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
             branchSelections: branchSelections,
             sessionItemsConfig: sessionItemsConfig,
             skillTracks: skillTracks,
-            hasGym: hasGym,
+            equipment: equipment,
           );
     for (final item in session.items) {
       if (seenExerciseIds.add(item.exercise.id)) {

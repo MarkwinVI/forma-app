@@ -1,5 +1,6 @@
 import '../catalog/exercise_catalog.dart';
 import '../catalog/skill_category_catalog.dart';
+import '../models/equipment_model.dart';
 import '../models/exercise_model.dart';
 import '../models/skill_category_model.dart';
 import '../models/skill_track_model.dart';
@@ -95,7 +96,7 @@ class TrainingProgramService {
     Map<TrainingTrack, String> branchSelections = const {},
     Map<String, dynamic> sessionItemsConfig = const {},
     List<SkillTrack> skillTracks = const [],
-    bool hasGym = true,
+    EquipmentAnswer equipment = EquipmentAnswer.fullGym,
     DateTime? plannedDate,
     int? plannedStepIndex,
     bool affectsSchedule = true,
@@ -125,7 +126,7 @@ class TrainingProgramService {
                     currentSessionType,
                     skillTracks,
                     progressMap,
-                    hasGym: hasGym,
+                    equipment: equipment,
                   )),
         plannedDate: plannedDate,
         plannedStepIndex: plannedStepIndex,
@@ -677,11 +678,38 @@ class TrainingProgramService {
     ],
   };
 
-  static const Map<TrainingSessionType, String> _gymAccessoryIds = {
-    TrainingSessionType.push: 'lateral_raise_dumbbell',
-    TrainingSessionType.pull: 'face_pull',
-    TrainingSessionType.lower: 'standing_calf_raise',
+  /// The accessory a session type ends on, as a chain: the first movement
+  /// the user's equipment can do is the one, and a session gets none when
+  /// nothing on its chain fits. Full-body and upper sessions carry no
+  /// accessory.
+  static const Map<TrainingSessionType, List<String>> _accessoryChains = {
+    TrainingSessionType.push: [
+      'lateral_raise_dumbbell',
+      'kettlebell_shoulder_press',
+      'lateral_raise_band',
+    ],
+    // The cable face pull has no home substitute yet.
+    TrainingSessionType.pull: ['face_pull'],
+    TrainingSessionType.lower: [
+      'standing_calf_raise',
+      'single_leg_standing_calf_raise_dumbbell',
+    ],
   };
+
+  /// The accessory for [sessionType] given what the user trains with, or
+  /// null when nothing on the chain fits.
+  static Exercise? accessoryFor(
+    TrainingSessionType sessionType,
+    EquipmentAnswer equipment,
+  ) {
+    for (final id in _accessoryChains[sessionType] ?? const <String>[]) {
+      final exercise = ExerciseCatalog.findById(id);
+      if (exercise != null && equipment.canDo(exercise.equipment)) {
+        return exercise;
+      }
+    }
+    return null;
+  }
 
   /// The movement lane a pattern reports as (for item labels, logging, and
   /// dashboards); tracks are scheduled by pattern, not stored by lane.
@@ -766,15 +794,13 @@ class TrainingProgramService {
     TrainingSessionType sessionType,
     List<SkillTrack> skillTracks,
     Map<String, ExerciseStatus> progressMap, {
-    required bool hasGym,
+    required EquipmentAnswer equipment,
   }) {
     final items = _buildItems(
       _trackBranchesForSession(sessionType, skillTracks),
       progressMap,
     );
-    final accessoryId = hasGym ? _gymAccessoryIds[sessionType] : null;
-    final accessory =
-        accessoryId == null ? null : ExerciseCatalog.findById(accessoryId);
+    final accessory = accessoryFor(sessionType, equipment);
     if (accessory != null) {
       items.add(
         TrainingRecommendationItem(
@@ -803,7 +829,8 @@ class TrainingProgramService {
 
     for (final skillTrack in skillTracks) {
       if (!skillTrack.included) continue;
-      final category = SkillCategoryCatalog.findById(skillTrack.skillCategoryId);
+      final category =
+          SkillCategoryCatalog.findById(skillTrack.skillCategoryId);
       if (category == null) continue;
       if (category.pathFor(skillTrack.branchId).isEmpty) continue;
 

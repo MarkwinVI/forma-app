@@ -1,5 +1,6 @@
 import '../catalog/exercise_catalog.dart';
 import '../catalog/skill_category_catalog.dart';
+import '../models/equipment_model.dart';
 import '../models/exercise_model.dart';
 import '../models/skill_category_model.dart';
 import 'exercise_progression_service.dart';
@@ -91,7 +92,8 @@ class ProgramStartPlanner {
   /// the tree's first step for the hinge (the bodyweight Romanian deadlift
   /// is where an untested hinge begins).
   static const Map<String, _WeightedGate> _weightedGates = {
-    SkillCategoryCatalog.squatId: _WeightedGate('squat', blankStartsOnBar: true),
+    SkillCategoryCatalog.squatId:
+        _WeightedGate('squat', blankStartsOnBar: true),
     SkillCategoryCatalog.hingeId: _WeightedGate('rdl', blankStartsOnBar: false),
   };
 
@@ -107,7 +109,7 @@ class ProgramStartPlanner {
   };
 
   static ProgramStartPlan planFor({
-    required bool hasGym,
+    required EquipmentAnswer equipment,
     required List<String> goalSkillIds,
     required Map<String, int?> startingStrength,
     double? bodyweightKg,
@@ -118,40 +120,51 @@ class ProgramStartPlanner {
     // pick; this is the rule itself, so no caller can plan a locked tree.
     final unlockedGoalIds = [
       for (final goalId in goalSkillIds)
-        if (TrainingProgramService.lockedGoal(goalId, existingProgress) ==
-            null)
+        if (TrainingProgramService.lockedGoal(goalId, existingProgress) == null)
           goalId,
     ];
     final goalBranches = _goalBranchesByCategory(unlockedGoalIds);
     final tracks = <String, String>{};
 
     void addTrack(String categoryId, String branchId) {
-      tracks.putIfAbsent(categoryId, () => goalBranches[categoryId] ?? branchId);
+      tracks.putIfAbsent(
+          categoryId, () => goalBranches[categoryId] ?? branchId);
     }
 
-    // The four upper-body progressions every split trains.
+    // The four upper-body progressions every split trains. Pull-ups climb
+    // the weighted branch only where load can be added — a gym or a vest —
+    // and the close-grip branch otherwise.
     for (final category in [
       SkillCategoryCatalog.pushups,
       SkillCategoryCatalog.dips,
       SkillCategoryCatalog.rows,
-      SkillCategoryCatalog.pullups,
     ]) {
       addTrack(category.id, category.defaultTrainingPathId);
     }
+    addTrack(
+      SkillCategoryCatalog.pullupsId,
+      equipment.canAddWeight ? 'weighted' : 'close_grip',
+    );
 
-    // Knee-dominant: the weighted (barbell) branch owns the slot only when a
-    // gym is available and no goal points at the squat tree.
+    // Knee-dominant: the weighted (barbell) branch owns the slot only when
+    // every rung of it can be loaded and no goal points at the squat tree.
     final squatGoalBranch = goalBranches[SkillCategoryCatalog.squatId];
     addTrack(
       SkillCategoryCatalog.squatId,
-      hasGym && squatGoalBranch == null
+      squatGoalBranch == null &&
+              canTrainBranch(equipment, SkillCategoryCatalog.squat, 'weighted')
           ? 'weighted'
           : SkillCategoryCatalog.squat.defaultTrainingPathId,
     );
 
     // Hinge: the loaded ladder when there is a bar to load, the Nordic
     // curls progression otherwise.
-    addTrack(SkillCategoryCatalog.hingeId, hasGym ? 'weighted' : 'nordic_curls');
+    addTrack(
+      SkillCategoryCatalog.hingeId,
+      canTrainBranch(equipment, SkillCategoryCatalog.hinge, 'weighted')
+          ? 'weighted'
+          : 'nordic_curls',
+    );
 
     // Direct core work belongs in every program. The split schedules it at
     // the end of full-body, push, and lower sessions.
@@ -175,7 +188,6 @@ class ProgramStartPlanner {
       final start = _startingPositionFor(
         category: category,
         branchId: entry.value,
-        hasGym: hasGym,
         startingStrength: startingStrength,
         bodyweightKg: bodyweightKg,
       );
@@ -192,7 +204,8 @@ class ProgramStartPlanner {
 
   /// Branch each goal skill points at, keyed by skill category. Two goals on
   /// one category keep the first, matching how tracks are seeded elsewhere.
-  static Map<String, String> _goalBranchesByCategory(List<String> goalSkillIds) {
+  static Map<String, String> _goalBranchesByCategory(
+      List<String> goalSkillIds) {
     final branches = <String, String>{};
 
     for (final goalId in goalSkillIds) {
@@ -210,10 +223,25 @@ class ProgramStartPlanner {
     return branches;
   }
 
+  /// Whether every step of a branch can be performed with [equipment] —
+  /// what decides between a loaded ladder and its bodyweight alternative.
+  static bool canTrainBranch(
+    EquipmentAnswer equipment,
+    SkillCategory category,
+    String branchId,
+  ) {
+    for (final id in category.pathFor(branchId)) {
+      final exercise = ExerciseCatalog.findById(id);
+      if (exercise != null && !equipment.canDo(exercise.equipment)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static _StartingPosition _startingPositionFor({
     required SkillCategory category,
     required String branchId,
-    required bool hasGym,
     required Map<String, int?> startingStrength,
     required double? bodyweightKg,
   }) {

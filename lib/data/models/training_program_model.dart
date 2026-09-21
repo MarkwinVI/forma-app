@@ -1,3 +1,4 @@
+import 'equipment_model.dart';
 import 'exercise_model.dart';
 
 enum TrainingProgramType { fullBody, pushPull, upperLower }
@@ -38,7 +39,6 @@ extension TrainingProgramTypeX on TrainingProgramType {
   }
 }
 
-
 /// Weekday names, Monday first — the index used to key a day's own plan.
 const List<String> kWeekdayNames = [
   'Monday',
@@ -58,12 +58,13 @@ const List<String> kWeekdayNames = [
 String programDayConfigKey(TrainingSessionType sessionType) =>
     sessionType.dbValue;
 
-/// Equipment choice saved by program setup. Programs created before the
-/// answer was stored follow the app's original full-gym default.
-bool programUsesGym(Map<String, dynamic> variationRules) {
+/// The equipment answer saved by program setup. Programs created before
+/// the answer was stored follow the app's original full-gym default.
+EquipmentAnswer programEquipment(Map<String, dynamic> variationRules) {
   final setup = variationRules['program_setup_v1'];
-  if (setup is! Map) return true;
-  return setup['has_gym'] as bool? ?? true;
+  return EquipmentAnswer.fromSetupAnswers(
+    setup is Map ? Map<String, dynamic>.from(setup) : const {},
+  );
 }
 
 /// The stored plan for a workout type, or null when it still runs on

@@ -31,7 +31,6 @@ void main() {
       branchSelections: const {},
       progressMap: const {},
       skillTracks: tracks(branchByCategory),
-      hasGym: true,
     );
   }
 
@@ -56,8 +55,8 @@ void main() {
         SkillCategoryCatalog.coreId: 'l_sit',
       });
 
-      final lateralRaise =
-          push.firstWhere((item) => item.exerciseId == 'lateral_raise_dumbbell');
+      final lateralRaise = push
+          .firstWhere((item) => item.exerciseId == 'lateral_raise_dumbbell');
       expect(lateralRaise.kind, ProgramDayItemKind.exercise);
       expect(lateralRaise.skillCategoryId, isNull);
     });

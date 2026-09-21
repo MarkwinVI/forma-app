@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/equipment_model.dart';
 import '../models/exercise_log_model.dart';
 import '../models/exercise_model.dart';
 import '../models/exercise_progress_model.dart';
@@ -117,8 +118,9 @@ class DevToolsService {
         branchSelections: branchSelections,
         sessionItemsConfig: sessionItemsConfig,
         skillTracks: skillTracks,
-        hasGym:
-            logic == null ? true : programUsesGym(logic.program.variationRules),
+        equipment: logic == null
+            ? EquipmentAnswer.fullGym
+            : programEquipment(logic.program.variationRules),
       );
       if (recommendation.items.isEmpty) continue;
 

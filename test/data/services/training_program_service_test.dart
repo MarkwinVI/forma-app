@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/models/exercise_model.dart';
 import 'package:forma_app/data/models/skill_track_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
@@ -6,10 +7,66 @@ import 'package:forma_app/data/services/skill_track_service.dart';
 import 'package:forma_app/data/services/training_program_service.dart';
 
 void main() {
+  group('accessoryFor', () {
+    Exercise? push(EquipmentAnswer equipment) =>
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.push,
+          equipment,
+        );
+
+    test('the push accessory follows what the user has', () {
+      expect(push(EquipmentAnswer.fullGym)?.id, 'lateral_raise_dumbbell');
+      expect(
+        push(EquipmentAnswer.some({EquipmentItem.dumbbells}))?.id,
+        'lateral_raise_dumbbell',
+      );
+      expect(
+        push(EquipmentAnswer.some({EquipmentItem.kettlebell}))?.id,
+        'kettlebell_shoulder_press',
+      );
+      expect(
+        push(EquipmentAnswer.some({EquipmentItem.bands}))?.id,
+        'lateral_raise_band',
+      );
+      expect(push(EquipmentAnswer.none), isNull);
+    });
+
+    test('the face pull needs a gym; the calf raise takes a bar or dumbbells',
+        () {
+      expect(
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.pull,
+          EquipmentAnswer.fullGym,
+        )?.id,
+        'face_pull',
+      );
+      expect(
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.pull,
+          EquipmentAnswer.some({EquipmentItem.bands, EquipmentItem.barbell}),
+        ),
+        isNull,
+      );
+      expect(
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.lower,
+          EquipmentAnswer.some({EquipmentItem.dumbbells}),
+        )?.id,
+        'single_leg_standing_calf_raise_dumbbell',
+      );
+      expect(
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.fullBody,
+          EquipmentAnswer.fullGym,
+        ),
+        isNull,
+      );
+    });
+  });
+
   final service = TrainingProgramService();
 
-  SkillTrack track(String categoryId, String branchId,
-      {bool included = true}) {
+  SkillTrack track(String categoryId, String branchId, {bool included = true}) {
     return SkillTrack(
       skillCategoryId: categoryId,
       branchId: branchId,
@@ -38,8 +95,8 @@ void main() {
       // Both horizontal-push tracks coexist — the lane model allowed one.
       expect(
         recommendation.items
-            .where((item) => item.exercise.category ==
-                ExerciseCategory.horizontalPush)
+            .where((item) =>
+                item.exercise.category == ExerciseCategory.horizontalPush)
             .length,
         greaterThanOrEqualTo(2),
       );
@@ -81,8 +138,7 @@ void main() {
       expect(categories, isNot(contains('pushups')));
     });
 
-    test('seeding converts lane selections and adds goal-only categories',
-        () {
+    test('seeding converts lane selections and adds goal-only categories', () {
       final seeds = SkillTrackService.seedTracksFrom(
         laneSelections: service.defaultBranchSelections(),
         goalSkillIds: const ['shrimp'],
@@ -226,8 +282,7 @@ void main() {
       expect(plank.isTimed, isTrue);
     });
 
-    test('configured progression picks the current exercise from the path',
-        () {
+    test('configured progression picks the current exercise from the path', () {
       final recommendation = service.buildToday(
         progressMap: const {},
         sessionItemsConfig: {

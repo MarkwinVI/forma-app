@@ -316,7 +316,7 @@ class _HomeViewState extends State<HomeView> {
       branchSelections: branchSelections,
       sessionItemsConfig: sessionItemsConfig,
       skillTracks: _skillTracks,
-      hasGym: programUsesGym(snapshot.program.variationRules),
+      equipment: programEquipment(snapshot.program.variationRules),
       plannedDate: selectedDay.date,
       plannedStepIndex: selectedDay.stepIndex,
       affectsSchedule: !selectedDay.isRestDay,

@@ -1,3 +1,5 @@
+import 'equipment_model.dart';
+
 enum ExerciseCategory {
   verticalPull,
   verticalPush,
@@ -226,6 +228,11 @@ class Exercise {
   /// never reads it.
   final LoadType loadType;
 
+  /// What the movement needs, in the equipment picker's terms — every entry
+  /// must be met. Read from the sheet's equipment column; empty for a
+  /// bodyweight movement. See [EquipmentAnswer.canDo].
+  final List<EquipmentNeed> equipment;
+
   const Exercise({
     required this.id,
     required this.category,
@@ -247,6 +254,7 @@ class Exercise {
     this.libraryId = '',
     this.weightFormula,
     this.loadType = LoadType.plates,
+    this.equipment = const [],
   });
 
   /// The same movement in a different place in the program. Every fact
@@ -274,6 +282,7 @@ class Exercise {
       libraryId: libraryId,
       weightFormula: weightFormula,
       loadType: loadType,
+      equipment: equipment,
     );
   }
 }
