@@ -311,9 +311,8 @@ class NewTreeMap extends StatefulWidget {
 
   const NewTreeMap({super.key, required this.data, required this.phase});
 
-  /// The map runs almost edge to edge, past the column's own padding —
-  /// this much stays clear on each side — and the tree fills the width.
-  static const double sideMargin = 12;
+  /// As wide as the target bar above it — the tree fills the width.
+  static const double width = celebrationContentWidth;
   static const double height = 184;
 
   @override
@@ -363,25 +362,18 @@ class _NewTreeMapState extends State<NewTreeMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width - 2 * NewTreeMap.sideMargin;
     return SizedBox(
+      width: NewTreeMap.width,
       height: NewTreeMap.height,
-      child: OverflowBox(
-        maxWidth: double.infinity,
-        child: SizedBox(
-          width: width,
-          height: NewTreeMap.height,
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_pulse, _spin, _beat]),
-            builder: (context, _) => CustomPaint(
-              painter: _NewTreeMapPainter(
-                data: widget.data,
-                phase: widget.phase,
-                pulse: Curves.easeInOut.transform(_pulse.value),
-                spin: const Cubic(0.32, 0.72, 0, 1).transform(_spin.value),
-                beat: _beat.value,
-              ),
-            ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_pulse, _spin, _beat]),
+        builder: (context, _) => CustomPaint(
+          painter: _NewTreeMapPainter(
+            data: widget.data,
+            phase: widget.phase,
+            pulse: Curves.easeInOut.transform(_pulse.value),
+            spin: const Cubic(0.32, 0.72, 0, 1).transform(_spin.value),
+            beat: _beat.value,
           ),
         ),
       ),
