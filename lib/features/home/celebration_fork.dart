@@ -225,12 +225,12 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
 
     at(600, () => _fill = true);
     at(2100, () => _phase = 1);
-    at(4300, () => _phase = 2);
-    at(5900, () {
+    at(3000, () => _phase = 2);
+    at(3600, () {
       _phase = 3;
       _fill = false;
     });
-    at(7100, () => _phase = 4);
+    at(4600, () => _phase = 4);
   }
 
   @override

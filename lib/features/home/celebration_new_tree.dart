@@ -180,13 +180,13 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
 
     at(600, () => _fill = true);
     at(2100, () => _phase = 1);
-    at(4000, () => _phase = 2);
-    at(5200, () => _phase = 3);
-    at(6500, () {
+    at(3200, () => _phase = 2);
+    at(4100, () => _phase = 3);
+    at(5000, () {
       _phase = 4;
       _fill = false;
     });
-    at(7700, () => _phase = 5);
+    at(5900, () => _phase = 5);
   }
 
   @override

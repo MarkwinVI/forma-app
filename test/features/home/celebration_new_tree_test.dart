@@ -57,15 +57,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2500));
     expect(find.text('EXERCISE MASTERED'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 2000));
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Handstand Pushups'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('NEW SKILL TREE UNLOCKED'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 1300));
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('NEW EXERCISE STARTED'), findsOneWidget);
     expect(find.text(data.newExercise.name), findsOneWidget);
