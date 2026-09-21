@@ -976,14 +976,16 @@ class _WheelPainter extends CustomPainter {
       if (state.widget.hideUnfocused && v <= 0.001) continue;
 
       for (final link in geo.links) {
+        // A travelled link reads green whichever it is — the hairline
+        // leaving the fork included, once the branch it opens is trained.
         final Color litColor;
         final double litWidth;
-        if (link.faint) {
-          litColor = _SkillWheelState._linkFaint;
-          litWidth = 1;
-        } else if (_lit(link)) {
+        if (_lit(link)) {
           litColor = _SkillWheelState._linkOn;
           litWidth = 2;
+        } else if (link.faint) {
+          litColor = _SkillWheelState._linkFaint;
+          litWidth = 1;
         } else {
           litColor = _SkillWheelState._linkDim;
           litWidth = 1.2;
