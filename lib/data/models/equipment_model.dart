@@ -11,12 +11,13 @@ extension SetupEquipmentX on SetupEquipment {
       };
 
   /// The value as stored, or null for anything unknown. The retired
-  /// "barbell and dumbbells" answer is not a preset any more: it reads as
-  /// [SetupEquipment.some] with those two items — see
-  /// [EquipmentAnswer.fromSetupAnswers].
+  /// "barbell and dumbbells" preset stays an alias for a full gym: it was
+  /// planned exactly like one, and an update must not change what anyone
+  /// is prescribed. The first time such a user saves the sheet, the
+  /// answer is written in the current shape.
   static SetupEquipment? fromDbValue(Object? value) => switch (value) {
-        'gym' => SetupEquipment.fullGym,
-        'some' || 'barbell' => SetupEquipment.some,
+        'gym' || 'barbell' => SetupEquipment.fullGym,
+        'some' => SetupEquipment.some,
         'none' => SetupEquipment.none,
         _ => null,
       };
@@ -103,12 +104,6 @@ class EquipmentAnswer {
       EquipmentAnswer(SetupEquipment.fullGym);
   static const EquipmentAnswer none = EquipmentAnswer(SetupEquipment.none);
 
-  /// What the retired "Barbell and dumbbells" preset stood for.
-  static const Set<EquipmentItem> legacyFreeWeights = {
-    EquipmentItem.barbell,
-    EquipmentItem.dumbbells,
-  };
-
   final SetupEquipment kind;
 
   /// Only meaningful for [SetupEquipment.some]; empty for the presets.
@@ -178,26 +173,22 @@ class EquipmentAnswer {
       };
 
   /// Reads the answer out of `program_setup_v1`. Programs from before the
-  /// question map their `has_gym` boolean onto the two presets; the retired
-  /// "barbell" preset becomes "Some equipment" with a barbell and dumbbells.
+  /// question map their `has_gym` boolean onto the two presets, and the
+  /// retired "barbell" preset reads as a full gym — see
+  /// [SetupEquipmentX.fromDbValue].
   factory EquipmentAnswer.fromSetupAnswers(Map<String, dynamic> answers) {
-    final raw = answers['equipment'];
-    final kind = SetupEquipmentX.fromDbValue(raw);
+    final kind = SetupEquipmentX.fromDbValue(answers['equipment']);
     if (kind == null) {
       return (answers['has_gym'] as bool? ?? true) ? fullGym : none;
     }
     if (kind != SetupEquipment.some) return EquipmentAnswer(kind);
 
     final rawItems = answers['equipment_items'];
-    final items = <EquipmentItem>{
+    return EquipmentAnswer.some({
       if (rawItems is List)
         for (final id in rawItems)
           if (EquipmentItemX.fromId(id) case final item?) item,
-    };
-    if (items.isEmpty && raw == 'barbell') {
-      return EquipmentAnswer.some(legacyFreeWeights);
-    }
-    return EquipmentAnswer.some(items);
+    });
   }
 
   /// "Full gym", "No equipment", or the ticked items — the first three by

@@ -25,15 +25,15 @@ void main() {
       expect(answer.shortLabel, '2 items');
     });
 
-    test('the retired barbell preset becomes barbell and dumbbells', () {
+    test('the retired barbell preset stays a full gym, as it was planned',
+        () {
       final answer = EquipmentAnswer.fromSetupAnswers({
         'equipment': 'barbell',
         'has_gym': true,
       });
-      expect(answer.kind, SetupEquipment.some);
-      expect(answer.items, {EquipmentItem.barbell, EquipmentItem.dumbbells});
+      expect(answer, EquipmentAnswer.fullGym);
       expect(answer.hasWeights, isTrue);
-      expect(answer.hasPullUpBar, isFalse);
+      expect(answer.canAddWeight, isTrue);
     });
 
     test('a program from before the question follows its has_gym flag', () {
