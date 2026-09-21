@@ -143,6 +143,16 @@ class SkillWheel extends StatefulWidget {
   /// the user started it anyway, so it is running.
   final Set<String> lockedCategoryIds;
 
+  /// Open already focused on this family, at [initialFocus], with no
+  /// fly-in — the post-workout celebration shows one tree from the first
+  /// frame. Null opens on the whole wheel.
+  final int? initialSelected;
+  final int initialFocus;
+
+  /// Draw only the focused family. The Progress tab keeps its neighbours
+  /// as faint structure; the celebration shows one tree and nothing else.
+  final bool hideUnfocused;
+
   const SkillWheel({
     super.key,
     required this.families,
@@ -153,6 +163,9 @@ class SkillWheel extends StatefulWidget {
     this.onToggleGoal,
     this.activeCategoryIds = const {},
     this.lockedCategoryIds = const {},
+    this.initialSelected,
+    this.initialFocus = 0,
+    this.hideUnfocused = false,
   });
 
   bool get isPicker => onToggleGoal != null;
@@ -245,6 +258,19 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 400),
       value: 1,
     );
+    final initial = widget.initialSelected;
+    if (initial != null && initial < _n) {
+      // Land where a fly-in would have ended: camera, spin, lighting and
+      // sector chrome all at their focused values, labels already in.
+      _sel = initial;
+      _focus = widget.initialFocus;
+      _fromVB = _toVB = _target(initial);
+      _fromRot = _toRot = _rotFor(initial);
+      _fromLit =
+          _toLit = [for (var i = 0; i < _n; i++) i == initial ? 1.0 : 0.0];
+      _sector.value = 0;
+      _halo.repeat();
+    }
   }
 
   @override
@@ -444,7 +470,11 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     // plus a label allowance, vertical span centred on the hub. The slack
     // above and below the tree is where the dimmed neighbours read.
     const x0 = _hx - 16.0, x1 = _hx + _reach + 62.0;
-    final yHalf = _reach * math.sin(_clampDeg * math.pi / 180) + 14;
+    // The vertical span follows the sector, up to a fan's widest spread —
+    // a wheel of two or three families would otherwise frame a half-turn
+    // of empty space around its tree.
+    final spreadDeg = math.min(_clampDeg, 24.0);
+    final yHalf = _reach * math.sin(spreadDeg * math.pi / 180) + 14;
     final y0 = _hy - yHalf, y1 = _hy + yHalf;
     final bandH = (_w * (y1 - y0) / (x1 - x0))
         .roundToDouble()
@@ -906,6 +936,7 @@ class _WheelPainter extends CustomPainter {
     for (var i = 0; i < state._n; i++) {
       final geo = state._tree(i);
       final v = lit[i];
+      if (state.widget.hideUnfocused && v <= 0.001) continue;
 
       for (final link in geo.links) {
         final Color litColor;

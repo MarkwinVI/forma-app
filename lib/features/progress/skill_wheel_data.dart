@@ -138,56 +138,62 @@ List<WheelFamily> buildWheelFamilies({
       goalBranchId: goalBranchId,
     );
 
-    WheelNode node(String exerciseId) {
+    WheelNodeState stateOf(String exerciseId) {
       final tree = nodeStates[exerciseId];
-      final WheelNodeState state;
-      if (tree == TreeNodeState.done) {
-        state = WheelNodeState.mastered;
-      } else if (tree == TreeNodeState.cur) {
-        state = working ? WheelNodeState.active : WheelNodeState.available;
-      } else if (tree == TreeNodeState.unlocked) {
-        state = WheelNodeState.available;
-      } else {
-        state = WheelNodeState.locked;
+      if (tree == TreeNodeState.done) return WheelNodeState.mastered;
+      if (tree == TreeNodeState.cur) {
+        return working ? WheelNodeState.active : WheelNodeState.available;
       }
-      return WheelNode(
-        exerciseId: exerciseId,
-        name: ExerciseCatalog.findById(exerciseId)?.name ?? exerciseId,
-        state: state,
-      );
+      if (tree == TreeNodeState.unlocked) return WheelNodeState.available;
+      return WheelNodeState.locked;
     }
 
-    final foundationIds = category.pathFor(category.foundationBranchId);
-    final branches = <WheelBranch>[];
-    for (final branch in category.branches) {
-      if (SkillCategory.isFoundationBranchId(branch.id)) continue;
-      final ids = category.pathFor(branch.id);
-      if (ids.length <= foundationIds.length) continue;
-      branches.add(WheelBranch(
-        id: branch.id,
-        label: branch.label,
-        steps: [
-          for (final id in ids.sublist(foundationIds.length)) node(id),
-        ],
-      ));
-    }
-    final displayOrder = _branchDisplayOrder[category.id];
-    if (displayOrder != null) {
-      branches.sort((a, b) {
-        final ia = displayOrder.indexOf(a.id), ib = displayOrder.indexOf(b.id);
-        return (ia < 0 ? displayOrder.length : ia)
-            .compareTo(ib < 0 ? displayOrder.length : ib);
-      });
-    }
-
-    final trunk = [for (final id in foundationIds) node(id)];
-    if (trunk.isEmpty && branches.isEmpty) continue;
-    families.add(WheelFamily(
-      categoryId: category.id,
-      title: category.title,
-      trunk: trunk,
-      branches: branches,
-    ));
+    final family = wheelFamilyFor(category, stateOf);
+    if (family != null) families.add(family);
   }
   return families;
+}
+
+/// One category as a wheel family — its foundation trunk and every branch
+/// tail in the wheel's display order — with each step's state supplied by
+/// [stateOf]. Null for a category with nothing to draw.
+WheelFamily? wheelFamilyFor(
+  SkillCategory category,
+  WheelNodeState Function(String exerciseId) stateOf,
+) {
+  WheelNode node(String exerciseId) => WheelNode(
+        exerciseId: exerciseId,
+        name: ExerciseCatalog.findById(exerciseId)?.name ?? exerciseId,
+        state: stateOf(exerciseId),
+      );
+
+  final foundationIds = category.pathFor(category.foundationBranchId);
+  final branches = <WheelBranch>[];
+  for (final branch in category.branches) {
+    if (SkillCategory.isFoundationBranchId(branch.id)) continue;
+    final ids = category.pathFor(branch.id);
+    if (ids.length <= foundationIds.length) continue;
+    branches.add(WheelBranch(
+      id: branch.id,
+      label: branch.label,
+      steps: [for (final id in ids.sublist(foundationIds.length)) node(id)],
+    ));
+  }
+  final displayOrder = _branchDisplayOrder[category.id];
+  if (displayOrder != null) {
+    branches.sort((a, b) {
+      final ia = displayOrder.indexOf(a.id), ib = displayOrder.indexOf(b.id);
+      return (ia < 0 ? displayOrder.length : ia)
+          .compareTo(ib < 0 ? displayOrder.length : ib);
+    });
+  }
+
+  final trunk = [for (final id in foundationIds) node(id)];
+  if (trunk.isEmpty && branches.isEmpty) return null;
+  return WheelFamily(
+    categoryId: category.id,
+    title: category.title,
+    trunk: trunk,
+    branches: branches,
+  );
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/features/home/celebration_fork.dart';
+import 'package:forma_app/features/home/celebration_tree.dart';
 
 ForkUnlockData? forkFor(String masteredId, String newId) {
   return resolveForkUnlock(
@@ -112,6 +113,6 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byType(ForkMap), findsOneWidget);
+    expect(find.byType(CelebrationTree), findsOneWidget);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/catalog/exercise_catalog.dart';
 import 'package:forma_app/features/home/celebration_new_tree.dart';
+import 'package:forma_app/features/home/celebration_tree.dart';
 
 NewTreeUnlockData? handoffFor(String masteredId, String newId) {
   return resolveNewTreeUnlock(
@@ -28,6 +29,8 @@ void main() {
       expect(data.toTitle, 'Handstand Pushups');
       expect(data.toNodeNames.length, 3);
       expect(data.toActiveIndex, 0);
+      expect(data.toRouteIds.length, 7);
+      expect(data.fromRouteIds.last, 'dips_parallel_bar_dips');
       expect(data.fromNoun, 'dip');
     });
 
@@ -75,6 +78,6 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.byType(NewTreeMap), findsOneWidget);
+    expect(find.byType(CelebrationTree), findsOneWidget);
   });
 }
