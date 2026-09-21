@@ -16,8 +16,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_scissors',
       category: ExerciseCategory.core,
       name: 'Ab Scissors',
-      description:
-          'Lie on your back with the lower back pressed flat and both legs raised a few inches off the floor.',
+      description: 'Lie on your back with the lower back pressed flat and both legs raised a few inches off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -29,8 +28,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_wheel_eccentric',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (Eccentric)',
-      description:
-          'Roll out from the knees through a longer range than you can return from, taking three to five seconds on the way out.',
+      description: 'Roll out from the knees through a longer range than you can return from, taking three to five seconds on the way out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -43,8 +41,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_wheel_kneeling',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (Kneeling)',
-      description:
-          'Kneel with the wheel under your shoulders and grip the handles.',
+      description: 'Kneel with the wheel under your shoulders and grip the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -57,8 +54,7 @@ class ExerciseLibraryCatalog {
       id: 'ab_wheel_standing',
       category: ExerciseCategory.core,
       name: 'Ab Wheel (Standing)',
-      description:
-          'Start standing with the wheel on the floor in front of your feet.',
+      description: 'Start standing with the wheel on the floor in front of your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -71,8 +67,7 @@ class ExerciseLibraryCatalog {
       id: 'aerobics',
       category: ExerciseCategory.other,
       name: 'Aerobics',
-      description:
-          'Follow a continuous routine of rhythmic, low impact movements that keeps the heart rate up for the whole session.',
+      description: 'Follow a continuous routine of rhythmic, low impact movements that keeps the heart rate up for the whole session.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -86,8 +81,7 @@ class ExerciseLibraryCatalog {
       id: 'air_bike',
       category: ExerciseCategory.other,
       name: 'Air Bike',
-      description:
-          'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
+      description: 'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -100,8 +94,7 @@ class ExerciseLibraryCatalog {
       id: 'arch_hang',
       category: ExerciseCategory.verticalPull,
       name: 'Arch Hang',
-      description:
-          'Hang from the bar and pull the shoulder blades down, then arch the chest toward the bar while looking up.',
+      description: 'Hang from the bar and pull the shoulder blades down, then arch the chest toward the bar while looking up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -109,16 +102,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isTimed: true,
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'arnold_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Arnold Press (Dumbbell)',
-      description:
-          'Start with the dumbbells in front of the shoulders, palms facing you.',
+      description: 'Start with the dumbbells in front of the shoulders, palms facing you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -127,16 +117,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'around_the_world',
       category: ExerciseCategory.other,
       name: 'Around The World',
-      description:
-          'Lie on a bench holding a light dumbbell in each hand at your hips, palms up.',
+      description: 'Lie on a bench holding a light dumbbell in each hand at your hips, palms up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -148,8 +135,7 @@ class ExerciseLibraryCatalog {
       id: 'assisted_pistol_squats',
       category: ExerciseCategory.squat,
       name: 'Assisted Pistol Squats',
-      description:
-          'Hold a doorframe or strap for light assistance and lower on one leg with the other held out in front.',
+      description: 'Hold a doorframe or strap for light assistance and lower on one leg with the other held out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -161,8 +147,7 @@ class ExerciseLibraryCatalog {
       id: 'back_extension_hyperextension',
       category: ExerciseCategory.hinge,
       name: 'Back Extension (Hyperextension)',
-      description:
-          'Set the pad just below your hip bones and hook your heels under the rollers.',
+      description: 'Set the pad just below your hip bones and hook your heels under the rollers.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -174,8 +159,7 @@ class ExerciseLibraryCatalog {
       id: 'back_extension_machine',
       category: ExerciseCategory.hinge,
       name: 'Back Extension (Machine)',
-      description:
-          'Sit in the machine with the pad across your upper back and your feet planted.',
+      description: 'Sit in the machine with the pad across your upper back and your feet planted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -189,8 +173,7 @@ class ExerciseLibraryCatalog {
       id: 'back_extension_weighted_hyperextension',
       category: ExerciseCategory.hinge,
       name: 'Back Extension (Weighted Hyperextension)',
-      description:
-          'Hold a plate against your chest or behind your head on the hyperextension bench.',
+      description: 'Hold a plate against your chest or behind your head on the hyperextension bench.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -203,8 +186,7 @@ class ExerciseLibraryCatalog {
       id: 'ball_slams',
       category: ExerciseCategory.other,
       name: 'Ball Slams',
-      description:
-          'Stand with the slam ball at your feet and lift it overhead with straight arms.',
+      description: 'Stand with the slam ball at your feet and lift it overhead with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -216,40 +198,33 @@ class ExerciseLibraryCatalog {
       id: 'band_pullaparts',
       category: ExerciseCategory.other,
       name: 'Band Pullaparts',
-      description:
-          'Hold a band with both hands, arms extended straight out in front at shoulder height.',
+      description: 'Hold a band with both hands, arms extended straight out in front at shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Shoulders'],
       secondaryMuscles: ['Traps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'bar_pullover',
       category: ExerciseCategory.verticalPull,
       name: 'Bar Pullover',
-      description:
-          'Pull hard until the bar reaches the waist, then lean the shoulders forward and rotate over the bar into a straight arm support.',
+      description: 'Pull hard until the bar reaches the waist, then lean the shoulders forward and rotate over the bar into a straight arm support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'battle_ropes',
       category: ExerciseCategory.other,
       name: 'Battle Ropes',
-      description:
-          'Anchor a heavy rope at its center and hold one end in each hand with arms at your sides.',
+      description: 'Anchor a heavy rope at its center and hold one end in each hand with arms at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -263,8 +238,7 @@ class ExerciseLibraryCatalog {
       id: 'behind_the_back_bicep_wrist_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Behind the Back Bicep Wrist Curl (Barbell)',
-      description:
-          'Stand upright holding a barbell behind your back with an overhand grip and let it hang at your fingertips.',
+      description: 'Stand upright holding a barbell behind your back with an overhand grip and let it hang at your fingertips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -273,32 +247,25 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'bench_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Bench Dip',
-      description:
-          'Sit on a bench with the hands beside the hips and the feet on the floor in front of you.',
+      description: 'Sit on a bench with the hands beside the hips and the feet on the floor in front of you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
     ),
     Exercise(
       id: 'bench_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Bench Press (Barbell)',
-      description:
-          'Lie on a flat bench and take a grip that puts the forearms vertical at the bottom.',
+      description: 'Lie on a flat bench and take a grip that puts the forearms vertical at the bottom.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -307,16 +274,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'bench_press_cable',
       category: ExerciseCategory.horizontalPush,
       name: 'Bench Press (Cable)',
-      description:
-          'Lie on a bench set between two low cable pulleys and take a handle in each hand at chest height.',
+      description: 'Lie on a bench set between two low cable pulleys and take a handle in each hand at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -330,8 +294,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Bench Press (Dumbbell)',
-      description:
-          'Lie back on a flat bench with a dumbbell in each hand at chest height, palms facing forward.',
+      description: 'Lie back on a flat bench with a dumbbell in each hand at chest height, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -340,9 +303,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'bench_press_smith_machine',
@@ -362,8 +323,7 @@ class ExerciseLibraryCatalog {
       id: 'bench_press_close_grip_barbell',
       category: ExerciseCategory.other,
       name: 'Bench Press - Close Grip (Barbell)',
-      description:
-          'Lie back on a flat bench and grip the bar at about shoulder width.',
+      description: 'Lie back on a flat bench and grip the bar at about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -372,9 +332,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'bench_press_wide_grip_barbell',
@@ -389,32 +347,26 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'bent_over_row_band',
       category: ExerciseCategory.horizontalPull,
       name: 'Bent Over Row (Band)',
-      description:
-          'Stand on the middle of the band and hinge forward with a flat back, holding one end in each hand.',
+      description: 'Stand on the middle of the band and hinge forward with a flat back, holding one end in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'bent_over_row_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Bent Over Row (Barbell)',
-      description:
-          'Hinge forward with a flat back until your torso is close to parallel and let the barbell hang at arms length.',
+      description: 'Hinge forward with a flat back until your torso is close to parallel and let the barbell hang at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -423,16 +375,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'bent_over_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Bent Over Row (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand and hinge forward at the waist, knees slightly bent, back flat until your torso is almost parallel to the floor.',
+      description: 'Hold a dumbbell in each hand and hinge forward at the waist, knees slightly bent, back flat until your torso is almost parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -441,16 +390,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'bicep_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Barbell)',
-      description:
-          'Stand tall holding the bar with an underhand shoulder-width grip and elbows pinned to the sides.',
+      description: 'Stand tall holding the bar with an underhand shoulder-width grip and elbows pinned to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -459,16 +405,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'bicep_curl_cable',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Cable)',
-      description:
-          'Stand facing a low pulley with a straight bar or handle and your elbows tucked at your sides.',
+      description: 'Stand facing a low pulley with a straight bar or handle and your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -482,8 +425,7 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Dumbbell)',
-      description:
-          'Stand upright with a dumbbell in each hand, arms at your sides and palms facing your thighs.',
+      description: 'Stand upright with a dumbbell in each hand, arms at your sides and palms facing your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -492,16 +434,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'bicep_curl_machine',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Machine)',
-      description:
-          'Sit with your upper arms flat on the pad and grip the handles with your arms nearly straight.',
+      description: 'Sit with your upper arms flat on the pad and grip the handles with your arms nearly straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -515,24 +454,20 @@ class ExerciseLibraryCatalog {
       id: 'bicep_curl_suspension',
       category: ExerciseCategory.other,
       name: 'Bicep Curl (Suspension)',
-      description:
-          'Hold the handles with palms up and walk your feet forward so your body leans back.',
+      description: 'Hold the handles with palms up and walk your feet forward so your body leans back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Biceps'],
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'bicycle_crunch',
       category: ExerciseCategory.core,
       name: 'Bicycle Crunch',
-      description:
-          'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
+      description: 'Lie on your back with hands lightly beside your head and lift your shoulders off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -544,8 +479,7 @@ class ExerciseLibraryCatalog {
       id: 'bicycle_crunch_raised_legs',
       category: ExerciseCategory.core,
       name: 'Bicycle Crunch Raised Legs',
-      description:
-          'Lie on your back with both legs raised and bent at ninety degrees and your hands light beside your head.',
+      description: 'Lie on your back with both legs raised and bent at ninety degrees and your hands light beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -581,8 +515,7 @@ class ExerciseLibraryCatalog {
       id: 'box_squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Box Squat (Barbell)',
-      description:
-          'Set a flat bench or box behind you and unrack a barbell across your upper back.',
+      description: 'Set a flat bench or box behind you and unrack a barbell across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -591,16 +524,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'boxing',
       category: ExerciseCategory.other,
       name: 'Boxing',
-      description:
-          'Work rounds on a bag or on pads, throwing combinations while keeping your hands up and your feet moving.',
+      description: 'Work rounds on a bag or on pads, throwing combinations while keeping your hands up and your feet moving.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -614,8 +544,7 @@ class ExerciseLibraryCatalog {
       id: 'bulgarian_split_squat',
       category: ExerciseCategory.squat,
       name: 'Bulgarian Split Squat',
-      description:
-          'Stand a stride in front of a bench and rest the top of the rear foot on it.',
+      description: 'Stand a stride in front of a bench and rest the top of the rear foot on it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -627,8 +556,7 @@ class ExerciseLibraryCatalog {
       id: 'burpee',
       category: ExerciseCategory.other,
       name: 'Burpee',
-      description:
-          'From standing, drop your hands to the floor and shoot your feet back into a push up position, then lower your chest to the ground.',
+      description: 'From standing, drop your hands to the floor and shoot your feet back into a push up position, then lower your chest to the ground.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -640,8 +568,7 @@ class ExerciseLibraryCatalog {
       id: 'burpee_over_the_bar',
       category: ExerciseCategory.other,
       name: 'Burpee Over the Bar',
-      description:
-          'Perform a burpee beside a loaded barbell, dropping your chest to the floor.',
+      description: 'Perform a burpee beside a loaded barbell, dropping your chest to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -653,8 +580,7 @@ class ExerciseLibraryCatalog {
       id: 'butterfly_pec_deck',
       category: ExerciseCategory.other,
       name: 'Butterfly (Pec Deck)',
-      description:
-          'Sit in the pec deck with your back flat against the pad and your forearms or hands on the pads at chest height.',
+      description: 'Sit in the pec deck with your back flat against the pad and your forearms or hands on the pads at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -666,8 +592,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_core_palloff_press',
       category: ExerciseCategory.core,
       name: 'Cable Core Palloff Press',
-      description:
-          'Stand side on to a cable set at chest height and hold the handle at your sternum with both hands.',
+      description: 'Stand side on to a cable set at chest height and hold the handle at your sternum with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -695,8 +620,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_fly_crossovers',
       category: ExerciseCategory.other,
       name: 'Cable Fly Crossovers',
-      description:
-          'Stand between two high pulleys with a handle in each hand and one foot forward.',
+      description: 'Stand between two high pulleys with a handle in each hand and one foot forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -710,8 +634,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_pull_through',
       category: ExerciseCategory.hinge,
       name: 'Cable Pull Through',
-      description:
-          'Face away from a low pulley with the rope passed between your legs and take a step forward.',
+      description: 'Face away from a low pulley with the rope passed between your legs and take a step forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -725,8 +648,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_twist_down_to_up',
       category: ExerciseCategory.core,
       name: 'Cable Twist (Down to up)',
-      description:
-          'Set the cable low and stand side on holding the handle with both hands near your outside hip.',
+      description: 'Set the cable low and stand side on holding the handle with both hands near your outside hip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -740,8 +662,7 @@ class ExerciseLibraryCatalog {
       id: 'cable_twist_up_to_down',
       category: ExerciseCategory.core,
       name: 'Cable Twist (Up to down)',
-      description:
-          'Set the cable high and stand side on holding the handle with both hands above one shoulder.',
+      description: 'Set the cable high and stand side on holding the handle with both hands above one shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -755,8 +676,7 @@ class ExerciseLibraryCatalog {
       id: 'calf_extension_machine',
       category: ExerciseCategory.other,
       name: 'Calf Extension (Machine)',
-      description:
-          'Position the balls of your feet on the platform with the pad on your shoulders or thighs.',
+      description: 'Position the balls of your feet on the platform with the pad on your shoulders or thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -769,8 +689,7 @@ class ExerciseLibraryCatalog {
       id: 'calf_press_machine',
       category: ExerciseCategory.other,
       name: 'Calf Press (Machine)',
-      description:
-          'Sit in the leg press and place just the balls of your feet on the lower edge of the platform, heels off.',
+      description: 'Sit in the leg press and place just the balls of your feet on the lower edge of the platform, heels off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -783,49 +702,40 @@ class ExerciseLibraryCatalog {
       id: 'chest_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Chest Dip',
-      description:
-          'Support yourself on parallel bars with straight arms and a tall chest.',
+      description: 'Support yourself on parallel bars with straight arms and a tall chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars})],
     ),
     Exercise(
       id: 'chest_dip_assisted',
       category: ExerciseCategory.verticalPush,
       name: 'Chest Dip (Assisted)',
-      description:
-          'Kneel on the assist pad or loop a band under your knees on the parallel bars and lean your chest forward.',
+      description: 'Kneel on the assist pad or loop a band under your knees on the parallel bars and lean your chest forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars})],
     ),
     Exercise(
       id: 'chest_dip_eccentric',
       category: ExerciseCategory.verticalPush,
       name: 'Chest Dip (Eccentric)',
-      description:
-          'Jump or step to the top of the parallel bars with straight arms.',
+      description: 'Jump or step to the top of the parallel bars with straight arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars})],
     ),
     Exercise(
       id: 'chest_dip_weighted',
@@ -839,33 +749,26 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars}),
-        EquipmentNeed({EquipmentItem.weightVest})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars}), EquipmentNeed({EquipmentItem.weightVest})],
     ),
     Exercise(
       id: 'chest_fly_band',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Band)',
-      description:
-          'Anchor the band behind you at chest height and hold one end in each hand with the arms out wide.',
+      description: 'Anchor the band behind you at chest height and hold one end in each hand with the arms out wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Shoulders', 'Biceps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'chest_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Dumbbell)',
-      description:
-          'Lie on a flat bench holding a dumbbell in each hand above your chest with a soft elbow bend.',
+      description: 'Lie on a flat bench holding a dumbbell in each hand above your chest with a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -874,16 +777,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'chest_fly_machine',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Machine)',
-      description:
-          'Sit with your back flat against the pad and grip the handles with your arms out to the sides and elbows slightly bent.',
+      description: 'Sit with your back flat against the pad and grip the handles with your arms out to the sides and elbows slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -897,40 +797,33 @@ class ExerciseLibraryCatalog {
       id: 'chest_fly_suspension',
       category: ExerciseCategory.other,
       name: 'Chest Fly (Suspension)',
-      description:
-          'Hold a handle in each hand and lean forward with your body straight and arms in front of your chest.',
+      description: 'Hold a handle in each hand and lean forward with your body straight and arms in front of your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Shoulders', 'Biceps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'chest_press_band',
       category: ExerciseCategory.horizontalPush,
       name: 'Chest Press (Band)',
-      description:
-          'Anchor the band behind you at chest height and hold an end in each hand beside your chest.',
+      description: 'Anchor the band behind you at chest height and hold an end in each hand beside your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'chest_press_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Chest Press (Machine)',
-      description:
-          'Sit with your back flat on the pad and the handles level with the middle of your chest.',
+      description: 'Sit with your back flat on the pad and the handles level with the middle of your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -944,8 +837,7 @@ class ExerciseLibraryCatalog {
       id: 'chest_supported_incline_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Chest Supported Incline Row (Dumbbell)',
-      description:
-          'Set an incline bench and lie chest-down against it with a dumbbell in each hand, neutral grip, arms hanging straight.',
+      description: 'Set an incline bench and lie chest-down against it with a dumbbell in each hand, neutral grip, arms hanging straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -954,16 +846,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'chest_supported_reverse_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Chest Supported Reverse Fly (Dumbbell)',
-      description:
-          'Lie chest down on an incline bench with a dumbbell in each hand hanging below you.',
+      description: 'Lie chest down on an incline bench with a dumbbell in each hand hanging below you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -972,16 +861,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'chest_supported_y_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Chest Supported Y Raise (Dumbbell)',
-      description:
-          'Lie chest down on an incline bench with light dumbbells hanging below you and thumbs pointing up.',
+      description: 'Lie chest down on an incline bench with light dumbbells hanging below you and thumbs pointing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -990,73 +876,59 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'chin_up',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up',
-      description:
-          'Hang from the bar with an underhand grip about shoulder width and your shoulder blades pulled down.',
+      description: 'Hang from the bar with an underhand grip about shoulder width and your shoulder blades pulled down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'chin_up_assisted',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (Assisted)',
-      description:
-          'Set the assist machine or loop a band under your knee and take an underhand grip on the bar.',
+      description: 'Set the assist machine or loop a band under your knee and take an underhand grip on the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'chin_up_one_arm',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (One Arm)',
-      description:
-          'Hang from one hand with a supinated grip and pull until the chin clears the bar.',
+      description: 'Hang from one hand with a supinated grip and pull until the chin clears the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'chin_up_one_arm_half_range',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (One Arm, Half Range)',
-      description:
-          'Grip the bar with one hand in a supinated grip and pull through the top half of the range only.',
+      description: 'Grip the bar with one hand in a supinated grip and pull through the top half of the range only.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'chin_up_one_arm_towel_assisted',
@@ -1069,16 +941,13 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'chin_up_weighted',
       category: ExerciseCategory.verticalPull,
       name: 'Chin Up (Weighted)',
-      description:
-          'Add load with a dip belt or a weight vest and hang from the bar with an underhand grip.',
+      description: 'Add load with a dip belt or a weight vest and hang from the bar with an underhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1086,17 +955,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar}),
-        EquipmentNeed({EquipmentItem.weightVest})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar}), EquipmentNeed({EquipmentItem.weightVest})],
     ),
     Exercise(
       id: 'clamshell',
       category: ExerciseCategory.other,
       name: 'Clamshell',
-      description:
-          'Lie on your side with your knees bent and stacked and your heels in line with your spine.',
+      description: 'Lie on your side with your knees bent and stacked and your heels in line with your spine.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1108,8 +973,7 @@ class ExerciseLibraryCatalog {
       id: 'clap_push_ups',
       category: ExerciseCategory.horizontalPush,
       name: 'Clap Push Ups',
-      description:
-          'Set up in a push up position and lower your chest to just above the floor.',
+      description: 'Set up in a push up position and lower your chest to just above the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1121,57 +985,37 @@ class ExerciseLibraryCatalog {
       id: 'clean',
       category: ExerciseCategory.other,
       name: 'Clean',
-      description:
-          'Set up over a barbell with an overhand grip just outside your legs, hips down, back flat and chest up.',
+      description: 'Set up over a barbell with an overhand grip just outside your legs, hips down, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell}),
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell}), EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'clean_and_jerk',
       category: ExerciseCategory.other,
       name: 'Clean and Jerk',
-      description:
-          'Clean the bar to the shoulders, then dip slightly and drive it overhead with the legs, splitting or squatting under to catch it locked out.',
+      description: 'Clean the bar to the shoulders, then dip slightly and drive it overhead with the legs, splitting or squatting under to catch it locked out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'clean_and_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Clean and Press',
-      description:
-          'Set up over a barbell with a overhand grip slightly wider than shoulder width, hips down and back flat.',
+      description: 'Set up over a barbell with a overhand grip slightly wider than shoulder width, hips down and back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1180,40 +1024,28 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'clean_pull',
       category: ExerciseCategory.other,
       name: 'Clean Pull',
-      description:
-          'Set up over a barbell with an overhand or hook grip just outside your legs, hips down, back flat and chest up.',
+      description: 'Set up over a barbell with an overhand or hook grip just outside your legs, hips down, back flat and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'climbing',
       category: ExerciseCategory.other,
       name: 'Climbing',
-      description:
-          'Work up a climbing wall or route at a pace that keeps you moving continuously.',
+      description: 'Work up a climbing wall or route at a pace that keeps you moving continuously.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1227,8 +1059,7 @@ class ExerciseLibraryCatalog {
       id: 'concentration_curl',
       category: ExerciseCategory.other,
       name: 'Concentration Curl',
-      description:
-          'Sit on a bench with your legs apart and brace the back of your upper arm against the inside of your thigh.',
+      description: 'Sit on a bench with your legs apart and brace the back of your upper arm against the inside of your thigh.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1240,8 +1071,7 @@ class ExerciseLibraryCatalog {
       id: 'cross_body_hammer_curl',
       category: ExerciseCategory.other,
       name: 'Cross Body Hammer Curl',
-      description:
-          'Stand tall with a dumbbell in each hand and palms facing in.',
+      description: 'Stand tall with a dumbbell in each hand and palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1250,16 +1080,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'crunch',
       category: ExerciseCategory.core,
       name: 'Crunch',
-      description:
-          'Lie on your back with your knees bent and your hands light beside your head.',
+      description: 'Lie on your back with your knees bent and your hands light beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1271,8 +1098,7 @@ class ExerciseLibraryCatalog {
       id: 'crunch_machine',
       category: ExerciseCategory.core,
       name: 'Crunch (Machine)',
-      description:
-          'Sit in the ab machine with the pad across your chest and your feet hooked in place.',
+      description: 'Sit in the ab machine with the pad across your chest and your feet hooked in place.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1286,8 +1112,7 @@ class ExerciseLibraryCatalog {
       id: 'crunch_weighted',
       category: ExerciseCategory.core,
       name: 'Crunch (Weighted)',
-      description:
-          'Lie on your back with your knees bent and hold a plate or dumbbell against your chest or overhead.',
+      description: 'Lie on your back with your knees bent and hold a plate or dumbbell against your chest or overhead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1300,8 +1125,7 @@ class ExerciseLibraryCatalog {
       id: 'curtsy_lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Curtsy Lunge (Dumbbell)',
-      description:
-          'Stand holding dumbbells at your sides and step one leg back and across behind the other, like a curtsy.',
+      description: 'Stand holding dumbbells at your sides and step one leg back and across behind the other, like a curtsy.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1310,16 +1134,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'cycling',
       category: ExerciseCategory.other,
       name: 'Cycling',
-      description:
-          'Ride at a steady effort you can hold for the whole session, adjusting resistance or terrain to keep the heart rate in range.',
+      description: 'Ride at a steady effort you can hold for the whole session, adjusting resistance or terrain to keep the heart rate in range.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1333,8 +1154,7 @@ class ExerciseLibraryCatalog {
       id: 'dead_bug',
       category: ExerciseCategory.core,
       name: 'Dead Bug',
-      description:
-          'Lie on your back with arms reaching toward the ceiling and knees bent over your hips at 90 degrees.',
+      description: 'Lie on your back with arms reaching toward the ceiling and knees bent over your hips at 90 degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1346,8 +1166,7 @@ class ExerciseLibraryCatalog {
       id: 'dead_hang',
       category: ExerciseCategory.horizontalPull,
       name: 'Dead Hang',
-      description:
-          'Grip the bar with both hands about shoulder width and let your body hang with the arms straight.',
+      description: 'Grip the bar with both hands about shoulder width and let your body hang with the arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1355,32 +1174,26 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isTimed: true,
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'deadlift_band',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Band)',
-      description:
-          'Stand on the middle of the band with feet hip width and hold one end in each hand.',
+      description: 'Stand on the middle of the band with feet hip width and hold one end in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Glutes'],
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'deadlift_barbell',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Barbell)',
-      description:
-          'Set the bar over the mid-foot, hip-width stance, and grip just outside the knees.',
+      description: 'Set the bar over the mid-foot, hip-width stance, and grip just outside the knees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1389,16 +1202,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'deadlift_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand in front of your thighs with your feet hip width.',
+      description: 'Hold a dumbbell in each hand in front of your thighs with your feet hip width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1407,16 +1217,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'deadlift_smith_machine',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Smith Machine)',
-      description:
-          'Set the bar low in the Smith machine and stand with it over the middle of your feet.',
+      description: 'Set the bar low in the Smith machine and stand with it over the middle of your feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1430,8 +1237,7 @@ class ExerciseLibraryCatalog {
       id: 'deadlift_trap_bar',
       category: ExerciseCategory.hinge,
       name: 'Deadlift (Trap bar)',
-      description:
-          'Stand in the center of a loaded trap bar and grip both handles.',
+      description: 'Stand in the center of a loaded trap bar and grip both handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1440,16 +1246,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'deadlift_high_pull',
       category: ExerciseCategory.other,
       name: 'Deadlift High Pull',
-      description:
-          'Deadlift the bar from the floor and, as it passes the thighs, extend hard and pull it up to chest height with the elbows driving high and outside.',
+      description: 'Deadlift the bar from the floor and, as it passes the thighs, extend hard and pull it up to chest height with the elbows driving high and outside.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1460,8 +1263,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_bench_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Bench Press (Barbell)',
-      description:
-          'On a decline bench with feet secured, unrack and hold the bar over the lower chest.',
+      description: 'On a decline bench with feet secured, unrack and hold the bar over the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1470,16 +1272,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'decline_bench_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Bench Press (Dumbbell)',
-      description:
-          'Lie on a decline bench with your legs hooked and a dumbbell in each hand at chest height.',
+      description: 'Lie on a decline bench with your legs hooked and a dumbbell in each hand at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1488,9 +1287,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'decline_bench_press_machine',
@@ -1510,8 +1307,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_bench_press_smith_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Bench Press (Smith Machine)',
-      description:
-          'Set a decline bench in a Smith machine and lie back so the bar sits over your lower chest.',
+      description: 'Set a decline bench in a Smith machine and lie back so the bar sits over your lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1525,8 +1321,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_chest_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Decline Chest Fly (Dumbbell)',
-      description:
-          'Lie on a decline bench holding dumbbells above your chest with a soft elbow bend.',
+      description: 'Lie on a decline bench holding dumbbells above your chest with a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1535,16 +1330,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'decline_crunch',
       category: ExerciseCategory.core,
       name: 'Decline Crunch',
-      description:
-          'Hook your legs at the top of a decline bench and lie back with your hands beside your head, elbows in.',
+      description: 'Hook your legs at the top of a decline bench and lie back with your hands beside your head, elbows in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1556,8 +1348,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_crunch_weighted',
       category: ExerciseCategory.core,
       name: 'Decline Crunch (Weighted)',
-      description:
-          'Hook your legs at the top of a decline bench and hold a plate against your chest.',
+      description: 'Hook your legs at the top of a decline bench and hold a plate against your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1570,8 +1361,7 @@ class ExerciseLibraryCatalog {
       id: 'decline_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Decline Push Up',
-      description:
-          'Place the feet on a box or bench with the hands on the floor.',
+      description: 'Place the feet on a box or bench with the hands on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1583,8 +1373,7 @@ class ExerciseLibraryCatalog {
       id: 'diamond_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Diamond Push Up',
-      description:
-          'Place the hands together under the chest so the thumbs and index fingers form a triangle.',
+      description: 'Place the hands together under the chest so the thumbs and index fingers form a triangle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1596,8 +1385,7 @@ class ExerciseLibraryCatalog {
       id: 'downward_dog',
       category: ExerciseCategory.other,
       name: 'Downward Dog',
-      description:
-          'From hands and knees, tuck the toes and lift the hips up and back so your body makes an inverted V.',
+      description: 'From hands and knees, tuck the toes and lift the hips up and back so your body makes an inverted V.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1609,8 +1397,7 @@ class ExerciseLibraryCatalog {
       id: 'drag_curl',
       category: ExerciseCategory.other,
       name: 'Drag Curl',
-      description:
-          'Hold a barbell with a palms-up grip and elbows drawn back behind your torso.',
+      description: 'Hold a barbell with a palms-up grip and elbows drawn back behind your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1619,9 +1406,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'dragon_flag',
@@ -1639,8 +1424,7 @@ class ExerciseLibraryCatalog {
       id: 'dragonfly',
       category: ExerciseCategory.core,
       name: 'Dragonfly',
-      description:
-          'Lie on a bench holding behind your head and raise your body until it is nearly vertical on your shoulders.',
+      description: 'Lie on a bench holding behind your head and raise your body until it is nearly vertical on your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1652,8 +1436,7 @@ class ExerciseLibraryCatalog {
       id: 'dumbbell_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Dumbbell Row',
-      description:
-          'Hold a dumbbell in each hand and hinge forward at the hips with your knees slightly bent and back flat.',
+      description: 'Hold a dumbbell in each hand and hinge forward at the hips with your knees slightly bent and back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1662,40 +1445,28 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'dumbbell_snatch',
       category: ExerciseCategory.other,
       name: 'Dumbbell Snatch',
-      description:
-          'Set a dumbbell on the floor between your feet and hinge down to grip it.',
+      description: 'Set a dumbbell on the floor between your feet and hinge down to grip it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'dumbbell_squeeze_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Dumbbell Squeeze Press',
-      description:
-          'Lie on a bench holding two dumbbells pressed hard together over your chest, palms facing each other.',
+      description: 'Lie on a bench holding two dumbbells pressed hard together over your chest, palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1704,16 +1475,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'dumbbell_step_up',
       category: ExerciseCategory.squat,
       name: 'Dumbbell Step Up',
-      description:
-          'Hold a dumbbell in each hand and place one whole foot on a box at about knee height.',
+      description: 'Hold a dumbbell in each hand and place one whole foot on a box at about knee height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1722,16 +1490,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'elbow_to_knee',
       category: ExerciseCategory.core,
       name: 'Elbow to Knee',
-      description:
-          'Lie on your back and cross one ankle over the opposite bent knee, hands behind your head.',
+      description: 'Lie on your back and cross one ankle over the opposite bent knee, hands behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1757,8 +1522,7 @@ class ExerciseLibraryCatalog {
       id: 'ez_bar_biceps_curl',
       category: ExerciseCategory.other,
       name: 'EZ Bar Biceps Curl',
-      description:
-          'Stand tall holding an EZ bar at the wide outer handles with palms facing forward and elbows close to your torso.',
+      description: 'Stand tall holding an EZ bar at the wide outer handles with palms facing forward and elbows close to your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1767,16 +1531,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'face_pull',
       category: ExerciseCategory.horizontalPull,
       name: 'Face Pull',
-      description:
-          'Set a rope on a high pulley and grab both ends with palms facing in.',
+      description: 'Set a rope on a high pulley and grab both ends with palms facing in.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1790,8 +1551,7 @@ class ExerciseLibraryCatalog {
       id: 'farmers_walk',
       category: ExerciseCategory.other,
       name: 'Farmers Walk',
-      description:
-          'Pick up a heavy dumbbell or kettlebell in each hand with a flat back and stand tall.',
+      description: 'Pick up a heavy dumbbell or kettlebell in each hand with a flat back and stand tall.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1816,8 +1576,7 @@ class ExerciseLibraryCatalog {
       id: 'floor_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Floor Press (Barbell)',
-      description:
-          'Lie on the floor under a barbell with your knees bent and unrack it over your chest.',
+      description: 'Lie on the floor under a barbell with your knees bent and unrack it over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1826,16 +1585,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'floor_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Floor Press (Dumbbell)',
-      description:
-          'Lie on the floor with a dumbbell in each hand at chest height and knees bent.',
+      description: 'Lie on the floor with a dumbbell in each hand at chest height and knees bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1844,32 +1600,26 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'floor_triceps_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Floor Triceps Dip',
-      description:
-          'Sit on the floor with your knees bent and your hands beside your hips, fingers pointing forward.',
+      description: 'Sit on the floor with your knees bent and your hands beside your hips, fingers pointing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars})],
     ),
     Exercise(
       id: 'flutter_kicks',
       category: ExerciseCategory.core,
       name: 'Flutter Kicks',
-      description:
-          'Lie facedown on a bench with your hips at the edge and hold the front for support.',
+      description: 'Lie facedown on a bench with your hips at the edge and hold the front for support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1893,8 +1643,7 @@ class ExerciseLibraryCatalog {
       id: 'frog_pumps_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Frog Pumps (Dumbbell)',
-      description:
-          'Lie on your back with the soles of your feet together and knees dropped out to the sides, holding a dumbbell on your hips.',
+      description: 'Lie on your back with the soles of your feet together and knees dropped out to the sides, holding a dumbbell on your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1903,32 +1652,26 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'front_lever_hold',
       category: ExerciseCategory.other,
       name: 'Front Lever Hold',
-      description:
-          'Hang from the bar and pull your shoulders down and back, then raise your body until it is horizontal and facing up.',
+      description: 'Hang from the bar and pull your shoulders down and back, then raise your body until it is horizontal and facing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
       isTimed: true,
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_hold_tuck',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Hold (Tuck)',
-      description:
-          'Hang from a bar and pull the knees to the chest while rotating back so the back faces the floor and the shins point forward.',
+      description: 'Hang from a bar and pull the knees to the chest while rotating back so the back faces the floor and the shins point forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -1936,127 +1679,103 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isTimed: true,
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_raise',
       category: ExerciseCategory.other,
       name: 'Front Lever Raise',
-      description:
-          'From a hang, pull your shoulders down and lift your straight body up to horizontal, then lower it back to the hang under control.',
+      description: 'From a hang, pull your shoulders down and lift your straight body up to horizontal, then lower it back to the hang under control.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row',
-      description:
-          'Hold a full front lever with straight legs together and pull the chest to the bar.',
+      description: 'Hold a full front lever with straight legs together and pull the chest to the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_row_advanced_tuck',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (Advanced Tuck)',
-      description:
-          'Row while holding an advanced tuck front lever with the knees opened away from the chest and the hips high.',
+      description: 'Row while holding an advanced tuck front lever with the knees opened away from the chest and the hips high.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_row_one_leg',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (One Leg)',
-      description:
-          'Row from a front lever with one leg extended and the other tucked.',
+      description: 'Row from a front lever with one leg extended and the other tucked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_row_straddle',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (Straddle)',
-      description:
-          'Hold a straddle front lever with the legs wide and row the chest toward the bar.',
+      description: 'Hold a straddle front lever with the legs wide and row the chest toward the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_lever_row_tuck',
       category: ExerciseCategory.horizontalPull,
       name: 'Front Lever Row (Tuck)',
-      description:
-          'Hold a tuck front lever and pull the chest toward the bar while keeping the knees tucked and the back flat.',
+      description: 'Hold a tuck front lever and pull the chest toward the bar while keeping the knees tucked and the back flat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_raise_band',
       category: ExerciseCategory.other,
       name: 'Front Raise (Band)',
-      description:
-          'Stand on the middle of the band holding an end in each hand in front of your thighs.',
+      description: 'Stand on the middle of the band holding an end in each hand in front of your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Shoulders'],
       secondaryMuscles: ['Traps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'front_raise_barbell',
       category: ExerciseCategory.other,
       name: 'Front Raise (Barbell)',
-      description:
-          'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
+      description: 'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2065,16 +1784,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'front_raise_cable',
       category: ExerciseCategory.other,
       name: 'Front Raise (Cable)',
-      description:
-          'Face away from a low pulley gripping the single handle with one hand, arm hanging straight in front of your thigh.',
+      description: 'Face away from a low pulley gripping the single handle with one hand, arm hanging straight in front of your thigh.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2088,8 +1804,7 @@ class ExerciseLibraryCatalog {
       id: 'front_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Front Raise (Dumbbell)',
-      description:
-          'Sit against an incline bench set to 30 to 60 degrees, holding a dumbbell in each hand with arms straight down and palms facing back.',
+      description: 'Sit against an incline bench set to 30 to 60 degrees, holding a dumbbell in each hand with arms straight down and palms facing back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2098,32 +1813,26 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'front_raise_suspension',
       category: ExerciseCategory.other,
       name: 'Front Raise (Suspension)',
-      description:
-          'Hold the handles and lean back with your arms in front of you and your body straight.',
+      description: 'Hold the handles and lean back with your arms in front of you and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Shoulders'],
       secondaryMuscles: ['Traps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'front_squat',
       category: ExerciseCategory.squat,
       name: 'Front Squat',
-      description:
-          'Rack the bar across the front of the shoulders with the elbows high, take a shoulder-width stance and brace.',
+      description: 'Rack the bar across the front of the shoulders with the elbows high, take a shoulder-width stance and brace.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2132,16 +1841,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'full_squat',
       category: ExerciseCategory.squat,
       name: 'Full Squat',
-      description:
-          'Stand with feet a little wider than your hips and toes turned slightly out.',
+      description: 'Stand with feet a little wider than your hips and toes turned slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2153,8 +1859,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_bridge',
       category: ExerciseCategory.hinge,
       name: 'Glute Bridge',
-      description:
-          'Lie on your back with knees bent and feet flat, heels close to your hips.',
+      description: 'Lie on your back with knees bent and feet flat, heels close to your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2166,8 +1871,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_ham_raise',
       category: ExerciseCategory.hinge,
       name: 'Glute Ham Raise',
-      description:
-          'Set your feet against the footplate between the rollers and lie facedown with your knees just behind the pad.',
+      description: 'Set your feet against the footplate between the rollers and lie facedown with your knees just behind the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2181,8 +1885,7 @@ class ExerciseLibraryCatalog {
       id: 'glute_kickback_machine',
       category: ExerciseCategory.other,
       name: 'Glute Kickback (Machine)',
-      description:
-          'Set the pad against the back of one thigh and hold the handles with your torso upright.',
+      description: 'Set the pad against the back of one thigh and hold the handles with your torso upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2208,8 +1911,7 @@ class ExerciseLibraryCatalog {
       id: 'goblet_squat',
       category: ExerciseCategory.squat,
       name: 'Goblet Squat',
-      description:
-          'Hold a dumbbell or kettlebell vertically against the chest.',
+      description: 'Hold a dumbbell or kettlebell vertically against the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2217,16 +1919,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'good_morning_barbell',
       category: ExerciseCategory.hinge,
       name: 'Good Morning (Barbell)',
-      description:
-          'Set a light bar across your upper back and stand with feet hip width and knees slightly bent.',
+      description: 'Set a light bar across your upper back and stand with feet hip width and knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2235,16 +1934,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'gorilla_row_kettlebell',
       category: ExerciseCategory.horizontalPull,
       name: 'Gorilla Row (Kettlebell)',
-      description:
-          'Stand over two kettlebells with a wide stance and hinge down with a flat back to grip both.',
+      description: 'Stand over two kettlebells with a wide stance and hinge down with a flat back to grip both.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2252,16 +1948,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'hack_squat',
       category: ExerciseCategory.squat,
       name: 'Hack Squat',
-      description:
-          'Set your shoulders and back against the pad with feet shoulder-width on the platform.',
+      description: 'Set your shoulders and back against the pad with feet shoulder-width on the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2270,17 +1963,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell}),
-        EquipmentNeed.gym
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell}), EquipmentNeed.gym],
     ),
     Exercise(
       id: 'hack_squat_machine',
       category: ExerciseCategory.squat,
       name: 'Hack Squat (Machine)',
-      description:
-          'Set your shoulders under the pads with your feet mid platform and release the safeties.',
+      description: 'Set your shoulders under the pads with your feet mid platform and release the safeties.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2294,24 +1983,20 @@ class ExerciseLibraryCatalog {
       id: 'hammer_curl_band',
       category: ExerciseCategory.other,
       name: 'Hammer Curl (Band)',
-      description:
-          'Stand on the band holding an end in each hand with palms facing each other.',
+      description: 'Stand on the band holding an end in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Biceps'],
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'hammer_curl_cable',
       category: ExerciseCategory.other,
       name: 'Hammer Curl (Cable)',
-      description:
-          'Attach a rope to a low pulley and hold one end in each hand with palms facing each other.',
+      description: 'Attach a rope to a low pulley and hold one end in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2325,8 +2010,7 @@ class ExerciseLibraryCatalog {
       id: 'hammer_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Hammer Curl (Dumbbell)',
-      description:
-          'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
+      description: 'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2335,16 +2019,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'handstand_hold',
       category: ExerciseCategory.other,
       name: 'Handstand Hold',
-      description:
-          'Kick or press up into a handstand against a wall with your hands about shoulder width.',
+      description: 'Kick or press up into a handstand against a wall with your hands about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2357,8 +2038,7 @@ class ExerciseLibraryCatalog {
       id: 'handstand_push_up',
       category: ExerciseCategory.verticalPush,
       name: 'Handstand Push Up',
-      description:
-          'Kick up to a wall handstand with the hands on parallettes or blocks.',
+      description: 'Kick up to a wall handstand with the hands on parallettes or blocks.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2370,8 +2050,7 @@ class ExerciseLibraryCatalog {
       id: 'handstand_push_up_freestanding',
       category: ExerciseCategory.verticalPush,
       name: 'Handstand Push-Up (Freestanding)',
-      description:
-          'Hold a freestanding handstand, lower to full depth, and press back to straight arms with no wall support.',
+      description: 'Hold a freestanding handstand, lower to full depth, and press back to straight arms with no wall support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2383,56 +2062,37 @@ class ExerciseLibraryCatalog {
       id: 'hang_clean',
       category: ExerciseCategory.other,
       name: 'Hang Clean',
-      description:
-          'Hold the bar at mid-thigh with a shoulder-width overhand or hook grip, back flat and torso leaning slightly forward.',
+      description: 'Hold the bar at mid-thigh with a shoulder-width overhand or hook grip, back flat and torso leaning slightly forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'hang_snatch',
       category: ExerciseCategory.other,
       name: 'Hang Snatch',
-      description:
-          'Take a wide overhand or hook grip with the bar at the hips, feet under the hips and turned out, spine extended and chest up.',
+      description: 'Take a wide overhand or hook grip with the bar at the hips, feet under the hips and turned out, spine extended and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'hanging_bent_leg_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Bent-Leg Raise',
-      description:
-          'From a hang, straighten the legs a little and lift the thighs above hip height.',
+      description: 'From a hang, straighten the legs a little and lift the thighs above hip height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2444,8 +2104,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_knee_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Knee Raise',
-      description:
-          'Hang from a bar with straight arms and pull the shoulders down away from the ears.',
+      description: 'Hang from a bar with straight arms and pull the shoulders down away from the ears.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2457,8 +2116,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_leg_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Leg Raise',
-      description:
-          'Hang from the bar with straight arms and the shoulders pulled down.',
+      description: 'Hang from the bar with straight arms and the shoulders pulled down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2470,8 +2128,7 @@ class ExerciseLibraryCatalog {
       id: 'hanging_straight_leg_raise',
       category: ExerciseCategory.core,
       name: 'Hanging Straight-Leg Raise',
-      description:
-          'Hang with straight legs together and lift them until they are at least parallel to the floor.',
+      description: 'Hang with straight legs together and lift them until they are at least parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2483,8 +2140,7 @@ class ExerciseLibraryCatalog {
       id: 'headstand_push_up_freestanding',
       category: ExerciseCategory.verticalPush,
       name: 'Headstand Push-Up (Freestanding)',
-      description:
-          'Kick up to a freestanding handstand and lower under control until the head touches the floor.',
+      description: 'Kick up to a freestanding handstand and lower under control until the head touches the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2496,8 +2152,7 @@ class ExerciseLibraryCatalog {
       id: 'headstand_push_up_wall',
       category: ExerciseCategory.verticalPush,
       name: 'Headstand Push-Up (Wall)',
-      description:
-          'Set up in a wall handstand and lower until the head touches the floor between the hands.',
+      description: 'Set up in a wall handstand and lower until the head touches the floor between the hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2521,8 +2176,7 @@ class ExerciseLibraryCatalog {
       id: 'heel_taps',
       category: ExerciseCategory.core,
       name: 'Heel Taps',
-      description:
-          'Lie on your back with knees bent, feet flat and shoulder-width apart, and arms extended at your sides.',
+      description: 'Lie on your back with knees bent, feet flat and shoulder-width apart, and arms extended at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2534,8 +2188,7 @@ class ExerciseLibraryCatalog {
       id: 'hex_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Hex Press (Dumbbell)',
-      description:
-          'Lie on a bench holding two hexagonal dumbbells pressed together over your chest.',
+      description: 'Lie on a bench holding two hexagonal dumbbells pressed together over your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2544,16 +2197,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'high_knee_skips',
       category: ExerciseCategory.other,
       name: 'High Knee Skips',
-      description:
-          'Skip forward driving one knee up to hip height while the opposite arm swings up.',
+      description: 'Skip forward driving one knee up to hip height while the opposite arm swings up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2565,8 +2215,7 @@ class ExerciseLibraryCatalog {
       id: 'high_knees',
       category: ExerciseCategory.other,
       name: 'High Knees',
-      description:
-          'Run on the spot bringing each knee up to hip height as fast as you can.',
+      description: 'Run on the spot bringing each knee up to hip height as fast as you can.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2578,8 +2227,7 @@ class ExerciseLibraryCatalog {
       id: 'hiit',
       category: ExerciseCategory.other,
       name: 'HIIT',
-      description:
-          'Alternate hard intervals with easy recovery periods on any cardio machine or with bodyweight moves.',
+      description: 'Alternate hard intervals with easy recovery periods on any cardio machine or with bodyweight moves.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2593,8 +2241,7 @@ class ExerciseLibraryCatalog {
       id: 'hiking',
       category: ExerciseCategory.other,
       name: 'Hiking',
-      description:
-          'Walk a route with varied terrain and elevation at a pace you can hold for the whole session.',
+      description: 'Walk a route with varied terrain and elevation at a pace you can hold for the whole session.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2608,8 +2255,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_abduction_machine',
       category: ExerciseCategory.other,
       name: 'Hip Abduction (Machine)',
-      description:
-          'Sit in the machine with the pads against the outside of your knees and your back flat on the seat.',
+      description: 'Sit in the machine with the pads against the outside of your knees and your back flat on the seat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2623,8 +2269,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_adduction_machine',
       category: ExerciseCategory.other,
       name: 'Hip Adduction (Machine)',
-      description:
-          'Sit with the pads against the inside of your knees and your legs open at a comfortable stretch.',
+      description: 'Sit with the pads against the inside of your knees and your legs open at a comfortable stretch.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2638,8 +2283,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_thrust',
       category: ExerciseCategory.hinge,
       name: 'Hip Thrust',
-      description:
-          'Sit with your upper back against a bench and your feet flat on the floor about shoulder width.',
+      description: 'Sit with your upper back against a bench and your feet flat on the floor about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2651,8 +2295,7 @@ class ExerciseLibraryCatalog {
       id: 'hip_thrust_barbell',
       category: ExerciseCategory.hinge,
       name: 'Hip Thrust (Barbell)',
-      description:
-          'Sit with the upper back on a bench and the bar across the hips.',
+      description: 'Sit with the upper back on a bench and the bar across the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2661,16 +2304,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'hip_thrust_machine',
       category: ExerciseCategory.hinge,
       name: 'Hip Thrust (Machine)',
-      description:
-          'Sit in the machine with the pad across your hips and your feet flat on the platform.',
+      description: 'Sit in the machine with the pad across your hips and your feet flat on the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2684,8 +2324,7 @@ class ExerciseLibraryCatalog {
       id: 'hollow_rock',
       category: ExerciseCategory.core,
       name: 'Hollow Rock',
-      description:
-          'Lie on your back and press the lower back into the floor, then lift the shoulders and legs to make a shallow banana shape.',
+      description: 'Lie on your back and press the lower back into the floor, then lift the shoulders and legs to make a shallow banana shape.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2697,8 +2336,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_bench_press_barbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Bench Press (Barbell)',
-      description:
-          'Lie back on an incline bench and grip the bar at medium width.',
+      description: 'Lie back on an incline bench and grip the bar at medium width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2707,16 +2345,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'incline_bench_press_dumbbell',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Bench Press (Dumbbell)',
-      description:
-          'On a 30-45 degree incline, start with the dumbbells at the upper chest, palms forward.',
+      description: 'On a 30-45 degree incline, start with the dumbbells at the upper chest, palms forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2725,16 +2360,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'incline_bench_press_smith_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Bench Press (Smith Machine)',
-      description:
-          'Set an incline bench under the Smith machine, with the bar set where your arms are almost fully extended.',
+      description: 'Set an incline bench under the Smith machine, with the bar set where your arms are almost fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2748,8 +2380,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_chest_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Incline Chest Fly (Dumbbell)',
-      description:
-          'Lie back on a bench set to around thirty degrees holding dumbbells above your chest with a soft elbow bend.',
+      description: 'Lie back on a bench set to around thirty degrees holding dumbbells above your chest with a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2758,16 +2389,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'incline_chest_press_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Chest Press (Machine)',
-      description:
-          'Sit in the incline press with your back flat on the pad and the handles level with your upper chest.',
+      description: 'Sit in the incline press with your back flat on the pad and the handles level with your upper chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2781,8 +2409,7 @@ class ExerciseLibraryCatalog {
       id: 'incline_push_ups',
       category: ExerciseCategory.horizontalPush,
       name: 'Incline Push Ups',
-      description:
-          'Put the hands on a bench, box or bar with the body in a straight line.',
+      description: 'Put the hands on a bench, box or bar with the body in a straight line.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2794,120 +2421,98 @@ class ExerciseLibraryCatalog {
       id: 'inverted_row_archer',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Archer)',
-      description:
-          'Set up with the body fully parallel to the floor under the bar or rings.',
+      description: 'Set up with the body fully parallel to the floor under the bar or rings.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_bent_legs',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Bent Legs)',
-      description:
-          'Hang under a bar with the knees bent and the feet flat on the floor.',
+      description: 'Hang under a bar with the knees bent and the feet flat on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_feet_elevated',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Feet Elevated)',
-      description:
-          'Put the feet on a box so the body sits close to horizontal under the bar.',
+      description: 'Put the feet on a box so the body sits close to horizontal under the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_incline',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Incline)',
-      description:
-          'Set a bar or rings at chest height and hold on with the body almost upright.',
+      description: 'Set a bar or rings at chest height and hold on with the body almost upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_one_arm',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (One Arm)',
-      description:
-          'Set up horizontally under the bar and row with a single arm while the body stays rigid and square.',
+      description: 'Set up horizontally under the bar and row with a single arm while the body stays rigid and square.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_one_arm_assisted',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (One Arm, Assisted)',
-      description:
-          'Row horizontally with most of the load on one arm while the other hand gives light support on the bar or a strap.',
+      description: 'Row horizontally with most of the load on one arm while the other hand gives light support on the bar or a strap.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_straight_legs',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Straight Legs)',
-      description:
-          'Hang under the bar with straight legs and the heels on the floor at roughly forty five degrees.',
+      description: 'Hang under the bar with straight legs and the heels on the floor at roughly forty five degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'inverted_row_weighted',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Weighted)',
-      description:
-          'Add external load with a vest or plates while keeping the body rigid.',
+      description: 'Add external load with a vest or plates while keeping the body rigid.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2915,33 +2520,26 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings}),
-        EquipmentNeed({EquipmentItem.weightVest})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings}), EquipmentNeed({EquipmentItem.weightVest})],
     ),
     Exercise(
       id: 'inverted_row_wide_grip',
       category: ExerciseCategory.horizontalPull,
       name: 'Inverted Row (Wide Grip)',
-      description:
-          'Row from the horizontal position with the hands set wider than shoulder width.',
+      description: 'Row from the horizontal position with the hands set wider than shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar, EquipmentItem.rings})],
     ),
     Exercise(
       id: 'iso_lateral_chest_press_machine',
       category: ExerciseCategory.horizontalPush,
       name: 'Iso-Lateral Chest Press (Machine)',
-      description:
-          'Sit with your back on the pad and grip both handles at chest height.',
+      description: 'Sit with your back on the pad and grip both handles at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2955,8 +2553,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_high_row_machine',
       category: ExerciseCategory.horizontalPull,
       name: 'Iso-Lateral High Row (Machine)',
-      description:
-          'Sit with your chest against the pad and reach up to grip the high handles.',
+      description: 'Sit with your chest against the pad and reach up to grip the high handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2970,8 +2567,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_low_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Iso-Lateral Low Row',
-      description:
-          'Sit with your chest on the pad and grip the low handles with your arms extended.',
+      description: 'Sit with your chest on the pad and grip the low handles with your arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2983,8 +2579,7 @@ class ExerciseLibraryCatalog {
       id: 'iso_lateral_row_machine',
       category: ExerciseCategory.horizontalPull,
       name: 'Iso-Lateral Row (Machine)',
-      description:
-          'Sit with your chest against the pad and take one handle in each hand at arms length.',
+      description: 'Sit with your chest against the pad and take one handle in each hand at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -2998,24 +2593,20 @@ class ExerciseLibraryCatalog {
       id: 'jack_knife_suspension',
       category: ExerciseCategory.core,
       name: 'Jack Knife (Suspension)',
-      description:
-          'Set up in a push up position with both feet in the suspension cradles and your body straight.',
+      description: 'Set up in a push up position with both feet in the suspension cradles and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Abdominals'],
       secondaryMuscles: ['Other'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'jackknife_sit_up',
       category: ExerciseCategory.core,
       name: 'Jackknife Sit Up',
-      description:
-          'Lie flat with your arms extended overhead and legs straight.',
+      description: 'Lie flat with your arms extended overhead and legs straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3027,8 +2618,7 @@ class ExerciseLibraryCatalog {
       id: 'jm_press_barbell',
       category: ExerciseCategory.other,
       name: 'JM Press (Barbell)',
-      description:
-          'Lie on a bench holding the bar over your chest with a close grip.',
+      description: 'Lie on a bench holding the bar over your chest with a close grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3037,16 +2627,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'jump_rope',
       category: ExerciseCategory.other,
       name: 'Jump Rope',
-      description:
-          'Hold the handles at hip height and turn the rope with the wrists rather than the arms.',
+      description: 'Hold the handles at hip height and turn the rope with the wrists rather than the arms.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3072,8 +2659,7 @@ class ExerciseLibraryCatalog {
       id: 'jump_squat',
       category: ExerciseCategory.other,
       name: 'Jump Squat',
-      description:
-          'Stand with feet shoulder width and squat down to around parallel.',
+      description: 'Stand with feet shoulder width and squat down to around parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3098,8 +2684,7 @@ class ExerciseLibraryCatalog {
       id: 'jumping_lunge',
       category: ExerciseCategory.other,
       name: 'Jumping Lunge',
-      description:
-          'Drop into a lunge with the front knee bent over your foot and the rear knee nearly touching the floor.',
+      description: 'Drop into a lunge with the front knee bent over your foot and the rear knee nearly touching the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3111,31 +2696,21 @@ class ExerciseLibraryCatalog {
       id: 'kettlebell_clean',
       category: ExerciseCategory.other,
       name: 'Kettlebell Clean',
-      description:
-          'Place a kettlebell between your feet, push your hips back, and grip it one-handed with eyes forward.',
+      description: 'Place a kettlebell between your feet, push your hips back, and grip it one-handed with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_curl',
       category: ExerciseCategory.other,
       name: 'Kettlebell Curl',
-      description:
-          'Hold a kettlebell in each hand by the handle with your elbows tucked at your sides.',
+      description: 'Hold a kettlebell in each hand by the handle with your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3143,16 +2718,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_goblet_squat',
       category: ExerciseCategory.squat,
       name: 'Kettlebell Goblet Squat',
-      description:
-          'Stand with your feet around shoulder-width apart and hold a kettlebell close to your chest with both hands.',
+      description: 'Stand with your feet around shoulder-width apart and hold a kettlebell close to your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3160,32 +2732,26 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_high_pull',
       category: ExerciseCategory.other,
       name: 'Kettlebell High Pull',
-      description:
-          'Stand in a wide sumo stance with a kettlebell between your feet and grip it with both hands, hips set back and chest up.',
+      description: 'Stand in a wide sumo stance with a kettlebell between your feet and grip it with both hands, hips set back and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_shoulder_press',
       category: ExerciseCategory.verticalPush,
       name: 'Kettlebell Shoulder Press',
-      description:
-          'Clean the kettlebell to the rack position at your shoulder with the bell resting on the forearm.',
+      description: 'Clean the kettlebell to the rack position at your shoulder with the bell resting on the forearm.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3193,87 +2759,66 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Chest'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_snatch',
       category: ExerciseCategory.other,
       name: 'Kettlebell Snatch',
-      description:
-          'Set a kettlebell between your feet, bend the knees, and sit the hips back with eyes forward.',
+      description: 'Set a kettlebell between your feet, bend the knees, and sit the hips back with eyes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_swing',
       category: ExerciseCategory.other,
       name: 'Kettlebell Swing',
-      description:
-          'Stand with the kettlebell a step in front of you and hinge down to grip it with both hands.',
+      description: 'Stand with the kettlebell a step in front of you and hinge down to grip it with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kettlebell_turkish_get_up',
       category: ExerciseCategory.other,
       name: 'Kettlebell Turkish Get Up',
-      description:
-          'Lie on your back and press one kettlebell to a locked-out arm above your shoulder.',
+      description: 'Lie on your back and press one kettlebell to a locked-out arm above your shoulder.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'kipping_pull_up',
       category: ExerciseCategory.verticalPull,
       name: 'Kipping Pull Up',
-      description:
-          'Hang from the bar and swing between a hollow and an arch position.',
+      description: 'Hang from the bar and swing between a hollow and an arch position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'knee_raise_parallel_bars',
       category: ExerciseCategory.core,
       name: 'Knee Raise Parallel Bars',
-      description:
-          'Support yourself on the raise station with your forearms on the pads and back against the rest, legs hanging straight down.',
+      description: 'Support yourself on the raise station with your forearms on the pads and back against the rest, legs hanging straight down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3285,24 +2830,20 @@ class ExerciseLibraryCatalog {
       id: 'kneeling_pulldown_band',
       category: ExerciseCategory.verticalPull,
       name: 'Kneeling Pulldown (band)',
-      description:
-          'Anchor the band overhead and kneel underneath it holding one end in each hand.',
+      description: 'Anchor the band overhead and kneel underneath it holding one end in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'kneeling_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Kneeling Push Up',
-      description:
-          'Set up on your hands and knees with your hands under your shoulders and your body straight from knees to head.',
+      description: 'Set up on your hands and knees with your hands under your shoulders and your body straight from knees to head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3314,8 +2855,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold',
-      description:
-          'Support on parallettes or bars with straight arms, then lift straight legs until they are parallel to the floor.',
+      description: 'Support on parallettes or bars with straight arms, then lift straight legs until they are parallel to the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3329,8 +2869,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_advanced_tuck',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Advanced Tuck)',
-      description:
-          'From the tuck position, open the knees to roughly a right angle so the thighs move away from the chest.',
+      description: 'From the tuck position, open the knees to roughly a right angle so the thighs move away from the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3344,8 +2883,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_foot_supported',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Foot-Supported)',
-      description:
-          'Sit with straight legs and press your hands into the floor or parallettes beside the hips.',
+      description: 'Sit with straight legs and press your hands into the floor or parallettes beside the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3373,8 +2911,7 @@ class ExerciseLibraryCatalog {
       id: 'l_sit_hold_tuck',
       category: ExerciseCategory.core,
       name: 'L-Sit Hold (Tuck)',
-      description:
-          'Support yourself on parallettes or bars with straight arms and pull both knees tightly to the chest.',
+      description: 'Support yourself on parallettes or bars with straight arms and pull both knees tightly to the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3388,8 +2925,7 @@ class ExerciseLibraryCatalog {
       id: 'landmine_180',
       category: ExerciseCategory.core,
       name: 'Landmine 180',
-      description:
-          'Hold the end of a landmine barbell overhead with both hands and your arms nearly straight.',
+      description: 'Hold the end of a landmine barbell overhead with both hands and your arms nearly straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3398,16 +2934,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'landmine_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Landmine Row',
-      description:
-          'Straddle a landmine barbell and hinge forward with a flat back, gripping the bar with both hands or a V handle.',
+      description: 'Straddle a landmine barbell and hinge forward with a flat back, gripping the bar with both hands or a V handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3416,16 +2949,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'landmine_squat_and_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Landmine Squat and Press',
-      description:
-          'Hold the end of a landmine bar at your chest with both hands.',
+      description: 'Hold the end of a landmine bar at your chest with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3434,32 +2964,26 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'lat_pulldown_band',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown (Band)',
-      description:
-          'Anchor the band overhead and hold one end in each hand with your arms extended above you.',
+      description: 'Anchor the band overhead and hold one end in each hand with your arms extended above you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'lat_pulldown_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown (Cable)',
-      description:
-          'Sit with your thighs under the pads and grip the bar wider than your shoulders.',
+      description: 'Sit with your thighs under the pads and grip the bar wider than your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3473,8 +2997,7 @@ class ExerciseLibraryCatalog {
       id: 'lat_pulldown_machine',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown (Machine)',
-      description:
-          'Sit with your thighs secured and grip the handles overhead.',
+      description: 'Sit with your thighs secured and grip the handles overhead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3488,8 +3011,7 @@ class ExerciseLibraryCatalog {
       id: 'lat_pulldown_close_grip_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Lat Pulldown - Close Grip (Cable)',
-      description:
-          'Sit with your thighs under the pads and take a narrow neutral grip on the handle.',
+      description: 'Sit with your thighs under the pads and take a narrow neutral grip on the handle.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3503,17 +3025,14 @@ class ExerciseLibraryCatalog {
       id: 'lateral_band_walks',
       category: ExerciseCategory.hinge,
       name: 'Lateral Band Walks',
-      description:
-          'Place a band around your legs just above the knees or ankles and sink into a quarter squat.',
+      description: 'Place a band around your legs just above the knees or ankles and sink into a quarter squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Glutes'],
       secondaryMuscles: ['Hamstrings', 'Lower Back', 'Adductors'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'lateral_box_jump',
@@ -3531,8 +3050,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_leg_raises',
       category: ExerciseCategory.hinge,
       name: 'Lateral Leg Raises',
-      description:
-          'Lie on your side with your body in a straight line and your lower arm supporting your head.',
+      description: 'Lie on your side with your body in a straight line and your lower arm supporting your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3556,24 +3074,20 @@ class ExerciseLibraryCatalog {
       id: 'lateral_raise_band',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Band)',
-      description:
-          'Stand on the middle of the band with an end in each hand at your sides.',
+      description: 'Stand on the middle of the band with an end in each hand at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Shoulders'],
       secondaryMuscles: ['Traps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'lateral_raise_cable',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Cable)',
-      description:
-          'Place a flat bench between two opposing low pulleys and sit on it.',
+      description: 'Place a flat bench between two opposing low pulleys and sit on it.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3587,8 +3101,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Dumbbell)',
-      description:
-          'Stand holding a dumbbell in each hand at your sides with a slight bend in the elbows.',
+      description: 'Stand holding a dumbbell in each hand at your sides with a slight bend in the elbows.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3597,16 +3110,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'lateral_raise_machine',
       category: ExerciseCategory.other,
       name: 'Lateral Raise (Machine)',
-      description:
-          'Sit with the pads against the outside of your upper arms and your torso upright.',
+      description: 'Sit with the pads against the outside of your upper arms and your torso upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3620,8 +3130,7 @@ class ExerciseLibraryCatalog {
       id: 'lateral_squat',
       category: ExerciseCategory.squat,
       name: 'Lateral Squat',
-      description:
-          'Stand with your feet much wider than your shoulders and your toes forward.',
+      description: 'Stand with your feet much wider than your shoulders and your toes forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3633,8 +3142,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_extension_machine',
       category: ExerciseCategory.other,
       name: 'Leg Extension (Machine)',
-      description:
-          'Sit with the pad resting on the front of your ankles and your knees in line with the machine pivot.',
+      description: 'Sit with the pad resting on the front of your ankles and your knees in line with the machine pivot.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3648,8 +3156,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_press_machine',
       category: ExerciseCategory.squat,
       name: 'Leg Press (Machine)',
-      description:
-          'Sit in the sled with your feet shoulder width on the platform and release the safeties.',
+      description: 'Sit in the sled with your feet shoulder width on the platform and release the safeties.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3663,8 +3170,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_press_horizontal_machine',
       category: ExerciseCategory.squat,
       name: 'Leg Press Horizontal (Machine)',
-      description:
-          'Sit with your back against the pad and your feet flat on the platform in front of you.',
+      description: 'Sit with your back against the pad and your feet flat on the platform in front of you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3678,8 +3184,7 @@ class ExerciseLibraryCatalog {
       id: 'leg_raise_parallel_bars',
       category: ExerciseCategory.core,
       name: 'Leg Raise Parallel Bars',
-      description:
-          'Support yourself on the parallel bars or a captains chair with your back against the pad.',
+      description: 'Support yourself on the parallel bars or a captains chair with your back against the pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3691,8 +3196,7 @@ class ExerciseLibraryCatalog {
       id: 'low_cable_fly_crossovers',
       category: ExerciseCategory.other,
       name: 'Low Cable Fly Crossovers',
-      description:
-          'Stand between two low pulleys with a handle in each hand and your palms facing forward.',
+      description: 'Stand between two low pulleys with a handle in each hand and your palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3706,17 +3210,14 @@ class ExerciseLibraryCatalog {
       id: 'low_row_suspension',
       category: ExerciseCategory.horizontalPull,
       name: 'Low Row (Suspension)',
-      description:
-          'Hold the handles and walk your feet forward so you hang back with your body straight.',
+      description: 'Hold the handles and walk your feet forward so you hang back with your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Shoulders', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'lunge',
@@ -3734,8 +3235,7 @@ class ExerciseLibraryCatalog {
       id: 'lunge_barbell',
       category: ExerciseCategory.squat,
       name: 'Lunge (Barbell)',
-      description:
-          'With the bar on the upper back, step forward and lower until the back knee is just off the floor and the front thigh is parallel.',
+      description: 'With the bar on the upper back, step forward and lower until the back knee is just off the floor and the front thigh is parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3744,16 +3244,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Lunge (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
+      description: 'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3762,16 +3259,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'lying_bent_leg_raise',
       category: ExerciseCategory.core,
       name: 'Lying Bent-Leg Raise',
-      description:
-          'Lie on your back and extend the shins so the legs are only slightly bent.',
+      description: 'Lie on your back and extend the shins so the legs are only slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3783,8 +3277,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_knee_raise',
       category: ExerciseCategory.core,
       name: 'Lying Knee Raise',
-      description:
-          'Lie on your back with the hands beside the hips and press the lower back into the floor.',
+      description: 'Lie on your back with the hands beside the hips and press the lower back into the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3796,8 +3289,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_leg_curl_machine',
       category: ExerciseCategory.other,
       name: 'Lying Leg Curl (Machine)',
-      description:
-          'Lie face down with the pad resting just above your heels and your knees just off the end of the bench.',
+      description: 'Lie face down with the pad resting just above your heels and your knees just off the end of the bench.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3811,8 +3303,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_leg_raise',
       category: ExerciseCategory.core,
       name: 'Lying Leg Raise',
-      description:
-          'Lie on your back with your hands under your hips and your legs straight.',
+      description: 'Lie on your back with your hands under your hips and your legs straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3824,8 +3315,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_curls',
       category: ExerciseCategory.other,
       name: 'Lying Neck Curls',
-      description:
-          'Lie face up on a bench with your head hanging just off the end.',
+      description: 'Lie face up on a bench with your head hanging just off the end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3836,8 +3326,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_curls_weighted',
       category: ExerciseCategory.other,
       name: 'Lying Neck Curls (Weighted)',
-      description:
-          'Lie face up with your head off the end of a bench and hold a light plate on your forehead with a towel underneath.',
+      description: 'Lie face up with your head off the end of a bench and hold a light plate on your forehead with a towel underneath.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3849,8 +3338,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_extension',
       category: ExerciseCategory.other,
       name: 'Lying Neck Extension',
-      description:
-          'Lie face down on a bench with your head hanging off the end.',
+      description: 'Lie face down on a bench with your head hanging off the end.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3861,8 +3349,7 @@ class ExerciseLibraryCatalog {
       id: 'lying_neck_extension_weighted',
       category: ExerciseCategory.other,
       name: 'Lying Neck Extension (Weighted)',
-      description:
-          'Lie face down with your head off the end of a bench and hold a light plate on the back of your head with a towel underneath.',
+      description: 'Lie face down with your head off the end of a bench and hold a light plate on the back of your head with a towel underneath.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3886,8 +3373,7 @@ class ExerciseLibraryCatalog {
       id: 'meadows_rows_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Meadows Rows (Barbell)',
-      description:
-          'Stand side on at the loaded end of a landmine barbell and hinge over with a flat back, gripping the sleeve with the outside hand.',
+      description: 'Stand side on at the loaded end of a landmine barbell and hinge over with a flat back, gripping the sleeve with the outside hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3896,16 +3382,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'mountain_climber',
       category: ExerciseCategory.other,
       name: 'Mountain Climber',
-      description:
-          'Set up in a push up position with your hands under your shoulders and your body straight.',
+      description: 'Set up in a push up position with your hands under your shoulders and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3916,8 +3399,7 @@ class ExerciseLibraryCatalog {
       id: 'muscle_up',
       category: ExerciseCategory.verticalPull,
       name: 'Muscle Up',
-      description:
-          'Pull explosively until the bar or rings reach the lower chest.',
+      description: 'Pull explosively until the bar or rings reach the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3929,8 +3411,7 @@ class ExerciseLibraryCatalog {
       id: 'muscle_up_eccentric',
       category: ExerciseCategory.verticalPull,
       name: 'Muscle Up (Eccentric)',
-      description:
-          'Start at the top in a straight arm support and lower slowly through the transition until you finish in a hang.',
+      description: 'Start at the top in a straight arm support and lower slowly through the transition until you finish in a hang.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3942,8 +3423,7 @@ class ExerciseLibraryCatalog {
       id: 'muscle_up_kipping',
       category: ExerciseCategory.verticalPull,
       name: 'Muscle Up (Kipping)',
-      description:
-          'From a hang, swing the legs forward and drive the hips up while pulling the bar toward the waist.',
+      description: 'From a hang, swing the legs forward and drive the hips up while pulling the bar toward the waist.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3962,9 +3442,7 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'nordic_hamstrings_curls',
@@ -3982,8 +3460,7 @@ class ExerciseLibraryCatalog {
       id: 'oblique_crunch',
       category: ExerciseCategory.core,
       name: 'Oblique Crunch',
-      description:
-          'Lie on your back with your knees bent and dropped to one side and your hands light beside your head.',
+      description: 'Lie on your back with your knees bent and dropped to one side and your hands light beside your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -3995,8 +3472,7 @@ class ExerciseLibraryCatalog {
       id: 'one_arm_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'One Arm Push Up',
-      description:
-          'Set the feet wide and put one hand under the chest with the other behind the back.',
+      description: 'Set the feet wide and put one hand under the chest with the other behind the back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4008,8 +3484,7 @@ class ExerciseLibraryCatalog {
       id: 'one_arm_one_leg_plank',
       category: ExerciseCategory.core,
       name: 'One-Arm One-Leg Plank',
-      description:
-          'From a forearm plank, lift one arm and the opposite leg a few inches off the floor.',
+      description: 'From a forearm plank, lift one arm and the opposite leg a few inches off the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4036,8 +3511,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_dumbbell_lunge',
       category: ExerciseCategory.squat,
       name: 'Overhead Dumbbell Lunge',
-      description:
-          'Hold a dumbbell locked out overhead with one or both arms and step forward into a long stride.',
+      description: 'Hold a dumbbell locked out overhead with one or both arms and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4046,16 +3520,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'overhead_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Overhead Press (Barbell)',
-      description:
-          'Hold the bar at shoulder height with your grip just outside your shoulders and your elbows slightly in front.',
+      description: 'Hold the bar at shoulder height with your grip just outside your shoulders and your elbows slightly in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4064,16 +3535,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'overhead_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Overhead Press (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand at shoulder height with your palms facing forward.',
+      description: 'Hold a dumbbell in each hand at shoulder height with your palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4082,16 +3550,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'overhead_press_smith_machine',
       category: ExerciseCategory.verticalPush,
       name: 'Overhead Press (Smith Machine)',
-      description:
-          'Set a bench with back support under the Smith bar and sit so the bar sits just above your shoulders.',
+      description: 'Set a bench with back support under the Smith bar and sit so the bar sits just above your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4105,8 +3570,7 @@ class ExerciseLibraryCatalog {
       id: 'overhead_squat',
       category: ExerciseCategory.other,
       name: 'Overhead Squat',
-      description:
-          'Take a wide snatch grip and press the barbell to full lockout overhead, feet slightly wider than the shoulders.',
+      description: 'Take a wide snatch grip and press the barbell to full lockout overhead, feet slightly wider than the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4114,16 +3578,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'pause_squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Pause Squat (Barbell)',
-      description:
-          'Squat down with the bar on your back until your thighs are at least parallel and hold that bottom position for two to three seconds.',
+      description: 'Squat down with the bar on your back until your thighs are at least parallel and hold that bottom position for two to three seconds.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4132,16 +3593,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'pendlay_row_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Pendlay Row (Barbell)',
-      description:
-          'Set your torso parallel to the floor with the bar resting on the ground.',
+      description: 'Set your torso parallel to the floor with the bar resting on the ground.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4150,16 +3608,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'pendulum_squat_machine',
       category: ExerciseCategory.squat,
       name: 'Pendulum Squat (Machine)',
-      description:
-          'Set your shoulders under the pads and your feet on the platform, then release the safeties.',
+      description: 'Set your shoulders under the pads and your feet on the platform, then release the safeties.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4173,8 +3628,7 @@ class ExerciseLibraryCatalog {
       id: 'pike_push_up_feet_elevated',
       category: ExerciseCategory.verticalPush,
       name: 'Pike Push-Up (Feet Elevated)',
-      description:
-          'Put the feet on a box so the hips stack higher over the shoulders.',
+      description: 'Put the feet on a box so the hips stack higher over the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4186,8 +3640,7 @@ class ExerciseLibraryCatalog {
       id: 'pike_pushup',
       category: ExerciseCategory.verticalPush,
       name: 'Pike Pushup',
-      description:
-          'Start in a pushup position and walk the feet in so the hips lift high and the body makes an upside down V.',
+      description: 'Start in a pushup position and walk the feet in so the hips lift high and the body makes an upside down V.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4199,8 +3652,7 @@ class ExerciseLibraryCatalog {
       id: 'pilates',
       category: ExerciseCategory.other,
       name: 'Pilates',
-      description:
-          'Move through a sequence of controlled mat exercises that work the deep core, breathing steadily with each movement.',
+      description: 'Move through a sequence of controlled mat exercises that work the deep core, breathing steadily with each movement.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4213,8 +3665,7 @@ class ExerciseLibraryCatalog {
       id: 'pinwheel_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Pinwheel Curl (Dumbbell)',
-      description:
-          'Stand holding a dumbbell in each hand with your palms facing your body.',
+      description: 'Stand holding a dumbbell in each hand with your palms facing your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4223,16 +3674,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'pistol_squat',
       category: ExerciseCategory.squat,
       name: 'Pistol Squat',
-      description:
-          'Stand on one leg with the other held straight out in front.',
+      description: 'Stand on one leg with the other held straight out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4244,8 +3692,7 @@ class ExerciseLibraryCatalog {
       id: 'pistol_squat_box',
       category: ExerciseCategory.squat,
       name: 'Pistol Squat (Box)',
-      description:
-          'Stand on one leg in front of a box, hold the free leg forward, and lower until the hips lightly touch the box before standing on the same leg.',
+      description: 'Stand on one leg in front of a box, hold the free leg forward, and lower until the hips lightly touch the box before standing on the same leg.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4257,8 +3704,7 @@ class ExerciseLibraryCatalog {
       id: 'pistol_squat_counterweighted',
       category: ExerciseCategory.squat,
       name: 'Pistol Squat (Counterweighted)',
-      description:
-          'Hold a light plate or dumbbell out in front of the chest to balance the load.',
+      description: 'Hold a light plate or dumbbell out in front of the chest to balance the load.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4267,16 +3713,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche',
-      description:
-          'Hold the body horizontal with the legs together and the arms locked straight.',
+      description: 'Hold the body horizontal with the legs together and the arms locked straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4290,8 +3733,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_advanced_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche (Advanced Tuck)',
-      description:
-          'From the tuck planche, open the knees so the thighs move away from the chest and flatten the back.',
+      description: 'From the tuck planche, open the knees so the thighs move away from the chest and flatten the back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4305,8 +3747,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_straddle',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche (Straddle)',
-      description:
-          'Hold a straight-arm planche with the legs separated to shorten the lever.',
+      description: 'Hold a straight-arm planche with the legs separated to shorten the lever.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4320,8 +3761,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche (Tuck)',
-      description:
-          'Support on the floor or parallettes with straight arms, lean forward, and pull both knees to the chest with the hips lifted to shoulder height.',
+      description: 'Support on the floor or parallettes with straight arms, lean forward, and pull both knees to the chest with the hips lifted to shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4335,8 +3775,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_lean',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Lean',
-      description:
-          'Start in a straight-arm push-up position with the hands slightly turned out.',
+      description: 'Start in a straight-arm push-up position with the hands slightly turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4350,8 +3789,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_lean_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Lean (Tuck)',
-      description:
-          'Hold a deep planche lean and lift one knee at a time toward the chest so both feet leave the floor briefly.',
+      description: 'Hold a deep planche lean and lift one knee at a time toward the chest so both feet leave the floor briefly.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4365,8 +3803,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up',
-      description:
-          'Hold a full planche with the legs together and the body horizontal.',
+      description: 'Hold a full planche with the legs together and the body horizontal.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4378,8 +3815,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up_advanced_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up (Advanced Tuck)',
-      description:
-          'Hold an advanced tuck planche with the back flat and the knees away from the chest.',
+      description: 'Hold an advanced tuck planche with the back flat and the knees away from the chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4391,8 +3827,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up_straddle',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up (Straddle)',
-      description:
-          'Hold a straddle planche with the legs wide and the body horizontal.',
+      description: 'Hold a straddle planche with the legs wide and the body horizontal.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4404,8 +3839,7 @@ class ExerciseLibraryCatalog {
       id: 'planche_push_up_tuck',
       category: ExerciseCategory.horizontalPush,
       name: 'Planche Push-Up (Tuck)',
-      description:
-          'Hold a tuck planche with the knees at the chest and the hips high.',
+      description: 'Hold a tuck planche with the knees at the chest and the hips high.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4417,8 +3851,7 @@ class ExerciseLibraryCatalog {
       id: 'plank',
       category: ExerciseCategory.core,
       name: 'Plank',
-      description:
-          'Rest on the forearms and toes with the elbows under the shoulders.',
+      description: 'Rest on the forearms and toes with the elbows under the shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4444,8 +3877,7 @@ class ExerciseLibraryCatalog {
       id: 'plate_curl',
       category: ExerciseCategory.other,
       name: 'Plate Curl',
-      description:
-          'Hold a weight plate by the edges in front of your thighs with your elbows tucked at your sides.',
+      description: 'Hold a weight plate by the edges in front of your thighs with your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4453,16 +3885,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Forearms'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'plate_front_raise',
       category: ExerciseCategory.other,
       name: 'Plate Front Raise',
-      description:
-          'Stand tall gripping a weight plate at the 3 and 9 o\'clock edges, palms facing each other, arms extended down with a slight elbow bend.',
+      description: 'Stand tall gripping a weight plate at the 3 and 9 o\'clock edges, palms facing each other, arms extended down with a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4470,16 +3899,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Traps'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'plate_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Plate Press',
-      description:
-          'Hold a weight plate flat between both palms at chest height with your elbows out.',
+      description: 'Hold a weight plate flat between both palms at chest height with your elbows out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4487,16 +3913,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'plate_squeeze_svend_press',
       category: ExerciseCategory.horizontalPush,
       name: 'Plate Squeeze (Svend Press)',
-      description:
-          'Press two plates together between your palms at chest height.',
+      description: 'Press two plates together between your palms at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4504,64 +3927,43 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'power_clean',
       category: ExerciseCategory.other,
       name: 'Power Clean',
-      description:
-          'From a deadlift setup, pull the bar explosively past the knees, extend the hips, ankles and knees, then whip the elbows through to catch the bar on the front of the shoulders in a partial squat.',
+      description: 'From a deadlift setup, pull the bar explosively past the knees, extend the hips, ankles and knees, then whip the elbows through to catch the bar on the front of the shoulders in a partial squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'power_snatch',
       category: ExerciseCategory.other,
       name: 'Power Snatch',
-      description:
-          'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
+      description: 'Stand over the bar with a wide grip, feet under your hips, hips down and chest up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'preacher_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Preacher Curl (Barbell)',
-      description:
-          'Sit at the preacher bench with your upper arms flat on the pad and grip an EZ or straight bar.',
+      description: 'Sit at the preacher bench with your upper arms flat on the pad and grip an EZ or straight bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4570,16 +3972,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'preacher_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Preacher Curl (Dumbbell)',
-      description:
-          'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
+      description: 'Rest both upper arms on a preacher bench and hold a dumbbell in each hand with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4588,16 +3987,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'preacher_curl_machine',
       category: ExerciseCategory.other,
       name: 'Preacher Curl (Machine)',
-      description:
-          'Sit with your upper arms flat on the pad and grip the handles with the arms extended.',
+      description: 'Sit with your upper arms flat on the pad and grip the handles with the arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4630,89 +4026,72 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_archer',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Archer)',
-      description:
-          'Pull up with a wide grip and travel toward one hand while the opposite arm stays straight along the bar.',
+      description: 'Pull up with a wide grip and travel toward one hand while the opposite arm stays straight along the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_assisted',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Assisted)',
-      description:
-          'Set the assist machine or loop a band under your knee and grip the bar overhand, wider than your shoulders.',
+      description: 'Set the assist machine or loop a band under your knee and grip the bar overhand, wider than your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_band',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Band)',
-      description:
-          'Loop a band under the knee or foot, or rest one foot on a low box.',
+      description: 'Loop a band under the knee or foot, or rest one foot on a low box.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'pull_up_belly_button',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Belly Button)',
-      description:
-          'Pull as high as you can while leaning back hard so the bar travels toward the navel.',
+      description: 'Pull as high as you can while leaning back hard so the bar travels toward the navel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_chest_to_bar',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Chest to Bar)',
-      description:
-          'Pull explosively while leaning back so the bar meets the lower chest.',
+      description: 'Pull explosively while leaning back so the bar meets the lower chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_close_grip',
@@ -4725,32 +4104,26 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_false_grip',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (False Grip)',
-      description:
-          'Hook the wrists over the rings or bar so the heel of the hand sits on top of the grip.',
+      description: 'Hook the wrists over the rings or bar so the heel of the hand sits on top of the grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_l_sit',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (L-Sit)',
-      description:
-          'Hold both legs straight out in front at hip height, then perform full pull ups without letting the legs drop.',
+      description: 'Hold both legs straight out in front at hip height, then perform full pull ups without letting the legs drop.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4758,9 +4131,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isTimed: true,
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_one_arm_eccentric',
@@ -4773,25 +4144,20 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_typewriter',
       category: ExerciseCategory.verticalPull,
       name: 'Pull Up (Typewriter)',
-      description:
-          'Pull to the top with a wide grip, then shift sideways over one hand while the other arm straightens.',
+      description: 'Pull to the top with a wide grip, then shift sideways over one hand while the other arm straightens.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'pull_up_weighted',
@@ -4805,17 +4171,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar}),
-        EquipmentNeed({EquipmentItem.weightVest})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar}), EquipmentNeed({EquipmentItem.weightVest})],
     ),
     Exercise(
       id: 'pullover_dumbbell',
       category: ExerciseCategory.verticalPull,
       name: 'Pullover (Dumbbell)',
-      description:
-          'Lie on a bench holding one dumbbell over your chest with both hands and a soft elbow bend.',
+      description: 'Lie on a bench holding one dumbbell over your chest with both hands and a soft elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4824,16 +4186,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'pullover_machine',
       category: ExerciseCategory.verticalPull,
       name: 'Pullover (Machine)',
-      description:
-          'Sit in the machine with the pads on your upper arms and the belt fastened.',
+      description: 'Sit in the machine with the pads on your upper arms and the belt fastened.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4847,8 +4206,7 @@ class ExerciseLibraryCatalog {
       id: 'push_press',
       category: ExerciseCategory.verticalPush,
       name: 'Push Press',
-      description:
-          'Hold the bar on the front of the shoulders with a shoulder-width grip and elbows up.',
+      description: 'Hold the bar on the front of the shoulders with a shoulder-width grip and elbows up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4857,16 +4215,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'push_up',
       category: ExerciseCategory.horizontalPush,
       name: 'Push Up',
-      description:
-          'Set the hands slightly wider than the shoulders with the body in a straight line.',
+      description: 'Set the hands slightly wider than the shoulders with the body in a straight line.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4878,8 +4233,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_weighted',
       category: ExerciseCategory.horizontalPush,
       name: 'Push Up (Weighted)',
-      description:
-          'Have a partner set a plate on your upper back or wear a weight vest, then set up in a push up position.',
+      description: 'Have a partner set a plate on your upper back or wear a weight vest, then set up in a push up position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4892,8 +4246,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_close_grip',
       category: ExerciseCategory.horizontalPush,
       name: 'Push Up - Close Grip',
-      description:
-          'Perform pushups keeping the elbows tucked close to the ribs the whole way down.',
+      description: 'Perform pushups keeping the elbows tucked close to the ribs the whole way down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4905,8 +4258,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_archer',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Archer)',
-      description:
-          'Take a wide hand position and lower toward one hand while the other arm straightens out to the side.',
+      description: 'Take a wide hand position and lower toward one hand while the other arm straightens out to the side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4918,8 +4270,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_one_arm_incline',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (One Arm, Incline)',
-      description:
-          'Place one hand on a bench or box with the other behind the back and the feet wide.',
+      description: 'Place one hand on a bench or box with the other behind the back and the feet wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4931,8 +4282,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_pseudo_planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Pseudo Planche)',
-      description:
-          'Place the hands lower beside the torso, lean the shoulders forward past the hands, and perform push-ups without losing the forward lean.',
+      description: 'Place the hands lower beside the torso, lean the shoulders forward past the hands, and perform push-ups without losing the forward lean.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -4944,17 +4294,14 @@ class ExerciseLibraryCatalog {
       id: 'push_up_rings_turned_out',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings Turned Out)',
-      description:
-          'Set the rings just off the floor and turn them out so the palms face forward at the top.',
+      description: 'Set the rings just off the floor and turn them out so the palms face forward at the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'push_up_rings_turned_out_archer',
@@ -4967,64 +4314,52 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'push_up_rings_turned_out_pseudo_planche',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings Turned Out, Pseudo Planche)',
-      description:
-          'On rings turned out, lean the shoulders forward and perform push-ups while keeping the rings stable and the forward lean consistent.',
+      description: 'On rings turned out, lean the shoulders forward and perform push-ups while keeping the rings stable and the forward lean consistent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Shoulders'],
       secondaryMuscles: ['Triceps'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'push_up_rings',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings)',
-      description:
-          'Set the rings just off the floor and hold them at shoulder width.',
+      description: 'Set the rings just off the floor and hold them at shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'push_up_rings_wide',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Rings, Wide)',
-      description:
-          'Set the rings a few inches off the floor and take a wide hand position.',
+      description: 'Set the rings a few inches off the floor and take a wide hand position.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'push_up_uneven',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Uneven)',
-      description:
-          'Put one hand on a low block or ball and the other on the floor.',
+      description: 'Put one hand on a low block or ball and the other on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5036,8 +4371,7 @@ class ExerciseLibraryCatalog {
       id: 'push_up_wall',
       category: ExerciseCategory.horizontalPush,
       name: 'Push-Up (Wall)',
-      description:
-          'Stand an arm length from a wall and place the hands on it at chest height.',
+      description: 'Stand an arm length from a wall and place the hands on it at chest height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5049,8 +4383,7 @@ class ExerciseLibraryCatalog {
       id: 'rack_pull',
       category: ExerciseCategory.horizontalPull,
       name: 'Rack Pull',
-      description:
-          'Set the barbell in a rack at about knee height and grip it with your shins close to the bar.',
+      description: 'Set the barbell in a rack at about knee height and grip it with your shins close to the bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5062,8 +4395,7 @@ class ExerciseLibraryCatalog {
       id: 'rear_delt_reverse_fly_cable',
       category: ExerciseCategory.other,
       name: 'Rear Delt Reverse Fly (Cable)',
-      description:
-          'Set both pulleys above head height and grab the left handle with your right hand and the right handle with your left so the cables cross in front.',
+      description: 'Set both pulleys above head height and grab the left handle with your right hand and the right handle with your left so the cables cross in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5077,8 +4409,7 @@ class ExerciseLibraryCatalog {
       id: 'rear_delt_reverse_fly_dumbbell',
       category: ExerciseCategory.other,
       name: 'Rear Delt Reverse Fly (Dumbbell)',
-      description:
-          'Hinge forward with a flat back holding a dumbbell in each hand below your chest.',
+      description: 'Hinge forward with a flat back holding a dumbbell in each hand below your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5087,16 +4418,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'rear_delt_reverse_fly_machine',
       category: ExerciseCategory.other,
       name: 'Rear Delt Reverse Fly (Machine)',
-      description:
-          'Sit facing the pad and grip the handles with your arms extended in front of you.',
+      description: 'Sit facing the pad and grip the handles with your arms extended in front of you.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5110,8 +4438,7 @@ class ExerciseLibraryCatalog {
       id: 'renegade_row_dumbbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Renegade Row (Dumbbell)',
-      description:
-          'Set up in a push up position gripping a dumbbell in each hand with your feet wide.',
+      description: 'Set up in a push up position gripping a dumbbell in each hand with your feet wide.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5120,16 +4447,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'reverse_crunch',
       category: ExerciseCategory.core,
       name: 'Reverse Crunch',
-      description:
-          'Lie on your back with your hands by your sides and your knees bent over your hips.',
+      description: 'Lie on your back with your hands by your sides and your knees bent over your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5141,8 +4465,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Reverse Curl (Barbell)',
-      description:
-          'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
+      description: 'Hold a barbell in front of your thighs with an overhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5151,16 +4474,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'reverse_curl_cable',
       category: ExerciseCategory.other,
       name: 'Reverse Curl (Cable)',
-      description:
-          'Attach a straight bar to a low pulley and grip it at shoulder width with palms facing down.',
+      description: 'Attach a straight bar to a low pulley and grip it at shoulder width with palms facing down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5174,8 +4494,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Reverse Curl (Dumbbell)',
-      description:
-          'Stand tall with a dumbbell in each hand and your palms facing down, arms fully extended.',
+      description: 'Stand tall with a dumbbell in each hand and your palms facing down, arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5184,16 +4503,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'reverse_fly_single_arm_cable',
       category: ExerciseCategory.other,
       name: 'Reverse Fly Single Arm (Cable)',
-      description:
-          'Stand side on to a cable set at chest height and take the handle in the far hand across your body.',
+      description: 'Stand side on to a cable set at chest height and take the handle in the far hand across your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5207,8 +4523,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_grip_concentration_curl',
       category: ExerciseCategory.other,
       name: 'Reverse Grip Concentration Curl',
-      description:
-          'Sit with your legs apart and brace the back of your upper arm against the inside of your thigh, holding the dumbbell with an overhand grip.',
+      description: 'Sit with your legs apart and brace the back of your upper arm against the inside of your thigh, holding the dumbbell with an overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5220,8 +4535,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_grip_lat_pulldown_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Reverse Grip Lat Pulldown (Cable)',
-      description:
-          'Sit with your thighs under the pads and take an underhand grip about shoulder width.',
+      description: 'Sit with your thighs under the pads and take an underhand grip about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5235,8 +4549,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_hyperextension',
       category: ExerciseCategory.hinge,
       name: 'Reverse Hyperextension',
-      description:
-          'Lie face down on a bench or hyperextension machine with your hips at the edge and your legs hanging.',
+      description: 'Lie face down on a bench or hyperextension machine with your hips at the edge and your legs hanging.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5260,8 +4573,7 @@ class ExerciseLibraryCatalog {
       id: 'reverse_lunge_barbell',
       category: ExerciseCategory.squat,
       name: 'Reverse Lunge (Barbell)',
-      description:
-          'Set a barbell across your upper back and step one leg back into a long stride.',
+      description: 'Set a barbell across your upper back and step one leg back into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5270,9 +4582,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'reverse_lunge_dumbbell',
@@ -5287,16 +4597,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'reverse_plank',
       category: ExerciseCategory.core,
       name: 'Reverse Plank',
-      description:
-          'Sit with your legs straight and your hands on the floor behind your hips, fingers pointing forward.',
+      description: 'Sit with your legs straight and your hands on the floor behind your hips, fingers pointing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5309,40 +4616,33 @@ class ExerciseLibraryCatalog {
       id: 'ring_dip_rings_turned_out',
       category: ExerciseCategory.verticalPush,
       name: 'Ring Dip (Rings Turned Out)',
-      description:
-          'Perform ring dips and finish each press by turning the rings out so the palms face forward at the top.',
+      description: 'Perform ring dips and finish each press by turning the rings out so the palms face forward at the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'ring_dips',
       category: ExerciseCategory.verticalPush,
       name: 'Ring Dips',
-      description:
-          'Support on rings with straight arms and the rings held close to the hips.',
+      description: 'Support on rings with straight arms and the rings held close to the hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Chest'],
       secondaryMuscles: ['Triceps', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'romanian_deadlift_barbell',
       category: ExerciseCategory.hinge,
       name: 'Romanian Deadlift (Barbell)',
-      description:
-          'Stand tall holding a barbell at your thighs with your knees slightly bent.',
+      description: 'Stand tall holding a barbell at your thighs with your knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5351,16 +4651,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'romanian_deadlift_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Romanian Deadlift (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand in front of your thighs with your knees slightly bent.',
+      description: 'Hold a dumbbell in each hand in front of your thighs with your knees slightly bent.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5369,16 +4666,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'rope_cable_curl',
       category: ExerciseCategory.other,
       name: 'Rope Cable Curl',
-      description:
-          'Attach a rope to a low pulley and hold one end in each hand with your elbows at your sides.',
+      description: 'Attach a rope to a low pulley and hold one end in each hand with your elbows at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5392,8 +4686,7 @@ class ExerciseLibraryCatalog {
       id: 'rope_straight_arm_pulldown',
       category: ExerciseCategory.verticalPull,
       name: 'Rope Straight Arm Pulldown',
-      description:
-          'Attach a rope to a high pulley and stand a couple feet back with a staggered stance.',
+      description: 'Attach a rope to a high pulley and stand a couple feet back with a staggered stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5421,8 +4714,7 @@ class ExerciseLibraryCatalog {
       id: 'running',
       category: ExerciseCategory.other,
       name: 'Running',
-      description:
-          'Run at a pace you can hold for the whole session, landing under your hips rather than reaching out in front.',
+      description: 'Run at a pace you can hold for the whole session, landing under your hips rather than reaching out in front.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5436,8 +4728,7 @@ class ExerciseLibraryCatalog {
       id: 'russian_twist_bodyweight',
       category: ExerciseCategory.core,
       name: 'Russian Twist (Bodyweight)',
-      description:
-          'Sit with the knees bent and torso leaned back, feet up or down.',
+      description: 'Sit with the knees bent and torso leaned back, feet up or down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5449,8 +4740,7 @@ class ExerciseLibraryCatalog {
       id: 'russian_twist_weighted',
       category: ExerciseCategory.core,
       name: 'Russian Twist (Weighted)',
-      description:
-          'Sit with your knees bent and lean your torso back to about forty five degrees, holding a plate or dumbbell at your chest.',
+      description: 'Sit with your knees bent and lean your torso back to about forty five degrees, holding a plate or dumbbell at your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5470,16 +4760,13 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Upper Back'],
       secondaryMuscles: ['Biceps', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'seated_cable_row_bar_grip',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Cable Row - Bar Grip',
-      description:
-          'Sit at the cable row with your feet on the platform and a slight knee bend, gripping the straight bar.',
+      description: 'Sit at the cable row with your feet on the platform and a slight knee bend, gripping the straight bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5493,8 +4780,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_cable_row_bar_wide_grip',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Cable Row - Bar Wide Grip',
-      description:
-          'Sit at the cable row and take a wide overhand grip on the long bar.',
+      description: 'Sit at the cable row and take a wide overhand grip on the long bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5508,8 +4794,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_cable_row_v_grip_cable',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Cable Row - V Grip (Cable)',
-      description:
-          'Sit with your feet planted and a slight knee bend, holding the V handle with both hands.',
+      description: 'Sit with your feet planted and a slight knee bend, holding the V handle with both hands.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5523,8 +4808,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_calf_raise',
       category: ExerciseCategory.other,
       name: 'Seated Calf Raise',
-      description:
-          'Sit with the pad on the lower thighs and the balls of the feet on the block.',
+      description: 'Sit with the pad on the lower thighs and the balls of the feet on the block.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5532,17 +4816,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell}),
-        EquipmentNeed.gym
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell}), EquipmentNeed.gym],
     ),
     Exercise(
       id: 'seated_chest_flys_cable',
       category: ExerciseCategory.other,
       name: 'Seated Chest Flys (Cable)',
-      description:
-          'Sit on a bench between two cable pulleys set at chest height with a handle in each hand.',
+      description: 'Sit on a bench between two cable pulleys set at chest height with a handle in each hand.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5556,8 +4836,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_dip_machine',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Dip Machine',
-      description:
-          'Sit with your back against the pad and grip the handles beside your hips.',
+      description: 'Sit with your back against the pad and grip the handles beside your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5571,8 +4850,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_incline_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Seated Incline Curl (Dumbbell)',
-      description:
-          'Sit on a flat bench holding a dumbbell in each hand at arm\'s length with elbows close to your sides.',
+      description: 'Sit on a flat bench holding a dumbbell in each hand at arm\'s length with elbows close to your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5581,16 +4859,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'seated_lateral_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Seated Lateral Raise (Dumbbell)',
-      description:
-          'Sit on the end of a bench with a dumbbell in each hand at your sides and a slight elbow bend.',
+      description: 'Sit on the end of a bench with a dumbbell in each hand at your sides and a slight elbow bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5599,9 +4874,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'seated_leg_curl_machine',
@@ -5621,8 +4894,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_overhead_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Overhead Press (Barbell)',
-      description:
-          'Sit on an upright bench with the bar at shoulder height and your grip just outside your shoulders.',
+      description: 'Sit on an upright bench with the bar at shoulder height and your grip just outside your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5631,16 +4903,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'seated_overhead_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Overhead Press (Dumbbell)',
-      description:
-          'Sit on a bench with back support and bring a dumbbell to each shoulder, palms facing forward.',
+      description: 'Sit on a bench with back support and bring a dumbbell to each shoulder, palms facing forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5649,16 +4918,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'seated_palms_up_wrist_curl',
       category: ExerciseCategory.other,
       name: 'Seated Palms Up Wrist Curl',
-      description:
-          'Sit on a flat bench holding a dumbbell in each hand with your palms facing up.',
+      description: 'Sit on a flat bench holding a dumbbell in each hand with your palms facing up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5667,17 +4933,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell}),
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell}), EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'seated_row_machine',
       category: ExerciseCategory.horizontalPull,
       name: 'Seated Row (Machine)',
-      description:
-          'Sit with your chest against the pad and grip the handles at arms length.',
+      description: 'Sit with your chest against the pad and grip the handles at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5691,8 +4953,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_shoulder_press_machine',
       category: ExerciseCategory.verticalPush,
       name: 'Seated Shoulder Press (Machine)',
-      description:
-          'Sit with your back flat against the pad and the handles level with your shoulders.',
+      description: 'Sit with your back flat against the pad and the handles level with your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5706,8 +4967,7 @@ class ExerciseLibraryCatalog {
       id: 'seated_triceps_press',
       category: ExerciseCategory.other,
       name: 'Seated Triceps Press',
-      description:
-          'Sit on a bench with back support and hold one dumbbell overhead with both hands, arms locked out.',
+      description: 'Sit on a bench with back support and hold one dumbbell overhead with both hands, arms locked out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5716,16 +4976,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'seated_wrist_extension_barbell',
       category: ExerciseCategory.other,
       name: 'Seated Wrist Extension (Barbell)',
-      description:
-          'Sit with your forearms resting on your thighs and your wrists past the knees, holding a light barbell with an overhand grip.',
+      description: 'Sit with your forearms resting on your thighs and your wrists past the knees, holding a light barbell with an overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5734,16 +4991,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'shoulder_press_dumbbell',
       category: ExerciseCategory.verticalPush,
       name: 'Shoulder Press (Dumbbell)',
-      description:
-          'Seated or standing, start with the dumbbells at shoulder height, palms forward.',
+      description: 'Seated or standing, start with the dumbbells at shoulder height, palms forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5752,16 +5006,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'shoulder_press_machine_plates',
       category: ExerciseCategory.verticalPush,
       name: 'Shoulder Press (Machine Plates)',
-      description:
-          'Sit with your back against the pad and grip the handles at shoulder height.',
+      description: 'Sit with your back against the pad and grip the handles at shoulder height.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5775,8 +5026,7 @@ class ExerciseLibraryCatalog {
       id: 'shoulder_taps',
       category: ExerciseCategory.other,
       name: 'Shoulder Taps',
-      description:
-          'Set up in a push up position with your feet wide and your body straight.',
+      description: 'Set up in a push up position with your feet wide and your body straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5788,8 +5038,7 @@ class ExerciseLibraryCatalog {
       id: 'shrimp_squat_advanced',
       category: ExerciseCategory.squat,
       name: 'Shrimp Squat (Advanced)',
-      description:
-          'Hold the rear foot behind you and lower until the back knee touches, keeping the torso upright and the balance steady with no assistance.',
+      description: 'Hold the rear foot behind you and lower until the back knee touches, keeping the torso upright and the balance steady with no assistance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5801,8 +5050,7 @@ class ExerciseLibraryCatalog {
       id: 'shrimp_squat_beginner',
       category: ExerciseCategory.squat,
       name: 'Shrimp Squat (Beginner)',
-      description:
-          'Hold one foot behind you with the same side hand and lower on the other leg until the back knee touches a pad.',
+      description: 'Hold one foot behind you with the same side hand and lower on the other leg until the back knee touches a pad.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5814,8 +5062,7 @@ class ExerciseLibraryCatalog {
       id: 'shrimp_squat_intermediate',
       category: ExerciseCategory.squat,
       name: 'Shrimp Squat (Intermediate)',
-      description:
-          'Hold the rear foot with the same side hand and lower to the back knee without any hand support.',
+      description: 'Hold the rear foot with the same side hand and lower to the back knee without any hand support.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5836,16 +5083,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'shrug_cable',
       category: ExerciseCategory.other,
       name: 'Shrug (Cable)',
-      description:
-          'Stand facing away from or beside a low pulley holding the handle or bar at arms length.',
+      description: 'Stand facing away from or beside a low pulley holding the handle or bar at arms length.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5859,8 +5103,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_dumbbell',
       category: ExerciseCategory.other,
       name: 'Shrug (Dumbbell)',
-      description:
-          'Stand tall holding a dumbbell in each hand at your sides with the arms straight.',
+      description: 'Stand tall holding a dumbbell in each hand at your sides with the arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5869,16 +5112,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'shrug_machine',
       category: ExerciseCategory.other,
       name: 'Shrug (Machine)',
-      description:
-          'Stand or sit in the machine gripping the handles with your arms straight.',
+      description: 'Stand or sit in the machine gripping the handles with your arms straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5892,8 +5132,7 @@ class ExerciseLibraryCatalog {
       id: 'shrug_smith_machine',
       category: ExerciseCategory.other,
       name: 'Shrug (Smith Machine)',
-      description:
-          'Stand inside the Smith machine holding the bar at arms length in front of your thighs.',
+      description: 'Stand inside the Smith machine holding the bar at arms length in front of your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5907,8 +5146,7 @@ class ExerciseLibraryCatalog {
       id: 'side_bend',
       category: ExerciseCategory.core,
       name: 'Side Bend',
-      description:
-          'Stand tall with your feet hip width and one hand behind your head.',
+      description: 'Stand tall with your feet hip width and one hand behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5920,8 +5158,7 @@ class ExerciseLibraryCatalog {
       id: 'side_bend_dumbbell',
       category: ExerciseCategory.core,
       name: 'Side Bend (Dumbbell)',
-      description:
-          'Stand holding a dumbbell in one hand at your side with the other hand behind your head.',
+      description: 'Stand holding a dumbbell in one hand at your side with the other hand behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5930,16 +5167,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'side_plank',
       category: ExerciseCategory.core,
       name: 'Side Plank',
-      description:
-          'Lie on your side and prop yourself on one forearm with the elbow under the shoulder and your feet stacked.',
+      description: 'Lie on your side and prop yourself on one forearm with the elbow under the shoulder and your feet stacked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5952,8 +5186,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_cable_crossover',
       category: ExerciseCategory.other,
       name: 'Single Arm Cable Crossover',
-      description:
-          'Set the pulley high and take the handle in one hand, stepping forward so the arm is extended out and back.',
+      description: 'Set the pulley high and take the handle in one hand, stepping forward so the arm is extended out and back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5967,8 +5200,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_cable_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Single Arm Cable Row',
-      description:
-          'Sit or stand facing a cable set at chest height and take the handle in one hand with the arm extended.',
+      description: 'Sit or stand facing a cable set at chest height and take the handle in one hand with the arm extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5982,8 +5214,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_curl_cable',
       category: ExerciseCategory.other,
       name: 'Single Arm Curl (Cable)',
-      description:
-          'Grab a single handle at the low pulley and step back so the cable stays taut.',
+      description: 'Grab a single handle at the low pulley and step back so the cable stays taut.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -5997,8 +5228,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_landmine_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Single Arm Landmine Press (Barbell)',
-      description:
-          'Hold the end of a landmine barbell at your shoulder with one hand and stand square.',
+      description: 'Hold the end of a landmine barbell at your shoulder with one hand and stand square.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6007,16 +5237,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'single_arm_lat_pulldown',
       category: ExerciseCategory.verticalPull,
       name: 'Single Arm Lat Pulldown',
-      description:
-          'Attach a single handle to a high pulley and sit with the knee pad snug against your thighs.',
+      description: 'Attach a single handle to a high pulley and sit with the knee pad snug against your thighs.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6030,8 +5257,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_lateral_raise_cable',
       category: ExerciseCategory.other,
       name: 'Single Arm Lateral Raise (Cable)',
-      description:
-          'Stand side on to a low pulley and take the handle in the outside hand across your body.',
+      description: 'Stand side on to a low pulley and take the handle in the outside hand across your body.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6045,8 +5271,7 @@ class ExerciseLibraryCatalog {
       id: 'single_arm_tricep_extension_dumbbell',
       category: ExerciseCategory.other,
       name: 'Single Arm Tricep Extension (Dumbbell)',
-      description:
-          'Sit or stand tall and raise a dumbbell overhead in one hand with the arm fully extended.',
+      description: 'Sit or stand tall and raise a dumbbell overhead in one hand with the arm fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6055,16 +5280,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'single_arm_triceps_pushdown_cable',
       category: ExerciseCategory.other,
       name: 'Single Arm Triceps Pushdown (Cable)',
-      description:
-          'Stand facing a high pulley with a single handle and your elbow tucked at your side.',
+      description: 'Stand facing a high pulley with a single handle and your elbow tucked at your side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6090,8 +5312,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_glute_bridge',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Glute Bridge',
-      description:
-          'Lie on your back with feet flat and knees bent, then lift one knee toward your chest.',
+      description: 'Lie on your back with feet flat and knees bent, then lift one knee toward your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6103,8 +5324,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_hip_thrust',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Hip Thrust',
-      description:
-          'Rest your upper back on a bench with one foot flat on the floor and the other leg lifted.',
+      description: 'Rest your upper back on a bench with one foot flat on the floor and the other leg lifted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6116,8 +5336,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_hip_thrust_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Hip Thrust (Dumbbell)',
-      description:
-          'Rest your upper back on a bench with a dumbbell across your hips and one foot planted.',
+      description: 'Rest your upper back on a bench with a dumbbell across your hips and one foot planted.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6126,16 +5345,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'single_leg_press_machine',
       category: ExerciseCategory.squat,
       name: 'Single Leg Press (Machine)',
-      description:
-          'Sit in the leg press and place one foot in the middle of the platform.',
+      description: 'Sit in the leg press and place one foot in the middle of the platform.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6149,8 +5365,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_romanian_deadlift_barbell',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Romanian Deadlift (Barbell)',
-      description:
-          'Hold a barbell in front of your thighs and shift your weight onto one leg.',
+      description: 'Hold a barbell in front of your thighs and shift your weight onto one leg.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6159,16 +5374,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'single_leg_romanian_deadlift_bodyweight',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Romanian Deadlift (Bodyweight)',
-      description:
-          'Stand on one leg with a soft knee and hinge at the hips, letting the free leg travel back as the chest lowers.',
+      description: 'Stand on one leg with a soft knee and hinge at the hips, letting the free leg travel back as the chest lowers.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6180,8 +5392,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_romanian_deadlift_dumbbell',
       category: ExerciseCategory.hinge,
       name: 'Single Leg Romanian Deadlift (Dumbbell)',
-      description:
-          'Hold a dumbbell in one or both hands and stand on one leg with a soft knee bend.',
+      description: 'Hold a dumbbell in one or both hands and stand on one leg with a soft knee bend.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6190,16 +5401,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise',
-      description:
-          'Stand on one foot on the edge of a step with the heel hanging off, holding something for balance.',
+      description: 'Stand on one foot on the edge of a step with the heel hanging off, holding something for balance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6210,8 +5418,7 @@ class ExerciseLibraryCatalog {
       id: 'single_leg_standing_calf_raise_barbell',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise (Barbell)',
-      description:
-          'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
+      description: 'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6219,16 +5426,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise (Dumbbell)',
-      description:
-          'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
+      description: 'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6236,16 +5440,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'single_leg_standing_calf_raise_machine',
       category: ExerciseCategory.other,
       name: 'Single Leg Standing Calf Raise (Machine)',
-      description:
-          'Set the shoulder pads and stand on the platform with one foot, the heel hanging off the edge.',
+      description: 'Set the shoulder pads and stand on the platform with one foot, the heel hanging off the edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6258,8 +5459,7 @@ class ExerciseLibraryCatalog {
       id: 'sissy_squat_weighted',
       category: ExerciseCategory.squat,
       name: 'Sissy Squat (Weighted)',
-      description:
-          'Grip a squat rack upright with one hand and hold a weight plate against your chest with the other, feet shoulder-width and up on your toes.',
+      description: 'Grip a squat rack upright with one hand and hold a weight plate against your chest with the other, feet shoulder-width and up on your toes.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6268,16 +5468,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'sit_up',
       category: ExerciseCategory.core,
       name: 'Sit Up',
-      description:
-          'Lie on your back with knees bent, feet anchored, and hands behind your head.',
+      description: 'Lie on your back with knees bent, feet anchored, and hands behind your head.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6289,8 +5486,7 @@ class ExerciseLibraryCatalog {
       id: 'sit_up_weighted',
       category: ExerciseCategory.core,
       name: 'Sit Up (Weighted)',
-      description:
-          'Lie on your back with your knees bent and hold a plate against your chest.',
+      description: 'Lie on your back with your knees bent and hold a plate against your chest.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6303,8 +5499,7 @@ class ExerciseLibraryCatalog {
       id: 'skullcrusher_barbell',
       category: ExerciseCategory.other,
       name: 'Skullcrusher (Barbell)',
-      description:
-          'Lie on a bench holding an EZ bar over your chest with a close grip.',
+      description: 'Lie on a bench holding an EZ bar over your chest with a close grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6313,16 +5508,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'skullcrusher_dumbbell',
       category: ExerciseCategory.other,
       name: 'Skullcrusher (Dumbbell)',
-      description:
-          'Lie on a bench holding a dumbbell in each hand over your chest with palms facing each other.',
+      description: 'Lie on a bench holding a dumbbell in each hand over your chest with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6331,16 +5523,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'sled_push',
       category: ExerciseCategory.other,
       name: 'Sled Push',
-      description:
-          'Load the sled and grip the handles with your arms fully extended.',
+      description: 'Load the sled and grip the handles with your arms fully extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6355,32 +5544,22 @@ class ExerciseLibraryCatalog {
       id: 'snatch',
       category: ExerciseCategory.other,
       name: 'Snatch',
-      description:
-          'From a wide grip, pull the bar explosively from the floor, extend the hips and pull under to catch it overhead in a full squat, then stand to lockout.',
+      description: 'From a wide grip, pull the bar explosively from the floor, extend the hips and pull under to catch it overhead in a full squat, then stand to lockout.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'snowboarding',
       category: ExerciseCategory.other,
       name: 'Snowboarding',
-      description:
-          'Ride at a pace and terrain that keeps you working continuously, staying low with the knees bent and the weight centered over the board.',
+      description: 'Ride at a pace and terrain that keeps you working continuously, staying low with the knees bent and the weight centered over the board.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6394,8 +5573,7 @@ class ExerciseLibraryCatalog {
       id: 'spider_curl_barbell',
       category: ExerciseCategory.other,
       name: 'Spider Curl (Barbell)',
-      description:
-          'Lie chest down on an incline bench with your arms hanging straight below you holding an EZ bar.',
+      description: 'Lie chest down on an incline bench with your arms hanging straight below you holding an EZ bar.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6404,16 +5582,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'spider_curl_dumbbell',
       category: ExerciseCategory.other,
       name: 'Spider Curl (Dumbbell)',
-      description:
-          'Lie face down on an incline bench with your chest supported and shoulders near the top.',
+      description: 'Lie face down on an incline bench with your chest supported and shoulders near the top.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6422,9 +5597,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'spiderman',
@@ -6442,8 +5615,7 @@ class ExerciseLibraryCatalog {
       id: 'spinning',
       category: ExerciseCategory.other,
       name: 'Spinning',
-      description:
-          'Ride a stationary bike through changes of pace and resistance, staying seated or standing as the session calls for.',
+      description: 'Ride a stationary bike through changes of pace and resistance, staying seated or standing as the session calls for.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6457,32 +5629,22 @@ class ExerciseLibraryCatalog {
       id: 'split_jerk',
       category: ExerciseCategory.other,
       name: 'Split Jerk',
-      description:
-          'Rack the bar across your front delts, feet under your hips.',
+      description: 'Rack the bar across your front delts, feet under your hips.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
-      secondaryMuscles: [
-        'Quadriceps',
-        'Glutes',
-        'Hamstrings',
-        'Shoulders',
-        'Traps'
-      ],
+      secondaryMuscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Shoulders', 'Traps'],
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'split_squat_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Split Squat (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand and set your feet in a long split stance.',
+      description: 'Hold a dumbbell in each hand and set your feet in a long split stance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6491,16 +5653,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'sprints',
       category: ExerciseCategory.other,
       name: 'Sprints',
-      description:
-          'Run at close to maximum effort for a short distance or time, then walk or jog until you have recovered.',
+      description: 'Run at close to maximum effort for a short distance or time, then walk or jog until you have recovered.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6514,8 +5673,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_assisted',
       category: ExerciseCategory.squat,
       name: 'Squat (Assisted)',
-      description:
-          'Hold a doorframe, pole or suspension strap and sit back into a squat.',
+      description: 'Hold a doorframe, pole or suspension strap and sit back into a squat.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6527,8 +5685,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_assisted_deep',
       category: ExerciseCategory.squat,
       name: 'Squat (Assisted, Deep)',
-      description:
-          'Using the same light support, lower all the way until the hamstrings meet the calves.',
+      description: 'Using the same light support, lower all the way until the hamstrings meet the calves.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6540,24 +5697,20 @@ class ExerciseLibraryCatalog {
       id: 'squat_band',
       category: ExerciseCategory.squat,
       name: 'Squat (Band)',
-      description:
-          'Stand on the band with your feet shoulder width and bring the top of the loop over your shoulders.',
+      description: 'Stand on the band with your feet shoulder width and bring the top of the loop over your shoulders.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Quadriceps'],
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Squat (Barbell)',
-      description:
-          'Set the bar just below shoulder height, step under it and rest it across your upper back.',
+      description: 'Set the bar just below shoulder height, step under it and rest it across your upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6566,16 +5719,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'squat_bodyweight',
       category: ExerciseCategory.squat,
       name: 'Squat (Bodyweight)',
-      description:
-          'Stand with the feet about shoulder width and the toes turned slightly out.',
+      description: 'Stand with the feet about shoulder width and the toes turned slightly out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6587,8 +5737,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_deep',
       category: ExerciseCategory.squat,
       name: 'Squat (Deep)',
-      description:
-          'Squat all the way to the bottom so the hamstrings rest on the calves and hold there comfortably.',
+      description: 'Squat all the way to the bottom so the hamstrings rest on the calves and hold there comfortably.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6600,8 +5749,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Squat (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand at your sides or one at your chest, feet about shoulder width.',
+      description: 'Hold a dumbbell in each hand at your sides or one at your chest, feet about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6610,16 +5758,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'squat_machine',
       category: ExerciseCategory.squat,
       name: 'Squat (Machine)',
-      description:
-          'Set the shoulder pads and place your feet on the platform about shoulder width.',
+      description: 'Set the shoulder pads and place your feet on the platform about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6633,8 +5778,7 @@ class ExerciseLibraryCatalog {
       id: 'squat_smith_machine',
       category: ExerciseCategory.squat,
       name: 'Squat (Smith Machine)',
-      description:
-          'Set the bar across your upper back in the Smith machine with your feet slightly forward.',
+      description: 'Set the bar across your upper back in the Smith machine with your feet slightly forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6648,24 +5792,20 @@ class ExerciseLibraryCatalog {
       id: 'squat_suspension',
       category: ExerciseCategory.squat,
       name: 'Squat (Suspension)',
-      description:
-          'Hold the handles and stand with your feet shoulder width and the straps taut.',
+      description: 'Hold the handles and stand with your feet shoulder width and the straps taut.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Quadriceps'],
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'squat_row',
       category: ExerciseCategory.horizontalPull,
       name: 'Squat Row',
-      description:
-          'Hold the suspension handles or a band and sink into a squat with your arms extended.',
+      description: 'Hold the suspension handles or a band and sink into a squat with your arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6677,8 +5817,7 @@ class ExerciseLibraryCatalog {
       id: 'stair_machine_floors',
       category: ExerciseCategory.other,
       name: 'Stair Machine (Floors)',
-      description:
-          'Step onto the machine and climb at a steady pace, standing tall rather than leaning on the rails.',
+      description: 'Step onto the machine and climb at a steady pace, standing tall rather than leaning on the rails.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6692,8 +5831,7 @@ class ExerciseLibraryCatalog {
       id: 'stair_machine_steps',
       category: ExerciseCategory.other,
       name: 'Stair Machine (Steps)',
-      description:
-          'Climb at a steady step rate, standing upright with a light touch on the rails for balance only.',
+      description: 'Climb at a steady step rate, standing upright with a light touch on the rails for balance only.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6707,8 +5845,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_cable_glute_kickbacks',
       category: ExerciseCategory.other,
       name: 'Standing Cable Glute Kickbacks',
-      description:
-          'Attach an ankle strap to a low pulley and face the machine holding on for balance.',
+      description: 'Attach an ankle strap to a low pulley and face the machine holding on for balance.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6722,8 +5859,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise',
-      description:
-          'Set a loaded barbell across your upper back inside a squat rack and step out.',
+      description: 'Set a loaded barbell across your upper back inside a squat rack and step out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6731,16 +5867,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'standing_calf_raise_barbell',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Barbell)',
-      description:
-          'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
+      description: 'Set a loaded barbell across your upper back and place the balls of your feet on a block or plate with heels hanging off.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6748,16 +5881,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'standing_calf_raise_dumbbell',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Dumbbell)',
-      description:
-          'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
+      description: 'Hold a sturdy object for balance and place the balls of both feet on a dumbbell handle, heels on the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6765,16 +5895,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'standing_calf_raise_machine',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Machine)',
-      description:
-          'Set the shoulder pads and stand with the balls of your feet on the platform edge.',
+      description: 'Set the shoulder pads and stand with the balls of your feet on the platform edge.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6787,8 +5914,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_calf_raise_smith',
       category: ExerciseCategory.other,
       name: 'Standing Calf Raise (Smith)',
-      description:
-          'Set the bar across your upper back in the Smith machine and stand with the balls of your feet on a block.',
+      description: 'Set the bar across your upper back in the Smith machine and stand with the balls of your feet on a block.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6799,8 +5925,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_leg_curls',
       category: ExerciseCategory.other,
       name: 'Standing Leg Curls',
-      description:
-          'Stand tall holding something for balance and shift your weight onto one leg.',
+      description: 'Stand tall holding something for balance and shift your weight onto one leg.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6812,8 +5937,7 @@ class ExerciseLibraryCatalog {
       id: 'standing_military_press_barbell',
       category: ExerciseCategory.verticalPush,
       name: 'Standing Military Press (Barbell)',
-      description:
-          'Hold the bar at the front of the shoulders, feet hip-width, glutes and abs braced.',
+      description: 'Hold the bar at the front of the shoulders, feet hip-width, glutes and abs braced.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6822,9 +5946,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'step_up',
@@ -6842,24 +5964,20 @@ class ExerciseLibraryCatalog {
       id: 'sternum_pull_up_gironda',
       category: ExerciseCategory.verticalPull,
       name: 'Sternum Pull up (Gironda)',
-      description:
-          'Hang from the bar and pull while leaning your head back and arching the upper back.',
+      description: 'Hang from the bar and pull while leaning your head back and arching the upper back.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'straight_arm_lat_pulldown_cable',
       category: ExerciseCategory.verticalPull,
       name: 'Straight Arm Lat Pulldown (Cable)',
-      description:
-          'Grab a wide bar on a high pulley with an overhand grip wider than shoulder width and step back about two feet.',
+      description: 'Grab a wide bar on a high pulley with an overhand grip wider than shoulder width and step back about two feet.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6873,8 +5991,7 @@ class ExerciseLibraryCatalog {
       id: 'straight_leg_deadlift',
       category: ExerciseCategory.hinge,
       name: 'Straight Leg Deadlift',
-      description:
-          'Stand with your feet hip width and your knees nearly locked.',
+      description: 'Stand with your feet hip width and your knees nearly locked.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6886,8 +6003,7 @@ class ExerciseLibraryCatalog {
       id: 'stretching',
       category: ExerciseCategory.other,
       name: 'Stretching',
-      description:
-          'Move into each position until you feel a mild stretch, then hold it while you breathe steadily.',
+      description: 'Move into each position until you feel a mild stretch, then hold it while you breathe steadily.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6900,8 +6016,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_deadlift',
       category: ExerciseCategory.hinge,
       name: 'Sumo Deadlift',
-      description:
-          'Stand with a wide stance and your toes turned out, hands inside your knees.',
+      description: 'Stand with a wide stance and your toes turned out, hands inside your knees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6913,8 +6028,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_squat',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat',
-      description:
-          'Stand with your feet much wider than your shoulders and your toes turned out.',
+      description: 'Stand with your feet much wider than your shoulders and your toes turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6926,8 +6040,7 @@ class ExerciseLibraryCatalog {
       id: 'sumo_squat_barbell',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat (Barbell)',
-      description:
-          'Set a barbell across your upper back and take a wide stance with your toes turned out.',
+      description: 'Set a barbell across your upper back and take a wide stance with your toes turned out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6936,16 +6049,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'sumo_squat_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat (Dumbbell)',
-      description:
-          'Hold a single dumbbell with both hands hanging between your legs and take a wide stance with toes out.',
+      description: 'Hold a single dumbbell with both hands hanging between your legs and take a wide stance with toes out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6954,16 +6064,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'sumo_squat_kettlebell',
       category: ExerciseCategory.squat,
       name: 'Sumo Squat (Kettlebell)',
-      description:
-          'Hold a kettlebell by the handle with both hands hanging in front of you and take a wide stance with toes out.',
+      description: 'Hold a kettlebell by the handle with both hands hanging in front of you and take a wide stance with toes out.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -6971,9 +6078,7 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'superman',
@@ -6991,8 +6096,7 @@ class ExerciseLibraryCatalog {
       id: 'swimming',
       category: ExerciseCategory.other,
       name: 'Swimming',
-      description:
-          'Swim continuous lengths at a pace you can hold, breathing on a regular rhythm.',
+      description: 'Swim continuous lengths at a pace you can hold, breathing on a regular rhythm.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7006,8 +6110,7 @@ class ExerciseLibraryCatalog {
       id: 't_bar_row',
       category: ExerciseCategory.horizontalPull,
       name: 'T Bar Row',
-      description:
-          'Straddle the bar and grip the handles with a flat back and your torso hinged forward.',
+      description: 'Straddle the bar and grip the handles with a flat back and your torso hinged forward.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7019,8 +6122,7 @@ class ExerciseLibraryCatalog {
       id: 'thruster_barbell',
       category: ExerciseCategory.other,
       name: 'Thruster (Barbell)',
-      description:
-          'Hold the bar in a front rack across your shoulders and squat down to at least parallel.',
+      description: 'Hold the bar in a front rack across your shoulders and squat down to at least parallel.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7028,32 +6130,26 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'thruster_kettlebell',
       category: ExerciseCategory.other,
       name: 'Thruster (Kettlebell)',
-      description:
-          'Hold two kettlebells racked at your shoulders, feet shoulder-width.',
+      description: 'Hold two kettlebells racked at your shoulders, feet shoulder-width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Full Body'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.kettlebell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
     ),
     Exercise(
       id: 'toe_touch',
       category: ExerciseCategory.core,
       name: 'Toe Touch',
-      description:
-          'Lie on your back with your legs raised straight toward the ceiling and your arms reaching up.',
+      description: 'Lie on your back with your legs raised straight toward the ceiling and your arms reaching up.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7072,16 +6168,13 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Abdominals'],
       secondaryMuscles: ['Other'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'torso_rotation',
       category: ExerciseCategory.core,
       name: 'Torso Rotation',
-      description:
-          'Sit or stand with the pad or handle against your torso and your hips locked in place.',
+      description: 'Sit or stand with the pad or handle against your torso and your hips locked in place.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7093,8 +6186,7 @@ class ExerciseLibraryCatalog {
       id: 'treadmill',
       category: ExerciseCategory.other,
       name: 'Treadmill',
-      description:
-          'Set a pace and incline you can hold and run or walk in the middle of the belt.',
+      description: 'Set a pace and incline you can hold and run or walk in the middle of the belt.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7108,40 +6200,33 @@ class ExerciseLibraryCatalog {
       id: 'triceps_dip',
       category: ExerciseCategory.verticalPush,
       name: 'Triceps Dip',
-      description:
-          'Support yourself on parallel bars with straight arms and your torso close to upright.',
+      description: 'Support yourself on parallel bars with straight arms and your torso close to upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars})],
     ),
     Exercise(
       id: 'triceps_dip_assisted',
       category: ExerciseCategory.verticalPush,
       name: 'Triceps Dip (Assisted)',
-      description:
-          'Kneel on the assist pad or loop a band under your knees on the parallel bars and stay upright.',
+      description: 'Kneel on the assist pad or loop a band under your knees on the parallel bars and stay upright.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars})],
     ),
     Exercise(
       id: 'triceps_dip_weighted',
       category: ExerciseCategory.verticalPush,
       name: 'Triceps Dip (Weighted)',
-      description:
-          'Add load with a dip belt or vest and support yourself upright on the parallel bars.',
+      description: 'Add load with a dip belt or vest and support yourself upright on the parallel bars.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7149,17 +6234,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Chest', 'Shoulders'],
       isLoaded: true,
       isWeighted: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dipBars}),
-        EquipmentNeed({EquipmentItem.weightVest})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dipBars}), EquipmentNeed({EquipmentItem.weightVest})],
     ),
     Exercise(
       id: 'triceps_extension_barbell',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Barbell)',
-      description:
-          'Lie back on an incline bench set between 45 and 75 degrees, holding a barbell with an overhand grip just inside shoulder width.',
+      description: 'Lie back on an incline bench set between 45 and 75 degrees, holding a barbell with an overhand grip just inside shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7168,16 +6249,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'triceps_extension_cable',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Cable)',
-      description:
-          'Lie on a flat bench at the end of a low pulley and hold the straight bar with a narrow overhand grip.',
+      description: 'Lie on a flat bench at the end of a low pulley and hold the straight bar with a narrow overhand grip.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7191,8 +6269,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_dumbbell',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Dumbbell)',
-      description:
-          'Stand with feet shoulder width and hold one dumbbell overhead with both hands, arms extended.',
+      description: 'Stand with feet shoulder width and hold one dumbbell overhead with both hands, arms extended.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7201,16 +6278,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'triceps_extension_machine',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Machine)',
-      description:
-          'Adjust the seat and set your upper arms against the pads, grasping the handles.',
+      description: 'Adjust the seat and set your upper arms against the pads, grasping the handles.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7224,24 +6298,20 @@ class ExerciseLibraryCatalog {
       id: 'triceps_extension_suspension',
       category: ExerciseCategory.other,
       name: 'Triceps Extension (Suspension)',
-      description:
-          'Hold the handles and lean forward with your body straight and your hands in front of your forehead.',
+      description: 'Hold the handles and lean forward with your body straight and your hands in front of your forehead.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Triceps'],
       secondaryMuscles: ['Shoulders'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.rings})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.rings})],
     ),
     Exercise(
       id: 'triceps_kickback_cable',
       category: ExerciseCategory.other,
       name: 'Triceps Kickback (Cable)',
-      description:
-          'Hinge forward holding a low cable handle with your upper arm pinned against your side.',
+      description: 'Hinge forward holding a low cable handle with your upper arm pinned against your side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7255,8 +6325,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_kickback_dumbbell',
       category: ExerciseCategory.other,
       name: 'Triceps Kickback (Dumbbell)',
-      description:
-          'Hinge forward with a flat back holding a dumbbell with your upper arm against your side.',
+      description: 'Hinge forward with a flat back holding a dumbbell with your upper arm against your side.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7265,16 +6334,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'triceps_pressdown',
       category: ExerciseCategory.other,
       name: 'Triceps Pressdown',
-      description:
-          'Stand facing a high pulley holding a bar or rope with your elbows tucked at your sides.',
+      description: 'Stand facing a high pulley holding a bar or rope with your elbows tucked at your sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7286,8 +6352,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_pushdown',
       category: ExerciseCategory.other,
       name: 'Triceps Pushdown',
-      description:
-          'Stand at a high pulley with the elbows pinned to the sides.',
+      description: 'Stand at a high pulley with the elbows pinned to the sides.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7301,8 +6366,7 @@ class ExerciseLibraryCatalog {
       id: 'triceps_rope_pushdown',
       category: ExerciseCategory.other,
       name: 'Triceps Rope Pushdown',
-      description:
-          'Attach a rope to a high pulley and grip it with palms facing each other.',
+      description: 'Attach a rope to a high pulley and grip it with palms facing each other.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7316,8 +6380,7 @@ class ExerciseLibraryCatalog {
       id: 'upright_row_barbell',
       category: ExerciseCategory.horizontalPull,
       name: 'Upright Row (Barbell)',
-      description:
-          'Grip a barbell with an overhand grip slightly narrower than shoulder width, arms hanging so the bar rests on your thighs and your back straight.',
+      description: 'Grip a barbell with an overhand grip slightly narrower than shoulder width, arms hanging so the bar rests on your thighs and your back straight.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7326,16 +6389,13 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.barbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.barbell})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.barbell})],
     ),
     Exercise(
       id: 'upright_row_cable',
       category: ExerciseCategory.horizontalPull,
       name: 'Upright Row (Cable)',
-      description:
-          'Stand facing a low pulley holding a straight bar with an overhand grip at about shoulder width.',
+      description: 'Stand facing a low pulley holding a straight bar with an overhand grip at about shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7358,9 +6418,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'v_up',
@@ -7378,8 +6436,7 @@ class ExerciseLibraryCatalog {
       id: 'v_sit_hold',
       category: ExerciseCategory.core,
       name: 'V-Sit Hold',
-      description:
-          'From an L-sit, compress the hips and lift the straight legs above horizontal into a V shape.',
+      description: 'From an L-sit, compress the hips and lift the straight legs above horizontal into a V shape.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7393,8 +6450,7 @@ class ExerciseLibraryCatalog {
       id: 'walking',
       category: ExerciseCategory.other,
       name: 'Walking',
-      description:
-          'Walk at a brisk pace you can hold for the session, standing tall with the shoulders relaxed.',
+      description: 'Walk at a brisk pace you can hold for the session, standing tall with the shoulders relaxed.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7408,8 +6464,7 @@ class ExerciseLibraryCatalog {
       id: 'walking_lunge',
       category: ExerciseCategory.squat,
       name: 'Walking Lunge',
-      description:
-          'Step forward into a long stride and lower until the back knee is just above the floor.',
+      description: 'Step forward into a long stride and lower until the back knee is just above the floor.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7422,8 +6477,7 @@ class ExerciseLibraryCatalog {
       id: 'walking_lunge_dumbbell',
       category: ExerciseCategory.squat,
       name: 'Walking Lunge (Dumbbell)',
-      description:
-          'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
+      description: 'Hold a dumbbell in each hand at your sides and step forward into a long stride.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7431,16 +6485,13 @@ class ExerciseLibraryCatalog {
       secondaryMuscles: ['Glutes', 'Hamstrings', 'Calves'],
       isTimed: true,
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'wall_ball',
       category: ExerciseCategory.other,
       name: 'Wall Ball',
-      description:
-          'Hold a medicine ball at your chest and squat to at least parallel facing a wall.',
+      description: 'Hold a medicine ball at your chest and squat to at least parallel facing a wall.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7452,8 +6503,7 @@ class ExerciseLibraryCatalog {
       id: 'wall_sit',
       category: ExerciseCategory.squat,
       name: 'Wall Sit',
-      description:
-          'Lean your back flat against a wall and walk your feet out until your knees are bent to ninety degrees.',
+      description: 'Lean your back flat against a wall and walk your feet out until your knees are bent to ninety degrees.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7466,8 +6516,7 @@ class ExerciseLibraryCatalog {
       id: 'warm_up',
       category: ExerciseCategory.other,
       name: 'Warm Up',
-      description:
-          'Spend five to ten minutes raising the heart rate and moving each joint through its range.',
+      description: 'Spend five to ten minutes raising the heart rate and moving each joint through its range.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7487,16 +6536,13 @@ class ExerciseLibraryCatalog {
       primaryMuscles: ['Lats'],
       secondaryMuscles: ['Biceps', 'Upper Back', 'Forearms'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.pullUpBar})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.pullUpBar})],
     ),
     Exercise(
       id: 'wrist_roller',
       category: ExerciseCategory.other,
       name: 'Wrist Roller',
-      description:
-          'Stand tall gripping a loaded wrist roller with both hands, palms down.',
+      description: 'Stand tall gripping a loaded wrist roller with both hands, palms down.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7508,8 +6554,7 @@ class ExerciseLibraryCatalog {
       id: 'yoga',
       category: ExerciseCategory.other,
       name: 'Yoga',
-      description:
-          'Move through a sequence of postures, holding each while you breathe steadily and keeping the transitions controlled.',
+      description: 'Move through a sequence of postures, holding each while you breathe steadily and keeping the transitions controlled.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7522,8 +6567,7 @@ class ExerciseLibraryCatalog {
       id: 'zercher_squat',
       category: ExerciseCategory.squat,
       name: 'Zercher Squat',
-      description:
-          'Hold a barbell in the crooks of your elbows against your body and stand with your feet shoulder width.',
+      description: 'Hold a barbell in the crooks of your elbows against your body and stand with your feet shoulder width.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
@@ -7544,9 +6588,7 @@ class ExerciseLibraryCatalog {
       isLoaded: true,
       isWeighted: true,
       loadType: LoadType.dumbbell,
-      equipment: [
-        EquipmentNeed({EquipmentItem.dumbbells})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.dumbbells})],
     ),
     Exercise(
       id: 'romanian_deadlift_bodyweight',
@@ -7564,34 +6606,53 @@ class ExerciseLibraryCatalog {
       id: 'nordic_hamstring_curl_banded_eccentric',
       category: ExerciseCategory.hinge,
       name: 'Nordic Hamstring Curl (Banded, Eccentric)',
-      description:
-          'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+      description: 'Kneel with your feet securely anchored and a resistance band assisting your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Hamstrings'],
       secondaryMuscles: ['Glutes', 'Calves'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
     Exercise(
       id: 'nordic_hamstring_curl_banded',
       category: ExerciseCategory.hinge,
       name: 'Nordic Hamstring Curl (Banded)',
-      description:
-          'Kneel with your feet securely anchored and a resistance band assisting your torso.',
+      description: 'Kneel with your feet securely anchored and a resistance band assisting your torso.',
       difficulty: 3,
       treeOrder: 0,
       isLibrary: true,
       primaryMuscles: ['Hamstrings'],
       secondaryMuscles: ['Glutes', 'Calves'],
       isLoaded: true,
-      equipment: [
-        EquipmentNeed({EquipmentItem.bands})
-      ],
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
     ),
+    Exercise(
+      id: 'single_leg_kettlebell_calf_raise',
+      category: ExerciseCategory.other,
+      name: 'Single Leg Standing Calf Raise (Kettlebell)',
+      description: 'Hold a kettlebell in one hand and use your free hand for balance against a wall or support.',
+      difficulty: 3,
+      treeOrder: 0,
+      isLibrary: true,
+      primaryMuscles: ['Calves'],
+      isLoaded: true,
+      equipment: [EquipmentNeed({EquipmentItem.kettlebell})],
+    ),
+    Exercise(
+      id: 'banded_standing_calf_raise',
+      category: ExerciseCategory.other,
+      name: 'Single Leg Standing Calf Raise (Band)',
+      description: 'Stand with the balls of both feet on the middle of a resistance band.',
+      difficulty: 3,
+      treeOrder: 0,
+      isLibrary: true,
+      primaryMuscles: ['Calves'],
+      isLoaded: true,
+      equipment: [EquipmentNeed({EquipmentItem.bands})],
+    ),
+
   ];
 
   static const Map<String, ExerciseCoaching> _coaching = {
@@ -14068,6 +13129,35 @@ class ExerciseLibraryCatalog {
       videoUrl: 'https://www.youtube.com/watch?v=HUXS3S2xSX4',
       imageUrl: '',
     ),
+    'single_leg_kettlebell_calf_raise': ExerciseCoaching(
+      howTo: [
+        'Hold a kettlebell in one hand and use your free hand for balance against a wall or support.',
+        'Stand on one leg, raise your heel as high as you can, then lower under control.',
+        'Complete all reps before switching legs.',
+      ],
+      formChecks: [
+        'Keep the working knee straight without locking it',
+        'Push through the ball of your foot without rolling the ankle outward',
+        'Same reps on both sides',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=KxKZEFddDwA',
+      imageUrl: '',
+    ),
+    'banded_standing_calf_raise': ExerciseCoaching(
+      howTo: [
+        'Stand with the balls of both feet on the middle of a resistance band.',
+        'Hold the ends at shoulder height with the band taut.',
+        'Raise your heels as high as you can, then lower under control.',
+      ],
+      formChecks: [
+        'Keep the knees straight without locking them',
+        'Keep tension in the band throughout',
+        'Pause at the top and avoid bouncing',
+      ],
+      videoUrl: 'https://www.youtube.com/watch?v=aS-13WxtTXw',
+      imageUrl: '',
+    ),
+
   };
 
   static List<Exercise> all() => _all;

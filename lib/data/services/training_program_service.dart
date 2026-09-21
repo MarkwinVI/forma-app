@@ -693,6 +693,8 @@ class TrainingProgramService {
     TrainingSessionType.lower: [
       'standing_calf_raise',
       'single_leg_standing_calf_raise_dumbbell',
+      'single_leg_kettlebell_calf_raise',
+      'banded_standing_calf_raise',
     ],
   };
 

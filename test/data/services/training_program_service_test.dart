@@ -56,6 +56,27 @@ void main() {
       );
       expect(
         TrainingProgramService.accessoryFor(
+          TrainingSessionType.lower,
+          EquipmentAnswer.some({EquipmentItem.kettlebell}),
+        )?.id,
+        'single_leg_kettlebell_calf_raise',
+      );
+      expect(
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.lower,
+          EquipmentAnswer.some({EquipmentItem.bands}),
+        )?.id,
+        'banded_standing_calf_raise',
+      );
+      expect(
+        TrainingProgramService.accessoryFor(
+          TrainingSessionType.lower,
+          EquipmentAnswer.none,
+        ),
+        isNull,
+      );
+      expect(
+        TrainingProgramService.accessoryFor(
           TrainingSessionType.fullBody,
           EquipmentAnswer.fullGym,
         ),

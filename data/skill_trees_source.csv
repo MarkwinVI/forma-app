@@ -129,11 +129,11 @@ handstand_pushups_free_handstand_push_up,Handstand Push-Up (Freestanding),handst
 dips_bench_dips,Bench Dip,dips,foundation,bench_dip,,1,
 dips_dip_negatives,Chest Dip (Eccentric),dips,foundation,chest_dip_eccentric,dips_bench_dips,2,
 dips_parallel_bar_dips,Chest Dip,dips,foundation,chest_dip,dips_dip_negatives,3,
-dips_weighted_dips_120,Chest Dip (+20% Bodyweigh),dips,weighted,chest_dip_weighted,dips_parallel_bar_dips,4,user_bodyweight * 0.20
-dips_weighted_dips_140,Chest Dip (+40% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_120,4,user_bodyweight * 0.40
-dips_weighted_dips_160,Chest Dip (+60% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_140,4,user_bodyweight * 0.60
+dips_weighted_dips_120,Chest Dip (+20% Bodyweight),dips,weighted,chest_dip_weighted,dips_parallel_bar_dips,4,user_bodyweight * 0.20
+dips_weighted_dips_140,Chest Dip (+40% Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_120,4,user_bodyweight * 0.40
+dips_weighted_dips_160,Chest Dip (+60% Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_140,4,user_bodyweight * 0.60
 dips_weighted_dips_180,Chest Dip (+80% Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_160,5,user_bodyweight * 0.80
-dips_weighted_dips_200,Chest Dip (+100% Bodyweigh),dips,weighted,chest_dip_weighted,dips_weighted_dips_180,5,user_bodyweight * 1.00
+dips_weighted_dips_200,Chest Dip (+100% Bodyweight),dips,weighted,chest_dip_weighted,dips_weighted_dips_180,5,user_bodyweight * 1.00
 dips_ring_dips,Ring Dips,dips,rings,ring_dips,dips_parallel_bar_dips,4,
 dips_ring_dips_rto,Ring Dip (Rings Turned Out),dips,rings,ring_dip_rings_turned_out,dips_ring_dips,5,
 barbell_squat_barbell_squat,Squat (Barbell),barbell_squat,main,squat_barbell,,3,
