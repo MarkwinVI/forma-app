@@ -276,11 +276,9 @@ class EquipmentTile extends StatelessWidget {
   }
 }
 
-/// The CTA label under a tile grid: how many are ticked, or the nudge to
-/// tick one.
-String equipmentDoneLabel(Set<EquipmentItem> picked) => picked.isEmpty
-    ? 'Select at least one item'
-    : 'Done — ${picked.length} item${picked.length == 1 ? '' : 's'}';
+/// The CTA label under a tile grid: Done, or the nudge to tick one.
+String equipmentDoneLabel(Set<EquipmentItem> picked) =>
+    picked.isEmpty ? 'Select at least one item' : 'Done';
 
 /// The setup wizard's "What do you have?" sheet: the tile grid, the bar
 /// reminder, and Done. Every toggle reaches [onChanged] as it happens, so

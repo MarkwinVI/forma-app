@@ -79,11 +79,11 @@ void main() {
     await tester.ensureVisible(find.text('Dumbbells'));
     await tester.tap(find.text('Dumbbells'));
     await tester.pump();
-    expect(find.text('Done — 1 item'), findsOneWidget);
+    expect(find.text('Done'), findsOneWidget);
     await tester.ensureVisible(find.text('Barbell'));
     await tester.tap(find.text('Barbell'));
     await tester.pump();
-    await tester.tap(find.text('Done — 2 items'));
+    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(find.text('What do you have?'), findsNothing);
     expect(find.text('Dumbbells, Barbell'), findsOneWidget);
