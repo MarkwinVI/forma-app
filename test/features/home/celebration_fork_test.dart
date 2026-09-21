@@ -105,7 +105,13 @@ void main() {
     expect(find.text(fork.newExercise.name), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1500));
-    expect(find.textContaining('You’re on the Weighted path.'), findsOneWidget);
+    expect(
+      find.text(
+        'Mastering Chest Dip unlocked ${fork.newExercise.name}. You’re on '
+        'the Weighted path. Change it anytime on the Program tab.',
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(ForkMap), findsOneWidget);
   });
 }

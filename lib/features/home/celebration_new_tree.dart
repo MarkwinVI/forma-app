@@ -323,7 +323,8 @@ class NewTreeMap extends StatefulWidget {
 
   const NewTreeMap({super.key, required this.data, required this.phase});
 
-  static const double width = 342;
+  /// As wide as the target bar above it — the tree fills the width.
+  static const double width = 280;
   static const double height = 184;
 
   @override
@@ -413,8 +414,10 @@ class _NewTreeMapPainter extends CustomPainter {
   /// each spoke starts with its first exercise, right at the pivot.
   static const _pivotX = 12.0;
   static const _step = 45.0;
-  static const _maxPitch = 44.0;
-  static const _minPitch = 26.0;
+  /// The pitch stretches to fill the width; only a long route packs
+  /// tighter than the design's 44.
+  static const _maxPitch = 96.0;
+  static const _minPitch = 24.0;
   static const _lock = Color(0xFF3A3A40);
   static final _dim = Colors.white.withValues(alpha: 0.14);
   static final _trunkOn = AppColors.green.withValues(alpha: 0.5);

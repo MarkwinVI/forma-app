@@ -234,13 +234,10 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
     final started = _phase >= 3;
     final done = _phase >= 4;
     final title = started ? data.newExercise.name : data.mastered.name;
-    final suffix = data.mastered.isTimed ? 's' : '';
-    final helper = data.isFork
-        ? 'You’re on the ${data.chosen!.label} path. Change it anytime on '
-            'the Program tab.'
-        : 'Clearing ${data.mastered.name} at '
-            '${data.masterySets} × ${data.masteryValue}$suffix opens '
-            '${data.newExercise.name} — your next move on this path.';
+    final helper =
+        'Mastering ${data.mastered.name} unlocked ${data.newExercise.name}.'
+        '${data.isFork ? ' You’re on the ${data.chosen!.label} path. '
+            'Change it anytime on the Program tab.' : ''}';
     final target = started
         ? '${data.startSets} × ${data.startValue}'
             '${data.newExercise.isTimed ? 's' : ''}'
@@ -361,7 +358,8 @@ class ForkMap extends StatefulWidget {
 
   const ForkMap({super.key, required this.data, required this.phase});
 
-  static const double width = 342;
+  /// As wide as the target bar above it — the tree fills the width.
+  static const double width = 280;
   static const double height = 178;
 
   @override
@@ -439,8 +437,11 @@ class _ForkMapPainter extends CustomPainter {
   /// Where the trunk starts — its first exercise sits right here; there is
   /// no hub drawn before it.
   static const _pivotX = 12.0;
-  static const _maxPitch = 44.0;
-  static const _minPitch = 26.0;
+
+  /// The pitch stretches to fill the width; only a long route packs
+  /// tighter than the design's 44.
+  static const _maxPitch = 96.0;
+  static const _minPitch = 24.0;
   static const _lock = Color(0xFF3A3A40);
   static final _dim = Colors.white.withValues(alpha: 0.14);
   static final _trunkOn = AppColors.green.withValues(alpha: 0.5);
@@ -450,12 +451,13 @@ class _ForkMapPainter extends CustomPainter {
   bool get _lit => phase >= 3;
 
   /// Where each branch leaves the trunk, in degrees. Two branches sit 16°
-  /// apart each side; more spread evenly across ±24°.
+  /// apart each side, three across ±20°, more across ±30° so their labels
+  /// clear each other.
   static List<double> _offsets(int count) => switch (count) {
         1 => const [0],
         2 => const [-16, 16],
         3 => const [-20, 0, 20],
-        _ => [for (var i = 0; i < count; i++) -24 + 48 * i / (count - 1)],
+        _ => [for (var i = 0; i < count; i++) -30 + 60 * i / (count - 1)],
       };
 
   TextPainter _text(
@@ -480,7 +482,7 @@ class _ForkMapPainter extends CustomPainter {
 
   /// The most steps the map draws along the route before it starts
   /// dropping trunk steps from the left.
-  static const _maxSteps = 8;
+  static const _maxSteps = 7;
 
   @override
   void paint(Canvas canvas, Size size) {
