@@ -33,11 +33,14 @@ import 'celebration_fork.dart';
 import 'celebration_new_tree.dart';
 import 'celebration_widgets.dart';
 import 'completed_workout_model.dart';
+import 'session_feedback_view.dart';
 import 'workout_analytics.dart';
 
 /// Post-workout celebration flow: a summary step that saves the session,
 /// followed by one step per progression change the session earned — target
 /// level-ups, masteries, and newly unlocked exercises — Duolingo-style.
+/// The last step hands over to [SessionFeedbackView], which asks how the
+/// session went before the flow returns to the tab shell.
 class FinishedWorkoutView extends StatefulWidget {
   final CompletedWorkout workout;
 
@@ -74,6 +77,10 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
   /// A failed save can be retried, and a retry that gets further than the
   /// last attempt would otherwise report the same workout twice.
   bool _analyticsCaptured = false;
+
+  /// The saved `workout_sessions` row, kept for the rating screen that
+  /// closes the flow.
+  String? _sessionId;
   int _stepIndex = 0;
 
   /// The live mastery target, read with the program when the session is
@@ -346,6 +353,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       if (!mounted) return;
       setState(() {
         _saving = false;
+        _sessionId = sessionId;
         _steps = _buildSteps(events);
       });
     } catch (error, stackTrace) {
@@ -662,10 +670,26 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
 
   void _advance() {
     if (_stepIndex >= _steps.length - 1) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      _askForFeedback();
       return;
     }
     setState(() => _stepIndex += 1);
+  }
+
+  /// The sequence ends on one more screen: how was this session? It takes
+  /// this one's place on the stack, and it is the one that unwinds back to
+  /// the tab shell.
+  void _askForFeedback() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => SessionFeedbackView(
+          workoutSessionId: _sessionId,
+          exercises: [
+            for (final entry in widget.workout.exercises) entry.exercise,
+          ],
+        ),
+      ),
+    );
   }
 
   void _skip() {
