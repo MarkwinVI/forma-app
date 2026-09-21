@@ -107,6 +107,10 @@ class _RiseInState extends State<RiseIn> with SingleTickerProviderStateMixin {
   }
 }
 
+/// How wide the target bar and the tree map under it are — one width, so
+/// the two always line up.
+const double celebrationContentWidth = 320;
+
 /// Label, target and a bar that fills to it — green, since what fills is
 /// the mastered prerequisite.
 class CelebrationTargetBar extends StatelessWidget {
@@ -126,7 +130,7 @@ class CelebrationTargetBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 280),
+      constraints: const BoxConstraints(maxWidth: celebrationContentWidth),
       child: Column(
         children: [
           Row(

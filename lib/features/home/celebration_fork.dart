@@ -346,9 +346,8 @@ class ForkMap extends StatefulWidget {
 
   const ForkMap({super.key, required this.data, required this.phase});
 
-  /// The map runs almost edge to edge, past the column's own padding —
-  /// this much stays clear on each side — and the tree fills the width.
-  static const double sideMargin = 12;
+  /// As wide as the target bar above it — the tree fills the width.
+  static const double width = celebrationContentWidth;
   static const double height = 178;
 
   @override
@@ -390,24 +389,17 @@ class _ForkMapState extends State<ForkMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width - 2 * ForkMap.sideMargin;
     return SizedBox(
+      width: ForkMap.width,
       height: ForkMap.height,
-      child: OverflowBox(
-        maxWidth: double.infinity,
-        child: SizedBox(
-          width: width,
-          height: ForkMap.height,
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_pulse, _beat]),
-            builder: (context, _) => CustomPaint(
-              painter: _ForkMapPainter(
-                data: widget.data,
-                phase: widget.phase,
-                pulse: Curves.easeInOut.transform(_pulse.value),
-                beat: _beat.value,
-              ),
-            ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_pulse, _beat]),
+        builder: (context, _) => CustomPaint(
+          painter: _ForkMapPainter(
+            data: widget.data,
+            phase: widget.phase,
+            pulse: Curves.easeInOut.transform(_pulse.value),
+            beat: _beat.value,
           ),
         ),
       ),
