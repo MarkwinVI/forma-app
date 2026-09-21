@@ -73,7 +73,7 @@ void main() {
     test('a goal for a movement the six do not cover adds its own track', () {
       final tracks = planFor(
         goals: ['lsit', 'hspu'],
-        progress: {'pushups_diamond_push_up': ExerciseStatus.mastered},
+        progress: {'dips_parallel_bar_dips': ExerciseStatus.mastered},
       ).tracks;
 
       expect(tracks[SkillCategoryCatalog.coreId], 'l_sit');
@@ -92,7 +92,7 @@ void main() {
     test('a step placement mastered unlocks a gated goal', () {
       final tracks = planFor(
         goals: ['hspu'],
-        progress: {'pushups_diamond_push_up': ExerciseStatus.mastered},
+        progress: {'dips_parallel_bar_dips': ExerciseStatus.mastered},
       ).tracks;
 
       expect(tracks[SkillCategoryCatalog.handstandPushupsId], 'main');

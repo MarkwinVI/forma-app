@@ -81,6 +81,49 @@ class ExerciseTarget {
 /// The progression changes one saved session earns: status transitions
 /// (mastered / newly activated), incremental target increases, branch
 /// selections implied by fork resolution, and forks the user must decide.
+/// A tree that hands its slot to another one when a given step masters:
+/// today the dips foundation ending in the handstand push-up tree. The
+/// hand-off is decided outside the ladder rules — from the user's answers
+/// — and applied here, so the outcome carries it like any other change.
+class TreeHandoff {
+  final String fromCategoryId;
+
+  /// The step whose mastery hands the slot over.
+  final String atExerciseId;
+  final String toCategoryId;
+  final String toBranchId;
+
+  const TreeHandoff({
+    required this.fromCategoryId,
+    required this.atExerciseId,
+    required this.toCategoryId,
+    required this.toBranchId,
+  });
+
+  /// The dips → handstand push-up hand-off at the last shared dip. It is
+  /// the default; only a strength archetype with a way to add load stays
+  /// in dips on the weighted branch, and a program already running the
+  /// handstand tree has nothing to hand over.
+  static const TreeHandoff dipsToHandstand = TreeHandoff(
+    fromCategoryId: SkillCategoryCatalog.dipsId,
+    atExerciseId: 'dips_parallel_bar_dips',
+    toCategoryId: SkillCategoryCatalog.handstandPushupsId,
+    toBranchId: 'main',
+  );
+
+  static List<TreeHandoff> rulesFor({
+    required bool prefersStrength,
+    required bool canAddWeight,
+    required Set<String> includedCategoryIds,
+  }) {
+    return [
+      if (!(prefersStrength && canAddWeight) &&
+          !includedCategoryIds.contains(dipsToHandstand.toCategoryId))
+        dipsToHandstand,
+    ];
+  }
+}
+
 class SessionProgressionOutcome {
   final Map<String, ExerciseStatus> statusChanges;
   final Map<String, ExerciseTarget> targetChanges;
@@ -105,6 +148,11 @@ class SessionProgressionOutcome {
   /// nor defaults decide — the user must pick the branch themselves.
   final List<String> branchChoicesNeeded;
 
+  /// Slots that moved to another tree this session: the old track pauses,
+  /// the new one starts. The activation itself is in
+  /// [activationsByMastered], keyed by the step that handed over.
+  final List<TreeHandoff> treeHandoffs;
+
   const SessionProgressionOutcome({
     required this.statusChanges,
     required this.targetChanges,
@@ -113,6 +161,7 @@ class SessionProgressionOutcome {
     this.previousStatuses = const {},
     this.branchesToPersist = const {},
     this.branchChoicesNeeded = const [],
+    this.treeHandoffs = const [],
   });
 
   bool get isEmpty =>
@@ -259,8 +308,7 @@ class ExerciseProgressionService {
     Exercise exercise, {
     ExerciseProgress? progress,
   }) =>
-      supportsAutoProgression(exercise) &&
-      (progress?.autoProgression ?? true);
+      supportsAutoProgression(exercise) && (progress?.autoProgression ?? true);
 
   /// Where the accessories a program adds on its own open, per exercise:
   /// a metric gym and an imperial gym start on different plates, so each
@@ -347,6 +395,7 @@ class ExerciseProgressionService {
     Map<String, String> activeBranchByCategory = const {},
     List<String> goalSkillIds = const [],
     double? bodyweightKg,
+    List<TreeHandoff> handoffs = const [],
   }) {
     final statusChanges = <String, ExerciseStatus>{};
     final targetChanges = <String, ExerciseTarget>{};
@@ -355,6 +404,7 @@ class ExerciseProgressionService {
     final previousStatuses = <String, ExerciseStatus>{};
     final branchesToPersist = <String, String>{};
     final branchChoicesNeeded = <String>[];
+    final treeHandoffs = <TreeHandoff>[];
 
     ExerciseStatus statusOf(String id) =>
         statusChanges[id] ??
@@ -429,6 +479,31 @@ class ExerciseProgressionService {
       if (result.volume >= masteryVolume) {
         statusChanges[exercise.id] = ExerciseStatus.mastered;
 
+        // A hand-off beats the tree's own successor: the slot moves to the
+        // other tree, whose first unmastered step becomes the thing to
+        // train. Nothing in this tree activates.
+        final handoff = _handoffAt(exercise.id, handoffs);
+        if (handoff != null) {
+          final path = SkillCategoryCatalog.findById(handoff.toCategoryId)
+                  ?.pathFor(handoff.toBranchId) ??
+              const [];
+          String? nextId;
+          for (final id in path) {
+            if (statusOf(id) != ExerciseStatus.mastered) {
+              nextId = id;
+              break;
+            }
+          }
+          if (nextId != null) {
+            if (statusOf(nextId) == ExerciseStatus.inactive) {
+              statusChanges[nextId] = ExerciseStatus.active;
+            }
+            activationsByMastered[exercise.id] = nextId;
+            treeHandoffs.add(handoff);
+            continue;
+          }
+        }
+
         // The load this mastery proved. A rung further up that resolves to
         // the same weight — 25% of a light user's bodyweight is the empty
         // bar, and so was the rung before it — asks for nothing new, so it
@@ -457,8 +532,9 @@ class ExerciseProgressionService {
           }
 
           final next = ExerciseCatalog.findById(nextId);
-          final nextLoadKg =
-              next == null ? null : requiredExternalWeightKg(next, bodyweightKg);
+          final nextLoadKg = next == null
+              ? null
+              : requiredExternalWeightKg(next, bodyweightKg);
           final sameLoad = next != null &&
               next.isWeighted &&
               next.weightFormula != null &&
@@ -500,7 +576,15 @@ class ExerciseProgressionService {
       previousStatuses: previousStatuses,
       branchesToPersist: branchesToPersist,
       branchChoicesNeeded: branchChoicesNeeded,
+      treeHandoffs: treeHandoffs,
     );
+  }
+
+  static TreeHandoff? _handoffAt(String exerciseId, List<TreeHandoff> rules) {
+    for (final rule in rules) {
+      if (rule.atExerciseId == exerciseId) return rule;
+    }
+    return null;
   }
 
   /// What one session moves for an accessory Forma is managing, or null when
@@ -903,6 +987,7 @@ class ExerciseProgressionService {
     Map<String, String> activeBranchByCategory = const {},
     List<String> goalSkillIds = const [],
     double? bodyweightKg,
+    List<TreeHandoff> handoffs = const [],
   }) async {
     if (await _eventService.hasEventsForSession(userId, sessionId)) {
       return const SessionProgressionOutcome(
@@ -918,6 +1003,7 @@ class ExerciseProgressionService {
       activeBranchByCategory: activeBranchByCategory,
       goalSkillIds: goalSkillIds,
       bodyweightKg: bodyweightKg,
+      handoffs: handoffs,
     );
     for (final entry in outcome.statusChanges.entries) {
       await _progressService.upsert(userId, entry.key, entry.value);
@@ -945,6 +1031,25 @@ class ExerciseProgressionService {
       } catch (_) {
         // Non-fatal: the successor is already active, so the program shows
         // the right exercise; only the stored branch preference lags.
+      }
+    }
+    for (final handoff in outcome.treeHandoffs) {
+      try {
+        // The slot moved: the old tree pauses — its branch and progress
+        // stay, so the Program tab can resume it — and the new tree starts.
+        await _skillTrackService.setIncluded(
+          userId,
+          handoff.fromCategoryId,
+          included: false,
+        );
+        await _skillTrackService.upsertTrack(
+          userId,
+          skillCategoryId: handoff.toCategoryId,
+          branchId: handoff.toBranchId,
+        );
+      } catch (_) {
+        // Non-fatal: the new tree's first step is already active, so the
+        // next workout trains it; only the track rows lag.
       }
     }
     await _eventService.insertAll(

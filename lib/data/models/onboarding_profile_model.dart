@@ -7,6 +7,14 @@ class OnboardingProfileModel {
   /// 'heavyweight' | 'builder' | 'natural' | 'mover' | 'artist'
   final String archetype;
 
+  /// The archetypes that asked for raw strength: low reps and added load.
+  /// Where a tree could carry on with weight or move to a skill, these
+  /// carry on with weight.
+  static const Set<String> strengthArchetypes = {'powerhouse', 'heavyweight'};
+
+  static bool prefersStrength(String? archetype) =>
+      strengthArchetypes.contains(archetype);
+
   /// True when the radar dot was left in the centre ("Balanced").
   final bool radarBalanced;
 

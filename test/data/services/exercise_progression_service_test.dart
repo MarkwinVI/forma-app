@@ -292,6 +292,107 @@ void main() {
       expect(outcome.branchChoicesNeeded, isEmpty);
     });
 
+    group('tree hand-off', () {
+      late Exercise chestDip;
+      late int masteryVolume;
+      const pike = 'handstand_pushups_pike_push_up';
+      const weightedDip = 'dips_weighted_dips_120';
+
+      setUpAll(() {
+        chestDip = ExerciseCatalog.findById('dips_parallel_bar_dips')!;
+        masteryVolume = ExerciseProgressionService.masteryTargetForExercise(
+          chestDip,
+        ).volume;
+      });
+
+      SessionProgressionOutcome master({
+        required List<TreeHandoff> handoffs,
+        Map<String, ExerciseProgress> progress = const {},
+      }) {
+        return ExerciseProgressionService.computeSessionOutcome(
+          results: [
+            SessionExerciseResult(exercise: chestDip, volume: masteryVolume),
+          ],
+          progressRows: progress,
+          activeBranchByCategory: const {'dips': 'weighted'},
+          handoffs: handoffs,
+        );
+      }
+
+      test('by default the last shared dip hands the slot to handstands', () {
+        final outcome = master(handoffs: const [TreeHandoff.dipsToHandstand]);
+
+        expect(outcome.statusChanges[chestDip.id], ExerciseStatus.mastered);
+        expect(outcome.statusChanges[pike], ExerciseStatus.active);
+        expect(outcome.statusChanges.containsKey(weightedDip), isFalse);
+        expect(outcome.activationsByMastered[chestDip.id], pike);
+        expect(outcome.treeHandoffs, [TreeHandoff.dipsToHandstand]);
+      });
+
+      test('without a rule the dips track continues on its branch', () {
+        final outcome = master(handoffs: const []);
+
+        expect(outcome.statusChanges[weightedDip], ExerciseStatus.active);
+        expect(outcome.statusChanges.containsKey(pike), isFalse);
+        expect(outcome.treeHandoffs, isEmpty);
+      });
+
+      test('a handstand tree with progress resumes where it was', () {
+        final outcome = master(
+          handoffs: const [TreeHandoff.dipsToHandstand],
+          progress: {
+            pike: progressWith(
+              exerciseId: pike,
+              status: ExerciseStatus.mastered,
+            ),
+          },
+        );
+
+        expect(outcome.statusChanges.containsKey(pike), isFalse);
+        expect(
+          outcome.activationsByMastered[chestDip.id],
+          'handstand_pushups_box_push_up',
+        );
+        expect(outcome.treeHandoffs, hasLength(1));
+      });
+
+      test('the rule stands unless strength and load both say otherwise', () {
+        expect(
+          TreeHandoff.rulesFor(
+            prefersStrength: false,
+            canAddWeight: true,
+            includedCategoryIds: const {},
+          ),
+          [TreeHandoff.dipsToHandstand],
+        );
+        expect(
+          TreeHandoff.rulesFor(
+            prefersStrength: true,
+            canAddWeight: false,
+            includedCategoryIds: const {},
+          ),
+          [TreeHandoff.dipsToHandstand],
+        );
+        expect(
+          TreeHandoff.rulesFor(
+            prefersStrength: true,
+            canAddWeight: true,
+            includedCategoryIds: const {},
+          ),
+          isEmpty,
+        );
+        expect(
+          TreeHandoff.rulesFor(
+            prefersStrength: false,
+            canAddWeight: false,
+            includedCategoryIds: const {'handstand_pushups'},
+          ),
+          isEmpty,
+          reason: 'a program already running the tree has nothing to hand over',
+        );
+      });
+    });
+
     group('fork resolution', () {
       late Exercise pullUp;
       late int masteryVolume;
@@ -435,7 +536,8 @@ void main() {
       );
     });
 
-    test('a jump masters the route it clears past and activates the '
+    test(
+        'a jump masters the route it clears past and activates the '
         'destination', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
@@ -507,13 +609,16 @@ void main() {
       // route — it goes inactive, never mastered.
       expect(outcome.statusChanges[active], ExerciseStatus.inactive);
       // The destination branch's own steps below the jump master with it.
-      expect(outcome.statusChanges[destinationPath[4]], ExerciseStatus.mastered);
-      expect(outcome.statusChanges[destinationPath[5]], ExerciseStatus.mastered);
+      expect(
+          outcome.statusChanges[destinationPath[4]], ExerciseStatus.mastered);
+      expect(
+          outcome.statusChanges[destinationPath[5]], ExerciseStatus.mastered);
       expect(outcome.statusChanges[destination.id], ExerciseStatus.active);
       expect(outcome.branchesToPersist, isEmpty);
     });
 
-    test('mastering the manual destination masters the route to it and '
+    test(
+        'mastering the manual destination masters the route to it and '
         'activates its successor', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,
@@ -578,7 +683,8 @@ void main() {
       expect(outcome.statusChanges[path[4]], ExerciseStatus.active);
     });
 
-    test('the starting volume on a jumped-to node settles the skipped steps '
+    test(
+        'the starting volume on a jumped-to node settles the skipped steps '
         'without mastering it', () {
       final category = SkillCategoryCatalog.findById(
         SkillCategoryCatalog.pushupsId,

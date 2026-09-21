@@ -387,12 +387,14 @@ class SkillCategoryCatalog {
         'handstand_pushups_free_handstand_push_up',
       ],
     },
+    // The dips foundation is the way in: mastering the last shared dip is
+    // what hands the vertical-push slot to this tree.
     unlockRequirement: SkillCategoryUnlockRequirement(
-      exerciseId: 'pushups_diamond_push_up',
+      exerciseId: 'dips_parallel_bar_dips',
       message:
-          'This tree is locked until you unlock Diamond Pushup in the Pushups track.',
-      ctaLabel: 'Go to Pushups',
-      targetSkillCategoryId: pushupsId,
+          'This tree is locked until you master Chest Dip in the Dips track.',
+      ctaLabel: 'Go to Dips',
+      targetSkillCategoryId: dipsId,
     ),
   );
 

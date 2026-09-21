@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 /// Pieces the post-workout celebration steps share, in [FinishedWorkoutView]
 /// and the fork and new-tree steps that live in files of their own.
 
@@ -100,6 +102,78 @@ class _RiseInState extends State<RiseIn> with SingleTickerProviderStateMixin {
           end: Offset.zero,
         ).animate(curve),
         child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Label, target and a bar that fills to it — green, since what fills is
+/// the mastered prerequisite.
+class CelebrationTargetBar extends StatelessWidget {
+  final String label;
+  final String target;
+  final Color targetColor;
+  final bool fill;
+
+  const CelebrationTargetBar({
+    super.key,
+    required this.label,
+    required this.target,
+    required this.targetColor,
+    required this.fill,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textMuted,
+                  letterSpacing: 0.9,
+                ),
+              ),
+              Text(
+                target,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: targetColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(5),
+            child: SizedBox(
+              height: 10,
+              child: Stack(
+                children: [
+                  Container(color: AppColors.surface2),
+                  AnimatedFractionallySizedBox(
+                    duration: fill
+                        ? const Duration(milliseconds: 1250)
+                        : Duration.zero,
+                    curve: Curves.easeOutCubic,
+                    widthFactor: fill ? 1 : 0,
+                    alignment: Alignment.centerLeft,
+                    child: Container(color: AppColors.green),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

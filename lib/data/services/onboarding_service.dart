@@ -39,6 +39,16 @@ class OnboardingService {
     return row != null;
   }
 
+  /// The archetype the user picked, or null before onboarding.
+  Future<String?> fetchArchetype(String userId) async {
+    final row = await _client
+        .from('user_onboarding_profiles')
+        .select('archetype')
+        .eq('user_id', userId)
+        .maybeSingle();
+    return row?['archetype'] as String?;
+  }
+
   Future<void> saveProfile(OnboardingProfileModel profile) async {
     await _client
         .from('user_onboarding_profiles')

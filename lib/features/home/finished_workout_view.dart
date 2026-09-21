@@ -9,8 +9,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
+import '../../data/models/equipment_model.dart';
 import '../../data/models/exercise_log_model.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/onboarding_profile_model.dart';
 import '../../data/models/progression_event_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/training_program_model.dart';
@@ -18,6 +20,7 @@ import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/onboarding_service.dart';
 import '../../data/services/weight_unit_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/progression_event_service.dart';
@@ -27,6 +30,7 @@ import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../../data/services/user_profile_service.dart';
 import 'celebration_fork.dart';
+import 'celebration_new_tree.dart';
 import 'celebration_widgets.dart';
 import 'completed_workout_model.dart';
 import 'workout_analytics.dart';
@@ -242,6 +246,29 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             // Rep and timed shortcuts still work; weighted ones safely wait
             // until the profile value can be read.
           }
+          // Whether the dips foundation hands its slot to the handstand
+          // tree: it does, unless the user asked for strength in onboarding
+          // and has a way to add load. An unreadable archetype counts as
+          // not asking.
+          String? archetype;
+          try {
+            archetype = await OnboardingService().fetchArchetype(userId);
+          } catch (_) {}
+          final setupAnswers =
+              logic?.program.variationRules['program_setup_v1'];
+          final equipment = EquipmentAnswer.fromSetupAnswers(
+            setupAnswers is Map
+                ? Map<String, dynamic>.from(setupAnswers)
+                : const {},
+          );
+          final handoffs = TreeHandoff.rulesFor(
+            prefersStrength: OnboardingProfileModel.prefersStrength(archetype),
+            canAddWeight: equipment.canAddWeight,
+            includedCategoryIds: {
+              for (final track in tracks)
+                if (track.included) track.skillCategoryId,
+            },
+          );
           await ExerciseProgressionService().applySessionResults(
             userId: userId,
             sessionId: sessionId,
@@ -255,6 +282,7 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
             },
             goalSkillIds: goalIds,
             bodyweightKg: bodyweightKg,
+            handoffs: handoffs,
             results: [
               // Accessories come through too now: they master nothing, but
               // an accessory Forma manages moves its own reps and weight.
@@ -462,6 +490,12 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       // A step that opens a branch off the shared foundation is a fork:
       // the tree splits here, so the screen shows both routes and the one
       // the program is on. Anything else is the next step on a path.
+      // A step in another tree is a hand-off: the slot moved trees.
+      final handoff = _resolveHandoff(event, masteredById);
+      if (handoff != null) {
+        steps.add(_CelebrationStep.newTree(handoff));
+        continue;
+      }
       final fork = _resolveFork(event, masteredById);
       if (fork != null) {
         steps.add(_CelebrationStep.fork(fork));
@@ -472,6 +506,30 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     }
 
     return steps;
+  }
+
+  NewTreeUnlockData? _resolveHandoff(
+    ProgressionEvent event,
+    Map<String, ProgressionEvent> masteredById,
+  ) {
+    if (event.valueFrom != null) return null;
+    final newExercise = ExerciseCatalog.findById(event.exerciseId);
+    final mastered = event.relatedExerciseId == null
+        ? null
+        : ExerciseCatalog.findById(event.relatedExerciseId!);
+    if (newExercise == null || mastered == null) return null;
+    final masteredEvent = masteredById[mastered.id];
+    return resolveNewTreeUnlock(
+      mastered: mastered,
+      newExercise: newExercise,
+      masterySets: masteredEvent?.targetSets ?? 3,
+      masteryValue: masteredEvent?.valueTo ?? 0,
+      startSets: event.targetSets ?? 3,
+      startValue: event.valueTo ??
+          ExerciseProgressionService.initialTargetValueForExercise(
+            newExercise,
+          ),
+    );
   }
 
   ForkUnlockData? _resolveFork(
@@ -743,6 +801,10 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                                 key: ValueKey(data.newExercise.id), data: data),
                             _ForkStep(data: final data) => ForkUnlockContent(
                                 key: ValueKey(data.newExercise.id), data: data),
+                            _NewTreeStep(data: final data) =>
+                              NewTreeUnlockContent(
+                                  key: ValueKey(data.newExercise.id),
+                                  data: data),
                           },
                   ),
                   Padding(
@@ -776,6 +838,7 @@ sealed class _CelebrationStep {
   const factory _CelebrationStep.mastered(_MasteredData data) = _MasteredStep;
   const factory _CelebrationStep.unlock(_UnlockData data) = _UnlockStep;
   const factory _CelebrationStep.fork(ForkUnlockData data) = _ForkStep;
+  const factory _CelebrationStep.newTree(NewTreeUnlockData data) = _NewTreeStep;
 }
 
 class _SummaryStep extends _CelebrationStep {
@@ -800,6 +863,11 @@ class _UnlockStep extends _CelebrationStep {
 class _ForkStep extends _CelebrationStep {
   final ForkUnlockData data;
   const _ForkStep(this.data);
+}
+
+class _NewTreeStep extends _CelebrationStep {
+  final NewTreeUnlockData data;
+  const _NewTreeStep(this.data);
 }
 
 class _LevelUpData {
