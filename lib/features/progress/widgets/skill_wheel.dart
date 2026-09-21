@@ -502,8 +502,11 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     required double clampDeg,
     required bool fitWidth,
   }) {
-    final x0 = fitWidth ? _hx + _r0 - 10 : _hx - 16.0;
-    const x1 = _hx + _reach + 62.0;
+    // Fitted: room for the selector halo before the first step, and a
+    // wider label column after the deepest one, which also spaces the
+    // steps a little closer.
+    final x0 = fitWidth ? _hx + _r0 - 16 : _hx - 16.0;
+    final x1 = _hx + _reach + (fitWidth ? 80.0 : 62.0);
     // The vertical span follows the sector, up to a fan's widest spread —
     // a wheel of two or three families would otherwise frame a half-turn
     // of empty space around its tree.
