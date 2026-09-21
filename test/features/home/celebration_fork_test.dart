@@ -108,7 +108,6 @@ void main() {
     expect(
       find.text(
         'Completing 24 reps of Chest Dip unlocked ${fork.newExercise.name}.\n'
-        'Next workout you’ll work on ${fork.newExercise.name}.\n'
         'You’re on the Weighted path. Change it anytime on the Program tab.',
       ),
       findsOneWidget,
