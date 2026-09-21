@@ -13,6 +13,9 @@ import '../../data/models/training_program_model.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/exercise_progression_service.dart';
+import '../../data/services/exercise_log_service.dart';
+import '../../data/services/program_start_service.dart';
+import '../../data/services/user_profile_service.dart';
 import '../../data/services/progress_service.dart';
 import '../../data/services/skill_track_service.dart';
 import '../../data/services/training_program_service.dart';
@@ -253,6 +256,12 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
 
     if (picked == null || picked == _equipment || !mounted) return;
 
+    // The trees the new answer would start differently, among those the
+    // user has not trained yet. Worked out before the save so the toast
+    // can say what happened; applied after it.
+    final replan = await _replanForEquipment(picked);
+    if (!mounted) return;
+
     await _saveLogic(
       // The keys travel together: 'equipment' and 'equipment_items' are the
       // answer itself, 'has_gym' the derived can-load-a-bar flag every
@@ -261,11 +270,116 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         ..._setupAnswers,
         ...picked.toSetupAnswers(),
       },
-      toast: 'Equipment updated',
+      toast: replan == null || replan.branches.isEmpty
+          ? 'Equipment updated'
+          : 'Equipment updated — ${replan.branches.length} '
+              'tree${replan.branches.length == 1 ? '' : 's'} re-planned',
     );
+    if (replan != null && replan.branches.isNotEmpty) {
+      await _applyReplan(replan);
+    }
     AnalyticsService.capture('program_equipment_changed', properties: {
       'equipment': picked.kind.dbValue,
       'equipment_items': picked.itemIds,
+      'replanned_trees': [...?replan?.branches.keys],
+    });
+  }
+
+  /// Plans the program again for [equipment] and picks out the tracks the
+  /// change moves: only trees the user has never logged a step of. Null
+  /// when the plan could not be worked out — the answer still saves, the
+  /// trees just stay where they are.
+  Future<_EquipmentReplan?> _replanForEquipment(
+    EquipmentAnswer equipment,
+  ) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return null;
+    try {
+      final logged =
+          await ExerciseLogService().loggedProgressionExerciseIds(userId);
+      double? bodyweightKg;
+      try {
+        bodyweightKg = await UserProfileService().fetchBodyweightKg(userId);
+      } catch (_) {
+        // The loaded rungs are placed without it; nothing else needs it.
+      }
+      final rawStrength = _setupAnswers['starting_strength'];
+      final plan = ProgramStartPlanner.planFor(
+        equipment: equipment,
+        goalSkillIds: _logic.program.setupGoalIds,
+        startingStrength: {
+          if (rawStrength is Map)
+            for (final entry in rawStrength.entries)
+              entry.key as String: (entry.value as num?)?.toInt(),
+        },
+        bodyweightKg: bodyweightKg,
+        existingProgress: _progress,
+      );
+      return _EquipmentReplan(
+        plan: plan,
+        branches: ProgramStartPlanner.replannedBranches(
+          plan: plan,
+          tracks: _skillTracks,
+          loggedExerciseIds: logged,
+        ),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Failed to re-plan for equipment: $error\n$stackTrace');
+      return null;
+    }
+  }
+
+  /// Moves each re-planned track to its new branch and puts the branch at
+  /// the plan's starting position; whatever the old branch had active and
+  /// the new one does not hold goes inactive, so one step trains per tree.
+  Future<void> _applyReplan(_EquipmentReplan replan) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+    final progressService = ProgressService();
+    final statusChanges = <String, ExerciseStatus>{};
+    final movedTracks = <SkillTrack>[];
+    try {
+      for (final entry in replan.branches.entries) {
+        final track = _skillTracks.firstWhere(
+          (track) => track.skillCategoryId == entry.key,
+        );
+        final category = SkillCategoryCatalog.findById(entry.key);
+        if (category == null) continue;
+        await _skillTrackService.setBranch(
+          userId,
+          entry.key,
+          branchId: entry.value,
+        );
+        movedTracks.add(track.copyWith(branchId: entry.value));
+
+        final newPath = category.pathFor(entry.value);
+        for (final id in newPath) {
+          final desired = replan.plan.statuses[id] ?? ExerciseStatus.inactive;
+          if ((_progress[id] ?? ExerciseStatus.inactive) != desired) {
+            await progressService.upsert(userId, id, desired);
+            statusChanges[id] = desired;
+          }
+        }
+        for (final id in category.pathFor(track.branchId)) {
+          if (!newPath.contains(id) && _progress[id] == ExerciseStatus.active) {
+            await progressService.upsert(userId, id, ExerciseStatus.inactive);
+            statusChanges[id] = ExerciseStatus.inactive;
+          }
+        }
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to apply the equipment re-plan: $error\n$stackTrace');
+    }
+    if (!mounted) return;
+    setState(() {
+      _skillTracks = [
+        for (final existing in _skillTracks)
+          movedTracks.firstWhere(
+            (moved) => moved.skillCategoryId == existing.skillCategoryId,
+            orElse: () => existing,
+          ),
+      ];
+      _progressOverrides.addAll(statusChanges);
     });
   }
 
@@ -1715,6 +1829,15 @@ class _SplitSheetState extends State<_SplitSheet> {
   }
 }
 
+/// An equipment change's consequence for the trees: the plan the new
+/// answer makes, and the tracks it actually moves.
+class _EquipmentReplan {
+  final ProgramStartPlan plan;
+  final Map<String, String> branches;
+
+  const _EquipmentReplan({required this.plan, required this.branches});
+}
+
 /// What you train with — the same three choices the setup wizard asks, so
 /// the answer can be revised without re-running it. "Some equipment" swaps
 /// the sheet to the tile grid (the back arrow returns), and Save only wakes
@@ -1835,6 +1958,20 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
                       padding: EdgeInsets.fromLTRB(2, 12, 2, 0),
                       child: Text(
                         kPullUpBarNote,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textMuted,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  if (dirty)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(2, 12, 2, 0),
+                      child: Text(
+                        'Trees you haven’t started yet are planned again for '
+                        'the new equipment. Trees with progress keep their '
+                        'path.',
                         style: TextStyle(
                           fontSize: 12.5,
                           color: AppColors.textMuted,

@@ -69,6 +69,52 @@ void main() {
     });
   });
 
+  group('replannedBranches', () {
+    SkillTrack track(String id, String branch) => SkillTrack(
+          skillCategoryId: id,
+          branchId: branch,
+          included: true,
+          updatedAt: DateTime(2026),
+        );
+
+    test('moves only untrained tracks whose branch the answer changes', () {
+      // From a gym program to no equipment: legs and pull-ups change.
+      final plan = planFor();
+      final tracks = [
+        track(SkillCategoryCatalog.squatId, 'weighted'),
+        track(SkillCategoryCatalog.hingeId, 'weighted'),
+        track(SkillCategoryCatalog.pullupsId, 'weighted'),
+        track(SkillCategoryCatalog.pushupsId, 'planche'),
+      ];
+
+      expect(
+        ProgramStartPlanner.replannedBranches(
+          plan: plan,
+          tracks: tracks,
+          loggedExerciseIds: const {},
+        ),
+        {
+          SkillCategoryCatalog.squatId: 'pistol',
+          SkillCategoryCatalog.hingeId: 'nordic_curls',
+          SkillCategoryCatalog.pullupsId: 'close_grip',
+        },
+      );
+
+      // A squat rung has been logged: the squat keeps its path.
+      expect(
+        ProgramStartPlanner.replannedBranches(
+          plan: plan,
+          tracks: tracks,
+          loggedExerciseIds: const {'squat_barbell_plus_25'},
+        ),
+        {
+          SkillCategoryCatalog.hingeId: 'nordic_curls',
+          SkillCategoryCatalog.pullupsId: 'close_grip',
+        },
+      );
+    });
+  });
+
   group('what a new program trains', () {
     test('without a gym: upper trees, squat, Nordic curls, and core', () {
       expect(planFor().tracks, {

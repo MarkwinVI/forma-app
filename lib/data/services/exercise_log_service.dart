@@ -284,6 +284,20 @@ class ExerciseLogService {
     return (data as List).isNotEmpty;
   }
 
+  /// Every exercise the user has logged as a progression step, ever. What
+  /// "a tree you haven't started" is measured against: a track none of
+  /// whose steps appear here has never been trained.
+  Future<Set<String>> loggedProgressionExerciseIds(String userId) async {
+    final data = await _client
+        .from('workout_exercise_logs')
+        .select('exercise_id')
+        .eq('user_id', userId)
+        .eq('is_progression', true);
+    return {
+      for (final row in data as List) (row as Map)['exercise_id'] as String,
+    };
+  }
+
   /// Best single-set value (reps, or seconds when timed) the user has ever
   /// logged per exercise, optionally excluding one session — used to detect
   /// personal bests for the session being saved without counting itself.

@@ -3,6 +3,7 @@ import '../catalog/skill_category_catalog.dart';
 import '../models/equipment_model.dart';
 import '../models/exercise_model.dart';
 import '../models/skill_category_model.dart';
+import '../models/skill_track_model.dart';
 import 'exercise_progression_service.dart';
 import 'progress_service.dart';
 import 'skill_track_service.dart';
@@ -221,6 +222,28 @@ class ProgramStartPlanner {
     }
 
     return branches;
+  }
+
+  /// What an equipment change re-plans: the tracks the user has not trained
+  /// yet — no step of their current path was ever logged — whose branch the
+  /// new answer picks differently. Returns skill category id → the branch
+  /// to move to. Tracks with progress keep their path, whatever the answer.
+  static Map<String, String> replannedBranches({
+    required ProgramStartPlan plan,
+    required List<SkillTrack> tracks,
+    required Set<String> loggedExerciseIds,
+  }) {
+    final changes = <String, String>{};
+    for (final track in tracks) {
+      final planned = plan.tracks[track.skillCategoryId];
+      if (planned == null || planned == track.branchId) continue;
+      final category = SkillCategoryCatalog.findById(track.skillCategoryId);
+      if (category == null) continue;
+      final trained =
+          category.pathFor(track.branchId).any(loggedExerciseIds.contains);
+      if (!trained) changes[track.skillCategoryId] = planned;
+    }
+    return changes;
   }
 
   /// Whether every step of a branch can be performed with [equipment] —
