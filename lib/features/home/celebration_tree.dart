@@ -71,6 +71,7 @@ class _CelebrationTreeState extends State<CelebrationTree> {
           initialSelected: widget.selected,
           initialFocus: _flatIndexOf(widget.focusExerciseId),
           hideUnfocused: true,
+          fitFocusedWidth: true,
         ),
       ),
     );

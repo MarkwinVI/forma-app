@@ -153,6 +153,11 @@ class SkillWheel extends StatefulWidget {
   /// as faint structure; the celebration shows one tree and nothing else.
   final bool hideUnfocused;
 
+  /// Frame a focused tree edge to edge: the band grows as tall as the tree
+  /// needs rather than widening past the tree to stay short. The Progress
+  /// tab keeps its short band, where the slack either side is by design.
+  final bool fitFocusedWidth;
+
   const SkillWheel({
     super.key,
     required this.families,
@@ -166,6 +171,7 @@ class SkillWheel extends StatefulWidget {
     this.initialSelected,
     this.initialFocus = 0,
     this.hideUnfocused = false,
+    this.fitFocusedWidth = false,
   });
 
   bool get isPicker => onToggleGoal != null;
@@ -476,10 +482,10 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     final spreadDeg = math.min(_clampDeg, 24.0);
     final yHalf = _reach * math.sin(spreadDeg * math.pi / 180) + 14;
     final y0 = _hy - yHalf, y1 = _hy + yHalf;
-    final bandH = (_w * (y1 - y0) / (x1 - x0))
-        .roundToDouble()
-        .clamp(_floorH, _bandMax)
-        .toDouble();
+    final rawBandH = (_w * (y1 - y0) / (x1 - x0)).roundToDouble();
+    final bandH = widget.fitFocusedWidth
+        ? math.max(_floorH, rawBandH)
+        : rawBandH.clamp(_floorH, _bandMax).toDouble();
     final w = [_minBox, x1 - x0, (y1 - y0) * _w / bandH].reduce(math.max);
     return [
       (x0 + x1) / 2 - w / 2,
