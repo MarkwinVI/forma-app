@@ -358,8 +358,9 @@ class ForkMap extends StatefulWidget {
 
   const ForkMap({super.key, required this.data, required this.phase});
 
-  /// As wide as the target bar above it — the tree fills the width.
-  static const double width = 280;
+  /// The map runs almost edge to edge, past the column's own padding —
+  /// this much stays clear on each side — and the tree fills the width.
+  static const double sideMargin = 12;
   static const double height = 178;
 
   @override
@@ -401,18 +402,23 @@ class _ForkMapState extends State<ForkMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      child: SizedBox(
-        width: ForkMap.width,
-        height: ForkMap.height,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_pulse, _beat]),
-          builder: (context, _) => CustomPaint(
-            painter: _ForkMapPainter(
-              data: widget.data,
-              phase: widget.phase,
-              pulse: Curves.easeInOut.transform(_pulse.value),
-              beat: _beat.value,
+    final width = MediaQuery.sizeOf(context).width - 2 * ForkMap.sideMargin;
+    return SizedBox(
+      height: ForkMap.height,
+      child: OverflowBox(
+        maxWidth: double.infinity,
+        child: SizedBox(
+          width: width,
+          height: ForkMap.height,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_pulse, _beat]),
+            builder: (context, _) => CustomPaint(
+              painter: _ForkMapPainter(
+                data: widget.data,
+                phase: widget.phase,
+                pulse: Curves.easeInOut.transform(_pulse.value),
+                beat: _beat.value,
+              ),
             ),
           ),
         ),
@@ -533,7 +539,15 @@ class _ForkMapPainter extends CustomPainter {
       for (var k = 0; k < trunkNames.length; k++) at(k * pitch, 0),
     ];
     final fork = trunk.last;
-    final forkRadius = (trunkNames.length - 1) * pitch;
+
+    // Branches fan out from the fork node itself, a pitch per step along
+    // their own ray, so the spread stays the same whatever the pitch.
+    Offset branchAt(int step, double degrees) {
+      final rad = degrees * math.pi / 180;
+      return fork +
+          Offset(step * pitch * math.cos(rad), step * pitch * math.sin(rad));
+    }
+
     final line = Paint()
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round
@@ -566,7 +580,7 @@ class _ForkMapPainter extends CustomPainter {
               ..strokeWidth = 2,
           );
         }
-        var radius = 7.5;
+        var radius = 6.0;
         var color = _cleared ? AppColors.green : AppColors.accentPrimary;
         if (_cleared && phase == 1) {
           final t = beat.clamp(0.0, 1.0);
@@ -635,7 +649,7 @@ class _ForkMapPainter extends CustomPainter {
       final count = on ? chosenShown : math.min(2, branch.nodeNames.length);
       if (count == 0) continue;
       final nodes = [
-        for (var k = 0; k < count; k++) at(forkRadius + (k + 1) * pitch, angle),
+        for (var k = 0; k < count; k++) branchAt(k + 1, angle),
       ];
       for (var k = 0; k < nodes.length; k++) {
         final from = k == 0 ? fork : nodes[k - 1];

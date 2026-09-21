@@ -323,8 +323,9 @@ class NewTreeMap extends StatefulWidget {
 
   const NewTreeMap({super.key, required this.data, required this.phase});
 
-  /// As wide as the target bar above it — the tree fills the width.
-  static const double width = 280;
+  /// The map runs almost edge to edge, past the column's own padding —
+  /// this much stays clear on each side — and the tree fills the width.
+  static const double sideMargin = 12;
   static const double height = 184;
 
   @override
@@ -374,19 +375,24 @@ class _NewTreeMapState extends State<NewTreeMap> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      child: SizedBox(
-        width: NewTreeMap.width,
-        height: NewTreeMap.height,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_pulse, _spin, _beat]),
-          builder: (context, _) => CustomPaint(
-            painter: _NewTreeMapPainter(
-              data: widget.data,
-              phase: widget.phase,
-              pulse: Curves.easeInOut.transform(_pulse.value),
-              spin: const Cubic(0.32, 0.72, 0, 1).transform(_spin.value),
-              beat: _beat.value,
+    final width = MediaQuery.sizeOf(context).width - 2 * NewTreeMap.sideMargin;
+    return SizedBox(
+      height: NewTreeMap.height,
+      child: OverflowBox(
+        maxWidth: double.infinity,
+        child: SizedBox(
+          width: width,
+          height: NewTreeMap.height,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_pulse, _spin, _beat]),
+            builder: (context, _) => CustomPaint(
+              painter: _NewTreeMapPainter(
+                data: widget.data,
+                phase: widget.phase,
+                pulse: Curves.easeInOut.transform(_pulse.value),
+                spin: const Cubic(0.32, 0.72, 0, 1).transform(_spin.value),
+                beat: _beat.value,
+              ),
             ),
           ),
         ),
@@ -414,6 +420,7 @@ class _NewTreeMapPainter extends CustomPainter {
   /// each spoke starts with its first exercise, right at the pivot.
   static const _pivotX = 12.0;
   static const _step = 45.0;
+
   /// The pitch stretches to fill the width; only a long route packs
   /// tighter than the design's 44.
   static const _maxPitch = 96.0;
@@ -516,7 +523,12 @@ class _NewTreeMapPainter extends CustomPainter {
         for (var k = 0; k < trunkCount; k++) at(k * pitch, 0),
       ];
       final fork = trunk.last;
-      final forkRadius = (trunkCount - 1) * pitch;
+      Offset branchAt(int step, double degrees) {
+        final rad = degrees * math.pi / 180;
+        return fork +
+            Offset(step * pitch * math.cos(rad), step * pitch * math.sin(rad));
+      }
+
       for (var k = 1; k < trunk.length; k++) {
         canvas.drawLine(
             trunk[k - 1], trunk[k], line..color = _fade(_trunkOn, oldAlpha));
@@ -529,8 +541,8 @@ class _NewTreeMapPainter extends CustomPainter {
       };
       for (var j = 0; j < offsets.length; j++) {
         final angle = offsets[j];
-        final n1 = at(forkRadius + pitch, angle);
-        final n2 = at(forkRadius + 2 * pitch, angle);
+        final n1 = branchAt(1, angle);
+        final n2 = branchAt(2, angle);
         canvas.drawLine(fork, n1, line..color = _fade(_dim, 0.6 * oldAlpha));
         canvas.drawLine(n1, n2, line..color = _fade(_dim, oldAlpha));
         final openT = _cleared ? (phase == 1 ? beatIn : 1.0) : 0.0;
@@ -564,7 +576,7 @@ class _NewTreeMapPainter extends CustomPainter {
               ..strokeWidth = 2,
           );
         }
-        var radius = last ? 7.5 : 6.0;
+        var radius = 6.0;
         var color =
             last && !_cleared ? AppColors.accentPrimary : AppColors.green;
         if (last && _cleared && phase == 1) {
