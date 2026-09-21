@@ -314,7 +314,7 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                 fill: _fill,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             RiseIn(
               delay: const Duration(milliseconds: 140),
               child: CelebrationTree(
@@ -333,7 +333,7 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                     started ? data.newExercise.id : data.mastered.id,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             AnimatedOpacity(
               duration: const Duration(milliseconds: 500),
               opacity: done ? 1 : 0,

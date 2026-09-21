@@ -253,15 +253,19 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
                 curve: Curves.easeOut,
                 child: _phase >= 2
                     ? const SizedBox(width: double.infinity)
-                    : CelebrationTargetBar(
-                        label: 'PREREQUISITE',
-                        target: target,
-                        targetColor: AppColors.green,
-                        fill: _fill,
+                    : Column(
+                        children: [
+                          CelebrationTargetBar(
+                            label: 'PREREQUISITE',
+                            target: target,
+                            targetColor: AppColors.green,
+                            fill: _fill,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                       ),
               ),
             ),
-            const SizedBox(height: 12),
             RiseIn(
               delay: const Duration(milliseconds: 140),
               child: CelebrationTree(
@@ -290,7 +294,7 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
                     _phase >= 2 ? data.newExercise.id : data.mastered.id,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             AnimatedOpacity(
               duration: const Duration(milliseconds: 500),
               opacity: done ? 1 : 0,
