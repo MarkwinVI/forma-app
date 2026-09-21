@@ -318,13 +318,16 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                 child: ConstrainedBox(
                   constraints:
                       const BoxConstraints(maxWidth: celebrationContentWidth),
-                  child: Text(
-                    helper,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      height: 1.55,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      helper,
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.55,
+                      ),
                     ),
                   ),
                 ),
