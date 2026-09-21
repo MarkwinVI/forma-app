@@ -276,7 +276,8 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
                 curve: const Cubic(0.32, 0.72, 0, 1),
                 offset: done ? Offset.zero : const Offset(0, 0.3),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 300),
+                  constraints:
+                      const BoxConstraints(maxWidth: celebrationContentWidth),
                   child: Text(
                     '${data.toTitle} replaced your ${data.fromNoun} '
                     'progression. Prefer to keep training '
