@@ -176,6 +176,21 @@ class SkillWheel extends StatefulWidget {
 
   bool get isPicker => onToggleGoal != null;
 
+  /// The height a wheel of [familyCount] families takes at [width] while
+  /// focused on a tree — what a caller that must box the wheel (an
+  /// overflow past its column) sizes the box to.
+  static double focusedHeightFor({
+    required double width,
+    required int familyCount,
+    bool fitFocusedWidth = false,
+  }) {
+    final frame = _SkillWheelState.focusedFrame(
+      clampDeg: 360 / familyCount / 2 - 0.5,
+      fitWidth: fitFocusedWidth,
+    );
+    return frame[3] * width / _SkillWheelState._w;
+  }
+
   @override
   State<SkillWheel> createState() => _SkillWheelState();
 }
@@ -472,18 +487,31 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
       const w = 2 * half * _w / _openH;
       return const [_hx - w / 2, _hy - half, w, _openH];
     }
-    // Left edge pinned just behind the hub, right edge at the deepest reach
-    // plus a label allowance, vertical span centred on the hub. The slack
-    // above and below the tree is where the dimmed neighbours read.
-    const x0 = _hx - 16.0, x1 = _hx + _reach + 62.0;
+    return focusedFrame(
+      clampDeg: _clampDeg,
+      fitWidth: widget.fitFocusedWidth,
+    );
+  }
+
+  /// The camera box for a focused tree, as `[x, y, width, bandHeight]` in
+  /// user units. Left edge pinned just behind the hub — or, fitted, at the
+  /// first step — right edge at the deepest reach plus a label allowance,
+  /// vertical span centred on the hub. On the wheel the slack above and
+  /// below the tree is where the dimmed neighbours read.
+  static List<double> focusedFrame({
+    required double clampDeg,
+    required bool fitWidth,
+  }) {
+    final x0 = fitWidth ? _hx + _r0 - 10 : _hx - 16.0;
+    const x1 = _hx + _reach + 62.0;
     // The vertical span follows the sector, up to a fan's widest spread —
     // a wheel of two or three families would otherwise frame a half-turn
     // of empty space around its tree.
-    final spreadDeg = math.min(_clampDeg, 24.0);
+    final spreadDeg = math.min(clampDeg, 18.0);
     final yHalf = _reach * math.sin(spreadDeg * math.pi / 180) + 14;
     final y0 = _hy - yHalf, y1 = _hy + yHalf;
     final rawBandH = (_w * (y1 - y0) / (x1 - x0)).roundToDouble();
-    final bandH = widget.fitFocusedWidth
+    final bandH = fitWidth
         ? math.max(_floorH, rawBandH)
         : rawBandH.clamp(_floorH, _bandMax).toDouble();
     final w = [_minBox, x1 - x0, (y1 - y0) * _w / bandH].reduce(math.max);

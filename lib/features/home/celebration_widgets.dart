@@ -111,6 +111,32 @@ class _RiseInState extends State<RiseIn> with SingleTickerProviderStateMixin {
 /// the two always line up.
 const double celebrationContentWidth = 320;
 
+/// The name of the tree drawn under it, small and white, centred between
+/// the target bar and the tree.
+class CelebrationTreeName extends StatelessWidget {
+  final String name;
+
+  const CelebrationTreeName(this.name, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: Text(
+        name.toUpperCase(),
+        key: ValueKey(name),
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+}
+
 /// Label, target and a bar that fills to it — green, since what fills is
 /// the mastered prerequisite.
 class CelebrationTargetBar extends StatelessWidget {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../data/catalog/skill_category_catalog.dart';
@@ -60,18 +62,43 @@ class _CelebrationTreeState extends State<CelebrationTree> {
     }
   }
 
+  /// The tree runs wider than the bar above it — past the column's own
+  /// padding, to this much short of the screen's edge — since it is the
+  /// one thing on the screen that gains from every point of width.
+  static const double sideMargin = 12;
+
   @override
   Widget build(BuildContext context) {
+    final width = math.max(
+      celebrationContentWidth,
+      MediaQuery.sizeOf(context).width - 2 * sideMargin,
+    );
+    final height = SkillWheel.focusedHeightFor(
+      width: width,
+      familyCount: widget.families.length,
+      fitFocusedWidth: true,
+    );
+    // The slot is the wheel's focused height; inside it the wheel lays
+    // out unbounded, so it keeps the width it is given rather than
+    // narrowing to fit its opening frame into the slot.
     return SizedBox(
-      width: celebrationContentWidth,
-      child: IgnorePointer(
-        child: SkillWheel(
-          families: widget.families,
-          controller: _controller,
-          initialSelected: widget.selected,
-          initialFocus: _flatIndexOf(widget.focusExerciseId),
-          hideUnfocused: true,
-          fitFocusedWidth: true,
+      height: height,
+      child: OverflowBox(
+        maxWidth: double.infinity,
+        maxHeight: double.infinity,
+        alignment: Alignment.topCenter,
+        child: SizedBox(
+          width: width,
+          child: IgnorePointer(
+            child: SkillWheel(
+              families: widget.families,
+              controller: _controller,
+              initialSelected: widget.selected,
+              initialFocus: _flatIndexOf(widget.focusExerciseId),
+              hideUnfocused: true,
+              fitFocusedWidth: true,
+            ),
+          ),
         ),
       ),
     );
