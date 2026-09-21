@@ -132,8 +132,10 @@ ForkUnlockData? resolveForkUnlock({
   }
   if (onPaths.isEmpty) return null;
 
+  // A tree whose branches share no opening steps (Core) has an empty
+  // trunk: every branch is its own route from step one, and the pair sits
+  // on exactly one of them.
   final foundation = category.pathFor(category.foundationBranchId);
-  if (foundation.isEmpty) return null;
   String nameOf(String id) => ExerciseCatalog.findById(id)?.name ?? id;
 
   // One branch per distinct first step past the trunk. Two paths that
@@ -166,6 +168,7 @@ ForkUnlockData? resolveForkUnlock({
     final path = category.trainingPaths[chosenId]!;
     masteredIndex = path.indexOf(mastered.id);
   }
+  if (branches.isEmpty && foundation.isEmpty) return null;
 
   return ForkUnlockData(
     mastered: mastered,

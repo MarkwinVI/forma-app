@@ -76,6 +76,18 @@ void main() {
       expect(data.masteredIndex, 0);
     });
 
+    test('a trunkless tree draws each branch from step one', () {
+      // Core's branches share no opening steps.
+      final data = forkFor('core_foot_supported_l_sit', 'core_l_sit_tuck');
+      expect(data, isNotNull);
+      expect(data!.foundationNames, isEmpty);
+      expect(data.chosenBranchId, 'l_sit');
+      expect(data.masteredIndex, 0);
+      expect(data.isFork, isFalse);
+      expect(data.branches.length, 3);
+      expect(data.routeIds.first, 'core_foot_supported_l_sit');
+    });
+
     test('a step in another tree is not an in-tree unlock', () {
       expect(
         forkFor('dips_parallel_bar_dips', 'handstand_pushups_pike_push_up'),
