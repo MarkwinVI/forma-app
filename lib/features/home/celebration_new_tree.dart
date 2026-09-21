@@ -246,17 +246,19 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
             const SizedBox(height: 18),
             RiseIn(
               delay: const Duration(milliseconds: 80),
-              // The bar steps back once the wheel turns: it is about the
-              // step just cleared, and the screen is about the new tree.
-              child: AnimatedOpacity(
+              // The bar goes once the wheel turns: it was about the step
+              // just cleared, and the screen is now about the new tree.
+              child: AnimatedSize(
                 duration: const Duration(milliseconds: 400),
-                opacity: _phase >= 2 ? 0.35 : 1,
-                child: CelebrationTargetBar(
-                  label: 'PREREQUISITE',
-                  target: target,
-                  targetColor: AppColors.green,
-                  fill: _fill,
-                ),
+                curve: Curves.easeOut,
+                child: _phase >= 2
+                    ? const SizedBox(width: double.infinity)
+                    : CelebrationTargetBar(
+                        label: 'PREREQUISITE',
+                        target: target,
+                        targetColor: AppColors.green,
+                        fill: _fill,
+                      ),
               ),
             ),
             const SizedBox(height: 12),
