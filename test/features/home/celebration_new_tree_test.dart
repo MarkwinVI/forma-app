@@ -28,7 +28,7 @@ void main() {
       expect(data.toTitle, 'Handstand Pushups');
       expect(data.toNodeNames.length, 3);
       expect(data.toActiveIndex, 0);
-      expect(data.slotLabel, 'vertical push');
+      expect(data.fromNoun, 'dip');
     });
 
     test('a step in the same tree is not a hand-off', () {
@@ -69,7 +69,10 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 1500));
     expect(
-      find.textContaining('now takes your vertical push slot'),
+      find.text(
+        'Handstand Pushups replaced your dip progression. Prefer to keep '
+        'training dips? Change it on the Program tab.',
+      ),
       findsOneWidget,
     );
     expect(find.byType(NewTreeMap), findsOneWidget);

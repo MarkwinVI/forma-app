@@ -363,7 +363,10 @@ class _ForkMapState extends State<ForkMap> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(ForkMap old) {
     super.didUpdateWidget(old);
-    if (old.phase != widget.phase && (widget.phase == 1 || widget.phase == 3)) {
+    // Crossings, not equality: several beats can land in one frame when
+    // the app was busy, and each one still has to play.
+    if ((old.phase < 1 && widget.phase >= 1) ||
+        (old.phase < 3 && widget.phase >= 3)) {
       _beat.forward(from: 0);
     }
   }
@@ -410,8 +413,9 @@ class _ForkMapPainter extends CustomPainter {
     required this.beat,
   });
 
-  static const _hubX = 34.0;
-  static const _r0 = 20.0;
+  /// Where the trunk starts — its first exercise sits right here; there is
+  /// no hub drawn before it.
+  static const _pivotX = 12.0;
   static const _maxPitch = 44.0;
   static const _minPitch = 26.0;
   static const _lock = Color(0xFF3A3A40);
@@ -453,7 +457,7 @@ class _ForkMapPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final hub = Offset(_hubX, size.height / 2);
+    final hub = Offset(_pivotX, size.height / 2);
     final trunkCount = data.foundationNames.length;
     final branches = data.branches;
     final branchDepth = branches.fold<int>(
@@ -473,7 +477,7 @@ class _ForkMapPainter extends CustomPainter {
       (widest, label) => math.max(widest, label.width),
     );
     final steps = (trunkCount - 1) + branchDepth;
-    final room = size.width - _hubX - _r0 - widestLabel - 11 - 4;
+    final room = size.width - _pivotX - widestLabel - 11 - 4;
     final pitch = steps <= 0
         ? _maxPitch
         : (room / steps).clamp(_minPitch, _maxPitch).toDouble();
@@ -484,31 +488,18 @@ class _ForkMapPainter extends CustomPainter {
     }
 
     final trunk = [
-      for (var k = 0; k < trunkCount; k++) at(_r0 + k * pitch, 0),
+      for (var k = 0; k < trunkCount; k++) at(k * pitch, 0),
     ];
     final fork = trunk.last;
-    final forkRadius = _r0 + (trunkCount - 1) * pitch;
+    final forkRadius = (trunkCount - 1) * pitch;
     final line = Paint()
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Hub.
-    canvas.drawCircle(hub, 11, Paint()..color = AppColors.bg);
-    canvas.drawCircle(
-      hub,
-      11,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.16)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-    canvas.drawCircle(hub, 3.2, Paint()..color = const Color(0xFF4A4B52));
-
     // Trunk links.
-    for (var k = 0; k < trunk.length; k++) {
-      final from = k == 0 ? hub + const Offset(11, 0) : trunk[k - 1];
-      canvas.drawLine(from, trunk[k], line..color = _trunkOn);
+    for (var k = 1; k < trunk.length; k++) {
+      canvas.drawLine(trunk[k - 1], trunk[k], line..color = _trunkOn);
     }
 
     // Branches: links, nodes, labels.

@@ -8,8 +8,6 @@ import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
-import '../../data/models/training_program_model.dart';
-import '../../data/services/training_program_service.dart';
 import 'celebration_widgets.dart';
 
 /// The post-workout step for a hand-off: mastering the last shared step of
@@ -40,9 +38,6 @@ class NewTreeUnlockData {
   final List<String> toNodeNames;
   final int toActiveIndex;
 
-  /// The slot that moved, in the user's words — "vertical push".
-  final String slotLabel;
-
   const NewTreeUnlockData({
     required this.mastered,
     required this.newExercise,
@@ -56,8 +51,14 @@ class NewTreeUnlockData {
     required this.toTitle,
     required this.toNodeNames,
     required this.toActiveIndex,
-    required this.slotLabel,
   });
+
+  /// The old tree as a noun for "your dip progression": its title, lower
+  /// case and singular.
+  String get fromNoun {
+    final lower = fromTitle.toLowerCase();
+    return lower.endsWith('s') ? lower.substring(0, lower.length - 1) : lower;
+  }
 }
 
 /// The hand-off behind an activation, or null when the new exercise is in
@@ -126,9 +127,6 @@ NewTreeUnlockData? resolveNewTreeUnlock({
     toTitle: to.title,
     toNodeNames: [for (final id in opening) nameOf(id)],
     toActiveIndex: activeIndex,
-    slotLabel: TrainingTrackX(
-      TrainingProgramService.trainingTrackForPattern(to.track),
-    ).label.toLowerCase(),
   );
 }
 
@@ -290,25 +288,11 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
                       color: Colors.white.withValues(alpha: 0.07),
                     ),
                   ),
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${data.toTitle} now takes your '
-                              '${data.slotLabel} slot. Prefer to keep '
-                              'training ${data.fromTitle.toLowerCase()}? '
-                              'Change it on the ',
-                        ),
-                        const TextSpan(
-                          text: 'Program tab',
-                          style: TextStyle(
-                            color: AppColors.accentPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const TextSpan(text: '.'),
-                      ],
-                    ),
+                  child: Text(
+                    '${data.toTitle} replaced your ${data.fromNoun} '
+                    'progression. Prefer to keep training '
+                    '${data.fromTitle.toLowerCase()}? Change it on the '
+                    'Program tab.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 13,
@@ -369,11 +353,13 @@ class _NewTreeMapState extends State<NewTreeMap> with TickerProviderStateMixin {
   void didUpdateWidget(NewTreeMap old) {
     super.didUpdateWidget(old);
     if (old.phase == widget.phase) return;
-    switch (widget.phase) {
-      case 2:
-        _spin.forward(from: 0);
-      case 1 || 3 || 4:
-        _beat.forward(from: 0);
+    // Crossings, not equality: several beats can land in one frame when
+    // the app was busy, and each one still has to play.
+    if (old.phase < 2 && widget.phase >= 2) _spin.forward(from: 0);
+    if ((old.phase < 1 && widget.phase >= 1) ||
+        (old.phase < 3 && widget.phase >= 3) ||
+        (old.phase < 4 && widget.phase >= 4)) {
+      _beat.forward(from: 0);
     }
   }
 
@@ -423,8 +409,9 @@ class _NewTreeMapPainter extends CustomPainter {
     required this.beat,
   });
 
-  static const _hubX = 30.0;
-  static const _r0 = 20.0;
+  /// The wheel's pivot — where a hub would be. Nothing is drawn there:
+  /// each spoke starts with its first exercise, right at the pivot.
+  static const _pivotX = 12.0;
   static const _step = 45.0;
   static const _maxPitch = 44.0;
   static const _minPitch = 26.0;
@@ -434,7 +421,6 @@ class _NewTreeMapPainter extends CustomPainter {
   static final _routeOn = AppColors.accentPrimary.withValues(alpha: 0.45);
 
   bool get _cleared => phase >= 1;
-  bool get _unlocked => phase >= 3;
   bool get _lit => phase >= 4;
 
   TextPainter _text(
@@ -462,7 +448,7 @@ class _NewTreeMapPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final hub = Offset(_hubX, size.height / 2);
+    final hub = Offset(_pivotX, size.height / 2);
     final rotation = -_step * spin;
     final oldAlpha = (1 - spin / 0.55).clamp(0.0, 1.0);
     final newAlpha = ((spin - 0.25) / 0.6).clamp(0.0, 1.0);
@@ -478,19 +464,22 @@ class _NewTreeMapPainter extends CustomPainter {
         color: Color.lerp(
             AppColors.textSecondary, AppColors.textPrimary, _lit ? beatIn : 0)!,
         letterSpacing: -0.13);
-    final widestLabel = [
-      for (final label in fromLabels) label.width,
-      toLabel.width,
-    ].fold<double>(0, math.max);
+    // Each spoke takes the pitch that fits its own steps and labels — the
+    // design's 44 when there is room — so a long name on one tree never
+    // squeezes the other.
+    double pitchFor(int steps, double labelWidth) {
+      final room = size.width - _pivotX - labelWidth - 11 - 4;
+      return steps <= 0
+          ? _maxPitch
+          : (room / steps).clamp(_minPitch, _maxPitch).toDouble();
+    }
+
     final trunkCount = data.fromFoundationNames.length;
-    final steps = math.max(
+    final oldPitch = pitchFor(
       (trunkCount - 1) + (data.fromBranchLabels.isEmpty ? 0 : 2),
-      data.toNodeNames.length - 1,
+      fromLabels.fold<double>(0, (w, label) => math.max(w, label.width)),
     );
-    final room = size.width - _hubX - _r0 - widestLabel - 11 - 4;
-    final pitch = steps <= 0
-        ? _maxPitch
-        : (room / steps).clamp(_minPitch, _maxPitch).toDouble();
+    final newPitch = pitchFor(data.toNodeNames.length - 1, toLabel.width);
 
     Offset at(double radius, double degrees) {
       final rad = degrees * math.pi / 180;
@@ -519,15 +508,15 @@ class _NewTreeMapPainter extends CustomPainter {
 
     // ── The old tree, on the 0° spoke ──
     if (oldAlpha > 0) {
+      final pitch = oldPitch;
       final trunk = [
-        for (var k = 0; k < trunkCount; k++) at(_r0 + k * pitch, 0),
+        for (var k = 0; k < trunkCount; k++) at(k * pitch, 0),
       ];
       final fork = trunk.last;
-      final forkRadius = _r0 + (trunkCount - 1) * pitch;
-      for (var k = 0; k < trunk.length; k++) {
-        final from = k == 0 ? hub + const Offset(11, 0) : trunk[k - 1];
+      final forkRadius = (trunkCount - 1) * pitch;
+      for (var k = 1; k < trunk.length; k++) {
         canvas.drawLine(
-            from, trunk[k], line..color = _fade(_trunkOn, oldAlpha));
+            trunk[k - 1], trunk[k], line..color = _fade(_trunkOn, oldAlpha));
       }
       final offsets = switch (data.fromBranchLabels.length) {
         0 => const <double>[],
@@ -607,19 +596,18 @@ class _NewTreeMapPainter extends CustomPainter {
       upright(anchor, () => caption.paint(canvas, anchor - const Offset(0, 8)));
     }
 
-    // ── The new tree, on the +45° spoke, locked until it swings in ──
+    // ── The new tree, on the +45° spoke: grey until its step lights ──
     if (newAlpha > 0) {
+      final pitch = newPitch;
       final nodes = [
-        for (var k = 0; k < data.toNodeNames.length; k++)
-          at(_r0 + k * pitch, _step),
+        for (var k = 0; k < data.toNodeNames.length; k++) at(k * pitch, _step),
       ];
       final active = data.toActiveIndex;
       final litT = _lit ? beatIn : 0.0;
-      for (var k = 0; k < nodes.length; k++) {
-        final from = k == 0 ? at(11, _step) : nodes[k - 1];
+      for (var k = 1; k < nodes.length; k++) {
         final on = k == active && _lit;
         canvas.drawLine(
-          from,
+          nodes[k - 1],
           nodes[k],
           line
             ..color =
@@ -627,19 +615,9 @@ class _NewTreeMapPainter extends CustomPainter {
         );
       }
       for (var k = 0; k < nodes.length; k++) {
-        final isActive = k == active;
-        final openT = isActive && _unlocked ? (phase == 3 ? beatIn : 1.0) : 0.0;
-        final activeT = isActive ? litT : 0.0;
-        var fill = Color.lerp(_lock, AppColors.textPrimary, openT)!;
-        fill = Color.lerp(fill, AppColors.accentPrimary, activeT)!;
-        var radius = 4.6 + 0.9 * openT + 1.0 * activeT;
-        if (isActive && _unlocked && phase == 3) {
-          final t = beat.clamp(0.0, 1.0);
-          final pop = t < 0.45
-              ? 1 + 0.6 * Curves.easeOut.transform(t / 0.45)
-              : 1.6 - 0.6 * Curves.easeIn.transform((t - 0.45) / 0.55);
-          radius *= pop;
-        }
+        final activeT = k == active ? litT : 0.0;
+        final fill = Color.lerp(_lock, AppColors.accentPrimary, activeT)!;
+        final radius = 4.6 + 1.9 * activeT;
         if (activeT > 0) {
           final ringT = (activeT / 0.55).clamp(0.0, 1.0);
           canvas.drawCircle(
@@ -662,73 +640,9 @@ class _NewTreeMapPainter extends CustomPainter {
         toLabel.paint(canvas, tip + Offset(11, -toLabel.height / 2));
         canvas.restore();
       });
-
-      // The padlock over the first step, popping off on unlock.
-      if (!_unlocked || phase == 3) {
-        final first = nodes[active];
-        final t = _unlocked ? beat.clamp(0.0, 1.0) : 0.0;
-        final scale =
-            t < 0.4 ? 1 + 0.35 * (t / 0.4) : 1.35 - 0.95 * ((t - 0.4) / 0.6);
-        final lift = t < 0.4 ? 0.0 : -22 * ((t - 0.4) / 0.6);
-        final tilt = t < 0.4 ? -14 * (t / 0.4) : -14.0;
-        final alpha = (t < 0.4 ? 1.0 : 1 - (t - 0.4) / 0.6) * newAlpha;
-        upright(first, () {
-          canvas.save();
-          canvas.translate(first.dx, first.dy + lift);
-          canvas.rotate(tilt * math.pi / 180);
-          canvas.scale(scale);
-          canvas.drawCircle(
-            Offset.zero,
-            11,
-            Paint()..color = AppColors.surface.withValues(alpha: alpha),
-          );
-          canvas.drawCircle(
-            Offset.zero,
-            11,
-            Paint()
-              ..color = Colors.white.withValues(alpha: 0.14 * alpha)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1,
-          );
-          final lockPaint = Paint()
-            ..color = AppColors.textSecondary.withValues(alpha: alpha)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.6
-            ..strokeCap = StrokeCap.round;
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              const Rect.fromLTWH(-3.4, -0.7, 6.8, 5.1),
-              const Radius.circular(1.4),
-            ),
-            lockPaint,
-          );
-          canvas.drawPath(
-            Path()
-              ..moveTo(-1.9, -0.7)
-              ..lineTo(-1.9, -2.4)
-              ..arcToPoint(const Offset(1.9, -2.4),
-                  radius: const Radius.circular(1.9))
-              ..lineTo(1.9, -0.7),
-            lockPaint,
-          );
-          canvas.restore();
-        });
-      }
     }
 
     canvas.restore();
-
-    // Hub, unrotated.
-    canvas.drawCircle(hub, 11, Paint()..color = AppColors.bg);
-    canvas.drawCircle(
-      hub,
-      11,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.16)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-    canvas.drawCircle(hub, 3.2, Paint()..color = const Color(0xFF4A4B52));
   }
 
   @override
