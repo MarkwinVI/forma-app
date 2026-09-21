@@ -314,12 +314,7 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                 fill: _fill,
               ),
             ),
-            const SizedBox(height: 18),
-            RiseIn(
-              delay: const Duration(milliseconds: 110),
-              child: CelebrationTreeName(data.treeTitle),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
             RiseIn(
               delay: const Duration(milliseconds: 140),
               child: CelebrationTree(
