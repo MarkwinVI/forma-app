@@ -12,8 +12,7 @@ import 'package:forma_app/features/home/widgets/today_workout_card.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-  });
+  setUpAll(() {});
 
   HomeTodaySummary summary({HomeCompletedWorkoutSummary? completed}) {
     return HomeTodaySummary(
@@ -37,7 +36,7 @@ void main() {
       previousLabel: '18s',
       changeLabel: '+2',
       changeDir: 1,
-      leveledUp: true,
+      tag: TodayRowTag.levelUp,
     ),
     TodayWorkoutRow(
       exerciseId: 'pullups_pull_up',
@@ -257,6 +256,30 @@ void main() {
         ],
       );
       expect(ids, {'pull_b'});
+    });
+
+    test('a step from another tree wears New rather than Lvl up', () {
+      final tags = TodayWorkoutContent.rowTags(
+        activations: [
+          ProgressionEvent(
+            id: 'handoff',
+            exerciseId: 'handstand_pushups_pike_push_up',
+            kind: ProgressionEventKind.activated,
+            createdAt: day2,
+            relatedExerciseId: 'dips_parallel_bar_dips',
+          ),
+          ProgressionEvent(
+            id: 'step',
+            exerciseId: 'dips_parallel_bar_dips',
+            kind: ProgressionEventKind.activated,
+            createdAt: day2,
+            relatedExerciseId: 'dips_dip_negatives',
+          ),
+        ],
+        pastWorkouts: const [],
+      );
+      expect(tags['handstand_pushups_pike_push_up'], TodayRowTag.newTree);
+      expect(tags['dips_parallel_bar_dips'], TodayRowTag.levelUp);
     });
 
     test('a manual fast-forward is not a level up', () {

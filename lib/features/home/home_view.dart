@@ -77,9 +77,9 @@ class _HomeViewState extends State<HomeView> {
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
 
-  /// Exercises the program levelled the user up onto that have not been
-  /// trained since — they carry the "Lvl up" tag in today's list.
-  Set<String> _leveledUpExerciseIds = const {};
+  /// Exercises the program moved the user onto that have not been trained
+  /// since — they carry a "Lvl up" or "New" tag in today's list.
+  Map<String, TodayRowTag> _rowTags = const {};
 
   /// The day the tab is looking at, or null while it is looking at today.
   /// Selecting a day never leaves the tab: the same screen re-reads itself
@@ -160,9 +160,9 @@ class _HomeViewState extends State<HomeView> {
 
       // Which of today's exercises are freshly levelled up. Best effort: a
       // failed lookup just means no tags this time round.
-      var leveledUp = const <String>{};
+      var rowTags = const <String, TodayRowTag>{};
       try {
-        leveledUp = TodayWorkoutContent.leveledUpExerciseIds(
+        rowTags = TodayWorkoutContent.rowTags(
           activations: await _progressionEventService.fetchActivations(userId),
           pastWorkouts: pastWorkouts,
         );
@@ -202,7 +202,7 @@ class _HomeViewState extends State<HomeView> {
         _logicSnapshot = logic;
         _hasProgram = _logicSnapshot != null;
         _pastWorkouts = pastWorkouts;
-        _leveledUpExerciseIds = leveledUp;
+        _rowTags = rowTags;
         _skillTracks = skillTracks;
         _loading = false;
       });
@@ -889,7 +889,7 @@ class _HomeViewState extends State<HomeView> {
   List<TodayWorkoutRow> _todayRows(HomeDashboardMetrics metrics) {
     return TodayWorkoutContent.rows(
       metrics,
-      leveledUpExerciseIds: _leveledUpExerciseIds,
+      rowTags: _rowTags,
     );
   }
 

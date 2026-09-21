@@ -22,10 +22,11 @@ class TodayWorkoutRow {
   final String changeLabel;
   final int changeDir;
 
-  /// The program moved the user onto this exercise by mastering the one
-  /// before it, and it has not been trained since — it wears the "Lvl up"
-  /// tag until it has.
-  final bool leveledUp;
+  /// The program moved the user onto this exercise and it has not been
+  /// trained since — it wears a tag until it has: "Lvl up" for the next
+  /// step of its own tree, "New" for the first step of a tree that took
+  /// over a slot.
+  final TodayRowTag? tag;
 
   const TodayWorkoutRow({
     this.exerciseId = '',
@@ -33,9 +34,14 @@ class TodayWorkoutRow {
     required this.previousLabel,
     required this.changeLabel,
     required this.changeDir,
-    this.leveledUp = false,
+    this.tag,
   });
+
+  bool get leveledUp => tag != null;
 }
+
+/// Why a row in today's list wears a tag.
+enum TodayRowTag { levelUp, newTree }
 
 /// Derives the session list's rows from the dashboard metrics, so any screen
 /// hosting it renders the same story.
@@ -44,7 +50,7 @@ class TodayWorkoutContent {
 
   static List<TodayWorkoutRow> rows(
     HomeDashboardMetrics metrics, {
-    Set<String> leveledUpExerciseIds = const {},
+    Map<String, TodayRowTag> rowTags = const {},
   }) {
     final perfByName = {
       for (final perf in metrics.exercisePerformance) perf.exerciseName: perf,
@@ -55,15 +61,45 @@ class TodayWorkoutContent {
         _rowFor(
           planned,
           perfByName[planned.name],
-          leveledUp: leveledUpExerciseIds.contains(planned.exerciseId),
+          tag: rowTags[planned.exerciseId],
         ),
     ];
   }
 
-  /// The exercises the program has levelled the user up onto — activated
-  /// by mastering the step before, not by a manual jump — that have not
-  /// been logged since. Training the exercise once retires the tag, so a
-  /// finished session clears every tag it carried.
+  /// The exercises the program has moved the user onto — activated by
+  /// mastering a step, not by a manual jump — that have not been logged
+  /// since, each with the tag it wears: the next step of its own tree
+  /// levelled up, the first step of a tree that took over a slot is new.
+  /// Training the exercise once retires the tag, so a finished session
+  /// clears every tag it carried.
+  static Map<String, TodayRowTag> rowTags({
+    required List<ProgressionEvent> activations,
+    required List<PastWorkout> pastWorkouts,
+  }) {
+    final tags = <String, TodayRowTag>{};
+    for (final id in leveledUpExerciseIds(
+      activations: activations,
+      pastWorkouts: pastWorkouts,
+    )) {
+      tags[id] = TodayRowTag.levelUp;
+    }
+    for (final event in activations) {
+      if (!tags.containsKey(event.exerciseId)) continue;
+      final from = event.relatedExerciseId == null
+          ? null
+          : ExerciseCatalog.findById(event.relatedExerciseId!);
+      final to = ExerciseCatalog.findById(event.exerciseId);
+      if (from != null &&
+          to != null &&
+          from.skillCategoryId.isNotEmpty &&
+          from.skillCategoryId != to.skillCategoryId) {
+        tags[event.exerciseId] = TodayRowTag.newTree;
+      }
+    }
+    return tags;
+  }
+
+  /// Every exercise that wears a tag, whichever kind — see [rowTags].
   static Set<String> leveledUpExerciseIds({
     required List<ProgressionEvent> activations,
     required List<PastWorkout> pastWorkouts,
@@ -99,7 +135,7 @@ class TodayWorkoutContent {
   static TodayWorkoutRow _rowFor(
     HomePlannedExerciseSummary planned,
     HomeExercisePerformance? perf, {
-    bool leveledUp = false,
+    TodayRowTag? tag,
   }) {
     final history = perf?.history ?? const <int>[];
     final isTimed = perf?.isTimed ?? false;
@@ -111,7 +147,7 @@ class TodayWorkoutContent {
     return TodayWorkoutRow(
       exerciseId: planned.exerciseId,
       name: planned.name,
-      leveledUp: leveledUp,
+      tag: tag,
       previousLabel: previous == null
           ? '—'
           : isTimed
@@ -285,9 +321,9 @@ class _ExerciseRow extends StatelessWidget {
               ),
             ),
           ),
-          if (row.leveledUp) ...[
+          if (row.tag case final tag?) ...[
             const SizedBox(width: 8),
-            const LevelUpTag(),
+            LevelUpTag(tag: tag),
           ],
         ],
       ),
@@ -298,10 +334,13 @@ class _ExerciseRow extends StatelessWidget {
   }
 }
 
-/// The pill beside an exercise the program has just levelled the user up
-/// onto. Reads "LVL UP" until the exercise has been trained once.
+/// The pill beside an exercise the program has just moved the user onto.
+/// Reads "LVL UP" — or "NEW", for the first step of a tree that took over
+/// a slot — until the exercise has been trained once.
 class LevelUpTag extends StatelessWidget {
-  const LevelUpTag({super.key});
+  final TodayRowTag tag;
+
+  const LevelUpTag({super.key, this.tag = TodayRowTag.levelUp});
 
   @override
   Widget build(BuildContext context) {
@@ -314,9 +353,9 @@ class LevelUpTag extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: const Text(
-        'LVL UP',
-        style: TextStyle(
+      child: Text(
+        tag == TodayRowTag.newTree ? 'NEW' : 'LVL UP',
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 1,
