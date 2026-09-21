@@ -88,6 +88,54 @@ void main() {
       expect(data.routeIds.first, 'core_foot_supported_l_sit');
     });
 
+    test('a jump lands on its step with the route cleared behind it', () {
+      final data = resolveForkUnlock(
+        mastered: ExerciseCatalog.findById('dips_dip_negatives')!,
+        newExercise: ExerciseCatalog.findById('dips_weighted_dips_140')!,
+        masterySets: 3,
+        masteryValue: 6,
+        startSets: 3,
+        startValue: 6,
+        kind: TreeUnlockKind.jump,
+      );
+      expect(data, isNotNull);
+      expect(data!.kind, TreeUnlockKind.jump);
+      expect(data.chosenBranchId, 'weighted');
+      // The +40% rung is route index 4; the cleared part ends just before.
+      expect(data.masteredIndex, 3);
+      expect(data.isFork, isFalse);
+    });
+
+    test('the end of a path draws the tree with nothing to unlock', () {
+      final data = resolveForkUnlock(
+        mastered: ExerciseCatalog.findById('dips_ring_dips_rto')!,
+        newExercise: null,
+        masterySets: 3,
+        masteryValue: 8,
+        startSets: 0,
+        startValue: 0,
+        kind: TreeUnlockKind.end,
+      );
+      expect(data, isNotNull);
+      expect(data!.kind, TreeUnlockKind.end);
+      expect(data.chosenBranchId, 'rings');
+      expect(data.masteredIndex, data.routeIds.length - 1);
+      expect(data.newExercise, isNull);
+      // A step short of the end is not a path end.
+      expect(
+        resolveForkUnlock(
+          mastered: ExerciseCatalog.findById('dips_ring_dips')!,
+          newExercise: null,
+          masterySets: 3,
+          masteryValue: 8,
+          startSets: 0,
+          startValue: 0,
+          kind: TreeUnlockKind.end,
+        ),
+        isNull,
+      );
+    });
+
     test('a step in another tree is not an in-tree unlock', () {
       expect(
         forkFor('dips_parallel_bar_dips', 'handstand_pushups_pike_push_up'),
@@ -115,12 +163,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('NEW EXERCISE STARTED'), findsOneWidget);
     expect(find.text('STARTING TARGET'), findsOneWidget);
-    expect(find.text(fork.newExercise.name), findsOneWidget);
+    expect(find.text(fork.newExercise!.name), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1500));
     expect(
       find.text(
-        'Completing 24 reps of Chest Dip unlocked ${fork.newExercise.name}.\n'
+        'Completing 24 reps of Chest Dip unlocked ${fork.newExercise!.name}.\n'
         'You’re on the Weighted path. Change it anytime on the Program tab.',
       ),
       findsOneWidget,

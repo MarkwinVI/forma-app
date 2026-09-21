@@ -478,6 +478,21 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
       if (!trained.contains(event.exerciseId)) continue;
       final exercise = ExerciseCatalog.findById(event.exerciseId);
       if (exercise == null) continue;
+      // The end of a path is drawn as the tree like any other mastery;
+      // only a step outside every tree keeps the plain card.
+      final pathEnd = resolveForkUnlock(
+        mastered: exercise,
+        newExercise: null,
+        masterySets: event.targetSets ?? 3,
+        masteryValue: event.valueTo ?? 0,
+        startSets: 0,
+        startValue: 0,
+        kind: TreeUnlockKind.end,
+      );
+      if (pathEnd != null) {
+        steps.add(_CelebrationStep.fork(pathEnd));
+        continue;
+      }
       steps.add(_CelebrationStep.mastered(_MasteredData(
         exercise: exercise,
         sets: event.targetSets ?? 3,
@@ -488,7 +503,8 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     for (final event in events) {
       if (event.kind != ProgressionEventKind.activated) continue;
       // Every unlock inside a tree is drawn as the tree — the fork, where
-      // the branches split, is its special case. Only a manual jump falls
+      // the branches split, is its special case, and a manual jump lands
+      // on its step the same way. Only a step outside every tree falls
       // through to the plain exercise-change screen.
       // A step in another tree is a hand-off: the slot moved trees.
       final handoff = _resolveHandoff(event, masteredById);
@@ -536,25 +552,26 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
     ProgressionEvent event,
     Map<String, ProgressionEvent> masteredById,
   ) {
-    // A manual fast-forward (valueFrom set) is an exercise change, not a
-    // fork, however far it jumped.
-    if (event.valueFrom != null) return null;
     final newExercise = ExerciseCatalog.findById(event.exerciseId);
     final mastered = event.relatedExerciseId == null
         ? null
         : ExerciseCatalog.findById(event.relatedExerciseId!);
     if (newExercise == null || mastered == null) return null;
+    // A manual fast-forward (valueFrom set) is a jump, however far: the
+    // ledger's valueFrom is the target the step it left was on.
+    final jump = event.valueFrom != null;
     final masteredEvent = masteredById[mastered.id];
     return resolveForkUnlock(
       mastered: mastered,
       newExercise: newExercise,
-      masterySets: masteredEvent?.targetSets ?? 3,
-      masteryValue: masteredEvent?.valueTo ?? 0,
+      masterySets: jump ? 3 : masteredEvent?.targetSets ?? 3,
+      masteryValue: jump ? event.valueFrom! : masteredEvent?.valueTo ?? 0,
       startSets: event.targetSets ?? 3,
       startValue: event.valueTo ??
           ExerciseProgressionService.initialTargetValueForExercise(
             newExercise,
           ),
+      kind: jump ? TreeUnlockKind.jump : TreeUnlockKind.unlock,
     );
   }
 
@@ -800,7 +817,11 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
                             _UnlockStep(data: final data) => _UnlockContent(
                                 key: ValueKey(data.newExercise.id), data: data),
                             _ForkStep(data: final data) => ForkUnlockContent(
-                                key: ValueKey(data.newExercise.id), data: data),
+                                key: ValueKey(
+                                  '${data.mastered.id}>'
+                                  '${data.newExercise?.id}',
+                                ),
+                                data: data),
                             _NewTreeStep(data: final data) =>
                               NewTreeUnlockContent(
                                   key: ValueKey(data.newExercise.id),

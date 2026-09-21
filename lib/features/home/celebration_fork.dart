@@ -37,9 +37,17 @@ class ForkBranch {
 /// An unlock inside a tree, drawn as the tree: the shared foundation as a
 /// trunk, every branch forking off its end, and the step just mastered
 /// wherever it sits — in the trunk, at the fork, or up a branch.
+/// What happened inside the tree: a step mastered and the next unlocked,
+/// a manual jump to a later step, or a mastery at the end of a path with
+/// nothing left to unlock.
+enum TreeUnlockKind { unlock, jump, end }
+
 class ForkUnlockData {
+  final TreeUnlockKind kind;
   final Exercise mastered;
-  final Exercise newExercise;
+
+  /// The step that starts training — null at the end of a path.
+  final Exercise? newExercise;
   final int masterySets;
   final int masteryValue;
   final int startSets;
@@ -67,6 +75,7 @@ class ForkUnlockData {
   final int masteredIndex;
 
   const ForkUnlockData({
+    this.kind = TreeUnlockKind.unlock,
     required this.mastered,
     required this.newExercise,
     required this.masterySets,
@@ -92,6 +101,7 @@ class ForkUnlockData {
   /// The mastered step ended the trunk and the new one opened a branch,
   /// with others to choose from: the moment the tree actually splits.
   bool get isFork =>
+      kind == TreeUnlockKind.unlock &&
       masteredIndex == foundationNames.length - 1 &&
       chosen != null &&
       branches.length >= 2;
@@ -103,44 +113,58 @@ class ForkUnlockData {
       ];
 }
 
-/// The tree behind an in-tree activation, or null when the new exercise
-/// does not follow the mastered one on any path of the mastered one's
-/// tree — a hand-off or a manual jump, drawn elsewhere.
+/// The tree behind an in-tree event, or null when it is not one: for an
+/// unlock the new exercise must follow the mastered one on a path of its
+/// tree; for a jump it must come later on one; at the end of a path there
+/// is no new exercise at all. A hand-off to another tree is drawn
+/// elsewhere.
 ForkUnlockData? resolveForkUnlock({
   required Exercise mastered,
-  required Exercise newExercise,
+  required Exercise? newExercise,
   required int masterySets,
   required int masteryValue,
   required int startSets,
   required int startValue,
+  TreeUnlockKind kind = TreeUnlockKind.unlock,
 }) {
-  if (mastered.skillCategoryId.isEmpty ||
+  if (mastered.skillCategoryId.isEmpty) return null;
+  if (kind == TreeUnlockKind.end) {
+    if (newExercise != null) return null;
+  } else if (newExercise == null ||
       mastered.skillCategoryId != newExercise.skillCategoryId) {
     return null;
   }
   final category = SkillCategoryCatalog.findById(mastered.skillCategoryId);
   if (category == null) return null;
 
-  // The paths the pair sits on, consecutively.
+  // The paths the event sits on: both steps in order (adjacent for an
+  // unlock), or just the mastered one at the end of a path.
   final onPaths = <String>[];
   for (final entry in category.trainingPaths.entries) {
     final path = entry.value;
     final at = path.indexOf(mastered.id);
-    if (at >= 0 && at + 1 < path.length && path[at + 1] == newExercise.id) {
-      onPaths.add(entry.key);
+    if (at < 0) continue;
+    switch (kind) {
+      case TreeUnlockKind.unlock:
+        if (at + 1 < path.length && path[at + 1] == newExercise!.id) {
+          onPaths.add(entry.key);
+        }
+      case TreeUnlockKind.jump:
+        if (path.indexOf(newExercise!.id) > at) onPaths.add(entry.key);
+      case TreeUnlockKind.end:
+        if (at == path.length - 1) onPaths.add(entry.key);
     }
   }
   if (onPaths.isEmpty) return null;
 
   // A tree whose branches share no opening steps (Core) has an empty
-  // trunk: every branch is its own route from step one, and the pair sits
-  // on exactly one of them.
+  // trunk: every branch is its own route from step one.
   final foundation = category.pathFor(category.foundationBranchId);
   String nameOf(String id) => ExerciseCatalog.findById(id)?.name ?? id;
 
   // One branch per distinct first step past the trunk. Two paths that
   // open with the same exercise are one route on the map; the one the
-  // pair sits on keeps the name.
+  // event sits on keeps the name.
   final chosenId = onPaths.length == 1 ? onPaths.first : null;
   final byFirstStep = <String, ForkBranch>{};
   for (final entry in category.trainingPaths.entries) {
@@ -161,16 +185,23 @@ ForkUnlockData? resolveForkUnlock({
     );
   }
   final branches = byFirstStep.values.toList();
-
-  var masteredIndex = foundation.indexOf(mastered.id);
-  if (masteredIndex < 0) {
-    if (chosenId == null) return null;
-    final path = category.trainingPaths[chosenId]!;
-    masteredIndex = path.indexOf(mastered.id);
-  }
   if (branches.isEmpty && foundation.isEmpty) return null;
 
+  final routeIds = [
+    ...foundation,
+    if (chosenId != null)
+      ...category.trainingPaths[chosenId]!.sublist(foundation.length),
+  ];
+  // Where the route's cleared part ends: the mastered step, or — on a
+  // jump, whose steps in between the shortcut rule proves along the way —
+  // the step before the one landed on.
+  final anchor = kind == TreeUnlockKind.jump ? newExercise!.id : mastered.id;
+  var masteredIndex = routeIds.indexOf(anchor);
+  if (masteredIndex < 0) return null;
+  if (kind == TreeUnlockKind.jump) masteredIndex -= 1;
+
   return ForkUnlockData(
+    kind: kind,
     mastered: mastered,
     newExercise: newExercise,
     masterySets: masterySets,
@@ -179,11 +210,7 @@ ForkUnlockData? resolveForkUnlock({
     startValue: startValue,
     treeTitle: category.title,
     categoryId: category.id,
-    routeIds: [
-      ...foundation,
-      if (chosenId != null)
-        ...category.trainingPaths[chosenId]!.sublist(foundation.length),
-    ],
+    routeIds: routeIds,
     foundationNames: [for (final id in foundation) nameOf(id)],
     branches: branches,
     chosenBranchId: chosenId,
@@ -228,6 +255,11 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
 
     at(600, () => _fill = true);
     at(2100, () => _phase = 1);
+    if (widget.data.kind == TreeUnlockKind.end) {
+      // Nothing starts: the mastery holds, then the helper.
+      at(3100, () => _phase = 4);
+      return;
+    }
     at(3000, () => _phase = 2);
     at(3600, () {
       _phase = 3;
@@ -247,33 +279,51 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
-    final started = _phase >= 3;
+    final kind = data.kind;
+    final next = data.newExercise;
+    final started = _phase >= 3 && next != null;
     final done = _phase >= 4;
-    final title = started ? data.newExercise.name : data.mastered.name;
+    final title = started ? next.name : data.mastered.name;
     // The volume that mastered it: sets × target, in the step's own unit.
     final total = data.masterySets * data.masteryValue;
     final unit = data.mastered.isTimed ? 'seconds' : 'reps';
-    final helper = 'Completing $total $unit of ${data.mastered.name} '
-        'unlocked ${data.newExercise.name}.'
-        '${data.isFork ? '\nYou’re on the ${data.chosen!.label} path. '
-            'Change it anytime on the Program tab.' : ''}';
+    final helper = switch (kind) {
+      TreeUnlockKind.unlock =>
+        'Completing $total $unit of ${data.mastered.name} '
+            'unlocked ${next!.name}.'
+            '${data.isFork ? '\nYou’re on the ${data.chosen!.label} path. '
+                'Change it anytime on the Program tab.' : ''}',
+      TreeUnlockKind.jump =>
+        'Your logged result moves your active exercise to ${next!.name}.',
+      TreeUnlockKind.end =>
+        'Completing $total $unit of ${data.mastered.name} mastered it. '
+            'That was the last step of this path.',
+    };
     final target = started
         ? '${data.startSets} × ${data.startValue}'
-            '${data.newExercise.isTimed ? 's' : ''}'
+            '${next.isTimed ? 's' : ''}'
         : '${data.masterySets} × ${data.masteryValue}'
             '${data.mastered.isTimed ? 's' : ''}';
     final Widget? tag = started
-        ? const CelebrationTag(
-            key: ValueKey('started'),
+        ? CelebrationTag(
+            key: const ValueKey('started'),
             color: AppColors.accentPrimary,
-            label: 'New exercise started',
+            label: kind == TreeUnlockKind.jump
+                ? 'Exercise changed'
+                : 'New exercise started',
           )
         : _phase >= 1
-            ? const CelebrationTag(
-                key: ValueKey('mastered'),
-                color: AppColors.green,
-                label: 'Exercise mastered',
-              )
+            ? kind == TreeUnlockKind.jump
+                ? const CelebrationTag(
+                    key: ValueKey('changed'),
+                    color: AppColors.accentPrimary,
+                    label: 'Exercise changed',
+                  )
+                : const CelebrationTag(
+                    key: ValueKey('mastered'),
+                    color: AppColors.green,
+                    label: 'Exercise mastered',
+                  )
             : null;
 
     return Center(
@@ -310,7 +360,11 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
             RiseIn(
               delay: const Duration(milliseconds: 80),
               child: CelebrationTargetBar(
-                label: started ? 'STARTING TARGET' : 'PREREQUISITE',
+                label: started
+                    ? 'STARTING TARGET'
+                    : kind == TreeUnlockKind.jump
+                        ? 'CURRENT TARGET'
+                        : 'PREREQUISITE',
                 target: target,
                 targetColor:
                     started ? AppColors.textSecondary : AppColors.green,
@@ -326,14 +380,15 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                     categoryId: data.categoryId,
                     routeIds: data.routeIds,
                     masteredIndex: data.masteredIndex,
-                    cleared: _phase >= 1,
+                    // A jump's route is already cleared up to the landing
+                    // step: the shortcut rule proved what it passed over.
+                    cleared: _phase >= 1 || kind == TreeUnlockKind.jump,
                     lit: started,
                     openSiblings: data.isFork,
                   )!,
                 ],
                 selected: 0,
-                focusExerciseId:
-                    started ? data.newExercise.id : data.mastered.id,
+                focusExerciseId: started ? next.id : data.mastered.id,
               ),
             ),
             const SizedBox(height: 16),
