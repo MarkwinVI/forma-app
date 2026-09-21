@@ -487,9 +487,9 @@ class _FinishedWorkoutViewState extends State<FinishedWorkoutView>
 
     for (final event in events) {
       if (event.kind != ProgressionEventKind.activated) continue;
-      // A step that opens a branch off the shared foundation is a fork:
-      // the tree splits here, so the screen shows both routes and the one
-      // the program is on. Anything else is the next step on a path.
+      // Every unlock inside a tree is drawn as the tree — the fork, where
+      // the branches split, is its special case. Only a manual jump falls
+      // through to the plain exercise-change screen.
       // A step in another tree is a hand-off: the slot moved trees.
       final handoff = _resolveHandoff(event, masteredById);
       if (handoff != null) {

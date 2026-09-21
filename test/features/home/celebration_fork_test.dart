@@ -19,7 +19,9 @@ void main() {
     test('the last foundation dip opening the weighted branch is a fork', () {
       final fork = forkFor('dips_parallel_bar_dips', 'dips_weighted_dips_120');
       expect(fork, isNotNull);
-      expect(fork!.treeTitle, 'Dips');
+      expect(fork!.isFork, isTrue);
+      expect(fork.masteredIndex, 2);
+      expect(fork.treeTitle, 'Dips');
       expect(fork.chosenBranchId, 'weighted');
       expect(fork.foundationNames.length, 3);
       expect(fork.foundationNames.last, 'Chest Dip');
@@ -27,7 +29,7 @@ void main() {
         [for (final branch in fork.branches) branch.id],
         ['weighted', 'rings'],
       );
-      expect(fork.chosen.nodeNames.length, 2);
+      expect(fork.chosen!.nodeNames.length, 5);
       expect(fork.branches.last.nodeNames.first, 'Ring Dips');
     });
 
@@ -36,18 +38,48 @@ void main() {
       expect(fork, isNotNull);
       expect(fork!.chosenBranchId, 'close_grip');
       expect(fork.branches.length, greaterThanOrEqualTo(3));
-      expect(fork.chosen.label, 'Close Grip');
+      expect(fork.chosen!.label, 'Close Grip');
     });
 
-    test('a step inside a branch is an ordinary unlock, not a fork', () {
+    test('a step inside a branch draws the tree with that branch chosen', () {
+      final data = forkFor('dips_weighted_dips_120', 'dips_weighted_dips_140');
+      expect(data, isNotNull);
+      expect(data!.isFork, isFalse);
+      expect(data.chosenBranchId, 'weighted');
+      // Mastered index runs along trunk then branch: 3 trunk steps, then
+      // the +20% rung is the branch's first.
+      expect(data.masteredIndex, 3);
+      expect(data.chosen!.nodeNames.length, 5);
+      expect(data.branches.last.nodeNames.length, 2);
+    });
+
+    test('a step inside the foundation draws the tree with no branch chosen',
+        () {
+      final data = forkFor('dips_dip_negatives', 'dips_parallel_bar_dips');
+      expect(data, isNotNull);
+      expect(data!.isFork, isFalse);
+      expect(data.chosenBranchId, isNull);
+      expect(data.masteredIndex, 1);
+      expect(data.foundationNames.length, 3);
+      expect(data.branches.length, 2);
+    });
+
+    test('a one-path tree is a straight trunk', () {
+      final data = forkFor(
+        'handstand_pushups_pike_push_up',
+        'handstand_pushups_box_push_up',
+      );
+      expect(data, isNotNull);
+      expect(data!.branches, isEmpty);
+      expect(data.foundationNames.length, 7);
+      expect(data.masteredIndex, 0);
+    });
+
+    test('a step in another tree is not an in-tree unlock', () {
       expect(
-        forkFor('dips_weighted_dips_120', 'dips_weighted_dips_140'),
+        forkFor('dips_parallel_bar_dips', 'handstand_pushups_pike_push_up'),
         isNull,
       );
-    });
-
-    test('a step inside the foundation is not a fork either', () {
-      expect(forkFor('dips_dip_negatives', 'dips_parallel_bar_dips'), isNull);
     });
   });
 

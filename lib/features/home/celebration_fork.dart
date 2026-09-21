@@ -11,20 +11,20 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/skill_category_model.dart';
 import 'celebration_widgets.dart';
 
-/// The post-workout fork step. Fires when the mastered exercise is the last
-/// node of a tree's shared foundation, so the next exercise is not a given:
-/// the tree splits here. One screen, five beats — bar fills → foundation
-/// cleared → the branch lines draw → the title swaps to the branch the
-/// program is on and its first node lights → a helper says where to change
-/// it. No decision is asked of a tired user.
+/// The post-workout step for any unlock inside a tree, drawn as the tree:
+/// the shared foundation as a trunk, every branch forking off its end, and
+/// the mastered step wherever it sits. One screen, five beats — bar fills →
+/// the step clears → hold → the title swaps to the new step and its node
+/// lights → a helper. At the fork itself the branch the program is on
+/// lights up and the helper says where to change it; nothing is asked.
 
 /// One branch growing out of the foundation, as the mini-map draws it.
 class ForkBranch {
   final String id;
   final String label;
 
-  /// The first steps past the fork — at most two, which is all the map
-  /// has room to show.
+  /// The branch's steps past the fork. The branch the user is on carries
+  /// all of them; the others carry the two the map has room to show.
   final List<String> nodeNames;
 
   const ForkBranch({
@@ -34,6 +34,9 @@ class ForkBranch {
   });
 }
 
+/// An unlock inside a tree, drawn as the tree: the shared foundation as a
+/// trunk, every branch forking off its end, and the step just mastered
+/// wherever it sits — in the trunk, at the fork, or up a branch.
 class ForkUnlockData {
   final Exercise mastered;
   final Exercise newExercise;
@@ -43,14 +46,20 @@ class ForkUnlockData {
   final int startValue;
   final String treeTitle;
 
-  /// The shared trunk, first step to the one just mastered.
+  /// The whole shared trunk, first step to the fork.
   final List<String> foundationNames;
 
-  /// Every branch that grows out of that trunk, in catalog order.
+  /// Every branch that grows out of the trunk, in catalog order. Empty for
+  /// a tree that is one straight path.
   final List<ForkBranch> branches;
 
-  /// The branch the program's track is on — the one that lights up.
-  final String chosenBranchId;
+  /// The branch the mastered and new steps sit on, when only one does —
+  /// null while both are still in the trunk, where no branch is chosen.
+  final String? chosenBranchId;
+
+  /// Where the mastered step sits along the route: the trunk, then the
+  /// chosen branch's steps.
+  final int masteredIndex;
 
   const ForkUnlockData({
     required this.mastered,
@@ -63,17 +72,33 @@ class ForkUnlockData {
     required this.foundationNames,
     required this.branches,
     required this.chosenBranchId,
+    required this.masteredIndex,
   });
 
-  ForkBranch get chosen =>
-      branches.firstWhere((branch) => branch.id == chosenBranchId);
+  ForkBranch? get chosen {
+    for (final branch in branches) {
+      if (branch.id == chosenBranchId) return branch;
+    }
+    return null;
+  }
+
+  /// The mastered step ended the trunk and the new one opened a branch,
+  /// with others to choose from: the moment the tree actually splits.
+  bool get isFork =>
+      masteredIndex == foundationNames.length - 1 &&
+      chosen != null &&
+      branches.length >= 2;
+
+  /// The route the map lights along: the trunk, then the chosen branch.
+  List<String> get routeNames => [
+        ...foundationNames,
+        ...?chosen?.nodeNames,
+      ];
 }
 
-/// The fork behind an activation, or null when the activation is an
-/// ordinary next step: the mastered exercise must end its tree's shared
-/// foundation, the new one must open a branch, and at least one other
-/// branch must grow out of the same trunk. The counts come from the
-/// progression events the caller already has.
+/// The tree behind an in-tree activation, or null when the new exercise
+/// does not follow the mastered one on any path of the mastered one's
+/// tree — a hand-off or a manual jump, drawn elsewhere.
 ForkUnlockData? resolveForkUnlock({
   required Exercise mastered,
   required Exercise newExercise,
@@ -82,54 +107,58 @@ ForkUnlockData? resolveForkUnlock({
   required int startSets,
   required int startValue,
 }) {
-  if (!SkillCategory.isFoundationBranchId(mastered.branchId) ||
-      SkillCategory.isFoundationBranchId(newExercise.branchId)) {
+  if (mastered.skillCategoryId.isEmpty ||
+      mastered.skillCategoryId != newExercise.skillCategoryId) {
     return null;
   }
   final category = SkillCategoryCatalog.findById(mastered.skillCategoryId);
   if (category == null) return null;
 
-  String? chosenId;
-  List<String>? chosenPath;
-  var index = -1;
+  // The paths the pair sits on, consecutively.
+  final onPaths = <String>[];
   for (final entry in category.trainingPaths.entries) {
     final path = entry.value;
     final at = path.indexOf(mastered.id);
-    if (at < 0 || at + 1 >= path.length || path[at + 1] != newExercise.id) {
-      continue;
+    if (at >= 0 && at + 1 < path.length && path[at + 1] == newExercise.id) {
+      onPaths.add(entry.key);
     }
-    chosenId = entry.key;
-    chosenPath = path;
-    index = at;
-    break;
   }
-  if (chosenId == null || chosenPath == null) return null;
+  if (onPaths.isEmpty) return null;
 
-  final foundation = chosenPath.sublist(0, index + 1);
+  final foundation = category.pathFor(category.foundationBranchId);
+  if (foundation.isEmpty) return null;
   String nameOf(String id) => ExerciseCatalog.findById(id)?.name ?? id;
 
-  // One branch per distinct first step past the fork. Two paths that open
-  // with the same exercise are one route on the map; the program's own
-  // path is the one that keeps the name.
+  // One branch per distinct first step past the trunk. Two paths that
+  // open with the same exercise are one route on the map; the one the
+  // pair sits on keeps the name.
+  final chosenId = onPaths.length == 1 ? onPaths.first : null;
   final byFirstStep = <String, ForkBranch>{};
   for (final entry in category.trainingPaths.entries) {
     final path = entry.value;
-    if (path.length <= index + 1 ||
-        !listEquals(path.sublist(0, index + 1), foundation)) {
+    if (path.length <= foundation.length ||
+        !listEquals(path.sublist(0, foundation.length), foundation)) {
       continue;
     }
-    final next = path.sublist(index + 1, math.min(path.length, index + 3));
-    if (byFirstStep.containsKey(next.first) && entry.key != chosenId) {
+    final rest = path.sublist(foundation.length);
+    if (byFirstStep.containsKey(rest.first) && entry.key != chosenId) {
       continue;
     }
-    byFirstStep[next.first] = ForkBranch(
+    final shown = entry.key == chosenId ? rest : rest.take(2).toList();
+    byFirstStep[rest.first] = ForkBranch(
       id: entry.key,
       label: _branchLabel(category, entry.key),
-      nodeNames: [for (final id in next) nameOf(id)],
+      nodeNames: [for (final id in shown) nameOf(id)],
     );
   }
   final branches = byFirstStep.values.toList();
-  if (branches.length < 2) return null;
+
+  var masteredIndex = foundation.indexOf(mastered.id);
+  if (masteredIndex < 0) {
+    if (chosenId == null) return null;
+    final path = category.trainingPaths[chosenId]!;
+    masteredIndex = path.indexOf(mastered.id);
+  }
 
   return ForkUnlockData(
     mastered: mastered,
@@ -142,6 +171,7 @@ ForkUnlockData? resolveForkUnlock({
     foundationNames: [for (final id in foundation) nameOf(id)],
     branches: branches,
     chosenBranchId: chosenId,
+    masteredIndex: masteredIndex,
   );
 }
 
@@ -203,8 +233,14 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
     final data = widget.data;
     final started = _phase >= 3;
     final done = _phase >= 4;
-    final branch = data.chosen;
     final title = started ? data.newExercise.name : data.mastered.name;
+    final suffix = data.mastered.isTimed ? 's' : '';
+    final helper = data.isFork
+        ? 'You’re on the ${data.chosen!.label} path. Change it anytime on '
+            'the Program tab.'
+        : 'Clearing ${data.mastered.name} at '
+            '${data.masterySets} × ${data.masteryValue}$suffix opens '
+            '${data.newExercise.name} — your next move on this path.';
     final target = started
         ? '${data.startSets} × ${data.startValue}'
             '${data.newExercise.isTimed ? 's' : ''}'
@@ -291,21 +327,8 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                       color: Colors.white.withValues(alpha: 0.07),
                     ),
                   ),
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: 'You’re on the ${branch.label} path. '),
-                        const TextSpan(text: 'Change it anytime on the '),
-                        const TextSpan(
-                          text: 'Program tab',
-                          style: TextStyle(
-                            color: AppColors.accentPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const TextSpan(text: '.'),
-                      ],
-                    ),
+                  child: Text(
+                    helper,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 13,
@@ -455,18 +478,36 @@ class _ForkMapPainter extends CustomPainter {
     )..layout();
   }
 
+  /// The most steps the map draws along the route before it starts
+  /// dropping trunk steps from the left.
+  static const _maxSteps = 8;
+
   @override
   void paint(Canvas canvas, Size size) {
     final hub = Offset(_pivotX, size.height / 2);
-    final trunkCount = data.foundationNames.length;
     final branches = data.branches;
-    final branchDepth = branches.fold<int>(
-      0,
-      (depth, branch) => math.max(depth, branch.nodeNames.length),
-    );
+    final chosen = data.chosen;
+    final trunkAll = data.foundationNames;
+    final chosenNodesAll = chosen?.nodeNames ?? const <String>[];
+    final beatIn = Curves.easeOut.transform(beat.clamp(0, 1));
 
-    // The pitch that fits the trunk, the deepest branch, and the widest
-    // label inside the map — the design's 44 when there is room.
+    // Window: everything up to the step after the new one, and enough of
+    // the trunk to fit — the mastered step is always in view.
+    final routeLength = trunkAll.length + chosenNodesAll.length;
+    final showUpTo = math.min(
+        routeLength, math.max(data.masteredIndex + 2, trunkAll.length));
+    final chosenShown = math.max(0, showUpTo - trunkAll.length);
+    final otherDepth =
+        branches.any((branch) => branch.id != chosen?.id) ? 2 : 0;
+    var trunkStart = 0;
+    var steps = (trunkAll.length - 1) + math.max(chosenShown, otherDepth);
+    while (steps > _maxSteps && trunkStart < trunkAll.length - 1) {
+      trunkStart++;
+      steps--;
+    }
+    final trunkNames = trunkAll.sublist(trunkStart);
+    final masteredAt = data.masteredIndex - trunkStart;
+
     final labels = [
       for (final branch in branches)
         _text(branch.label,
@@ -476,7 +517,6 @@ class _ForkMapPainter extends CustomPainter {
       0,
       (widest, label) => math.max(widest, label.width),
     );
-    final steps = (trunkCount - 1) + branchDepth;
     final room = size.width - _pivotX - widestLabel - 11 - 4;
     final pitch = steps <= 0
         ? _maxPitch
@@ -488,52 +528,74 @@ class _ForkMapPainter extends CustomPainter {
     }
 
     final trunk = [
-      for (var k = 0; k < trunkCount; k++) at(k * pitch, 0),
+      for (var k = 0; k < trunkNames.length; k++) at(k * pitch, 0),
     ];
     final fork = trunk.last;
-    final forkRadius = (trunkCount - 1) * pitch;
+    final forkRadius = (trunkNames.length - 1) * pitch;
     final line = Paint()
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Trunk links.
-    for (var k = 1; k < trunk.length; k++) {
-      canvas.drawLine(trunk[k - 1], trunk[k], line..color = _trunkOn);
+    // Along the route: done before the mastered step, the step after it
+    // is next, everything past that locked.
+    Color routeLink(int toIndex) {
+      if (toIndex <= masteredAt) return _trunkOn;
+      if (toIndex == masteredAt + 1) {
+        return Color.lerp(_dim, _routeOn, _lit ? beatIn : 0)!;
+      }
+      return _dim;
     }
 
-    // Branches: links, nodes, labels.
-    final offsets = _offsets(branches.length);
-    final beatIn = Curves.easeOut.transform(beat.clamp(0, 1));
-    for (var j = 0; j < branches.length; j++) {
-      final branch = branches[j];
-      final on = branch.id == data.chosenBranchId;
-      final angle = offsets[j];
-      final nodes = [
-        for (var k = 0; k < branch.nodeNames.length; k++)
-          at(forkRadius + (k + 1) * pitch, angle),
-      ];
-      final routeT = on && _lit ? beatIn : 0.0;
-      final route = Color.lerp(_dim, _routeOn, routeT)!;
-      for (var k = 0; k < nodes.length; k++) {
-        final from = k == 0 ? fork : nodes[k - 1];
-        canvas.drawLine(
-          from,
-          nodes[k],
-          line..color = k == 0 ? route.withValues(alpha: route.a * 0.6) : route,
-        );
+    void routeNode(Offset node, int index, {bool big = false}) {
+      if (index < masteredAt) {
+        canvas.drawCircle(node, 6, Paint()..color = AppColors.green);
+        return;
       }
-      for (var k = 0; k < nodes.length; k++) {
-        final first = k == 0;
-        final openT = first && _cleared ? (phase == 1 ? beatIn : 1.0) : 0.0;
-        final activeT = on && first && _lit ? beatIn : 0.0;
+      if (index == masteredAt) {
+        if (!_cleared) {
+          canvas.drawCircle(
+            node,
+            14 * (1 + 0.25 * pulse),
+            Paint()
+              ..color =
+                  AppColors.accentPrimary.withValues(alpha: 0.55 - 0.4 * pulse)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2,
+          );
+        }
+        var radius = 7.5;
+        var color = _cleared ? AppColors.green : AppColors.accentPrimary;
+        if (_cleared && phase == 1) {
+          final t = beat.clamp(0.0, 1.0);
+          final burst = Curves.easeOutCubic.transform(t);
+          canvas.drawCircle(
+            node,
+            7 * (1 + 2.4 * burst),
+            Paint()
+              ..color = AppColors.green.withValues(alpha: 0.9 * (1 - burst))
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 3,
+          );
+          final pop = t < 0.45
+              ? 1 + 0.9 * Curves.easeOut.transform(t / 0.45)
+              : 1.9 - 0.9 * Curves.easeIn.transform((t - 0.45) / 0.55);
+          radius *= pop;
+          color = Color.lerp(
+              AppColors.accentPrimary, AppColors.green, (t / 0.3).clamp(0, 1))!;
+        }
+        canvas.drawCircle(node, radius, Paint()..color = color);
+        return;
+      }
+      if (index == masteredAt + 1) {
+        final openT = _cleared ? (phase == 1 ? beatIn : 1.0) : 0.0;
+        final activeT = _lit ? beatIn : 0.0;
         var fill = Color.lerp(_lock, AppColors.textPrimary, openT)!;
         fill = Color.lerp(fill, AppColors.accentPrimary, activeT)!;
-        final radius = 4.6 + 0.9 * openT + 1.0 * activeT;
         if (activeT > 0) {
           final ringT = (activeT / 0.55).clamp(0.0, 1.0);
           canvas.drawCircle(
-            nodes[k],
+            node,
             13 * (0.75 + 0.25 * ringT),
             Paint()
               ..color = AppColors.accentPrimary.withValues(alpha: 0.3 * ringT)
@@ -541,7 +603,58 @@ class _ForkMapPainter extends CustomPainter {
               ..strokeWidth = 2,
           );
         }
-        canvas.drawCircle(nodes[k], radius, Paint()..color = fill);
+        canvas.drawCircle(
+            node, 4.6 + 0.9 * openT + 1.0 * activeT, Paint()..color = fill);
+        return;
+      }
+      canvas.drawCircle(node, 4.6, Paint()..color = _lock);
+    }
+
+    // A trunk cut on the left starts with a faint stub, so the tree reads
+    // as continuing.
+    if (trunkStart > 0) {
+      canvas.drawLine(
+        trunk.first - const Offset(10, 0),
+        trunk.first,
+        line..color = _trunkOn.withValues(alpha: 0.25),
+      );
+    }
+    for (var k = 1; k < trunk.length; k++) {
+      canvas.drawLine(trunk[k - 1], trunk[k], line..color = routeLink(k));
+    }
+
+    // Branches: links, nodes, labels. The chosen one is part of the route;
+    // the others open their first node only at the fork itself.
+    final offsets = _offsets(branches.length);
+    for (var j = 0; j < branches.length; j++) {
+      final branch = branches[j];
+      final on = branch.id == chosen?.id;
+      final angle = offsets[j];
+      final count = on ? chosenShown : math.min(2, branch.nodeNames.length);
+      if (count == 0) continue;
+      final nodes = [
+        for (var k = 0; k < count; k++) at(forkRadius + (k + 1) * pitch, angle),
+      ];
+      for (var k = 0; k < nodes.length; k++) {
+        final from = k == 0 ? fork : nodes[k - 1];
+        final color = on
+            ? routeLink(trunkNames.length + k)
+            : (k == 0 ? _dim.withValues(alpha: _dim.a * 0.6) : _dim);
+        canvas.drawLine(from, nodes[k], line..color = color);
+      }
+      for (var k = 0; k < nodes.length; k++) {
+        if (on) {
+          routeNode(nodes[k], trunkNames.length + k);
+          continue;
+        }
+        final openT = k == 0 && data.isFork && _cleared
+            ? (phase == 1 ? beatIn : 1.0)
+            : 0.0;
+        canvas.drawCircle(
+          nodes[k],
+          4.6 + 0.9 * openT,
+          Paint()..color = Color.lerp(_lock, AppColors.textPrimary, openT)!,
+        );
       }
       final tip = nodes.last;
       final label = on && _lit
@@ -556,51 +669,22 @@ class _ForkMapPainter extends CustomPainter {
 
     // Trunk nodes on top of everything.
     for (var k = 0; k < trunk.length; k++) {
-      final last = k == trunk.length - 1;
-      final node = trunk[k];
-      if (last && !_cleared) {
-        // Breathing ring on the node about to clear.
-        canvas.drawCircle(
-          node,
-          14 * (1 + 0.25 * pulse),
-          Paint()
-            ..color =
-                AppColors.accentPrimary.withValues(alpha: 0.55 - 0.4 * pulse)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2,
-        );
-      }
-      var radius = last ? 7.5 : 6.0;
-      var color = last && !_cleared ? AppColors.accentPrimary : AppColors.green;
-      if (last && _cleared && phase == 1) {
-        // The clear: a burst ring flies out and the node pops.
-        final t = beat.clamp(0.0, 1.0);
-        final burst = Curves.easeOutCubic.transform(t);
-        canvas.drawCircle(
-          node,
-          7 * (1 + 2.4 * burst),
-          Paint()
-            ..color = AppColors.green.withValues(alpha: 0.9 * (1 - burst))
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-        final pop = t < 0.45
-            ? 1 + 0.9 * Curves.easeOut.transform(t / 0.45)
-            : 1.9 - 0.9 * Curves.easeIn.transform((t - 0.45) / 0.55);
-        radius *= pop;
-        color = Color.lerp(
-            AppColors.accentPrimary, AppColors.green, (t / 0.3).clamp(0, 1))!;
-      }
-      canvas.drawCircle(node, radius, Paint()..color = color);
+      routeNode(trunk[k], k);
     }
 
-    final caption = _text(
-      'FOUNDATION',
-      size: 10,
-      color: _cleared ? AppColors.green : AppColors.textSecondary,
-      letterSpacing: 1.4,
-    );
-    caption.paint(canvas, Offset(trunk.first.dx - 6, hub.dy - 22 - 8));
+    if (trunkStart == 0) {
+      // A tree that never forks has no foundation to speak of: its own
+      // name goes over the trunk instead.
+      final caption = _text(
+        branches.isEmpty ? data.treeTitle.toUpperCase() : 'FOUNDATION',
+        size: 10,
+        color: masteredAt >= trunk.length - 1 && _cleared
+            ? AppColors.green
+            : AppColors.textSecondary,
+        letterSpacing: 1.4,
+      );
+      caption.paint(canvas, Offset(trunk.first.dx - 6, hub.dy - 22 - 8));
+    }
   }
 
   @override
