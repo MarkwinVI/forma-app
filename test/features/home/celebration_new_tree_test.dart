@@ -64,13 +64,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('NEW SKILL TREE UNLOCKED'), findsOneWidget);
+    expect(find.text('Handstand Pushups'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('NEW EXERCISE STARTED'), findsOneWidget);
-    expect(find.text(data.newExercise.name), findsOneWidget);
-
+    // The screen ends on the tree: no swap to the exercise.
     await tester.pump(const Duration(milliseconds: 1500));
+    expect(find.text('NEW EXERCISE STARTED'), findsNothing);
+    expect(find.text('NEW SKILL TREE UNLOCKED'), findsOneWidget);
+    expect(find.text(data.newExercise.name), findsNothing);
     expect(
       find.text(
         'Handstand Pushups replaced your dip progression. Prefer to keep '

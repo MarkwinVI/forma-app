@@ -163,8 +163,8 @@ class NewTreeUnlockContent extends StatefulWidget {
 
 class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
   /// 0 bar filling · 1 step cleared, the old tree's branch firsts open ·
-  /// 2 the wheel spins to the new tree · 3 padlock off · 4 first step
-  /// lights, title swaps · 5 helper.
+  /// 2 the wheel spins to the new tree · 3 the tree unlocks and its first
+  /// step lights · 4 helper. The screen ends on the tree, not the step.
   int _phase = 0;
   bool _fill = false;
   final List<Timer> _timers = [];
@@ -182,11 +182,7 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
     at(2100, () => _phase = 1);
     at(3200, () => _phase = 2);
     at(4100, () => _phase = 3);
-    at(5000, () {
-      _phase = 4;
-      _fill = false;
-    });
-    at(5900, () => _phase = 5);
+    at(5000, () => _phase = 4);
   }
 
   @override
@@ -200,37 +196,24 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
-    final started = _phase >= 4;
-    final done = _phase >= 5;
-    final title = started
-        ? data.newExercise.name
-        : _phase >= 2
-            ? data.toTitle
-            : data.mastered.name;
-    final target = started
-        ? '${data.startSets} × ${data.startValue}'
-            '${data.newExercise.isTimed ? 's' : ''}'
-        : '${data.masterySets} × ${data.masteryValue}'
-            '${data.mastered.isTimed ? 's' : ''}';
-    final Widget? tag = started
+    final unlocked = _phase >= 3;
+    final done = _phase >= 4;
+    final title = _phase >= 2 ? data.toTitle : data.mastered.name;
+    final target = '${data.masterySets} × ${data.masteryValue}'
+        '${data.mastered.isTimed ? 's' : ''}';
+    final Widget? tag = unlocked
         ? const CelebrationTag(
-            key: ValueKey('started'),
-            color: AppColors.accentPrimary,
-            label: 'New exercise started',
+            key: ValueKey('tree'),
+            color: AppColors.amber,
+            label: 'New skill tree unlocked',
           )
-        : _phase >= 3
+        : _phase >= 1
             ? const CelebrationTag(
-                key: ValueKey('tree'),
-                color: AppColors.amber,
-                label: 'New skill tree unlocked',
+                key: ValueKey('mastered'),
+                color: AppColors.green,
+                label: 'Exercise mastered',
               )
-            : _phase >= 1
-                ? const CelebrationTag(
-                    key: ValueKey('mastered'),
-                    color: AppColors.green,
-                    label: 'Exercise mastered',
-                  )
-                : null;
+            : null;
 
     return Center(
       child: SingleChildScrollView(
@@ -263,16 +246,15 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
             const SizedBox(height: 18),
             RiseIn(
               delay: const Duration(milliseconds: 80),
-              // The bar steps back while the wheel turns: it is about the
+              // The bar steps back once the wheel turns: it is about the
               // step just cleared, and the screen is about the new tree.
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 400),
-                opacity: _phase == 2 || _phase == 3 ? 0.35 : 1,
+                opacity: _phase >= 2 ? 0.35 : 1,
                 child: CelebrationTargetBar(
-                  label: started ? 'STARTING TARGET' : 'PREREQUISITE',
+                  label: 'PREREQUISITE',
                   target: target,
-                  targetColor:
-                      started ? AppColors.textSecondary : AppColors.green,
+                  targetColor: AppColors.green,
                   fill: _fill,
                 ),
               ),
@@ -297,7 +279,7 @@ class _NewTreeUnlockContentState extends State<NewTreeUnlockContent> {
                     routeIds: data.toRouteIds,
                     masteredIndex: data.toActiveIndex - 1,
                     cleared: true,
-                    lit: started,
+                    lit: unlocked,
                     nextOpensOnClear: false,
                   )!,
                 ],
