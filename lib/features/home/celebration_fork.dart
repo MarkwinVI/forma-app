@@ -311,27 +311,15 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
                 duration: const Duration(milliseconds: 500),
                 curve: const Cubic(0.32, 0.72, 0, 1),
                 offset: done ? Offset.zero : const Offset(0, 0.3),
-                child: Container(
+                child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 290),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.07),
-                    ),
-                  ),
                   child: Text(
                     helper,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
                       color: AppColors.textSecondary,
-                      height: 1.5,
+                      height: 1.55,
                     ),
                   ),
                 ),
