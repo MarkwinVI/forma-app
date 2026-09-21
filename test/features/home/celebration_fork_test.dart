@@ -107,7 +107,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1500));
     expect(
       find.text(
-        'Mastering Chest Dip unlocked ${fork.newExercise.name}. You’re on '
+        'Completing 24 reps of Chest Dip unlocked ${fork.newExercise.name}. '
+        'Next workout you’ll work on ${fork.newExercise.name}. You’re on '
         'the Weighted path. Change it anytime on the Program tab.',
       ),
       findsOneWidget,

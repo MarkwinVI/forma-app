@@ -234,8 +234,12 @@ class _ForkUnlockContentState extends State<ForkUnlockContent> {
     final started = _phase >= 3;
     final done = _phase >= 4;
     final title = started ? data.newExercise.name : data.mastered.name;
-    final helper =
-        'Mastering ${data.mastered.name} unlocked ${data.newExercise.name}.'
+    // The volume that mastered it: sets × target, in the step's own unit.
+    final total = data.masterySets * data.masteryValue;
+    final unit = data.mastered.isTimed ? 'seconds' : 'reps';
+    final helper = 'Completing $total $unit of ${data.mastered.name} '
+        'unlocked ${data.newExercise.name}. Next workout you’ll work on '
+        '${data.newExercise.name}.'
         '${data.isFork ? ' You’re on the ${data.chosen!.label} path. '
             'Change it anytime on the Program tab.' : ''}';
     final target = started
