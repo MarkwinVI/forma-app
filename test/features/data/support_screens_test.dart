@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/services/feedback_service.dart';
-import 'package:forma_app/features/data/support_sheets.dart';
+import 'package:forma_app/features/data/support_screens.dart';
 
-/// The Profile tab's two support sheets. Feedback needs a star before it
-/// can send and names the rating in a word; Contact needs a first
-/// character. Both swap the form for a thanks inside the same sheet, keep
-/// the draft when dismissed or when the send fails, and clear it once it
-/// has gone.
+/// The Profile tab's two support screens, full screen with an X on the
+/// left. Feedback needs a star before it can send and names the rating in
+/// a word; Contact needs a first character. Both swap the form for a
+/// thanks on the same screen, keep the draft when closed or when the send
+/// fails, and clear it once it has gone.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -46,7 +46,7 @@ void main() {
       final draft = FeedbackDraft();
       int? result;
       await pumpOpener(tester, (context) async {
-        result = await showFeedbackSheet(context, draft: draft, store: store);
+        result = await showFeedbackScreen(context, draft: draft, store: store);
       });
 
       expect(find.text("How's Forma so far?"), findsOneWidget);
@@ -77,15 +77,15 @@ void main() {
       expect(find.text('Open'), findsOneWidget);
     });
 
-    testWidgets('cancel keeps the draft for next time', (tester) async {
+    testWidgets('closing keeps the draft for next time', (tester) async {
       final draft = FeedbackDraft();
       await pumpOpener(tester, (context) async {
-        await showFeedbackSheet(context, draft: draft, store: FakeStore());
+        await showFeedbackScreen(context, draft: draft, store: FakeStore());
       });
       await tester.tap(find.bySemanticsLabel('2 stars'));
       await tester.enterText(find.byType(TextField), 'Half typed');
-      await tester.tap(find.text('Cancel'));
-      await settle(tester);
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pumpAndSettle();
 
       expect(draft.rating, 2);
       expect(draft.text, 'Half typed');
@@ -100,7 +100,7 @@ void main() {
     testWidgets('a failed send says so and keeps everything', (tester) async {
       final store = FakeStore()..failNext = true;
       await pumpOpener(tester, (context) async {
-        await showFeedbackSheet(context, draft: FeedbackDraft(), store: store);
+        await showFeedbackScreen(context, draft: FeedbackDraft(), store: store);
       });
       await tester.tap(find.bySemanticsLabel('5 stars'));
       await tester.enterText(find.byType(TextField), 'Love it');
@@ -121,7 +121,7 @@ void main() {
       final draft = SupportDraft();
       bool? result;
       await pumpOpener(tester, (context) async {
-        result = await showContactSupportSheet(
+        result = await showContactSupportScreen(
           context,
           draft: draft,
           replyEmail: 'alex@example.com',
@@ -154,7 +154,7 @@ void main() {
       final store = FakeStore()..failNext = true;
       final draft = SupportDraft();
       await pumpOpener(tester, (context) async {
-        await showContactSupportSheet(
+        await showContactSupportScreen(
           context,
           draft: draft,
           replyEmail: null,

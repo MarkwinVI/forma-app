@@ -12,68 +12,69 @@ import '../../data/services/feedback_service.dart';
 /// The word under the stars, one per rating.
 const feedbackRatingWords = ['Poor', 'Fair', 'Okay', 'Good', 'Great'];
 
-/// What the feedback sheet holds between opens: dismissing keeps the draft
+/// What the feedback screen holds between opens: closing keeps the draft
 /// for next time, and a send clears it. Owned by the Profile tab.
 class FeedbackDraft {
   int rating = 0;
   String text = '';
 }
 
-/// Same for the support sheet.
+/// Same for the support screen.
 class SupportDraft {
   String text = '';
 }
 
-/// Rate the app 1–5, then say what could be better. Resolves with the
-/// rating that was sent, or null when the sheet closed without sending.
-Future<int?> showFeedbackSheet(
+/// Rate the app 1–5, then say what could be better. Opens full screen and
+/// resolves with the rating that was sent, or null when it closed without
+/// sending.
+Future<int?> showFeedbackScreen(
   BuildContext context, {
   required FeedbackDraft draft,
   ProfileFeedbackStore? store,
 }) {
-  return showModalBottomSheet<int>(
-    context: context,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (_) => _FeedbackSheet(draft: draft, store: store),
+  return Navigator.of(context, rootNavigator: true).push<int>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _FeedbackScreen(draft: draft, store: store),
+    ),
   );
 }
 
-/// One field to support. Resolves with true when the message was sent.
-Future<bool?> showContactSupportSheet(
+/// One field to support, full screen. Resolves with true when the message
+/// was sent.
+Future<bool?> showContactSupportScreen(
   BuildContext context, {
   required SupportDraft draft,
   required String? replyEmail,
   ProfileFeedbackStore? store,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    useRootNavigator: true,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (_) => _ContactSheet(
-      draft: draft,
-      replyEmail: replyEmail,
-      store: store,
+  return Navigator.of(context, rootNavigator: true).push<bool>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _ContactScreen(
+        draft: draft,
+        replyEmail: replyEmail,
+        store: store,
+      ),
     ),
   );
 }
 
 // ── Feedback ──────────────────────────────────────────────────────────
 
-class _FeedbackSheet extends StatefulWidget {
+class _FeedbackScreen extends StatefulWidget {
   final FeedbackDraft draft;
   final ProfileFeedbackStore? store;
-  const _FeedbackSheet({required this.draft, required this.store});
+  const _FeedbackScreen({required this.draft, required this.store});
 
   @override
-  State<_FeedbackSheet> createState() => _FeedbackSheetState();
+  State<_FeedbackScreen> createState() => _FeedbackScreenState();
 }
 
-class _FeedbackSheetState extends State<_FeedbackSheet> {
+class _FeedbackScreenState extends State<_FeedbackScreen> {
   late final ProfileFeedbackStore _store = widget.store ?? FeedbackService();
   late final _text = TextEditingController(text: widget.draft.text);
+  final _focus = FocusNode();
   late int _rating = widget.draft.rating;
   bool _sending = false;
   bool _failed = false;
@@ -82,13 +83,17 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   @override
   void initState() {
     super.initState();
-    AnalyticsService.screen('feedback_sheet');
-    _text.addListener(() => widget.draft.text = _text.text);
+    AnalyticsService.screen('feedback_screen');
+    _text.addListener(() {
+      if (_text.text == widget.draft.text) return;
+      widget.draft.text = _text.text;
+    });
   }
 
   @override
   void dispose() {
     _text.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -137,22 +142,16 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   @override
   Widget build(BuildContext context) {
     final sent = _sentRating;
-    return _SupportSheetShell(
+    return _SupportScreen(
       caption: 'LEAVE FEEDBACK',
-      onDismiss: () => Navigator.of(context).pop(sent),
-      child: sent != null
-          ? _DoneView(
-              title: 'Thanks for your feedback!',
-              onDone: () => Navigator.of(context).pop(sent),
-            )
+      fieldFocus: _focus,
+      closeEnabled: !_sending,
+      onClose: () => Navigator.of(context).pop(sent),
+      body: sent != null
+          ? const _DoneView(title: 'Thanks for your feedback!')
           : _FormView(
               title: "How's Forma so far?",
-              cta: 'Send feedback',
-              canSend: _rating > 0,
-              sending: _sending,
               failed: _failed,
-              onSend: _send,
-              onCancel: () => Navigator.of(context).pop(),
               children: [
                 const SizedBox(height: 26),
                 _Stars(value: _rating, onChanged: _rate),
@@ -160,6 +159,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                 Text('WHAT COULD BE BETTER', style: monoStyle(size: 10.5)),
                 _BareField(
                   controller: _text,
+                  focusNode: _focus,
                   enabled: !_sending,
                   minLines: 3,
                   hint: 'Optional — a missing exercise, something '
@@ -170,29 +170,40 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                     'Sent with your app version and device. No workout data.'),
               ],
             ),
+      action: sent != null
+          ? PillButton(
+              label: 'Done',
+              onTap: () => Navigator.of(context).pop(sent),
+            )
+          : PillButton(
+              label: _sending ? 'Sending' : 'Send feedback',
+              semanticLabel: 'Send feedback',
+              onTap: _rating > 0 && !_sending ? _send : null,
+            ),
     );
   }
 }
 
 // ── Contact support ───────────────────────────────────────────────────
 
-class _ContactSheet extends StatefulWidget {
+class _ContactScreen extends StatefulWidget {
   final SupportDraft draft;
   final String? replyEmail;
   final ProfileFeedbackStore? store;
-  const _ContactSheet({
+  const _ContactScreen({
     required this.draft,
     required this.replyEmail,
     required this.store,
   });
 
   @override
-  State<_ContactSheet> createState() => _ContactSheetState();
+  State<_ContactScreen> createState() => _ContactScreenState();
 }
 
-class _ContactSheetState extends State<_ContactSheet> {
+class _ContactScreenState extends State<_ContactScreen> {
   late final ProfileFeedbackStore _store = widget.store ?? FeedbackService();
   late final _text = TextEditingController(text: widget.draft.text);
+  final _focus = FocusNode();
   bool _sending = false;
   bool _failed = false;
   bool _sent = false;
@@ -200,7 +211,7 @@ class _ContactSheetState extends State<_ContactSheet> {
   @override
   void initState() {
     super.initState();
-    AnalyticsService.screen('contact_support_sheet');
+    AnalyticsService.screen('contact_support_screen');
     _text.addListener(() {
       // Selection and focus changes report through here too; only the
       // words matter, both for the draft and for clearing an error.
@@ -213,6 +224,7 @@ class _ContactSheetState extends State<_ContactSheet> {
   @override
   void dispose() {
     _text.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -251,27 +263,24 @@ class _ContactSheetState extends State<_ContactSheet> {
   @override
   Widget build(BuildContext context) {
     final email = widget.replyEmail;
-    return _SupportSheetShell(
+    return _SupportScreen(
       caption: 'CONTACT SUPPORT',
-      onDismiss: () => Navigator.of(context).pop(_sent),
-      child: _sent
-          ? _DoneView(
+      fieldFocus: _focus,
+      closeEnabled: !_sending,
+      onClose: () => Navigator.of(context).pop(_sent),
+      body: _sent
+          ? const _DoneView(
               title: 'Thanks for contacting us',
               sub: 'We will get back to you within 1–2 business days.',
-              onDone: () => Navigator.of(context).pop(true),
             )
           : _FormView(
               title: "What's going on?",
-              cta: 'Send message',
-              canSend: _canSend,
-              sending: _sending,
               failed: _failed,
-              onSend: _send,
-              onCancel: () => Navigator.of(context).pop(false),
               children: [
                 const SizedBox(height: 18),
                 _BareField(
                   controller: _text,
+                  focusNode: _focus,
                   enabled: !_sending,
                   minLines: 5,
                   hint: 'Describe the issue or question — a subscription '
@@ -295,68 +304,159 @@ class _ContactSheetState extends State<_ContactSheet> {
                 ),
               ],
             ),
+      action: _sent
+          ? PillButton(
+              label: 'Done',
+              onTap: () => Navigator.of(context).pop(true),
+            )
+          : PillButton(
+              label: _sending ? 'Sending' : 'Send message',
+              semanticLabel: 'Send message',
+              onTap: _canSend && !_sending ? _send : null,
+            ),
     );
   }
 }
 
 // ── Shared chrome ─────────────────────────────────────────────────────
 
-/// The Profile tab's sheet vocabulary, as the bodyweight edit: surface,
-/// grabber, mono caption. The keyboard lifts the whole sheet, and the
-/// body scrolls when a short screen cannot hold it.
-class _SupportSheetShell extends StatelessWidget {
+/// A full-screen form: an X on the left up top, a mono caption, the body
+/// scrolling beneath, and the one action pinned at the bottom. The action
+/// rides up with the keyboard and the field is kept in view above it.
+class _SupportScreen extends StatefulWidget {
   final String caption;
-  final Widget child;
-  final VoidCallback onDismiss;
+  final Widget body;
+  final Widget action;
+  final FocusNode fieldFocus;
+  final bool closeEnabled;
+  final VoidCallback onClose;
 
-  const _SupportSheetShell({
+  const _SupportScreen({
     required this.caption,
-    required this.child,
-    required this.onDismiss,
+    required this.body,
+    required this.action,
+    required this.fieldFocus,
+    required this.closeEnabled,
+    required this.onClose,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+  State<_SupportScreen> createState() => _SupportScreenState();
+}
 
+class _SupportScreenState extends State<_SupportScreen> {
+  /// The body's end — the field and what sits under it — which the
+  /// keyboard must not cover.
+  final _bodyEndKey = GlobalKey();
+  double _keyboardInset = 0;
+
+  /// The keyboard rises over a few frames; each one it takes more of the
+  /// screen, the end of the body is nudged back above the pinned action.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final inset = MediaQuery.viewInsetsOf(context).bottom;
+    if (inset == _keyboardInset) return;
+    final rising = inset > _keyboardInset;
+    _keyboardInset = inset;
+    if (rising && widget.fieldFocus.hasFocus) _revealBodyEnd();
+  }
+
+  void _revealBodyEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final endContext = _bodyEndKey.currentContext;
+      if (!mounted || endContext == null) return;
+      Scrollable.ensureVisible(
+        endContext,
+        alignment: 1,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) onDismiss();
+        if (!didPop && widget.closeEnabled) widget.onClose();
       },
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: AnimatedPadding(
-          duration: const Duration(milliseconds: 120),
-          padding: EdgeInsets.only(bottom: keyboard),
-          child: Container(
-            padding: EdgeInsets.fromLTRB(22, 12, 22, 16 + bottomInset),
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-              border: Border(top: BorderSide(color: AppColors.divider)),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 38,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        resizeToAvoidBottomInset: true,
+        body: GestureDetector(
+          // A tap on the background puts the keyboard away.
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SafeArea(
+            child: Column(
+              children: [
+                _CloseRow(
+                  onClose: widget.closeEnabled ? widget.onClose : null,
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(widget.caption, style: monoStyle(size: 10.5)),
+                        widget.body,
+                        SizedBox(key: _bodyEndKey, height: 8),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(caption, style: monoStyle(size: 10.5)),
-                  child,
-                ],
+                ),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 11, 16, 20),
+                  decoration: const BoxDecoration(
+                    border: Border(top: BorderSide(color: AppColors.divider)),
+                  ),
+                  child: widget.action,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The X, on the left: this is a place you came to do one thing and
+/// leave, not a page in a stack. Drawn at 36; the tap catches 44×44.
+class _CloseRow extends StatelessWidget {
+  final VoidCallback? onClose;
+  const _CloseRow({required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Pressable(
+          semanticLabel: 'Close',
+          onTap: onClose,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           ),
@@ -368,22 +468,12 @@ class _SupportSheetShell extends StatelessWidget {
 
 class _FormView extends StatelessWidget {
   final String title;
-  final String cta;
-  final bool canSend;
-  final bool sending;
   final bool failed;
-  final VoidCallback onSend;
-  final VoidCallback onCancel;
   final List<Widget> children;
 
   const _FormView({
     required this.title,
-    required this.cta,
-    required this.canSend,
-    required this.sending,
     required this.failed,
-    required this.onSend,
-    required this.onCancel,
     required this.children,
   });
 
@@ -423,28 +513,6 @@ class _FormView extends StatelessWidget {
             ],
           ),
         ],
-        const SizedBox(height: 22),
-        PillButton(
-          label: sending ? 'Sending' : cta,
-          semanticLabel: cta,
-          onTap: canSend && !sending ? onSend : null,
-        ),
-        const SizedBox(height: 4),
-        Pressable(
-          onTap: sending ? null : onCancel,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 13),
-            child: Text(
-              'Cancel',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -503,15 +571,17 @@ class _Stars extends StatelessWidget {
   }
 }
 
-/// A bare text field above a hairline — the sheet's only input.
+/// A bare text field above a hairline — the screen's only input.
 class _BareField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode focusNode;
   final bool enabled;
   final int minLines;
   final String hint;
 
   const _BareField({
     required this.controller,
+    required this.focusNode,
     required this.enabled,
     required this.minLines,
     required this.hint,
@@ -525,6 +595,7 @@ class _BareField extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         enabled: enabled,
         minLines: minLines,
         maxLines: minLines + 4,
@@ -577,9 +648,8 @@ class _Footnote extends StatelessWidget {
 class _DoneView extends StatefulWidget {
   final String title;
   final String? sub;
-  final VoidCallback onDone;
 
-  const _DoneView({required this.title, this.sub, required this.onDone});
+  const _DoneView({required this.title, this.sub});
 
   @override
   State<_DoneView> createState() => _DoneViewState();
@@ -626,7 +696,7 @@ class _DoneViewState extends State<_DoneView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 26),
+        const SizedBox(height: 56),
         Center(
           child: ScaleTransition(
             scale: _ring,
@@ -685,9 +755,6 @@ class _DoneViewState extends State<_DoneView>
             ),
           ),
         ),
-        const SizedBox(height: 28),
-        PillButton(label: 'Done', onTap: widget.onDone),
-        const SizedBox(height: 8),
       ],
     );
   }

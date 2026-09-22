@@ -20,7 +20,7 @@ import '../exercises/exercise_picker_view.dart';
 import 'bodyweight_row.dart';
 import 'calendar_view.dart';
 import 'past_workout_detail_view.dart';
-import 'support_sheets.dart';
+import 'support_screens.dart';
 
 class DataView extends StatefulWidget {
   final bool isActive;
@@ -45,7 +45,7 @@ class _DataViewState extends State<DataView> {
   double? _bodyweightKg;
   bool _bodyweightJustSaved = false;
 
-  /// What the support sheets hold between opens, and what they last sent —
+  /// What the support screens hold between opens, and what they last sent —
   /// the row's subline turns green for the rest of the visit as a trace.
   final _feedbackDraft = FeedbackDraft();
   final _supportDraft = SupportDraft();
@@ -166,17 +166,17 @@ class _DataViewState extends State<DataView> {
   }
 
   /// Rate the app, say what could be better. Five stars is the one moment
-  /// we know the answer is yes, so once the sheet is gone the native store
+  /// we know the answer is yes, so once the screen is gone the native store
   /// review prompt follows — at most once per app version.
   Future<void> _openFeedbackSheet() async {
-    final rating = await showFeedbackSheet(context, draft: _feedbackDraft);
+    final rating = await showFeedbackScreen(context, draft: _feedbackDraft);
     if (!mounted) return;
     if (rating != null) setState(() => _feedbackSentRating = rating);
     if (rating == 5) await StoreReviewService().maybeAsk(rating: rating!);
   }
 
   Future<void> _openContactSheet() async {
-    final sent = await showContactSupportSheet(
+    final sent = await showContactSupportScreen(
       context,
       draft: _supportDraft,
       replyEmail: AuthService().currentUser?.email,
