@@ -45,17 +45,12 @@ Future<int?> showFeedbackScreen(
 Future<bool?> showContactSupportScreen(
   BuildContext context, {
   required SupportDraft draft,
-  required String? replyEmail,
   ProfileFeedbackStore? store,
 }) {
   return Navigator.of(context, rootNavigator: true).push<bool>(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) => _ContactScreen(
-        draft: draft,
-        replyEmail: replyEmail,
-        store: store,
-      ),
+      builder: (_) => _ContactScreen(draft: draft, store: store),
     ),
   );
 }
@@ -143,21 +138,21 @@ class _FeedbackScreenState extends State<_FeedbackScreen> {
   Widget build(BuildContext context) {
     final sent = _sentRating;
     return _SupportScreen(
-      caption: 'LEAVE FEEDBACK',
+      title: sent == null ? 'Leave feedback' : null,
       fieldFocus: _focus,
       closeEnabled: !_sending,
       onClose: () => Navigator.of(context).pop(sent),
       body: sent != null
           ? const _DoneView(title: 'Thanks for your feedback!')
           : _FormView(
-              title: "How's Forma so far?",
               failed: _failed,
               children: [
-                const SizedBox(height: 26),
+                const SizedBox(height: 28),
                 _Stars(value: _rating, onChanged: _rate),
-                const SizedBox(height: 22),
+                const SizedBox(height: 26),
                 Text('WHAT COULD BE BETTER', style: monoStyle(size: 10.5)),
-                _BareField(
+                const SizedBox(height: 10),
+                _NoteField(
                   controller: _text,
                   focusNode: _focus,
                   enabled: !_sending,
@@ -165,9 +160,6 @@ class _FeedbackScreenState extends State<_FeedbackScreen> {
                   hint: 'Optional — a missing exercise, something '
                       'confusing, anything.',
                 ),
-                const SizedBox(height: 12),
-                _Footnote(
-                    'Sent with your app version and device. No workout data.'),
               ],
             ),
       action: sent != null
@@ -188,13 +180,8 @@ class _FeedbackScreenState extends State<_FeedbackScreen> {
 
 class _ContactScreen extends StatefulWidget {
   final SupportDraft draft;
-  final String? replyEmail;
   final ProfileFeedbackStore? store;
-  const _ContactScreen({
-    required this.draft,
-    required this.replyEmail,
-    required this.store,
-  });
+  const _ContactScreen({required this.draft, required this.store});
 
   @override
   State<_ContactScreen> createState() => _ContactScreenState();
@@ -262,9 +249,8 @@ class _ContactScreenState extends State<_ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final email = widget.replyEmail;
     return _SupportScreen(
-      caption: 'CONTACT SUPPORT',
+      title: _sent ? null : 'Contact support',
       fieldFocus: _focus,
       closeEnabled: !_sending,
       onClose: () => Navigator.of(context).pop(_sent),
@@ -274,11 +260,10 @@ class _ContactScreenState extends State<_ContactScreen> {
               sub: 'We will get back to you within 1–2 business days.',
             )
           : _FormView(
-              title: "What's going on?",
               failed: _failed,
               children: [
-                const SizedBox(height: 18),
-                _BareField(
+                const SizedBox(height: 22),
+                _NoteField(
                   controller: _text,
                   focusNode: _focus,
                   enabled: !_sending,
@@ -287,21 +272,7 @@ class _ContactScreenState extends State<_ContactScreen> {
                       'problem, a bug, a request.',
                 ),
                 const SizedBox(height: 12),
-                _Footnote.rich(
-                  email == null
-                      ? const TextSpan(
-                          text: 'We reply to your account email, usually '
-                              'within a day.')
-                      : TextSpan(children: [
-                          const TextSpan(text: 'We reply to '),
-                          TextSpan(
-                            text: email,
-                            style:
-                                const TextStyle(color: AppColors.textSecondary),
-                          ),
-                          const TextSpan(text: ', usually within a day.'),
-                        ]),
-                ),
+                const _Footnote('We usually reply within 1–2 business days.'),
               ],
             ),
       action: _sent
@@ -320,11 +291,12 @@ class _ContactScreenState extends State<_ContactScreen> {
 
 // ── Shared chrome ─────────────────────────────────────────────────────
 
-/// A full-screen form: an X on the left up top, a mono caption, the body
+/// A full-screen form: an X on the left up top, one title, the body
 /// scrolling beneath, and the one action pinned at the bottom. The action
 /// rides up with the keyboard and the field is kept in view above it.
 class _SupportScreen extends StatefulWidget {
-  final String caption;
+  /// The screen's one heading; none once the form has become a thanks.
+  final String? title;
   final Widget body;
   final Widget action;
   final FocusNode fieldFocus;
@@ -332,7 +304,7 @@ class _SupportScreen extends StatefulWidget {
   final VoidCallback onClose;
 
   const _SupportScreen({
-    required this.caption,
+    required this.title,
     required this.body,
     required this.action,
     required this.fieldFocus,
@@ -402,7 +374,16 @@ class _SupportScreenState extends State<_SupportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(widget.caption, style: monoStyle(size: 10.5)),
+                        if (widget.title != null)
+                          Text(
+                            widget.title!,
+                            style: const TextStyle(
+                              fontSize: 27,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.8,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         widget.body,
                         SizedBox(key: _bodyEndKey, height: 8),
                       ],
@@ -467,31 +448,16 @@ class _CloseRow extends StatelessWidget {
 }
 
 class _FormView extends StatelessWidget {
-  final String title;
   final bool failed;
   final List<Widget> children;
 
-  const _FormView({
-    required this.title,
-    required this.failed,
-    required this.children,
-  });
+  const _FormView({required this.failed, required this.children});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 10),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 27,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.8,
-            color: AppColors.textPrimary,
-          ),
-        ),
         ...children,
         if (failed) ...[
           const SizedBox(height: 14),
@@ -571,15 +537,17 @@ class _Stars extends StatelessWidget {
   }
 }
 
-/// A bare text field above a hairline — the screen's only input.
-class _BareField extends StatelessWidget {
+/// The screen's one input, boxed so it reads as somewhere to type. Set in
+/// regular weight: the theme's body text is semibold, and a semibold
+/// placeholder looks like copy, not a prompt.
+class _NoteField extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool enabled;
   final int minLines;
   final String hint;
 
-  const _BareField({
+  const _NoteField({
     required this.controller,
     required this.focusNode,
     required this.enabled,
@@ -590,8 +558,10 @@ class _BareField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: TextField(
         controller: controller,
@@ -604,6 +574,7 @@ class _BareField extends StatelessWidget {
         style: const TextStyle(
           fontSize: 16,
           height: 1.5,
+          fontWeight: FontWeight.w400,
           color: AppColors.textPrimary,
         ),
         cursorColor: AppColors.accentPrimary,
@@ -612,12 +583,13 @@ class _BareField extends StatelessWidget {
           hintStyle: const TextStyle(
             fontSize: 16,
             height: 1.5,
+            fontWeight: FontWeight.w400,
             color: AppColors.textMuted,
           ),
           border: InputBorder.none,
           counterText: '',
           isDense: true,
-          contentPadding: const EdgeInsets.fromLTRB(0, 14, 0, 12),
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
         ),
       ),
     );
@@ -625,15 +597,13 @@ class _BareField extends StatelessWidget {
 }
 
 class _Footnote extends StatelessWidget {
-  final TextSpan span;
-
-  _Footnote(String text) : span = TextSpan(text: text);
-  const _Footnote.rich(this.span);
+  final String text;
+  const _Footnote(this.text);
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(
-      span,
+    return Text(
+      text,
       style: const TextStyle(
         fontSize: 13,
         height: 1.45,

@@ -49,7 +49,7 @@ void main() {
         result = await showFeedbackScreen(context, draft: draft, store: store);
       });
 
-      expect(find.text("How's Forma so far?"), findsOneWidget);
+      expect(find.text('Leave feedback'), findsOneWidget);
       expect(find.text('TAP TO RATE'), findsOneWidget);
       // Disabled until a star is picked.
       await tester.tap(find.text('Send feedback'));
@@ -67,6 +67,8 @@ void main() {
       expect(store.feedback.single.rating, 4);
       expect(store.feedback.single.note, 'Reorder exercises.');
       expect(find.text('Thanks for your feedback!'), findsOneWidget);
+      // One heading at a time: the thanks takes the title's place.
+      expect(find.text('Leave feedback'), findsNothing);
       // Sent: the draft is spent.
       expect(draft.rating, 0);
       expect(draft.text, '');
@@ -124,13 +126,13 @@ void main() {
         result = await showContactSupportScreen(
           context,
           draft: draft,
-          replyEmail: 'alex@example.com',
           store: store,
         );
       });
 
-      expect(find.text("What's going on?"), findsOneWidget);
-      expect(find.textContaining('alex@example.com'), findsOneWidget);
+      expect(find.text('Contact support'), findsOneWidget);
+      expect(find.text('We usually reply within 1–2 business days.'),
+          findsOneWidget);
       await tester.tap(find.text('Send message'));
       await settle(tester);
       expect(store.messages, isEmpty);
@@ -157,7 +159,6 @@ void main() {
         await showContactSupportScreen(
           context,
           draft: draft,
-          replyEmail: null,
           store: store,
         );
       });

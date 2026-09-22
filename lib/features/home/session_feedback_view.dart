@@ -762,6 +762,7 @@ class _NoteField extends StatelessWidget {
         style: const TextStyle(
           fontSize: 15,
           height: 1.5,
+          fontWeight: FontWeight.w400,
           color: AppColors.textPrimary,
         ),
         cursorColor: AppColors.accentPrimary,
@@ -770,6 +771,7 @@ class _NoteField extends StatelessWidget {
           hintStyle: TextStyle(
             fontSize: 15,
             height: 1.5,
+            fontWeight: FontWeight.w400,
             color: AppColors.textMuted,
           ),
           border: InputBorder.none,

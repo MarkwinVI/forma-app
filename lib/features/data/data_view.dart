@@ -45,12 +45,10 @@ class _DataViewState extends State<DataView> {
   double? _bodyweightKg;
   bool _bodyweightJustSaved = false;
 
-  /// What the support screens hold between opens, and what they last sent —
-  /// the row's subline turns green for the rest of the visit as a trace.
+  /// What the support screens hold between opens: a draft survives a
+  /// close, and goes once it is sent.
   final _feedbackDraft = FeedbackDraft();
   final _supportDraft = SupportDraft();
-  int? _feedbackSentRating;
-  bool _supportSent = false;
 
   @override
   void initState() {
@@ -168,21 +166,14 @@ class _DataViewState extends State<DataView> {
   /// Rate the app, say what could be better. Five stars is the one moment
   /// we know the answer is yes, so once the screen is gone the native store
   /// review prompt follows — at most once per app version.
-  Future<void> _openFeedbackSheet() async {
+  Future<void> _openFeedbackScreen() async {
     final rating = await showFeedbackScreen(context, draft: _feedbackDraft);
-    if (!mounted) return;
-    if (rating != null) setState(() => _feedbackSentRating = rating);
-    if (rating == 5) await StoreReviewService().maybeAsk(rating: rating!);
+    if (!mounted || rating != 5) return;
+    await StoreReviewService().maybeAsk(rating: rating!);
   }
 
-  Future<void> _openContactSheet() async {
-    final sent = await showContactSupportScreen(
-      context,
-      draft: _supportDraft,
-      replyEmail: AuthService().currentUser?.email,
-    );
-    if (!mounted || sent != true) return;
-    setState(() => _supportSent = true);
+  void _openContactScreen() {
+    showContactSupportScreen(context, draft: _supportDraft);
   }
 
   void _openAllSessions() {
@@ -361,23 +352,12 @@ class _DataViewState extends State<DataView> {
       const TypeSectionLabel('Support'),
       TypeContentRow(
         name: 'Leave feedback',
-        sub: _feedbackSentRating == null
-            ? 'Rate the app and tell us what to improve'
-            : 'Thanks — '
-                '${feedbackRatingWords[_feedbackSentRating! - 1].toLowerCase()}'
-                ', sent just now',
-        subColor: _feedbackSentRating == null ? null : AppColors.green,
-        onTap: _openFeedbackSheet,
+        onTap: _openFeedbackScreen,
       ),
       TypeContentRow(
         name: 'Contact support',
-        sub: _supportSent
-            ? 'Sent — we reply to '
-                '${AuthService().currentUser?.email ?? 'your account email'}'
-            : 'Questions, bugs, subscription help',
-        subColor: _supportSent ? AppColors.green : null,
         last: true,
-        onTap: _openContactSheet,
+        onTap: _openContactScreen,
       ),
       const TypeSectionLabel('Account'),
       // The way into (or the state of) the membership, then the session.
