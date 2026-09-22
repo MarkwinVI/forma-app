@@ -268,8 +268,7 @@ class _ContactScreenState extends State<_ContactScreen> {
                   focusNode: _focus,
                   enabled: !_sending,
                   minLines: 5,
-                  hint: 'Describe the issue or question — a subscription '
-                      'problem, a bug, a request.',
+                  hint: 'Describe the issue or question',
                 ),
                 const SizedBox(height: 12),
                 const _Footnote('We usually reply within 1–2 business days.'),
