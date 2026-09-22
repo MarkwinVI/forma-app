@@ -157,8 +157,8 @@ class _FeedbackScreenState extends State<_FeedbackScreen> {
                   focusNode: _focus,
                   enabled: !_sending,
                   minLines: 3,
-                  hint: 'Optional — a missing exercise, something '
-                      'confusing, anything.',
+                  hint: 'A missing exercise, something confusing, '
+                      'anything.',
                 ),
               ],
             ),
