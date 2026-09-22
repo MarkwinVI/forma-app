@@ -81,6 +81,26 @@ void main() {
     expect(find.textContaining('PICK ANY'), findsNothing);
   });
 
+  testWidgets('the question rests mid-screen and rises when a thumb is tapped',
+      (tester) async {
+    final store = FakeStore();
+    await pumpOverShell(tester, store);
+
+    final screen = tester.getSize(find.byType(SessionFeedbackView));
+    final question = find.text('How was this session?');
+    final thumbs = thumbsDown();
+    final restingMiddle = (tester.getTopLeft(question).dy +
+            tester.getBottomRight(thumbs).dy) /
+        2;
+    // The block's centre sits within a few points of the screen's.
+    expect(restingMiddle, closeTo(screen.height / 2, 24));
+
+    await tester.tap(thumbsUp());
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(question).dy, lessThan(screen.height / 4));
+  });
+
   testWidgets('Skip records nothing and returns to the shell',
       (tester) async {
     final store = FakeStore();

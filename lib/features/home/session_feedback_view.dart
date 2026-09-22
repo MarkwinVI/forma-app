@@ -250,11 +250,25 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
 
   // ── Build ─────────────────────────────────────────────────────────
 
+  /// The question's line height is pinned so the resting block's height
+  /// is known: one line at 26pt, the gap, and the 76pt thumbs.
+  static const _questionLineHeight = 1.2;
+  static const _restingBlockHeight = 26 * _questionLineHeight + 40 + 76;
+
+  /// Before a thumb is chosen the question and thumbs sit in the middle
+  /// of the space between the close button and Skip; a tap slides them
+  /// up to make room for the reasons.
+  static double _centredTop(double available) {
+    const bottom = 20.0;
+    final top = (available - bottom - _restingBlockHeight) / 2;
+    return top < 18 ? 18 : top;
+  }
+
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final duration =
-        reduceMotion ? Duration.zero : const Duration(milliseconds: 280);
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 340);
     const curve = Curves.easeOutCubic;
 
     return PopScope(
@@ -273,15 +287,22 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
               Expanded(
                 child: AbsorbPointer(
                   absorbing: _sending,
-                  child: SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: AnimatedPadding(
-                      duration: duration,
-                      curve: curve,
-                      padding: EdgeInsets.fromLTRB(
-                          22, _expanded ? 18 : 110, 22, 20),
-                      child: Column(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: AnimatedPadding(
+                        duration: duration,
+                        curve: curve,
+                        padding: EdgeInsets.fromLTRB(
+                          22,
+                          _expanded
+                              ? 18
+                              : _centredTop(constraints.maxHeight),
+                          22,
+                          20,
+                        ),
+                        child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           AnimatedDefaultTextStyle(
@@ -289,6 +310,7 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
                             curve: curve,
                             style: TextStyle(
                               fontSize: _expanded ? 24 : 26,
+                              height: _questionLineHeight,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
                               color: AppColors.textPrimary,
@@ -351,6 +373,7 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
                         ],
                       ),
                     ),
+                  ),
                   ),
                 ),
               ),
