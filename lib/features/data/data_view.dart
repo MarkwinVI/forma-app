@@ -12,6 +12,7 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/membership_service.dart';
+import '../../data/services/store_review_service.dart';
 import '../../data/services/user_profile_service.dart';
 import '../membership/subscription_rows.dart';
 import '../settings/settings_view.dart';
@@ -19,6 +20,7 @@ import '../exercises/exercise_picker_view.dart';
 import 'bodyweight_row.dart';
 import 'calendar_view.dart';
 import 'past_workout_detail_view.dart';
+import 'support_sheets.dart';
 
 class DataView extends StatefulWidget {
   final bool isActive;
@@ -42,6 +44,13 @@ class _DataViewState extends State<DataView> {
   List<PastWorkout> _workouts = const [];
   double? _bodyweightKg;
   bool _bodyweightJustSaved = false;
+
+  /// What the support sheets hold between opens, and what they last sent —
+  /// the row's subline turns green for the rest of the visit as a trace.
+  final _feedbackDraft = FeedbackDraft();
+  final _supportDraft = SupportDraft();
+  int? _feedbackSentRating;
+  bool _supportSent = false;
 
   @override
   void initState() {
@@ -154,6 +163,26 @@ class _DataViewState extends State<DataView> {
         const SnackBar(content: Text("Couldn't update bodyweight.")),
       );
     }
+  }
+
+  /// Rate the app, say what could be better. Five stars is the one moment
+  /// we know the answer is yes, so once the sheet is gone the native store
+  /// review prompt follows — at most once per app version.
+  Future<void> _openFeedbackSheet() async {
+    final rating = await showFeedbackSheet(context, draft: _feedbackDraft);
+    if (!mounted) return;
+    if (rating != null) setState(() => _feedbackSentRating = rating);
+    if (rating == 5) await StoreReviewService().maybeAsk(rating: rating!);
+  }
+
+  Future<void> _openContactSheet() async {
+    final sent = await showContactSupportSheet(
+      context,
+      draft: _supportDraft,
+      replyEmail: AuthService().currentUser?.email,
+    );
+    if (!mounted || sent != true) return;
+    setState(() => _supportSent = true);
   }
 
   void _openAllSessions() {
@@ -328,6 +357,27 @@ class _DataViewState extends State<DataView> {
         sub: 'Browse by movement pattern',
         last: true,
         onTap: _openExercises,
+      ),
+      const TypeSectionLabel('Support'),
+      TypeContentRow(
+        name: 'Leave feedback',
+        sub: _feedbackSentRating == null
+            ? 'Rate the app and tell us what to improve'
+            : 'Thanks — '
+                '${feedbackRatingWords[_feedbackSentRating! - 1].toLowerCase()}'
+                ', sent just now',
+        subColor: _feedbackSentRating == null ? null : AppColors.green,
+        onTap: _openFeedbackSheet,
+      ),
+      TypeContentRow(
+        name: 'Contact support',
+        sub: _supportSent
+            ? 'Sent — we reply to '
+                '${AuthService().currentUser?.email ?? 'your account email'}'
+            : 'Questions, bugs, subscription help',
+        subColor: _supportSent ? AppColors.green : null,
+        last: true,
+        onTap: _openContactSheet,
       ),
       const TypeSectionLabel('Account'),
       // The way into (or the state of) the membership, then the session.

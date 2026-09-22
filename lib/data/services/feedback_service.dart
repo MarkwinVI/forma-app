@@ -31,12 +31,29 @@ abstract class SessionFeedbackStore {
   });
 }
 
-/// The `feedback` table: session ratings now, app ratings and support
-/// messages when they arrive. Every write silently attaches the app
-/// version, platform and OS version so a report can be read against the
-/// build that earned it.
-class FeedbackService implements SessionFeedbackStore {
+/// Where the Profile tab's two sheets send: an app rating in stars, and a
+/// message to support.
+abstract class ProfileFeedbackStore {
+  Future<void> sendAppFeedback({required int rating, required String? note});
+
+  /// Delivers a support message to the team and records it. Throws when it
+  /// could not be delivered, so the sheet can say so and keep the draft.
+  Future<void> sendSupportMessage(String message);
+}
+
+/// The `feedback` table: session ratings, app ratings and support
+/// messages. Every write silently attaches the app version, platform and
+/// OS version so a report can be read against the build that earned it.
+class FeedbackService implements SessionFeedbackStore, ProfileFeedbackStore {
   SupabaseClient get _client => SupabaseService.client;
+
+  String _requireUserId() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('Cannot save feedback while signed out.');
+    }
+    return userId;
+  }
 
   @override
   Future<String> save({
@@ -47,25 +64,21 @@ class FeedbackService implements SessionFeedbackStore {
     required List<String> flaggedExerciseIds,
     required String? note,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw StateError('Cannot save feedback while signed out.');
-    }
+    final userId = _requireUserId();
     final diagnostics = await FeedbackDiagnostics.collect();
-    final trimmedNote = note?.trim();
     final values = {
       'sentiment': sentiment.dbValue,
       'tags': tags,
       'flagged_exercise_ids': flaggedExerciseIds,
-      'note': trimmedNote == null || trimmedNote.isEmpty ? null : trimmedNote,
+      'note': _cleanNote(note),
       ...diagnostics.toColumns(),
     };
 
     if (id != null) {
-      await _client
-          .from('feedback')
-          .update({...values, 'updated_at': DateTime.now().toUtc().toIso8601String()})
-          .eq('id', id);
+      await _client.from('feedback').update({
+        ...values,
+        'updated_at': DateTime.now().toUtc().toIso8601String()
+      }).eq('id', id);
       return id;
     }
 
@@ -80,6 +93,40 @@ class FeedbackService implements SessionFeedbackStore {
         .select('id')
         .single();
     return row['id'] as String;
+  }
+
+  @override
+  Future<void> sendAppFeedback({
+    required int rating,
+    required String? note,
+  }) async {
+    final userId = _requireUserId();
+    final diagnostics = await FeedbackDiagnostics.collect();
+    await _client.from('feedback').insert({
+      'user_id': userId,
+      'kind': 'app_rating',
+      'rating': rating,
+      'note': _cleanNote(note),
+      ...diagnostics.toColumns(),
+    });
+  }
+
+  /// The `support-message` edge function records the message and emails
+  /// it to the team inbox with the account email as the reply address, so
+  /// a reply from the inbox lands straight back with the user.
+  @override
+  Future<void> sendSupportMessage(String message) async {
+    _requireUserId();
+    final diagnostics = await FeedbackDiagnostics.collect();
+    await _client.functions.invoke('support-message', body: {
+      'message': message.trim(),
+      ...diagnostics.toColumns(),
+    });
+  }
+
+  static String? _cleanNote(String? note) {
+    final trimmed = note?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
   }
 }
 
