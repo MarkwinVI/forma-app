@@ -89,9 +89,8 @@ void main() {
     final screen = tester.getSize(find.byType(SessionFeedbackView));
     final question = find.text('How was this session?');
     final thumbs = thumbsDown();
-    final restingMiddle = (tester.getTopLeft(question).dy +
-            tester.getBottomRight(thumbs).dy) /
-        2;
+    final restingMiddle =
+        (tester.getTopLeft(question).dy + tester.getBottomRight(thumbs).dy) / 2;
     // The block's centre sits within a few points of the screen's.
     expect(restingMiddle, closeTo(screen.height / 2, 24));
 
@@ -101,8 +100,7 @@ void main() {
     expect(tester.getTopLeft(question).dy, lessThan(screen.height / 4));
   });
 
-  testWidgets('Skip records nothing and returns to the shell',
-      (tester) async {
+  testWidgets('Skip records nothing and returns to the shell', (tester) async {
     final store = FakeStore();
     await pumpOverShell(tester, store);
 
@@ -130,6 +128,8 @@ void main() {
     expect(find.text('WHAT WORKED WELL? (PICK ANY)'), findsOneWidget);
     expect(find.text('Right difficulty'), findsOneWidget);
     expect(find.text('Making progress'), findsOneWidget);
+    expect(find.text('Rest times felt right'), findsNothing);
+    expect(find.text('Good variety'), findsNothing);
     expect(find.text('Add a note (optional)'), findsOneWidget);
     expect(find.text('Skip'), findsNothing);
     // Nothing picked yet, so the button only closes.
@@ -144,7 +144,7 @@ void main() {
     await tester.tap(thumbsUp());
     await tester.pumpAndSettle();
     await tester.tap(find.text('Right difficulty'));
-    await tester.tap(find.text('Good variety'));
+    await tester.tap(find.text('Making progress'));
     await tester.pump();
     expect(find.text('Send'), findsOneWidget);
 
@@ -158,7 +158,7 @@ void main() {
     final sent = store.calls.last;
     expect(sent.id, 'row-1');
     expect(sent.sentiment, FeedbackSentiment.up);
-    expect(sent.tags, ['right_difficulty', 'good_variety']);
+    expect(sent.tags, ['right_difficulty', 'making_progress']);
     expect(sent.flaggedExerciseIds, isEmpty);
     expect(sent.note, 'Rest timer could be adjustable.');
     expect(find.text('shell'), findsOneWidget);
@@ -283,8 +283,41 @@ void main() {
     expect(find.text('shell'), findsOneWidget);
   });
 
-  testWidgets('under Reduce Motion the reasons appear at once',
+  testWidgets('the keyboard never covers the note: it scrolls up above Send',
       (tester) async {
+    final store = FakeStore();
+    await pumpOverShell(tester, store);
+
+    await tester.tap(thumbsDown());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+
+    // The keyboard arrives over a few frames, as on a device.
+    for (final inset in [300.0, 600.0, 900.0]) {
+      tester.view.viewInsets = FakeViewPadding(bottom: inset);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    final noteBottom = tester.getBottomRight(find.byType(TextField)).dy;
+    final buttonTop = tester.getTopLeft(find.text('Done')).dy;
+    final screenBottom =
+        tester.getSize(find.byType(SessionFeedbackView)).height;
+    expect(noteBottom, lessThan(buttonTop));
+    // The button itself sits above the keyboard.
+    expect(buttonTop, lessThan(screenBottom - 300));
+
+    // A tap on the background puts the keyboard away.
+    expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
+        isTrue);
+    await tester.tapAt(const Offset(200, 60));
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
+        isFalse);
+  });
+
+  testWidgets('under Reduce Motion the reasons appear at once', (tester) async {
     final store = FakeStore();
     await pumpOverShell(tester, store, reduceMotion: true);
 

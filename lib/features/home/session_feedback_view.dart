@@ -23,8 +23,6 @@ const sessionFeedbackUpTags = [
   SessionFeedbackTag('right_difficulty', 'Right difficulty'),
   SessionFeedbackTag('good_exercise_picks', 'Good exercise picks'),
   SessionFeedbackTag('clear_instructions', 'Clear instructions'),
-  SessionFeedbackTag('rest_times_right', 'Rest times felt right'),
-  SessionFeedbackTag('good_variety', 'Good variety'),
   SessionFeedbackTag('making_progress', 'Making progress'),
 ];
 
@@ -71,6 +69,11 @@ class SessionFeedbackView extends StatefulWidget {
 class _SessionFeedbackViewState extends State<SessionFeedbackView> {
   late final SessionFeedbackStore _store = widget.store ?? FeedbackService();
   final _note = TextEditingController();
+  final _noteFocus = FocusNode();
+
+  /// The note and the gap under it — what the keyboard must not cover.
+  final _noteKey = GlobalKey();
+  double _keyboardInset = 0;
 
   FeedbackSentiment? _sentiment;
   final _tags = <String>{};
@@ -96,9 +99,36 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
     _note.addListener(() => setState(() {}));
   }
 
+  /// The keyboard rises over a few frames. Each frame it takes more of
+  /// the screen, the note is nudged back into the space above the pinned
+  /// button — not only at the moment of focus, when the keyboard has
+  /// not yet arrived.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final inset = MediaQuery.viewInsetsOf(context).bottom;
+    if (inset == _keyboardInset) return;
+    final rising = inset > _keyboardInset;
+    _keyboardInset = inset;
+    if (rising && _noteFocus.hasFocus) _revealNote();
+  }
+
+  void _revealNote() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final noteContext = _noteKey.currentContext;
+      if (!mounted || noteContext == null) return;
+      Scrollable.ensureVisible(
+        noteContext,
+        alignment: 1,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _note.dispose();
+    _noteFocus.dispose();
     super.dispose();
   }
 
@@ -280,138 +310,144 @@ class _SessionFeedbackViewState extends State<SessionFeedbackView> {
       child: Scaffold(
         backgroundColor: AppColors.bg,
         resizeToAvoidBottomInset: true,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _CloseRow(onClose: _sending ? null : _dismiss),
-              Expanded(
-                child: AbsorbPointer(
-                  absorbing: _sending,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: AnimatedPadding(
-                        duration: duration,
-                        curve: curve,
-                        padding: EdgeInsets.fromLTRB(
-                          22,
-                          _expanded
-                              ? 18
-                              : _centredTop(constraints.maxHeight),
-                          22,
-                          20,
-                        ),
-                        child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AnimatedDefaultTextStyle(
-                            duration: duration,
-                            curve: curve,
-                            style: TextStyle(
-                              fontSize: _expanded ? 24 : 26,
-                              height: _questionLineHeight,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
-                              color: AppColors.textPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                            child: const Text('How was this session?'),
+        body: GestureDetector(
+          // A tap on the background puts the keyboard away.
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SafeArea(
+            child: Column(
+              children: [
+                _CloseRow(onClose: _sending ? null : _dismiss),
+                Expanded(
+                  child: AbsorbPointer(
+                    absorbing: _sending,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: AnimatedPadding(
+                          duration: duration,
+                          curve: curve,
+                          padding: EdgeInsets.fromLTRB(
+                            22,
+                            _expanded ? 18 : _centredTop(constraints.maxHeight),
+                            22,
+                            20,
                           ),
-                          AnimatedContainer(
-                            duration: duration,
-                            curve: curve,
-                            height: _expanded ? 20 : 40,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _ThumbButton(
-                                sentiment: FeedbackSentiment.up,
-                                selected: _sentiment == FeedbackSentiment.up,
-                                compact: _expanded,
+                              AnimatedDefaultTextStyle(
                                 duration: duration,
-                                onTap: () =>
-                                    _pickSentiment(FeedbackSentiment.up),
+                                curve: curve,
+                                style: TextStyle(
+                                  fontSize: _expanded ? 24 : 26,
+                                  height: _questionLineHeight,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                  color: AppColors.textPrimary,
+                                ),
+                                textAlign: TextAlign.center,
+                                child: const Text('How was this session?'),
                               ),
                               AnimatedContainer(
                                 duration: duration,
                                 curve: curve,
-                                width: _expanded ? 16 : 20,
+                                height: _expanded ? 20 : 40,
                               ),
-                              _ThumbButton(
-                                sentiment: FeedbackSentiment.down,
-                                selected:
-                                    _sentiment == FeedbackSentiment.down,
-                                compact: _expanded,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _ThumbButton(
+                                    sentiment: FeedbackSentiment.up,
+                                    selected:
+                                        _sentiment == FeedbackSentiment.up,
+                                    compact: _expanded,
+                                    duration: duration,
+                                    onTap: () =>
+                                        _pickSentiment(FeedbackSentiment.up),
+                                  ),
+                                  AnimatedContainer(
+                                    duration: duration,
+                                    curve: curve,
+                                    width: _expanded ? 16 : 20,
+                                  ),
+                                  _ThumbButton(
+                                    sentiment: FeedbackSentiment.down,
+                                    selected:
+                                        _sentiment == FeedbackSentiment.down,
+                                    compact: _expanded,
+                                    duration: duration,
+                                    onTap: () =>
+                                        _pickSentiment(FeedbackSentiment.down),
+                                  ),
+                                ],
+                              ),
+                              _Grow(
                                 duration: duration,
-                                onTap: () =>
-                                    _pickSentiment(FeedbackSentiment.down),
+                                child: _expanded
+                                    ? _Details(
+                                        key: ValueKey(_sentiment),
+                                        sentiment: _sentiment!,
+                                        tagOptions: _tagOptions,
+                                        tags: _tags,
+                                        exercises: _flagsExercises
+                                            ? _exerciseOptions
+                                            : const [],
+                                        flagged: _flagged,
+                                        note: _note,
+                                        noteFocus: _noteFocus,
+                                        noteKey: _noteKey,
+                                        sendFailed: _sendFailed,
+                                        duration: duration,
+                                        onToggleTag: _toggleTag,
+                                        onToggleExercise: _toggleExercise,
+                                      )
+                                    : const SizedBox(width: double.infinity),
                               ),
                             ],
                           ),
-                          _Grow(
-                            duration: duration,
-                            child: _expanded
-                                ? _Details(
-                                    key: ValueKey(_sentiment),
-                                    sentiment: _sentiment!,
-                                    tagOptions: _tagOptions,
-                                    tags: _tags,
-                                    exercises: _flagsExercises
-                                        ? _exerciseOptions
-                                        : const [],
-                                    flagged: _flagged,
-                                    note: _note,
-                                    sendFailed: _sendFailed,
-                                    duration: duration,
-                                    onToggleTag: _toggleTag,
-                                    onToggleExercise: _toggleExercise,
-                                  )
-                                : const SizedBox(width: double.infinity),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                  ),
                 ),
-              ),
-              AnimatedSwitcher(
-                duration: duration,
-                child: _expanded
-                    ? _SendFooter(
-                        key: const ValueKey('send'),
-                        label: _sending
-                            ? 'Sending'
-                            : _hasDetails
-                                ? 'Send'
-                                : 'Done',
-                        onTap: _sending ? null : _send,
-                      )
-                    : Padding(
-                        key: const ValueKey('skip'),
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-                        child: Pressable(
-                          onTap: _dismiss,
-                          child: Container(
-                            constraints: const BoxConstraints(minHeight: 44),
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 24),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              'Skip',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
+                AnimatedSwitcher(
+                  duration: duration,
+                  child: _expanded
+                      ? _SendFooter(
+                          key: const ValueKey('send'),
+                          label: _sending
+                              ? 'Sending'
+                              : _hasDetails
+                                  ? 'Send'
+                                  : 'Done',
+                          onTap: _sending ? null : _send,
+                        )
+                      : Padding(
+                          key: const ValueKey('skip'),
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                          child: Pressable(
+                            onTap: _dismiss,
+                            child: Container(
+                              constraints: const BoxConstraints(minHeight: 44),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                'Skip',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMuted,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -537,6 +573,8 @@ class _Details extends StatelessWidget {
   final List<Exercise> exercises;
   final Set<String> flagged;
   final TextEditingController note;
+  final FocusNode noteFocus;
+  final Key noteKey;
   final bool sendFailed;
   final Duration duration;
   final ValueChanged<String> onToggleTag;
@@ -550,6 +588,8 @@ class _Details extends StatelessWidget {
     required this.exercises,
     required this.flagged,
     required this.note,
+    required this.noteFocus,
+    required this.noteKey,
     required this.sendFailed,
     required this.duration,
     required this.onToggleTag,
@@ -607,14 +647,19 @@ class _Details extends StatelessWidget {
                 ),
         ),
         const SizedBox(height: 16),
-        _NoteField(controller: note),
+        // The key spans the field and a breath of space under it, so
+        // scrolling the note into view leaves a gap above the button.
+        Padding(
+          key: noteKey,
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _NoteField(controller: note, focusNode: noteFocus),
+        ),
         if (sendFailed) ...[
           const SizedBox(height: 14),
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 16, color: AppColors.red),
+              Icon(Icons.error_outline_rounded, size: 16, color: AppColors.red),
               SizedBox(width: 6),
               Flexible(
                 child: Text(
@@ -695,7 +740,8 @@ class _Pill extends StatelessWidget {
 
 class _NoteField extends StatelessWidget {
   final TextEditingController controller;
-  const _NoteField({required this.controller});
+  final FocusNode focusNode;
+  const _NoteField({required this.controller, required this.focusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -708,6 +754,7 @@ class _NoteField extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         minLines: 2,
         maxLines: 6,
         maxLength: 1000,
