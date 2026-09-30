@@ -91,15 +91,28 @@ class _LoginViewState extends State<LoginView> {
                   child: ConstrainedBox(
                     constraints:
                         BoxConstraints(minHeight: constraints.maxHeight),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 22,
                         vertical: 24,
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [_WelcomeHeadline()],
+                        children: [
+                          // A quiet mono eyebrow: it names the promise, and
+                          // the headline under it stays the thing you read.
+                          Text(
+                            'YOUR ROADMAP TO CALISTHENICS SKILLS',
+                            style: monoStyle(
+                              size: 12,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 1.6,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const _WelcomeHeadline(),
+                        ],
                       ),
                     ),
                   ),
