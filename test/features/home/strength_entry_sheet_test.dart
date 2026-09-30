@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forma_app/features/home/program_setup_view.dart';
+import 'package:forma_app/features/onboarding/program_setup_steps.dart';
 
 /// Direct entry for a starting-strength value: digits build the number, Done
 /// hands it back clamped to the maximum, and nothing typed hands back null.

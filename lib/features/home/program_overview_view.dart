@@ -1838,7 +1838,7 @@ class _EquipmentReplan {
   const _EquipmentReplan({required this.plan, required this.branches});
 }
 
-/// What you train with — the same three choices the setup wizard asks, so
+/// What you train with — the same three choices onboarding asks, so
 /// the answer can be revised without re-running it. "Some equipment" swaps
 /// the sheet to the tile grid (the back arrow returns), and Save only wakes
 /// on a real change.

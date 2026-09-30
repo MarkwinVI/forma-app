@@ -14,13 +14,18 @@ import '../../data/models/exercise_model.dart';
 import '../../data/models/onboarding_profile_model.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
-import '../../data/services/onboarding_service.dart';
+import '../../data/services/membership_service.dart';
+import '../home/program_ready_view.dart';
+import '../progress/skill_wheel_bundle.dart';
+import 'program_setup_steps.dart';
 
-/// Post-signup onboarding: three grounded beats (the skill tree
-/// route, the workout that levels up, the data loop that eases you back) →
-/// archetype radar → about you. Shown once per account; the answers are saved
-/// to `user_onboarding_profiles` when the last step is confirmed, and the app
-/// carries straight on into building the program.
+/// Post-signup onboarding, one flow from the pitch to a built program: three
+/// grounded beats (the skill tree route, the workout that levels up, the data
+/// loop that eases you back) → archetype radar → about you → the program
+/// questions (schedule, equipment, bodyweight, starting strength) → the map
+/// the answers drew, and the membership choice. Everything is written when
+/// the program is built: the profile to `user_onboarding_profiles`, the
+/// program through the host's save.
 
 // ── Shared type styles ──────────────────────────────────────────────────────
 
@@ -171,31 +176,81 @@ const _genderChoices = [
 
 // ── Flow ────────────────────────────────────────────────────────────────────
 
+/// The steps of the flow, in order. The last four ask the program
+/// questions.
+enum _Step {
+  skills('onboarding_skills'),
+  workout('onboarding_workout'),
+  data('onboarding_data'),
+  radar('onboarding_radar'),
+  aboutYou('onboarding_about_you'),
+  schedule('onboarding_schedule', ProgramSetupQuestion.schedule),
+  equipment('onboarding_equipment', ProgramSetupQuestion.equipment),
+  bodyweight('onboarding_bodyweight', ProgramSetupQuestion.bodyweight),
+  strength('onboarding_strength', ProgramSetupQuestion.strength);
+
+  /// The `$screen` name the step reports.
+  final String screenName;
+
+  /// The program question the step asks, when it is one.
+  final ProgramSetupQuestion? question;
+
+  const _Step(this.screenName, [this.question]);
+}
+
+const _programIcons = {
+  ProgramSetupQuestion.schedule: Icons.calendar_today_rounded,
+  ProgramSetupQuestion.equipment: Icons.fitness_center_rounded,
+  ProgramSetupQuestion.bodyweight: Icons.monitor_weight_rounded,
+  ProgramSetupQuestion.strength: Icons.trending_up_rounded,
+};
+
 class OnboardingView extends StatefulWidget {
+  final String userId;
+
+  /// Whether to run the steps that end in the onboarding profile. Off when
+  /// the answers are already on file — an older account, or a dev reset —
+  /// and only the program is missing.
+  final bool askProfile;
+
+  /// Whether to run the program questions. Off for an older account that
+  /// has a program but never answered onboarding: its program stays as it
+  /// is, and the flow ends at the profile.
+  final bool askProgram;
+
+  /// Writes what the flow collected — the onboarding profile and the
+  /// program, each null when it was not asked.
+  final Future<void> Function(
+    OnboardingProfileModel? profile,
+    ProgramSetupResult? program,
+  ) onSave;
+
+  /// Leaves the flow: from the ready screen when a program was built,
+  /// straight after the save when it was not.
   final VoidCallback onFinished;
 
-  const OnboardingView({super.key, required this.onFinished});
+  const OnboardingView({
+    super.key,
+    required this.userId,
+    this.askProfile = true,
+    this.askProgram = true,
+    required this.onSave,
+    required this.onFinished,
+  }) : assert(askProfile || askProgram);
 
   @override
   State<OnboardingView> createState() => _OnboardingViewState();
 }
 
 class _OnboardingViewState extends State<OnboardingView> {
-  static const _stepCount = 5;
-
-  /// One `$screen` name per step, in step order.
-  static const _stepScreenNames = [
-    'onboarding_skills',
-    'onboarding_workout',
-    'onboarding_data',
-    'onboarding_radar',
-    'onboarding_about_you',
+  late final List<_Step> _steps = [
+    for (final step in _Step.values)
+      if (step.question == null ? widget.askProfile : widget.askProgram) step,
   ];
 
-  /// The step that tints the progress bar with the picked archetype.
-  static const _radarStep = 3;
+  final _setup = ProgramSetupController();
 
-  int _step = 0;
+  int _index = 0;
   int _dir = 1;
   bool _balanced = true;
   double _angleDeg = -90;
@@ -204,63 +259,119 @@ class _OnboardingViewState extends State<OnboardingView> {
   String? _freq;
   bool _saving = false;
 
+  /// Set once everything is written: the flow ends on the map the answers
+  /// drew and the membership choice.
+  bool _ready = false;
+
+  /// The map for the ready screen, fetched while the button still says it
+  /// is building — so the screen arrives whole rather than behind a wait.
+  SkillWheelBundle? _readyBundle;
+
+  _Step get _step => _steps[_index];
+
   _Archetype get _archetype => _balanced
       ? _balancedArchetype
       : _archetypes[_nearestArchetypeIndex(_angleDeg)];
 
   Color get _hue =>
-      _step == _radarStep ? _archetype.hue : AppColors.accentPrimary;
+      _step == _Step.radar ? _archetype.hue : AppColors.accentPrimary;
 
-  bool get _isLast => _step == _stepCount - 1;
+  bool get _isLast => _index == _steps.length - 1;
+
+  /// The dip tip takes the equipment question's place in the flow, so the
+  /// page slides to it like a step of its own.
+  int get _viewKey => _index * 2 + (_setup.showingDipTip ? 1 : 0);
 
   @override
   void initState() {
     super.initState();
-    AnalyticsService.screen(_stepScreenNames[_step]);
+    _setup.addListener(_onSetupChanged);
+    AnalyticsService.screen(_step.screenName);
+  }
+
+  @override
+  void dispose() {
+    _setup.dispose();
+    super.dispose();
+  }
+
+  void _onSetupChanged() {
+    if (mounted) setState(() {});
   }
 
   void _go(int next) {
-    final clamped = next.clamp(0, _stepCount - 1);
-    if (clamped == _step) return;
-    AnalyticsService.screen(_stepScreenNames[clamped]);
+    if (next < 0 || next >= _steps.length || next == _index) return;
+    final leaving = _step.question;
+    if (leaving != null) _setup.depart(leaving);
+    AnalyticsService.screen(_steps[next].screenName);
     setState(() {
-      _dir = clamped >= _step ? 1 : -1;
-      _step = clamped;
+      _dir = next > _index ? 1 : -1;
+      _index = next;
     });
+    final arriving = _step.question;
+    if (arriving != null) _setup.arrive(arriving);
   }
 
   void _advance() {
+    final question = _step.question;
+    if (question != null && _setup.continueFrom(question)) {
+      setState(() => _dir = 1);
+      return;
+    }
     if (_isLast) {
       _finish();
     } else {
-      _go(_step + 1);
+      _go(_index + 1);
     }
   }
 
+  void _back() {
+    final question = _step.question;
+    if (question != null && _setup.backFrom(question)) {
+      setState(() => _dir = -1);
+      return;
+    }
+    _go(_index - 1);
+  }
+
   Future<void> _finish() async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null || _saving) return;
+    if (_saving) return;
 
     setState(() => _saving = true);
     try {
-      await OnboardingService().saveProfile(OnboardingProfileModel(
-        userId: userId,
-        archetype: _archetype.id,
-        radarBalanced: _balanced,
-        radarAngleDeg: _balanced ? null : _angleDeg,
-        age: _age,
-        gender: _gender,
-        trainingFrequency: _freq,
-        completedAt: DateTime.now().toUtc(),
-      ));
-      widget.onFinished();
+      await widget.onSave(
+        !widget.askProfile
+            ? null
+            : OnboardingProfileModel(
+                userId: widget.userId,
+                archetype: _archetype.id,
+                radarBalanced: _balanced,
+                radarAngleDeg: _balanced ? null : _angleDeg,
+                age: _age,
+                gender: _gender,
+                trainingFrequency: _freq,
+                completedAt: DateTime.now().toUtc(),
+              ),
+        widget.askProgram ? _setup.result() : null,
+      );
+      if (!widget.askProgram) {
+        widget.onFinished();
+        return;
+      }
+      final bundle = await _loadReadyBundle();
+      if (!mounted) return;
+      setState(() {
+        _ready = true;
+        _readyBundle = bundle;
+      });
     } catch (error, stackTrace) {
-      debugPrint('Onboarding profile save failed: $error\n$stackTrace');
+      debugPrint('Onboarding save failed: $error\n$stackTrace');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            "Couldn't save your profile. Check your connection and try again.",
+          content: Text(
+            "Couldn't save your ${widget.askProgram ? 'program' : 'profile'}. "
+            'Check your connection and try again.',
           ),
           action: SnackBarAction(label: 'Retry', onPressed: _finish),
         ),
@@ -270,53 +381,113 @@ class _OnboardingViewState extends State<OnboardingView> {
     }
   }
 
+  /// The wheel data the save started warming the moment it wrote the
+  /// program — the Progress tab takes that warm-up later, so this only
+  /// looks at it. A load that fails costs the map, not the screen.
+  Future<SkillWheelBundle?> _loadReadyBundle() async {
+    try {
+      var future = peekWarmSkillWheelBundle()?.future;
+      if (future == null) {
+        final userId = AuthService().currentUser?.id;
+        if (userId == null) return null;
+        future = loadSkillWheelBundle(userId);
+      }
+      return await future;
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load the program map: $error\n$stackTrace');
+      return null;
+    }
+  }
+
+  String get _cta {
+    final question = _step.question;
+    if (question == null) return _isLast && _saving ? 'Saving…' : 'Continue';
+    if (_setup.showingDipTip) return 'Got it';
+    if (!_setup.answered(question)) return _setup.holdLabel(question);
+    if (_isLast) return _saving ? 'Building your program…' : 'Build my program';
+    return 'Continue';
+  }
+
+  bool get _canContinue {
+    final question = _step.question;
+    return !_saving && (question == null || _setup.answered(question));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final steps = [
-      _buildSkillsBeat(),
-      _buildWorkoutBeat(),
-      _buildDataBeat(),
-      _buildRadarStep(),
-      _buildAboutYou(),
-    ];
-    final cta = _isLast && _saving ? 'Saving…' : 'Continue';
+    if (_ready) {
+      // The map the answers drew, and the choice that gates the app. Both
+      // the trial landing and "Not now" leave the flow the same way.
+      return ProgramReadyView(
+        service: MembershipService.instance,
+        bundle: _readyBundle,
+        onDone: widget.onFinished,
+      );
+    }
 
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 320),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, animation) {
-                  final incoming = (child.key as ValueKey<int>).value == _step;
-                  final shift = incoming ? 0.07 : -0.05;
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: Offset(_dir >= 0 ? shift : -shift, 0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: KeyedSubtree(key: ValueKey(_step), child: steps[_step]),
+    final viewKey = _viewKey;
+    return PopScope(
+      // The back gesture steps backwards through the flow; on the first
+      // step it leaves the app, as it would on any first screen.
+      canPop: _index == 0 && !_setup.showingDipTip,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) {
+                    final incoming =
+                        (child.key as ValueKey<int>).value == viewKey;
+                    final shift = incoming ? 0.07 : -0.05;
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: Offset(_dir >= 0 ? shift : -shift, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey(viewKey),
+                    child: _buildStep(_step),
+                  ),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-              child: PillButton(label: cta, onTap: _saving ? null : _advance),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+                child: PillButton(
+                  label: _cta,
+                  onTap: _canContinue ? _advance : null,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildStep(_Step step) {
+    return switch (step) {
+      _Step.skills => _buildSkillsBeat(),
+      _Step.workout => _buildWorkoutBeat(),
+      _Step.data => _buildDataBeat(),
+      _Step.radar => _buildRadarStep(),
+      _Step.aboutYou => _buildAboutYou(),
+      _ => _buildProgramQuestion(step.question!),
+    };
   }
 
   Widget _buildHeader() {
@@ -325,12 +496,12 @@ class _OnboardingViewState extends State<OnboardingView> {
       child: Row(
         children: [
           Visibility(
-            visible: _step > 0,
+            visible: _index > 0 || _setup.showingDipTip,
             maintainSize: true,
             maintainAnimation: true,
             maintainState: true,
             child: Pressable(
-              onTap: () => _go(_step - 1),
+              onTap: _back,
               semanticLabel: 'Back',
               child: const SizedBox(
                 width: 44,
@@ -347,14 +518,14 @@ class _OnboardingViewState extends State<OnboardingView> {
           Expanded(
             child: Row(
               children: [
-                for (var i = 0; i < _stepCount; i++) ...[
+                for (var i = 0; i < _steps.length; i++) ...[
                   if (i > 0) const SizedBox(width: 6),
                   Expanded(
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: i <= _step
+                        color: i <= _index
                             ? _hue
                             : Colors.white.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(2),
@@ -504,7 +675,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         children: [
           const _StepHead(
             icon: Icons.person_rounded,
-            pill: 'ALMOST THERE',
+            pill: 'A LITTLE BIT ABOUT YOU',
             title: 'Your profile',
           ),
           Expanded(
@@ -652,6 +823,35 @@ class _OnboardingViewState extends State<OnboardingView> {
           ),
         ],
       ],
+    );
+  }
+
+  // ── Steps 5–8: the program questions ──
+
+  Widget _buildProgramQuestion(ProgramSetupQuestion question) {
+    final head = _setup.headFor(question);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _StepHead(
+            icon: _programIcons[question]!,
+            pill: 'YOUR PROGRAM',
+            title: head.title,
+            sub: head.sub,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 20, bottom: 12),
+              child: _Rise(
+                index: 3,
+                child: ProgramSetupStep(controller: _setup, question: question),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

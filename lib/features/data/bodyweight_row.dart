@@ -99,7 +99,7 @@ class _BodyweightSheetState extends State<_BodyweightSheet> {
     return display.toStringAsFixed(1);
   }
 
-  /// The sheet's toggle is the app-wide choice, same as the wizard's.
+  /// The sheet's toggle is the app-wide choice, same as onboarding's.
   void _pickUnit(WeightUnit unit) {
     if (unit == _unit) return;
     setState(() {

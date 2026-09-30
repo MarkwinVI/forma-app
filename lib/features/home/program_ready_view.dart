@@ -14,7 +14,7 @@ import '../progress/skill_wheel_bundle.dart';
 import '../progress/widgets/skill_wheel.dart';
 import '../progress/widgets/skill_wheel_screen.dart';
 
-/// The end of the setup wizard: the map the answers drew — every tree on
+/// The end of onboarding: the map the answers drew — every tree on
 /// the wheel, blue where the program starts — with the starting exercise
 /// of each running tree listed under it, and the way on: the trial, or
 /// "Not now" into the locked app.
@@ -25,10 +25,10 @@ import '../progress/widgets/skill_wheel_screen.dart';
 class ProgramReadyView extends StatefulWidget {
   final MembershipService service;
 
-  /// Leaves the wizard — after "Not now", or once a purchase has landed.
+  /// Leaves onboarding — after "Not now", or once a purchase has landed.
   final VoidCallback onDone;
 
-  /// The wheel data, loaded by the wizard while its button still says it
+  /// The wheel data, loaded by onboarding while its button still says it
   /// is working, so this screen draws complete on its first frame. Null
   /// when the load failed: the page and its choice stand without the map.
   final SkillWheelBundle? bundle;

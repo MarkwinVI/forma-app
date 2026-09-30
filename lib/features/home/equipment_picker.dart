@@ -5,7 +5,7 @@ import '../../core/widgets/polished.dart';
 import '../../data/models/equipment_model.dart';
 
 /// The reminder every answer short of a pull-up bar earns, in the setup
-/// wizard and on the Program tab alike.
+/// onboarding and on the Program tab alike.
 const String kPullUpBarNote =
     'You’ll still need access to at least a pull-up bar — most of Forma’s '
     'pulling work hangs from one. A doorway bar or a park is enough.';
@@ -280,7 +280,7 @@ class EquipmentTile extends StatelessWidget {
 String equipmentDoneLabel(Set<EquipmentItem> picked) =>
     picked.isEmpty ? 'Select at least one item' : 'Done';
 
-/// The setup wizard's "What do you have?" sheet: the tile grid, the bar
+/// Onboarding's "What do you have?" sheet: the tile grid, the bar
 /// reminder, and Done. Every toggle reaches [onChanged] as it happens, so
 /// dismissing the sheet by the scrim or the handle loses nothing — the
 /// caller decides what an empty list means.

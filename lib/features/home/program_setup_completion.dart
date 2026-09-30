@@ -8,10 +8,10 @@ import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../../data/services/training_schedule_service.dart';
 import '../../data/services/user_profile_service.dart';
+import '../onboarding/program_setup_steps.dart';
 import '../progress/skill_wheel_bundle.dart';
-import 'program_setup_view.dart';
 
-/// Everything a finished "Build your program" wizard writes, in one place:
+/// Everything the program questions at the end of onboarding write:
 /// the program row (split, frequency, answers), the skill tracks the split
 /// trains, and the starting position the reported strength implies.
 Future<void> completeProgramSetup({
@@ -36,7 +36,7 @@ Future<void> completeProgramSetup({
 
   final plan = ProgramStartPlanner.planFor(
     equipment: result.equipment,
-    // The wizard no longer asks about goal skills, so setup plans the default
+    // Onboarding does not ask about goal skills, so setup plans the default
     // branch of every tree. The planner still takes goals for whatever picks
     // them next; it just has none to work from here.
     goalSkillIds: const [],
@@ -82,7 +82,7 @@ Future<void> completeProgramSetup({
     plan: plan,
   );
 
-  // The wizard's ready screen shows this map, and the app opens on Progress
+  // Onboarding's ready screen shows this map, and the app opens on Progress
   // after it. Start the load now so both draw the new program at once.
   warmSkillWheelBundle(userId);
 
@@ -93,7 +93,7 @@ Future<void> completeProgramSetup({
     'equipment': result.equipment.kind.dbValue,
     'equipment_items': result.equipment.itemIds,
     'bodyweight_kg': result.bodyweightKg,
-    // The wizard's reported strength, one property per answered exercise.
+    // The reported starting strength, one property per answered exercise.
     for (final entry in result.startingStrength.entries)
       if (entry.value != null) 'starting_${entry.key}': entry.value!,
   });

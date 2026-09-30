@@ -28,13 +28,13 @@ class DevToolsService {
 
   /// Bumped after [resetToNewUser]. The app has no screens for an account
   /// without a program, so the entry gate listens and sends the user back
-  /// into the setup wizard.
+  /// into onboarding's program questions.
   static final resetSignal = ValueNotifier<int>(0);
 
   /// Wipes everything that makes this account look like an existing user:
   /// workout history, exercise progress, branch choices, and the training
   /// program itself. The auth session, `users` row and onboarding answers
-  /// are kept, so the app lands on the setup wizard.
+  /// are kept, so the app lands on onboarding's program questions.
   Future<void> resetToNewUser(String userId) async {
     await _devClockService.reset();
     // Children before parents to respect foreign keys.

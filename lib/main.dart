@@ -8,6 +8,7 @@ import 'core/theme/app_colors.dart';
 import 'core/theme/app_text_theme.dart';
 import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
+import 'data/models/onboarding_profile_model.dart';
 import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/dev_tools_service.dart';
@@ -16,9 +17,9 @@ import 'data/services/onboarding_service.dart';
 import 'data/services/training_program_store_service.dart';
 import 'data/services/weight_unit_service.dart';
 import 'features/home/program_setup_completion.dart';
-import 'features/home/program_setup_view.dart';
 import 'features/login/login_view.dart';
 import 'features/onboarding/onboarding_view.dart';
+import 'features/onboarding/program_setup_steps.dart';
 import 'features/progress/skill_wheel_bundle.dart';
 import 'features/shell/shell_view.dart';
 
@@ -150,8 +151,10 @@ class _AppEntry extends StatelessWidget {
   }
 }
 
-/// Routes a signed-in user through onboarding until they have a saved
-/// onboarding profile, then on to [_ProgramGate].
+/// Routes a signed-in user through onboarding — which ends in building the
+/// program — until they have both a saved onboarding profile and a program,
+/// then into the main app. The tabs have no screens for an account without
+/// a program, so the shell is never shown before one exists.
 class _OnboardingGate extends StatefulWidget {
   final String userId;
 
@@ -162,73 +165,12 @@ class _OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<_OnboardingGate> {
-  late Future<bool> _completed;
+  /// Whether the onboarding answers are on file, and whether a program is.
+  late Future<(bool, bool)> _status;
 
-  /// Set when onboarding finishes right here, so the gate goes straight on
+  /// Set when the flow finishes right here, so the gate goes straight on
   /// without a frame of loader while a resolved future settles.
   var _finishedHere = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _check();
-  }
-
-  void _check() {
-    _completed = OnboardingService().hasCompletedOnboarding(widget.userId);
-    // The program gate asks next; start its lookup behind onboarding so the
-    // answer is usually in by the time onboarding is.
-    TrainingProgramStoreService().fetchProgramLogic(widget.userId).ignore();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final programGate = _ProgramGate(userId: widget.userId);
-    if (_finishedHere) return programGate;
-    return FutureBuilder<bool>(
-      future: _completed,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _GateLoadFailed(
-            message: 'Could not load your profile.',
-            onRetry: () => setState(_check),
-          );
-        }
-        if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: LoadingIndicator()));
-        }
-        if (snapshot.data!) return programGate;
-        return OnboardingView(
-          // Block body: the arrow form would return the assigned Future out
-          // of the setState callback, which setState rejects.
-          onFinished: () => setState(() {
-            _completed = Future.value(true);
-            _finishedHere = true;
-          }),
-        );
-      },
-    );
-  }
-}
-
-/// Routes an onboarded user into the setup wizard until they have a
-/// training program, then into the main app. The tabs have no screens for an
-/// account without a program, so the shell is never shown before one exists.
-class _ProgramGate extends StatefulWidget {
-  final String userId;
-
-  const _ProgramGate({required this.userId});
-
-  @override
-  State<_ProgramGate> createState() => _ProgramGateState();
-}
-
-class _ProgramGateState extends State<_ProgramGate> {
-  late Future<bool> _hasProgram;
-
-  /// Set when the wizard finishes right here, so the gate goes straight on
-  /// to the shell without re-reading what it just wrote.
-  var _builtHere = false;
 
   @override
   void initState() {
@@ -244,43 +186,57 @@ class _ProgramGateState extends State<_ProgramGate> {
   }
 
   void _check() {
-    _hasProgram = TrainingProgramStoreService()
-        .fetchProgramLogic(widget.userId)
-        .then((logic) => logic != null);
+    _status = (
+      OnboardingService().hasCompletedOnboarding(widget.userId),
+      TrainingProgramStoreService()
+          .fetchProgramLogic(widget.userId)
+          .then((logic) => logic != null),
+    ).wait;
   }
 
   /// A dev reset deleted the program out from under the shell: back to the
-  /// wizard.
+  /// program questions.
   void _onReset() {
     if (!mounted) return;
     setState(() {
-      _builtHere = false;
+      _finishedHere = false;
       _check();
     });
   }
 
+  Future<void> _save(
+    OnboardingProfileModel? profile,
+    ProgramSetupResult? program,
+  ) async {
+    if (profile != null) await OnboardingService().saveProfile(profile);
+    if (program != null) {
+      await completeProgramSetup(userId: widget.userId, result: program);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_builtHere) return const ShellView();
-    return FutureBuilder<bool>(
-      future: _hasProgram,
+    if (_finishedHere) return const ShellView();
+    return FutureBuilder<(bool, bool)>(
+      future: _status,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _GateLoadFailed(
-            message: 'Could not load your program.',
+            message: 'Could not load your profile.',
             onRetry: () => setState(_check),
           );
         }
         if (!snapshot.hasData) {
           return const Scaffold(body: Center(child: LoadingIndicator()));
         }
-        if (snapshot.data!) return const ShellView();
-        return ProgramSetupView(
-          onComplete: (result) => completeProgramSetup(
-            userId: widget.userId,
-            result: result,
-          ),
-          onDone: () => setState(() => _builtHere = true),
+        final (onboarded, hasProgram) = snapshot.data!;
+        if (onboarded && hasProgram) return const ShellView();
+        return OnboardingView(
+          userId: widget.userId,
+          askProfile: !onboarded,
+          askProgram: !hasProgram,
+          onSave: _save,
+          onFinished: () => setState(() => _finishedHere = true),
         );
       },
     );

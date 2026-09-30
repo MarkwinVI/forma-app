@@ -39,7 +39,7 @@ class _ShellViewState extends State<ShellView> {
   /// One navigator per tab: pushes inside a tab keep the bottom bar visible,
   /// the stack survives switching tabs, and re-tapping the active tab can
   /// unwind it back to the tab's index page. Flows that must take over the
-  /// whole screen (workout, program setup wizard, fullscreen video) opt out
+  /// whole screen (workout, fullscreen video) opt out
   /// by pushing on the root navigator instead.
   final _tabNavigatorKeys = [
     for (var i = 0; i < 4; i++) GlobalKey<NavigatorState>(),

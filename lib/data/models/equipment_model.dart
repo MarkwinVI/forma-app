@@ -134,7 +134,7 @@ class EquipmentAnswer {
         SetupEquipment.none => false,
       };
 
-  /// Whether there is something to dip on. Without it the wizard shows the
+  /// Whether there is something to dip on. Without it onboarding shows the
   /// two-chairs tip once — the dips tree still runs, on chairs.
   bool get hasDipBars => switch (kind) {
         SetupEquipment.fullGym => true,

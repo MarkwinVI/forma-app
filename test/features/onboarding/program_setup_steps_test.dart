@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
-import 'package:forma_app/features/home/program_setup_view.dart';
+import 'package:forma_app/features/onboarding/onboarding_view.dart';
+import 'package:forma_app/features/onboarding/program_setup_steps.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -17,50 +18,49 @@ void main() {
   Future<void> pumpStep(WidgetTester tester) =>
       tester.pump(const Duration(milliseconds: 400));
 
-  Future<void> pumpWizard(
+  /// An account with its onboarding answers already on file: the flow is
+  /// the program questions alone.
+  Future<void> pumpQuestions(
     WidgetTester tester, {
     required Future<void> Function(ProgramSetupResult) onComplete,
+    VoidCallback? onFinished,
   }) async {
+    // Phone-sized, so the bodyweight keypad sits above the fold.
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       MaterialApp(
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      // The host decides where "done" goes; here, back to
-                      // the page that opened it.
-                      builder: (_) => ProgramSetupView(
-                        onComplete: onComplete,
-                        onDone: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('Open wizard'),
-              ),
-            ),
-          ),
+        home: OnboardingView(
+          userId: 'user',
+          askProfile: false,
+          onSave: (profile, program) async {
+            expect(profile, isNull);
+            await onComplete(program!);
+          },
+          onFinished: onFinished ?? () {},
         ),
       ),
     );
-    await tester.tap(find.text('Open wizard'));
     await tester.pumpAndSettle();
   }
+
+  Finder backButton() => find.byIcon(Icons.arrow_back_ios_new_rounded);
 
   testWidgets('walks through all four steps and reports the answers',
       (tester) async {
     ProgramSetupResult? result;
-    await pumpWizard(
+    var finished = 0;
+    await pumpQuestions(
       tester,
       onComplete: (value) async => result = value,
+      onFinished: () => finished++,
     );
 
     // Step 1: schedule — nothing picked, so the CTA holds.
     expect(find.text('Your training schedule'), findsOneWidget);
-    expect(find.text('1 / 4'), findsOneWidget);
+    expect(find.text('YOUR PROGRAM'), findsOneWidget);
     expect(find.text('Pick one to continue'), findsOneWidget);
     await tester.tap(find.text('4'));
     await tester.pump();
@@ -99,8 +99,8 @@ void main() {
     // Nothing to dip on in that pick, so the two-chairs tip comes first —
     // still on the equipment step's count, back returns to the pick.
     expect(find.text('No dip bars? Two chairs will do.'), findsOneWidget);
-    expect(find.text('2 / 4'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    expect(find.text('Your equipment'), findsNothing);
+    await tester.tap(backButton());
     await tester.pumpAndSettle();
     expect(find.text('Your equipment'), findsOneWidget);
     expect(find.text('Dumbbells, Barbell'), findsOneWidget);
@@ -161,12 +161,12 @@ void main() {
     expect(find.textContaining('free trial'), findsWidgets);
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
-    expect(find.text('Open wizard'), findsOneWidget);
+    expect(finished, 1);
   });
 
   testWidgets('4–6 training days build a push/pull split', (tester) async {
     ProgramSetupResult? result;
-    await pumpWizard(tester, onComplete: (value) async => result = value);
+    await pumpQuestions(tester, onComplete: (value) async => result = value);
 
     await tester.tap(find.text('5'));
     await tester.pump();
@@ -204,7 +204,7 @@ void main() {
   testWidgets('picking lbs converts the shown weight and sticks app-wide',
       (tester) async {
     ProgramSetupResult? result;
-    await pumpWizard(tester, onComplete: (value) async => result = value);
+    await pumpQuestions(tester, onComplete: (value) async => result = value);
 
     await tester.tap(find.text('3'));
     await tester.pump();
@@ -249,31 +249,30 @@ void main() {
 
   testWidgets('back button steps backwards, and the first step has none',
       (tester) async {
-    await pumpWizard(tester, onComplete: (_) async {});
+    await pumpQuestions(tester, onComplete: (_) async {});
+    expect(backButton().hitTestable(), findsNothing);
 
     await tester.tap(find.text('3'));
     await tester.pump();
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    expect(find.text('2 / 4'), findsOneWidget);
+    expect(find.text('Your equipment'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    await tester.tap(backButton());
     await tester.pumpAndSettle();
-    expect(find.text('1 / 4'), findsOneWidget);
-
-    // The wizard is the end of onboarding: nothing behind the first step.
-    expect(find.byIcon(Icons.arrow_back_rounded).hitTestable(), findsNothing);
+    expect(find.text('Your training schedule'), findsOneWidget);
+    expect(backButton().hitTestable(), findsNothing);
   });
 
-  testWidgets('a back gesture steps backwards rather than leaving the wizard',
+  testWidgets('a back gesture steps backwards through the questions',
       (tester) async {
-    await pumpWizard(tester, onComplete: (_) async {});
+    await pumpQuestions(tester, onComplete: (_) async {});
 
     await tester.tap(find.text('3'));
     await tester.pump();
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    expect(find.text('2 / 4'), findsOneWidget);
+    expect(find.text('Your equipment'), findsOneWidget);
 
     // What the iOS edge swipe and the Android back button both call.
     Future<void> systemBack() async {
@@ -282,12 +281,6 @@ void main() {
     }
 
     await systemBack();
-    expect(find.text('1 / 4'), findsOneWidget);
-    expect(find.text('Open wizard'), findsNothing);
-
-    // On the first step the gesture is the system's again — here, back to
-    // the page that opened it; in the app, out of the app.
-    await systemBack();
-    expect(find.text('Open wizard'), findsOneWidget);
+    expect(find.text('Your training schedule'), findsOneWidget);
   });
 }

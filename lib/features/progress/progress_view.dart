@@ -60,7 +60,7 @@ class _ProgressViewState extends State<ProgressView> {
 
   Future<void> _loadData({WarmSkillWheelBundle? warm}) async {
     // A load started elsewhere, when there is one — by main() during the
-    // splash, or by the setup wizard once it has written the program — so
+    // splash, or by onboarding once it has written the program — so
     // the tab appears with its data already fetched. It was started for the
     // signed-in user, so it stands on its own even before this tab reads
     // the session.

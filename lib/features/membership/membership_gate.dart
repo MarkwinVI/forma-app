@@ -8,8 +8,8 @@ import 'membership_scope.dart';
 /// visible — dimmed, inert — under the lock dock. Nothing to dismiss;
 /// the tab bar keeps working, and Profile is never wrapped.
 ///
-/// The tabs are only reached once a program exists — the setup wizard, and
-/// its paywall, come first — so the lock is the membership alone.
+/// The tabs are only reached once onboarding has built a program and shown
+/// its paywall, so the lock is the membership alone.
 class MembershipGate extends StatelessWidget {
   final MembershipService service;
   final Widget child;

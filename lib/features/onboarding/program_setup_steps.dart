@@ -7,15 +7,10 @@ import '../../core/widgets/polished.dart';
 import '../../core/widgets/weight_entry.dart';
 import '../../data/models/equipment_model.dart';
 import '../../data/models/training_program_model.dart';
-import '../../data/services/analytics_service.dart';
-import '../../data/services/auth_service.dart';
-import '../../data/services/membership_service.dart';
 import '../../data/services/weight_unit_service.dart';
-import '../progress/skill_wheel_bundle.dart';
-import 'equipment_picker.dart';
-import 'program_ready_view.dart';
+import '../home/equipment_picker.dart';
 
-/// Answers collected by the "Build your program" wizard.
+/// Answers to the program questions that end onboarding.
 class ProgramSetupResult {
   final int daysPerWeek;
   final TrainingProgramType split;
@@ -52,7 +47,7 @@ class ProgramSetupResult {
   }
 }
 
-// ── Wizard data ─────────────────────────────────────────────
+// ── Question data ───────────────────────────────────────────
 
 const _days = [2, 3, 4, 5, 6];
 
@@ -142,7 +137,7 @@ const _repStrengthExercises = [
 ];
 
 /// Asked with access to weights: the heaviest bar weight squatted for a
-/// single rep, in the display unit the wizard is running in. The planner
+/// single rep, in the display unit the questions are running in. The planner
 /// starts the weighted squat branch at 80% of it.
 _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
       id: 'squat',
@@ -176,66 +171,39 @@ const _bodyweightSquat = _StrengthExercise(
   max: 100,
 );
 
-// ── Wizard ──────────────────────────────────────────────────
+// ── Questions ───────────────────────────────────────────────
 
-/// Four-step "Build your program" wizard: schedule, equipment, bodyweight
-/// and starting strength. The split comes from the schedule ([splitForDays])
-/// rather than being asked. Calls [onComplete] with the answers, then shows
-/// the "program ready" confirmation.
-///
-/// It is the last leg of onboarding rather than something opened from a tab:
-/// the app has no screens for an account without a program, so there is no
-/// way out of the first step — only forward.
-class ProgramSetupView extends StatefulWidget {
-  final Future<void> Function(ProgramSetupResult result) onComplete;
+/// The program questions at the end of onboarding, in the order they come.
+enum ProgramSetupQuestion { schedule, equipment, bodyweight, strength }
 
-  /// Leaves the ready screen — after "Not now", or once a purchase landed.
-  final VoidCallback onDone;
-
-  const ProgramSetupView({
-    super.key,
-    required this.onComplete,
-    required this.onDone,
-  });
-
-  @override
-  State<ProgramSetupView> createState() => _ProgramSetupViewState();
-}
-
-class _ProgramSetupViewState extends State<ProgramSetupView> {
-  static const _stepCount = 4;
-
-  int _step = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    AnalyticsService.screen('program_setup');
-  }
-
-  /// Schedule and equipment start unanswered — the CTA holds until a pick.
+/// The answers to the program questions, and the rules for moving between
+/// them. Onboarding owns the flow — the header, the button, the steps — and
+/// asks this what each question needs; [ProgramSetupStep] draws one.
+class ProgramSetupController extends ChangeNotifier {
+  /// Schedule and equipment start unanswered — the button holds until a
+  /// pick.
   int? _days;
   EquipmentAnswer? _equipment;
 
-  /// The two-chairs tip is up: shown once, between the equipment step and
-  /// the bodyweight step, when the pick has nothing to dip on.
+  /// The two-chairs tip is up: shown between the equipment question and the
+  /// bodyweight question when the pick has nothing to dip on.
   bool _dipTip = false;
 
-  /// Bodyweight is kept in the unit being displayed; only the finish
-  /// converts to canonical kilograms.
+  /// Bodyweight is kept in the unit being displayed; only [result] converts
+  /// to canonical kilograms.
   WeightUnit _unit = WeightUnitService.unit;
   late double _bw = _unit == WeightUnit.lb ? 165 : 75;
   String _bwEdit = '';
   bool _bwEditing = false;
 
-  /// Whether the user has typed a bodyweight of their own. The step opens
-  /// with the keypad up and a placeholder in the field, and Continue holds
-  /// until a real number is in it — the placeholder is a suggestion, not an
-  /// answer.
+  /// Whether the user has typed a bodyweight of their own. The question
+  /// opens with the keypad up and a placeholder in the field, and the
+  /// button holds until a real number is in it — the placeholder is a
+  /// suggestion, not an answer.
   bool _bwEntered = false;
 
   /// Starting-strength answers, unset until the user adds a number. The
-  /// squat and RDL loads live in the display unit while the wizard runs.
+  /// squat and RDL loads live in the display unit while the questions run.
   final Map<String, int?> _strength = {
     'pushups': null,
     'pullups': null,
@@ -245,27 +213,138 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
     'squat_bw': null,
   };
 
-  bool _saving = false;
-  bool _ready = false;
-
-  /// The map for the ready screen, fetched while the button still says it
-  /// is building — so the screen arrives whole rather than behind a wait.
-  SkillWheelBundle? _readyBundle;
+  bool get showingDipTip => _dipTip;
 
   double get _bwMin => _unit == WeightUnit.lb ? 66 : 30;
   double get _bwMax => _unit == WeightUnit.lb ? 550 : 250;
 
-  TrainingProgramType get _split => splitForDays(_days ?? 3);
+  /// Whether [question] has an answer the flow can move on from. The dip
+  /// tip is read, not answered, so it never holds.
+  bool answered(ProgramSetupQuestion question) {
+    if (_dipTip) return true;
+    return switch (question) {
+      ProgramSetupQuestion.schedule => _days != null,
+      ProgramSetupQuestion.equipment => _equipmentAnswered,
+      ProgramSetupQuestion.bodyweight => _bwEntered && _bw >= _bwMin,
+      ProgramSetupQuestion.strength => true,
+    };
+  }
 
-  bool get _isLastStep => _step == _stepCount - 1;
+  /// What the button says while [question] holds.
+  String holdLabel(ProgramSetupQuestion question) =>
+      question == ProgramSetupQuestion.bodyweight
+          ? 'Enter your bodyweight to continue'
+          : 'Pick one to continue';
 
-  bool get _ctaDisabled =>
-      (_step == 0 && _days == null) ||
-      (_step == 1 && !_equipmentAnswered) ||
-      (_step == 2 && !_bwUsable);
+  /// The heading over [question] — the tip's own while it is up.
+  ({String title, String sub}) headFor(ProgramSetupQuestion question) {
+    if (_dipTip) {
+      return (
+        title: 'No dip bars? Two chairs will do.',
+        sub: 'Set two sturdy chairs shoulder-width apart with the backs '
+            'facing out, and dip with a hand on each. If they feel tippy, '
+            'weigh the seats down with something heavy.',
+      );
+    }
+    return switch (question) {
+      ProgramSetupQuestion.schedule => (
+          title: 'Your training schedule',
+          sub: 'Choose how many days a week you want to train.',
+        ),
+      ProgramSetupQuestion.equipment => (
+          title: 'Your equipment',
+          sub: 'What do you have access to?',
+        ),
+      ProgramSetupQuestion.bodyweight => (
+          title: 'Your bodyweight',
+          sub: 'Skills like weighted pull-ups use your bodyweight to set the '
+              'weight. A close guess is fine. You can update it anytime from '
+              'your profile.',
+        ),
+      ProgramSetupQuestion.strength => (
+          title: 'Where are you starting?',
+          sub: 'What’s your best for each exercise? Enter your max reps or '
+              'one-rep max. A rough estimate is fine.',
+        ),
+    };
+  }
 
-  /// A bodyweight the user typed, at or above the floor.
-  bool get _bwUsable => _bwEntered && _bw >= _bwMin;
+  /// [question] has come up. The bodyweight question opens ready to type
+  /// into.
+  void arrive(ProgramSetupQuestion question) {
+    if (question != ProgramSetupQuestion.bodyweight) return;
+    _openBodyweightEntry();
+    notifyListeners();
+  }
+
+  /// [question] is being left, in either direction. Whatever was typed into
+  /// the bodyweight is folded in and the keypad closes.
+  void depart(ProgramSetupQuestion question) {
+    if (question == ProgramSetupQuestion.bodyweight) _commitBodyweight();
+  }
+
+  /// Continue on [question]. True when it was handled in place — the dip
+  /// tip coming up — and the flow should stay where it is.
+  bool continueFrom(ProgramSetupQuestion question) {
+    if (_dipTip) {
+      _dipTip = false;
+      return false;
+    }
+    if (question == ProgramSetupQuestion.equipment &&
+        !(_equipment?.hasDipBars ?? true)) {
+      _dipTip = true;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// Back on [question]. True when it was handled in place — closing the
+  /// dip tip, which returns to the pick.
+  bool backFrom(ProgramSetupQuestion question) {
+    if (!_dipTip) return false;
+    _dipTip = false;
+    notifyListeners();
+    return true;
+  }
+
+  /// The answers, in canonical units.
+  ProgramSetupResult result() {
+    final equipment = _equipment ?? EquipmentAnswer.fullGym;
+    final bodyweightKg = _clampBw(_bw) *
+        (_unit == WeightUnit.lb ? WeightUnitService.kgPerLb : 1);
+    final days = _days ?? 3;
+    return ProgramSetupResult(
+      daysPerWeek: days,
+      split: splitForDays(days),
+      equipment: equipment,
+      bodyweightKg: bodyweightKg,
+      // Only the leg questions matching the equipment answer are recorded,
+      // and the loads are converted back to canonical kilograms.
+      startingStrength: {
+        'pushups': _strength['pushups'],
+        'pullups': _strength['pullups'],
+        'dips': _strength['dips'],
+        if (equipment.hasWeights) ...{
+          'squat': _strengthKg('squat'),
+          'rdl': _strengthKg('rdl'),
+        } else
+          'squat_bw': _strength['squat_bw'],
+      },
+    );
+  }
+
+  void _setDays(int days) {
+    _days = days;
+    notifyListeners();
+  }
+
+  void _setEquipment(EquipmentAnswer? equipment) {
+    _equipment = equipment;
+    notifyListeners();
+  }
+
+  void _strengthChanged() => notifyListeners();
 
   /// A preset, or "Some equipment" with at least one item ticked. The list
   /// is only empty while its sheet is up — closing it empty clears the pick.
@@ -275,75 +354,75 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
         (!equipment.isSome || equipment.items.isNotEmpty);
   }
 
-  /// The wizard's unit toggle is the app-wide choice: picking lbs here flips
-  /// every weight the app shows from now on.
+  /// The unit toggle is the app-wide choice: picking lbs here flips every
+  /// weight the app shows from now on.
   void _setUnit(WeightUnit unit) {
     if (unit == _unit) return;
-    setState(() {
-      // Whatever is in the field right now travels with the unit — a number
-      // half typed included, so flipping mid-entry converts it rather than
-      // rounding it up to the floor first.
-      final shown = double.tryParse(_bwEdit) ?? _bw;
-      final kg =
-          _unit == WeightUnit.lb ? shown * WeightUnitService.kgPerLb : shown;
-      // The barbell answers are loads, so they travel with the unit —
-      // rounded to something loadable rather than a raw conversion.
-      for (final barbell in [
-        _barbellSquatFor(unit),
-        _romanianDeadliftFor(unit)
-      ]) {
-        final value = _strength[barbell.id];
-        // A 0 answer stays 0 — the loadable floor below would turn it into
-        // a phantom 5 on a unit flip.
-        if (value == null || value == 0) continue;
-        final converted = unit == WeightUnit.lb
-            ? value / WeightUnitService.kgPerLb
-            : value * WeightUnitService.kgPerLb;
-        _strength[barbell.id] =
-            ((converted / 5).round() * 5).clamp(5, barbell.max).toInt();
-      }
-      _unit = unit;
+    // Whatever is in the field right now travels with the unit — a number
+    // half typed included, so flipping mid-entry converts it rather than
+    // rounding it up to the floor first.
+    final shown = double.tryParse(_bwEdit) ?? _bw;
+    final kg =
+        _unit == WeightUnit.lb ? shown * WeightUnitService.kgPerLb : shown;
+    // The barbell answers are loads, so they travel with the unit —
+    // rounded to something loadable rather than a raw conversion.
+    for (final barbell in [
+      _barbellSquatFor(unit),
+      _romanianDeadliftFor(unit)
+    ]) {
+      final value = _strength[barbell.id];
+      // A 0 answer stays 0 — the loadable floor below would turn it into a
+      // phantom 5 on a unit flip.
+      if (value == null || value == 0) continue;
       final converted = unit == WeightUnit.lb
-          ? (kg / WeightUnitService.kgPerLb).roundToDouble()
-          : kg.roundToDouble();
-      // The placeholder is kept inside the range; a typed number is only
-      // capped, and Continue holds until it clears the floor.
-      _bw = _bwEntered
-          ? converted.clamp(0, _bwMax).toDouble()
-          : _clampBw(converted);
-      _bwEdit = '';
-      // Flipping the unit converts the number; it does not close the entry.
-      if (_step == 2) _openBodyweightEntry();
-    });
+          ? value / WeightUnitService.kgPerLb
+          : value * WeightUnitService.kgPerLb;
+      _strength[barbell.id] =
+          ((converted / 5).round() * 5).clamp(5, barbell.max).toInt();
+    }
+    _unit = unit;
+    final converted = unit == WeightUnit.lb
+        ? (kg / WeightUnitService.kgPerLb).roundToDouble()
+        : kg.roundToDouble();
+    // The placeholder is kept inside the range; a typed number is only
+    // capped, and the button holds until it clears the floor.
+    _bw = _bwEntered
+        ? converted.clamp(0, _bwMax).toDouble()
+        : _clampBw(converted);
+    _bwEdit = '';
+    // Flipping the unit converts the number; it does not close the entry.
+    if (_bwEditing) _openBodyweightEntry();
     WeightUnitService.set(unit);
+    notifyListeners();
   }
 
   double _clampBw(double value) => value.clamp(_bwMin, _bwMax);
 
-  /// Folds whatever was typed into the bodyweight value and closes the
-  /// keypad. Runs when the step is left in any direction.
   void _commitBodyweight() {
     if (!_bwEditing && _bwEdit.isEmpty) return;
     final parsed = double.tryParse(_bwEdit);
-    setState(() {
-      if (parsed != null && parsed > 0) _bw = _clampBw(parsed);
-      _bwEdit = '';
-      _bwEditing = false;
-    });
+    if (parsed != null && parsed > 0) _bw = _clampBw(parsed);
+    _bwEdit = '';
+    _bwEditing = false;
+    notifyListeners();
   }
 
   void _pressBwKey(String key) {
-    setState(() {
-      _bwEdit = weightEntryPress(_bwEdit, key);
-      final parsed = double.tryParse(_bwEdit);
-      if (parsed != null) _bw = parsed.clamp(0, _bwMax).toDouble();
-      _bwEntered = parsed != null && parsed > 0;
-    });
+    _bwEdit = weightEntryPress(_bwEdit, key);
+    final parsed = double.tryParse(_bwEdit);
+    if (parsed != null) _bw = parsed.clamp(0, _bwMax).toDouble();
+    _bwEntered = parsed != null && parsed > 0;
+    notifyListeners();
   }
 
-  /// The bodyweight step opens ready to type into: keypad up, and the field
-  /// showing what the user has already given — or the placeholder, dimmed,
-  /// while they have given nothing.
+  void _tapBwValue() {
+    _bwEditing = true;
+    _bwEdit = '';
+    notifyListeners();
+  }
+
+  /// The field shows what the user has already given — or the placeholder,
+  /// dimmed, while they have given nothing.
   void _openBodyweightEntry() {
     _bwEditing = true;
     _bwEdit = _bwEntered ? _bwText : '';
@@ -352,43 +431,6 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   String get _bwText => _bw == _bw.roundToDouble()
       ? _bw.round().toString()
       : _bw.toStringAsFixed(1);
-
-  Future<void> _next() async {
-    if (_dipTip) {
-      setState(() {
-        _dipTip = false;
-        _step = 2;
-        _openBodyweightEntry();
-      });
-      return;
-    }
-    if (_step == 1 && !(_equipment?.hasDipBars ?? true)) {
-      setState(() => _dipTip = true);
-      return;
-    }
-    if (_step == 2) _commitBodyweight();
-    if (!_isLastStep) {
-      setState(() {
-        _step += 1;
-        if (_step == 2) _openBodyweightEntry();
-      });
-      return;
-    }
-    await _finish();
-  }
-
-  void _back() {
-    if (_dipTip) {
-      setState(() => _dipTip = false);
-      return;
-    }
-    if (_step == 0) return;
-    if (_step == 2) _commitBodyweight();
-    setState(() {
-      _step -= 1;
-      if (_step == 2) _openBodyweightEntry();
-    });
-  }
 
   /// A barbell answer in canonical kilograms, whatever unit it was typed in.
   int? _strengthKg(String id) {
@@ -399,343 +441,54 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
             : value.toDouble())
         .round();
   }
-
-  Future<void> _finish() async {
-    final equipment = _equipment ?? EquipmentAnswer.fullGym;
-    final bodyweightKg = _clampBw(_bw) *
-        (_unit == WeightUnit.lb ? WeightUnitService.kgPerLb : 1);
-
-    setState(() => _saving = true);
-    try {
-      await widget.onComplete(
-        ProgramSetupResult(
-          daysPerWeek: _days ?? 3,
-          split: _split,
-          equipment: equipment,
-          bodyweightKg: bodyweightKg,
-          // Only the leg questions matching the equipment answer are
-          // recorded, and the loads are converted back to canonical
-          // kilograms.
-          startingStrength: {
-            'pushups': _strength['pushups'],
-            'pullups': _strength['pullups'],
-            'dips': _strength['dips'],
-            if (equipment.hasWeights) ...{
-              'squat': _strengthKg('squat'),
-              'rdl': _strengthKg('rdl'),
-            } else
-              'squat_bw': _strength['squat_bw'],
-          },
-        ),
-      );
-      final bundle = await _loadReadyBundle();
-      if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _ready = true;
-        _readyBundle = bundle;
-      });
-    } catch (error, stackTrace) {
-      debugPrint('Failed to save program setup: $error\n$stackTrace');
-      if (!mounted) return;
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't save your program. Try again."),
-        ),
-      );
-    }
-  }
-
-  /// The wheel data setup started warming the moment it wrote the
-  /// program — the Progress tab takes that warm-up later, so this only
-  /// looks at it. A load that fails costs the map, not the screen.
-  Future<SkillWheelBundle?> _loadReadyBundle() async {
-    try {
-      var future = peekWarmSkillWheelBundle()?.future;
-      if (future == null) {
-        final userId = AuthService().currentUser?.id;
-        if (userId == null) return null;
-        future = loadSkillWheelBundle(userId);
-      }
-      return await future;
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load the program map: $error\n$stackTrace');
-      return null;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_ready) {
-      // The map the answers drew, and the choice that gates the app. Both
-      // the trial landing and "Not now" leave the wizard the same way.
-      return ProgramReadyView(
-        service: MembershipService.instance,
-        bundle: _readyBundle,
-        onDone: widget.onDone,
-      );
-    }
-
-    return PopScope(
-      // The back gesture steps backwards through the wizard; on the first
-      // step it leaves the app, as it would on any first screen.
-      canPop: _step == 0,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _back();
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              _WizardHeader(
-                step: _step,
-                stepCount: _stepCount,
-                onBack: _step == 0 ? null : _back,
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                  child: _dipTip
-                      ? const _DipBarsTip()
-                      : switch (_step) {
-                          0 => _ScheduleStep(
-                              days: _days,
-                              onChanged: (value) =>
-                                  setState(() => _days = value),
-                            ),
-                          1 => _EquipmentStep(
-                              equipment: _equipment,
-                              onChanged: (value) =>
-                                  setState(() => _equipment = value),
-                            ),
-                          2 => _WeightStep(
-                              bw: _bw,
-                              edit: _bwEdit,
-                              editing: _bwEditing,
-                              unit: _unit,
-                              min: _bwMin,
-                              onUnitChanged: _setUnit,
-                              onTapValue: () => setState(() {
-                                _bwEditing = true;
-                                _bwEdit = '';
-                              }),
-                              onKey: _pressBwKey,
-                            ),
-                          3 => _StrengthStep(
-                              strength: _strength,
-                              hasWeights: _equipment?.hasWeights ?? true,
-                              unit: _unit,
-                              onChanged: () => setState(() {}),
-                            ),
-                          _ => const SizedBox.shrink(),
-                        },
-                ),
-              ),
-              _WizardFooter(
-                label: _dipTip
-                    ? 'Got it'
-                    : _isLastStep
-                        ? 'Build my program'
-                        : _ctaDisabled
-                            ? _step == 2
-                                ? 'Enter your bodyweight to continue'
-                                : 'Pick one to continue'
-                            : 'Continue',
-                trailingChevron: !_dipTip && !_isLastStep && !_ctaDisabled,
-                saving: _saving,
-                onTap: !_dipTip && _ctaDisabled ? null : _next,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-class _WizardHeader extends StatelessWidget {
-  final int step;
-  final int stepCount;
+/// The body of one program question — everything under its heading, which
+/// the host draws so the questions read like the rest of onboarding.
+class ProgramSetupStep extends StatelessWidget {
+  final ProgramSetupController controller;
+  final ProgramSetupQuestion question;
 
-  /// Null on the first step, which has nothing behind it: the button is
-  /// hidden but keeps its place, so the title does not shift.
-  final VoidCallback? onBack;
-
-  const _WizardHeader({
-    required this.step,
-    required this.stepCount,
-    required this.onBack,
+  const ProgramSetupStep({
+    super.key,
+    required this.controller,
+    required this.question,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
-            children: [
-              Visibility(
-                visible: onBack != null,
-                maintainSize: true,
-                maintainAnimation: true,
-                maintainState: true,
-                child: Pressable(
-                  onTap: onBack,
-                  semanticLabel: 'Back',
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 17,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Build your program',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              Text(
-                '${step + 1} / $stepCount',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Row(
-            children: [
-              for (var index = 0; index < stepCount; index++) ...[
-                if (index > 0) const SizedBox(width: 5),
-                Expanded(
-                  child: Container(
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: index <= step
-                          ? AppColors.accentPrimary
-                          : AppColors.surface2,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WizardFooter extends StatelessWidget {
-  final String label;
-  final bool trailingChevron;
-  final bool saving;
-  final VoidCallback? onTap;
-
-  const _WizardFooter({
-    required this.label,
-    required this.trailingChevron,
-    required this.saving,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomInset),
-      decoration: const BoxDecoration(
-        color: AppColors.bg,
-        border: Border(
-          top: BorderSide(color: AppColors.divider),
-        ),
-      ),
-      child: saving
-          ? Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.accentPrimary,
-                borderRadius: BorderRadius.circular(26),
-              ),
-              alignment: Alignment.center,
-              child: const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: Colors.white,
-                ),
-              ),
-            )
-          : PillButton(
-              label: label,
-              icon: trailingChevron ? Icons.chevron_right_rounded : null,
-              trailingIcon: true,
-              onTap: onTap,
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final c = controller;
+        if (c._dipTip) return const _DipBarsTip();
+        return switch (question) {
+          ProgramSetupQuestion.schedule => _ScheduleStep(
+              days: c._days,
+              onChanged: c._setDays,
             ),
-    );
-  }
-}
-
-class _StepTitle extends StatelessWidget {
-  final String title;
-  final String sub;
-
-  const _StepTitle({
-    required this.title,
-    required this.sub,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 23,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.46,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          sub,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            height: 1.45,
-          ),
-        ),
-      ],
+          ProgramSetupQuestion.equipment => _EquipmentStep(
+              equipment: c._equipment,
+              onChanged: c._setEquipment,
+            ),
+          ProgramSetupQuestion.bodyweight => _WeightStep(
+              bw: c._bw,
+              edit: c._bwEdit,
+              editing: c._bwEditing,
+              unit: c._unit,
+              min: c._bwMin,
+              onUnitChanged: c._setUnit,
+              onTapValue: c._tapBwValue,
+              onKey: c._pressBwKey,
+            ),
+          ProgramSetupQuestion.strength => _StrengthStep(
+              strength: c._strength,
+              hasWeights: c._equipment?.hasWeights ?? true,
+              unit: c._unit,
+              onChanged: c._strengthChanged,
+            ),
+        };
+      },
     );
   }
 }
@@ -870,11 +623,6 @@ class _ScheduleStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _StepTitle(
-          title: 'Your training schedule',
-          sub: 'Choose how many days a week you want to train.',
-        ),
-        const SizedBox(height: 20),
         Row(
           children: [
             for (var index = 0; index < _days.length; index++) ...[
@@ -1001,11 +749,6 @@ class _EquipmentStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _StepTitle(
-          title: 'Your equipment',
-          sub: 'What do you have access to?',
-        ),
-        const SizedBox(height: 18),
         _RadioRow(
           selected: equipment?.kind == SetupEquipment.fullGym,
           label: 'Full gym',
@@ -1034,38 +777,26 @@ class _EquipmentStep extends StatelessWidget {
   }
 }
 
-/// Shown once after the equipment step when nothing in the pick can be
-/// dipped on: the dips tree still runs, on two chairs. Same wizard chrome
-/// as the step it follows; Got it moves on, back returns to the pick.
+/// Shown after the equipment question when nothing in the pick can be
+/// dipped on: the dips tree still runs, on two chairs. It holds the
+/// equipment question's place; Got it moves on, back returns to the pick.
 class _DipBarsTip extends StatelessWidget {
   const _DipBarsTip();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 240),
-              child: Image.asset(
-                'assets/equipment/chairs.png',
-                semanticLabel:
-                    'Two chairs placed back-rests out, shoulder-width apart',
-              ),
-            ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 240),
+          child: Image.asset(
+            'assets/equipment/chairs.png',
+            semanticLabel:
+                'Two chairs placed back-rests out, shoulder-width apart',
           ),
         ),
-        const SizedBox(height: 26),
-        const _StepTitle(
-          title: 'No dip bars? Two chairs will do.',
-          sub: 'Set two sturdy chairs shoulder-width apart with the backs '
-              'facing out, and dip with a hand on each. If they feel tippy, '
-              'weigh the seats down with something heavy.',
-        ),
-      ],
+      ),
     );
   }
 }
@@ -1107,13 +838,6 @@ class _WeightStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _StepTitle(
-          title: 'Your bodyweight',
-          sub: 'Skills like weighted pull-ups use your bodyweight to set the '
-              'weight. A close guess is fine. You can update it anytime from '
-              'your profile.',
-        ),
-        const SizedBox(height: 22),
         Center(child: WeightUnitToggle(unit: unit, onChanged: onUnitChanged)),
         const SizedBox(height: 22),
         WeightValueDisplay(
@@ -1176,12 +900,6 @@ class _StrengthStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _StepTitle(
-          title: 'Where are you starting?',
-          sub: 'What’s your best for each exercise? Enter your max reps or '
-              'one-rep max. A rough estimate is fine.',
-        ),
-        const SizedBox(height: 18),
         for (var index = 0; index < exercises.length; index++) ...[
           if (index > 0) const SizedBox(height: 10),
           _StrengthCard(
