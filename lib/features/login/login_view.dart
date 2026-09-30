@@ -82,7 +82,7 @@ class _LoginViewState extends State<LoginView> {
               padding: EdgeInsets.fromLTRB(22, 16, 22, 0),
               child: _BrandMark(),
             ),
-            // The pitch sits centred in the space between the mark and the
+            // The headline sits centred in the space between the mark and the
             // sign-in block, and scrolls if it must; the sign-in block below
             // never moves.
             Expanded(
@@ -99,20 +99,7 @@ class _LoginViewState extends State<LoginView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _WelcomeHeadline(),
-                          SizedBox(height: 18),
-                          Text(
-                            'Every calisthenics skill, broken into steps. '
-                            'Forma builds workouts around the ones you train '
-                            'and moves you up as you master each one.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              height: 1.6,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                        children: [_WelcomeHeadline()],
                       ),
                     ),
                   ),
@@ -206,10 +193,10 @@ class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
     ('squat', 'l-sit'),
   ];
   static const _style = TextStyle(
-    fontSize: 31,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.8,
-    height: 1.16,
+    fontSize: 42,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -1.5,
+    height: 1.06,
     color: AppColors.textPrimary,
   );
 
