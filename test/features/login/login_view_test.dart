@@ -16,7 +16,7 @@ void main() {
     );
   });
 
-  testWidgets('the sign-in screen keeps animating without overflowing',
+  testWidgets('the sign-in screen cycles its headline without overflowing',
       (tester) async {
     tester.view.physicalSize = const Size(393 * 3, 852 * 3);
     tester.view.devicePixelRatio = 3;
@@ -38,11 +38,20 @@ void main() {
     );
     expect(find.text('Track progress'), findsNothing);
 
-    // The hero loops forever, so drive it through a full run: a frame that
-    // throws while painting fails here rather than on a device.
-    for (var i = 0; i < 8; i++) {
+    // The headline's words cycle forever, so drive it through a full round:
+    // a frame that throws or overflows fails here rather than on a device.
+    for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(seconds: 1));
     }
+    // No node graph above the pitch any more.
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_ConstellationPainter',
+      ),
+      findsNothing,
+    );
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('Android gets Continue with Google in the Apple button\'s place',

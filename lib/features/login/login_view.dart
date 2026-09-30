@@ -78,24 +78,26 @@ class _LoginViewState extends State<LoginView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The pitch scrolls if it must; the sign-in block below never
-            // moves.
-            const Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(top: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 22),
-                      child: _BrandMark(),
-                    ),
-                    // Full-bleed: the graph runs past the page margin on
-                    // both sides.
-                    _ConstellationHero(),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(22, 30, 22, 0),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(22, 16, 22, 0),
+              child: _BrandMark(),
+            ),
+            // The pitch sits centred in the space between the mark and the
+            // sign-in block, and scrolls if it must; the sign-in block below
+            // never moves.
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 24,
+                      ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _WelcomeHeadline(),
@@ -113,7 +115,7 @@ class _LoginViewState extends State<LoginView> {
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -188,7 +190,7 @@ class _BrandMark extends StatelessWidget {
   }
 }
 
-/// "From your first <skill> to the <skill>" — real moves only, cycling for as
+/// "From your first <skill> to <skill>" — real moves only, cycling for as
 /// long as the page is up.
 class _WelcomeHeadline extends StatefulWidget {
   const _WelcomeHeadline();
@@ -276,7 +278,7 @@ class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('to the ', style: _style),
+            const Text('to ', style: _style),
             Flexible(child: _slot(pair.$2)),
           ],
         ),
@@ -574,245 +576,4 @@ class _SigningInButton extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Hero constellation ────────────────────────────────────────────────
-
-/// The app's own progression graph as the hero: the spine draws itself in and
-/// the nodes light one by one up to a haloed skill still ahead, so "level up"
-/// happens on screen rather than being claimed in copy. The run loops.
-class _ConstellationHero extends StatefulWidget {
-  const _ConstellationHero();
-
-  @override
-  State<_ConstellationHero> createState() => _ConstellationHeroState();
-}
-
-class _ConstellationHeroState extends State<_ConstellationHero>
-    with TickerProviderStateMixin {
-  /// One pass of the drawing sequence, then a hold before it runs again.
-  late final AnimationController _run;
-
-  /// The halo on the node still ahead, and the glow behind everything — both
-  /// keep breathing after the draw finishes so the screen is never fully
-  /// still.
-  late final AnimationController _halo;
-  late final AnimationController _glow;
-
-  /// Whether the loops have been started (or deliberately held) — decided
-  /// once, on the first build, when MediaQuery can say if motion is reduced.
-  var _started = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _run = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 7200),
-    );
-    _halo = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    );
-    _glow = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 6000),
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-
-    if (MediaQuery.disableAnimationsOf(context)) {
-      // Reduce Motion: the graph fully drawn, the halo at mid-breath and the
-      // glow at its peak — the frame the loop keeps returning to, held.
-      _run.value = 1;
-      _halo.value = 0.5;
-      _glow.value = 0.25;
-      return;
-    }
-    _run.repeat();
-    _halo.repeat();
-    _glow.repeat();
-  }
-
-  @override
-  void dispose() {
-    _run.dispose();
-    _halo.dispose();
-    _glow.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 165,
-      width: double.infinity,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_run, _halo, _glow]),
-        builder: (context, _) => CustomPaint(
-          painter: _ConstellationPainter(
-            seconds: _run.value * 7.2,
-            halo: _halo.value,
-            glow: _glow.value,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ConstellationPainter extends CustomPainter {
-  /// Elapsed seconds into the current run — every element starts from its own
-  /// offset, which is what makes the graph build rather than appear.
-  final double seconds;
-  final double halo;
-  final double glow;
-
-  const _ConstellationPainter({
-    required this.seconds,
-    required this.halo,
-    required this.glow,
-  });
-
-  /// Laid out on the design's 402 × 230 grid. The first and last nodes sit
-  /// past the edges, so the graph reads as part of something larger.
-  static const _nodes = [
-    Offset(-8, 214),
-    Offset(58, 196),
-    Offset(124, 168),
-    Offset(190, 176),
-    Offset(256, 130),
-    Offset(322, 96),
-    Offset(392, 44),
-    Offset(150, 96),
-    Offset(300, 190),
-  ];
-  static const _links = [
-    (0, 1),
-    (1, 2),
-    (2, 3),
-    (3, 4),
-    (4, 5),
-    (5, 6),
-    (2, 7),
-    (4, 8),
-  ];
-
-  /// The node the sequence climbs to — it stays haloed, a skill still ahead.
-  static const _peak = 6;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // The layout is drawn on a 402 × 230 grid but the box may be shorter —
-    // the graph compresses vertically to fit rather than clipping.
-    final scale = size.width / 402;
-    final scaleY = size.height / 230;
-    Offset at(Offset point) => Offset(point.dx * scale, point.dy * scaleY);
-
-    // Blue bloom behind the graph, breathing on its own cycle.
-    final glowOpacity = 0.55 + 0.35 * math.sin(glow * 2 * math.pi);
-    canvas.drawCircle(
-      at(const Offset(300, 90)),
-      180 * scale,
-      Paint()
-        ..color = AppColors.accentPrimary.withValues(alpha: 0.20 * glowOpacity)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60),
-    );
-
-    for (var i = 0; i < _links.length; i++) {
-      final (from, to) = _links[i];
-      // Links off the spine are the paths not taken yet: dashed, unlit.
-      final isSpine = to == from + 1;
-      final progress = _phase(start: 0.12 + i * 0.14, duration: 1.5);
-      if (progress <= 0) continue;
-
-      final a = at(_nodes[from]);
-      final b = at(_nodes[to]);
-      final head = Offset.lerp(a, b, progress)!;
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = isSpine ? 1.4 : 1.1
-        ..color = isSpine
-            ? AppColors.accentPrimary.withValues(alpha: 0.55)
-            : Colors.white.withValues(alpha: 0.12);
-
-      if (isSpine) {
-        canvas.drawLine(a, head, paint);
-      } else {
-        _dashedLine(canvas, a, head, paint);
-      }
-    }
-
-    for (var i = 0; i < _nodes.length; i++) {
-      final center = at(_nodes[i]);
-      final lit = Curves.easeOut.transform(
-        _phase(start: 0.3 + i * 0.16, duration: 0.9),
-      );
-      final radius = (i == _peak ? 12.0 : 9.5) * scale;
-
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..color = Color.lerp(
-            AppColors.bg.withValues(alpha: 0.7),
-            AppColors.accentPrimary.withValues(alpha: 0.16),
-            lit,
-          )!,
-      );
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.3
-          ..color = Color.lerp(
-            Colors.white.withValues(alpha: 0.16),
-            AppColors.accentPrimary,
-            lit,
-          )!,
-      );
-
-      // The peak keeps a slow ring pushing outward once it is lit.
-      if (i == _peak && lit > 0) {
-        canvas.drawCircle(
-          center,
-          radius * (1 + 1.1 * halo),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.2
-            ..color = AppColors.accentPrimary
-                .withValues(alpha: 0.5 * (1 - halo) * lit),
-        );
-      }
-    }
-  }
-
-  /// 0 before [start], 1 once [duration] has passed, linear between.
-  double _phase({required double start, required double duration}) {
-    return ((seconds - start) / duration).clamp(0.0, 1.0);
-  }
-
-  void _dashedLine(Canvas canvas, Offset a, Offset b, Paint paint) {
-    const dash = 3.0, gap = 5.0;
-    final total = (b - a).distance;
-    if (total == 0) return;
-    final step = (b - a) / total;
-    for (var travelled = 0.0; travelled < total; travelled += dash + gap) {
-      final end = math.min(travelled + dash, total);
-      canvas.drawLine(a + step * travelled, a + step * end, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ConstellationPainter oldDelegate) =>
-      oldDelegate.seconds != seconds ||
-      oldDelegate.halo != halo ||
-      oldDelegate.glow != glow;
 }
