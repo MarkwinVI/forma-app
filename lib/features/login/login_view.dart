@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart'
@@ -69,21 +70,6 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  static const _values = [
-    (
-      'Learn cool calisthenics skills',
-      'A program built around your level and goals.',
-    ),
-    (
-      'Track progress',
-      'Watch your strength climb toward elite skills.',
-    ),
-    (
-      'Get world class advice',
-      'Every skill broken into steps that work.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,43 +80,34 @@ class _LoginViewState extends State<LoginView> {
           children: [
             // The pitch scrolls if it must; the sign-in block below never
             // moves.
-            Expanded(
+            const Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 16),
+                padding: EdgeInsets.only(top: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 22),
                       child: _BrandMark(),
                     ),
                     // Full-bleed: the graph runs past the page margin on
                     // both sides.
-                    const _ConstellationHero(),
+                    _ConstellationHero(),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 30, 22, 0),
+                      padding: EdgeInsets.fromLTRB(22, 30, 22, 0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _HeroText(),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.only(top: 4),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: AppColors.divider),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                for (var i = 0; i < _values.length; i++)
-                                  _ValueRow(
-                                    name: _values[i].$1,
-                                    sub: _values[i].$2,
-                                    last: i == _values.length - 1,
-                                  ),
-                              ],
+                          _WelcomeHeadline(),
+                          SizedBox(height: 18),
+                          Text(
+                            'Every calisthenics skill, broken into steps. '
+                            'Forma builds workouts around the ones you train '
+                            'and moves you up as you master each one.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              height: 1.6,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -211,77 +188,99 @@ class _BrandMark extends StatelessWidget {
   }
 }
 
-class _HeroText extends StatelessWidget {
-  const _HeroText();
+/// "From your first <skill> to the <skill>" — real moves only, cycling for as
+/// long as the page is up.
+class _WelcomeHeadline extends StatefulWidget {
+  const _WelcomeHeadline();
 
   @override
-  Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text.rich(
-          TextSpan(
-            style: TextStyle(
-              fontSize: 44,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.76,
-              height: 0.98,
-              color: AppColors.textPrimary,
-            ),
-            children: [
-              TextSpan(text: 'Level up\n'),
-              TextSpan(
-                text: 'your body.',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  State<_WelcomeHeadline> createState() => _WelcomeHeadlineState();
 }
 
-class _ValueRow extends StatelessWidget {
-  final String name;
-  final String sub;
-  final bool last;
+class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
+  static const _pairs = [
+    ('pull-up', 'muscle-up'),
+    ('push-up', 'handstand'),
+    ('squat', 'l-sit'),
+  ];
+  static const _style = TextStyle(
+    fontSize: 31,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.8,
+    height: 1.16,
+    color: AppColors.textPrimary,
+  );
 
-  const _ValueRow({required this.name, required this.sub, required this.last});
+  int _index = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _schedule();
+  }
+
+  /// Cycles for as long as the page is on screen — it never settles.
+  void _schedule() {
+    _timer = Timer(
+      Duration(milliseconds: _index == 0 ? 1250 : 1450),
+      () {
+        if (!mounted) return;
+        setState(() => _index = (_index + 1) % _pairs.length);
+        _schedule();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Widget _slot(String word) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 420),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.5),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.centerLeft,
+        children: [...previous, if (current != null) current],
+      ),
+      child: Text(
+        word,
+        key: ValueKey(word),
+        style: _style.copyWith(color: AppColors.accentPrimary),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 13, bottom: 14),
-      decoration: BoxDecoration(
-        border: last
-            ? null
-            : const Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 18.5,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.37,
-              height: 1.15,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            sub,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
+    final pair = _pairs[_index];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('From your first', style: _style),
+        _slot(pair.$1),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('to the ', style: _style),
+            Flexible(child: _slot(pair.$2)),
+          ],
+        ),
+      ],
     );
   }
 }

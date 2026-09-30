@@ -16,7 +16,7 @@ import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/onboarding_service.dart';
 
-/// Post-signup onboarding: welcome hook → three grounded beats (the skill tree
+/// Post-signup onboarding: three grounded beats (the skill tree
 /// route, the workout that levels up, the data loop that eases you back) →
 /// archetype radar → about you → ready. Shown once per account; the answers are
 /// saved to `user_onboarding_profiles` when the last step is confirmed.
@@ -180,11 +180,10 @@ class OnboardingView extends StatefulWidget {
 }
 
 class _OnboardingViewState extends State<OnboardingView> {
-  static const _stepCount = 7;
+  static const _stepCount = 6;
 
   /// One `$screen` name per step, in step order.
   static const _stepScreenNames = [
-    'onboarding_welcome',
     'onboarding_skills',
     'onboarding_workout',
     'onboarding_data',
@@ -194,7 +193,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   ];
 
   /// The step that tints the progress bar with the picked archetype.
-  static const _radarStep = 4;
+  static const _radarStep = 3;
 
   int _step = 0;
   int _dir = 1;
@@ -274,7 +273,6 @@ class _OnboardingViewState extends State<OnboardingView> {
   @override
   Widget build(BuildContext context) {
     final steps = [
-      _buildWelcome(),
       _buildSkillsBeat(),
       _buildWorkoutBeat(),
       _buildDataBeat(),
@@ -282,11 +280,8 @@ class _OnboardingViewState extends State<OnboardingView> {
       _buildAboutYou(),
       _buildReady(),
     ];
-    final cta = _step == 0
-        ? 'Get started'
-        : _isLast
-            ? (_saving ? 'Saving…' : 'Enter Forma')
-            : 'Continue';
+    final cta =
+        _isLast ? (_saving ? 'Saving…' : 'Enter Forma') : 'Continue';
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -381,45 +376,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 0: welcome ──
-
-  Widget _buildWelcome() {
-    return const Stack(
-      children: [
-        Positioned(
-          top: 40,
-          left: -80,
-          child: _AccentGlow(size: 320),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Rise(index: 0, child: _WelcomeHeadline()),
-              SizedBox(height: 18),
-              _Rise(
-                index: 1,
-                child: Text(
-                  'Every calisthenics skill, broken into steps. Forma builds '
-                  'workouts around the ones you train and moves you up as '
-                  'you master each one.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.6,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Steps 1–3: the narrative beats ──
+  // ── Steps 0–2: the narrative beats ──
 
   Widget _buildSkillsBeat() {
     return const _NarrativeSlide(
@@ -451,7 +408,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 4: archetype radar ──
+  // ── Step 3: archetype radar ──
 
   Widget _buildRadarStep() {
     final arch = _archetype;
@@ -539,7 +496,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 5: about you ──
+  // ── Step 4: about you ──
 
   Widget _buildAboutYou() {
     return Padding(
@@ -700,7 +657,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 6: ready ──
+  // ── Step 5: ready ──
 
   Widget _buildReady() {
     return Stack(
@@ -838,7 +795,7 @@ class _RiseState extends State<_Rise> with SingleTickerProviderStateMixin {
   }
 }
 
-/// Soft accent bloom behind the welcome and ready screens.
+/// Soft accent bloom behind the ready screen.
 class _AccentGlow extends StatelessWidget {
   final double size;
 
@@ -865,106 +822,7 @@ class _AccentGlow extends StatelessWidget {
   }
 }
 
-// ── Step 0: the swapping headline ───────────────────────────────────────────
-
-/// "From your first <skill> to the <skill>" — real moves only, cycling for as
-/// long as the step is up.
-class _WelcomeHeadline extends StatefulWidget {
-  const _WelcomeHeadline();
-
-  @override
-  State<_WelcomeHeadline> createState() => _WelcomeHeadlineState();
-}
-
-class _WelcomeHeadlineState extends State<_WelcomeHeadline> {
-  static const _pairs = [
-    ('pull-up', 'muscle-up'),
-    ('push-up', 'handstand'),
-    ('squat', 'l-sit'),
-  ];
-  static const _style = TextStyle(
-    fontSize: 31,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.8,
-    height: 1.16,
-    color: AppColors.textPrimary,
-  );
-
-  int _index = 0;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _schedule();
-  }
-
-  /// Cycles for as long as the step is on screen — it never settles.
-  void _schedule() {
-    _timer = Timer(
-      Duration(milliseconds: _index == 0 ? 1250 : 1450),
-      () {
-        if (!mounted) return;
-        setState(() => _index = (_index + 1) % _pairs.length);
-        _schedule();
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  Widget _slot(String word) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 420),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.5),
-            end: Offset.zero,
-          ).animate(animation),
-          child: child,
-        ),
-      ),
-      layoutBuilder: (current, previous) => Stack(
-        alignment: Alignment.centerLeft,
-        children: [...previous, if (current != null) current],
-      ),
-      child: Text(
-        word,
-        key: ValueKey(word),
-        style: _style.copyWith(color: AppColors.accentPrimary),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pair = _pairs[_index];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('From your first', style: _style),
-        _slot(pair.$1),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('to the ', style: _style),
-            Flexible(child: _slot(pair.$2)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ── Steps 1–3: narrative slide shell ────────────────────────────────────────
+// ── Steps 0–2: narrative slide shell ────────────────────────────────────────
 
 class _NarrativeSlide extends StatelessWidget {
   final String title;
@@ -1036,7 +894,7 @@ class _NarrativeSlide extends StatelessWidget {
   }
 }
 
-// ── Step 1: the real skill-tree map, filling in ─────────────────────────────
+// ── Step 0: the real skill-tree map, filling in ─────────────────────────────
 
 /// The Pullups tree drawn by the same [SkillTreeMap] the Skills tab uses,
 /// walked forward along one route (One Arm) a step at a time: the working
@@ -1288,7 +1146,7 @@ class _RouteStepRow extends StatelessWidget {
   }
 }
 
-// ── Step 2: reps build until the exercise levels up ─────────────────────────
+// ── Step 1: reps build until the exercise levels up ─────────────────────────
 
 class _LevelUpBeat extends StatefulWidget {
   const _LevelUpBeat();
@@ -1548,7 +1406,7 @@ class _LevelUpBeatState extends State<_LevelUpBeat> {
   }
 }
 
-// ── Step 3: the reps graph drives the plan both ways ────────────────────────
+// ── Step 2: the reps graph drives the plan both ways ────────────────────────
 
 class _AdaptBeat extends StatefulWidget {
   const _AdaptBeat();
@@ -1946,12 +1804,16 @@ class _RadarChart extends StatelessWidget {
   static const double defaultRadius = 96;
   static const double _margin = 40; // room for the axis labels
 
+  /// SKILLS and PHYSIQUE sit above and below the ring and need little room;
+  /// STRENGTH and MOBILITY sit beside it and need their whole width.
+  static const double _sideMargin = 68;
+
   final bool balanced;
   final double angleDeg;
   final bool interactive;
   final void Function(bool balanced, double angleDeg)? onChanged;
 
-  /// Ring radius; the chart is a square of 2 × (radius + label margin).
+  /// Ring radius; the chart is 2 × (radius + label margin) on each side.
   static const double radius = defaultRadius;
 
   const _RadarChart({
@@ -1961,11 +1823,11 @@ class _RadarChart extends StatelessWidget {
     this.onChanged,
   });
 
-  /// The chart's side for a given ring radius.
+  /// The chart's height for a given ring radius.
   static double sideFor(double radius) => 2 * (radius + _margin);
 
-  void _handle(Offset local, double side) {
-    final delta = local - Offset(side / 2, side / 2);
+  void _handle(Offset local, Size size) {
+    final delta = local - size.center(Offset.zero);
     if (delta.distance < radius * 0.3) {
       onChanged!(true, angleDeg);
     } else {
@@ -1975,10 +1837,10 @@ class _RadarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final side = sideFor(radius);
+    final size = Size(2 * (radius + _sideMargin), sideFor(radius));
     final chart = SizedBox(
-      width: side,
-      height: side,
+      width: size.width,
+      height: size.height,
       child: CustomPaint(
         painter: _RadarPainter(
           balanced: balanced,
@@ -2004,8 +1866,8 @@ class _RadarChart extends StatelessWidget {
           'options below it.',
       value: archetype.name,
       child: GestureDetector(
-        onPanDown: (d) => _handle(d.localPosition, side),
-        onPanUpdate: (d) => _handle(d.localPosition, side),
+        onPanDown: (d) => _handle(d.localPosition, size),
+        onPanUpdate: (d) => _handle(d.localPosition, size),
         child: chart,
       ),
     );
@@ -2116,7 +1978,12 @@ class _RadarPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      final pos = _pt(c, axis.deg, radius + 22);
+      // Anchored by the edge nearest the ring, so a wide label beside it
+      // grows outward instead of back across the circle.
+      final rad = axis.deg * math.pi / 180;
+      final reach = (math.cos(rad) * painter.width / 2).abs() +
+          (math.sin(rad) * painter.height / 2).abs();
+      final pos = _pt(c, axis.deg, radius + 12 + reach);
       painter.paint(
         canvas,
         pos - Offset(painter.width / 2, painter.height / 2),

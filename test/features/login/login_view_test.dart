@@ -25,7 +25,8 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: LoginView()));
 
     expect(find.text('FORMA'), findsOneWidget);
-    expect(find.textContaining('Level up'), findsOneWidget);
+    expect(find.text('From your first'), findsOneWidget);
+    expect(find.text('pull-up'), findsOneWidget);
     expect(find.textContaining('Calisthenics decoded'), findsNothing);
     // A Sign in with Apple button to the HIG's proportions: the logo, one
     // of the sanctioned labels, 44pt tall.
@@ -35,7 +36,7 @@ void main() {
       tester.getSize(find.bySemanticsLabel('Continue with Apple')).height,
       44,
     );
-    expect(find.text('Track progress'), findsOneWidget);
+    expect(find.text('Track progress'), findsNothing);
 
     // The hero loops forever, so drive it through a full run: a frame that
     // throws while painting fails here rather than on a device.
