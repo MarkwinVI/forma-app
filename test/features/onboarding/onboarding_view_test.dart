@@ -22,7 +22,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 900));
   }
 
-  testWidgets('walks through all six steps and reflects the answers',
+  testWidgets('walks through all five steps and reflects the answers',
       (tester) async {
     await pumpFlow(tester);
 
@@ -85,11 +85,11 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Male'));
     await tester.pump();
-    await next(tester, 'Continue');
 
-    // Step 5: ready.
-    expect(find.text('Welcome to Forma'), findsOneWidget);
-    expect(find.text('Enter Forma'), findsOneWidget);
+    // The last step: no welcome screen after it — the app carries on into
+    // building the program.
+    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Enter Forma'), findsNothing);
   });
 
   testWidgets('the age slider is a real slider that announces its value',

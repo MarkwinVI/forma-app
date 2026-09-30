@@ -10,9 +10,13 @@ import 'core/widgets/forma_splash.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
+import 'data/services/dev_tools_service.dart';
 import 'data/services/membership_service.dart';
 import 'data/services/onboarding_service.dart';
+import 'data/services/training_program_store_service.dart';
 import 'data/services/weight_unit_service.dart';
+import 'features/home/program_setup_completion.dart';
+import 'features/home/program_setup_view.dart';
 import 'features/login/login_view.dart';
 import 'features/onboarding/onboarding_view.dart';
 import 'features/progress/skill_wheel_bundle.dart';
@@ -147,7 +151,7 @@ class _AppEntry extends StatelessWidget {
 }
 
 /// Routes a signed-in user through onboarding until they have a saved
-/// onboarding profile, then into the main app.
+/// onboarding profile, then on to [_ProgramGate].
 class _OnboardingGate extends StatefulWidget {
   final String userId;
 
@@ -172,41 +176,28 @@ class _OnboardingGateState extends State<_OnboardingGate> {
 
   void _check() {
     _completed = OnboardingService().hasCompletedOnboarding(widget.userId);
+    // The program gate asks next; start its lookup behind onboarding so the
+    // answer is usually in by the time onboarding is.
+    TrainingProgramStoreService().fetchProgramLogic(widget.userId).ignore();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_finishedHere) return const ShellView();
+    final programGate = _ProgramGate(userId: widget.userId);
+    if (_finishedHere) return programGate;
     return FutureBuilder<bool>(
       future: _completed,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Could not load your profile.',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => setState(_check),
-                    child: const Text(
-                      'Retry',
-                      style: TextStyle(color: AppColors.accentPrimary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          return _GateLoadFailed(
+            message: 'Could not load your profile.',
+            onRetry: () => setState(_check),
           );
         }
         if (!snapshot.hasData) {
           return const Scaffold(body: Center(child: LoadingIndicator()));
         }
-        if (snapshot.data!) return const ShellView();
+        if (snapshot.data!) return programGate;
         return OnboardingView(
           // Block body: the arrow form would return the assigned Future out
           // of the setState callback, which setState rejects.
@@ -216,6 +207,115 @@ class _OnboardingGateState extends State<_OnboardingGate> {
           }),
         );
       },
+    );
+  }
+}
+
+/// Routes an onboarded user into the setup wizard until they have a
+/// training program, then into the main app. The tabs have no screens for an
+/// account without a program, so the shell is never shown before one exists.
+class _ProgramGate extends StatefulWidget {
+  final String userId;
+
+  const _ProgramGate({required this.userId});
+
+  @override
+  State<_ProgramGate> createState() => _ProgramGateState();
+}
+
+class _ProgramGateState extends State<_ProgramGate> {
+  late Future<bool> _hasProgram;
+
+  /// Set when the wizard finishes right here, so the gate goes straight on
+  /// to the shell without re-reading what it just wrote.
+  var _builtHere = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+    DevToolsService.resetSignal.addListener(_onReset);
+  }
+
+  @override
+  void dispose() {
+    DevToolsService.resetSignal.removeListener(_onReset);
+    super.dispose();
+  }
+
+  void _check() {
+    _hasProgram = TrainingProgramStoreService()
+        .fetchProgramLogic(widget.userId)
+        .then((logic) => logic != null);
+  }
+
+  /// A dev reset deleted the program out from under the shell: back to the
+  /// wizard.
+  void _onReset() {
+    if (!mounted) return;
+    setState(() {
+      _builtHere = false;
+      _check();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_builtHere) return const ShellView();
+    return FutureBuilder<bool>(
+      future: _hasProgram,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _GateLoadFailed(
+            message: 'Could not load your program.',
+            onRetry: () => setState(_check),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Scaffold(body: Center(child: LoadingIndicator()));
+        }
+        if (snapshot.data!) return const ShellView();
+        return ProgramSetupView(
+          onComplete: (result) => completeProgramSetup(
+            userId: widget.userId,
+            result: result,
+          ),
+          onDone: () => setState(() => _builtHere = true),
+        );
+      },
+    );
+  }
+}
+
+/// What a gate shows when its lookup failed: the problem, and Retry.
+class _GateLoadFailed extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _GateLoadFailed({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: onRetry,
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: AppColors.accentPrimary),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

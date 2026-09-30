@@ -26,10 +26,15 @@ class DevToolsService {
   final _progressionService = ExerciseProgressionService();
   final _devClockService = DevClockService();
 
+  /// Bumped after [resetToNewUser]. The app has no screens for an account
+  /// without a program, so the entry gate listens and sends the user back
+  /// into the setup wizard.
+  static final resetSignal = ValueNotifier<int>(0);
+
   /// Wipes everything that makes this account look like an existing user:
   /// workout history, exercise progress, branch choices, and the training
-  /// program itself. The auth session and `users` row are kept, so the app
-  /// lands on the new-user home state.
+  /// program itself. The auth session, `users` row and onboarding answers
+  /// are kept, so the app lands on the setup wizard.
   Future<void> resetToNewUser(String userId) async {
     await _devClockService.reset();
     // Children before parents to respect foreign keys.
@@ -49,6 +54,7 @@ class DevToolsService {
     await _client.from('user_training_programs').delete().eq('user_id', userId);
     // These deletes bypass the store service, so its cache must be told.
     TrainingProgramStoreService.invalidateLogicCache();
+    resetSignal.value += 1;
   }
 
   /// Fast-forwards the local developer clock by one day. Workout history stays

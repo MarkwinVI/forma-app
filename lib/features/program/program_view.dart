@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/loading_indicator.dart';
-import '../../core/widgets/no_program_state.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/exercise_model.dart';
@@ -10,11 +9,8 @@ import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/training_program_model.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/progress_service.dart';
-import '../../data/services/training_program_service.dart';
 import '../../data/services/training_program_store_service.dart';
 import '../home/program_overview_view.dart';
-import '../home/program_setup_completion.dart';
-import '../home/program_setup_view.dart';
 import '../progress/skill_wheel_bundle.dart';
 
 /// Program tab — hosts the program overview (training days, split, sessions,
@@ -22,14 +18,9 @@ import '../progress/skill_wheel_bundle.dart';
 class ProgramView extends StatefulWidget {
   final bool isActive;
 
-  /// Fired after the setup wizard has written a program and been dismissed,
-  /// so the shell can move the user on to Progress, their new home tab.
-  final VoidCallback? onProgramCreated;
-
   const ProgramView({
     super.key,
     this.isActive = false,
-    this.onProgramCreated,
   });
 
   @override
@@ -38,15 +29,9 @@ class ProgramView extends StatefulWidget {
 
 class _ProgramViewState extends State<ProgramView> {
   final _progressService = ProgressService();
-  final _trainingProgramService = TrainingProgramService();
   final _trainingProgramStoreService = TrainingProgramStoreService();
 
   bool _loading = true;
-
-  /// The last fetch threw. Kept apart from "no program" on purpose: a
-  /// failed read must never invite the user to build over a program that
-  /// may well exist.
-  bool _loadFailed = false;
   Map<String, ExerciseStatus> _progressMap = {};
   TrainingProgramLogicSnapshot? _logicSnapshot;
 
@@ -57,7 +42,6 @@ class _ProgramViewState extends State<ProgramView> {
   @override
   void initState() {
     super.initState();
-    programCreatedSignal.addListener(_onProgramCreated);
     // The landing gate has usually already loaded progress and program
     // logic into the warm bundle; start from that instead of a loader, and
     // let the fresh read below replace it quietly.
@@ -71,27 +55,12 @@ class _ProgramViewState extends State<ProgramView> {
   }
 
   @override
-  void dispose() {
-    programCreatedSignal.removeListener(_onProgramCreated);
-    super.dispose();
-  }
-
-  /// A program was written — here or on another tab. Re-read now, and while
-  /// the read is out show the loader rather than the empty state that is
-  /// about to be wrong.
-  void _onProgramCreated() {
-    if (!mounted) return;
-    if (_logicSnapshot == null) setState(() => _loading = true);
-    _loadData();
-  }
-
-  @override
   void didUpdateWidget(covariant ProgramView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
-    // this tab becomes active — a program created or reset elsewhere would
-    // otherwise leave this tab stale.
+    // this tab becomes active — progress made on another tab would otherwise
+    // leave this one stale.
     if (!oldWidget.isActive && widget.isActive) {
       _loadData();
     }
@@ -114,7 +83,6 @@ class _ProgramViewState extends State<ProgramView> {
       final progress = results[0] as List<ExerciseProgress>;
       final fetched = results[1] as TrainingProgramLogicSnapshot?;
       setState(() {
-        _loadFailed = false;
         _progressMap = {
           for (final item in progress) item.exerciseId: item.status,
         };
@@ -130,18 +98,12 @@ class _ProgramViewState extends State<ProgramView> {
     } catch (error, stackTrace) {
       debugPrint('Failed to load program data: $error\n$stackTrace');
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _loadFailed = true;
-      });
+      setState(() => _loading = false);
     }
   }
 
   Future<void> _retryLoad() async {
-    setState(() {
-      _loading = true;
-      _loadFailed = false;
-    });
+    setState(() => _loading = true);
     await _loadData();
   }
 
@@ -173,40 +135,6 @@ class _ProgramViewState extends State<ProgramView> {
     return snapshot;
   }
 
-  Future<void> _openProgramSetup() async {
-    var created = false;
-    // The setup wizard takes over the whole screen, above the tab bar.
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => ProgramSetupView(
-          onComplete: (result) async {
-            await _completeProgramSetup(result);
-            created = true;
-          },
-        ),
-      ),
-    );
-    // Abandoning the wizard midway must not move the user, so the redirect
-    // only fires once a program was actually written and the wizard closed.
-    if (created) widget.onProgramCreated?.call();
-    // Re-fetch so the tab reflects the freshly created program even if the
-    // user abandoned the wizard midway on a stale state.
-    await _loadData();
-  }
-
-  Future<void> _completeProgramSetup(ProgramSetupResult result) async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    await completeProgramSetup(
-      userId: userId,
-      result: result,
-      trainingProgramService: _trainingProgramService,
-      storeService: _trainingProgramStoreService,
-    );
-    await _loadData();
-  }
-
   @override
   Widget build(BuildContext context) {
     final snapshot = _logicSnapshot;
@@ -218,34 +146,14 @@ class _ProgramViewState extends State<ProgramView> {
       );
     }
 
-    if (snapshot == null && _loadFailed) {
+    // No program to host: the read failed, or came back without the program
+    // the entry gate saw — either way, Retry.
+    if (snapshot == null) {
       return Scaffold(
         backgroundColor: AppColors.bg,
         body: SafeArea(
           bottom: false,
           child: ProgramLoadErrorState(onRetry: _retryLoad),
-        ),
-      );
-    }
-
-    if (snapshot == null) {
-      // The tab that owns setup carries the detail: what it will ask for and
-      // what comes back, over the program that does not exist yet.
-      return Scaffold(
-        backgroundColor: AppColors.bg,
-        body: SafeArea(
-          bottom: false,
-          child: RefreshIndicator(
-            color: AppColors.accentPrimary,
-            backgroundColor: AppColors.surface,
-            onRefresh: _loadData,
-            child: NoProgramState(
-              title: 'Build your training program',
-              sub: 'Answer a few questions. Forma builds your program and '
-                  'adjusts it as you get stronger.',
-              onCreateProgram: _openProgramSetup,
-            ),
-          ),
         ),
       );
     }
@@ -259,9 +167,9 @@ class _ProgramViewState extends State<ProgramView> {
   }
 }
 
-/// The Program tab when the fetch threw: names the problem, offers the one
-/// way out, and deliberately does not offer to build a program — the one on
-/// the server may be fine.
+/// The Program tab when the fetch came back without a program: names the
+/// problem and offers the one way out — the program on the server is almost
+/// certainly fine.
 ///
 /// Public for its tests.
 class ProgramLoadErrorState extends StatelessWidget {

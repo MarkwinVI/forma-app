@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
-import 'package:forma_app/features/home/getting_started_checklist.dart';
 import 'package:forma_app/features/home/program_setup_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,7 +30,12 @@ void main() {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => ProgramSetupView(onComplete: onComplete),
+                      // The host decides where "done" goes; here, back to
+                      // the page that opened it.
+                      builder: (_) => ProgramSetupView(
+                        onComplete: onComplete,
+                        onDone: () => Navigator.of(context).pop(),
+                      ),
                     ),
                   );
                 },
@@ -243,7 +247,7 @@ void main() {
     expect(result!.bodyweightKg, closeTo(74.8, 0.2));
   });
 
-  testWidgets('back button steps backwards and then leaves the wizard',
+  testWidgets('back button steps backwards, and the first step has none',
       (tester) async {
     await pumpWizard(tester, onComplete: (_) async {});
 
@@ -257,9 +261,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1 / 4'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
-    await tester.pumpAndSettle();
-    expect(find.text('Open wizard'), findsOneWidget);
+    // The wizard is the end of onboarding: nothing behind the first step.
+    expect(find.byIcon(Icons.arrow_back_rounded).hitTestable(), findsNothing);
   });
 
   testWidgets('a back gesture steps backwards rather than leaving the wizard',
@@ -282,33 +285,9 @@ void main() {
     expect(find.text('1 / 4'), findsOneWidget);
     expect(find.text('Open wizard'), findsNothing);
 
-    // Only once there is no step behind does it leave.
+    // On the first step the gesture is the system's again — here, back to
+    // the page that opened it; in the app, out of the app.
     await systemBack();
     expect(find.text('Open wizard'), findsOneWidget);
-  });
-
-  testWidgets('getting started checklist reflects program completion',
-      (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: GettingStartedChecklist(programDone: false),
-        ),
-      ),
-    );
-    expect(find.text('0 / 2'), findsOneWidget);
-    expect(find.text('Set up your training program'), findsOneWidget);
-    expect(find.text('Complete your first workout'), findsOneWidget);
-    expect(find.text('Reach your first skill level-up'), findsNothing);
-
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: GettingStartedChecklist(programDone: true),
-        ),
-      ),
-    );
-    expect(find.text('1 / 2'), findsOneWidget);
-    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
   });
 }

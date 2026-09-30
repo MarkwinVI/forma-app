@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/core/widgets/app_nav_bar.dart';
 import 'package:forma_app/core/widgets/tab_reset.dart';
 import 'package:forma_app/data/services/membership_service.dart';
-import 'package:forma_app/features/home/program_setup_completion.dart';
 import 'package:forma_app/features/progress/progress_view.dart';
 import 'package:forma_app/features/shell/shell_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -141,14 +140,10 @@ void main() {
   });
 
   testWidgets(
-      'with a program and no membership the training tabs lock under the '
-      'dock, and Profile stays open', (tester) async {
+      'with no membership the training tabs lock under the dock, and '
+      'Profile stays open', (tester) async {
     await MembershipService.instance.load('user');
     await pumpShell(tester);
-    // No signed-in user, so no program was found at landing; setup writing
-    // one is what turns the lock on.
-    expect(find.text('Start free trial'), findsNothing);
-    programCreatedSignal.value++;
     await tester.pumpAndSettle();
 
     expect(find.byType(ProgressView), findsOneWidget);

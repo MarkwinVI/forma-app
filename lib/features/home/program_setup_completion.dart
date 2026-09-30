@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import '../../data/models/equipment_model.dart';
 import '../../data/models/skill_track_model.dart';
 import '../../data/models/training_program_model.dart';
@@ -13,14 +11,7 @@ import '../../data/services/user_profile_service.dart';
 import '../progress/skill_wheel_bundle.dart';
 import 'program_setup_view.dart';
 
-/// Bumped every time setup writes a program. The tabs are kept alive in the
-/// shell whether or not they are showing, so each one listens and re-reads
-/// itself at once — while the wizard's ready screen is still up — rather
-/// than waiting to be looked at and showing the empty state it last drew.
-final ValueNotifier<int> programCreatedSignal = ValueNotifier(0);
-
-/// Everything a finished "Build your program" wizard writes, in one place so
-/// the Train and Program tabs cannot drift apart on what setup means:
+/// Everything a finished "Build your program" wizard writes, in one place:
 /// the program row (split, frequency, answers), the skill tracks the split
 /// trains, and the starting position the reported strength implies.
 Future<void> completeProgramSetup({
@@ -91,12 +82,9 @@ Future<void> completeProgramSetup({
     plan: plan,
   );
 
-  // The wizard lands on Progress next. Start that tab's load now, while its
-  // ready screen is still up, so Progress opens on the new program rather
-  // than on the empty state it last showed and then catches up — and tell
-  // the other tabs, which do the same.
+  // The wizard's ready screen shows this map, and the app opens on Progress
+  // after it. Start the load now so both draw the new program at once.
   warmSkillWheelBundle(userId);
-  programCreatedSignal.value += 1;
 
   AnalyticsService.capture('program_created', properties: {
     'program_id': snapshot.program.id,

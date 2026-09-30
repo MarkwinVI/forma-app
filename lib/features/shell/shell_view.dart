@@ -7,10 +7,8 @@ import '../../core/widgets/tab_reset.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/membership_service.dart';
-import '../../data/services/training_program_store_service.dart';
 import '../data/data_view.dart';
 import '../home/home_view.dart';
-import '../home/program_setup_completion.dart';
 import '../membership/membership_gate.dart';
 import '../membership/membership_scope.dart';
 import '../program/program_view.dart';
@@ -69,45 +67,14 @@ class _ShellViewState extends State<ShellView> {
     for (var i = 0; i < 4; i++) ScrollController(),
   ];
 
-  /// Whether a program exists — what turns the membership lock on. Read
-  /// with the landing tab, then kept current by setup writing a program and
-  /// by re-reading (from the store's cache) whenever a tab is opened. A
-  /// listenable, like [_activeIndex], because the gates live inside the
-  /// tabs' navigator routes.
-  final _hasProgram = ValueNotifier<bool>(false);
-
   @override
   void initState() {
     super.initState();
-    programCreatedSignal.addListener(_onProgramCreated);
     _resolveLandingTab();
-  }
-
-  /// Setup wrote a program: the lock applies from now on, whether the
-  /// wizard's ready screen ends in a purchase or in "Not now".
-  void _onProgramCreated() {
-    _hasProgram.value = true;
-  }
-
-  /// The store's cached answer — a real fetch only after a write cleared
-  /// it — so a dev reset or a deleted program lifts the lock on the next
-  /// tab switch without a query per tap.
-  Future<void> _refreshHasProgram() async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-    try {
-      final logic =
-          await TrainingProgramStoreService().fetchProgramLogic(userId);
-      if (mounted) _hasProgram.value = logic != null;
-    } catch (_) {
-      // Keep what we had; a failed read must not flip the lock either way.
-    }
   }
 
   @override
   void dispose() {
-    programCreatedSignal.removeListener(_onProgramCreated);
-    _hasProgram.dispose();
     for (final controller in _tabScrollControllers) {
       controller.dispose();
     }
@@ -136,7 +103,6 @@ class _ShellViewState extends State<ShellView> {
   void _onTabTapped(int index) {
     if (index != _currentIndex) {
       _selectTab(index);
-      _refreshHasProgram();
       return;
     }
 
@@ -172,60 +138,32 @@ class _ShellViewState extends State<ShellView> {
     });
   }
 
-  /// Without a program the app opens on the Program tab, whose whole empty
-  /// state is about building one. Anything that goes wrong lands on
-  /// Progress, the normal home — a failed lookup should not strand people
-  /// in setup.
-  ///
-  /// The membership is awaited alongside, so the first frame already knows
-  /// whether the tab is locked: main() started both loads behind the
-  /// splash, and the membership load falls back to its cache on its own.
+  /// The app always opens on Progress. The membership is awaited first, so
+  /// the first frame already knows whether the tab is locked: main() started
+  /// the load behind the splash, and it falls back to its cache on its own.
   Future<void> _resolveLandingTab() async {
     final userId = AuthService().currentUser?.id;
-    if (userId == null) {
-      if (mounted) _selectTab(_progressTab);
-      return;
+    if (userId != null) {
+      try {
+        await MembershipService.instance.load(userId);
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load the membership: $error\n$stackTrace');
+      }
     }
-
-    var landing = _progressTab;
-    var hasProgram = false;
-    try {
-      final (logic, _) = await (
-        TrainingProgramStoreService().fetchProgramLogic(userId),
-        MembershipService.instance.load(userId),
-      ).wait;
-      hasProgram = logic != null;
-      if (!hasProgram) landing = _programTab;
-    } catch (error, stackTrace) {
-      debugPrint('Failed to resolve the landing tab: $error\n$stackTrace');
-    }
-    if (!mounted) return;
-    _hasProgram.value = hasProgram;
-    _selectTab(landing);
+    if (mounted) _selectTab(_progressTab);
   }
 
-  // Every tab's "Create my program" opens the setup wizard right where the
-  // user is, and a freshly built program lands them on Progress, the tab
-  // the app treats as home once a program exists. Progress hosts its own
-  // completion — the wizard already leaves the user there.
-  //
-  // Progress, Train and Program sit behind the membership gate: with a
-  // program but no membership they show dimmed under the lock dock. Profile
+  // Progress, Train and Program sit behind the membership gate: without a
+  // membership they show dimmed under the lock dock. Profile
   // never does — sign out, account deletion and the subscription row have
   // to stay reachable whatever the membership says.
   Widget _tabPage(int tab, int activeIndex) {
     final Widget page;
     switch (tab) {
       case _trainTab:
-        page = HomeView(
-          isActive: activeIndex == _trainTab,
-          onProgramCreated: () => _selectTab(_progressTab),
-        );
+        page = HomeView(isActive: activeIndex == _trainTab);
       case _programTab:
-        page = ProgramView(
-          isActive: activeIndex == _programTab,
-          onProgramCreated: () => _selectTab(_progressTab),
-        );
+        page = ProgramView(isActive: activeIndex == _programTab);
       case _profileTab:
         return DataView(isActive: activeIndex == _profileTab);
       case _progressTab:
@@ -233,7 +171,6 @@ class _ShellViewState extends State<ShellView> {
         page = ProgressView(isActive: activeIndex == _progressTab);
     }
     return MembershipGate(
-      hasProgram: _hasProgram,
       service: MembershipService.instance,
       child: page,
     );

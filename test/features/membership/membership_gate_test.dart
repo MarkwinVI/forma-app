@@ -37,18 +37,13 @@ void main() {
     return (s, gateway);
   }
 
-  Future<int> pump(
-    WidgetTester tester,
-    MembershipService service, {
-    required bool hasProgram,
-  }) async {
+  Future<int> pump(WidgetTester tester, MembershipService service) async {
     var taps = 0;
     await tester.pumpWidget(MaterialApp(
       home: MembershipScope(
         service: service,
         child: Scaffold(
           body: MembershipGate(
-            hasProgram: ValueNotifier(hasProgram),
             service: service,
             child: Center(
               child: TextButton(
@@ -80,10 +75,10 @@ void main() {
       );
 
   testWidgets(
-      'with a program and no membership, the page is inert under '
-      'the lock dock', (tester) async {
+      'without a membership, the page is inert under the lock dock',
+      (tester) async {
     final (s, _) = await service();
-    final taps = await pump(tester, s, hasProgram: true);
+    final taps = await pump(tester, s);
 
     expect(taps, 0);
     expect(find.text('Start free trial'), findsOneWidget);
@@ -91,18 +86,9 @@ void main() {
     expect(find.textContaining('Your program is saved'), findsOneWidget);
   });
 
-  testWidgets(
-      'without a program there is no lock — setup must stay '
-      'reachable', (tester) async {
-    final (s, _) = await service();
-    final taps = await pump(tester, s, hasProgram: false);
-    expect(taps, 1);
-    expect(find.byIcon(Icons.lock_rounded), findsNothing);
-  });
-
   testWidgets('the copy follows how the user got locked out', (tester) async {
     final (s, _) = await service(account: trialEnded());
-    await pump(tester, s, hasProgram: true);
+    await pump(tester, s);
     expect(find.text('Your free trial has ended'), findsOneWidget);
     expect(find.text(r'Subscribe · $9.99 / month'), findsOneWidget);
     expect(find.textContaining(r'or $49.99 / year'), findsOneWidget);
@@ -110,7 +96,7 @@ void main() {
 
   testWidgets('a purchase landing lifts the lock in place', (tester) async {
     final (s, gateway) = await service();
-    expect(await pump(tester, s, hasProgram: true), 0);
+    expect(await pump(tester, s), 0);
 
     gateway.emit(
       FakePurchasesGateway.activeAccount(productId: MembershipProducts.monthly),

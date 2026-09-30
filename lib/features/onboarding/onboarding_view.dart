@@ -18,8 +18,9 @@ import '../../data/services/onboarding_service.dart';
 
 /// Post-signup onboarding: three grounded beats (the skill tree
 /// route, the workout that levels up, the data loop that eases you back) →
-/// archetype radar → about you → ready. Shown once per account; the answers are
-/// saved to `user_onboarding_profiles` when the last step is confirmed.
+/// archetype radar → about you. Shown once per account; the answers are saved
+/// to `user_onboarding_profiles` when the last step is confirmed, and the app
+/// carries straight on into building the program.
 
 // ── Shared type styles ──────────────────────────────────────────────────────
 
@@ -180,7 +181,7 @@ class OnboardingView extends StatefulWidget {
 }
 
 class _OnboardingViewState extends State<OnboardingView> {
-  static const _stepCount = 6;
+  static const _stepCount = 5;
 
   /// One `$screen` name per step, in step order.
   static const _stepScreenNames = [
@@ -189,7 +190,6 @@ class _OnboardingViewState extends State<OnboardingView> {
     'onboarding_data',
     'onboarding_radar',
     'onboarding_about_you',
-    'onboarding_ready',
   ];
 
   /// The step that tints the progress bar with the picked archetype.
@@ -278,10 +278,8 @@ class _OnboardingViewState extends State<OnboardingView> {
       _buildDataBeat(),
       _buildRadarStep(),
       _buildAboutYou(),
-      _buildReady(),
     ];
-    final cta =
-        _isLast ? (_saving ? 'Saving…' : 'Enter Forma') : 'Continue';
+    final cta = _isLast && _saving ? 'Saving…' : 'Continue';
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -656,75 +654,6 @@ class _OnboardingViewState extends State<OnboardingView> {
       ],
     );
   }
-
-  // ── Step 5: ready ──
-
-  Widget _buildReady() {
-    return Stack(
-      alignment: Alignment.topCenter,
-      children: [
-        const Positioned(top: 60, child: _AccentGlow(size: 300)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Rise(
-                index: 0,
-                child: Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.accentPrimary.withValues(alpha: 0.28),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.check_rounded,
-                    size: 44,
-                    color: AppColors.accentPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              const _Rise(
-                index: 2,
-                child: Text(
-                  'Welcome to Forma',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.8,
-                    height: 1.08,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _Rise(
-                index: 3,
-                child: Text(
-                  "You're saved as ${_archetype.name}. Next, build your "
-                  'program and start your first workout — Forma shapes it '
-                  'around your progress.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.55,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 // ── Entrance stagger ────────────────────────────────────────────────────────
@@ -790,33 +719,6 @@ class _RiseState extends State<_Rise> with SingleTickerProviderStateMixin {
           end: Offset.zero,
         ).animate(_animation),
         child: widget.child,
-      ),
-    );
-  }
-}
-
-/// Soft accent bloom behind the ready screen.
-class _AccentGlow extends StatelessWidget {
-  final double size;
-
-  const _AccentGlow({required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              AppColors.accentPrimary.withValues(alpha: 0.16),
-              AppColors.accentPrimary.withValues(alpha: 0),
-            ],
-            stops: const [0, 0.68],
-          ),
-        ),
       ),
     );
   }

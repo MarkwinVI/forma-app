@@ -188,7 +188,7 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
     if (confirmed != true) return;
     await _run(
       _devToolsService.resetToNewUser,
-      'Account reset — Home now shows the new-user state.',
+      'Account reset.',
     );
   }
 

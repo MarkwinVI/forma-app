@@ -2,18 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/forma_splash.dart';
-import '../../core/widgets/no_program_state.dart';
-import '../../core/widgets/type_led.dart';
 import '../../data/catalog/exercise_catalog.dart';
-import '../../data/models/exercise_model.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
-import '../../data/services/training_program_service.dart';
-import '../../data/services/training_program_store_service.dart';
 import '../exercises/exercise_detail_view.dart';
-import '../home/program_day_items.dart';
-import '../home/program_setup_completion.dart';
-import '../home/program_setup_view.dart';
+import '../program/program_view.dart';
 import 'skill_wheel_bundle.dart';
 import 'widgets/skill_wheel.dart';
 import 'widgets/skill_wheel_screen.dart';
@@ -34,9 +27,6 @@ class ProgressView extends StatefulWidget {
 }
 
 class _ProgressViewState extends State<ProgressView> {
-  final _trainingProgramService = TrainingProgramService();
-  final _trainingProgramStoreService = TrainingProgramStoreService();
-
   bool _loading = true;
   SkillWheelBundle? _bundle;
 
@@ -97,36 +87,21 @@ class _ProgressViewState extends State<ProgressView> {
       debugPrint('Failed to load progress data: $error\n$stackTrace');
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't load your progress. Pull down to retry."),
-        ),
-      );
+      // With an older wheel still up, the failure is a passing note; with
+      // nothing to show, the tab itself becomes the error state (see build).
+      if (_bundle != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Couldn't refresh your progress."),
+            action: SnackBarAction(label: 'Retry', onPressed: _retryLoad),
+          ),
+        );
+      }
     }
   }
 
-  Future<void> _openProgramSetup() async {
-    // The setup wizard takes over the whole screen, above the tab bar.
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => ProgramSetupView(
-          onComplete: _completeProgramSetup,
-        ),
-      ),
-    );
-    await _loadData();
-  }
-
-  Future<void> _completeProgramSetup(ProgramSetupResult result) async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    await completeProgramSetup(
-      userId: userId,
-      result: result,
-      trainingProgramService: _trainingProgramService,
-      storeService: _trainingProgramStoreService,
-    );
+  Future<void> _retryLoad() async {
+    setState(() => _loading = true);
     await _loadData();
   }
 
@@ -153,7 +128,9 @@ class _ProgressViewState extends State<ProgressView> {
   @override
   Widget build(BuildContext context) {
     final bundle = _bundle;
-    final empty = !_loading &&
+    // No wheel to draw: the read failed, or came back without the program
+    // the entry gate saw — either way, Retry.
+    final failed = !_loading &&
         (bundle == null || !bundle.hasProgram || bundle.families.isEmpty);
 
     return Scaffold(
@@ -166,8 +143,8 @@ class _ProgressViewState extends State<ProgressView> {
             // not a loader — and it never appears when the warm-up already
             // landed (see initState).
             ? const FormaSplash.endFrame(background: AppColors.bg)
-            : empty
-                ? _ProgressEmptyState(onCreateProgram: _openProgramSetup)
+            : failed
+                ? ProgramLoadErrorState(onRetry: _retryLoad)
                 : SkillWheelScreen(
                     families: bundle!.families,
                     journeyByCategory: bundle.journeyByCategory,
@@ -177,43 +154,6 @@ class _ProgressViewState extends State<ProgressView> {
                     onOpenExercise: _openExercise,
                   ),
       ),
-    );
-  }
-}
-
-/// Progress before any training: the six movement paths named, none of them
-/// started, framed as what the tab will show rather than what it lacks.
-class _ProgressEmptyState extends StatelessWidget {
-  final VoidCallback onCreateProgram;
-
-  const _ProgressEmptyState({required this.onCreateProgram});
-
-  static const _paths = [
-    ExerciseCategory.horizontalPush,
-    ExerciseCategory.verticalPush,
-    ExerciseCategory.horizontalPull,
-    ExerciseCategory.verticalPull,
-    ExerciseCategory.squat,
-    ExerciseCategory.core,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return NoProgramState(
-      title: 'See how your strength develops',
-      sub: 'Hit your rep targets to climb each skill tree and unlock harder '
-          'exercises.',
-      onCreateProgram: onCreateProgram,
-      children: [
-        const TypeSectionLabel('Skill trees'),
-        for (var i = 0; i < _paths.length; i++)
-          GhostRow(
-            name: programPatternLabel(_paths[i]),
-            note: 'NOT STARTED',
-            nameSize: 19,
-            last: i == _paths.length - 1,
-          ),
-      ],
     );
   }
 }

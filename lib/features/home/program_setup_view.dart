@@ -182,12 +182,20 @@ const _bodyweightSquat = _StrengthExercise(
 /// and starting strength. The split comes from the schedule ([splitForDays])
 /// rather than being asked. Calls [onComplete] with the answers, then shows
 /// the "program ready" confirmation.
+///
+/// It is the last leg of onboarding rather than something opened from a tab:
+/// the app has no screens for an account without a program, so there is no
+/// way out of the first step — only forward.
 class ProgramSetupView extends StatefulWidget {
   final Future<void> Function(ProgramSetupResult result) onComplete;
+
+  /// Leaves the ready screen — after "Not now", or once a purchase landed.
+  final VoidCallback onDone;
 
   const ProgramSetupView({
     super.key,
     required this.onComplete,
+    required this.onDone,
   });
 
   @override
@@ -374,15 +382,12 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
       setState(() => _dipTip = false);
       return;
     }
+    if (_step == 0) return;
     if (_step == 2) _commitBodyweight();
-    if (_step > 0) {
-      setState(() {
-        _step -= 1;
-        if (_step == 2) _openBodyweightEntry();
-      });
-    } else {
-      Navigator.of(context).pop();
-    }
+    setState(() {
+      _step -= 1;
+      if (_step == 2) _openBodyweightEntry();
+    });
   }
 
   /// A barbell answer in canonical kilograms, whatever unit it was typed in.
@@ -464,18 +469,17 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
   Widget build(BuildContext context) {
     if (_ready) {
       // The map the answers drew, and the choice that gates the app. Both
-      // the trial landing and "Not now" leave the wizard the same way; the
-      // tab that opened it moves the user on to Progress.
+      // the trial landing and "Not now" leave the wizard the same way.
       return ProgramReadyView(
         service: MembershipService.instance,
         bundle: _readyBundle,
-        onDone: () => Navigator.of(context).pop(),
+        onDone: widget.onDone,
       );
     }
 
     return PopScope(
-      // Only the first step is the wizard's exit; everywhere else the back
-      // gesture is handled here and steps backwards instead.
+      // The back gesture steps backwards through the wizard; on the first
+      // step it leaves the app, as it would on any first screen.
       canPop: _step == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
@@ -489,7 +493,7 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
               _WizardHeader(
                 step: _step,
                 stepCount: _stepCount,
-                onBack: _back,
+                onBack: _step == 0 ? null : _back,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -555,7 +559,10 @@ class _ProgramSetupViewState extends State<ProgramSetupView> {
 class _WizardHeader extends StatelessWidget {
   final int step;
   final int stepCount;
-  final VoidCallback onBack;
+
+  /// Null on the first step, which has nothing behind it: the button is
+  /// hidden but keeps its place, so the title does not shift.
+  final VoidCallback? onBack;
 
   const _WizardHeader({
     required this.step,
@@ -571,20 +578,27 @@ class _WizardHeader extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
           child: Row(
             children: [
-              Pressable(
-                onTap: onBack,
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: const BoxDecoration(
-                    color: AppColors.surface,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.arrow_back_rounded,
-                    size: 17,
-                    color: AppColors.textPrimary,
+              Visibility(
+                visible: onBack != null,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: Pressable(
+                  onTap: onBack,
+                  semanticLabel: 'Back',
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 17,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),

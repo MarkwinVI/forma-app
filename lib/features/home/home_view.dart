@@ -24,10 +24,7 @@ import '../../data/services/training_schedule_service.dart';
 import '../exercises/exercise_detail_view.dart';
 import 'alternate_workout_options_view.dart';
 import 'home_dashboard_metrics.dart';
-import 'home_empty_state.dart';
 import 'live_workout_view.dart';
-import 'program_setup_completion.dart';
-import 'program_setup_view.dart';
 import 'session_overview_view.dart';
 import 'train_day_view.dart';
 import 'widgets/day_ribbon.dart';
@@ -42,14 +39,9 @@ import '../data/past_workout_detail_view.dart';
 class HomeView extends StatefulWidget {
   final bool isActive;
 
-  /// Fired after the setup wizard has written a program and been dismissed,
-  /// so the shell can move the user on to Progress, their new home tab.
-  final VoidCallback? onProgramCreated;
-
   const HomeView({
     super.key,
     this.isActive = false,
-    this.onProgramCreated,
   });
 
   @override
@@ -67,12 +59,6 @@ class _HomeViewState extends State<HomeView> {
   final _progressionEventService = ProgressionEventService();
 
   bool _loading = true;
-  bool _hasProgram = true;
-
-  /// True when the last read failed and there is nothing older to show — the
-  /// tab then says so in place, with Retry, rather than pretending the user
-  /// has no program.
-  bool _loadFailed = false;
   Map<String, ExerciseStatus> _progressMap = {};
   Map<String, ExerciseProgress> _progressEntries = {};
   List<PastWorkout> _pastWorkouts = const [];
@@ -94,14 +80,12 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    programCreatedSignal.addListener(_onProgramCreated);
     workoutSavedSignal.addListener(_onWorkoutSaved);
     _loadHomeData();
   }
 
   @override
   void dispose() {
-    programCreatedSignal.removeListener(_onProgramCreated);
     workoutSavedSignal.removeListener(_onWorkoutSaved);
     super.dispose();
   }
@@ -121,22 +105,13 @@ class _HomeViewState extends State<HomeView> {
     });
   }
 
-  /// A program was written — here or on another tab. Re-read now, and while
-  /// the read is out show the loader rather than the empty state that is
-  /// about to be wrong.
-  void _onProgramCreated() {
-    if (!mounted) return;
-    if (!_hasProgram) setState(() => _loading = true);
-    _loadHomeData();
-  }
-
   @override
   void didUpdateWidget(covariant HomeView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     // The shell keeps tabs alive in an IndexedStack, so re-fetch whenever
-    // this tab becomes active — e.g. after a dev reset from Settings the
-    // card would otherwise keep showing the deleted program.
+    // this tab becomes active — a workout logged or the program edited on
+    // another tab would otherwise leave the day stale.
     if (!oldWidget.isActive && widget.isActive) {
       _loadHomeData();
     }
@@ -192,7 +167,6 @@ class _HomeViewState extends State<HomeView> {
       if (!mounted) return;
       final progress = results[0] as List<ExerciseProgress>;
       setState(() {
-        _loadFailed = false;
         _progressEntries = {
           for (final item in progress) item.exerciseId: item,
         };
@@ -200,7 +174,6 @@ class _HomeViewState extends State<HomeView> {
           for (final item in progress) item.exerciseId: item.status,
         };
         _logicSnapshot = logic;
-        _hasProgram = _logicSnapshot != null;
         _pastWorkouts = pastWorkouts;
         _rowTags = rowTags;
         _skillTracks = skillTracks;
@@ -209,10 +182,7 @@ class _HomeViewState extends State<HomeView> {
     } catch (error, stackTrace) {
       debugPrint('Failed to load home data: $error\n$stackTrace');
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _loadFailed = true;
-      });
+      setState(() => _loading = false);
       // With an older read still on screen, the day stays up and the
       // failure is a passing note with a way to try again; with nothing to
       // show, the body itself becomes the error state (see build).
@@ -229,10 +199,7 @@ class _HomeViewState extends State<HomeView> {
 
   void _retryLoad() {
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _loadFailed = false;
-    });
+    setState(() => _loading = true);
     _loadHomeData();
   }
 
@@ -417,40 +384,6 @@ class _HomeViewState extends State<HomeView> {
     return null;
   }
 
-  Future<void> _openProgramSetup() async {
-    var created = false;
-    // The setup wizard takes over the whole screen, above the tab bar.
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => ProgramSetupView(
-          onComplete: (result) async {
-            await _completeProgramSetup(result);
-            created = true;
-          },
-        ),
-      ),
-    );
-    // Abandoning the wizard midway must not move the user, so the redirect
-    // only fires once a program was actually written and the wizard closed.
-    if (created) widget.onProgramCreated?.call();
-    // Re-fetch so the tab reflects the freshly created program even if the
-    // user abandoned the wizard midway on a stale state.
-    await _loadHomeData();
-  }
-
-  Future<void> _completeProgramSetup(ProgramSetupResult result) async {
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    await completeProgramSetup(
-      userId: userId,
-      result: result,
-      trainingProgramService: _trainingProgramService,
-      storeService: _trainingProgramStoreService,
-    );
-    await _loadHomeData();
-  }
-
   Future<void> _startWorkout(DailyTrainingRecommendation recommendation) async {
     final openedAt = _devClockService.now();
     // SessionOverviewView is stateless, so its screen view is captured here;
@@ -519,11 +452,11 @@ class _HomeViewState extends State<HomeView> {
         bottom: false,
         child: _loading || _refreshingAfterWorkout
             ? const Center(child: LoadingIndicator())
-            : _loadFailed && _logicSnapshot == null
+            // No day to draw: the read failed, or came back without the
+            // program the entry gate saw — either way, Retry.
+            : snapshot == null
                 ? _LoadFailedState(onRetry: _retryLoad)
-                : !_hasProgram || snapshot == null
-                    ? HomeEmptyState(onCreateProgram: _openProgramSetup)
-                    : _buildTab(snapshot),
+                : _buildTab(snapshot),
       ),
     );
   }
