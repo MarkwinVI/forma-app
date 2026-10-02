@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -94,8 +96,9 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
   }
 
   /// A tree tapped on the overview opens the full wheel, flown into that
-  /// tree. The wheel here pulls back out meanwhile, so the page is on its
-  /// overview again when the user returns.
+  /// tree. The wheel here goes straight back to its overview — no flight,
+  /// which would freeze midway under the covering page — so the user comes
+  /// back to the whole map.
   void _onWheelChanged(int? selected, int focus) {
     final bundle = _bundle;
     if (selected == null || bundle == null) return;
@@ -113,8 +116,10 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
         ),
       ),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _wheelController.back();
+    // After the wheel's own tap handling has finished, and before the next
+    // frame, so the fly-in it just started never shows.
+    scheduleMicrotask(() {
+      if (mounted) _wheelController.reset();
     });
   }
 
@@ -161,7 +166,7 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'This is your map',
+                      'Program ready',
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w800,

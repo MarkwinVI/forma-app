@@ -99,6 +99,24 @@ class SkillWheelController {
 
   void back() => _state?._go(null, 0);
 
+  /// Back to the wheel at once, with no flight. For a page that is about to
+  /// be covered by another: animations are paused under a covering route,
+  /// so a flight started now would freeze midway and greet the user, on
+  /// their return, as a tree still half zoomed in.
+  void reset() => _state?._go(null, 0, instant: true);
+
+  /// Whether the wheel shows its whole overview: camera home, tree names
+  /// in, sector chrome drawn — nothing still on its way there.
+  @visibleForTesting
+  bool get showsWholeOverview {
+    final state = _state;
+    return state != null &&
+        state._sel == null &&
+        state._move.value == 1 &&
+        state._labels.value == 1 &&
+        state._sector.value == 1;
+  }
+
   void goTo(int familyIndex, int flatIndex) =>
       _state?._go(familyIndex, flatIndex);
 }
@@ -550,7 +568,9 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
 
   // ── Transitions ────────────────────────────────────────────────────
 
-  void _go(int? sel, int focus) {
+  void _go(int? sel, int focus, {bool instant = false}) {
+    // Reduce Motion, or a caller that needs the end state now.
+    final still = _reduceMotion || instant;
     final fromVB = _liveVB();
     var fromRot = _liveRot();
     var toRot = _rotFor(sel);
@@ -583,7 +603,7 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     _fromRot = fromRot;
     _toRot = toRot;
 
-    final durationMs = _reduceMotion ? 0 : (moves ? _moveMs : _spinMs);
+    final durationMs = still ? 0 : (moves ? _moveMs : _spinMs);
     _move.duration = Duration(milliseconds: durationMs);
     _move.forward(from: 0);
 
@@ -594,13 +614,13 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     // focused tree moves no camera, and the branch names must hold steady
     // rather than blink out and back.
     if (moves || spins || sel != _sel) {
-      final delayMs = _reduceMotion
+      final delayMs = still
           ? 0
           : (moves || spins)
               ? (durationMs * 0.62).round()
               : 200;
       _labelTimer?.cancel();
-      if (_reduceMotion) {
+      if (still) {
         _labels.value = 1;
       } else {
         _labels.value = 0;
@@ -613,12 +633,12 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     if (sel == null) {
       _halo.stop();
       _halo.value = 0;
-      if (_reduceMotion) {
+      if (still) {
         _sector.value = 1;
       } else {
         _sector.forward();
       }
-    } else if (_reduceMotion) {
+    } else if (still) {
       // A still ring at mid-pulse instead of the breathing halo.
       _halo.value = 0.5;
       _sector.value = 0;

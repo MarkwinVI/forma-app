@@ -162,7 +162,7 @@ void main() {
     expect(savedProgram!.daysPerWeek, 3);
     expect(savedProgram!.bodyweightKg, 80);
     // The flow ends on the map the answers drew.
-    expect(find.text('This is your map'), findsOneWidget);
+    expect(find.text('Program ready'), findsOneWidget);
   });
 
   testWidgets(

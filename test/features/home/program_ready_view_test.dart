@@ -120,7 +120,7 @@ void main() {
       (tester) async {
     await pump(tester, service: await service(), onDone: () {});
 
-    expect(find.text('This is your map'), findsOneWidget);
+    expect(find.text('Program ready'), findsOneWidget);
     expect(
       find.text('Every dot is an exercise. Master one and the next unlocks.'),
       findsOneWidget,
@@ -185,20 +185,39 @@ void main() {
     }
 
     expect(familyNodes(tester, 'Pushups'), hasLength(1));
+    // The ready view's own wheel, which stays in the tree (offstage) while
+    // the full wheel covers it.
+    SkillWheelController readyWheel() => tester
+        .widget<SkillWheel>(find.descendant(
+          of: find.byType(ProgramReadyView, skipOffstage: false),
+          matching: find.byType(SkillWheel, skipOffstage: false),
+        ))
+        .controller!;
+
+    expect(readyWheel().showsWholeOverview, isTrue);
     tester.semantics.tap(find.semantics.byLabel(RegExp('^Pushups,')));
     await settle();
 
     expect(find.byType(SkillWheelScreen), findsOneWidget);
     expect(find.text('Pushups'), findsWidgets);
-    expect(find.text('This is your map'), findsNothing);
+    // Underneath, the ready view's wheel is already back on its whole map.
+    // Animations pause under a covering page, so anything still on its way
+    // — the tree names fading back in — would greet the user, on their
+    // return, as a map not yet whole.
+    expect(readyWheel().showsWholeOverview, isTrue);
+    expect(find.text('Program ready'), findsNothing);
 
     // Backing out of the tree lands straight on the ready view — no wheel
     // overview in between.
     await tester.tap(find.bySemanticsLabel('Back').first);
     await settle();
     expect(find.byType(SkillWheelScreen), findsNothing);
-    expect(find.text('This is your map'), findsOneWidget);
+    expect(find.text('Program ready'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
+    // The map is whole again — every tree on the overview, not the one that
+    // was opened, still zoomed in.
+    expect(familyNodes(tester, 'Pushups'), hasLength(1));
+    expect(familyNodes(tester, 'Pullups'), hasLength(1));
     handle.dispose();
   });
 
