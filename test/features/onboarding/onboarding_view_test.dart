@@ -61,7 +61,7 @@ void main() {
     expect(find.text('From your first'), findsNothing);
     expect(find.text('Get started'), findsNothing);
     // The skill-tree beat, drawn by the app's own tree map.
-    expect(find.text('A roadmap for every calisthenic skill.'), findsOneWidget);
+    expect(find.text('Every skill is a ladder of steps.'), findsOneWidget);
     expect(find.text('PULL-UP SKILL TREE'), findsOneWidget);
     final treeMap = find.byWidgetPredicate(
       (w) =>
@@ -73,7 +73,7 @@ void main() {
 
     // Step 1: the workout beat starts at 3 × 5.
     expect(
-      find.text('Your exercises adapt to your skill level.'),
+      find.text('Level up exercises as you get stronger.'),
       findsOneWidget,
     );
     expect(find.text('3 × '), findsOneWidget);
@@ -82,7 +82,7 @@ void main() {
 
     // Step 2: the data beat.
     expect(
-      find.text('Your workouts adapt so you never start over.'),
+      find.text('Your workouts adapt to your progress.'),
       findsOneWidget,
     );
     await next(tester, 'Continue');
@@ -208,13 +208,13 @@ void main() {
 
     await next(tester, 'Continue');
     expect(
-      find.text('Your exercises adapt to your skill level.'),
+      find.text('Level up exercises as you get stronger.'),
       findsOneWidget,
     );
 
     await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 900));
-    expect(find.text('A roadmap for every calisthenic skill.'), findsOneWidget);
+    expect(find.text('Every skill is a ladder of steps.'), findsOneWidget);
   });
 }

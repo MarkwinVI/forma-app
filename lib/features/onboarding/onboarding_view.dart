@@ -549,17 +549,17 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   Widget _buildSkillsBeat() {
     return const _NarrativeSlide(
-      title: 'A roadmap for every calisthenic skill.',
+      title: 'Every skill is a ladder of steps.',
       label: 'PULL-UP SKILL TREE',
-      caption: 'Every skill is a foundation for the next. Reach your goals '
-          'skill by skill.',
+      caption: 'Clear a step, unlock the next. Reach your goals skill by '
+          'skill.',
       visual: _SkillTreeBeat(),
     );
   }
 
   Widget _buildWorkoutBeat() {
     return const _NarrativeSlide(
-      title: 'Your exercises adapt to your skill level.',
+      title: 'Level up exercises as you get stronger.',
       label: "TODAY'S WORKOUT",
       caption: 'When you master a skill, the next one is seamlessly placed '
           'into your workout program.',
@@ -569,7 +569,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   Widget _buildDataBeat() {
     return const _NarrativeSlide(
-      title: 'Your workouts adapt so you never start over.',
+      title: 'Your workouts adapt to your progress.',
       label: 'PULL-UP REPS / SESSION',
       caption: 'Drop off for a while and Forma steps the exercise back, then '
           'builds you up again.',
