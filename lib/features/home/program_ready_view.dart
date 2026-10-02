@@ -14,10 +14,9 @@ import '../progress/skill_wheel_bundle.dart';
 import '../progress/widgets/skill_wheel.dart';
 import '../progress/widgets/skill_wheel_screen.dart';
 
-/// The end of onboarding: the map the answers drew — every tree on
-/// the wheel, blue where the program starts — with the starting exercise
-/// of each running tree listed under it, and the way on: the trial, or
-/// "Not now" into the locked app.
+/// The end of onboarding: the map the answers drew — every tree on the
+/// wheel, blue where the program starts, centred under its title — and the
+/// way on: the trial, or "Not now" into the locked app.
 ///
 /// Tapping a tree opens the full read-only wheel over this screen, the
 /// same one the Progress tab shows; backing out of it lands here again, so
@@ -140,10 +139,6 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
     final bundle = _bundle;
     final families = bundle?.families ?? const <WheelFamily>[];
     final active = bundle?.activeCategoryIds ?? const <String>{};
-    final starts = [
-      for (final family in families)
-        if (active.contains(family.categoryId)) _StartRow.of(family),
-    ];
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final membership = widget.service.current;
     // Already a member — a subscriber rebuilding their program, or a
@@ -158,76 +153,80 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
         bottom: false,
         child: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 20),
+            _Reveal(
+              animation: _segment(0),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _Reveal(
-                      animation: _segment(0),
-                      child: const Padding(
-                        padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
-                        child: Text(
-                          'Program ready',
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.9,
-                            height: 1.04,
-                          ),
-                        ),
+                    Text(
+                      'This is your map',
+                      style: TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.9,
+                        height: 1.04,
                       ),
                     ),
-                    if (families.isNotEmpty)
-                      _Reveal(
-                        animation: _segment(1),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(6, 6, 6, 0),
-                              child: SkillWheel(
-                                families: families,
-                                controller: _wheelController,
-                                activeCategoryIds: active,
-                                lockedCategoryIds:
-                                    bundle?.treeLocks.keys.toSet() ?? const {},
-                                onChanged: _onWheelChanged,
-                              ),
-                            ),
-                            const _Legend(),
-                          ],
-                        ),
+                    SizedBox(height: 10),
+                    Text(
+                      'Every dot is an exercise. Master one and the next '
+                      'unlocks.',
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        color: AppColors.textSecondary,
+                        height: 1.45,
                       ),
-                    if (starts.isNotEmpty)
-                      _Reveal(
-                        animation: _segment(2),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(22, 0, 22, 0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const TypeSectionLabel(
-                                'Where you start',
-                                top: 22,
-                              ),
-                              for (var i = 0; i < starts.length; i++)
-                                _StartRowTile(
-                                  row: starts[i],
-                                  last: i == starts.length - 1,
-                                  onTap: () => _openExercise(starts[i]),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    ),
                   ],
                 ),
               ),
             ),
+            // The wheel sits centred in the space between the title and the
+            // dock, and scrolls if a small screen cannot fit it.
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Center(
+                      child: families.isEmpty
+                          ? const SizedBox.shrink()
+                          : _Reveal(
+                              animation: _segment(1),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 12,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SkillWheel(
+                                      families: families,
+                                      controller: _wheelController,
+                                      activeCategoryIds: active,
+                                      lockedCategoryIds: bundle
+                                              ?.treeLocks.keys
+                                              .toSet() ??
+                                          const {},
+                                      onChanged: _onWheelChanged,
+                                    ),
+                                    const _Legend(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             _Reveal(
-              animation: _segment(3),
+              animation: _segment(2),
               child: Container(
                 padding: EdgeInsets.fromLTRB(22, 12, 22, 6 + bottomInset),
                 decoration: const BoxDecoration(
@@ -288,26 +287,6 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _openExercise(_StartRow row) {
-    final exercise = ExerciseCatalog.findById(row.start.exerciseId);
-    if (exercise == null) return;
-    AnalyticsService.capture('skill_tree_exercise_opened', properties: {
-      'exercise_id': row.start.exerciseId,
-      'node_state': row.start.state.name,
-      if (exercise.skillCategoryId.isNotEmpty)
-        'skill_tree_id': exercise.skillCategoryId,
-      'source': 'program_ready',
-    });
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => ExerciseDetailView(
-          exercise: exercise,
-          skillCategoryId: exercise.skillCategoryId,
         ),
       ),
     );
@@ -400,81 +379,6 @@ class _Legend extends StatelessWidget {
           item(AppColors.textPrimary.withValues(alpha: 0.85), 'AVAILABLE'),
           item(AppColors.surface, 'LOCKED', border: AppColors.surface3),
         ],
-      ),
-    );
-  }
-}
-
-/// One running tree and the step it starts on.
-class _StartRow {
-  final String treeTitle;
-  final WheelNode start;
-
-  const _StartRow({required this.treeTitle, required this.start});
-
-  static _StartRow of(WheelFamily family) => _StartRow(
-        treeTitle: family.title,
-        start: family.flat[family.activeFlatIndex],
-      );
-}
-
-class _StartRowTile extends StatelessWidget {
-  final _StartRow row;
-  final bool last;
-  final VoidCallback onTap;
-
-  const _StartRowTile({
-    required this.row,
-    required this.last,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    row.treeTitle.toUpperCase(),
-                    style: monoStyle(
-                      size: 10.5,
-                      color: AppColors.accentPrimary,
-                      letterSpacing: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    row.start.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.textMuted,
-            ),
-          ],
-        ),
       ),
     );
   }

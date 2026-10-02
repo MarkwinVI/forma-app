@@ -116,27 +116,35 @@ void main() {
   Iterable<SemanticsNode> familyNodes(WidgetTester tester, String title) =>
       find.semantics.byLabel(RegExp('^$title,')).evaluate();
 
-  testWidgets(
-      'draws the map and lists where each running tree starts and what '
-      'comes next', (tester) async {
+  testWidgets('draws the map, centred under its title, and nothing else',
+      (tester) async {
     await pump(tester, service: await service(), onDone: () {});
 
-    expect(find.text('Program ready'), findsOneWidget);
-    // The title stands alone: no eyebrow above it, no line under it.
-    expect(find.text('PROGRAM READY'), findsNothing);
+    expect(find.text('This is your map'), findsOneWidget);
+    expect(
+      find.text('Every dot is an exercise. Master one and the next unlocks.'),
+      findsOneWidget,
+    );
     expect(find.textContaining('days a week'), findsNothing);
     expect(find.text('AVAILABLE'), findsOneWidget);
     expect(find.text('UP NEXT'), findsNothing);
     expect(find.byType(SkillWheel), findsOneWidget);
 
-    expect(find.text('WHERE YOU START'), findsOneWidget);
-    expect(find.text('Pullups step 1'), findsOneWidget);
-    expect(find.text('Pushups step 0'), findsOneWidget);
-    // Only the starting step of each running tree — no "next" column, and
-    // an idle tree is not a starting point.
-    expect(find.text('NEXT UNLOCK'), findsNothing);
-    expect(find.text('Pullups step 2'), findsNothing);
-    expect(find.textContaining('Squat step'), findsNothing);
+    // No list of starting exercises under the map.
+    expect(find.text('WHERE YOU START'), findsNothing);
+    expect(find.text('Pullups step 1'), findsNothing);
+    expect(find.text('Pushups step 0'), findsNothing);
+
+    // The wheel sits in the middle of the page across, and the wheel with
+    // its legend in the middle of the space between the title and the dock.
+    final wheel = tester.getRect(find.byType(SkillWheel));
+    expect(wheel.center.dx, moreOrLessEquals(393 / 2, epsilon: 1));
+    final space = tester.getRect(find.byType(SingleChildScrollView));
+    final map = tester.getRect(
+      find.ancestor(of: find.byType(SkillWheel), matching: find.byType(Column))
+          .first,
+    );
+    expect(map.center.dy, moreOrLessEquals(space.center.dy, epsilon: 1));
 
     // The trial leads, with the store's own trial length.
     expect(find.text('Start 7-day free trial'), findsOneWidget);
@@ -182,14 +190,14 @@ void main() {
 
     expect(find.byType(SkillWheelScreen), findsOneWidget);
     expect(find.text('Pushups'), findsWidgets);
-    expect(find.text('Program ready'), findsNothing);
+    expect(find.text('This is your map'), findsNothing);
 
     // Backing out of the tree lands straight on the ready view — no wheel
     // overview in between.
     await tester.tap(find.bySemanticsLabel('Back').first);
     await settle();
     expect(find.byType(SkillWheelScreen), findsNothing);
-    expect(find.text('Program ready'), findsOneWidget);
+    expect(find.text('This is your map'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
     handle.dispose();
   });
