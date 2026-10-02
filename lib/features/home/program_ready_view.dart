@@ -166,7 +166,7 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Program ready',
+                      'Your plan is ready',
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w800,
@@ -200,29 +200,31 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                     child: Center(
                       child: families.isEmpty
                           ? const SizedBox.shrink()
-                          : _Reveal(
-                              animation: _segment(1),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 12,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SkillWheel(
-                                      families: families,
-                                      controller: _wheelController,
-                                      activeCategoryIds: active,
-                                      lockedCategoryIds: bundle
-                                              ?.treeLocks.keys
-                                              .toSet() ??
-                                          const {},
-                                      onChanged: _onWheelChanged,
-                                    ),
-                                    const _Legend(),
-                                  ],
-                                ),
+                          : Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 12,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // The map builds itself in — its own
+                                  // reveal, not the page's fade.
+                                  SkillWheel(
+                                    families: families,
+                                    controller: _wheelController,
+                                    activeCategoryIds: active,
+                                    lockedCategoryIds:
+                                        bundle?.treeLocks.keys.toSet() ??
+                                            const {},
+                                    onChanged: _onWheelChanged,
+                                    revealOnEntry: true,
+                                  ),
+                                  _Reveal(
+                                    animation: _segment(1),
+                                    child: const _Legend(),
+                                  ),
+                                ],
                               ),
                             ),
                     ),

@@ -114,7 +114,8 @@ class SkillWheelController {
         state._sel == null &&
         state._move.value == 1 &&
         state._labels.value == 1 &&
-        state._sector.value == 1;
+        state._sector.value == 1 &&
+        state._reveal.value == 1;
   }
 
   void goTo(int familyIndex, int flatIndex) =>
@@ -176,6 +177,13 @@ class SkillWheel extends StatefulWidget {
   /// tab keeps its short band, where the slack either side is by design.
   final bool fitFocusedWidth;
 
+  /// Build the wheel in on arrival rather than standing whole from the
+  /// first frame: the rim and hub first, then every node and link fading in
+  /// outward from the hub, each active tree's starting step popping in, and
+  /// the tree names last. The end of onboarding shows the map this way
+  /// once; everywhere else the wheel is already known.
+  final bool revealOnEntry;
+
   const SkillWheel({
     super.key,
     required this.families,
@@ -190,6 +198,7 @@ class SkillWheel extends StatefulWidget {
     this.initialFocus = 0,
     this.hideUnfocused = false,
     this.fitFocusedWidth = false,
+    this.revealOnEntry = false,
   });
 
   bool get isPicker => onToggleGoal != null;
@@ -254,6 +263,12 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
   /// Sector geometry (spokes, rim ring, curved names) shows on the wheel and
   /// fades away while a tree is focused.
   late final AnimationController _sector;
+
+  /// The entry reveal (see [SkillWheel.revealOnEntry]): one run from 0 to
+  /// 1 over [_revealMs], or held at 1 for a wheel that stands whole.
+  late final AnimationController _reveal;
+  static const int _revealMs = 2000;
+  var _revealStarted = false;
   Timer? _labelTimer;
 
   Offset? _dragStart;
@@ -297,6 +312,11 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 400),
       value: 1,
     );
+    _reveal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: _revealMs),
+      value: widget.revealOnEntry ? 0 : 1,
+    );
     final initial = widget.initialSelected;
     if (initial != null && initial < _n) {
       // Land where a fly-in would have ended: camera, spin, lighting and
@@ -333,6 +353,16 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    // The reveal waits for this, the first point the Reduce Motion setting
+    // can be read: under it the wheel simply stands whole.
+    if (widget.revealOnEntry && !_revealStarted) {
+      _revealStarted = true;
+      if (_reduceMotion) {
+        _reveal.value = 1;
+      } else {
+        _reveal.forward();
+      }
+    }
   }
 
   @override
@@ -343,6 +373,7 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     _labels.dispose();
     _halo.dispose();
     _sector.dispose();
+    _reveal.dispose();
     widget.controller?._state = null;
     super.dispose();
   }
@@ -571,6 +602,9 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
   void _go(int? sel, int focus, {bool instant = false}) {
     // Reduce Motion, or a caller that needs the end state now.
     final still = _reduceMotion || instant;
+    // The wheel is being used: whatever the entry reveal had still to draw
+    // is drawn, so a flight never starts from a half-built map.
+    _reveal.value = 1;
     final fromVB = _liveVB();
     var fromRot = _liveRot();
     var toRot = _rotFor(sel);
@@ -653,6 +687,33 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
     });
     widget.onChanged?.call(sel, focus);
   }
+
+  // ── Entry reveal ───────────────────────────────────────────────────
+  // The timings are the reference design's: everything fades over 0.5s,
+  // nodes and links after a delay that grows with their distance from the
+  // hub (0.1s there, 1.0s at the rim), names 0.25s behind the nodes at
+  // their radius, and each active tree's starting step popping in on its
+  // own beat. With no reveal running every element is simply drawn.
+
+  double get _revealT => _reveal.value * _revealMs / 1000;
+
+  /// How far along an element is, 0 to 1 and linear, [fade] seconds after
+  /// [delay]; 1 outright while the wheel stands whole.
+  double _revealLinear(double delay, double fade) {
+    if (_reveal.value >= 1) return 1;
+    return ((_revealT - delay) / fade).clamp(0.0, 1.0);
+  }
+
+  /// [_revealLinear], eased, for everything that fades.
+  double _revealed(double delay, double fade) =>
+      Curves.ease.transform(_revealLinear(delay, fade));
+
+  /// The outward stagger, in seconds, for something [r] units from the hub.
+  static double _radialDelay(double r) =>
+      0.1 + 0.9 * (r / _rim).clamp(0.0, 1.0);
+
+  /// The starting step's pop: scale from a fifth with an overshoot.
+  static const _pop = Cubic(0.2, 0.9, 0.3, 1.3);
 
   // ── Gestures ───────────────────────────────────────────────────────
   // One scale recognizer covers both: single-finger drags are the swipes,
@@ -845,9 +906,14 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
                     child: CustomPaint(
                       painter: _WheelPainter(
                         state: this,
-                        repaint: Listenable.merge(
-                          [_move, _labels, _halo, _sector, _pressedSector],
-                        ),
+                        repaint: Listenable.merge([
+                          _move,
+                          _labels,
+                          _halo,
+                          _sector,
+                          _pressedSector,
+                          _reveal,
+                        ]),
                       ),
                     ),
                   ),
@@ -990,10 +1056,16 @@ class _WheelPainter extends CustomPainter {
     canvas.rotate(rot);
     canvas.translate(-_hx, -_hy);
 
+    // Each active tree's starting step pops in on its own beat, counted in
+    // wheel order; the trees around it build in by radius.
+    var activeTrees = 0;
     for (var i = 0; i < state._n; i++) {
       final geo = state._tree(i);
       final v = lit[i];
       if (state.widget.hideUnfocused && v <= 0.001) continue;
+      final active = state.widget.activeCategoryIds
+          .contains(state.widget.families[i].categoryId);
+      final beat = active ? 0.15 * activeTrees++ : 0.0;
 
       for (final link in geo.links) {
         // A travelled link reads green whichever it is — the hairline
@@ -1010,26 +1082,47 @@ class _WheelPainter extends CustomPainter {
           litColor = _SkillWheelState._linkDim;
           litWidth = 1.2;
         }
+        // A link arrives with its outer end.
+        final linkIn = state._revealed(
+          _SkillWheelState._radialDelay(math.max(link.p.r, link.q.r)),
+          0.5,
+        );
+        final color = Color.lerp(_SkillWheelState._mutedLink, litColor, v)!;
         canvas.drawLine(
           Offset(link.p.x, link.p.y),
           Offset(link.q.x, link.q.y),
           Paint()
-            ..color = Color.lerp(_SkillWheelState._mutedLink, litColor, v)!
+            ..color = color.withValues(alpha: color.a * linkIn)
             ..strokeWidth = 1.4 + (litWidth - 1.4) * v
             ..strokeCap = StrokeCap.round,
         );
       }
 
       for (final node in geo.nodes) {
+        var radius = _radiusOf(node.state, scale);
+        final double nodeIn;
+        if (active &&
+            node.state == WheelNodeState.active &&
+            !state.widget.isPicker) {
+          // The starting step: a pop from small, overshooting into place.
+          final t = state._revealLinear(0.3 + beat, 0.5);
+          nodeIn = t;
+          radius *= 0.2 + 0.8 * _SkillWheelState._pop.transform(t);
+        } else if (active && node.state == WheelNodeState.available) {
+          // What comes next, a beat after the start.
+          nodeIn = state._revealed(0.7 + beat, 0.4);
+        } else {
+          nodeIn = state._revealed(_SkillWheelState._radialDelay(node.r), 0.5);
+        }
+        final color = Color.lerp(
+          _SkillWheelState._mutedNode,
+          _fillOf(node.state),
+          v,
+        )!;
         canvas.drawCircle(
           Offset(node.x, node.y),
-          _radiusOf(node.state, scale),
-          Paint()
-            ..color = Color.lerp(
-              _SkillWheelState._mutedNode,
-              _fillOf(node.state),
-              v,
-            )!,
+          radius,
+          Paint()..color = color.withValues(alpha: color.a * nodeIn),
         );
       }
     }
@@ -1053,11 +1146,15 @@ class _WheelPainter extends CustomPainter {
   /// and each family's name curved along the arc just inside the rim.
   /// Bottom sectors get a reversed arc at a slightly larger radius so the
   /// glyphs stay upright at the same optical line.
-  void _paintSectors(Canvas canvas, double opacity, double scale) {
+  void _paintSectors(Canvas canvas, double sectorOpacity, double scale) {
     const rim = _SkillWheelState._rim;
     final stepDeg = state._stepDeg;
     // Sector text is sized for the overview camera, where it lives.
     const k = 2 * (rim + 10) / _SkillWheelState._openH;
+
+    // On entry the frame — rim, spokes — is there almost at once, the
+    // ground the trees then grow across; the names come last.
+    final opacity = sectorOpacity * state._revealed(0, 0.3);
 
     // The wedge under a finger: a faint fill from hub to rim, so a sector
     // reads as pressed before the fly-in starts.
@@ -1114,14 +1211,20 @@ class _WheelPainter extends CustomPainter {
       final locked =
           !active && state.widget.lockedCategoryIds.contains(categoryId);
       if (locked) {
-        _paintPadlock(canvas, state._angRad(i), opacity);
+        _paintPadlock(
+          canvas,
+          state._angRad(i),
+          sectorOpacity *
+              state._revealed(_SkillWheelState._radialDelay(rim - 34), 0.5),
+        );
       }
       _paintArcLabel(
         canvas,
         state.widget.families[i].title.toUpperCase(),
         state._angDeg(i),
         k,
-        opacity,
+        sectorOpacity *
+            state._revealed(_SkillWheelState._radialDelay(rim) + 0.25, 0.5),
         scale: scale,
         color: active
             ? const Color(0xFF8FB4F5)
@@ -1312,8 +1415,9 @@ class _WheelPainter extends CustomPainter {
     List<double> vb,
     double k,
     double rot,
-    double fade,
+    double labelFade,
   ) {
+    final fade = labelFade * state._revealed(0, 0.3);
     if (fade <= 0) return;
 
     // Goals chosen inside a tree stay visible from the wheel: an amber

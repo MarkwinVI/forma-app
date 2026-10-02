@@ -222,7 +222,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _GateLoadFailed(
-            message: 'Could not load your profile.',
+            message: 'Could not load your account.',
             onRetry: () => setState(_check),
           );
         }

@@ -120,7 +120,7 @@ void main() {
       (tester) async {
     await pump(tester, service: await service(), onDone: () {});
 
-    expect(find.text('Program ready'), findsOneWidget);
+    expect(find.text('Your plan is ready'), findsOneWidget);
     expect(
       find.text('Every dot is an exercise. Master one and the next unlocks.'),
       findsOneWidget,
@@ -150,6 +150,43 @@ void main() {
     expect(find.text('Start 7-day free trial'), findsOneWidget);
     expect(find.textContaining(r'then from $4.17/mo'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
+  });
+
+  testWidgets('the map builds itself in on arrival, then stands whole',
+      (tester) async {
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final s = await service();
+
+    SkillWheelController wheel() =>
+        tester.widget<SkillWheel>(find.byType(SkillWheel)).controller!;
+
+    await tester.pumpWidget(MaterialApp(
+      home: ProgramReadyView(service: s, onDone: () {}, bundle: _bundle()),
+    ));
+    await tester.pump();
+    // Still building: the reveal runs for two seconds from the first frame.
+    expect(wheel().showsWholeOverview, isFalse);
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(wheel().showsWholeOverview, isFalse);
+    await tester.pump(const Duration(milliseconds: 1100));
+    expect(wheel().showsWholeOverview, isTrue);
+
+    // Under Reduce Motion the map simply stands whole.
+    await tester.pumpWidget(MaterialApp(
+      home: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: ProgramReadyView(
+          key: UniqueKey(),
+          service: s,
+          onDone: () {},
+          bundle: _bundle(),
+        ),
+      ),
+    ));
+    await tester.pump();
+    expect(wheel().showsWholeOverview, isTrue);
   });
 
   testWidgets('"Not now" leaves the wizard', (tester) async {
@@ -205,14 +242,14 @@ void main() {
     // — the tree names fading back in — would greet the user, on their
     // return, as a map not yet whole.
     expect(readyWheel().showsWholeOverview, isTrue);
-    expect(find.text('Program ready'), findsNothing);
+    expect(find.text('Your plan is ready'), findsNothing);
 
     // Backing out of the tree lands straight on the ready view — no wheel
     // overview in between.
     await tester.tap(find.bySemanticsLabel('Back').first);
     await settle();
     expect(find.byType(SkillWheelScreen), findsNothing);
-    expect(find.text('Program ready'), findsOneWidget);
+    expect(find.text('Your plan is ready'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
     // The map is whole again — every tree on the overview, not the one that
     // was opened, still zoomed in.
