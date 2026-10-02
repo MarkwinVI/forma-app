@@ -204,11 +204,18 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     });
   }
 
+  /// Set once the profile is on file. A retry after the program write
+  /// failed must not write — and report — the profile a second time.
+  var _profileSaved = false;
+
   Future<void> _save(
     OnboardingProfileModel? profile,
     ProgramSetupResult? program,
   ) async {
-    if (profile != null) await OnboardingService().saveProfile(profile);
+    if (profile != null && !_profileSaved) {
+      await OnboardingService().saveProfile(profile);
+      _profileSaved = true;
+    }
     if (program != null) {
       await completeProgramSetup(userId: widget.userId, result: program);
     }
