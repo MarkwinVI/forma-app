@@ -196,6 +196,11 @@ enum _Step {
   final ProgramSetupQuestion? question;
 
   const _Step(this.screenName, [this.question]);
+
+  /// The intro beats only show something; every other step asks for an
+  /// answer.
+  bool get asksNothing =>
+      this == _Step.skills || this == _Step.workout || this == _Step.data;
 }
 
 const _programIcons = {
@@ -399,7 +404,9 @@ class _OnboardingViewState extends State<OnboardingView> {
     }
   }
 
+  /// "Got it" where the step only shows something, "Continue" where it asks.
   String get _cta {
+    if (_step.asksNothing) return 'Got it';
     final question = _step.question;
     if (question == null) return _isLast && _saving ? 'Saving…' : 'Continue';
     if (_setup.showingDipTip) return 'Got it';

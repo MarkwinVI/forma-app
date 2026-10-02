@@ -69,7 +69,9 @@ void main() {
           w.painter.runtimeType.toString() == '_TreeMapPainter',
     );
     expect(treeMap, findsOneWidget);
-    await next(tester, 'Continue');
+    // The beats only show something, so they are acknowledged, not answered.
+    expect(find.text('Continue'), findsNothing);
+    await next(tester, 'Got it');
 
     // Step 1: the workout beat starts at 3 × 5.
     expect(
@@ -78,14 +80,17 @@ void main() {
     );
     expect(find.text('3 × '), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
-    await next(tester, 'Continue');
+    await next(tester, 'Got it');
 
     // Step 2: the data beat.
     expect(
       find.text('Your workouts adapt to your progress.'),
       findsOneWidget,
     );
-    await next(tester, 'Continue');
+    await next(tester, 'Got it');
+
+    // From here every step asks for something.
+    expect(find.text('Got it'), findsNothing);
 
     // Step 3: radar starts balanced; dragging up selects The Technician.
     expect(find.text('What is your aim?'), findsOneWidget);
@@ -175,9 +180,10 @@ void main() {
       },
       onFinished: () => finished++,
     );
-    for (var i = 0; i < 4; i++) {
-      await next(tester, 'Continue');
+    for (var i = 0; i < 3; i++) {
+      await next(tester, 'Got it');
     }
+    await next(tester, 'Continue');
     expect(find.text('Your profile'), findsOneWidget);
     await next(tester, 'Continue');
 
@@ -190,9 +196,10 @@ void main() {
       (tester) async {
     final handle = tester.ensureSemantics();
     await pumpFlow(tester);
-    for (var i = 0; i < 4; i++) {
-      await next(tester, 'Continue');
+    for (var i = 0; i < 3; i++) {
+      await next(tester, 'Got it');
     }
+    await next(tester, 'Continue');
     expect(find.text('Your profile'), findsOneWidget);
     expect(find.text('A LITTLE BIT ABOUT YOU'), findsOneWidget);
     expect(find.text('Rather not say'), findsOneWidget);
@@ -206,7 +213,7 @@ void main() {
   testWidgets('back button steps backwards', (tester) async {
     await pumpFlow(tester);
 
-    await next(tester, 'Continue');
+    await next(tester, 'Got it');
     expect(
       find.text('Level up exercises as you get stronger.'),
       findsOneWidget,
