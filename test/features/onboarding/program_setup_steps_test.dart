@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/core/widgets/polished.dart';
+import 'package:forma_app/core/widgets/weight_entry.dart';
 import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
@@ -48,6 +49,9 @@ void main() {
   }
 
   Finder backButton() => find.byIcon(Icons.arrow_back_ios_new_rounded);
+
+  WeightValueDisplay bodyweightField(WidgetTester tester) =>
+      tester.widget<WeightValueDisplay>(find.byType(WeightValueDisplay));
 
   /// The flow's one button: greyed out and inert while a step still waits
   /// on an answer.
@@ -120,7 +124,11 @@ void main() {
     // Step 3: bodyweight — the keypad is already up, the placeholder shows,
     // and Continue holds until a number of the user's own is in the field.
     expect(find.text('Your bodyweight'), findsOneWidget);
-    expect(find.text('75'), findsOneWidget);
+    // A dimmed 0 kg, and no "minimum" nag about a number nobody typed.
+    expect(bodyweightField(tester).text, '0');
+    expect(bodyweightField(tester).dim, isTrue);
+    expect(bodyweightField(tester).unit, WeightUnit.kg);
+    expect(find.textContaining('Minimum'), findsNothing);
     expect(find.text('Tap the number to change it'), findsNothing);
     expect(find.text('8'), findsOneWidget, reason: 'the keypad is open');
     expect(find.text('Enter your bodyweight to continue'), findsOneWidget);
@@ -243,11 +251,13 @@ void main() {
     await pumpStep(tester);
     expect(find.text('Got it'), findsNothing, reason: 'a gym has dip bars');
 
-    // 75 kg becomes 165 lbs, and the choice persists for the whole app —
-    // and the keypad stays up across the flip.
+    // The placeholder is 0 in either unit, the choice persists for the
+    // whole app, and the keypad stays up across the flip.
     await tester.tap(find.text('lbs'));
     await tester.pump();
-    expect(find.text('165'), findsOneWidget);
+    expect(bodyweightField(tester).text, '0');
+    expect(bodyweightField(tester).dim, isTrue);
+    expect(bodyweightField(tester).unit, WeightUnit.lb);
     expect(WeightUnitService.unit, WeightUnit.lb);
     expect(find.text('8'), findsOneWidget, reason: 'the keypad is still open');
 

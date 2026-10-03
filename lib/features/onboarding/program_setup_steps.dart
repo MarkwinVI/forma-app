@@ -172,14 +172,13 @@ class ProgramSetupController extends ChangeNotifier {
   /// Bodyweight is kept in the unit being displayed; only [result] converts
   /// to canonical kilograms.
   WeightUnit _unit = WeightUnitService.unit;
-  late double _bw = _unit == WeightUnit.lb ? 165 : 75;
+  double _bw = 0;
   String _bwEdit = '';
   bool _bwEditing = false;
 
   /// Whether the user has typed a bodyweight of their own. The question
-  /// opens with the keypad up and a placeholder in the field, and the
-  /// button holds until a real number is in it — the placeholder is a
-  /// suggestion, not an answer.
+  /// opens with the keypad up and a dimmed 0 in the field, and the button
+  /// holds until a real number is in it.
   bool _bwEntered = false;
 
   /// Starting-strength answers, null until the user gives one. The squat
@@ -361,11 +360,9 @@ class ProgramSetupController extends ChangeNotifier {
     final converted = unit == WeightUnit.lb
         ? (kg / WeightUnitService.kgPerLb).roundToDouble()
         : kg.roundToDouble();
-    // The placeholder is kept inside the range; a typed number is only
+    // The placeholder stays 0 in either unit; a typed number is only
     // capped, and the button holds until it clears the floor.
-    _bw = _bwEntered
-        ? converted.clamp(0, _bwMax).toDouble()
-        : _clampBw(converted);
+    _bw = _bwEntered ? converted.clamp(0, _bwMax).toDouble() : 0;
     _bwEdit = '';
     // Flipping the unit converts the number; it does not close the entry.
     if (_bwEditing) _openBodyweightEntry();
@@ -387,7 +384,8 @@ class ProgramSetupController extends ChangeNotifier {
   void _pressBwKey(String key) {
     _bwEdit = weightEntryPress(_bwEdit, key);
     final parsed = double.tryParse(_bwEdit);
-    if (parsed != null) _bw = parsed.clamp(0, _bwMax).toDouble();
+    // An emptied field falls back to the placeholder, 0.
+    _bw = parsed == null ? 0 : parsed.clamp(0, _bwMax).toDouble();
     _bwEntered = parsed != null && parsed > 0;
     notifyListeners();
   }
@@ -849,7 +847,9 @@ class _WeightStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final belowMin = editing && bw < min;
+    // Only once something is typed: the placeholder 0 is not an answer to
+    // correct.
+    final belowMin = editing && edit.isNotEmpty && bw < min;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
