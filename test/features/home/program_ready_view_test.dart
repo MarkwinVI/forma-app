@@ -120,7 +120,7 @@ void main() {
       (tester) async {
     await pump(tester, service: await service(), onDone: () {});
 
-    expect(find.text('Your plan is ready'), findsOneWidget);
+    expect(find.text('Your training program is ready'), findsOneWidget);
     expect(
       find.text('Every dot is an exercise. Master one and the next unlocks.'),
       findsOneWidget,
@@ -242,14 +242,14 @@ void main() {
     // — the tree names fading back in — would greet the user, on their
     // return, as a map not yet whole.
     expect(readyWheel().showsWholeOverview, isTrue);
-    expect(find.text('Your plan is ready'), findsNothing);
+    expect(find.text('Your training program is ready'), findsNothing);
 
     // Backing out of the tree lands straight on the ready view — no wheel
     // overview in between.
     await tester.tap(find.bySemanticsLabel('Back').first);
     await settle();
     expect(find.byType(SkillWheelScreen), findsNothing);
-    expect(find.text('Your plan is ready'), findsOneWidget);
+    expect(find.text('Your training program is ready'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
     // The map is whole again — every tree on the overview, not the one that
     // was opened, still zoomed in.

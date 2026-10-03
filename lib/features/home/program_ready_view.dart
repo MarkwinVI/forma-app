@@ -166,7 +166,7 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Your plan is ready',
+                      'Your training program is ready',
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w800,
