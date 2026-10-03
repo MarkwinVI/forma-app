@@ -409,13 +409,14 @@ class _OnboardingViewState extends State<OnboardingView> {
   /// and "I don't train" are answers. Age always has one: the slider.
   bool get _profileAnswered => _gender != null && _freq != null;
 
-  /// The label never changes with what is still unanswered: a step that is
-  /// waiting says "Continue" like any other, greyed out (see [_canContinue]).
+  /// The profile step keeps "Continue" while it waits, greyed out (see
+  /// [_canContinue]); a program question says what it is waiting for.
   String get _cta {
     if (_step.asksNothing) return 'Got it';
     final question = _step.question;
     if (question == null) return _isLast && _saving ? 'Saving…' : 'Continue';
     if (_setup.showingDipTip) return 'Got it';
+    if (!_setup.answered(question)) return _setup.holdLabel(question);
     if (_isLast) return _saving ? 'Building your program…' : 'Build my program';
     return 'Continue';
   }

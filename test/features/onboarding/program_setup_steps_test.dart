@@ -50,7 +50,7 @@ void main() {
   Finder backButton() => find.byIcon(Icons.arrow_back_ios_new_rounded);
 
   /// The flow's one button: greyed out and inert while a step still waits
-  /// on an answer, with the same label either way.
+  /// on an answer.
   bool continueEnabled(WidgetTester tester) =>
       tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
 
@@ -67,7 +67,7 @@ void main() {
     // Step 1: schedule — nothing picked, so the CTA holds.
     expect(find.text('Your training schedule'), findsOneWidget);
     expect(find.text('YOUR PROGRAM'), findsOneWidget);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Pick one to continue'), findsOneWidget);
     expect(continueEnabled(tester), isFalse);
     await tester.tap(find.text('4'));
     await tester.pump();
@@ -82,7 +82,7 @@ void main() {
     // Step 2: equipment — "Some equipment" opens the tile sheet; Done writes
     // the ticks back onto the card, and a list without a bar warns about it.
     expect(find.text('Your equipment'), findsOneWidget);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Pick one to continue'), findsOneWidget);
     expect(continueEnabled(tester), isFalse);
     await tester.tap(find.text('Some equipment'));
     await tester.pumpAndSettle();
@@ -123,7 +123,7 @@ void main() {
     expect(find.text('75'), findsOneWidget);
     expect(find.text('Tap the number to change it'), findsNothing);
     expect(find.text('8'), findsOneWidget, reason: 'the keypad is open');
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Enter your bodyweight to continue'), findsOneWidget);
     expect(continueEnabled(tester), isFalse, reason: 'nothing typed yet');
     await tester.tap(find.text('8'));
     await tester.pump();

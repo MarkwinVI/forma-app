@@ -209,6 +209,12 @@ class ProgramSetupController extends ChangeNotifier {
     };
   }
 
+  /// What the button says while [question] holds.
+  String holdLabel(ProgramSetupQuestion question) =>
+      question == ProgramSetupQuestion.bodyweight
+          ? 'Enter your bodyweight to continue'
+          : 'Pick one to continue';
+
   /// The heading over [question] — the tip's own while it is up.
   ({String title, String sub}) headFor(ProgramSetupQuestion question) {
     if (_dipTip) {
