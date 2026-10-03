@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/core/widgets/polished.dart';
 import 'package:forma_app/data/models/onboarding_profile_model.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
 import 'package:forma_app/features/onboarding/onboarding_view.dart';
@@ -42,6 +43,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 900));
   }
+
+
+  /// The flow's one button: greyed out and inert while a step still waits
+  /// on an answer, with the same label either way.
+  bool continueEnabled(WidgetTester tester) =>
+      tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
 
   testWidgets(
       'one flow from the beats to a built program, saving both at the end',
@@ -121,20 +128,21 @@ void main() {
     expect(find.text('3–4'), findsOneWidget);
     expect(find.text('5+'), findsOneWidget);
 
-    // Gender and frequency both need an answer before the flow moves on.
-    expect(find.text('Answer both to continue'), findsOneWidget);
-    await tester.tap(find.text('Answer both to continue'));
+    // Gender and frequency both need an answer before the flow moves on:
+    // the button says Continue throughout, greyed out until they have one.
+    expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isFalse);
+    await tester.tap(find.text('Continue'));
     await tester.pump(const Duration(milliseconds: 900));
     expect(find.text('Your profile'), findsOneWidget);
     await tester.tap(find.text('1–2'));
     await tester.pump();
-    expect(find.text('Answer one more to continue'), findsOneWidget);
-    await tester.tap(find.text('Answer one more to continue'));
-    await tester.pump(const Duration(milliseconds: 900));
-    expect(find.text('Your profile'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isFalse);
     await tester.tap(find.text('Male'));
     await tester.pump();
     expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isTrue);
 
     // No welcome screen and no second flow: the program questions come
     // next under the same header, and back crosses between the two.

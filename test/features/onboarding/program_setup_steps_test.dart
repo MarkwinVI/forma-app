@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forma_app/core/widgets/polished.dart';
 import 'package:forma_app/data/models/equipment_model.dart';
 import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/services/weight_unit_service.dart';
@@ -48,6 +49,11 @@ void main() {
 
   Finder backButton() => find.byIcon(Icons.arrow_back_ios_new_rounded);
 
+  /// The flow's one button: greyed out and inert while a step still waits
+  /// on an answer, with the same label either way.
+  bool continueEnabled(WidgetTester tester) =>
+      tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
+
   testWidgets('walks through all four steps and reports the answers',
       (tester) async {
     ProgramSetupResult? result;
@@ -61,7 +67,8 @@ void main() {
     // Step 1: schedule — nothing picked, so the CTA holds.
     expect(find.text('Your training schedule'), findsOneWidget);
     expect(find.text('YOUR PROGRAM'), findsOneWidget);
-    expect(find.text('Pick one to continue'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isFalse);
     await tester.tap(find.text('4'));
     await tester.pump();
     // The note copy varies with the day count.
@@ -75,7 +82,8 @@ void main() {
     // Step 2: equipment — "Some equipment" opens the tile sheet; Done writes
     // the ticks back onto the card, and a list without a bar warns about it.
     expect(find.text('Your equipment'), findsOneWidget);
-    expect(find.text('Pick one to continue'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isFalse);
     await tester.tap(find.text('Some equipment'));
     await tester.pumpAndSettle();
     expect(find.text('What do you have?'), findsOneWidget);
@@ -115,8 +123,8 @@ void main() {
     expect(find.text('75'), findsOneWidget);
     expect(find.text('Tap the number to change it'), findsNothing);
     expect(find.text('8'), findsOneWidget, reason: 'the keypad is open');
-    expect(find.text('Enter your bodyweight to continue'), findsOneWidget);
-    expect(find.text('Continue'), findsNothing, reason: 'nothing typed yet');
+    expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isFalse, reason: 'nothing typed yet');
     await tester.tap(find.text('8'));
     await tester.pump();
     await tester.tap(find.text('2'));

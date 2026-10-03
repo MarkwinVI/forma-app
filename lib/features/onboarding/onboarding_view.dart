@@ -407,27 +407,22 @@ class _OnboardingViewState extends State<OnboardingView> {
   /// "Got it" where the step only shows something, "Continue" where it asks.
   /// Gender and training frequency both need an answer — "Rather not say"
   /// and "I don't train" are answers. Age always has one: the slider.
-  int get _profileUnanswered =>
-      (_gender == null ? 1 : 0) + (_freq == null ? 1 : 0);
+  bool get _profileAnswered => _gender != null && _freq != null;
 
+  /// The label never changes with what is still unanswered: a step that is
+  /// waiting says "Continue" like any other, greyed out (see [_canContinue]).
   String get _cta {
     if (_step.asksNothing) return 'Got it';
     final question = _step.question;
-    if (_step == _Step.aboutYou && _profileUnanswered > 0) {
-      return _profileUnanswered == 2
-          ? 'Answer both to continue'
-          : 'Answer one more to continue';
-    }
     if (question == null) return _isLast && _saving ? 'Saving…' : 'Continue';
     if (_setup.showingDipTip) return 'Got it';
-    if (!_setup.answered(question)) return _setup.holdLabel(question);
     if (_isLast) return _saving ? 'Building your program…' : 'Build my program';
     return 'Continue';
   }
 
   bool get _canContinue {
     if (_saving) return false;
-    if (_step == _Step.aboutYou) return _profileUnanswered == 0;
+    if (_step == _Step.aboutYou) return _profileAnswered;
     final question = _step.question;
     return question == null || _setup.answered(question);
   }
