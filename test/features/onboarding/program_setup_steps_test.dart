@@ -274,6 +274,47 @@ void main() {
     expect(result!.bodyweightKg, closeTo(74.8, 0.2));
   });
 
+  testWidgets(
+      'a page on its way out keeps what it showed — no flash of another '
+      'state mid-transition', (tester) async {
+    await pumpQuestions(tester, onComplete: (_) async {});
+    await tester.tap(find.text('3'));
+    await tester.pump();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('No equipment'));
+    await tester.pump();
+
+    // Into the chairs tip: the equipment page leaves as the equipment page.
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(find.text('No equipment'), findsOneWidget);
+    expect(find.byType(Image), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('No equipment'), findsNothing);
+
+    // Out of it: the tip leaves as the tip, not as the options behind it.
+    await tester.tap(find.text('Got it'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(find.text('No equipment'), findsNothing);
+    expect(find.byType(Image), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(Image), findsNothing);
+
+    // Leaving the bodyweight page: its keypad stays up while it fades.
+    expect(find.text('Your bodyweight'), findsOneWidget);
+    await tester.tap(find.text('7'));
+    await tester.pump();
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(find.text('Tap the number to change it'), findsNothing);
+  });
+
   testWidgets('back button steps backwards, and the first step has none',
       (tester) async {
     await pumpQuestions(tester, onComplete: (_) async {});

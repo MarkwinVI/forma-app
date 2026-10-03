@@ -307,12 +307,14 @@ class _OnboardingViewState extends State<OnboardingView> {
   void _go(int next) {
     if (next < 0 || next >= _steps.length || next == _index) return;
     final leaving = _step.question;
-    if (leaving != null) _setup.depart(leaving);
     AnalyticsService.screen(_steps[next].screenName);
     setState(() {
       _dir = next > _index ? 1 : -1;
       _index = next;
     });
+    // After the page has changed: what leaving tidies up (the bodyweight
+    // keypad closing) must not redraw the page that is still fading out.
+    if (leaving != null) _setup.depart(leaving);
     final arriving = _step.question;
     if (arriving != null) _setup.arrive(arriving);
   }
@@ -845,6 +847,9 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   Widget _buildProgramQuestion(ProgramSetupQuestion question) {
     final head = _setup.headFor(question);
+    // What this page is, fixed as it is built: the transition keeps the
+    // outgoing page on screen, and it must go on being this one.
+    final viewKey = _viewKey;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
       child: Column(
@@ -861,7 +866,12 @@ class _OnboardingViewState extends State<OnboardingView> {
               padding: const EdgeInsets.only(top: 20, bottom: 12),
               child: _Rise(
                 index: 3,
-                child: ProgramSetupStep(controller: _setup, question: question),
+                child: ProgramSetupStep(
+                  controller: _setup,
+                  question: question,
+                  showDipTip: _setup.showingDipTip,
+                  isCurrent: () => _viewKey == viewKey,
+                ),
               ),
             ),
           ),

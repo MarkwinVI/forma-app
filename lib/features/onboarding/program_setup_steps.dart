@@ -422,51 +422,90 @@ class ProgramSetupController extends ChangeNotifier {
 
 /// The body of one program question — everything under its heading, which
 /// the host draws so the questions read like the rest of onboarding.
-class ProgramSetupStep extends StatelessWidget {
+///
+/// It follows the controller only while [isCurrent] says it is the page
+/// being shown. A page on its way out — still on screen for the length of
+/// the host's transition — keeps what it last drew, so it leaves as itself
+/// rather than redrawing into whatever the answers say next.
+class ProgramSetupStep extends StatefulWidget {
   final ProgramSetupController controller;
   final ProgramSetupQuestion question;
+
+  /// Whether to draw the dip-bars tip in the question's place. Decided by
+  /// the host when it builds the page, and fixed for that page from then on.
+  final bool showDipTip;
+
+  /// Whether this page is still the one being shown.
+  final ValueGetter<bool> isCurrent;
 
   const ProgramSetupStep({
     super.key,
     required this.controller,
     required this.question,
+    required this.showDipTip,
+    required this.isCurrent,
   });
 
   @override
+  State<ProgramSetupStep> createState() => _ProgramSetupStepState();
+}
+
+class _ProgramSetupStepState extends State<ProgramSetupStep> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant ProgramSetupStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onChanged);
+      widget.controller.addListener(_onChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onChanged);
+    super.dispose();
+  }
+
+  void _onChanged() {
+    if (mounted && widget.isCurrent()) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        final c = controller;
-        if (c._dipTip) return const _DipBarsTip();
-        return switch (question) {
-          ProgramSetupQuestion.schedule => _ScheduleStep(
-              days: c._days,
-              onChanged: c._setDays,
-            ),
-          ProgramSetupQuestion.equipment => _EquipmentStep(
-              equipment: c._equipment,
-              onChanged: c._setEquipment,
-            ),
-          ProgramSetupQuestion.bodyweight => _WeightStep(
-              bw: c._bw,
-              edit: c._bwEdit,
-              editing: c._bwEditing,
-              unit: c._unit,
-              min: c._bwMin,
-              onUnitChanged: c._setUnit,
-              onTapValue: c._tapBwValue,
-              onKey: c._pressBwKey,
-            ),
-          ProgramSetupQuestion.strength => _StrengthStep(
-              strength: c._strength,
-              hasWeights: c._equipment?.hasWeights ?? true,
-              unit: c._unit,
-              onChanged: c._strengthChanged,
-            ),
-        };
-      },
-    );
+    final c = widget.controller;
+    if (widget.showDipTip) return const _DipBarsTip();
+    return switch (widget.question) {
+      ProgramSetupQuestion.schedule => _ScheduleStep(
+          days: c._days,
+          onChanged: c._setDays,
+        ),
+      ProgramSetupQuestion.equipment => _EquipmentStep(
+          equipment: c._equipment,
+          onChanged: c._setEquipment,
+        ),
+      ProgramSetupQuestion.bodyweight => _WeightStep(
+          bw: c._bw,
+          edit: c._bwEdit,
+          editing: c._bwEditing,
+          unit: c._unit,
+          min: c._bwMin,
+          onUnitChanged: c._setUnit,
+          onTapValue: c._tapBwValue,
+          onKey: c._pressBwKey,
+        ),
+      ProgramSetupQuestion.strength => _StrengthStep(
+          strength: c._strength,
+          hasWeights: c._equipment?.hasWeights ?? true,
+          unit: c._unit,
+          onChanged: c._strengthChanged,
+        ),
+    };
   }
 }
 
