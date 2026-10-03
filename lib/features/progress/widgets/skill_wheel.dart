@@ -157,8 +157,7 @@ class SkillWheel extends StatefulWidget {
   final Set<String> activeCategoryIds;
 
   /// Categories still behind an unmet prerequisite in another tree. Each
-  /// gets a dashed gray rim arc and a padlock badge on its spoke, and its
-  /// curved name dims. A tree that is actively training draws as active —
+  /// gets a padlock leading its curved name, and the name dims. A tree that is actively training draws as active —
   /// the user started it anyway, so it is running.
   final Set<String> lockedCategoryIds;
 
@@ -1203,21 +1202,14 @@ class _WheelPainter extends CustomPainter {
         ..color = Colors.white.withValues(alpha: 0.055 * opacity),
     );
     // The "training now" hint lives in the curved names: active trees read
-    // in blue, locked trees dim behind their padlock. (Rim arcs were tried
-    // and clipped at the screen edge — the labels carry it instead.)
+    // in blue, locked trees dim behind a padlock that leads the name. (Rim
+    // arcs were tried and clipped at the screen edge, and a padlock badge
+    // on the spoke sat on the tree's own nodes — the labels carry both.)
     for (var i = 0; i < state._n; i++) {
       final categoryId = state.widget.families[i].categoryId;
       final active = state.widget.activeCategoryIds.contains(categoryId);
       final locked =
           !active && state.widget.lockedCategoryIds.contains(categoryId);
-      if (locked) {
-        _paintPadlock(
-          canvas,
-          state._angRad(i),
-          sectorOpacity *
-              state._revealed(_SkillWheelState._radialDelay(rim - 34), 0.5),
-        );
-      }
       _paintArcLabel(
         canvas,
         state.widget.families[i].title.toUpperCase(),
@@ -1226,6 +1218,7 @@ class _WheelPainter extends CustomPainter {
         sectorOpacity *
             state._revealed(_SkillWheelState._radialDelay(rim) + 0.25, 0.5),
         scale: scale,
+        locked: locked,
         color: active
             ? const Color(0xFF8FB4F5)
             : locked
@@ -1235,47 +1228,39 @@ class _WheelPainter extends CustomPainter {
     }
   }
 
-  /// The padlock badge on a locked tree's spoke, inside the rim and clear
-  /// of the curved names: the tree waits on a prerequisite in another tree.
-  void _paintPadlock(Canvas canvas, double angleRad, double opacity) {
-    const r = _SkillWheelState._rim - 34;
-    final lx = _hx + r * math.cos(angleRad);
-    final ly = _hy + r * math.sin(angleRad);
-
-    canvas.drawCircle(
-      Offset(lx, ly),
-      10.5,
-      Paint()..color = _SkillWheelState._cardBg.withValues(alpha: opacity),
-    );
-    canvas.drawCircle(
-      Offset(lx, ly),
-      10.5,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..color = Colors.white.withValues(alpha: 0.22 * opacity),
-    );
+  /// A padlock [height] tall, centred on [center] in the current canvas:
+  /// the tree waits on a prerequisite in another tree.
+  void _paintPadlock(
+    Canvas canvas,
+    Offset center,
+    double height,
+    double opacity,
+  ) {
+    // Drawn on an 8 × 11 grid: a 6.6-tall body under a 2.5-radius shackle.
+    final u = height / 11;
+    final lx = center.dx;
+    final ly = center.dy - 0.15 * u;
     final metal = const Color(0xFF8A8B93).withValues(alpha: opacity);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(lx - 4, ly - 1, 8, 6.6),
-        const Radius.circular(1.8),
+        Rect.fromLTWH(lx - 4 * u, ly - 1 * u, 8 * u, 6.6 * u),
+        Radius.circular(1.8 * u),
       ),
       Paint()..color = metal,
     );
     final shackle = Path()
-      ..moveTo(lx - 2.5, ly - 1)
-      ..lineTo(lx - 2.5, ly - 2.8)
+      ..moveTo(lx - 2.5 * u, ly - 1 * u)
+      ..lineTo(lx - 2.5 * u, ly - 2.8 * u)
       ..arcToPoint(
-        Offset(lx + 2.5, ly - 2.8),
-        radius: const Radius.circular(2.5),
+        Offset(lx + 2.5 * u, ly - 2.8 * u),
+        radius: Radius.circular(2.5 * u),
       )
-      ..lineTo(lx + 2.5, ly - 1);
+      ..lineTo(lx + 2.5 * u, ly - 1 * u);
     canvas.drawPath(
       shackle,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
+        ..strokeWidth = 1.5 * u
         ..color = metal,
     );
   }
@@ -1333,7 +1318,8 @@ class _WheelPainter extends CustomPainter {
   }
 
   /// One name on an arc: glyphs placed one by one along the circle, each
-  /// rotated to its local tangent.
+  /// rotated to its local tangent. A [locked] name is led by a padlock on
+  /// the same arc, and the two are centred on the sector together.
   void _paintArcLabel(
     Canvas canvas,
     String text,
@@ -1341,6 +1327,7 @@ class _WheelPainter extends CustomPainter {
     double k,
     double opacity, {
     required double scale,
+    bool locked = false,
     Color color = const Color(0xFF66676E),
   }) {
     final reversed = math.sin(midDeg * math.pi / 180) > 0.3;
@@ -1363,6 +1350,9 @@ class _WheelPainter extends CustomPainter {
         ];
     double widthOf(List<TextPainter> glyphs) =>
         glyphs.fold(0.0, (t, g) => t + g.width);
+    // The padlock and the gap after it, sized off the type beside it.
+    double lockWidth(double fontSize) => locked ? fontSize * 0.6 : 0;
+    double leadOf(double fontSize) => locked ? fontSize * 1.05 : 0;
 
     // The iOS 11pt floor, in user units: a name never shrinks below it on
     // the device — when it will not fit its arc at that size it is
@@ -1373,16 +1363,19 @@ class _WheelPainter extends CustomPainter {
     var total = widthOf(glyphs);
     // A long name (Handstand Pushups) must stay inside its sector's arc.
     final maxArc = r * (state._stepDeg - 5) * math.pi / 180;
-    if (total > maxArc) {
-      fontSize = math.max(fontSize * maxArc / total, floor);
+    if (total + leadOf(fontSize) > maxArc) {
+      fontSize = math.max(
+        fontSize * maxArc / (total + leadOf(fontSize)),
+        floor,
+      );
       glyphs = layout(text, fontSize);
       total = widthOf(glyphs);
     }
-    if (total > maxArc) {
+    if (total + leadOf(fontSize) > maxArc) {
       var label = text.split(' ').first;
       glyphs = layout(label, fontSize);
       total = widthOf(glyphs);
-      while (total > maxArc && label.length > 3) {
+      while (total + leadOf(fontSize) > maxArc && label.length > 3) {
         label = label.substring(0, label.length - 1);
         glyphs = layout(label, fontSize);
         total = widthOf(glyphs);
@@ -1390,7 +1383,29 @@ class _WheelPainter extends CustomPainter {
     }
 
     final mid = midDeg * math.pi / 180;
-    var along = -total / 2;
+    final lead = leadOf(fontSize);
+    var along = -(total + lead) / 2;
+    if (locked) {
+      // Where the name's first letter would otherwise sit — to its left as
+      // read, on either half of the wheel — and on the letters' midline.
+      final center = along + lockWidth(fontSize) / 2;
+      final theta = mid + (reversed ? -center / r : center / r);
+      final phi = theta + (reversed ? -math.pi / 2 : math.pi / 2);
+      canvas.save();
+      canvas.translate(
+        _hx + r * math.cos(theta),
+        _hy + r * math.sin(theta),
+      );
+      canvas.rotate(phi);
+      _paintPadlock(
+        canvas,
+        Offset(0, -fontSize * 0.36),
+        fontSize * 0.82,
+        opacity,
+      );
+      canvas.restore();
+      along += lead;
+    }
     for (final glyph in glyphs) {
       final center = along + glyph.width / 2;
       along += glyph.width;
