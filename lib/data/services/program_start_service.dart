@@ -71,10 +71,12 @@ class ProgramStartPlan {
 ///    starting node with nothing owed behind it. Rows always start at the
 ///    first step. A weighted branch starts on the deepest barbell rung whose load
 ///    fits inside 80% of the reported one-rep max — rounded down, so an
-///    answer between rungs lands on the lighter one. Without an answer a
-///    weighted branch opens on its ladder's first rung, a quarter of
-///    bodyweight. Setup asks for the squat max only, so the weighted hinge
-///    always opens there; an answer stored by an older setup still places it.
+///    answer between rungs lands on the lighter one. A squat max of 0 — the
+///    answer setup opens on, so an untouched one too — says the bar is new:
+///    the squat starts on the tree's first step, the bodyweight run-up
+///    included. Setup asks for the squat max only, so the weighted hinge
+///    always opens on its ladder's first rung, a quarter of bodyweight; an
+///    answer stored by an older setup still places it.
 class ProgramStartPlanner {
   ProgramStartPlanner._();
 
@@ -89,13 +91,16 @@ class ProgramStartPlanner {
   static const double weightedStartFractionOfMax = 0.8;
 
   /// Per weighted branch: the setup answer (a one-rep max in kg) that places
-  /// the starting rung, and where a blank answer starts — the first loaded
-  /// rung for both: a gym user never starts on the bodyweight run-up. The
-  /// hinge's answer is no longer asked, so it is blank for every new
-  /// program; the key stays for the answers older setups stored.
+  /// the starting rung, and where an answer of 0 or none starts.
+  ///
+  /// The squat is asked, and its answer opens on 0: someone who leaves it
+  /// there has not squatted a bar, so they start on the tree's first step
+  /// and work up through the bodyweight squats. The hinge is not asked —
+  /// its key stays for the answers older setups stored — so it has nothing
+  /// to read a beginner from, and opens on the first loaded rung.
   static const Map<String, _WeightedGate> _weightedGates = {
     SkillCategoryCatalog.squatId:
-        _WeightedGate('squat', blankStartsOnBar: true),
+        _WeightedGate('squat', blankStartsOnBar: false),
     SkillCategoryCatalog.hingeId: _WeightedGate('rdl', blankStartsOnBar: true),
   };
 

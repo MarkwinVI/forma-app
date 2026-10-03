@@ -305,8 +305,35 @@ void main() {
       expect(plan.statuses['squat_barbell_plus_75'], ExerciseStatus.active);
     });
 
-    test('a blank squat answer starts on the ladder\u2019s first rung', () {
-      final plan = planFor(hasGym: true);
+    test('a squat max of 0, or none, starts on the tree\u2019s first step',
+        () {
+      // The answer setup opens on: the bar is new, so the bodyweight
+      // squats come first and nothing is marked mastered behind them.
+      for (final strength in [
+        const <String, int?>{'squat': 0},
+        const <String, int?>{},
+      ]) {
+        final plan = planFor(
+          hasGym: true,
+          strength: strength,
+          bodyweightKg: 80,
+        );
+
+        expect(plan.tracks[SkillCategoryCatalog.squatId], 'weighted');
+        expect(plan.statuses['squat_assisted_squat'], ExerciseStatus.active);
+        expect(plan.statuses.containsKey('squat_deep_squat'), isFalse);
+        expect(plan.statuses.containsKey('squat_barbell_plus_25'), isFalse);
+      }
+    });
+
+    test('any squat max above 0 starts on the bar, never below its first rung',
+        () {
+      // 80% of 10 kg is under the first rung's 20 kg, and still lands there.
+      final plan = planFor(
+        hasGym: true,
+        strength: {'squat': 10},
+        bodyweightKg: 80,
+      );
 
       expect(plan.statuses['squat_barbell_plus_25'], ExerciseStatus.active);
       expect(plan.statuses['squat_deep_squat'], ExerciseStatus.mastered);
@@ -407,7 +434,7 @@ void main() {
           'dips_bench_dips',
           'rows_vertical_rows',
           'pushups_wall_push_up',
-          'squat_barbell_plus_25',
+          'squat_assisted_squat',
           'hinge_rdl_25_bw',
           'core_foot_supported_l_sit',
         ],
@@ -428,7 +455,7 @@ void main() {
         [
           'dips_bench_dips',
           'pushups_wall_push_up',
-          'squat_barbell_plus_25',
+          'squat_assisted_squat',
           'core_foot_supported_l_sit',
           'lateral_raise_dumbbell',
         ],
@@ -474,7 +501,7 @@ void main() {
           hasGym: true,
         ),
         [
-          'squat_barbell_plus_25',
+          'squat_assisted_squat',
           'hinge_rdl_25_bw',
           'core_foot_supported_l_sit',
           'standing_calf_raise',
