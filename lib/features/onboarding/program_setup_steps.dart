@@ -536,13 +536,11 @@ class _InfoNote extends StatelessWidget {
 class _RadioRow extends StatelessWidget {
   final bool selected;
   final String label;
-  final String sub;
   final VoidCallback onTap;
 
   const _RadioRow({
     required this.selected,
     required this.label,
-    required this.sub,
     required this.onTap,
   });
 
@@ -560,12 +558,10 @@ class _RadioRow extends StatelessWidget {
               : null,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 22,
               height: 22,
-              margin: const EdgeInsets.only(top: 1),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -589,27 +585,14 @@ class _RadioRow extends StatelessWidget {
             ),
             const SizedBox(width: 13),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.16,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    sub,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.16,
+                ),
               ),
             ),
           ],
@@ -726,8 +709,8 @@ class _DayCell extends StatelessWidget {
 
 // ── Step 2: equipment ───────────────────────────────────────
 
-/// Three presets. "Some equipment" slides up the tile-grid sheet; Done
-/// writes a summary of the ticks back onto its card, and closing the sheet
+/// Three presets, each a bare name. "Some equipment" slides up the
+/// tile-grid sheet; Done writes a summary of the ticks back onto its card, and closing the sheet
 /// with nothing ticked clears the radio again.
 class _EquipmentStep extends StatelessWidget {
   final EquipmentAnswer? equipment;
@@ -766,20 +749,19 @@ class _EquipmentStep extends StatelessWidget {
         _RadioRow(
           selected: equipment?.kind == SetupEquipment.fullGym,
           label: 'Full gym',
-          sub: 'Pull-up bar, rings, barbells — the works',
           onTap: () => onChanged(EquipmentAnswer.fullGym),
         ),
         const SizedBox(height: 10),
         _RadioRow(
           selected: equipment?.kind == SetupEquipment.none,
           label: 'No equipment',
-          sub: 'Training at home or outdoors',
           onTap: () => onChanged(EquipmentAnswer.none),
         ),
         const SizedBox(height: 10),
         SomeEquipmentRow(
           selected: some,
           items: some ? equipment.items : const {},
+          showHints: false,
           onTap: () => _pickItems(context),
         ),
         if (equipmentNeedsBarNote(equipment)) ...[

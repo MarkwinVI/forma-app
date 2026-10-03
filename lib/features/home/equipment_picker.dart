@@ -27,11 +27,17 @@ class SomeEquipmentRow extends StatelessWidget {
   final Set<EquipmentItem> items;
   final VoidCallback onTap;
 
+  /// Whether to explain the option under its name while nothing is ticked.
+  /// Onboarding lists its three options as bare names; the summary of what
+  /// was ticked shows either way — that is the answer, not a hint.
+  final bool showHints;
+
   const SomeEquipmentRow({
     super.key,
     required this.selected,
     required this.items,
     required this.onTap,
+    this.showHints = true,
   });
 
   @override
@@ -51,12 +57,16 @@ class SomeEquipmentRow extends StatelessWidget {
               : null,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // A bare name centres on its radio; anything under it hangs from
+          // the top.
+          crossAxisAlignment: hasItems || showHints
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.center,
           children: [
             Container(
               width: 22,
               height: 22,
-              margin: const EdgeInsets.only(top: 1),
+              margin: EdgeInsets.only(top: hasItems || showHints ? 1 : 0),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -92,20 +102,22 @@ class SomeEquipmentRow extends StatelessWidget {
                       letterSpacing: -0.16,
                     ),
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    hasItems
-                        ? EquipmentAnswer.summarizeItems(items)
-                        : 'Rings, a kettlebell, a bar in the garage…',
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.4,
-                      color: hasItems
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                  if (hasItems || showHints) ...[
+                    const SizedBox(height: 1),
+                    Text(
+                      hasItems
+                          ? EquipmentAnswer.summarizeItems(items)
+                          : 'Rings, a kettlebell, a bar in the garage…',
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: hasItems
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  if (!selected) ...[
+                  ],
+                  if (!selected && showHints) ...[
                     const SizedBox(height: 6),
                     const Text(
                       'Tell Forma exactly what you have.',

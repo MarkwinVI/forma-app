@@ -88,6 +88,14 @@ void main() {
     expect(find.text('Your equipment'), findsOneWidget);
     expect(find.text('Pick one to continue'), findsOneWidget);
     expect(continueEnabled(tester), isFalse);
+    // Three bare names: no explaining line under any of them.
+    expect(find.text('Full gym'), findsOneWidget);
+    expect(find.text('No equipment'), findsOneWidget);
+    expect(find.text('Some equipment'), findsOneWidget);
+    expect(find.textContaining('Pull-up bar, rings'), findsNothing);
+    expect(find.textContaining('Training at home'), findsNothing);
+    expect(find.textContaining('bar in the garage'), findsNothing);
+    expect(find.textContaining('Tell Forma'), findsNothing);
     await tester.tap(find.text('Some equipment'));
     await tester.pumpAndSettle();
     expect(find.text('What do you have?'), findsOneWidget);
