@@ -459,13 +459,13 @@ class _OnboardingViewState extends State<OnboardingView> {
               Expanded(
                 child: AnimatedSwitcher(
                   // One after the other, not a cross-fade: the page leaving
-                  // is gone in 140ms, and the page arriving only starts once
-                  // it mostly is. Two full pages at half strength on top of
-                  // each other read as a slow, smeared exit.
-                  duration: const Duration(milliseconds: 320),
-                  reverseDuration: const Duration(milliseconds: 140),
+                  // is gone in 180ms, and the page arriving only starts once
+                  // it mostly is (140ms in). Two full pages at half strength
+                  // on top of each other read as a slow, smeared exit.
+                  duration: const Duration(milliseconds: 400),
+                  reverseDuration: const Duration(milliseconds: 180),
                   switchInCurve:
-                      const Interval(0.3, 1, curve: Curves.easeOutCubic),
+                      const Interval(0.35, 1, curve: Curves.easeOutCubic),
                   switchOutCurve: Curves.easeIn,
                   transitionBuilder: (child, animation) {
                     final incoming =
