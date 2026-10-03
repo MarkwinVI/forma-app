@@ -116,10 +116,25 @@ void main() {
     // Step 4: about you.
     expect(find.text('Your profile'), findsOneWidget);
     expect(find.text('28'), findsOneWidget); // default age
-    await tester.tap(find.text('1–2×'));
+    expect(find.text('HOW OFTEN DO YOU TRAIN PER WEEK?'), findsOneWidget);
+    expect(find.text('I don’t train'), findsOneWidget);
+    expect(find.text('3–4'), findsOneWidget);
+    expect(find.text('5+'), findsOneWidget);
+
+    // Gender and frequency both need an answer before the flow moves on.
+    expect(find.text('Answer both to continue'), findsOneWidget);
+    await tester.tap(find.text('Answer both to continue'));
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('Your profile'), findsOneWidget);
+    await tester.tap(find.text('1–2'));
     await tester.pump();
+    expect(find.text('Answer one more to continue'), findsOneWidget);
+    await tester.tap(find.text('Answer one more to continue'));
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('Your profile'), findsOneWidget);
     await tester.tap(find.text('Male'));
     await tester.pump();
+    expect(find.text('Continue'), findsOneWidget);
 
     // No welcome screen and no second flow: the program questions come
     // next under the same header, and back crosses between the two.
@@ -185,9 +200,16 @@ void main() {
     }
     await next(tester, 'Continue');
     expect(find.text('Your profile'), findsOneWidget);
+    // "Rather not say" and "I don't train" are answers like any other.
+    await tester.tap(find.text('Rather not say'));
+    await tester.pump();
+    await tester.tap(find.text('I don’t train'));
+    await tester.pump();
     await next(tester, 'Continue');
 
     expect(savedProfile, isNotNull);
+    expect(savedProfile!.gender, 'na');
+    expect(savedProfile!.trainingFrequency, '0');
     expect(savedProgram, isNull);
     expect(finished, 1, reason: 'no ready screen without a new program');
   });

@@ -162,10 +162,10 @@ class _Choice {
 }
 
 const _freqChoices = [
-  _Choice('0', 'Not yet', flex: 13),
-  _Choice('1-2', '1–2×'),
-  _Choice('3-4', '3–4×'),
-  _Choice('5+', '5+×'),
+  _Choice('0', 'I don’t train', flex: 20),
+  _Choice('1-2', '1–2'),
+  _Choice('3-4', '3–4'),
+  _Choice('5+', '5+'),
 ];
 
 const _genderChoices = [
@@ -405,9 +405,19 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   /// "Got it" where the step only shows something, "Continue" where it asks.
+  /// Gender and training frequency both need an answer — "Rather not say"
+  /// and "I don't train" are answers. Age always has one: the slider.
+  int get _profileUnanswered =>
+      (_gender == null ? 1 : 0) + (_freq == null ? 1 : 0);
+
   String get _cta {
     if (_step.asksNothing) return 'Got it';
     final question = _step.question;
+    if (_step == _Step.aboutYou && _profileUnanswered > 0) {
+      return _profileUnanswered == 2
+          ? 'Answer both to continue'
+          : 'Answer one more to continue';
+    }
     if (question == null) return _isLast && _saving ? 'Saving…' : 'Continue';
     if (_setup.showingDipTip) return 'Got it';
     if (!_setup.answered(question)) return _setup.holdLabel(question);
@@ -416,8 +426,10 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   bool get _canContinue {
+    if (_saving) return false;
+    if (_step == _Step.aboutYou) return _profileUnanswered == 0;
     final question = _step.question;
-    return !_saving && (question == null || _setup.answered(question));
+    return question == null || _setup.answered(question);
   }
 
   @override
@@ -738,8 +750,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         _choiceRow(
                           _genderChoices,
                           _gender,
-                          (id) => setState(
-                              () => _gender = _gender == id ? null : id),
+                          (id) => setState(() => _gender = id),
                         ),
                       ],
                     ),
@@ -750,17 +761,18 @@ class _OnboardingViewState extends State<OnboardingView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _FieldCaption('HOW OFTEN DO YOU TRAIN?'),
+                        const _FieldCaption(
+                          'HOW OFTEN DO YOU TRAIN PER WEEK?',
+                        ),
                         const SizedBox(height: 10),
                         _choiceRow(
                           _freqChoices,
                           _freq,
-                          (id) =>
-                              setState(() => _freq = _freq == id ? null : id),
+                          (id) => setState(() => _freq = id),
                         ),
                         const SizedBox(height: 9),
                         const Text(
-                          'Sessions per week, any kind of training.',
+                          'Any kind of training counts.',
                           style: TextStyle(
                             fontSize: 12,
                             height: 1.5,
