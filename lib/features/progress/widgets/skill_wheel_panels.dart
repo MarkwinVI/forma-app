@@ -606,10 +606,6 @@ class WheelExerciseCard extends StatefulWidget {
   final double bottomInset;
   final void Function(int flatIndex) onPickStep;
 
-  /// Called when the list is pulled down past its top — the gesture that
-  /// dismisses the tree back to the wheel.
-  final VoidCallback? onDismiss;
-
   /// Reports whether the focused step's row is inside the list's viewport —
   /// the host slides the detail sheet away while it is not.
   final ValueChanged<bool>? onFocusVisible;
@@ -620,7 +616,6 @@ class WheelExerciseCard extends StatefulWidget {
     required this.focus,
     required this.bottomInset,
     required this.onPickStep,
-    this.onDismiss,
     this.onFocusVisible,
   });
 
@@ -641,9 +636,6 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   /// For the first step of each branch, the top of its header; null for
   /// every other step.
   List<double?> _rowHeaderTops = const [];
-
-  /// One dismiss per drag: re-armed when the scroll settles.
-  bool _dismissArmed = true;
 
   /// Last visibility reported for the focused row, so the host only hears
   /// about changes.
@@ -765,21 +757,13 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     _rowOffsets = offsets;
     _rowHeaderTops = headerTops;
 
-    // Pulling the list down past its top reads as "let go of this tree" —
-    // it hands back to the wheel, like the background tap and pinch-out.
+    // Scrolling only ever scrolls: pulling the list past its top bounces
+    // and settles, and leaving the tree stays with the back button, the
+    // edge swipe and the pinch.
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification is ScrollUpdateNotification) {
-          if (_dismissArmed &&
-              notification.dragDetails != null &&
-              notification.metrics.pixels < -60 &&
-              widget.onDismiss != null) {
-            _dismissArmed = false;
-            widget.onDismiss!();
-          }
-          _reportFocusVisibility();
-        } else if (notification is ScrollEndNotification) {
-          _dismissArmed = true;
+        if (notification is ScrollUpdateNotification ||
+            notification is ScrollEndNotification) {
           _reportFocusVisibility();
         }
         return false;

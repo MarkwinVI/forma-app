@@ -584,7 +584,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                       bottomInset + bottomPanelAllowance,
                                   onPickStep: (flatIndex) =>
                                       _wheelController.goTo(_sel!, flatIndex),
-                                  onDismiss: _treeBack,
                                   onFocusVisible: (visible) => setState(
                                     () => _focusInView = visible,
                                   ),

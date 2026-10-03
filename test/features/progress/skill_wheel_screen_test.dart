@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/core/widgets/tab_reset.dart';
 import 'package:forma_app/features/home/program_skill_trees_section.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel.dart';
+import 'package:forma_app/features/progress/widgets/skill_wheel_panels.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel_screen.dart';
 
 WheelFamily _family(
@@ -86,6 +87,49 @@ void main() {
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
     expect(find.text('Stop training'), findsNothing);
     expect(find.text('Start training'), findsNothing);
+  });
+
+  testWidgets('pulling the step list down past its top does not leave the tree',
+      (tester) async {
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    var backs = 0;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      initialCategoryId: 'a',
+      exitOnTreeBack: true,
+      onBack: () => backs++,
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.byType(WheelExerciseCard), findsOneWidget);
+
+    // A long pull down from the first row: the list is already at its top,
+    // so this is all overscroll.
+    // A slow pull down from the top of the list, which is already at its
+    // top: all overscroll, well past the 60pt that used to mean "back".
+    final list = tester.getRect(find.byType(WheelExerciseCard));
+    final position = tester
+        .state<ScrollableState>(find.descendant(
+          of: find.byType(WheelExerciseCard),
+          matching: find.byType(Scrollable),
+        ))
+        .position;
+    final gesture =
+        await tester.startGesture(list.topCenter + const Offset(0, 24));
+    for (var i = 0; i < 10; i++) {
+      await gesture.moveBy(const Offset(0, 30));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(position.pixels, lessThan(-100));
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(backs, 0);
+    expect(find.byType(WheelExerciseCard), findsOneWidget);
   });
 
   testWidgets('a locked tree shows the padlock note and the gray Unlock',
