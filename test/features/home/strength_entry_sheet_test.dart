@@ -40,6 +40,9 @@ void main() {
   testWidgets('typed digits come back on Done', (tester) async {
     final result = await open(tester);
     expect(find.text('Push-ups'), findsOneWidget);
+    // The title and the number are the whole sheet: no line under either.
+    expect(find.textContaining('Your best'), findsNothing);
+    expect(find.textContaining('Type a number'), findsNothing);
     await tester.tap(find.text('2').last);
     await tester.tap(find.text('5').last);
     await tester.pump();

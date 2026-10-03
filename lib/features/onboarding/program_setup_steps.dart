@@ -1235,7 +1235,6 @@ class _StrengthEntrySheetState extends State<StrengthEntrySheet> {
 
     return SheetShell(
       title: widget.label,
-      sub: 'Your best — max reps or one-rep max.',
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
         child: Column(
@@ -1271,15 +1270,13 @@ class _StrengthEntrySheetState extends State<StrengthEntrySheet> {
               ],
             ),
             const SizedBox(height: 6),
+            // Empty unless the number runs over the top — the line keeps
+            // its height either way, so the keypad never shifts under a
+            // thumb.
             Center(
               child: Text(
-                overMax
-                    ? 'Maximum ${widget.max} ${widget.unitSuffix}'
-                    : 'Type a number, or 0 to leave it unset',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: overMax ? AppColors.amber : AppColors.textMuted,
-                ),
+                overMax ? 'Maximum ${widget.max} ${widget.unitSuffix}' : '',
+                style: const TextStyle(fontSize: 12.5, color: AppColors.amber),
               ),
             ),
             const SizedBox(height: 16),
