@@ -181,6 +181,11 @@ class ProgramSetupController extends ChangeNotifier {
   /// holds until a real number is in it.
   bool _bwEntered = false;
 
+  /// The "Minimum 30 kg" note is up: Continue was pressed on a number under
+  /// the floor. It never shows while the number is still being typed — the
+  /// next key takes it down again.
+  bool _bwMinimumNoted = false;
+
   /// Starting-strength answers, null until the user gives one. The squat
   /// load lives in the display unit while the questions run.
   final Map<String, int?> _strength = {
@@ -203,7 +208,9 @@ class ProgramSetupController extends ChangeNotifier {
     return switch (question) {
       ProgramSetupQuestion.schedule => _days != null,
       ProgramSetupQuestion.equipment => _equipmentAnswered,
-      ProgramSetupQuestion.bodyweight => _bwEntered && _bw >= _bwMin,
+      // Any number of the user's own lets Continue be pressed; one under
+      // the floor is turned back there, with the reason (see continueFrom).
+      ProgramSetupQuestion.bodyweight => _bwEntered,
       ProgramSetupQuestion.strength => true,
     };
   }
@@ -262,11 +269,17 @@ class ProgramSetupController extends ChangeNotifier {
   }
 
   /// Continue on [question]. True when it was handled in place — the dip
-  /// tip coming up — and the flow should stay where it is.
+  /// tip coming up, or a bodyweight under the floor being turned back —
+  /// and the flow should stay where it is.
   bool continueFrom(ProgramSetupQuestion question) {
     if (_dipTip) {
       _dipTip = false;
       return false;
+    }
+    if (question == ProgramSetupQuestion.bodyweight && _bw < _bwMin) {
+      _bwMinimumNoted = true;
+      notifyListeners();
+      return true;
     }
     if (question == ProgramSetupQuestion.equipment &&
         !(_equipment?.hasDipBars ?? true)) {
@@ -364,6 +377,7 @@ class ProgramSetupController extends ChangeNotifier {
     // capped, and the button holds until it clears the floor.
     _bw = _bwEntered ? converted.clamp(0, _bwMax).toDouble() : 0;
     _bwEdit = '';
+    _bwMinimumNoted = false;
     // Flipping the unit converts the number; it does not close the entry.
     if (_bwEditing) _openBodyweightEntry();
     WeightUnitService.set(unit);
@@ -375,14 +389,20 @@ class ProgramSetupController extends ChangeNotifier {
   void _commitBodyweight() {
     if (!_bwEditing && _bwEdit.isEmpty) return;
     final parsed = double.tryParse(_bwEdit);
-    if (parsed != null && parsed > 0) _bw = _clampBw(parsed);
+    // Capped, never raised: a number under the floor stays what was typed,
+    // and Continue is what says so.
+    if (parsed != null && parsed > 0) {
+      _bw = parsed.clamp(0, _bwMax).toDouble();
+    }
     _bwEdit = '';
     _bwEditing = false;
+    _bwMinimumNoted = false;
     notifyListeners();
   }
 
   void _pressBwKey(String key) {
     _bwEdit = weightEntryPress(_bwEdit, key);
+    _bwMinimumNoted = false;
     final parsed = double.tryParse(_bwEdit);
     // An emptied field falls back to the placeholder, 0.
     _bw = parsed == null ? 0 : parsed.clamp(0, _bwMax).toDouble();
@@ -493,6 +513,7 @@ class _ProgramSetupStepState extends State<ProgramSetupStep> {
           editing: c._bwEditing,
           unit: c._unit,
           min: c._bwMin,
+          showMinimum: c._bwMinimumNoted,
           onUnitChanged: c._setUnit,
           onTapValue: c._tapBwValue,
           onKey: c._pressBwKey,
@@ -805,6 +826,10 @@ class _WeightStep extends StatelessWidget {
   final bool editing;
   final WeightUnit unit;
   final double min;
+
+  /// Whether to say what the minimum is — only after Continue was pressed
+  /// on a number under it, never while the number is being typed.
+  final bool showMinimum;
   final ValueChanged<WeightUnit> onUnitChanged;
   final VoidCallback onTapValue;
   final ValueChanged<String> onKey;
@@ -815,6 +840,7 @@ class _WeightStep extends StatelessWidget {
     required this.editing,
     required this.unit,
     required this.min,
+    required this.showMinimum,
     required this.onUnitChanged,
     required this.onTapValue,
     required this.onKey,
@@ -829,10 +855,6 @@ class _WeightStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Only once something is typed: the placeholder 0 is not an answer to
-    // correct.
-    final belowMin = editing && edit.isNotEmpty && bw < min;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -853,7 +875,7 @@ class _WeightStep extends StatelessWidget {
               style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
             ),
           )
-        else if (belowMin)
+        else if (showMinimum)
           Center(
             child: Text(
               'Minimum ${min.round()} ${unit.suffix}',

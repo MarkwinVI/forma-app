@@ -293,6 +293,53 @@ void main() {
   });
 
   testWidgets(
+      'the bodyweight minimum is only mentioned when Continue is pressed on '
+      'a number under it', (tester) async {
+    await pumpQuestions(tester, onComplete: (_) async {});
+    await tester.tap(find.text('3'));
+    await tester.pump();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Full gym'));
+    await tester.pump();
+    await tester.tap(find.text('Continue'));
+    await pumpStep(tester);
+    expect(find.text('Your bodyweight'), findsOneWidget);
+
+    // Typing a number under the floor: no note, and Continue can be tried.
+    // (Keys from the keypad's upper rows: the bottom one is under the fold.)
+    await tester.tap(find.text('1'));
+    await tester.pump();
+    expect(bodyweightField(tester).text, '1');
+    expect(find.textContaining('Minimum'), findsNothing);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(continueEnabled(tester), isTrue);
+
+    // Pressing Continue on it: the page stays, and says why.
+    await tester.tap(find.text('Continue'));
+    await pumpStep(tester);
+    expect(find.text('Your bodyweight'), findsOneWidget);
+    expect(find.text('Minimum 30 kg'), findsOneWidget);
+    expect(bodyweightField(tester).text, '1');
+
+    // The next key takes the note down again, even though 12 is still
+    // under the floor — it only comes back on another press of Continue.
+    await tester.tap(find.text('2'));
+    await tester.pump();
+    expect(bodyweightField(tester).text, '12');
+    expect(find.textContaining('Minimum'), findsNothing);
+
+    // A real weight goes through.
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    expect(bodyweightField(tester).text, '125');
+    expect(find.textContaining('Minimum'), findsNothing);
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('Where are you starting?'), findsOneWidget);
+  });
+
+  testWidgets(
       'a page on its way out keeps what it showed — no flash of another '
       'state mid-transition', (tester) async {
     await pumpQuestions(tester, onComplete: (_) async {});
