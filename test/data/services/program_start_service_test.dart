@@ -323,7 +323,7 @@ void main() {
       expect(plan.statuses['squat_barbell_plus_25'], ExerciseStatus.active);
     });
 
-    test('the weighted hinge places its rung from 80% of the RDL max', () {
+    test('an RDL max stored by an older setup still places the rung', () {
       // 80% of a 100 kg max is 80 kg — the +100% bodyweight rung exactly.
       final plan = planFor(
         hasGym: true,
@@ -347,17 +347,17 @@ void main() {
       expect(plan.statuses.containsKey('hinge_rdl_125_bw'), isFalse);
     });
 
-    test('a blank RDL answer starts the hinge on its first step', () {
+    test('with no RDL answer the weighted hinge starts on its first rung',
+        () {
+      // Setup no longer asks for an RDL max, so this is every new program.
       final plan = planFor(hasGym: true);
 
+      expect(plan.statuses['hinge_rdl_25_bw'], ExerciseStatus.active);
       expect(
         plan.statuses['hinge_romanian_deadlift_bodyweight'],
-        ExerciseStatus.active,
+        ExerciseStatus.mastered,
       );
-      expect(
-        plan.statuses.containsKey('hinge_rdl_25_bw'),
-        isFalse,
-      );
+      expect(plan.statuses.containsKey('hinge_rdl_50_bw'), isFalse);
     });
 
     test('without a gym the hinge runs the Nordic curls from the start', () {
@@ -408,7 +408,7 @@ void main() {
           'rows_vertical_rows',
           'pushups_wall_push_up',
           'squat_barbell_plus_25',
-          'hinge_romanian_deadlift_bodyweight',
+          'hinge_rdl_25_bw',
           'core_foot_supported_l_sit',
         ],
       );
@@ -443,7 +443,7 @@ void main() {
         [
           'pullups_scapular_pull',
           'rows_vertical_rows',
-          'hinge_romanian_deadlift_bodyweight',
+          'hinge_rdl_25_bw',
           'face_pull',
         ],
       );
@@ -475,7 +475,7 @@ void main() {
         ),
         [
           'squat_barbell_plus_25',
-          'hinge_romanian_deadlift_bodyweight',
+          'hinge_rdl_25_bw',
           'core_foot_supported_l_sit',
           'standing_calf_raise',
         ],

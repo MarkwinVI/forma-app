@@ -71,9 +71,10 @@ class ProgramStartPlan {
 ///    starting node with nothing owed behind it. Rows always start at the
 ///    first step. A weighted branch starts on the deepest barbell rung whose load
 ///    fits inside 80% of the reported one-rep max — rounded down, so an
-///    answer between rungs lands on the lighter one. Without an answer the
-///    squat opens on the ladder's first rung, a quarter of bodyweight, and
-///    the hinge on the tree's first step, the bodyweight Romanian deadlift.
+///    answer between rungs lands on the lighter one. Without an answer a
+///    weighted branch opens on its ladder's first rung, a quarter of
+///    bodyweight. Setup asks for the squat max only, so the weighted hinge
+///    always opens there; an answer stored by an older setup still places it.
 class ProgramStartPlanner {
   ProgramStartPlanner._();
 
@@ -89,13 +90,13 @@ class ProgramStartPlanner {
 
   /// Per weighted branch: the setup answer (a one-rep max in kg) that places
   /// the starting rung, and where a blank answer starts — the first loaded
-  /// rung for the squat (a gym user never starts on the bodyweight run-up),
-  /// the tree's first step for the hinge (the bodyweight Romanian deadlift
-  /// is where an untested hinge begins).
+  /// rung for both: a gym user never starts on the bodyweight run-up. The
+  /// hinge's answer is no longer asked, so it is blank for every new
+  /// program; the key stays for the answers older setups stored.
   static const Map<String, _WeightedGate> _weightedGates = {
     SkillCategoryCatalog.squatId:
         _WeightedGate('squat', blankStartsOnBar: true),
-    SkillCategoryCatalog.hingeId: _WeightedGate('rdl', blankStartsOnBar: false),
+    SkillCategoryCatalog.hingeId: _WeightedGate('rdl', blankStartsOnBar: true),
   };
 
   /// Per tree: the setup answer that places the starting node, and the step

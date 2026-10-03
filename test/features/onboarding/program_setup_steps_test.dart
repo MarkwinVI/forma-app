@@ -129,11 +129,12 @@ void main() {
     // by a rep, or by five of the weight unit.
     expect(find.text('Where are you starting?'), findsOneWidget);
     expect(find.text('Barbell squat'), findsOneWidget);
-    expect(find.text('Romanian deadlift'), findsOneWidget);
+    // The hinge is not asked about: it opens on its first loaded rung.
+    expect(find.text('Romanian deadlift'), findsNothing);
     expect(find.text('Best single rep — bar weight'), findsNothing);
     expect(find.text('—'), findsNothing);
     expect(find.text('0'), findsNWidgets(3)); // push-ups, pull-ups, dips
-    expect(find.text('0 kg'), findsNWidgets(2)); // squat, RDL
+    expect(find.text('0 kg'), findsOneWidget); // squat
     await tester.tap(find.byIcon(Icons.add_rounded).at(1));
     await tester.pump();
     expect(find.text('1'), findsOneWidget); // pull-ups: one rep
@@ -148,7 +149,7 @@ void main() {
     // Back down to 0, where "−" stops.
     await tester.tap(find.byIcon(Icons.remove_rounded).at(3));
     await tester.pump();
-    expect(find.text('0 kg'), findsNWidgets(2));
+    expect(find.text('0 kg'), findsOneWidget);
     expect(find.text('Build my program'), findsOneWidget);
     await tester.tap(find.text('Build my program'));
     await tester.pumpAndSettle();
@@ -164,9 +165,9 @@ void main() {
     expect(result!.bodyweightKg, 82);
     expect(result!.startingStrength['pushups'], isNull);
     expect(result!.startingStrength['pullups'], 3);
-    // Stepped up and back down is an answer of 0; never touched stays null.
+    // Stepped up and back down is an answer of 0.
     expect(result!.startingStrength['squat'], 0);
-    expect(result!.startingStrength['rdl'], isNull);
+    expect(result!.startingStrength.containsKey('rdl'), isFalse);
     expect(result!.startingStrength.containsKey('squat_bw'), isFalse);
     expect(result!.toMap()['has_gym'], isTrue);
     expect(result!.toMap()['equipment'], 'some');

@@ -143,18 +143,6 @@ _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
       max: unit == WeightUnit.lb ? 660 : 300,
     );
 
-/// Also asked with access to weights: the heaviest single-rep Romanian
-/// deadlift, placing the start of the hinge tree's weighted ladder the same
-/// way — at 80% of it.
-_StrengthExercise _romanianDeadliftFor(WeightUnit unit) => _StrengthExercise(
-      id: 'rdl',
-      label: 'Romanian deadlift',
-      icon: Icons.fitness_center_rounded,
-      isWeight: true,
-      step: 5,
-      max: unit == WeightUnit.lb ? 660 : 300,
-    );
-
 /// Asked without weights: bodyweight squats measured in reps instead.
 const _bodyweightSquat = _StrengthExercise(
   id: 'squat_bw',
@@ -194,14 +182,13 @@ class ProgramSetupController extends ChangeNotifier {
   /// suggestion, not an answer.
   bool _bwEntered = false;
 
-  /// Starting-strength answers, null until the user gives one. The
-  /// squat and RDL loads live in the display unit while the questions run.
+  /// Starting-strength answers, null until the user gives one. The squat
+  /// load lives in the display unit while the questions run.
   final Map<String, int?> _strength = {
     'pushups': null,
     'pullups': null,
     'dips': null,
     'squat': null,
-    'rdl': null,
     'squat_bw': null,
   };
 
@@ -317,10 +304,11 @@ class ProgramSetupController extends ChangeNotifier {
         'pushups': _strength['pushups'],
         'pullups': _strength['pullups'],
         'dips': _strength['dips'],
-        if (equipment.hasWeights) ...{
-          'squat': _strengthKg('squat'),
-          'rdl': _strengthKg('rdl'),
-        } else
+        // The hinge is not asked about: with weights it opens on the
+        // ladder's first loaded rung, without them on the tree's first step.
+        if (equipment.hasWeights)
+          'squat': _strengthKg('squat')
+        else
           'squat_bw': _strength['squat_bw'],
       },
     );
@@ -356,12 +344,9 @@ class ProgramSetupController extends ChangeNotifier {
     final shown = double.tryParse(_bwEdit) ?? _bw;
     final kg =
         _unit == WeightUnit.lb ? shown * WeightUnitService.kgPerLb : shown;
-    // The barbell answers are loads, so they travel with the unit —
-    // rounded to something loadable rather than a raw conversion.
-    for (final barbell in [
-      _barbellSquatFor(unit),
-      _romanianDeadliftFor(unit)
-    ]) {
+    // The barbell answer is a load, so it travels with the unit — rounded
+    // to something loadable rather than a raw conversion.
+    for (final barbell in [_barbellSquatFor(unit)]) {
       final value = _strength[barbell.id];
       // A 0 answer stays 0 — the loadable floor below would turn it into a
       // phantom 5 on a unit flip.
@@ -882,11 +867,7 @@ class _StrengthStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final exercises = [
       ..._repStrengthExercises,
-      if (hasWeights) ...[
-        _barbellSquatFor(unit),
-        _romanianDeadliftFor(unit),
-      ] else
-        _bodyweightSquat,
+      if (hasWeights) _barbellSquatFor(unit) else _bodyweightSquat,
     ];
 
     return Column(
