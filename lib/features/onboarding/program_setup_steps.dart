@@ -98,7 +98,6 @@ class _StrengthExercise {
   /// Whether the answer is a load (kg/lbs) rather than a rep count.
   final bool isWeight;
   final int step;
-  final int def;
   final int max;
 
   const _StrengthExercise({
@@ -107,7 +106,6 @@ class _StrengthExercise {
     required this.icon,
     this.isWeight = false,
     this.step = 1,
-    required this.def,
     required this.max,
   });
 }
@@ -117,21 +115,18 @@ const _repStrengthExercises = [
     id: 'pushups',
     label: 'Push-ups',
     icon: Icons.trending_flat_rounded,
-    def: 10,
     max: 100,
   ),
   _StrengthExercise(
     id: 'pullups',
     label: 'Pull-ups',
     icon: Icons.arrow_upward_rounded,
-    def: 3,
     max: 50,
   ),
   _StrengthExercise(
     id: 'dips',
     label: 'Dips',
     icon: Icons.north_rounded,
-    def: 5,
     max: 50,
   ),
 ];
@@ -145,7 +140,6 @@ _StrengthExercise _barbellSquatFor(WeightUnit unit) => _StrengthExercise(
       icon: Icons.accessibility_new_rounded,
       isWeight: true,
       step: 5,
-      def: unit == WeightUnit.lb ? 90 : 40,
       max: unit == WeightUnit.lb ? 660 : 300,
     );
 
@@ -158,7 +152,6 @@ _StrengthExercise _romanianDeadliftFor(WeightUnit unit) => _StrengthExercise(
       icon: Icons.fitness_center_rounded,
       isWeight: true,
       step: 5,
-      def: unit == WeightUnit.lb ? 90 : 40,
       max: unit == WeightUnit.lb ? 660 : 300,
     );
 
@@ -167,7 +160,6 @@ const _bodyweightSquat = _StrengthExercise(
   id: 'squat_bw',
   label: 'Bodyweight squats',
   icon: Icons.accessibility_new_rounded,
-  def: 15,
   max: 100,
 );
 
@@ -202,7 +194,7 @@ class ProgramSetupController extends ChangeNotifier {
   /// suggestion, not an answer.
   bool _bwEntered = false;
 
-  /// Starting-strength answers, unset until the user adds a number. The
+  /// Starting-strength answers, null until the user gives one. The
   /// squat and RDL loads live in the display unit while the questions run.
   final Map<String, int?> _strength = {
     'pushups': null,
@@ -961,11 +953,10 @@ class _StrengthCard extends StatelessWidget {
               ],
             ),
           ),
-          _UnsetStepper(
+          _StrengthStepper(
             label: exercise.label,
             value: value,
             step: exercise.step,
-            def: exercise.def,
             max: exercise.max,
             unitSuffix: exercise.isWeight ? unit.suffix : null,
             onChanged: onChanged,
@@ -976,24 +967,25 @@ class _StrengthCard extends StatelessWidget {
   }
 }
 
-/// Unset by default — "+" adds a value, and stepping below zero clears it
-/// back to unset ("—"), which the planner reads as "test it in session one".
-/// The number itself opens direct entry; ± are the fine adjust, and holding
-/// one keeps stepping.
-class _UnsetStepper extends StatelessWidget {
+/// Starts at 0 — "+" steps up from there, a rep or five of the weight
+/// unit at a time, and "−" steps back down to 0. The number itself opens
+/// direct entry, and holding a button keeps stepping.
+///
+/// A null [value] is an answer nobody touched. It reads as 0 here and
+/// places the user exactly as a 0 does, but stays null in what is saved,
+/// so "left alone" and "can't do one yet" remain two different answers.
+class _StrengthStepper extends StatelessWidget {
   final String label;
   final int? value;
   final int step;
-  final int def;
   final int max;
   final String? unitSuffix;
   final ValueChanged<int?> onChanged;
 
-  const _UnsetStepper({
+  const _StrengthStepper({
     required this.label,
     required this.value,
     required this.step,
-    required this.def,
     required this.max,
     required this.unitSuffix,
     required this.onChanged,
@@ -1013,14 +1005,12 @@ class _UnsetStepper extends StatelessWidget {
       ),
     );
     if (entered == null) return;
-    // A typed 0 is an answer ("I can't do one yet"), not a cleared field —
-    // stepping below zero stays the way to clear.
     onChanged(entered);
   }
 
   @override
   Widget build(BuildContext context) {
-    final unset = value == null;
+    final shown = value ?? 0;
     final unitWord = unitSuffix ?? 'reps';
 
     return Row(
@@ -1029,16 +1019,11 @@ class _UnsetStepper extends StatelessWidget {
         _StepperButton(
           icon: Icons.remove_rounded,
           semanticLabel: 'Decrease $label',
-          enabled: !unset,
-          onTap: () {
-            final next = value! - step;
-            onChanged(next < 0 ? null : next);
-          },
+          enabled: shown > 0,
+          onTap: () => onChanged((shown - step).clamp(0, max)),
         ),
         Pressable(
-          semanticLabel: unset
-              ? '$label, not set. Tap to enter a value'
-              : '$label, $value $unitWord. Tap to enter a value',
+          semanticLabel: '$label, $shown $unitWord. Tap to enter a value',
           onTap: () => _openEntry(context),
           child: Container(
             constraints: const BoxConstraints(minWidth: 52, minHeight: 44),
@@ -1047,17 +1032,16 @@ class _UnsetStepper extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: unset ? '—' : '$value',
-                    style: TextStyle(
+                    text: '$shown',
+                    style: const TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.w800,
-                      color:
-                          unset ? AppColors.textMuted : AppColors.textPrimary,
+                      color: AppColors.textPrimary,
                       letterSpacing: -0.42,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontFeatures: [FontFeature.tabularFigures()],
                     ),
                   ),
-                  if (!unset && unitSuffix != null)
+                  if (unitSuffix != null)
                     TextSpan(
                       text: ' $unitSuffix',
                       style: const TextStyle(
@@ -1074,8 +1058,8 @@ class _UnsetStepper extends StatelessWidget {
         _StepperButton(
           icon: Icons.add_rounded,
           semanticLabel: 'Increase $label',
-          enabled: unset || value! < max,
-          onTap: () => onChanged(unset ? def : (value! + step).clamp(0, max)),
+          enabled: shown < max,
+          onTap: () => onChanged((shown + step).clamp(0, max)),
         ),
       ],
     );
