@@ -166,11 +166,12 @@ void main() {
       home: ProgramReadyView(service: s, onDone: () {}, bundle: _bundle()),
     ));
     await tester.pump();
-    // Still building: the reveal runs for two seconds from the first frame.
+    // Still building: the reveal runs for two and a half seconds from the
+    // first frame.
     expect(wheel().showsWholeOverview, isFalse);
-    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(milliseconds: 2300));
     expect(wheel().showsWholeOverview, isFalse);
-    await tester.pump(const Duration(milliseconds: 1100));
+    await tester.pump(const Duration(milliseconds: 300));
     expect(wheel().showsWholeOverview, isTrue);
 
     // Under Reduce Motion the map simply stands whole.

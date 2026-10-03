@@ -266,7 +266,12 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
   /// The entry reveal (see [SkillWheel.revealOnEntry]): one run from 0 to
   /// 1 over [_revealMs], or held at 1 for a wheel that stands whole.
   late final AnimationController _reveal;
-  static const int _revealMs = 2000;
+  static const int _revealMs = 2500;
+
+  /// The reveal's script is written in the reference design's seconds — two
+  /// of them, start to finish — and played over [_revealMs]: the same
+  /// build, a quarter slower.
+  static const double _revealScriptSeconds = 2;
   var _revealStarted = false;
   Timer? _labelTimer;
 
@@ -692,9 +697,11 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
   // nodes and links after a delay that grows with their distance from the
   // hub (0.1s there, 1.0s at the rim), names 0.25s behind the nodes at
   // their radius, and each active tree's starting step popping in on its
-  // own beat. With no reveal running every element is simply drawn.
+  // own beat — all of it stretched by a quarter, since the script's two
+  // seconds play over [_revealMs]. With no reveal running every element is
+  // simply drawn.
 
-  double get _revealT => _reveal.value * _revealMs / 1000;
+  double get _revealT => _reveal.value * _revealScriptSeconds;
 
   /// How far along an element is, 0 to 1 and linear, [fade] seconds after
   /// [delay]; 1 outright while the wheel stands whole.
