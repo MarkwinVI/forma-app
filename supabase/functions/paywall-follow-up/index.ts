@@ -36,6 +36,11 @@
 //                              the same for that call only.
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are injected by Supabase.
 //
+// A body of {"test_to": "<address>", "test_name": "<first name>"} sends the
+// email to that one address through the same Resend call and does nothing
+// else — no window, no claim, dry run or not. tool/run_paywall_follow_up.sh
+// --test wraps it.
+//
 // Deploy with --no-verify-jwt: pg_net sends the shared secret, not a JWT.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -65,6 +70,30 @@ Deno.serve(async (req) => {
   const secret = Deno.env.get("PAYWALL_FOLLOW_UP_SECRET");
   if (!secret || req.headers.get("authorization") !== secret) {
     return json(401, { error: "Unauthorized" });
+  }
+
+  let body: { test_to?: unknown; test_name?: unknown } = {};
+  try {
+    body = await req.json();
+  } catch {
+    // The cron job posts '{}'; anything unreadable is treated the same.
+  }
+  if (typeof body.test_to === "string" && body.test_to.includes("@")) {
+    const candidate: Candidate = {
+      userId: "test",
+      completedAt: new Date().toISOString(),
+      email: body.test_to.trim(),
+      firstName: typeof body.test_name === "string" && body.test_name.trim()
+        ? body.test_name.trim()
+        : null,
+    };
+    try {
+      await sendFollowUp(candidate);
+    } catch (error) {
+      console.error("test send failed", error);
+      return json(502, { error: `Email failed: ${error}` });
+    }
+    return json(200, { test_sent_to: candidate.email });
   }
 
   const dryRun = Deno.env.get("FOLLOW_UP_DRY_RUN") === "true" ||
