@@ -2,9 +2,11 @@
 // free trial.
 //
 // RevenueCat posts every subscription event here (register the function URL
-// under Integrations → Webhooks). Only one kind is acted on: a voluntary
-// CANCELLATION while the period is a TRIAL, in PRODUCTION. Everything else
-// is acknowledged with 200 so RevenueCat stops retrying.
+// under Integrations → Webhooks). Each one is recorded in webhook_events
+// with the user it concerns — the record paywall-follow-up reads to tell
+// who has ever had a trial — and then only one kind is acted on: a
+// voluntary CANCELLATION while the period is a TRIAL, in PRODUCTION.
+// Everything else is acknowledged with 200 so RevenueCat stops retrying.
 //
 // Secrets (supabase secrets set ...):
 //   REVENUECAT_WEBHOOK_SECRET  the value RevenueCat sends as Authorization
@@ -55,6 +57,29 @@ Deno.serve(async (req) => {
     return new Response("Bad request", { status: 400 });
   }
 
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  // Every event is recorded, acted on or not. For the one kind that sends
+  // mail the row is the dedupe: RevenueCat retries on anything but 2xx, and
+  // the primary key makes a retry a no-op instead of a second email. For
+  // the rest it is the history of who has ever had a trial or subscription.
+  const { error: dedupeError } = await supabase
+    .from("webhook_events")
+    .insert({
+      id: event.id,
+      event_type: event.type,
+      app_user_id: event.app_user_id,
+      environment: event.environment,
+    });
+  if (dedupeError) {
+    if (dedupeError.code === "23505") return ok("already handled");
+    console.error("webhook_events insert failed", dedupeError);
+    return new Response("Database error", { status: 500 });
+  }
+
   const allowSandbox = Deno.env.get("ALLOW_SANDBOX_EVENTS") === "true";
   const wanted =
     event.type === "CANCELLATION" &&
@@ -64,22 +89,6 @@ Deno.serve(async (req) => {
   if (!wanted) {
     console.log(`ignored ${event.type} ${event.environment} ${event.period_type ?? ""} ${event.cancel_reason ?? ""}`);
     return ok(`ignored ${event.type}`);
-  }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-
-  // RevenueCat retries on anything but 2xx; the primary key makes a retry a
-  // no-op instead of a second email.
-  const { error: dedupeError } = await supabase
-    .from("webhook_events")
-    .insert({ id: event.id, event_type: event.type });
-  if (dedupeError) {
-    if (dedupeError.code === "23505") return ok("already handled");
-    console.error("webhook_events insert failed", dedupeError);
-    return new Response("Database error", { status: 500 });
   }
 
   const member = await lookupMember(supabase, event);

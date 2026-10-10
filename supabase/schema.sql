@@ -412,17 +412,38 @@ grant execute on function public.delete_account() to authenticated;
 
 -- ── Webhooks ──────────────────────────────────────────────────────────────
 
--- Dedupe log for the revenuecat-webhook edge function
--- (supabase/functions/revenuecat-webhook). One row per RevenueCat event id;
--- service role only, so no policies.
+-- Every RevenueCat event the revenuecat-webhook edge function receives
+-- (supabase/functions/revenuecat-webhook), one row per event id. The dedupe
+-- for the events that send mail, and the record of who has ever had a trial
+-- or subscription for paywall-follow-up. Service role only, so no policies.
 
 create table public.webhook_events (
-  id          text primary key,
-  event_type  text not null,
-  received_at timestamptz default now() not null
+  id           text primary key,
+  event_type   text not null,
+  app_user_id  text, -- the Supabase user id, as the app logs into RevenueCat with it
+  environment  text, -- 'PRODUCTION' | 'SANDBOX'
+  received_at  timestamptz default now() not null
 );
 
+create index webhook_events_app_user_idx
+  on public.webhook_events (app_user_id);
+
 alter table public.webhook_events enable row level security;
+
+-- ── One-off emails ────────────────────────────────────────────────────────
+-- Who has had which one-off email, so none goes twice. The first kind is
+-- the paywall follow-up (supabase/functions/paywall-follow-up), which a
+-- pg_cron job runs hourly — see migrations/2026-10-10_paywall_follow_up.sql
+-- for the job. Service role only, so no policies.
+
+create table public.email_sends (
+  user_id  uuid references auth.users(id) on delete cascade not null,
+  kind     text not null, -- 'paywall_follow_up'
+  sent_at  timestamptz default now() not null,
+  primary key (user_id, kind)
+);
+
+alter table public.email_sends enable row level security;
 
 -- ── Feedback ──────────────────────────────────────────────────────────────
 -- One row per thing a user told us: the session rating that closes every
