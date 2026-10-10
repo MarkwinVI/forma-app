@@ -26,7 +26,7 @@
 //   EMAIL_FROM                 e.g. "Forma <hello@your-verified-domain>" (shared)
 //   SUPPORT_INBOX              where replies go (shared)
 //   FOLLOW_UP_TEMPLATE_ID      optional; id or alias of a published Resend
-//                              template, sent with the NAME variable. It
+//                              template, sent with the `name` variable. It
 //                              must carry its own subject. When unset, the
 //                              inline copy below is sent.
 //   FOLLOW_UP_EXCLUDED_EMAILS  optional; comma-separated addresses that are
@@ -244,8 +244,8 @@ async function sendFollowUp(c: Candidate) {
   };
   const templateId = Deno.env.get("FOLLOW_UP_TEMPLATE_ID");
   const payload = templateId
-    ? { ...base, template: { id: templateId, variables: { NAME: c.firstName ?? "there" } } }
-    : { ...base, subject: "Quick question about Forma", ...inlineCopy(c.firstName) };
+    ? { ...base, template: { id: templateId, variables: { name: c.firstName ?? "there" } } }
+    : { ...base, subject: "Can I ask why you didn't start the trial?", ...inlineCopy(c.firstName) };
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
