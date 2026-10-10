@@ -15,13 +15,15 @@ import '../../data/models/onboarding_profile_model.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/membership_service.dart';
+import '../../data/services/meta_ads_service.dart';
 import '../home/program_ready_view.dart';
 import '../progress/skill_wheel_bundle.dart';
 import 'program_setup_steps.dart';
 
 /// Post-signup onboarding, one flow from the pitch to a built program: three
 /// grounded beats (the skill tree route, the workout that levels up, the data
-/// loop that eases you back) → archetype radar → about you → the program
+/// loop that eases you back) → the tracking ask (iOS, once, for the ad
+/// campaigns) → archetype radar → about you → the program
 /// questions (schedule, equipment, bodyweight, starting strength) → the map
 /// the answers drew, and the membership choice. Everything is written when
 /// the program is built: the profile to `user_onboarding_profiles`, the
@@ -182,6 +184,7 @@ enum _Step {
   skills('onboarding_skills'),
   workout('onboarding_workout'),
   data('onboarding_data'),
+  tracking('onboarding_tracking'),
   radar('onboarding_radar'),
   aboutYou('onboarding_about_you'),
   schedule('onboarding_schedule', ProgramSetupQuestion.schedule),
@@ -223,6 +226,12 @@ class OnboardingView extends StatefulWidget {
   /// is, and the flow ends at the profile.
   final bool askProgram;
 
+  /// Whether to ask for tracking permission on the way: iOS, and the
+  /// system has never asked for this app (see
+  /// [MetaAdsService.shouldAskTracking]). The step shows once, whatever
+  /// the answer.
+  final bool askTracking;
+
   /// Writes what the flow collected — the onboarding profile and the
   /// program, each null when it was not asked.
   final Future<void> Function(
@@ -239,6 +248,7 @@ class OnboardingView extends StatefulWidget {
     required this.userId,
     this.askProfile = true,
     this.askProgram = true,
+    this.askTracking = false,
     required this.onSave,
     required this.onFinished,
   }) : assert(askProfile || askProgram);
@@ -250,7 +260,12 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView> {
   late final List<_Step> _steps = [
     for (final step in _Step.values)
-      if (step.question == null ? widget.askProfile : widget.askProgram) step,
+      if (step == _Step.tracking
+          ? widget.askTracking
+          : step.question == null
+              ? widget.askProfile
+              : widget.askProgram)
+        step,
   ];
 
   final _setup = ProgramSetupController();
@@ -263,6 +278,10 @@ class _OnboardingViewState extends State<OnboardingView> {
   String? _gender;
   String? _freq;
   bool _saving = false;
+
+  /// While the system tracking dialog is up, so a second tap cannot ask
+  /// again.
+  bool _askingTracking = false;
 
   /// Set once everything is written: the flow ends on the map the answers
   /// drew and the membership choice.
@@ -320,6 +339,10 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   void _advance() {
+    if (_step == _Step.tracking) {
+      _askTracking();
+      return;
+    }
     final question = _step.question;
     if (question != null && _setup.continueFrom(question)) {
       setState(() => _dir = 1);
@@ -330,6 +353,17 @@ class _OnboardingViewState extends State<OnboardingView> {
     } else {
       _go(_index + 1);
     }
+  }
+
+  /// The system tracking dialog, then onward whatever the answer — the
+  /// page only ever shows once, and nothing in the flow depends on it.
+  Future<void> _askTracking() async {
+    if (_askingTracking) return;
+    setState(() => _askingTracking = true);
+    await MetaAdsService.instance.requestTracking();
+    if (!mounted) return;
+    setState(() => _askingTracking = false);
+    _go(_index + 1);
   }
 
   void _back() {
@@ -415,6 +449,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   /// [_canContinue]); a program question says what it is waiting for.
   String get _cta {
     if (_step.asksNothing) return 'Got it';
+    if (_step == _Step.tracking) return 'Continue';
     final question = _step.question;
     if (question == null) return _isLast && _saving ? 'Saving…' : 'Continue';
     if (_setup.showingDipTip) return 'Got it';
@@ -424,7 +459,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   }
 
   bool get _canContinue {
-    if (_saving) return false;
+    if (_saving || _askingTracking) return false;
     if (_step == _Step.aboutYou) return _profileAnswered;
     final question = _step.question;
     return question == null || _setup.answered(question);
@@ -507,6 +542,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       _Step.skills => _buildSkillsBeat(),
       _Step.workout => _buildWorkoutBeat(),
       _Step.data => _buildDataBeat(),
+      _Step.tracking => _buildTrackingStep(),
       _Step.radar => _buildRadarStep(),
       _Step.aboutYou => _buildAboutYou(),
       _ => _buildProgramQuestion(step.question!),
@@ -600,7 +636,53 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 3: archetype radar ──
+  // ── Step 3: the tracking ask ──
+
+  /// The dialog that follows is Apple's, in Apple's words; this page says
+  /// in ours what the permission is for, so the ask is not the first thing
+  /// seen.
+  Widget _buildTrackingStep() {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _StepHead(
+            icon: Icons.campaign_rounded,
+            pill: 'ONE QUICK QUESTION',
+            title: 'Help Forma reach more people like you.',
+            sub: 'Next, iOS will ask whether Forma may track your activity. '
+                'Allowing it shows us which ads bring in people who '
+                'actually train — nothing more.',
+          ),
+          SizedBox(height: 26),
+          _Rise(
+            index: 3,
+            child: _TrackingPoint(
+              icon: Icons.lock_outline_rounded,
+              text: 'Your workouts and progress stay private.',
+            ),
+          ),
+          _Rise(
+            index: 4,
+            child: _TrackingPoint(
+              icon: Icons.tune_rounded,
+              text: 'Nothing in the app changes with your answer.',
+            ),
+          ),
+          _Rise(
+            index: 5,
+            child: _TrackingPoint(
+              icon: Icons.settings_outlined,
+              text: 'Change your mind any time in iOS Settings.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Step 4: archetype radar ──
 
   Widget _buildRadarStep() {
     final arch = _archetype;
@@ -1812,6 +1894,37 @@ class _StepHead extends StatelessWidget {
           _Rise(index: 2, child: Text(sub!, style: _captionStyle)),
         ],
       ],
+    );
+  }
+}
+
+/// One line of the tracking page: an icon in a soft tile, and what it
+/// promises.
+class _TrackingPoint extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _TrackingPoint({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 19, color: AppColors.accentPrimary),
+          ),
+          const SizedBox(width: 13),
+          Expanded(child: Text(text, style: _captionStyle)),
+        ],
+      ),
     );
   }
 }

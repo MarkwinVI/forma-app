@@ -16,6 +16,7 @@ void main() {
   Future<void> pumpFlow(
     WidgetTester tester, {
     bool askProgram = true,
+    bool askTracking = false,
     Future<void> Function(OnboardingProfileModel?, ProgramSetupResult?)? onSave,
     VoidCallback? onFinished,
   }) async {
@@ -29,6 +30,7 @@ void main() {
         home: OnboardingView(
           userId: 'user',
           askProgram: askProgram,
+          askTracking: askTracking,
           onSave: onSave ?? (_, __) async {},
           onFinished: onFinished ?? () {},
         ),
@@ -49,6 +51,24 @@ void main() {
   /// on an answer, with the same label either way.
   bool continueEnabled(WidgetTester tester) =>
       tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
+
+  testWidgets('the tracking ask, when on, sits between the beats and the radar',
+      (tester) async {
+    await pumpFlow(tester, askTracking: true);
+    await next(tester, 'Got it');
+    await next(tester, 'Got it');
+    await next(tester, 'Got it');
+
+    // Step 3: our words first, then Apple's dialog. It asks nothing of the
+    // flow itself, so Continue is live at once.
+    expect(find.text('Help Forma reach more people like you.'), findsOneWidget);
+    expect(find.text('Got it'), findsNothing);
+    expect(continueEnabled(tester), isTrue);
+    // Off a phone there is no dialog to show; the flow moves on regardless.
+    await next(tester, 'Continue');
+
+    expect(find.text('What is your aim?'), findsOneWidget);
+  });
 
   testWidgets(
       'one flow from the beats to a built program, saving both at the end',

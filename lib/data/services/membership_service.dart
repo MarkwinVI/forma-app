@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/membership_model.dart';
 import 'analytics_service.dart';
 import 'auth_service.dart';
+import 'meta_ads_service.dart';
 import 'purchases_gateway.dart';
 
 /// One membership for the whole app: resolved behind the splash, cached on
@@ -131,8 +132,32 @@ class MembershipService with WidgetsBindingObserver {
       // configure() takes the id but not the email; that is a logIn call,
       // which for the same id only sets the attribute.
       await _gateway.logIn(userId, email: email);
+      await _gateway.attachAdvertisingIdentity(
+        metaAnonymousId: _metaAnonymousId,
+      );
     } catch (error) {
       debugPrint('Store SDK setup failed, membership from cache only: $error');
+    }
+  }
+
+  /// Meta's anonymous id, kept here so a store SDK that starts later (at
+  /// the first sign-in) still gets it.
+  String? _metaAnonymousId;
+
+  /// Hands the store what Meta matches on (see
+  /// [PurchasesGateway.attachAdvertisingIdentity]). Before the store SDK
+  /// is up the id is only remembered; [_configure] applies it. Never
+  /// throws.
+  Future<void> attachAdvertisingIdentity({String? metaAnonymousId}) async {
+    if (metaAnonymousId != null) _metaAnonymousId = metaAnonymousId;
+    if (!_configured) return;
+    await _identifying;
+    try {
+      await _gateway.attachAdvertisingIdentity(
+        metaAnonymousId: _metaAnonymousId,
+      );
+    } catch (error) {
+      debugPrint('Store advertising identity failed: $error');
     }
   }
 
@@ -299,7 +324,31 @@ class MembershipService with WidgetsBindingObserver {
       'product_id': productId,
       'state': membership.state.name,
     });
+    if (membership.state == MembershipState.trialing) {
+      unawaited(_reportTrialStarted(userId, productId));
+    }
     return membership;
+  }
+
+  /// Meta hears a trial start from the device itself (see
+  /// [MetaAdsService.logTrialStarted]), with the plan's price and currency
+  /// as its StartTrial event expects.
+  Future<void> _reportTrialStarted(String userId, String productId) async {
+    MembershipPlan? plan;
+    try {
+      for (final candidate in await plans()) {
+        if (candidate.productId == productId) plan = candidate;
+      }
+    } catch (_) {
+      // The paywall already showed the plans; a miss here costs only the
+      // price on the event.
+    }
+    await MetaAdsService.instance.logTrialStarted(
+      productId: productId,
+      price: plan?.price ?? 0,
+      currency: plan?.currencyCode ?? 'USD',
+      orderId: '$userId:$productId',
+    );
   }
 
   /// Restores purchases made under this Apple ID and resolves from them.

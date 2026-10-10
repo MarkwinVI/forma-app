@@ -46,6 +46,13 @@ abstract class PurchasesGateway {
   /// account.
   Future<StoreAccount> syncPurchases();
 
+  /// Gives the store the identifiers Meta matches ad events on — the
+  /// device's own (IDFV, IP, and the IDFA once tracking is allowed) and
+  /// Meta's anonymous id — so the subscription events the store forwards
+  /// to Meta land on the person the ad reached. Called again after the
+  /// tracking answer, when there is more to collect.
+  Future<void> attachAdvertisingIdentity({String? metaAnonymousId});
+
   /// Pushed by the SDK whenever the store's view changes — a renewal, a
   /// cancellation detected in the background, a purchase on another device.
   Stream<StoreAccount> get updates;
@@ -73,6 +80,14 @@ class RevenueCatGateway implements PurchasesGateway {
     Purchases.addCustomerInfoUpdateListener((info) {
       _updates.add(_toAccount(info));
     });
+  }
+
+  @override
+  Future<void> attachAdvertisingIdentity({String? metaAnonymousId}) async {
+    await Purchases.collectDeviceIdentifiers();
+    if (metaAnonymousId != null) {
+      await Purchases.setFBAnonymousID(metaAnonymousId);
+    }
   }
 
   @override

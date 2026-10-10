@@ -13,6 +13,7 @@ import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/dev_tools_service.dart';
 import 'data/services/membership_service.dart';
+import 'data/services/meta_ads_service.dart';
 import 'data/services/onboarding_service.dart';
 import 'data/services/training_program_store_service.dart';
 import 'data/services/weight_unit_service.dart';
@@ -42,10 +43,12 @@ Future<void> main() async {
     WeightUnitService.load(),
   ]);
 
-  // After Supabase: both read the restored auth session. Neither throws.
+  // After Supabase: the first two read the restored auth session, and Meta
+  // hands the membership service its anonymous id. None of them throws.
   await Future.wait([
     AnalyticsService.setup(),
     MembershipService.instance.setup(),
+    MetaAdsService.instance.setup(),
   ]);
 
   _warmStartupData();
@@ -165,8 +168,9 @@ class _OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<_OnboardingGate> {
-  /// Whether the onboarding answers are on file, and whether a program is.
-  late Future<(bool, bool)> _status;
+  /// Whether the onboarding answers are on file, whether a program is, and
+  /// whether the flow should ask for tracking permission on the way.
+  late Future<(bool, bool, bool)> _status;
 
   /// Set when the flow finishes right here, so the gate goes straight on
   /// without a frame of loader while a resolved future settles.
@@ -191,6 +195,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
       TrainingProgramStoreService()
           .fetchProgramLogic(widget.userId)
           .then((logic) => logic != null),
+      MetaAdsService.instance.shouldAskTracking(),
     ).wait;
   }
 
@@ -224,7 +229,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
   @override
   Widget build(BuildContext context) {
     if (_finishedHere) return const ShellView();
-    return FutureBuilder<(bool, bool)>(
+    return FutureBuilder<(bool, bool, bool)>(
       future: _status,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -236,12 +241,13 @@ class _OnboardingGateState extends State<_OnboardingGate> {
         if (!snapshot.hasData) {
           return const Scaffold(body: Center(child: LoadingIndicator()));
         }
-        final (onboarded, hasProgram) = snapshot.data!;
+        final (onboarded, hasProgram, askTracking) = snapshot.data!;
         if (onboarded && hasProgram) return const ShellView();
         return OnboardingView(
           userId: widget.userId,
           askProfile: !onboarded,
           askProgram: !hasProgram,
+          askTracking: askTracking,
           onSave: _save,
           onFinished: () => setState(() => _finishedHere = true),
         );

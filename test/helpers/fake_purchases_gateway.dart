@@ -76,6 +76,14 @@ class FakePurchasesGateway implements PurchasesGateway {
     logOuts++;
   }
 
+  /// Every Meta anonymous id handed over, null for a collect-only call.
+  final adIdentities = <String?>[];
+
+  @override
+  Future<void> attachAdvertisingIdentity({String? metaAnonymousId}) async {
+    adIdentities.add(metaAnonymousId);
+  }
+
   var fetches = 0;
 
   @override

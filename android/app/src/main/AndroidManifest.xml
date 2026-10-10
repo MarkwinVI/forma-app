@@ -46,6 +46,18 @@
         <meta-data
             android:name="com.posthog.posthog.AUTO_INIT"
             android:value="false" />
+        <!-- The Meta SDK, for the app-install campaigns. The app id and
+             client token come from strings.xml; automatic logging is off so
+             it never records a purchase of its own (see MetaAdsService). -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
+        <meta-data
+            android:name="com.facebook.sdk.AutoLogAppEventsEnabled"
+            android:value="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

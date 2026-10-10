@@ -22,8 +22,28 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fbMETA_APP_ID</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- The Meta SDK, for the app-install campaigns. Automatic logging is
+	     off so it never records a purchase of its own: RevenueCat reports
+	     those, and Meta would count each twice (see MetaAdsService). -->
+	<key>FacebookAppID</key>
+	<string>META_APP_ID</string>
+	<key>FacebookAutoLogAppEventsEnabled</key>
+	<false/>
+	<key>FacebookClientToken</key>
+	<string>META_CLIENT_TOKEN</string>
+	<key>FacebookDisplayName</key>
+	<string>Forma</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -36,6 +56,8 @@
 	<string>Allow Flutter tools on your computer to connect and debug your application during development.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This lets Forma see which ads bring in people who train, so we can reach more of them. It changes nothing about your workouts.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
