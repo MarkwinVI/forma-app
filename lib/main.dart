@@ -7,6 +7,7 @@ import 'core/config/app_config.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_text_theme.dart';
 import 'core/widgets/forma_splash.dart';
+import 'core/widgets/keyboard_dismiss.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'data/models/onboarding_profile_model.dart';
 import 'data/services/analytics_service.dart';
@@ -102,10 +103,13 @@ class FormaApp extends StatelessWidget {
       // Dynamic Type follows the reader's setting up to 1.6×. Past that the
       // fixed-height rows and pinned buttons start swallowing their own
       // text; below 1.0 the type is already as small as it is designed to go.
+      // And on every page, a pull down puts the keyboard away.
       builder: (context, child) => MediaQuery.withClampedTextScaling(
         minScaleFactor: 1.0,
         maxScaleFactor: 1.6,
-        child: child ?? const SizedBox.shrink(),
+        child: KeyboardDismissOnSwipeDown(
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
       home: const _StartupGate(),
     );

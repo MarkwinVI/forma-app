@@ -683,7 +683,6 @@ class _OnboardingViewState extends State<OnboardingView> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.only(top: 22, bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2111,7 +2110,9 @@ class _WhyOption extends StatelessWidget {
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            // The pick lights up quickly; the card it leaves goes out at
+            // once, or two cards read as chosen for a beat.
+            duration: Duration(milliseconds: selected ? 120 : 0),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: selected
@@ -2126,7 +2127,7 @@ class _WhyOption extends StatelessWidget {
             child: Row(
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: selected ? 120 : 0),
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
