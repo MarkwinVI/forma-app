@@ -3,6 +3,6 @@
     <!-- The Meta app (developers.facebook.com → the Forma app → Settings →
          Basic), read by the Meta SDK through the manifest's meta-data. The
          client token is meant to ship in the app; it is not a secret. -->
-    <string name="facebook_app_id">META_APP_ID</string>
-    <string name="facebook_client_token">META_CLIENT_TOKEN</string>
+    <string name="facebook_app_id">968640206304521</string>
+    <string name="facebook_client_token">3e5848f8f15abf308f40986867bef3ed</string>
 </resources>

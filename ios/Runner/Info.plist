@@ -27,7 +27,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>fbMETA_APP_ID</string>
+				<string>fb968640206304521</string>
 			</array>
 		</dict>
 	</array>
@@ -37,11 +37,11 @@
 	     off so it never records a purchase of its own: RevenueCat reports
 	     those, and Meta would count each twice (see MetaAdsService). -->
 	<key>FacebookAppID</key>
-	<string>META_APP_ID</string>
+	<string>968640206304521</string>
 	<key>FacebookAutoLogAppEventsEnabled</key>
 	<false/>
 	<key>FacebookClientToken</key>
-	<string>META_CLIENT_TOKEN</string>
+	<string>3e5848f8f15abf308f40986867bef3ed</string>
 	<key>FacebookDisplayName</key>
 	<string>Forma</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
