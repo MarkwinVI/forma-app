@@ -2097,6 +2097,12 @@ class _WhyOption extends StatelessWidget {
     required this.onTap,
   });
 
+  /// The design's 10% accent over the page, flattened to one opaque colour.
+  static final _selectedFill = Color.alphaBlend(
+    AppColors.accentPrimary.withValues(alpha: 0.10),
+    AppColors.bg,
+  );
+
   @override
   Widget build(BuildContext context) {
     // Not a Pressable: its press dim and shrink, right for a small chip,
@@ -2114,14 +2120,18 @@ class _WhyOption extends StatelessWidget {
             // once, or two cards read as chosen for a beat.
             duration: Duration(milliseconds: selected ? 120 : 0),
             padding: const EdgeInsets.all(16),
+            // Both ends of each lerp are opaque and share a hue, so the
+            // change is the only thing that moves: a fill lerped towards a
+            // translucent tint dips dark as the page shows through, and a
+            // ring lerped from Colors.transparent passes through black.
             decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.accentPrimary.withValues(alpha: 0.10)
-                  : AppColors.surface,
+              color: selected ? _selectedFill : AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 width: 1.5,
-                color: selected ? AppColors.accentPrimary : Colors.transparent,
+                color: selected
+                    ? AppColors.accentPrimary
+                    : AppColors.accentPrimary.withValues(alpha: 0),
               ),
             ),
             child: Row(
@@ -2132,7 +2142,9 @@ class _WhyOption extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: selected ? Colors.white : Colors.transparent,
+                    color: selected
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0),
                     border: Border.all(
                       width: selected ? 7 : 2,
                       color: selected
