@@ -679,7 +679,6 @@ class _OnboardingViewState extends State<OnboardingView> {
             icon: Icons.auto_awesome_rounded,
             pill: 'BEFORE WE START',
             title: 'What drew you to Forma?',
-            sub: 'Pick the one that fits best.',
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -731,20 +730,7 @@ class _OnboardingViewState extends State<OnboardingView> {
       children: [
         const Padding(
           padding: EdgeInsets.fromLTRB(2, 8, 0, 8),
-          child: Row(
-            children: [
-              _FieldCaption('TELL US MORE'),
-              SizedBox(width: 6),
-              Text(
-                '· optional',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ],
-          ),
+          child: _FieldCaption('TELL US MORE (OPTIONAL)'),
         ),
         TextField(
           controller: _whyOther,
