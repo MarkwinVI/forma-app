@@ -30,6 +30,12 @@ class OnboardingService {
     }();
   }
 
+  /// Drops the memoized answer for [userId], after a row was deleted behind
+  /// this service's back (the developer reset). The next lookup asks again.
+  static void forgetCompleted(String userId) {
+    _completedCache.remove(userId);
+  }
+
   Future<bool> _fetchCompletedOnboarding(String userId) async {
     final row = await _client
         .from('user_onboarding_profiles')

@@ -8,6 +8,7 @@ import '../models/training_program_model.dart';
 import 'dev_clock_service.dart';
 import 'exercise_log_service.dart';
 import 'exercise_progression_service.dart';
+import 'onboarding_service.dart';
 import 'progress_service.dart';
 import 'skill_track_service.dart';
 import 'supabase_service.dart';
@@ -28,13 +29,14 @@ class DevToolsService {
 
   /// Bumped after [resetToNewUser]. The app has no screens for an account
   /// without a program, so the entry gate listens and sends the user back
-  /// into onboarding's program questions.
+  /// to the start of onboarding.
   static final resetSignal = ValueNotifier<int>(0);
 
   /// Wipes everything that makes this account look like an existing user:
-  /// workout history, exercise progress, branch choices, and the training
-  /// program itself. The auth session, `users` row and onboarding answers
-  /// are kept, so the app lands on onboarding's program questions.
+  /// workout history, exercise progress, branch choices, the training
+  /// program and the onboarding answers. Only the auth session and the
+  /// `users` row are kept, so the app lands on onboarding's first beat, as
+  /// it would for a new account.
   Future<void> resetToNewUser(String userId) async {
     await _devClockService.reset();
     // Children before parents to respect foreign keys.
@@ -52,8 +54,13 @@ class DevToolsService {
         .delete()
         .eq('user_id', userId);
     await _client.from('user_training_programs').delete().eq('user_id', userId);
-    // These deletes bypass the store service, so its cache must be told.
+    await _client
+        .from('user_onboarding_profiles')
+        .delete()
+        .eq('user_id', userId);
+    // These deletes bypass the services, so their caches must be told.
     TrainingProgramStoreService.invalidateLogicCache();
+    OnboardingService.forgetCompleted(userId);
     resetSignal.value += 1;
   }
 

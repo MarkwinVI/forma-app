@@ -162,8 +162,9 @@ class _DevToolsSectionState extends State<_DevToolsSection> {
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: const Text(
-          'Deletes this account\'s training program, exercise progress and '
-          'workout history. The account itself is kept.',
+          'Deletes this account\'s training program, exercise progress, '
+          'workout history and onboarding answers, so the app starts over '
+          'from the first onboarding screen. The account itself is kept.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [

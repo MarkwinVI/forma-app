@@ -199,8 +199,8 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     ).wait;
   }
 
-  /// A dev reset deleted the program out from under the shell: back to the
-  /// program questions.
+  /// A dev reset deleted the program and the onboarding answers out from
+  /// under the shell: back to the start of onboarding.
   void _onReset() {
     if (!mounted) return;
     setState(() {
