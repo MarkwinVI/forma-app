@@ -164,16 +164,29 @@ class _Choice {
   const _Choice(this.id, this.label, {this.flex = 10});
 }
 
-/// The answers to "What drew you to Forma?", in the order shown. The ids
-/// are what the profile stores and analytics segments by.
+/// The answers to "What drew you to Forma?", in the order shown, each with
+/// the line under it that says what the answer means. The ids are what
+/// the profile stores and analytics segments by.
+typedef _WhyChoice = ({String id, String label, String? sub});
+
 const _whyOtherId = 'other';
-const _whyOptions = [
-  _Choice('specific_skill', 'I have a specific skill I want to achieve'),
-  _Choice(
-      'skill_levels', 'I like the idea of progressing through skill levels'),
-  _Choice('strength_muscle', 'I mainly want to build strength and muscle'),
-  _Choice('clear_program', 'I want a clear workout program to follow'),
-  _Choice(_whyOtherId, 'Other'),
+const _whyOptions = <_WhyChoice>[
+  (
+    id: 'specific_skill',
+    label: 'I have a specific skill I want to achieve',
+    sub: 'A pull-up, a handstand, a muscle-up…',
+  ),
+  (
+    id: 'skill_levels',
+    label: 'I like the idea of progressing through skill levels',
+    sub: 'Clear steps, each one unlocking the next',
+  ),
+  (
+    id: 'clear_program',
+    label: 'I want a clear workout program to follow',
+    sub: 'Tell me what to do each session',
+  ),
+  (id: _whyOtherId, label: 'Other', sub: null),
 ];
 
 const _freqChoices = [
@@ -330,8 +343,6 @@ class _OnboardingViewState extends State<OnboardingView> {
   void initState() {
     super.initState();
     _setup.addListener(_onSetupChanged);
-    // Continue follows the "Other" words keystroke by keystroke.
-    _whyOther.addListener(_onSetupChanged);
     AnalyticsService.screen(_step.screenName);
   }
 
@@ -416,7 +427,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                 trainingFrequency: _freq,
                 motivation: _why,
                 motivationOther:
-                    _why == _whyOtherId ? _whyOther.text.trim() : null,
+                    _why == _whyOtherId && _whyOther.text.trim().isNotEmpty
+                        ? _whyOther.text.trim()
+                        : null,
                 completedAt: DateTime.now().toUtc(),
               ),
         widget.askProgram ? _setup.result() : null,
@@ -484,13 +497,10 @@ class _OnboardingViewState extends State<OnboardingView> {
     return 'Continue';
   }
 
-  /// An option is picked, and "Other" has its words.
-  bool get _whyAnswered =>
-      _why != null && (_why != _whyOtherId || _whyOther.text.trim().isNotEmpty);
-
   bool get _canContinue {
     if (_saving || _askingTracking) return false;
-    if (_step == _Step.why) return _whyAnswered;
+    // An option picked is enough; the words behind "Other" are optional.
+    if (_step == _Step.why) return _why != null;
     if (_step == _Step.aboutYou) return _profileAnswered;
     final question = _step.question;
     return question == null || _setup.answered(question);
@@ -638,8 +648,8 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   // ── Step 0: what drew them here ──
 
-  /// One pick from [_whyOptions]; "Other" opens a line for their own words,
-  /// and Continue waits for them.
+  /// One pick from [_whyOptions]; "Other" unfolds a field for their own
+  /// words, which are welcome but not required.
   Widget _buildWhyStep() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
@@ -650,11 +660,11 @@ class _OnboardingViewState extends State<OnboardingView> {
             icon: Icons.auto_awesome_rounded,
             pill: 'BEFORE WE START',
             title: 'What drew you to Forma?',
-            sub: 'Choose the one that fits you best.',
+            sub: 'Pick the one that fits best.',
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 14, bottom: 12),
+              padding: const EdgeInsets.only(top: 22, bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -663,56 +673,89 @@ class _OnboardingViewState extends State<OnboardingView> {
                       index: 2 + i,
                       child: _WhyOption(
                         label: _whyOptions[i].label,
+                        sub: _whyOptions[i].sub,
                         selected: _why == _whyOptions[i].id,
                         onTap: () => setState(() => _why = _whyOptions[i].id),
                       ),
                     ),
-                  if (_why == _whyOtherId)
-                    TextField(
-                      controller: _whyOther,
-                      autofocus: true,
-                      minLines: 1,
-                      maxLines: 3,
-                      maxLength: 200,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textPrimary,
-                      ),
-                      cursorColor: AppColors.accentPrimary,
-                      decoration: InputDecoration(
-                        hintText: 'Tell us in a few words',
-                        hintStyle: const TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textMuted,
-                        ),
-                        counterText: '',
-                        filled: true,
-                        fillColor: AppColors.surface,
-                        contentPadding:
-                            const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide:
-                              const BorderSide(color: AppColors.divider),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide:
-                              const BorderSide(color: AppColors.accentPrimary),
-                        ),
-                      ),
-                    ),
+                  // The field unfolds under the list rather than popping in.
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: _why == _whyOtherId
+                        ? _buildWhyOtherField()
+                        : const SizedBox(width: double.infinity),
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWhyOtherField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(2, 8, 0, 8),
+          child: Row(
+            children: [
+              _FieldCaption('TELL US MORE'),
+              SizedBox(width: 6),
+              Text(
+                '· optional',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        TextField(
+          controller: _whyOther,
+          autofocus: true,
+          minLines: 3,
+          maxLines: 4,
+          maxLength: 120,
+          textCapitalization: TextCapitalization.sentences,
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.4,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textPrimary,
+          ),
+          cursorColor: AppColors.accentPrimary,
+          decoration: InputDecoration(
+            hintText: 'What are you hoping to get out of Forma?',
+            hintStyle: const TextStyle(
+              fontSize: 16,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textMuted,
+            ),
+            counterText: '',
+            filled: true,
+            fillColor: AppColors.surface,
+            contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  const BorderSide(color: Colors.transparent, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  const BorderSide(color: AppColors.accentPrimary, width: 1.5),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -2010,27 +2053,28 @@ class _StepHead extends StatelessWidget {
   }
 }
 
-/// One answer to "What drew you to Forma?": a full-width tile, lit when
-/// picked.
+/// One answer to "What drew you to Forma?": a card with the radio on the
+/// left, where eye and thumb meet, the answer, and a line under it saying
+/// what the answer means.
 class _WhyOption extends StatelessWidget {
   final String label;
+  final String? sub;
   final bool selected;
   final VoidCallback onTap;
 
   const _WhyOption({
     required this.label,
+    required this.sub,
     required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Five of these have to fit above the button on a small phone, so the
-    // tile is as tight as the label allows. Not a Pressable: its press dim
-    // and shrink, right for a small chip, read as a blink across a tile
-    // this wide — the colour change is feedback enough.
+    // Not a Pressable: its press dim and shrink, right for a small chip,
+    // read as a blink across a card this wide — the ring is feedback enough.
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Semantics(
         button: true,
         selected: selected,
@@ -2038,36 +2082,67 @@ class _WhyOption extends StatelessWidget {
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: selected ? AppColors.accentSoft : AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
+              color: selected
+                  ? AppColors.accentPrimary.withValues(alpha: 0.10)
+                  : AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: selected ? AppColors.accentPrimary : AppColors.divider,
+                width: 1.5,
+                color: selected ? AppColors.accentPrimary : Colors.transparent,
               ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      height: 1.25,
-                      color: selected
-                          ? AppColors.accentPrimary
-                          : AppColors.textPrimary,
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: selected ? Colors.white : Colors.transparent,
+                      border: Border.all(
+                        width: selected ? 7 : 2,
+                        color: selected
+                            ? AppColors.accentPrimary
+                            : Colors.white.withValues(alpha: 0.16),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Icon(
-                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  size: 18,
-                  color:
-                      selected ? AppColors.accentPrimary : AppColors.textMuted,
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                          letterSpacing: -0.16,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (sub != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          sub!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ],
             ),

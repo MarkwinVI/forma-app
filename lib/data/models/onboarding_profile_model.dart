@@ -30,8 +30,8 @@ class OnboardingProfileModel {
   final String? trainingFrequency;
 
   /// What drew them to Forma: 'specific_skill' | 'skill_levels' |
-  /// 'strength_muscle' | 'clear_program' | 'other'. Null on profiles from
-  /// before the question existed.
+  /// 'clear_program' | 'other'. Null on profiles from before the question
+  /// existed.
   final String? motivation;
 
   /// The words behind 'other'. Stored, never sent to analytics.

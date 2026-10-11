@@ -48,15 +48,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 900));
   }
 
-
   /// The flow's one button: greyed out and inert while a step still waits
   /// on an answer, with the same label either way.
   bool continueEnabled(WidgetTester tester) =>
       tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
 
-  /// The first page: pick what drew them here and move on.
+  /// The first page: "Other", with nothing typed, and on — the words are
+  /// optional. (The test font is a wide square, so the cards wrap far more
+  /// than on a phone and the last one sits below the fold: scroll to it,
+  /// as a small screen would.)
   Future<void> answerWhy(WidgetTester tester) async {
-    await tester.tap(find.text('I want a clear workout program to follow'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Other'));
+    await tester.pump();
+    await tester.tap(find.text('Other'));
     await tester.pump();
     await next(tester, 'Continue');
   }
@@ -91,23 +96,28 @@ void main() {
       },
     );
 
-    // Step 0: what drew them here. Nothing moves until an option is picked,
-    // and "Other" needs words of its own.
+    // Step 0: what drew them here. Nothing moves until an option is picked;
+    // "Other" opens a field for their words, which are optional.
     expect(find.text('What drew you to Forma?'), findsOneWidget);
     expect(continueEnabled(tester), isFalse);
-    // The only page with no looping animation: let its rise-in finish.
+    // The only page with no looping animation: let its rise-in finish. The
+    // scrolls are for the test font, see answerWhy.
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Other'));
+    await tester.pump();
     await tester.tap(find.text('Other'));
     await tester.pump();
     expect(find.byType(TextField), findsOneWidget);
-    expect(continueEnabled(tester), isFalse);
+    expect(continueEnabled(tester), isTrue);
     await tester.enterText(find.byType(TextField), 'A friend trains with it');
     await tester.pump();
-    expect(continueEnabled(tester), isTrue);
     // A listed answer wins over the words, which are then not kept. (The
     // pause is a finger's: two taps in the same instant lose the second.)
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('I mainly want to build strength and muscle'));
+    final skill = find.text('I have a specific skill I want to achieve');
+    await tester.ensureVisible(skill);
+    await tester.pump();
+    await tester.tap(skill);
     await tester.pump();
     expect(find.byType(TextField), findsNothing);
     await next(tester, 'Continue');
@@ -231,7 +241,7 @@ void main() {
     expect(savedProfile!.archetype, 'technician');
     expect(savedProfile!.gender, 'm');
     expect(savedProfile!.trainingFrequency, '1-2');
-    expect(savedProfile!.motivation, 'strength_muscle');
+    expect(savedProfile!.motivation, 'specific_skill');
     expect(savedProfile!.motivationOther, isNull);
     expect(savedProgram!.daysPerWeek, 3);
     expect(savedProgram!.bodyweightKg, 80);
@@ -270,7 +280,9 @@ void main() {
     expect(savedProfile, isNotNull);
     expect(savedProfile!.gender, 'na');
     expect(savedProfile!.trainingFrequency, '0');
-    expect(savedProfile!.motivation, 'clear_program');
+    // "Other" with nothing typed is an answer; the empty words are not kept.
+    expect(savedProfile!.motivation, 'other');
+    expect(savedProfile!.motivationOther, isNull);
     expect(savedProgram, isNull);
     expect(finished, 1, reason: 'no ready screen without a new program');
   });

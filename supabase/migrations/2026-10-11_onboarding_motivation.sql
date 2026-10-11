@@ -6,5 +6,5 @@
 -- rule as feedback notes.
 
 alter table public.user_onboarding_profiles
-  add column motivation text,       -- 'specific_skill' | 'skill_levels' | 'strength_muscle' | 'clear_program' | 'other'
+  add column motivation text,       -- 'specific_skill' | 'skill_levels' | 'clear_program' | 'other'
   add column motivation_other text; -- the words behind 'other'; never sent to analytics
