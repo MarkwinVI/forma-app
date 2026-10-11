@@ -297,6 +297,14 @@ class _OnboardingViewState extends State<OnboardingView> {
   /// their own words.
   String? _why;
   final _whyOther = TextEditingController();
+  final _whyOtherFocus = FocusNode();
+
+  /// The end of the why page's list — the field and the room under it —
+  /// which the keyboard must not cover. The same nudge the support screens
+  /// make: the keyboard rises over a few frames, and each one it takes
+  /// more of the screen, the end is scrolled back above the pinned button.
+  final _whyEndKey = GlobalKey();
+  double _keyboardInset = 0;
 
   bool _saving = false;
 
@@ -338,7 +346,30 @@ class _OnboardingViewState extends State<OnboardingView> {
   void dispose() {
     _setup.dispose();
     _whyOther.dispose();
+    _whyOtherFocus.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final inset = MediaQuery.viewInsetsOf(context).bottom;
+    if (inset == _keyboardInset) return;
+    final rising = inset > _keyboardInset;
+    _keyboardInset = inset;
+    if (rising && _whyOtherFocus.hasFocus) _revealWhyEnd();
+  }
+
+  void _revealWhyEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final end = _whyEndKey.currentContext;
+      if (!mounted || end == null) return;
+      Scrollable.ensureVisible(
+        end,
+        alignment: 1,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
   }
 
   void _onSetupChanged() {
@@ -652,6 +683,7 @@ class _OnboardingViewState extends State<OnboardingView> {
           ),
           Expanded(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.only(top: 22, bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -662,7 +694,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       child: _WhyOption(
                         label: _whyOptions[i].label,
                         selected: _why == _whyOptions[i].id,
-                        onTap: () => setState(() => _why = _whyOptions[i].id),
+                        onTap: () => _pickWhy(_whyOptions[i].id),
                       ),
                     ),
                   // The field unfolds under the list rather than popping in.
@@ -681,6 +713,17 @@ class _OnboardingViewState extends State<OnboardingView> {
         ],
       ),
     );
+  }
+
+  void _pickWhy(String id) {
+    setState(() => _why = id);
+    // The field unfolds while the keyboard rises; once it is full size,
+    // one more nudge so the whole of it sits above the keyboard.
+    if (id == _whyOtherId) {
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted && _why == _whyOtherId) _revealWhyEnd();
+      });
+    }
   }
 
   Widget _buildWhyOtherField() {
@@ -706,6 +749,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         ),
         TextField(
           controller: _whyOther,
+          focusNode: _whyOtherFocus,
           autofocus: true,
           minLines: 3,
           maxLines: 4,
@@ -742,6 +786,7 @@ class _OnboardingViewState extends State<OnboardingView> {
             ),
           ),
         ),
+        SizedBox(key: _whyEndKey, height: 8),
       ],
     );
   }
