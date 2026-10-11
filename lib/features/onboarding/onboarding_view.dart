@@ -164,29 +164,17 @@ class _Choice {
   const _Choice(this.id, this.label, {this.flex = 10});
 }
 
-/// The answers to "What drew you to Forma?", in the order shown, each with
-/// the line under it that says what the answer means. The ids are what
-/// the profile stores and analytics segments by.
-typedef _WhyChoice = ({String id, String label, String? sub});
-
+/// The answers to "What drew you to Forma?", in the order shown. The ids
+/// are what the profile stores and analytics segments by.
 const _whyOtherId = 'other';
-const _whyOptions = <_WhyChoice>[
-  (
-    id: 'specific_skill',
-    label: 'I have a specific skill I want to achieve',
-    sub: 'A pull-up, a handstand, a muscle-up…',
+const _whyOptions = [
+  _Choice('specific_skill', 'I have a specific skill I want to achieve'),
+  _Choice(
+    'skill_levels',
+    'I like the idea of progressing through skill levels',
   ),
-  (
-    id: 'skill_levels',
-    label: 'I like the idea of progressing through skill levels',
-    sub: 'Clear steps, each one unlocking the next',
-  ),
-  (
-    id: 'clear_program',
-    label: 'I want a clear workout program to follow',
-    sub: 'Tell me what to do each session',
-  ),
-  (id: _whyOtherId, label: 'Other', sub: null),
+  _Choice('clear_program', 'I want a clear workout program to follow'),
+  _Choice(_whyOtherId, 'Other'),
 ];
 
 const _freqChoices = [
@@ -673,7 +661,6 @@ class _OnboardingViewState extends State<OnboardingView> {
                       index: 2 + i,
                       child: _WhyOption(
                         label: _whyOptions[i].label,
-                        sub: _whyOptions[i].sub,
                         selected: _why == _whyOptions[i].id,
                         onTap: () => setState(() => _why = _whyOptions[i].id),
                       ),
@@ -2054,17 +2041,14 @@ class _StepHead extends StatelessWidget {
 }
 
 /// One answer to "What drew you to Forma?": a card with the radio on the
-/// left, where eye and thumb meet, the answer, and a line under it saying
-/// what the answer means.
+/// left, where eye and thumb meet, and the answer beside it.
 class _WhyOption extends StatelessWidget {
   final String label;
-  final String? sub;
   final bool selected;
   final VoidCallback onTap;
 
   const _WhyOption({
     required this.label,
-    required this.sub,
     required this.selected,
     required this.onTap,
   });
@@ -2095,53 +2079,33 @@ class _WhyOption extends StatelessWidget {
               ),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 1),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 22,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected ? Colors.white : Colors.transparent,
-                      border: Border.all(
-                        width: selected ? 7 : 2,
-                        color: selected
-                            ? AppColors.accentPrimary
-                            : Colors.white.withValues(alpha: 0.16),
-                      ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? Colors.white : Colors.transparent,
+                    border: Border.all(
+                      width: selected ? 7 : 2,
+                      color: selected
+                          ? AppColors.accentPrimary
+                          : Colors.white.withValues(alpha: 0.16),
                     ),
                   ),
                 ),
                 const SizedBox(width: 13),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          height: 1.3,
-                          letterSpacing: -0.16,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      if (sub != null) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          sub!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            height: 1.4,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ],
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                      letterSpacing: -0.16,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ],
