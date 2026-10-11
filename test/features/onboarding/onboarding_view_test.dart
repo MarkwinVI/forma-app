@@ -54,6 +54,13 @@ void main() {
   bool continueEnabled(WidgetTester tester) =>
       tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
 
+  /// The first page: pick what drew them here and move on.
+  Future<void> answerWhy(WidgetTester tester) async {
+    await tester.tap(find.text('I want a clear workout program to follow'));
+    await tester.pump();
+    await next(tester, 'Continue');
+  }
+
   testWidgets('the tracking ask, when on, comes right before the schedule',
       (tester) async {
     // With the profile already on file the ask is the first page, and the
@@ -84,7 +91,28 @@ void main() {
       },
     );
 
-    // Step 0: the skill-tree beat — the welcome hook now lives on the
+    // Step 0: what drew them here. Nothing moves until an option is picked,
+    // and "Other" needs words of its own.
+    expect(find.text('What drew you to Forma?'), findsOneWidget);
+    expect(continueEnabled(tester), isFalse);
+    // The only page with no looping animation: let its rise-in finish.
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Other'));
+    await tester.pump();
+    expect(find.byType(TextField), findsOneWidget);
+    expect(continueEnabled(tester), isFalse);
+    await tester.enterText(find.byType(TextField), 'A friend trains with it');
+    await tester.pump();
+    expect(continueEnabled(tester), isTrue);
+    // A listed answer wins over the words, which are then not kept. (The
+    // pause is a finger's: two taps in the same instant lose the second.)
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('I mainly want to build strength and muscle'));
+    await tester.pump();
+    expect(find.byType(TextField), findsNothing);
+    await next(tester, 'Continue');
+
+    // Step 1: the skill-tree beat — the welcome hook now lives on the
     // sign-in screen.
     expect(find.text('From your first'), findsNothing);
     expect(find.text('Get started'), findsNothing);
@@ -203,6 +231,8 @@ void main() {
     expect(savedProfile!.archetype, 'technician');
     expect(savedProfile!.gender, 'm');
     expect(savedProfile!.trainingFrequency, '1-2');
+    expect(savedProfile!.motivation, 'strength_muscle');
+    expect(savedProfile!.motivationOther, isNull);
     expect(savedProgram!.daysPerWeek, 3);
     expect(savedProgram!.bodyweightKg, 80);
     // The flow ends on the map the answers drew.
@@ -224,6 +254,7 @@ void main() {
       },
       onFinished: () => finished++,
     );
+    await answerWhy(tester);
     for (var i = 0; i < 3; i++) {
       await next(tester, 'Got it');
     }
@@ -239,6 +270,7 @@ void main() {
     expect(savedProfile, isNotNull);
     expect(savedProfile!.gender, 'na');
     expect(savedProfile!.trainingFrequency, '0');
+    expect(savedProfile!.motivation, 'clear_program');
     expect(savedProgram, isNull);
     expect(finished, 1, reason: 'no ready screen without a new program');
   });
@@ -247,6 +279,7 @@ void main() {
       (tester) async {
     final handle = tester.ensureSemantics();
     await pumpFlow(tester);
+    await answerWhy(tester);
     for (var i = 0; i < 3; i++) {
       await next(tester, 'Got it');
     }
@@ -263,6 +296,7 @@ void main() {
 
   testWidgets('back button steps backwards', (tester) async {
     await pumpFlow(tester);
+    await answerWhy(tester);
 
     await next(tester, 'Got it');
     expect(

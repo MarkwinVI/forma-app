@@ -20,9 +20,10 @@ import '../home/program_ready_view.dart';
 import '../progress/skill_wheel_bundle.dart';
 import 'program_setup_steps.dart';
 
-/// Post-signup onboarding, one flow from the pitch to a built program: three
-/// grounded beats (the skill tree route, the workout that levels up, the data
-/// loop that eases you back) → archetype radar → about you → the tracking
+/// Post-signup onboarding, one flow from the pitch to a built program: what
+/// drew them here → three grounded beats (the skill tree route, the workout
+/// that levels up, the data loop that eases you back) → archetype radar →
+/// about you → the tracking
 /// ask (iOS, once, for the ad campaigns) → the program
 /// questions (schedule, equipment, bodyweight, starting strength) → the map
 /// the answers drew, and the membership choice. Everything is written when
@@ -163,6 +164,18 @@ class _Choice {
   const _Choice(this.id, this.label, {this.flex = 10});
 }
 
+/// The answers to "What drew you to Forma?", in the order shown. The ids
+/// are what the profile stores and analytics segments by.
+const _whyOtherId = 'other';
+const _whyOptions = [
+  _Choice('specific_skill', 'I have a specific skill I want to achieve'),
+  _Choice(
+      'skill_levels', 'I like the idea of progressing through skill levels'),
+  _Choice('strength_muscle', 'I mainly want to build strength and muscle'),
+  _Choice('clear_program', 'I want a clear workout program to follow'),
+  _Choice(_whyOtherId, 'Other'),
+];
+
 const _freqChoices = [
   _Choice('0', 'I don’t train', flex: 20),
   _Choice('1-2', '1–2'),
@@ -181,6 +194,7 @@ const _genderChoices = [
 /// The steps of the flow, in order. The last four ask the program
 /// questions.
 enum _Step {
+  why('onboarding_why'),
   skills('onboarding_skills'),
   workout('onboarding_workout'),
   data('onboarding_data'),
@@ -277,6 +291,12 @@ class _OnboardingViewState extends State<OnboardingView> {
   int _age = 28;
   String? _gender;
   String? _freq;
+
+  /// What drew them to Forma — one of [_whyOptions] — and, for 'other',
+  /// their own words.
+  String? _why;
+  final _whyOther = TextEditingController();
+
   bool _saving = false;
 
   /// While the system tracking dialog is up, so a second tap cannot ask
@@ -310,12 +330,15 @@ class _OnboardingViewState extends State<OnboardingView> {
   void initState() {
     super.initState();
     _setup.addListener(_onSetupChanged);
+    // Continue follows the "Other" words keystroke by keystroke.
+    _whyOther.addListener(_onSetupChanged);
     AnalyticsService.screen(_step.screenName);
   }
 
   @override
   void dispose() {
     _setup.dispose();
+    _whyOther.dispose();
     super.dispose();
   }
 
@@ -391,6 +414,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                 age: _age,
                 gender: _gender,
                 trainingFrequency: _freq,
+                motivation: _why,
+                motivationOther:
+                    _why == _whyOtherId ? _whyOther.text.trim() : null,
                 completedAt: DateTime.now().toUtc(),
               ),
         widget.askProgram ? _setup.result() : null,
@@ -458,8 +484,13 @@ class _OnboardingViewState extends State<OnboardingView> {
     return 'Continue';
   }
 
+  /// An option is picked, and "Other" has its words.
+  bool get _whyAnswered =>
+      _why != null && (_why != _whyOtherId || _whyOther.text.trim().isNotEmpty);
+
   bool get _canContinue {
     if (_saving || _askingTracking) return false;
+    if (_step == _Step.why) return _whyAnswered;
     if (_step == _Step.aboutYou) return _profileAnswered;
     final question = _step.question;
     return question == null || _setup.answered(question);
@@ -539,6 +570,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   Widget _buildStep(_Step step) {
     return switch (step) {
+      _Step.why => _buildWhyStep(),
       _Step.skills => _buildSkillsBeat(),
       _Step.workout => _buildWorkoutBeat(),
       _Step.data => _buildDataBeat(),
@@ -604,7 +636,87 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Steps 0–2: the narrative beats ──
+  // ── Step 0: what drew them here ──
+
+  /// One pick from [_whyOptions]; "Other" opens a line for their own words,
+  /// and Continue waits for them.
+  Widget _buildWhyStep() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _StepHead(
+            icon: Icons.auto_awesome_rounded,
+            pill: 'BEFORE WE START',
+            title: 'What drew you to Forma?',
+            sub: 'Choose the one that fits you best.',
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 14, bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < _whyOptions.length; i++)
+                    _Rise(
+                      index: 2 + i,
+                      child: _WhyOption(
+                        label: _whyOptions[i].label,
+                        selected: _why == _whyOptions[i].id,
+                        onTap: () => setState(() => _why = _whyOptions[i].id),
+                      ),
+                    ),
+                  if (_why == _whyOtherId)
+                    TextField(
+                      controller: _whyOther,
+                      autofocus: true,
+                      minLines: 1,
+                      maxLines: 3,
+                      maxLength: 200,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textPrimary,
+                      ),
+                      cursorColor: AppColors.accentPrimary,
+                      decoration: InputDecoration(
+                        hintText: 'Tell us in a few words',
+                        hintStyle: const TextStyle(
+                          fontSize: 16,
+                          height: 1.5,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.textMuted,
+                        ),
+                        counterText: '',
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding:
+                            const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide:
+                              const BorderSide(color: AppColors.divider),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide:
+                              const BorderSide(color: AppColors.accentPrimary),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Steps 1–3: the narrative beats ──
 
   Widget _buildSkillsBeat() {
     return const _NarrativeSlide(
@@ -636,7 +748,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 3: archetype radar ──
+  // ── Step 4: archetype radar ──
 
   Widget _buildRadarStep() {
     final arch = _archetype;
@@ -724,7 +836,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 4: about you ──
+  // ── Step 5: about you ──
 
   Widget _buildAboutYou() {
     return Padding(
@@ -885,7 +997,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 5: the tracking ask ──
+  // ── Step 6: the tracking ask ──
 
   /// The dialog that follows is Apple's, in Apple's words; this page says
   /// in ours what the permission is for, so the ask is not the first thing
@@ -931,7 +1043,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Steps 6–9: the program questions ──
+  // ── Steps 7–10: the program questions ──
 
   Widget _buildProgramQuestion(ProgramSetupQuestion question) {
     final head = _setup.headFor(question);
@@ -1037,7 +1149,7 @@ class _RiseState extends State<_Rise> with SingleTickerProviderStateMixin {
   }
 }
 
-// ── Steps 0–2: narrative slide shell ────────────────────────────────────────
+// ── Steps 1–3: narrative slide shell ────────────────────────────────────────
 
 class _NarrativeSlide extends StatelessWidget {
   final String title;
@@ -1109,7 +1221,7 @@ class _NarrativeSlide extends StatelessWidget {
   }
 }
 
-// ── Step 0: the real skill-tree map, filling in ─────────────────────────────
+// ── Step 1: the real skill-tree map, filling in ─────────────────────────────
 
 /// The Pullups tree drawn by the same [SkillTreeMap] the Skills tab uses,
 /// walked forward along one route (One Arm) a step at a time: the working
@@ -1361,7 +1473,7 @@ class _RouteStepRow extends StatelessWidget {
   }
 }
 
-// ── Step 1: reps build until the exercise levels up ─────────────────────────
+// ── Step 2: reps build until the exercise levels up ─────────────────────────
 
 class _LevelUpBeat extends StatefulWidget {
   const _LevelUpBeat();
@@ -1621,7 +1733,7 @@ class _LevelUpBeatState extends State<_LevelUpBeat> {
   }
 }
 
-// ── Step 2: the reps graph drives the plan both ways ────────────────────────
+// ── Step 3: the reps graph drives the plan both ways ────────────────────────
 
 class _AdaptBeat extends StatefulWidget {
   const _AdaptBeat();
@@ -1894,6 +2006,74 @@ class _StepHead extends StatelessWidget {
           _Rise(index: 2, child: Text(sub!, style: _captionStyle)),
         ],
       ],
+    );
+  }
+}
+
+/// One answer to "What drew you to Forma?": a full-width tile, lit when
+/// picked.
+class _WhyOption extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _WhyOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Five of these have to fit above the button on a small phone, so the
+    // tile is as tight as the label allows. Not a Pressable: its press dim
+    // and shrink, right for a small chip, read as a blink across a tile
+    // this wide — the colour change is feedback enough.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.fromLTRB(14, 11, 12, 11),
+            decoration: BoxDecoration(
+              color: selected ? AppColors.accentSoft : AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected ? AppColors.accentPrimary : AppColors.divider,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                      color: selected
+                          ? AppColors.accentPrimary
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Icon(
+                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+                  size: 18,
+                  color:
+                      selected ? AppColors.accentPrimary : AppColors.textMuted,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

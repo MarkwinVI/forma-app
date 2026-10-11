@@ -72,6 +72,10 @@ class OnboardingService {
         if (profile.gender != null) 'gender': profile.gender!,
         if (profile.trainingFrequency != null)
           'training_frequency': profile.trainingFrequency!,
+        // The option only: the words behind "Other" stay in the database.
+        if (profile.motivation != null) 'motivation': profile.motivation!,
+        if (profile.motivation != null)
+          'has_motivation_note': profile.motivationOther != null,
       },
       // The durable traits, kept on the person so any event can be
       // segmented by them.
@@ -81,6 +85,7 @@ class OnboardingService {
         if (profile.gender != null) 'gender': profile.gender!,
         if (profile.trainingFrequency != null)
           'training_frequency': profile.trainingFrequency!,
+        if (profile.motivation != null) 'motivation': profile.motivation!,
       },
     );
   }

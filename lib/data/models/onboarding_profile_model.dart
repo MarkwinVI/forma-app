@@ -29,6 +29,14 @@ class OnboardingProfileModel {
   /// '0' | '1-2' | '3-4' | '5+' sessions per week — null if not answered.
   final String? trainingFrequency;
 
+  /// What drew them to Forma: 'specific_skill' | 'skill_levels' |
+  /// 'strength_muscle' | 'clear_program' | 'other'. Null on profiles from
+  /// before the question existed.
+  final String? motivation;
+
+  /// The words behind 'other'. Stored, never sent to analytics.
+  final String? motivationOther;
+
   final DateTime completedAt;
 
   const OnboardingProfileModel({
@@ -39,6 +47,8 @@ class OnboardingProfileModel {
     required this.age,
     this.gender,
     this.trainingFrequency,
+    this.motivation,
+    this.motivationOther,
     required this.completedAt,
   });
 
@@ -51,6 +61,8 @@ class OnboardingProfileModel {
       age: map['age'] as int,
       gender: map['gender'] as String?,
       trainingFrequency: map['training_frequency'] as String?,
+      motivation: map['motivation'] as String?,
+      motivationOther: map['motivation_other'] as String?,
       completedAt: DateTime.parse(map['completed_at'] as String),
     );
   }
@@ -64,6 +76,8 @@ class OnboardingProfileModel {
       'age': age,
       'gender': gender,
       'training_frequency': trainingFrequency,
+      'motivation': motivation,
+      'motivation_other': motivationOther,
       'completed_at': completedAt.toIso8601String(),
     };
   }
