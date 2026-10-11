@@ -168,12 +168,16 @@ class _Choice {
 /// are what the profile stores and analytics segments by.
 const _whyOtherId = 'other';
 const _whyOptions = [
-  _Choice('specific_skill', 'I have a specific skill I want to achieve'),
+  _Choice('start_calisthenics', 'I want to start calisthenics'),
+  _Choice('track_progress', 'I want to track and visualise my progress'),
   _Choice(
-    'skill_levels',
-    'I like the idea of progressing through skill levels',
+    'unstuck',
+    'I’ve stopped making progress and want to get unstuck',
   ),
+  _Choice('specific_skill', 'I want to learn a specific skill'),
   _Choice('clear_program', 'I want a clear workout program to follow'),
+  _Choice('stay_consistent', 'I want help staying consistent with training'),
+  _Choice('exploring', 'I’m just exploring'),
   _Choice(_whyOtherId, 'Other'),
 ];
 
@@ -293,9 +297,9 @@ class _OnboardingViewState extends State<OnboardingView> {
   String? _gender;
   String? _freq;
 
-  /// What drew them to Forma — one of [_whyOptions] — and, for 'other',
+  /// What drew them to Forma — any of [_whyOptions] — and, for 'other',
   /// their own words.
-  String? _why;
+  final _why = <String>{};
   final _whyOther = TextEditingController();
   final _whyOtherFocus = FocusNode();
 
@@ -444,11 +448,15 @@ class _OnboardingViewState extends State<OnboardingView> {
                 age: _age,
                 gender: _gender,
                 trainingFrequency: _freq,
-                motivation: _why,
-                motivationOther:
-                    _why == _whyOtherId && _whyOther.text.trim().isNotEmpty
-                        ? _whyOther.text.trim()
-                        : null,
+                // In the order shown, whatever order they were picked in.
+                motivations: [
+                  for (final option in _whyOptions)
+                    if (_why.contains(option.id)) option.id,
+                ],
+                motivationOther: _why.contains(_whyOtherId) &&
+                        _whyOther.text.trim().isNotEmpty
+                    ? _whyOther.text.trim()
+                    : null,
                 completedAt: DateTime.now().toUtc(),
               ),
         widget.askProgram ? _setup.result() : null,
@@ -519,7 +527,7 @@ class _OnboardingViewState extends State<OnboardingView> {
   bool get _canContinue {
     if (_saving || _askingTracking) return false;
     // An option picked is enough; the words behind "Other" are optional.
-    if (_step == _Step.why) return _why != null;
+    if (_step == _Step.why) return _why.isNotEmpty;
     if (_step == _Step.aboutYou) return _profileAnswered;
     final question = _step.question;
     return question == null || _setup.answered(question);
@@ -667,8 +675,8 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   // ── Step 0: what drew them here ──
 
-  /// One pick from [_whyOptions]; "Other" unfolds a field for their own
-  /// words, which are welcome but not required.
+  /// As many of [_whyOptions] as apply; "Other" unfolds a field for their
+  /// own words, which are welcome but not required.
   Widget _buildWhyStep() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
@@ -691,8 +699,8 @@ class _OnboardingViewState extends State<OnboardingView> {
                       index: 2 + i,
                       child: _WhyOption(
                         label: _whyOptions[i].label,
-                        selected: _why == _whyOptions[i].id,
-                        onTap: () => _pickWhy(_whyOptions[i].id),
+                        selected: _why.contains(_whyOptions[i].id),
+                        onTap: () => _toggleWhy(_whyOptions[i].id),
                       ),
                     ),
                   // The field unfolds under the list rather than popping in.
@@ -700,7 +708,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeOutCubic,
                     alignment: Alignment.topCenter,
-                    child: _why == _whyOtherId
+                    child: _why.contains(_whyOtherId)
                         ? _buildWhyOtherField()
                         : const SizedBox(width: double.infinity),
                   ),
@@ -713,13 +721,14 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  void _pickWhy(String id) {
-    setState(() => _why = id);
+  void _toggleWhy(String id) {
+    final picked = !_why.contains(id);
+    setState(() => picked ? _why.add(id) : _why.remove(id));
     // The field unfolds while the keyboard rises; once it is full size,
     // one more nudge so the whole of it sits above the keyboard.
-    if (id == _whyOtherId) {
+    if (picked && id == _whyOtherId) {
       Future.delayed(const Duration(milliseconds: 320), () {
-        if (mounted && _why == _whyOtherId) _revealWhyEnd();
+        if (mounted && _why.contains(_whyOtherId)) _revealWhyEnd();
       });
     }
   }
@@ -2070,8 +2079,8 @@ class _StepHead extends StatelessWidget {
   }
 }
 
-/// One answer to "What drew you to Forma?": a card with the radio on the
-/// left, where eye and thumb meet, and the answer beside it.
+/// One answer to "What drew you to Forma?": a card with the tick box on
+/// the left, where eye and thumb meet, and the answer beside it.
 class _WhyOption extends StatelessWidget {
   final String label;
   final bool selected;
@@ -2096,14 +2105,12 @@ class _WhyOption extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Semantics(
-        button: true,
-        selected: selected,
+        checked: selected,
         child: GestureDetector(
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
-            // The pick lights up quickly; the card it leaves goes out at
-            // once, or two cards read as chosen for a beat.
+            // A pick lights up quickly; an unpicked card goes out at once.
             duration: Duration(milliseconds: selected ? 120 : 0),
             padding: const EdgeInsets.all(16),
             // Both ends of each lerp are opaque and share a hue, so the
@@ -2127,17 +2134,26 @@ class _WhyOption extends StatelessWidget {
                   width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    // A square, not a radio's circle: more than one can
+                    // be ticked.
+                    borderRadius: BorderRadius.circular(7),
                     color: selected
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0),
+                        ? AppColors.accentPrimary
+                        : AppColors.accentPrimary.withValues(alpha: 0),
                     border: Border.all(
-                      width: selected ? 7 : 2,
+                      width: 2,
                       color: selected
                           ? AppColors.accentPrimary
                           : Colors.white.withValues(alpha: 0.16),
                     ),
                   ),
+                  child: selected
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 13),
                 Expanded(

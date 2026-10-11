@@ -378,7 +378,8 @@ create table public.user_onboarding_profiles (
   age                 int not null,
   gender              text, -- 'f' | 'm' | 'na'
   training_frequency  text, -- '0' | '1-2' | '3-4' | '5+' sessions per week
-  motivation          text, -- 'specific_skill' | 'skill_levels' | 'clear_program' | 'other'
+  motivation          text, -- legacy single answer (1.1.3); superseded by motivations
+  motivations         text[], -- any of 'start_calisthenics' | 'track_progress' | 'unstuck' | 'specific_skill' | 'clear_program' | 'stay_consistent' | 'exploring' | 'other'
   motivation_other    text, -- the words behind 'other'; never sent to analytics
   completed_at        timestamptz default now() not null,
   check (age between 16 and 100)

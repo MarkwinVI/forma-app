@@ -72,9 +72,9 @@ class OnboardingService {
         if (profile.gender != null) 'gender': profile.gender!,
         if (profile.trainingFrequency != null)
           'training_frequency': profile.trainingFrequency!,
-        // The option only: the words behind "Other" stay in the database.
-        if (profile.motivation != null) 'motivation': profile.motivation!,
-        if (profile.motivation != null)
+        // The options only: the words behind "Other" stay in the database.
+        if (profile.motivations.isNotEmpty) 'motivations': profile.motivations,
+        if (profile.motivations.isNotEmpty)
           'has_motivation_note': profile.motivationOther != null,
       },
       // The durable traits, kept on the person so any event can be
@@ -85,7 +85,7 @@ class OnboardingService {
         if (profile.gender != null) 'gender': profile.gender!,
         if (profile.trainingFrequency != null)
           'training_frequency': profile.trainingFrequency!,
-        if (profile.motivation != null) 'motivation': profile.motivation!,
+        if (profile.motivations.isNotEmpty) 'motivations': profile.motivations,
       },
     );
   }

@@ -111,15 +111,25 @@ void main() {
     expect(continueEnabled(tester), isTrue);
     await tester.enterText(find.byType(TextField), 'A friend trains with it');
     await tester.pump();
-    // A listed answer wins over the words, which are then not kept. (The
-    // pause is a finger's: two taps in the same instant lose the second.)
+    // A second answer joins the first rather than replacing it, and the
+    // words stay. (The pause is a finger's: two taps in the same instant
+    // lose the second.)
     await tester.pump(const Duration(milliseconds: 400));
-    final skill = find.text('I have a specific skill I want to achieve');
+    final skill = find.text('I want to learn a specific skill');
     await tester.ensureVisible(skill);
     await tester.pump();
     await tester.tap(skill);
     await tester.pump();
-    expect(find.byType(TextField), findsNothing);
+    expect(find.byType(TextField), findsOneWidget);
+    // A second tap takes an answer back.
+    final exploring = find.text('I’m just exploring');
+    for (var i = 0; i < 2; i++) {
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.ensureVisible(exploring);
+      await tester.pump();
+      await tester.tap(exploring);
+      await tester.pump();
+    }
     await next(tester, 'Continue');
 
     // Step 1: the skill-tree beat — the welcome hook now lives on the
@@ -241,8 +251,9 @@ void main() {
     expect(savedProfile!.archetype, 'technician');
     expect(savedProfile!.gender, 'm');
     expect(savedProfile!.trainingFrequency, '1-2');
-    expect(savedProfile!.motivation, 'specific_skill');
-    expect(savedProfile!.motivationOther, isNull);
+    // In the order shown, not the order picked.
+    expect(savedProfile!.motivations, ['specific_skill', 'other']);
+    expect(savedProfile!.motivationOther, 'A friend trains with it');
     expect(savedProgram!.daysPerWeek, 3);
     expect(savedProgram!.bodyweightKg, 80);
     // The flow ends on the map the answers drew.
@@ -281,7 +292,7 @@ void main() {
     expect(savedProfile!.gender, 'na');
     expect(savedProfile!.trainingFrequency, '0');
     // "Other" with nothing typed is an answer; the empty words are not kept.
-    expect(savedProfile!.motivation, 'other');
+    expect(savedProfile!.motivations, ['other']);
     expect(savedProfile!.motivationOther, isNull);
     expect(savedProgram, isNull);
     expect(finished, 1, reason: 'no ready screen without a new program');
