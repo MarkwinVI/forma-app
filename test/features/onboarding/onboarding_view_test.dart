@@ -15,6 +15,7 @@ void main() {
 
   Future<void> pumpFlow(
     WidgetTester tester, {
+    bool askProfile = true,
     bool askProgram = true,
     bool askTracking = false,
     Future<void> Function(OnboardingProfileModel?, ProgramSetupResult?)? onSave,
@@ -29,6 +30,7 @@ void main() {
       MaterialApp(
         home: OnboardingView(
           userId: 'user',
+          askProfile: askProfile,
           askProgram: askProgram,
           askTracking: askTracking,
           onSave: onSave ?? (_, __) async {},
@@ -52,22 +54,21 @@ void main() {
   bool continueEnabled(WidgetTester tester) =>
       tester.widget<PillButton>(find.byType(PillButton)).onTap != null;
 
-  testWidgets('the tracking ask, when on, sits between the beats and the radar',
+  testWidgets('the tracking ask, when on, comes right before the schedule',
       (tester) async {
-    await pumpFlow(tester, askTracking: true);
-    await next(tester, 'Got it');
-    await next(tester, 'Got it');
-    await next(tester, 'Got it');
+    // With the profile already on file the ask is the first page, and the
+    // program questions follow it.
+    await pumpFlow(tester, askProfile: false, askTracking: true);
 
-    // Step 3: our words first, then Apple's dialog. It asks nothing of the
-    // flow itself, so Continue is live at once.
+    // Our words first, then Apple's dialog. It asks nothing of the flow
+    // itself, so Continue is live at once.
     expect(find.text('Help Forma reach more people like you.'), findsOneWidget);
     expect(find.text('Got it'), findsNothing);
     expect(continueEnabled(tester), isTrue);
     // Off a phone there is no dialog to show; the flow moves on regardless.
     await next(tester, 'Continue');
 
-    expect(find.text('What is your aim?'), findsOneWidget);
+    expect(find.text('Your training schedule'), findsOneWidget);
   });
 
   testWidgets(

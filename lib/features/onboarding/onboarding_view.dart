@@ -22,8 +22,8 @@ import 'program_setup_steps.dart';
 
 /// Post-signup onboarding, one flow from the pitch to a built program: three
 /// grounded beats (the skill tree route, the workout that levels up, the data
-/// loop that eases you back) → the tracking ask (iOS, once, for the ad
-/// campaigns) → archetype radar → about you → the program
+/// loop that eases you back) → archetype radar → about you → the tracking
+/// ask (iOS, once, for the ad campaigns) → the program
 /// questions (schedule, equipment, bodyweight, starting strength) → the map
 /// the answers drew, and the membership choice. Everything is written when
 /// the program is built: the profile to `user_onboarding_profiles`, the
@@ -184,9 +184,9 @@ enum _Step {
   skills('onboarding_skills'),
   workout('onboarding_workout'),
   data('onboarding_data'),
-  tracking('onboarding_tracking'),
   radar('onboarding_radar'),
   aboutYou('onboarding_about_you'),
+  tracking('onboarding_tracking'),
   schedule('onboarding_schedule', ProgramSetupQuestion.schedule),
   equipment('onboarding_equipment', ProgramSetupQuestion.equipment),
   bodyweight('onboarding_bodyweight', ProgramSetupQuestion.bodyweight),
@@ -636,53 +636,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Step 3: the tracking ask ──
-
-  /// The dialog that follows is Apple's, in Apple's words; this page says
-  /// in ours what the permission is for, so the ask is not the first thing
-  /// seen.
-  Widget _buildTrackingStep() {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _StepHead(
-            icon: Icons.campaign_rounded,
-            pill: 'ONE QUICK QUESTION',
-            title: 'Help Forma reach more people like you.',
-            sub: 'Next, iOS will ask whether Forma may track your activity. '
-                'Allowing it shows us which ads bring in people who '
-                'actually train — nothing more.',
-          ),
-          SizedBox(height: 26),
-          _Rise(
-            index: 3,
-            child: _TrackingPoint(
-              icon: Icons.lock_outline_rounded,
-              text: 'Your workouts and progress stay private.',
-            ),
-          ),
-          _Rise(
-            index: 4,
-            child: _TrackingPoint(
-              icon: Icons.tune_rounded,
-              text: 'Nothing in the app changes with your answer.',
-            ),
-          ),
-          _Rise(
-            index: 5,
-            child: _TrackingPoint(
-              icon: Icons.settings_outlined,
-              text: 'Change your mind any time in iOS Settings.',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Step 4: archetype radar ──
+  // ── Step 3: archetype radar ──
 
   Widget _buildRadarStep() {
     final arch = _archetype;
@@ -931,7 +885,53 @@ class _OnboardingViewState extends State<OnboardingView> {
     );
   }
 
-  // ── Steps 5–8: the program questions ──
+  // ── Step 5: the tracking ask ──
+
+  /// The dialog that follows is Apple's, in Apple's words; this page says
+  /// in ours what the permission is for, so the ask is not the first thing
+  /// seen.
+  Widget _buildTrackingStep() {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(24, 0, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _StepHead(
+            icon: Icons.campaign_rounded,
+            pill: 'ONE QUICK QUESTION',
+            title: 'Help Forma reach more people like you.',
+            sub: 'Next, iOS will ask whether Forma may track your activity. '
+                'Allowing it shows us which ads bring in people who '
+                'actually train, nothing more.',
+          ),
+          SizedBox(height: 26),
+          _Rise(
+            index: 3,
+            child: _TrackingPoint(
+              icon: Icons.lock_outline_rounded,
+              text: 'Your workouts and progress stay private.',
+            ),
+          ),
+          _Rise(
+            index: 4,
+            child: _TrackingPoint(
+              icon: Icons.tune_rounded,
+              text: 'Nothing in the app changes with your answer.',
+            ),
+          ),
+          _Rise(
+            index: 5,
+            child: _TrackingPoint(
+              icon: Icons.settings_outlined,
+              text: 'Change your mind any time in iOS Settings.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Steps 6–9: the program questions ──
 
   Widget _buildProgramQuestion(ProgramSetupQuestion question) {
     final head = _setup.headFor(question);
