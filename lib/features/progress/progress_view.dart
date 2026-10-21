@@ -127,15 +127,22 @@ class _ProgressViewState extends State<ProgressView> {
   }
 
   /// Edit: the same editable wheel the Program tab opens, pushed inside this
-  /// tab. Whatever was started or stopped there is re-read on the way back,
-  /// behind the wheel that is already up.
-  Future<void> _openEditor() async {
+  /// tab — flown straight into [family] when the pill was tapped on a
+  /// focused tree, so back from there lands on that tree here rather than on
+  /// the editable overview. Whatever was started or stopped is re-read on
+  /// the way back, behind the wheel that is already up.
+  Future<void> _openEditor(WheelFamily? family) async {
     AnalyticsService.capture('skill_trees_edit_opened', properties: {
       'source': 'progress_tab',
+      if (family != null) 'skill_tree_id': family.categoryId,
     });
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const ProgramSkillWheelView(source: 'progress_tab'),
+        builder: (_) => ProgramSkillWheelView(
+          source: 'progress_tab',
+          initialCategoryId: family?.categoryId,
+          exitOnTreeBack: family != null,
+        ),
       ),
     );
     if (!mounted) return;

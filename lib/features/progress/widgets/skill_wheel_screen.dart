@@ -49,9 +49,10 @@ class SkillWheelScreen extends StatefulWidget {
   /// hosts that push this screen as its own route.
   final VoidCallback? onBack;
 
-  /// The Edit pill on the overview header — the read-only wheel's way into
-  /// the editable one. Hidden while a tree is focused.
-  final VoidCallback? onEdit;
+  /// The Edit pill in the header — the read-only wheel's way into the
+  /// editable one. On the overview it gets null; on a focused tree it gets
+  /// that tree, so the host can open the editor straight into it.
+  final void Function(WheelFamily? family)? onEdit;
 
   /// Fly into this category's tree on first build.
   final String? initialCategoryId;
@@ -516,9 +517,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             ),
                           ),
                         ),
-                        if (_sel == null && widget.onEdit != null) ...[
+                        if (widget.onEdit != null) ...[
                           const SizedBox(width: 12),
-                          _EditPill(onTap: widget.onEdit!),
+                          _EditPill(onTap: () => widget.onEdit!(family)),
                         ],
                       ],
                     ),
@@ -718,7 +719,8 @@ class _WheelCta extends StatelessWidget {
 }
 
 /// The header's Edit pill: a soft gray capsule beside the title, the
-/// reference design's one way from the Progress wheel into the editable one.
+/// reference design's one way from the Progress wheel into the editable
+/// one — the whole wheel from the overview, one tree from that tree.
 class _EditPill extends StatelessWidget {
   final VoidCallback onTap;
 

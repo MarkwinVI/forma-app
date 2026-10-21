@@ -374,14 +374,14 @@ void main() {
     expect(find.text('Start anyway'), findsOneWidget);
   });
 
-  testWidgets('the Edit pill opens the editor from the overview only',
-      (tester) async {
-    var edits = 0;
+  testWidgets('the Edit pill opens the editor — the whole wheel from the '
+      'overview, one tree from that tree', (tester) async {
+    final edits = <String?>[];
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
       activeCategoryIds: const {'a'},
       onOpenExercise: (_) {},
-      onEdit: () => edits++,
+      onEdit: (family) => edits.add(family?.categoryId),
     )));
     await tester.pump(const Duration(milliseconds: 800));
 
@@ -389,23 +389,27 @@ void main() {
     expect(find.bySemanticsLabel('Edit skill trees'), findsOneWidget);
     await tester.tap(find.text('Edit'));
     await tester.pump();
-    expect(edits, 1);
+    expect(edits, [null]);
     // Read-only still: nothing on the wheel itself changes progressions.
     expect(find.text('Stop training'), findsNothing);
 
-    // Focused on a tree, the header is the tree's and the pill is gone. A
-    // fresh screen: the fly-in only happens on first build.
+    // Focused on a tree, the pill stays and names that tree. A fresh
+    // screen: the fly-in only happens on first build.
     await tester.pumpWidget(_host(SkillWheelScreen(
       key: const ValueKey('focused'),
       families: _families(),
       activeCategoryIds: const {'a'},
       initialCategoryId: 'a',
       onOpenExercise: (_) {},
-      onEdit: () => edits++,
+      onEdit: (family) => edits.add(family?.categoryId),
     )));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Edit'), findsNothing);
+    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    await tester.tap(find.text('Edit'));
+    await tester.pump();
+    expect(edits, [null, 'a']);
   });
 
   testWidgets('without an editor to open, the header carries no pill',
