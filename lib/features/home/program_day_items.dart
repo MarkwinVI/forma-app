@@ -123,7 +123,16 @@ class ProgramSessionPlan {
     List<SkillTrack> skillTracks = const [],
     EquipmentAnswer equipment = EquipmentAnswer.fullGym,
   }) {
-    final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
+    // The saved plan, read against the tracks the way the Train tab reads
+    // it — a tree stopped on the wheel is already gone from the list the
+    // editor opens on, and one started there is already in it.
+    final sessionMap = service.reconciledDayConfig(
+      programType: programType,
+      sessionType: sessionType,
+      sessionItemsConfig: sessionItemsConfig,
+      skillTracks: skillTracks,
+      progressMap: progressMap,
+    );
     if (sessionMap != null) {
       final items = <ProgramDayItem>[];
       for (final component in const [

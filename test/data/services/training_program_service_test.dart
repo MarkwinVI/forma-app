@@ -215,6 +215,127 @@ void main() {
     });
   });
 
+  group('saved plans follow the skill tracks', () {
+    SkillTrack track(String categoryId, String branchId,
+            {bool included = true}) =>
+        SkillTrack(
+          skillCategoryId: categoryId,
+          branchId: branchId,
+          included: included,
+          updatedAt: DateTime(2026, 10, 21),
+        );
+
+    // A push day saved by hand: the push-up progression and an accessory.
+    const pushPlan = {
+      'push': {
+        'strength': [
+          {
+            'kind': 'progression',
+            'skill_category_id': 'pushups',
+            'branch_id': 'planche',
+          },
+          {'kind': 'exercise', 'exercise_id': 'lateral_raise_dumbbell'},
+        ],
+      },
+    };
+
+    List<String> trees(DailyTrainingRecommendation recommendation) => [
+          for (final item in recommendation.items)
+            if (item.isProgression) item.sourceSkillCategoryId,
+        ];
+
+    test('a tree stopped on the wheel leaves the saved plan', () {
+      final recommendation = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.push,
+        sessionItemsConfig: pushPlan,
+        skillTracks: [track('pushups', 'planche', included: false)],
+      );
+
+      expect(trees(recommendation), isEmpty);
+      expect(
+        recommendation.items.map((item) => item.exercise.id),
+        ['lateral_raise_dumbbell'],
+      );
+    });
+
+    test('a tree started on the wheel joins the saved plan, before the '
+        'accessories', () {
+      final recommendation = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.push,
+        sessionItemsConfig: pushPlan,
+        skillTracks: [
+          track('pushups', 'planche'),
+          track('dips', 'weighted'),
+        ],
+      );
+
+      expect(trees(recommendation), ['pushups', 'dips']);
+      expect(recommendation.items.last.exercise.id, 'lateral_raise_dumbbell');
+    });
+
+    test('a tree another workout still runs does not join a plan it was '
+        'taken off', () {
+      // The muscle-up is skill work, which push and pull days both
+      // schedule. Taken off the saved push day, it still runs on the
+      // generated pull day — so it stays off push.
+      final tracks = [track('pushups', 'planche'), track('muscle_up', 'main')];
+      final push = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.push,
+        sessionItemsConfig: pushPlan,
+        skillTracks: tracks,
+      );
+      final pull = service.buildToday(
+        progressMap: const {},
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.pull,
+        sessionItemsConfig: pushPlan,
+        skillTracks: tracks,
+      );
+
+      expect(trees(push), ['pushups']);
+      expect(trees(pull), contains('muscle_up'));
+    });
+
+    test('a day with no saved plan is left to the generator', () {
+      expect(
+        service.reconciledDayConfig(
+          programType: TrainingProgramType.pushPull,
+          sessionType: TrainingSessionType.pull,
+          sessionItemsConfig: pushPlan,
+          skillTracks: [track('pullups', 'weighted')],
+          progressMap: const {},
+        ),
+        isNull,
+      );
+    });
+
+    test('saving a plan without a tree pauses it, unless another workout '
+        'still runs it', () {
+      final tracks = [
+        track('pushups', 'planche'),
+        track('dips', 'weighted'),
+        track('muscle_up', 'main'),
+        track('pullups', 'weighted'),
+      ];
+      final left = service.treesLeftBySavedDay(
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.push,
+        sessionItemsConfig: pushPlan,
+        skillTracks: tracks,
+      );
+
+      // Dips were taken off the only day that trains them; the muscle-up
+      // carries on with the pull day, and pull-ups never were push work.
+      expect(left, ['dips']);
+    });
+  });
+
   group('TrainingRecommendationItem.isProgression', () {
     test('lane-built items carry their progression path', () {
       final recommendation = service.buildToday(progressMap: const {});

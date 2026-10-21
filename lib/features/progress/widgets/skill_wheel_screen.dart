@@ -49,6 +49,10 @@ class SkillWheelScreen extends StatefulWidget {
   /// hosts that push this screen as its own route.
   final VoidCallback? onBack;
 
+  /// The Edit pill on the overview header — the read-only wheel's way into
+  /// the editable one. Hidden while a tree is focused.
+  final VoidCallback? onEdit;
+
   /// Fly into this category's tree on first build.
   final String? initialCategoryId;
 
@@ -71,6 +75,7 @@ class SkillWheelScreen extends StatefulWidget {
     this.onTrainNode,
     this.onStopTraining,
     this.onBack,
+    this.onEdit,
     this.initialCategoryId,
     this.exitOnTreeBack = false,
   });
@@ -511,6 +516,10 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             ),
                           ),
                         ),
+                        if (_sel == null && widget.onEdit != null) ...[
+                          const SizedBox(width: 12),
+                          _EditPill(onTap: widget.onEdit!),
+                        ],
                       ],
                     ),
                   ),
@@ -553,7 +562,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                               // Read-only with nothing else under the
                               // wheel: the same guidance the editable
                               // overview gives, in one line.
-                              ? const _ReadOnlyOverviewNote()
+                              ? _ReadOnlyOverviewNote(
+                                  hasEdit: widget.onEdit != null,
+                                )
                               : const SizedBox.shrink())
                       : DecoratedBox(
                           decoration: const BoxDecoration(
@@ -706,6 +717,41 @@ class _WheelCta extends StatelessWidget {
   }
 }
 
+/// The header's Edit pill: a soft gray capsule beside the title, the
+/// reference design's one way from the Progress wheel into the editable one.
+class _EditPill extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _EditPill({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: 'Edit skill trees',
+      child: Container(
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: const Text(
+          'Edit',
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.15,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A header icon with a full 44pt hit area around a 22–28pt glyph.
 class _HeaderIconButton extends StatelessWidget {
   final IconData icon;
@@ -795,20 +841,27 @@ class _TreeLockBanner extends StatelessWidget {
 /// Under the read-only wheel when no performance sheet takes the space:
 /// what the wheel is for and where a progression gets started.
 class _ReadOnlyOverviewNote extends StatelessWidget {
-  const _ReadOnlyOverviewNote();
+  /// Whether the header carries the Edit pill — the note then points there
+  /// rather than at the Program tab.
+  final bool hasEdit;
+
+  const _ReadOnlyOverviewNote({required this.hasEdit});
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
+    return DecoratedBox(
+      decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(22, 14, 22, 0),
+        padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
         child: Text(
-          'Tap a tree to see its steps. Start or change a progression from '
-          'the Program tab.',
-          style: TextStyle(
+          hasEdit
+              ? 'Tap a tree to see its steps. Edit starts or changes a '
+                  'progression.'
+              : 'Tap a tree to see its steps. Start or change a progression '
+                  'from the Program tab.',
+          style: const TextStyle(
             fontSize: 13.5,
             height: 1.55,
             color: AppColors.textMuted,

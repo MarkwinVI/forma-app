@@ -374,6 +374,51 @@ void main() {
     expect(find.text('Start anyway'), findsOneWidget);
   });
 
+  testWidgets('the Edit pill opens the editor from the overview only',
+      (tester) async {
+    var edits = 0;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      onOpenExercise: (_) {},
+      onEdit: () => edits++,
+    )));
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.bySemanticsLabel('Edit skill trees'), findsOneWidget);
+    await tester.tap(find.text('Edit'));
+    await tester.pump();
+    expect(edits, 1);
+    // Read-only still: nothing on the wheel itself changes progressions.
+    expect(find.text('Stop training'), findsNothing);
+
+    // Focused on a tree, the header is the tree's and the pill is gone. A
+    // fresh screen: the fly-in only happens on first build.
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      key: const ValueKey('focused'),
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      initialCategoryId: 'a',
+      onOpenExercise: (_) {},
+      onEdit: () => edits++,
+    )));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(find.text('Edit'), findsNothing);
+  });
+
+  testWidgets('without an editor to open, the header carries no pill',
+      (tester) async {
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      onOpenExercise: (_) {},
+    )));
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(find.text('Edit'), findsNothing);
+  });
+
   testWidgets('program card is the plain door into the trees', (tester) async {
     await tester.pumpWidget(_host(SingleChildScrollView(
       child: ProgramSkillTreesCard(

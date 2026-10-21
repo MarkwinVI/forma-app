@@ -34,6 +34,72 @@ void main() {
     );
   }
 
+  group('the editor opens on the plan as the tracks read it', () {
+    const pullPlan = {
+      'pull': {
+        'strength': [
+          {
+            'kind': 'progression',
+            'skill_category_id': 'pullups',
+            'branch_id': 'weighted',
+          },
+          {
+            'kind': 'progression',
+            'skill_category_id': 'rows',
+            'branch_id': 'front_lever',
+          },
+          {'kind': 'exercise', 'exercise_id': 'face_pull'},
+        ],
+      },
+    };
+
+    test('a tree stopped on the wheel is gone from the saved day', () {
+      final pull = ProgramSessionPlan.loadDay(
+        service: service,
+        sessionItemsConfig: pullPlan,
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.pull,
+        branchSelections: const {},
+        progressMap: const {},
+        skillTracks: [
+          ...tracks({SkillCategoryCatalog.rowsId: 'front_lever'}),
+          SkillTrack(
+            skillCategoryId: SkillCategoryCatalog.pullupsId,
+            branchId: 'weighted',
+            included: false,
+            updatedAt: DateTime(2026, 10, 21),
+          ),
+        ],
+      );
+
+      expect(
+        pull.map((item) => item.skillCategoryId ?? item.exerciseId),
+        [SkillCategoryCatalog.rowsId, 'face_pull'],
+      );
+    });
+
+    test('a tree started on the wheel is already in the saved day', () {
+      final pull = dayFor(
+        TrainingSessionType.pull,
+        {
+          SkillCategoryCatalog.pullupsId: 'weighted',
+          SkillCategoryCatalog.rowsId: 'front_lever',
+          SkillCategoryCatalog.hingeId: 'weighted',
+        },
+        sessionItemsConfig: pullPlan,
+      );
+
+      final hinge = pull.firstWhere(
+        (item) => item.skillCategoryId == SkillCategoryCatalog.hingeId,
+      );
+      expect(hinge.kind, ProgramDayItemKind.progression);
+      expect(hinge.branchId, 'weighted');
+      expect(hinge.exerciseId, isNotNull);
+      // Ahead of the accessory, with the other progressions.
+      expect(pull.last.exerciseId, 'face_pull');
+    });
+  });
+
   group('where a day item says it came from', () {
     test('the gym accessories are standalone, not tree progressions', () {
       final pull = dayFor(TrainingSessionType.pull, {

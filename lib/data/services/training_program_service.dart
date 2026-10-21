@@ -113,6 +113,8 @@ class TrainingProgramService {
               sessionType: currentSessionType,
               progressMap: progressMap,
               sessionItemsConfig: sessionItemsConfig,
+              programType: programType,
+              skillTracks: skillTracks,
             );
       return DailyTrainingRecommendation(
         programType: programType,
@@ -145,6 +147,8 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
+                programType: programType,
+                skillTracks: skillTracks,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -170,6 +174,8 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
+                programType: programType,
+                skillTracks: skillTracks,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -194,6 +200,8 @@ class TrainingProgramService {
                 sessionType: currentSessionType,
                 progressMap: progressMap,
                 sessionItemsConfig: sessionItemsConfig,
+                programType: programType,
+                skillTracks: skillTracks,
               );
         return DailyTrainingRecommendation(
           programType: programType,
@@ -217,15 +225,20 @@ class TrainingProgramService {
     required TrainingSessionType sessionType,
     required Map<String, ExerciseStatus> progressMap,
     required Map<String, dynamic> sessionItemsConfig,
+    required TrainingProgramType programType,
+    required List<SkillTrack> skillTracks,
   }) {
-    final sessionMap = programDayConfig(
-      sessionItemsConfig,
-      sessionType,
+    final sessionMap = reconciledDayConfig(
+      programType: programType,
+      sessionType: sessionType,
+      sessionItemsConfig: sessionItemsConfig,
+      skillTracks: skillTracks,
+      progressMap: progressMap,
     );
     if (sessionMap == null) return null;
     final items = <TrainingRecommendationItem>[];
 
-    for (final component in const ['warmup', 'skill', 'strength', 'cooldown']) {
+    for (final component in _dayComponents) {
       final rawItems = sessionMap[component];
       if (rawItems is! List) continue;
 
@@ -242,6 +255,168 @@ class TrainingProgramService {
     }
 
     return items;
+  }
+
+  static const List<String> _dayComponents = [
+    'warmup',
+    'skill',
+    'strength',
+    'cooldown',
+  ];
+
+  /// The stored plan for [sessionType], read against the skill tracks so a
+  /// day saved by hand and a tree started or stopped on the wheel can never
+  /// disagree: a progression row of a paused tree is dropped, and a running
+  /// tree that no session of the program trains any more joins the sessions
+  /// its pattern belongs to, ahead of the accessories. Null when the type
+  /// still runs on generated defaults, which follow the tracks already.
+  Map<String, dynamic>? reconciledDayConfig({
+    required TrainingProgramType programType,
+    required TrainingSessionType sessionType,
+    required Map<String, dynamic> sessionItemsConfig,
+    required List<SkillTrack> skillTracks,
+    required Map<String, ExerciseStatus> progressMap,
+  }) {
+    final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
+    if (sessionMap == null) return null;
+
+    final paused = {
+      for (final track in skillTracks)
+        if (!track.included) track.skillCategoryId,
+    };
+    final reconciled = <String, dynamic>{...sessionMap};
+    for (final component in _dayComponents) {
+      final rawItems = sessionMap[component];
+      if (rawItems is! List) continue;
+      reconciled[component] = [
+        for (final rawItem in rawItems)
+          if (!paused.contains(_progressionCategoryOf(rawItem))) rawItem,
+      ];
+    }
+
+    final joining = <Map<String, dynamic>>[];
+    final patterns = patternsForSession(sessionType);
+    for (final track in skillTracks) {
+      if (!track.included) continue;
+      final category = SkillCategoryCatalog.findById(track.skillCategoryId);
+      if (category == null || !patterns.contains(category.track)) continue;
+      final path = category.pathFor(track.branchId);
+      if (path.isEmpty) continue;
+      if (_configTrainsTree(reconciled, category.id)) continue;
+      if (programTrainsTree(
+        programType: programType,
+        sessionItemsConfig: sessionItemsConfig,
+        skillTracks: skillTracks,
+        skillCategoryId: category.id,
+      )) {
+        continue;
+      }
+
+      final exercise = _pickCurrentExercise(
+        _TrainingBranch(
+          track: trainingTrackForPattern(category.track),
+          sourceCategory: category.track,
+          sourceSkillCategoryId: category.id,
+          exerciseIds: path,
+        ),
+        progressMap,
+      );
+      joining.add({
+        'id': 'track-${category.id}-${exercise?.id ?? track.branchId}',
+        'kind': 'progression',
+        'name': exercise?.name ?? category.title,
+        'skill_category_id': category.id,
+        'branch_id': track.branchId,
+        if (exercise != null) 'exercise_id': exercise.id,
+      });
+    }
+    if (joining.isNotEmpty) {
+      final strength = [...?reconciled['strength'] as List?];
+      final firstAccessory = strength.indexWhere(
+        (rawItem) => _progressionCategoryOf(rawItem) == null,
+      );
+      strength.insertAll(
+        firstAccessory < 0 ? strength.length : firstAccessory,
+        joining,
+      );
+      reconciled['strength'] = strength;
+    }
+    return reconciled;
+  }
+
+  /// Whether any session of the program trains [skillCategoryId]'s
+  /// progression: a saved plan that lists it, or a generated day whose
+  /// patterns schedule the running track.
+  bool programTrainsTree({
+    required TrainingProgramType programType,
+    required Map<String, dynamic> sessionItemsConfig,
+    required List<SkillTrack> skillTracks,
+    required String skillCategoryId,
+  }) {
+    final category = SkillCategoryCatalog.findById(skillCategoryId);
+    final running = skillTracks.any(
+      (track) => track.included && track.skillCategoryId == skillCategoryId,
+    );
+    for (final sessionType in trainingDaysForProgramType(programType)) {
+      final sessionMap = programDayConfig(sessionItemsConfig, sessionType);
+      if (sessionMap != null) {
+        if (_configTrainsTree(sessionMap, skillCategoryId)) return true;
+      } else if (running &&
+          category != null &&
+          patternsForSession(sessionType).contains(category.track)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// The trees a save of [sessionType]'s plan stops training: running
+  /// tracks the session schedules that the saved plan leaves out and no
+  /// other session lists either. Pausing them keeps the skill wheel honest
+  /// about what the program trains.
+  List<String> treesLeftBySavedDay({
+    required TrainingProgramType programType,
+    required TrainingSessionType sessionType,
+    required Map<String, dynamic> sessionItemsConfig,
+    required List<SkillTrack> skillTracks,
+  }) {
+    final patterns = patternsForSession(sessionType);
+    return [
+      for (final track in skillTracks)
+        if (track.included &&
+            patterns.contains(
+              SkillCategoryCatalog.findById(track.skillCategoryId)?.track,
+            ) &&
+            !programTrainsTree(
+              programType: programType,
+              sessionItemsConfig: sessionItemsConfig,
+              skillTracks: skillTracks,
+              skillCategoryId: track.skillCategoryId,
+            ))
+          track.skillCategoryId,
+    ];
+  }
+
+  static bool _configTrainsTree(
+    Map<String, dynamic> sessionMap,
+    String skillCategoryId,
+  ) {
+    for (final component in _dayComponents) {
+      final rawItems = sessionMap[component];
+      if (rawItems is! List) continue;
+      if (rawItems.any(
+        (rawItem) => _progressionCategoryOf(rawItem) == skillCategoryId,
+      )) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// The tree a saved row progresses, or null for an accessory.
+  static String? _progressionCategoryOf(Object? rawItem) {
+    if (rawItem is! Map || rawItem['kind'] != 'progression') return null;
+    return rawItem['skill_category_id'] as String?;
   }
 
   TrainingRecommendationItem? _configuredRecommendationItem({

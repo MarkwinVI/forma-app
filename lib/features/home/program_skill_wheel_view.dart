@@ -30,10 +30,15 @@ class ProgramSkillWheelView extends StatefulWidget {
   /// would be a detour on the way back.
   final bool exitOnTreeBack;
 
+  /// Where the user came in from, for analytics — the Program tab's
+  /// overview, a workout row's Edit progression, or the Progress tab's Edit.
+  final String source;
+
   const ProgramSkillWheelView({
     super.key,
     this.initialCategoryId,
     this.exitOnTreeBack = false,
+    this.source = 'program_tab',
   });
 
   @override
@@ -233,10 +238,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
     await _load();
   }
 
-  /// Where the user came in from — the Program tab's overview, or a
-  /// workout row's Edit progression.
-  String get _source =>
-      widget.exitOnTreeBack ? 'workout_editor' : 'program_tab';
+  String get _source => widget.source;
 
   void _openExercise(WheelNode node) {
     final exercise = ExerciseCatalog.findById(node.exerciseId);

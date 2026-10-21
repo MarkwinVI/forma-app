@@ -6,6 +6,7 @@ import '../../data/catalog/exercise_catalog.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../exercises/exercise_detail_view.dart';
+import '../home/program_skill_wheel_view.dart';
 import '../program/program_view.dart';
 import 'skill_wheel_bundle.dart';
 import 'widgets/skill_wheel.dart';
@@ -125,6 +126,22 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
+  /// Edit: the same editable wheel the Program tab opens, pushed inside this
+  /// tab. Whatever was started or stopped there is re-read on the way back,
+  /// behind the wheel that is already up.
+  Future<void> _openEditor() async {
+    AnalyticsService.capture('skill_trees_edit_opened', properties: {
+      'source': 'progress_tab',
+    });
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ProgramSkillWheelView(source: 'progress_tab'),
+      ),
+    );
+    if (!mounted) return;
+    await _loadData();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bundle = _bundle;
@@ -152,6 +169,7 @@ class _ProgressViewState extends State<ProgressView> {
                     treeLocks: bundle.treeLocks,
                     performance: bundle.performance,
                     onOpenExercise: _openExercise,
+                    onEdit: _openEditor,
                   ),
       ),
     );

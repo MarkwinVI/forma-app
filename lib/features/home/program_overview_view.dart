@@ -180,6 +180,10 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
         ),
       ),
     );
+    if (!mounted) return;
+    // A progression taken off the list has paused its tree; the Skill
+    // trees card reads the tracks, so it re-reads them.
+    await _loadSkillTracks();
   }
 
   Future<void> _openDaysSheet() async {

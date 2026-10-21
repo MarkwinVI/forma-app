@@ -1336,12 +1336,18 @@ class HomeDashboardMetricsCalculator {
     required Map<String, SkillCategory> categoriesById,
     List<SkillTrack> skillTracks = const [],
   }) {
+    // A tree stopped on the wheel stays in the saved plans until they are
+    // next saved; its path is not active for as long as its track is paused.
+    final paused = {
+      for (final track in skillTracks)
+        if (!track.included) track.skillCategoryId,
+    };
     final configuredOptions = _activePathOptionsFromSessionConfig(
       trainingProgramService: trainingProgramService,
       programType: programType,
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
-    );
+    ).where((option) => !paused.contains(option.sourceSkillCategoryId)).toList();
     final trackOptions = trainingProgramService.activeTrackOptions(skillTracks);
     final options = trackOptions.isNotEmpty
         ? [...configuredOptions, ...trackOptions]

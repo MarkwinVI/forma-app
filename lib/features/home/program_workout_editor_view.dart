@@ -128,6 +128,11 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     );
 
     try {
+      // A progression taken off the list stops its tree, the way Stop
+      // training on the wheel does — unless another workout still runs it.
+      // Paused first: a plan that then fails to save still reads without
+      // the tree, and the retry only has the plan left to write.
+      await _pauseTreesLeft(config);
       await widget.onSave(config);
       _captureSaved();
       if (!mounted) return;
@@ -144,6 +149,40 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
           action: SnackBarAction(label: 'Retry', onPressed: _save),
         ),
       );
+    }
+  }
+
+  /// Pauses every tree the saved plan leaves untrained, so the skill wheel
+  /// stops calling it active. The tracks here are updated too: the day
+  /// re-reads against them should the save fail and the user try again.
+  Future<void> _pauseTreesLeft(Map<String, dynamic> config) async {
+    final userId = AuthService().currentUser?.id;
+    if (userId == null) return;
+
+    final left = _programService.treesLeftBySavedDay(
+      programType: widget.programType,
+      sessionType: widget.sessionType,
+      sessionItemsConfig: config,
+      skillTracks: _skillTracks,
+    );
+    for (final skillCategoryId in left) {
+      await SkillTrackService().setIncluded(
+        userId,
+        skillCategoryId,
+        included: false,
+      );
+      AnalyticsService.capture('progression_stopped', properties: {
+        'skill_tree_id': skillCategoryId,
+        'source': 'workout_editor_remove',
+      });
+    }
+    if (left.isNotEmpty) {
+      _skillTracks = [
+        for (final track in _skillTracks)
+          left.contains(track.skillCategoryId)
+              ? track.copyWith(included: false)
+              : track,
+      ];
     }
   }
 
@@ -285,6 +324,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
           // Back from the tree returns to this list — the wheel overview
           // would be a detour the user never asked for.
           exitOnTreeBack: true,
+          source: 'workout_editor',
         ),
       ),
     );
