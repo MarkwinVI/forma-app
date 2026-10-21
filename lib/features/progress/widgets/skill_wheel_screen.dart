@@ -14,9 +14,11 @@ import 'skill_wheel_panels.dart';
 /// panel below it — MY PERFORMANCE on the overview (draggable up to cover
 /// the wheel), the focused exercise card otherwise.
 ///
-/// Opened from the Program tab it also manages progressions: [editable]
-/// adds the STOP TRAINING pill on an active tree and the "Train this
-/// exercise" CTA under the focused node's card.
+/// Editing is a mode of the same screen, not another page: the header's
+/// Edit pill turns into Done, the overview's panel becomes the list of
+/// progressions, and a focused tree's footer becomes the step's preview
+/// plus the one action that applies to it. The Program tab opens the
+/// screen already in that mode, and its Done leaves the screen.
 class SkillWheelScreen extends StatefulWidget {
   final List<WheelFamily> families;
   final Map<String, JourneySkillProgressData> journeyByCategory;
@@ -31,12 +33,20 @@ class SkillWheelScreen extends StatefulWidget {
   final Map<String, WheelTreeLock> treeLocks;
 
   /// MY PERFORMANCE data for the sheet under the wheel. The sheet only
-  /// mounts when this is set (Progress tab); editable hosts never show it.
+  /// mounts when this is set (Progress tab), and slides away in edit mode.
   final PerformanceOverview? performance;
 
-  /// Whether this screen can change progressions (Program-tab entry). The
-  /// Progress tab keeps the wheel read-only.
+  /// Whether this screen can change progressions: the header carries the
+  /// Edit pill, and edit mode is reachable. Off, the wheel is a plain view.
   final bool editable;
+
+  /// Open in edit mode — the Program tab's entry, where editing is the
+  /// whole point of the visit.
+  final bool startEditing;
+
+  /// What Done does for a host that pushed this screen as a route: leave
+  /// it. Without this, Done just ends edit mode in place.
+  final VoidCallback? onDone;
 
   /// Makes the focused node the trained exercise of its tree — starting the
   /// tree's progression when it isn't running. Required when [editable].
@@ -49,10 +59,9 @@ class SkillWheelScreen extends StatefulWidget {
   /// hosts that push this screen as its own route.
   final VoidCallback? onBack;
 
-  /// The Edit pill in the header — the read-only wheel's way into the
-  /// editable one. On the overview it gets null; on a focused tree it gets
-  /// that tree, so the host can open the editor straight into it.
-  final void Function(WheelFamily? family)? onEdit;
+  /// Where the screen is shown, for analytics: the Progress tab, or the
+  /// Program tab and the surfaces that open the wheel from it.
+  final String source;
 
   /// Fly into this category's tree on first build.
   final String? initialCategoryId;
@@ -73,10 +82,12 @@ class SkillWheelScreen extends StatefulWidget {
     this.treeLocks = const {},
     this.performance,
     this.editable = false,
+    this.startEditing = false,
+    this.onDone,
     this.onTrainNode,
     this.onStopTraining,
     this.onBack,
-    this.onEdit,
+    this.source = 'progress_tab',
     this.initialCategoryId,
     this.exitOnTreeBack = false,
   });
@@ -92,6 +103,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   int _focus = 0;
   double _edgeDragDx = 0;
   bool _acting = false;
+
+  /// Edit mode — on from the first frame for hosts that open into it.
+  late bool _editing = widget.editable && widget.startEditing;
 
   /// Whether the focused step's row is inside the list viewport — the
   /// detail sheet slides away while the user has scrolled past it.
@@ -142,6 +156,29 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     _treeBack();
   }
 
+  /// Edit: the same screen, in edit mode — the pill becomes Done, the
+  /// panels swap. From a focused tree it edits that tree, right there.
+  void _startEditing() {
+    if (_editing) return;
+    final family = _sel == null ? null : widget.families[_sel!];
+    AnalyticsService.capture('skill_trees_edit_opened', properties: {
+      'source': widget.source,
+      if (family != null) 'skill_tree_id': family.categoryId,
+    });
+    setState(() => _editing = true);
+  }
+
+  /// Done: leave edit mode where the user stands — a host that pushed the
+  /// screen as a route leaves the screen instead.
+  void _finishEditing() {
+    final onDone = widget.onDone;
+    if (onDone != null) {
+      onDone();
+      return;
+    }
+    setState(() => _editing = false);
+  }
+
   @override
   void didUpdateWidget(covariant SkillWheelScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -164,14 +201,15 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     final family = widget.families[index];
     AnalyticsService.capture('skill_tree_opened', properties: {
       'skill_tree_id': family.categoryId,
-      'source': widget.editable ? 'program_tab' : 'progress_tab',
+      'source': widget.source,
+      'editing': _editing,
       'is_active': widget.activeCategoryIds.contains(family.categoryId),
       'is_locked': widget.treeLocks.containsKey(family.categoryId),
     });
     // Also a screen view: a focused tree is a page in its own right, it just
     // never goes through a route.
     AnalyticsService.screen('skill_tree_${family.categoryId}', properties: {
-      'source': widget.editable ? 'program_tab' : 'progress_tab',
+      'source': widget.source,
     });
   }
 
@@ -378,76 +416,89 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         ? null
         : widget.treeLocks[family.categoryId];
 
-    // The bottom panel while a tree is focused: the selected exercise's
-    // preview (thumb, status, description, progress bar), the lock note
-    // when the tree waits on a prerequisite, and — editable only — the
-    // caption + CTA that makes the selected node the trained exercise. On
-    // a locked tree the CTA turns amber: starting is possible, just not
-    // advised yet.
+    // The bottom panel while a tree is focused. Viewing: the selected
+    // exercise's preview (thumb, status, progress bar). Editing: the
+    // reference design's footer — a wide preview card that opens the
+    // exercise, then the one action that applies to the step: Stop
+    // training when it is the tree's current step, otherwise the verb that
+    // makes it the trained exercise.
     Widget? bottomPanel;
     var bottomPanelAllowance = 0.0;
     if (family != null) {
       final flat = family.flat;
       final node = flat[_focus.clamp(0, flat.length - 1)];
-      // The current step of a running tree offers Stop; everything else
-      // offers the verb that would make it the trained exercise.
       final isCurrent = familyActive && node.state == WheelNodeState.active;
-      final showCta =
-          widget.editable && (isCurrent ? widget.onStopTraining != null : true);
-      final lockedNode = node.state == WheelNodeState.locked;
       final panelBottomPad = MediaQuery.of(context).padding.bottom + 14;
-      bottomPanelAllowance = 146 + (showCta ? 66 : 0);
+      bottomPanelAllowance = _editing ? 178 : 146;
+      final Widget panelBody = _editing
+          ? Column(
+              key: const ValueKey('edit-footer'),
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WheelEditPreview(
+                  node: node,
+                  caption: isCurrent
+                      ? 'CURRENTLY TRAINING'
+                      : 'STEP ${flat.indexOf(node) + 1} OF ${flat.length}',
+                  captionColor: isCurrent
+                      ? AppColors.accentBright
+                      : AppColors.textMuted,
+                  onOpen: () => widget.onOpenExercise(node),
+                ),
+                const SizedBox(height: 10),
+                if (isCurrent)
+                  _WheelCta(
+                    label: _acting
+                        ? 'Saving…'
+                        : 'Stop training ${family.title}',
+                    color: AppColors.red,
+                    onTap: _acting || widget.onStopTraining == null
+                        ? null
+                        : () => _stopWithConfirm(family, node),
+                  )
+                else
+                  _WheelCta(
+                    label: _acting
+                        ? 'Saving…'
+                        : familyActive
+                            ? 'Make this my current step'
+                            : 'Start training here',
+                    color: AppColors.accentPrimary,
+                    filled: true,
+                    onTap: _acting || widget.onTrainNode == null
+                        ? null
+                        : () => _trainWithConfirm(
+                              family,
+                              node,
+                              familyActive: familyActive,
+                              lock: lock,
+                            ),
+                  ),
+              ],
+            )
+          : WheelExercisePreview(
+              key: const ValueKey('view-preview'),
+              node: node,
+              journey: widget.journeyByCategory[family.categoryId],
+              onOpen: () => widget.onOpenExercise(node),
+            );
       bottomPanel = Container(
         padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
         decoration: const BoxDecoration(
           color: AppColors.bg,
           border: Border(top: BorderSide(color: AppColors.divider)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            WheelExercisePreview(
-              node: node,
-              journey: widget.journeyByCategory[family.categoryId],
-              onOpen: () => widget.onOpenExercise(node),
-            ),
-            if (showCta) ...[
-              const SizedBox(height: 8),
-              if (isCurrent)
-                _WheelCta(
-                  label: _acting ? 'Saving…' : 'Stop training',
-                  color: AppColors.red,
-                  onTap: _acting ? null : () => _stopWithConfirm(family, node),
-                )
-              else
-                // A locked step — a locked tree's steps included — offers a
-                // quiet gray Unlock; a reachable step gets the blue verb. A
-                // white (available) step always says Start training, on an
-                // idle tree too.
-                _WheelCta(
-                  label: _acting
-                      ? 'Saving…'
-                      : lockedNode
-                          ? 'Unlock'
-                          : node.state == WheelNodeState.available ||
-                                  familyActive
-                              ? 'Start training'
-                              : 'Start here',
-                  color: lockedNode
-                      ? AppColors.textSecondary
-                      : AppColors.accentPrimary,
-                  onTap: _acting
-                      ? null
-                      : () => _trainWithConfirm(
-                            family,
-                            node,
-                            familyActive: familyActive,
-                            lock: lock,
-                          ),
-                ),
-            ],
-          ],
+        // Edit and Done swap the footer in place: the old one fades as the
+        // new one takes its height.
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: panelBody,
+          ),
         ),
       );
     }
@@ -517,9 +568,12 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             ),
                           ),
                         ),
-                        if (widget.onEdit != null) ...[
+                        if (widget.editable) ...[
                           const SizedBox(width: 12),
-                          _EditPill(onTap: () => widget.onEdit!(family)),
+                          _EditPill(
+                            editing: _editing,
+                            onTap: _editing ? _finishEditing : _startEditing,
+                          ),
                         ],
                       ],
                     ),
@@ -548,25 +602,37 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 ),
                 Expanded(
                   child: family == null
-                      ? (widget.editable
-                          ? _ProgressionsPanel(
-                              families: widget.families,
-                              activeCategoryIds: widget.activeCategoryIds,
-                              lockedCategoryIds: widget.treeLocks.keys.toSet(),
-                              bottomInset: bottomInset,
-                              onOpenFamily: (index) => _wheelController.goTo(
-                                index,
-                                widget.families[index].activeFlatIndex,
-                              ),
-                            )
-                          : widget.performance == null
-                              // Read-only with nothing else under the
-                              // wheel: the same guidance the editable
-                              // overview gives, in one line.
-                              ? _ReadOnlyOverviewNote(
-                                  hasEdit: widget.onEdit != null,
+                      // Edit and Done cross-fade the overview's panel: the
+                      // list of progressions in, the performance sheet
+                      // (below, in the stack) sliding away.
+                      ? AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          child: _editing
+                              ? _ProgressionsPanel(
+                                  key: const ValueKey('progressions'),
+                                  families: widget.families,
+                                  activeCategoryIds: widget.activeCategoryIds,
+                                  lockedCategoryIds:
+                                      widget.treeLocks.keys.toSet(),
+                                  bottomInset: bottomInset,
+                                  onOpenFamily: (index) =>
+                                      _wheelController.goTo(
+                                    index,
+                                    widget.families[index].activeFlatIndex,
+                                  ),
                                 )
-                              : const SizedBox.shrink())
+                              : widget.performance == null
+                                  // Viewing with nothing else under the
+                                  // wheel: the same guidance the editing
+                                  // overview gives, in one line.
+                                  ? _ReadOnlyOverviewNote(
+                                      key: const ValueKey('note'),
+                                      hasEdit: widget.editable,
+                                    )
+                                  : const SizedBox.shrink(
+                                      key: ValueKey('sheet-room'),
+                                    ),
+                        )
                       : DecoratedBox(
                           decoration: const BoxDecoration(
                             border: Border(
@@ -644,26 +710,33 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
               ),
             // MY PERFORMANCE rides in a sheet: resting just under the wheel,
             // draggable up to snap over it at the top of the page, and back
-            // down to the resting view.
-            if (family == null &&
-                !widget.editable &&
-                widget.performance != null)
-              DraggableScrollableSheet(
-                initialChildSize: minFraction,
-                minChildSize: minFraction,
-                maxChildSize: 1.0,
-                snap: true,
-                builder: (context, scrollController) => DecoratedBox(
-                  decoration: const BoxDecoration(
-                    color: AppColors.bg,
-                    border: Border(
-                      top: BorderSide(color: AppColors.divider),
+            // down to the resting view. Edit slides it off the bottom and
+            // Done brings it back; while it is away it takes no touches.
+            if (family == null && widget.performance != null)
+              IgnorePointer(
+                ignoring: _editing,
+                child: AnimatedSlide(
+                  offset: _editing ? const Offset(0, 1) : Offset.zero,
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  child: DraggableScrollableSheet(
+                    initialChildSize: minFraction,
+                    minChildSize: minFraction,
+                    maxChildSize: 1.0,
+                    snap: true,
+                    builder: (context, scrollController) => DecoratedBox(
+                      decoration: const BoxDecoration(
+                        color: AppColors.bg,
+                        border: Border(
+                          top: BorderSide(color: AppColors.divider),
+                        ),
+                      ),
+                      child: PerformancePanel(
+                        overview: widget.performance!,
+                        controller: scrollController,
+                        bottomInset: bottomInset,
+                      ),
                     ),
-                  ),
-                  child: PerformancePanel(
-                    overview: widget.performance!,
-                    controller: scrollController,
-                    bottomInset: bottomInset,
                   ),
                 ),
               ),
@@ -674,16 +747,19 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   }
 }
 
-/// The one CTA style of the reference design: a soft tinted pill whose tint
-/// carries the action — blue = go, amber = caution, red = stop.
+/// The CTA styles of the reference design: a soft tinted pill whose tint
+/// carries the action — red = stop — or, [filled], the solid blue button
+/// that commits a step.
 class _WheelCta extends StatelessWidget {
   final String label;
   final Color color;
+  final bool filled;
   final VoidCallback? onTap;
 
   const _WheelCta({
     required this.label,
     required this.color,
+    this.filled = false,
     required this.onTap,
   });
 
@@ -700,9 +776,14 @@ class _WheelCta extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(13),
-          color: color.withValues(alpha: enabled ? 0.13 : 0.05),
-          border:
-              Border.all(color: color.withValues(alpha: enabled ? 0.38 : 0.14)),
+          color: filled
+              ? color.withValues(alpha: enabled ? 1 : 0.3)
+              : color.withValues(alpha: enabled ? 0.13 : 0.05),
+          border: filled
+              ? null
+              : Border.all(
+                  color: color.withValues(alpha: enabled ? 0.38 : 0.14),
+                ),
         ),
         child: Text(
           label,
@@ -710,7 +791,11 @@ class _WheelCta extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.15,
-            color: enabled ? color : AppColors.textMuted,
+            color: filled
+                ? Colors.white
+                : enabled
+                    ? color
+                    : AppColors.textMuted,
           ),
         ),
       ),
@@ -718,31 +803,39 @@ class _WheelCta extends StatelessWidget {
   }
 }
 
-/// The header's Edit pill: a soft gray capsule beside the title, the
-/// reference design's one way from the Progress wheel into the editable
-/// one — the whole wheel from the overview, one tree from that tree.
+/// The header's mode pill: a soft gray Edit beside the title, which fills
+/// blue and reads Done for as long as edit mode is on.
 class _EditPill extends StatelessWidget {
+  final bool editing;
   final VoidCallback onTap;
 
-  const _EditPill({required this.onTap});
+  const _EditPill({required this.editing, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
-      semanticLabel: 'Edit skill trees',
-      child: Container(
+      semanticLabel: editing ? 'Done editing' : 'Edit skill trees',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: editing
+              ? AppColors.accentPrimary
+              : Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          border: Border.all(
+            color: editing
+                ? AppColors.accentPrimary
+                : Colors.white.withValues(alpha: 0.06),
+          ),
         ),
-        child: const Text(
-          'Edit',
-          style: TextStyle(
+        child: Text(
+          editing ? 'Done' : 'Edit',
+          style: const TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.15,
@@ -847,7 +940,7 @@ class _ReadOnlyOverviewNote extends StatelessWidget {
   /// rather than at the Program tab.
   final bool hasEdit;
 
-  const _ReadOnlyOverviewNote({required this.hasEdit});
+  const _ReadOnlyOverviewNote({super.key, required this.hasEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -885,6 +978,7 @@ class _ProgressionsPanel extends StatelessWidget {
   final void Function(int familyIndex) onOpenFamily;
 
   const _ProgressionsPanel({
+    super.key,
     required this.families,
     required this.activeCategoryIds,
     required this.lockedCategoryIds,

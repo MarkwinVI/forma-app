@@ -556,15 +556,7 @@ class WheelExercisePreview extends StatelessWidget {
   /// The demo as a square thumbnail — the clip's poster frame when there is
   /// footage, the exercise's still otherwise, a play badge always.
   Widget _thumb() {
-    final exercise = ExerciseCatalog.findById(node.exerciseId);
-    final coaching =
-        exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
-    final videoId = coaching?.videoId;
-    final imageUrl = videoId != null
-        ? 'https://img.youtube.com/vi/$videoId/hqdefault.jpg'
-        : ((coaching?.imageUrl.isNotEmpty ?? false)
-            ? coaching!.imageUrl
-            : exercise?.imageUrl);
+    final imageUrl = wheelNodeImageUrl(node);
 
     const badge = Center(child: _PlayBadge(size: 38, iconSize: 18));
 
@@ -590,6 +582,156 @@ class WheelExercisePreview extends StatelessWidget {
                 badge,
               ],
             ),
+    );
+  }
+}
+
+/// The picture for a node's exercise: the clip's poster frame when there
+/// is footage, the exercise's still otherwise, nothing when it has neither.
+String? wheelNodeImageUrl(WheelNode node) {
+  final exercise = ExerciseCatalog.findById(node.exerciseId);
+  final coaching =
+      exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
+  final videoId = coaching?.videoId;
+  return videoId != null
+      ? 'https://img.youtube.com/vi/$videoId/hqdefault.jpg'
+      : ((coaching?.imageUrl.isNotEmpty ?? false)
+          ? coaching!.imageUrl
+          : exercise?.imageUrl);
+}
+
+// ── Edit-mode preview ─────────────────────────────────────────────────
+
+/// The focused step while editing, as the reference design's footer card:
+/// the exercise's picture across a wide card, darkened from the left so
+/// the caption, name and "tap for details" line read over it, a play badge
+/// at the right. No progress bar — in edit mode the step is a choice, not
+/// a score. Tapping it opens the exercise's own page.
+class WheelEditPreview extends StatelessWidget {
+  final WheelNode node;
+
+  /// The small line over the name: CURRENTLY TRAINING on the tree's
+  /// current step, STEP n OF m on any other.
+  final String caption;
+  final Color captionColor;
+  final VoidCallback onOpen;
+
+  const WheelEditPreview({
+    super.key,
+    required this.node,
+    required this.caption,
+    required this.captionColor,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = wheelNodeImageUrl(node);
+
+    return Pressable(
+      onTap: onOpen,
+      semanticLabel: '${node.name}, tap for details',
+      child: Container(
+        height: 84,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: const Color(0xFF17171B),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF27272A)),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (imageUrl != null)
+              Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                alignment: Alignment.centerRight,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            // The text reads over the picture's dark left; the picture
+            // shows through on the right, behind the play badge.
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xEB111114), Color(0xBF111114), Color(0x33111114)],
+                  stops: [0, 0.55, 1],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 14,
+              top: 10,
+              right: 60,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'RobotoMono',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.26,
+                      color: captionColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    node.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.34,
+                      height: 1.15,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  const Text(
+                    'VIDEO · TAP FOR DETAILS',
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: 'RobotoMono',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.17,
+                      color: Color(0xFF66676E),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              right: 14,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    size: 20,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

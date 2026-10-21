@@ -6,15 +6,16 @@ import '../../data/catalog/exercise_catalog.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/auth_service.dart';
 import '../exercises/exercise_detail_view.dart';
-import '../home/program_skill_wheel_view.dart';
 import '../program/program_view.dart';
+import 'skill_tree_actions.dart';
 import 'skill_wheel_bundle.dart';
 import 'widgets/skill_wheel.dart';
 import 'widgets/skill_wheel_screen.dart';
 
 /// Progress tab — every skill tree on one radial wheel. Tap a family to fly
 /// in, swipe up/down to spin between families, swipe left/right to walk the
-/// steps, tap the background to pull back out.
+/// steps, tap the background to pull back out. Edit turns the same wheel
+/// into its edit mode in place; Done turns it back.
 class ProgressView extends StatefulWidget {
   final bool isActive;
 
@@ -28,6 +29,8 @@ class ProgressView extends StatefulWidget {
 }
 
 class _ProgressViewState extends State<ProgressView> {
+  final _actions = SkillTreeActions();
+
   bool _loading = true;
   SkillWheelBundle? _bundle;
 
@@ -126,26 +129,49 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  /// Edit: the same editable wheel the Program tab opens, pushed inside this
-  /// tab — flown straight into [family] when the pill was tapped on a
-  /// focused tree, so back from there lands on that tree here rather than on
-  /// the editable overview. Whatever was started or stopped is re-read on
-  /// the way back, behind the wheel that is already up.
-  Future<void> _openEditor(WheelFamily? family) async {
-    AnalyticsService.capture('skill_trees_edit_opened', properties: {
-      'source': 'progress_tab',
-      if (family != null) 'skill_tree_id': family.categoryId,
-    });
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProgramSkillWheelView(
-          source: 'progress_tab',
-          initialCategoryId: family?.categoryId,
-          exitOnTreeBack: family != null,
-        ),
-      ),
+  /// A failed write is said once, and the wheel stays as it was.
+  void _couldNotSave() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Couldn't save that change. Try again.")),
+    );
+  }
+
+  /// The edits of edit mode, written and then re-read behind the wheel
+  /// that is already up — the tab never leaves for them.
+  Future<void> _trainNode(WheelFamily family, WheelNode node) async {
+    final userId = AuthService().currentUser?.id;
+    final bundle = _bundle;
+    if (userId == null || bundle == null) return;
+    final saved = await _actions.trainNode(
+      userId: userId,
+      bundle: bundle,
+      family: family,
+      node: node,
+      source: 'progress_tab',
     );
     if (!mounted) return;
+    if (!saved) {
+      _couldNotSave();
+      return;
+    }
+    await _loadData();
+  }
+
+  Future<void> _stopTraining(WheelFamily family) async {
+    final userId = AuthService().currentUser?.id;
+    final bundle = _bundle;
+    if (userId == null || bundle == null) return;
+    final saved = await _actions.stopTraining(
+      userId: userId,
+      bundle: bundle,
+      family: family,
+      source: 'progress_tab',
+    );
+    if (!mounted) return;
+    if (!saved) {
+      _couldNotSave();
+      return;
+    }
     await _loadData();
   }
 
@@ -175,8 +201,10 @@ class _ProgressViewState extends State<ProgressView> {
                     activeCategoryIds: bundle.activeCategoryIds,
                     treeLocks: bundle.treeLocks,
                     performance: bundle.performance,
+                    editable: true,
+                    onTrainNode: _trainNode,
+                    onStopTraining: _stopTraining,
                     onOpenExercise: _openExercise,
-                    onEdit: _openEditor,
                   ),
       ),
     );
