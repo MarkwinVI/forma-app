@@ -436,7 +436,7 @@ void main() {
           'pushups_wall_push_up',
           'squat_assisted_squat',
           'hinge_rdl_25_bw',
-          'core_foot_supported_l_sit',
+          'core_dead_bug_hold',
         ],
       );
     });
@@ -456,7 +456,7 @@ void main() {
           'dips_bench_dips',
           'pushups_wall_push_up',
           'squat_assisted_squat',
-          'core_foot_supported_l_sit',
+          'core_dead_bug_hold',
           'lateral_raise_dumbbell',
         ],
       );
@@ -503,7 +503,7 @@ void main() {
         [
           'squat_assisted_squat',
           'hinge_rdl_25_bw',
-          'core_foot_supported_l_sit',
+          'core_dead_bug_hold',
           'standing_calf_raise',
         ],
       );
@@ -523,7 +523,7 @@ void main() {
           'dips_bench_dips',
           'pushups_wall_push_up',
           'squat_assisted_squat',
-          'core_foot_supported_l_sit',
+          'core_dead_bug_hold',
         ],
       );
       expect(
@@ -549,7 +549,7 @@ void main() {
         [
           'squat_assisted_squat',
           'hinge_romanian_deadlift_bodyweight',
-          'core_foot_supported_l_sit',
+          'core_dead_bug_hold',
         ],
       );
     });

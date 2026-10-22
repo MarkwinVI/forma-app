@@ -12,17 +12,17 @@ void main() {
 
   group('what the sheet became', () {
     test('every tree step and every library movement is here', () {
-      expect(steps, hasLength(151));
+      expect(steps, hasLength(153));
       expect(library, hasLength(495));
-      expect(ExerciseCatalog.everything(), hasLength(151 + 495));
+      expect(ExerciseCatalog.everything(), hasLength(153 + 495));
     });
 
     test('picking lists a movement once, as the step performed with it', () {
       final searchable = ExerciseCatalog.searchable();
       final performedWith = steps.map((step) => step.libraryId).toSet();
 
-      expect(performedWith, hasLength(110));
-      expect(searchable, hasLength(151 + 495 - 110));
+      expect(performedWith, hasLength(112));
+      expect(searchable, hasLength(153 + 495 - 112));
       expect(
         searchable.where((e) => e.isLibrary && performedWith.contains(e.id)),
         isEmpty,

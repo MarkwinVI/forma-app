@@ -300,6 +300,7 @@ class SkillCategoryCatalog {
     track: ExerciseCategory.core,
     defaultTrainingPathId: 'l_sit',
     branches: [
+      SkillCategoryBranch(id: 'foundation', label: 'Foundation', lane: 0),
       SkillCategoryBranch(id: 'l_sit', label: 'L-Sit / V-Sit', lane: -1),
       SkillCategoryBranch(
         id: 'ab_wheel',
@@ -309,8 +310,15 @@ class SkillCategoryCatalog {
       ),
       SkillCategoryBranch(id: 'leg_raises', label: 'Leg Raises', lane: 1),
     ],
+    // The dead bug foundation leads into all three branches (the path
+    // for 'foundation' is that shared prefix). The lying knee raise that
+    // used to open the leg raises was retired on 2026-10-22; its rows were
+    // moved to the bent-leg raise by that day's migration.
     trainingPaths: {
       'l_sit': [
+        'core_dead_bug_hold',
+        'core_dead_bug_heel_tap',
+        'core_dead_bug',
         'core_foot_supported_l_sit',
         'core_l_sit_tuck',
         'core_advanced_tuck_l_sit',
@@ -319,6 +327,9 @@ class SkillCategoryCatalog {
         'core_v_sit',
       ],
       'ab_wheel': [
+        'core_dead_bug_hold',
+        'core_dead_bug_heel_tap',
+        'core_dead_bug',
         'core_plank',
         'core_plank_60s',
         'core_one_arm_one_leg_plank',
@@ -327,7 +338,9 @@ class SkillCategoryCatalog {
         'core_ab_wheel_standing',
       ],
       'leg_raises': [
-        'core_lying_knee_raises',
+        'core_dead_bug_hold',
+        'core_dead_bug_heel_tap',
+        'core_dead_bug',
         'core_bent_leg_lying_leg_raises',
         'core_straight_leg_lying_leg_raises',
         'core_hanging_knee_raises',

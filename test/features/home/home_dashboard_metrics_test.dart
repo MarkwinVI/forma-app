@@ -222,7 +222,7 @@ void main() {
           ),
           _workout(
             'core',
-            'core_foot_supported_l_sit',
+            'core_dead_bug_hold',
             [12, 12, 12],
             loggedAt: DateTime(2026, 6, 17),
             isTimed: true,

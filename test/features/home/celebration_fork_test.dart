@@ -76,16 +76,16 @@ void main() {
       expect(data.masteredIndex, 0);
     });
 
-    test('a trunkless tree draws each branch from step one', () {
-      // Core's branches share no opening steps.
+    test('the core foundation leads into three branches', () {
+      // Core's branches share the dead bug foundation: the first branch step
+      // keeps the chosen branch and the route runs from the foundation.
       final data = forkFor('core_foot_supported_l_sit', 'core_l_sit_tuck');
       expect(data, isNotNull);
-      expect(data!.foundationNames, isEmpty);
+      expect(data!.foundationNames.length, 3);
       expect(data.chosenBranchId, 'l_sit');
-      expect(data.masteredIndex, 0);
       expect(data.isFork, isFalse);
       expect(data.branches.length, 3);
-      expect(data.routeIds.first, 'core_foot_supported_l_sit');
+      expect(data.routeIds.first, 'core_dead_bug_hold');
     });
 
     test('a jump lands on its step with the route cleared behind it', () {
