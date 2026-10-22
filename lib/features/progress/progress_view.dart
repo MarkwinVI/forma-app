@@ -197,7 +197,7 @@ class _ProgressViewState extends State<ProgressView> {
                 ? ProgramLoadErrorState(onRetry: _retryLoad)
                 : SkillWheelScreen(
                     families: bundle!.families,
-                    journeyByCategory: bundle.journeyByCategory,
+                    stepStats: bundle.stepStats,
                     activeCategoryIds: bundle.activeCategoryIds,
                     treeLocks: bundle.treeLocks,
                     performance: bundle.performance,

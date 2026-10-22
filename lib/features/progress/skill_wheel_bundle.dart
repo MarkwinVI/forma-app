@@ -30,6 +30,10 @@ class SkillWheelBundle {
   final List<WheelFamily> families;
   final Map<String, JourneySkillProgressData> journeyByCategory;
 
+  /// The open row's meter numbers, by exercise id — see
+  /// [buildWheelStepStats].
+  final Map<String, WheelStepStats> stepStats;
+
   /// MY PERFORMANCE: every exercise in the program's workout lists,
   /// classified by how its best set moved. Null without a program.
   final PerformanceOverview? performance;
@@ -42,6 +46,7 @@ class SkillWheelBundle {
     required this.pastWorkouts,
     required this.families,
     required this.journeyByCategory,
+    this.stepStats = const {},
     required this.performance,
   });
 
@@ -168,6 +173,13 @@ Future<SkillWheelBundle> loadSkillWheelBundle(String userId) async {
         for (final skill in metrics.journeySnapshot.closestSkills)
           skill.skillCategoryId: skill,
     },
+    stepStats: buildWheelStepStats(
+      families: families,
+      pastWorkouts: pastWorkouts,
+      progressEntries: progressEntries,
+      masterySettings:
+          logicSnapshot?.masteryTargets ?? MasteryTargetSettings.defaults,
+    ),
     performance: derived?.performance,
   );
 }

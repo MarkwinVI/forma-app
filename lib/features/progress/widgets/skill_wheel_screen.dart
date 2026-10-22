@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/tab_reset.dart';
 import '../../../data/services/analytics_service.dart';
-import '../../home/home_dashboard_metrics.dart';
 import '../performance_overview.dart';
 import 'skill_tree_confirm.dart';
 import 'skill_wheel.dart';
@@ -12,16 +11,20 @@ import 'skill_wheel_panels.dart';
 
 /// The whole Progress-tab wheel screen: header, the radial wheel, and the
 /// panel below it — MY PERFORMANCE on the overview (draggable up to cover
-/// the wheel), the focused exercise card otherwise.
+/// the wheel), the focused tree's step list otherwise, where the focused
+/// step opens in place.
 ///
 /// Editing is a mode of the same screen, not another page: the header's
 /// Edit pill turns into Done, the overview's panel becomes the list of
-/// progressions, and a focused tree's footer becomes the step's preview
-/// plus the one action that applies to it. The Program tab opens the
-/// screen already in that mode, and its Done leaves the screen.
+/// progressions, and a focused tree's open row gains the one action that
+/// applies to its step. The Program tab opens the screen already in that
+/// mode, and its Done leaves the screen.
 class SkillWheelScreen extends StatefulWidget {
   final List<WheelFamily> families;
-  final Map<String, JourneySkillProgressData> journeyByCategory;
+
+  /// The open row's meter numbers, by exercise id. A step without an entry
+  /// shows its status alone.
+  final Map<String, WheelStepStats> stepStats;
   final void Function(WheelNode node) onOpenExercise;
 
   /// Categories with a progression running — their curved names read blue
@@ -81,7 +84,7 @@ class SkillWheelScreen extends StatefulWidget {
   const SkillWheelScreen({
     super.key,
     required this.families,
-    this.journeyByCategory = const {},
+    this.stepStats = const {},
     required this.onOpenExercise,
     this.activeCategoryIds = const {},
     this.treeLocks = const {},
@@ -113,9 +116,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   /// Edit mode — on from the first frame for hosts that open into it.
   late bool _editing = widget.editable && widget.startEditing;
 
-  /// Whether the focused step's row is inside the list viewport — the
-  /// detail sheet slides away while the user has scrolled past it.
-  bool _focusInView = true;
+  /// Whether the focused step's row is open. A tap on the open row closes
+  /// it; the selector landing on a step opens that one.
+  bool _expanded = true;
 
   @override
   void initState() {
@@ -430,43 +433,30 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         ? null
         : widget.treeLocks[family.categoryId];
 
-    // The bottom panel while a tree is focused: the selected exercise's
-    // preview (thumb, status, progress bar) in both modes, and in edit
-    // mode one button under it. A node drawn as active is the current
-    // step of a running tree (a paused tree's step reads as available), so
-    // the node's state alone decides the verb: Stop training on it, Start
+    // The focused step's row opens in place: the exercise's preview (thumb,
+    // status, best-workout meter) in both modes, and in edit mode one
+    // button under it. A node drawn as active is the current step of a
+    // running tree (a paused tree's step reads as available), so the
+    // node's state alone decides the verb: Stop training on it, Start
     // training on every other node. What the start means — switch, jump
     // ahead, go back, start a tree — is the confirm sheet's to say.
-    Widget? bottomPanel;
-    var bottomPanelAllowance = 0.0;
-    if (family != null) {
+    Widget? detail;
+    var detailHeight = 0.0;
+    if (family != null && _expanded) {
       final flat = family.flat;
       final node = flat[_focus.clamp(0, flat.length - 1)];
       final isCurrent = node.state == WheelNodeState.active;
-      final panelBottomPad = MediaQuery.of(context).padding.bottom + 14;
-      bottomPanelAllowance = 146 + (_editing ? 66 : 0);
-      final Widget panelBody = Column(
-        key: ValueKey(_editing ? 'edit-footer' : 'view-footer'),
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          WheelExercisePreview(
-            node: node,
-            journey: widget.journeyByCategory[family.categoryId],
-            onOpen: () => widget.onOpenExercise(node),
-          ),
-          if (_editing) ...[
-            const SizedBox(height: 8),
-            if (isCurrent)
-              _WheelCta(
+      Widget? action;
+      if (_editing) {
+        action = isCurrent
+            ? _WheelCta(
                 label: _acting ? 'Saving…' : 'Stop training',
                 color: AppColors.red,
                 onTap: _acting || widget.onStopTraining == null
                     ? null
                     : () => _stopWithConfirm(family, node),
               )
-            else
-              _WheelCta(
+            : _WheelCta(
                 label: _acting ? 'Saving…' : 'Start training',
                 color: AppColors.accentPrimary,
                 filled: true,
@@ -478,28 +468,15 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                           familyActive: familyActive,
                           lock: lock,
                         ),
-              ),
-          ],
-        ],
+              );
+      }
+      detail = WheelStepDetail(
+        node: node,
+        stats: widget.stepStats[node.exerciseId],
+        onOpen: () => widget.onOpenExercise(node),
+        action: action,
       );
-      bottomPanel = Container(
-        padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
-        decoration: const BoxDecoration(
-          color: AppColors.bg,
-          border: Border(top: BorderSide(color: AppColors.divider)),
-        ),
-        // Edit and Done swap the footer in place: the old one fades as the
-        // new one takes its height.
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            child: panelBody,
-          ),
-        ),
-      );
+      detailHeight = WheelStepDetail.heightFor(withAction: action != null);
     }
 
     return LayoutBuilder(
@@ -593,9 +570,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       if (sel != null && sel != _sel) _reportTreeOpened(sel);
                       _sel = sel;
                       _focus = focus;
-                      // A fresh selection scrolls its row into view, so the
-                      // sheet comes back with it rather than a beat later.
-                      _focusInView = true;
+                      // The selector landing on a step opens its row.
+                      _expanded = true;
                     }),
                   ),
                 ),
@@ -654,16 +630,24 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                 child: WheelExerciseCard(
                                   family: family,
                                   focus: _focus,
-                                  // The bottom panel floats over the list's
-                                  // tail, so the list needs the extra room
-                                  // to scroll clear of it.
-                                  bottomInset:
-                                      bottomInset + bottomPanelAllowance,
-                                  onPickStep: (flatIndex) =>
-                                      _wheelController.goTo(_sel!, flatIndex),
-                                  onFocusVisible: (visible) => setState(
-                                    () => _focusInView = visible,
-                                  ),
+                                  bottomInset: bottomInset,
+                                  detail: detail,
+                                  detailHeight: detailHeight,
+                                  // Tapping the open row closes it (and a
+                                  // closed one opens); tapping any other
+                                  // row moves the selector there, which
+                                  // opens that row.
+                                  onPickStep: (flatIndex) {
+                                    final focused = _focus.clamp(
+                                      0,
+                                      family.flat.length - 1,
+                                    );
+                                    if (flatIndex == focused) {
+                                      setState(() => _expanded = !_expanded);
+                                    } else {
+                                      _wheelController.goTo(_sel!, flatIndex);
+                                    }
+                                  },
                                 ),
                               ),
                             ],
@@ -688,23 +672,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                   onHorizontalDragEnd: (_) {
                     if (_edgeDragDx > 50) _treeBack();
                   },
-                ),
-              ),
-            if (bottomPanel != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                // Scrolling the focused row out of the list slides the sheet
-                // away; it rides back in the moment the row returns.
-                child: IgnorePointer(
-                  ignoring: !_focusInView,
-                  child: AnimatedSlide(
-                    offset: _focusInView ? Offset.zero : const Offset(0, 1.05),
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOutCubic,
-                    child: bottomPanel,
-                  ),
                 ),
               ),
             // MY PERFORMANCE rides in a sheet: resting just under the wheel,
@@ -746,9 +713,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   }
 }
 
-/// The CTA styles of the reference design: a soft tinted pill whose tint
-/// carries the action — red = stop — or, [filled], the solid blue button
-/// that commits a step.
+/// The open row's button, in the reference design's two styles: a soft
+/// tinted pill whose tint carries the action — red = stop — or, [filled],
+/// the solid blue button that commits a step.
 class _WheelCta extends StatelessWidget {
   final String label;
   final Color color;
@@ -771,17 +738,17 @@ class _WheelCta extends StatelessWidget {
       onTap: onTap,
       semanticLabel: label,
       child: Container(
-        height: 46,
+        height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(13),
           color: filled
               ? color.withValues(alpha: enabled ? 1 : 0.3)
-              : color.withValues(alpha: enabled ? 0.13 : 0.05),
+              : color.withValues(alpha: enabled ? 0.08 : 0.04),
           border: filled
               ? null
               : Border.all(
-                  color: color.withValues(alpha: enabled ? 0.38 : 0.14),
+                  color: color.withValues(alpha: enabled ? 0.45 : 0.16),
                 ),
         ),
         child: Text(

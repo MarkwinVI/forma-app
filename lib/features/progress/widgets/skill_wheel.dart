@@ -93,6 +93,25 @@ class WheelTreeLock {
   });
 }
 
+/// What the open row's meter reads for one step: the most volume the
+/// movement has logged in a single workout, against the single-workout
+/// volume that masters it.
+class WheelStepStats {
+  final int bestVolume;
+  final int targetVolume;
+
+  /// Whether the volumes are seconds held rather than reps.
+  final bool isTimed;
+
+  const WheelStepStats({
+    required this.bestVolume,
+    required this.targetVolume,
+    this.isTimed = false,
+  });
+
+  String get unit => isTimed ? 'sec' : 'reps';
+}
+
 /// Lets the screen around the wheel drive it (back arrow, queue rows).
 class SkillWheelController {
   _SkillWheelState? _state;

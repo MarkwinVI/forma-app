@@ -340,7 +340,7 @@ class _ProgramReadyWheelScreen extends StatelessWidget {
         bottom: false,
         child: SkillWheelScreen(
           families: bundle.families,
-          journeyByCategory: bundle.journeyByCategory,
+          stepStats: bundle.stepStats,
           activeCategoryIds: bundle.activeCategoryIds,
           treeLocks: bundle.treeLocks,
           initialCategoryId: initialCategoryId,

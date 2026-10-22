@@ -2,8 +2,12 @@ import '../../core/widgets/skill_tree_map.dart';
 import '../../data/catalog/exercise_catalog.dart';
 import '../../data/catalog/skill_category_catalog.dart';
 import '../../data/models/exercise_model.dart';
+import '../../data/models/exercise_progress_model.dart';
 import '../../data/models/skill_category_model.dart';
 import '../../data/models/skill_track_model.dart';
+import '../../data/models/training_program_model.dart';
+import '../../data/models/workout_history_model.dart';
+import '../../data/services/exercise_progression_service.dart';
 import '../../data/services/training_program_service.dart';
 import 'widgets/skill_wheel.dart';
 
@@ -196,4 +200,51 @@ WheelFamily? wheelFamilyFor(
     trunk: trunk,
     branches: branches,
   );
+}
+
+/// The open row's meter numbers for every step of [families]: the most
+/// volume the movement has logged in one workout — a session logged under
+/// any of the movement's ids counts, the way mastery itself is judged — and
+/// the single-workout volume that masters it, read with the program's
+/// mastery settings.
+Map<String, WheelStepStats> buildWheelStepStats({
+  required List<WheelFamily> families,
+  required List<PastWorkout> pastWorkouts,
+  required Map<String, ExerciseProgress> progressEntries,
+  MasteryTargetSettings masterySettings = MasteryTargetSettings.defaults,
+}) {
+  // One pass over the history: the best single entry per movement. Mastery
+  // compares each logged entry's volume to the target, so the best entry is
+  // the number that says how close a step has come.
+  final bestByMovement = <String, int>{};
+  for (final workout in pastWorkouts) {
+    for (final item in workout.exercises) {
+      if (item.sets.isEmpty) continue;
+      final volume = item.sets.fold<int>(0, (sum, set) => sum + set.value);
+      final movement = ExerciseCatalog.movementIdFor(item.exerciseId);
+      if (volume > (bestByMovement[movement] ?? 0)) {
+        bestByMovement[movement] = volume;
+      }
+    }
+  }
+
+  final stats = <String, WheelStepStats>{};
+  for (final family in families) {
+    for (final node in family.flat) {
+      final exercise = ExerciseCatalog.findById(node.exerciseId);
+      if (exercise == null) continue;
+      stats[node.exerciseId] = WheelStepStats(
+        bestVolume:
+            bestByMovement[ExerciseCatalog.movementIdFor(node.exerciseId)] ??
+                0,
+        targetVolume: ExerciseProgressionService.masteryTargetForExercise(
+          exercise,
+          progress: progressEntries[exercise.id],
+          masterySettings: masterySettings,
+        ).volume,
+        isTimed: exercise.isTimed,
+      );
+    }
+  }
+  return stats;
 }

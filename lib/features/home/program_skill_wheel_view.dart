@@ -172,7 +172,7 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
                 // the hosts that opened straight into one.
                 : SkillWheelScreen(
                     families: bundle.families,
-                    journeyByCategory: bundle.journeyByCategory,
+                    stepStats: bundle.stepStats,
                     activeCategoryIds: bundle.activeCategoryIds,
                     treeLocks: bundle.treeLocks,
                     editable: true,

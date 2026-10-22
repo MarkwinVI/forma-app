@@ -185,7 +185,7 @@ void main() {
     // the same preview view mode shows.
     expect(find.text('Stop training'), findsOneWidget);
     expect(find.text('Start training'), findsNothing);
-    expect(find.byType(WheelExercisePreview), findsOneWidget);
+    expect(find.byType(WheelStepDetail), findsOneWidget);
 
     // Walk the selector onto the locked step via its list row — any other
     // step offers Start training, with no helper text above it.
@@ -338,6 +338,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.text('Pullups step 0'), warnIfMissed: false);
     await tester.pump(const Duration(milliseconds: 1200));
+    // The row opened with its top just under the list's edge, so the list
+    // glides it into view — and a scrolling list takes no taps until the
+    // glide ends: one frame to start the clock, one to run it out.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.text('Start training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -437,7 +442,7 @@ void main() {
     // Viewing the tree: the preview, no action.
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
-    expect(find.byType(WheelExercisePreview), findsOneWidget);
+    expect(find.byType(WheelStepDetail), findsOneWidget);
     expect(find.text('Stop training'), findsNothing);
 
     // Edit: still on Pullups, the same preview with the step's action
@@ -449,7 +454,7 @@ void main() {
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Stop training'), findsOneWidget);
-    expect(find.byType(WheelExercisePreview), findsOneWidget);
+    expect(find.byType(WheelStepDetail), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
 
     // Done: the tree and its preview stay, the action goes.
@@ -459,7 +464,7 @@ void main() {
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Stop training'), findsNothing);
-    expect(find.byType(WheelExercisePreview), findsOneWidget);
+    expect(find.byType(WheelStepDetail), findsOneWidget);
   });
 
   testWidgets('opened in edit mode for a host, Done leaves the screen',
@@ -560,7 +565,7 @@ void main() {
     await tester.pumpWidget(_host(screen(isActive: true)));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Edit'), findsOneWidget);
-    expect(find.byType(WheelExercisePreview), findsOneWidget);
+    expect(find.byType(WheelStepDetail), findsOneWidget);
   });
 
   testWidgets('without an editor, the header carries no pill',
