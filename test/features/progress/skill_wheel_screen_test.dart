@@ -154,18 +154,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    // The lock note names the prerequisite; the tree is not running, so
-    // the footer offers to start training at the focused step.
+    // The lock note names the prerequisite; no step of the tree is being
+    // trained, so the footer offers Start training.
     expect(
       find.textContaining('Locked tree.', findRichText: true),
       findsOneWidget,
     );
-    expect(find.text('Start training here'), findsOneWidget);
-    expect(find.text('Make this my current step'), findsNothing);
+    expect(find.text('Start training'), findsOneWidget);
+    expect(find.text('Stop training'), findsNothing);
   });
 
   testWidgets(
-      'the active step offers Stop training, any other Make current',
+      'the active step offers Stop training, any other Start training',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
@@ -181,19 +181,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    // Initial focus is the active step — its CTA is the red stop, named
-    // for the tree. The preview above it carries no progress bar.
-    expect(find.text('Stop training Pullups'), findsOneWidget);
-    expect(find.text('CURRENTLY TRAINING'), findsOneWidget);
-    expect(find.text('Make this my current step'), findsNothing);
-    expect(find.byType(WheelExercisePreview), findsNothing);
+    // Initial focus is the active step — its CTA is the red stop, under
+    // the same preview view mode shows.
+    expect(find.text('Stop training'), findsOneWidget);
+    expect(find.text('Start training'), findsNothing);
+    expect(find.byType(WheelExercisePreview), findsOneWidget);
 
     // Walk the selector onto the locked step via its list row — any other
-    // step offers to become the current one.
+    // step offers Start training, with no helper text above it.
     await tester.tap(find.text('Pullups step 2'));
     await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Make this my current step'), findsOneWidget);
-    expect(find.text('STEP 3 OF 3'), findsOneWidget);
+    expect(find.text('Start training'), findsOneWidget);
+    expect(find.text('Stop training'), findsNothing);
     expect(find.textContaining('Skips the steps before it'), findsNothing);
   });
 
@@ -213,7 +212,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    await tester.tap(find.text('Stop training Pullups'));
+    await tester.tap(find.text('Stop training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Stop training Pullups step 1?'), findsOneWidget);
@@ -227,11 +226,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(stopped, isFalse);
 
-    // Confirming does stop it.
-    await tester.tap(find.text('Stop training Pullups'));
+    // Confirming does stop it — the sheet's own button is the last one.
+    await tester.tap(find.text('Stop training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Stop training'));
+    await tester.tap(find.text('Stop training').last);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(stopped, isTrue);
@@ -255,7 +254,7 @@ void main() {
 
     await tester.tap(find.text('Pullups step 2'));
     await tester.pump(const Duration(milliseconds: 1200));
-    await tester.tap(find.text('Make this my current step'));
+    await tester.tap(find.text('Start training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -297,7 +296,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    await tester.tap(find.text('Start training here'));
+    await tester.tap(find.text('Start training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Start training Pullups step 0?'), findsOneWidget);
@@ -306,7 +305,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Start training'));
+    await tester.tap(find.text('Start training').last);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(trained, isTrue);
@@ -339,7 +338,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.text('Pullups step 0'), warnIfMissed: false);
     await tester.pump(const Duration(milliseconds: 1200));
-    await tester.tap(find.text('Make this my current step'));
+    await tester.tap(find.text('Start training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -374,7 +373,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    await tester.tap(find.text('Start training here'));
+    await tester.tap(find.text('Start training'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -435,30 +434,31 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
 
-    // Viewing the tree: the plain preview, no action.
+    // Viewing the tree: the preview, no action.
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
     expect(find.byType(WheelExercisePreview), findsOneWidget);
-    expect(find.text('Stop training Pullups'), findsNothing);
+    expect(find.text('Stop training'), findsNothing);
 
-    // Edit: still on Pullups, now with the step's action under it and Done
-    // in the header. The list of progressions never appears.
+    // Edit: still on Pullups, the same preview with the step's action
+    // under it and Done in the header. The list of progressions never
+    // appears.
     await tester.tap(find.text('Edit'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
-    expect(find.text('Stop training Pullups'), findsOneWidget);
-    expect(find.byType(WheelExercisePreview), findsNothing);
+    expect(find.text('Stop training'), findsOneWidget);
+    expect(find.byType(WheelExercisePreview), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
 
-    // Done: the tree stays, the action goes.
+    // Done: the tree and its preview stay, the action goes.
     await tester.tap(find.text('Done'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
-    expect(find.text('Stop training Pullups'), findsNothing);
+    expect(find.text('Stop training'), findsNothing);
     expect(find.byType(WheelExercisePreview), findsOneWidget);
   });
 
@@ -535,14 +535,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
     // Focused on Pullups: the overview's progression list is gone.
-    expect(find.text('Stop training Pullups'), findsOneWidget);
+    expect(find.text('Stop training'), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
 
     // The re-tap: the wheel claims it and flies back out.
     expect(reset.fire(), isTrue);
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Stop training Pullups'), findsNothing);
+    expect(find.text('Stop training'), findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
 
     // Already on the overview: nothing to unwind, so the shell may scroll.

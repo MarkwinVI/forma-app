@@ -416,73 +416,58 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         ? null
         : widget.treeLocks[family.categoryId];
 
-    // The bottom panel while a tree is focused. Viewing: the selected
-    // exercise's preview (thumb, status, progress bar). Editing: the
-    // reference design's footer — a wide preview card that opens the
-    // exercise, then the one action that applies to the step: Stop
-    // training when it is the tree's current step, otherwise the verb that
-    // makes it the trained exercise.
+    // The bottom panel while a tree is focused: the selected exercise's
+    // preview (thumb, status, progress bar) in both modes, and in edit
+    // mode one button under it. A node drawn as active is the current
+    // step of a running tree (a paused tree's step reads as available), so
+    // the node's state alone decides the verb: Stop training on it, Start
+    // training on every other node. What the start means — switch, jump
+    // ahead, go back, start a tree — is the confirm sheet's to say.
     Widget? bottomPanel;
     var bottomPanelAllowance = 0.0;
     if (family != null) {
       final flat = family.flat;
       final node = flat[_focus.clamp(0, flat.length - 1)];
-      final isCurrent = familyActive && node.state == WheelNodeState.active;
+      final isCurrent = node.state == WheelNodeState.active;
       final panelBottomPad = MediaQuery.of(context).padding.bottom + 14;
-      bottomPanelAllowance = _editing ? 178 : 146;
-      final Widget panelBody = _editing
-          ? Column(
-              key: const ValueKey('edit-footer'),
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                WheelEditPreview(
-                  node: node,
-                  caption: isCurrent
-                      ? 'CURRENTLY TRAINING'
-                      : 'STEP ${flat.indexOf(node) + 1} OF ${flat.length}',
-                  captionColor: isCurrent
-                      ? AppColors.accentBright
-                      : AppColors.textMuted,
-                  onOpen: () => widget.onOpenExercise(node),
-                ),
-                const SizedBox(height: 10),
-                if (isCurrent)
-                  _WheelCta(
-                    label: _acting
-                        ? 'Saving…'
-                        : 'Stop training ${family.title}',
-                    color: AppColors.red,
-                    onTap: _acting || widget.onStopTraining == null
-                        ? null
-                        : () => _stopWithConfirm(family, node),
-                  )
-                else
-                  _WheelCta(
-                    label: _acting
-                        ? 'Saving…'
-                        : familyActive
-                            ? 'Make this my current step'
-                            : 'Start training here',
-                    color: AppColors.accentPrimary,
-                    filled: true,
-                    onTap: _acting || widget.onTrainNode == null
-                        ? null
-                        : () => _trainWithConfirm(
-                              family,
-                              node,
-                              familyActive: familyActive,
-                              lock: lock,
-                            ),
-                  ),
-              ],
-            )
-          : WheelExercisePreview(
-              key: const ValueKey('view-preview'),
-              node: node,
-              journey: widget.journeyByCategory[family.categoryId],
-              onOpen: () => widget.onOpenExercise(node),
-            );
+      bottomPanelAllowance = 146 + (_editing ? 66 : 0);
+      final Widget panelBody = Column(
+        key: ValueKey(_editing ? 'edit-footer' : 'view-footer'),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          WheelExercisePreview(
+            node: node,
+            journey: widget.journeyByCategory[family.categoryId],
+            onOpen: () => widget.onOpenExercise(node),
+          ),
+          if (_editing) ...[
+            const SizedBox(height: 8),
+            if (isCurrent)
+              _WheelCta(
+                label: _acting ? 'Saving…' : 'Stop training',
+                color: AppColors.red,
+                onTap: _acting || widget.onStopTraining == null
+                    ? null
+                    : () => _stopWithConfirm(family, node),
+              )
+            else
+              _WheelCta(
+                label: _acting ? 'Saving…' : 'Start training',
+                color: AppColors.accentPrimary,
+                filled: true,
+                onTap: _acting || widget.onTrainNode == null
+                    ? null
+                    : () => _trainWithConfirm(
+                          family,
+                          node,
+                          familyActive: familyActive,
+                          lock: lock,
+                        ),
+              ),
+          ],
+        ],
+      );
       bottomPanel = Container(
         padding: EdgeInsets.fromLTRB(22, 12, 22, panelBottomPad),
         decoration: const BoxDecoration(
