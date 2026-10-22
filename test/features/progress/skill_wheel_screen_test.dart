@@ -489,6 +489,80 @@ void main() {
     expect(find.text('Done'), findsOneWidget);
   });
 
+  testWidgets('a re-tap on the overview in edit mode ends the edit',
+      (tester) async {
+    final reset = TabResetNotifier();
+    addTearDown(reset.dispose);
+    await tester.pumpWidget(_host(TabReset(
+      notifier: reset,
+      child: SkillWheelScreen(
+        families: _families(),
+        activeCategoryIds: const {'a'},
+        editable: true,
+        onTrainNode: (_, __) async {},
+        onStopTraining: (_) async {},
+        onOpenExercise: (_) {},
+      ),
+    )));
+    await tester.pump(const Duration(milliseconds: 800));
+
+    // Viewing: a re-tap has nothing to unwind, so the shell may scroll.
+    expect(reset.fire(), isFalse);
+
+    await tester.tap(find.text('Edit'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Done'), findsOneWidget);
+    expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
+
+    // Editing on the overview: the re-tap is the way out of edit mode.
+    expect(reset.fire(), isTrue);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Done'), findsNothing);
+    expect(find.text('ACTIVE SKILL TREES'), findsNothing);
+    expect(reset.fire(), isFalse);
+  });
+
+  testWidgets('leaving the tab ends the edit, and keeps the tree',
+      (tester) async {
+    Widget screen({required bool isActive}) => SkillWheelScreen(
+          families: _families(),
+          activeCategoryIds: const {'a'},
+          editable: true,
+          isActive: isActive,
+          initialCategoryId: 'a',
+          onTrainNode: (_, __) async {},
+          onStopTraining: (_) async {},
+          onOpenExercise: (_) {},
+        );
+    await tester.pumpWidget(_host(screen(isActive: true)));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    await tester.tap(find.text('Edit'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Done'), findsOneWidget);
+    expect(find.text('Stop training'), findsOneWidget);
+
+    // Another tab: the edit ends behind the user's back, the tree stays
+    // focused for when they come back.
+    await tester.pumpWidget(_host(screen(isActive: false)));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Done'), findsNothing);
+    expect(find.text('Stop training'), findsNothing);
+
+    // Back on the tab: still viewing.
+    await tester.pumpWidget(_host(screen(isActive: true)));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.byType(WheelExercisePreview), findsOneWidget);
+  });
+
   testWidgets('without an editor, the header carries no pill',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
@@ -545,7 +619,13 @@ void main() {
     expect(find.text('Stop training'), findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
 
-    // Already on the overview: nothing to unwind, so the shell may scroll.
+    // On the overview, still editing: the next re-tap ends the edit. Then
+    // there is nothing left to unwind, so the shell may scroll.
+    expect(reset.fire(), isTrue);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('ACTIVE SKILL TREES'), findsNothing);
+    expect(find.text('Edit'), findsOneWidget);
     expect(reset.fire(), isFalse);
   });
 }

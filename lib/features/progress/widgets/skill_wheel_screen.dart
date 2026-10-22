@@ -44,6 +44,11 @@ class SkillWheelScreen extends StatefulWidget {
   /// whole point of the visit.
   final bool startEditing;
 
+  /// Whether the screen is on the tab the user is looking at. Leaving the
+  /// tab ends edit mode: the wheel is met as a view on the way back, never
+  /// as an edit left half-done.
+  final bool isActive;
+
   /// What Done does for a host that pushed this screen as a route: leave
   /// it. Without this, Done just ends edit mode in place.
   final VoidCallback? onDone;
@@ -83,6 +88,7 @@ class SkillWheelScreen extends StatefulWidget {
     this.performance,
     this.editable = false,
     this.startEditing = false,
+    this.isActive = true,
     this.onDone,
     this.onTrainNode,
     this.onStopTraining,
@@ -150,10 +156,16 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     super.dispose();
   }
 
+  /// The re-tap unwinds one layer at a time: a focused tree pulls out to
+  /// the overview, and the overview in edit mode ends the edit.
   void _onTabReset() {
-    if (_sel == null) return;
-    _tabReset?.markHandled();
-    _treeBack();
+    if (_sel != null) {
+      _tabReset?.markHandled();
+      _treeBack();
+    } else if (_editing) {
+      _tabReset?.markHandled();
+      _finishEditing();
+    }
   }
 
   /// Edit: the same screen, in edit mode — the pill becomes Done, the
@@ -186,6 +198,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       _sel = null;
       _focus = 0;
     }
+    // Switching tabs ends the edit; the focused tree, if any, stays.
+    if (oldWidget.isActive && !widget.isActive) _editing = false;
   }
 
   /// What backing out of a focused tree does — pull out to the wheel, or

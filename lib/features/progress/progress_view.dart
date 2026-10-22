@@ -202,6 +202,7 @@ class _ProgressViewState extends State<ProgressView> {
                     treeLocks: bundle.treeLocks,
                     performance: bundle.performance,
                     editable: true,
+                    isActive: widget.isActive,
                     onTrainNode: _trainNode,
                     onStopTraining: _stopTraining,
                     onOpenExercise: _openExercise,
