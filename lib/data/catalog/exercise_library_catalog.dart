@@ -8332,7 +8332,7 @@ class ExerciseLibraryCatalog {
         'Hips stay level',
         'Even work on both sides',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=6fkwhX1OVs4',
+      videoUrl: 'https://www.youtube.com/watch?v=cjcOTATf6LU',
       imageUrl: '',
     ),
     'front_lever_row_straddle': ExerciseCoaching(
@@ -8345,7 +8345,7 @@ class ExerciseLibraryCatalog {
         'Body flat',
         'Straight arms between reps',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=PCDWbh7tkgI',
+      videoUrl: 'https://www.youtube.com/watch?v=9SoDaZVMZsE',
       imageUrl: '',
     ),
     'front_lever_row_tuck': ExerciseCoaching(
@@ -9006,7 +9006,7 @@ class ExerciseLibraryCatalog {
         'Straight line from head to heels',
         'Chest touches each rep',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=TdaVgnWOPY0',
+      videoUrl: 'https://www.youtube.com/watch?v=E--Ls5QtFqI',
       imageUrl: '',
     ),
     'inverted_row_archer': ExerciseCoaching(
@@ -9472,7 +9472,7 @@ class ExerciseLibraryCatalog {
         'Keep the back flat',
         'Hips level with the shoulders',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=YG90dDJyhhA',
+      videoUrl: 'https://www.youtube.com/watch?v=L6Zfv-ZmrLo',
       imageUrl: '',
     ),
     'l_sit_hold_foot_supported': ExerciseCoaching(
@@ -10020,7 +10020,7 @@ class ExerciseLibraryCatalog {
         'Roll the shoulders forward early',
         'Finish with straight arms',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=k1Lkbi8nl64',
+      videoUrl: 'https://www.youtube.com/watch?v=4wu5zOWKDXM',
       imageUrl: '',
     ),
     'negative_pull_up': ExerciseCoaching(
@@ -10390,7 +10390,7 @@ class ExerciseLibraryCatalog {
         'Body parallel to the floor',
         'Feet never touch',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=Cdmg0CfMZeo',
+      videoUrl: 'https://www.youtube.com/watch?v=NawVw4ORmj4',
       imageUrl: '',
     ),
     'planche_push_up_advanced_tuck': ExerciseCoaching(
@@ -10666,7 +10666,7 @@ class ExerciseLibraryCatalog {
         'Lean back at the top',
         'Drive the elbows down',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=YYaQMQtiCjI',
+      videoUrl: 'https://www.youtube.com/watch?v=QNfFgEk3KfU',
       imageUrl: '',
     ),
     'pull_up_close_grip': ExerciseCoaching(
@@ -10717,7 +10717,7 @@ class ExerciseLibraryCatalog {
         'Fight the whole way down',
         'Stop when the descent turns into a drop',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=d0cc7GiIZ68',
+      videoUrl: 'https://www.youtube.com/watch?v=KGPPiO2NZyM',
       imageUrl: '',
     ),
     'pull_up_typewriter': ExerciseCoaching(
@@ -10928,7 +10928,7 @@ class ExerciseLibraryCatalog {
         'Rings stay steady',
         'Body in one line',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=PLS2-32rAp0',
+      videoUrl: 'https://www.youtube.com/watch?v=sOqMm0Y1bQw',
       imageUrl: '',
     ),
     'push_up_uneven': ExerciseCoaching(
@@ -11216,7 +11216,7 @@ class ExerciseLibraryCatalog {
         'Bar stays in contact with the legs',
         'Stop where the back would start to round',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=xgusDooVfKU',
+      videoUrl: 'https://www.youtube.com/watch?v=z3Nk7sbHZSU',
       imageUrl: '',
     ),
     'romanian_deadlift_dumbbell': ExerciseCoaching(
@@ -12256,7 +12256,7 @@ class ExerciseLibraryCatalog {
         'Hold the bottom position',
         'Keep the spine long',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=ZR7XApOTREw',
+      videoUrl: 'https://www.youtube.com/watch?v=pIHaSYzFICA',
       imageUrl: '',
     ),
     'squat_dumbbell': ExerciseCoaching(
@@ -13097,7 +13097,7 @@ class ExerciseLibraryCatalog {
         'Knees stay softly bent',
         'Feel the stretch in the hamstrings, not the lower back',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=EK-Fi5sFSm4',
+      videoUrl: 'https://www.youtube.com/watch?v=656IpAxqXss',
       imageUrl: '',
     ),
     'nordic_hamstring_curl_banded_eccentric': ExerciseCoaching(
@@ -13112,7 +13112,7 @@ class ExerciseLibraryCatalog {
         'Lower slowly under control',
         'Use the hands to return, not the hamstrings',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=HUXS3S2xSX4',
+      videoUrl: 'https://www.youtube.com/watch?v=YMViVMsMHIU',
       imageUrl: '',
     ),
     'nordic_hamstring_curl_banded': ExerciseCoaching(
@@ -13126,7 +13126,7 @@ class ExerciseLibraryCatalog {
         'Control the descent',
         'Use the band only as much as needed',
       ],
-      videoUrl: 'https://www.youtube.com/watch?v=HUXS3S2xSX4',
+      videoUrl: 'https://www.youtube.com/watch?v=QD7FZzjuqiM',
       imageUrl: '',
     ),
     'single_leg_kettlebell_calf_raise': ExerciseCoaching(
