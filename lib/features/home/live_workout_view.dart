@@ -170,7 +170,7 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
     _loadLastSessions();
     // Ask once, up front — the first background rest alert must not be the
     // moment we discover notifications were never allowed.
-    WorkoutNotificationService.instance.requestPermission();
+    _requestAlertPermissions();
     _liveActivityService.onAction = _handleLiveActivityAction;
     _liveActivityService
         .start(widget.recommendation.sessionLabel, _liveActivityState())
@@ -199,8 +199,38 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
           _pausedRestRemaining = null;
         }
       });
-      if (shouldClearRest) _syncWorkoutPresence();
+      if (shouldClearRest) _syncWorkoutPresence(restElapsed: true);
     });
+  }
+
+  /// Notifications first; then, on an Android that has not granted exact
+  /// alarms, one ask for Alarms & reminders — shown once per install, so a
+  /// "Not now" is kept. The sheet explains what the switch buys, since
+  /// Android's own page says nothing about Forma.
+  Future<void> _requestAlertPermissions() async {
+    final service = WorkoutNotificationService.instance;
+    await service.requestPermission();
+    if (!mounted) return;
+    final ask = await service.shouldAskExactAlarms();
+    if (!ask || !mounted) return;
+    final allow = await showModalBottomSheet<bool>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const _ConfirmSheet(
+        title: 'Hear the rest chime with the screen off',
+        message: 'Android only lets Forma ring on the second with its '
+            'Alarms & reminders permission. Without it the chime can run '
+            'late while the phone is locked or you are in another app. '
+            'In Forma it always sounds on time.',
+        confirmLabel: 'Allow in Settings',
+        cancelLabel: 'Not now',
+        confirmColor: AppColors.accentPrimary,
+      ),
+    );
+    if (allow != true || !mounted) return;
+    await service.requestExactAlarms();
   }
 
   @override
@@ -1047,21 +1077,25 @@ class _LiveWorkoutViewState extends State<LiveWorkoutView>
   /// Everything the phone shows about this workout outside the app — the
   /// scheduled rest-over notification and the Live Activity — refreshed
   /// together after any state change that affects either.
-  void _syncWorkoutPresence() {
-    _syncRestNotification();
+  void _syncWorkoutPresence({bool restElapsed = false}) {
+    _syncRestNotification(restElapsed: restElapsed);
     _syncLiveActivity();
   }
 
   /// Keeps the scheduled rest-over notification in step with the rest timer:
   /// one pending notification while rest is running, none otherwise. Uses a
-  /// fixed id, so rescheduling simply replaces the previous one.
-  void _syncRestNotification() {
+  /// fixed id, so rescheduling simply replaces the previous one. Rest that
+  /// ran its course ([restElapsed]) lets the notification sound rather than
+  /// cancelling it; anything else that ends rest early cancels.
+  void _syncRestNotification({bool restElapsed = false}) {
     final timer = _activeRestTimer;
     if (_isRunning && timer != null && _activeRestRemainingSeconds() > 0) {
       WorkoutNotificationService.instance.scheduleRestOver(
         endsAt: timer.endsAt,
         exerciseName: _exerciseNameById(timer.exerciseId) ?? 'your exercise',
       );
+    } else if (restElapsed) {
+      WorkoutNotificationService.instance.restElapsed();
     } else {
       WorkoutNotificationService.instance.cancelRestOver();
     }
@@ -3324,11 +3358,16 @@ class _ConfirmSheet extends StatelessWidget {
   final String confirmLabel;
   final String cancelLabel;
 
+  /// The confirm button's fill: danger for the destructive asks this sheet
+  /// mostly carries, the accent for a plain yes.
+  final Color confirmColor;
+
   const _ConfirmSheet({
     required this.title,
     required this.message,
     required this.confirmLabel,
     required this.cancelLabel,
+    this.confirmColor = _workoutDanger,
   });
 
   @override
@@ -3368,7 +3407,7 @@ class _ConfirmSheet extends StatelessWidget {
             height: 52,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: _workoutDanger,
+              color: confirmColor,
               borderRadius: BorderRadius.circular(26),
             ),
             alignment: Alignment.center,

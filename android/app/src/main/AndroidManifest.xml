@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- The rest-over alert is the app's core timer function, so the
-         auto-granted exact-alarm permission applies (no user toggle). -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- The rest-over alert has to land on the second. USE_EXACT_ALARM is
+         reserved by Play policy for alarm clock and calendar apps, so this
+         is the ordinary exact-alarm permission: granted on install up to
+         Android 13, and from 14 on switched on by the user under Alarms &
+         reminders, which the workout screen asks for once
+         (WorkoutNotificationService). Without it the alert falls back to
+         an inexact alarm. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- Debug builds inherit this from the debug manifest; release builds
          need it stated here for Supabase and PostHog to reach the network. -->
     <uses-permission android:name="android.permission.INTERNET"/>
