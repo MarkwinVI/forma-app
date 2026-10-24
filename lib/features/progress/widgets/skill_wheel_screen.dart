@@ -973,9 +973,8 @@ class _ReadOnlyOverviewNote extends StatelessWidget {
 
 /// The overview panel of the editable wheel: every tree, running ones
 /// first, one row each — a status dot, the tree's name, and a status line
-/// that says what it is doing ("Training · Pistol Squat", "Not training ·
-/// 4 of 19 cleared", "Locked · master Diamond Pushup first"). A tap flies
-/// into the tree.
+/// that says what it is doing ("Training · Pistol Squat", "Not training",
+/// "Locked"). A tap flies into the tree.
 class _ProgressionsPanel extends StatelessWidget {
   final List<WheelFamily> families;
   final Set<String> activeCategoryIds;
@@ -1014,8 +1013,7 @@ class _ProgressionsPanel extends StatelessWidget {
     required bool active,
     required bool last,
   }) {
-    final lock = active ? null : treeLocks[family.categoryId];
-    final locked = lock != null;
+    final locked = !active && treeLocks.containsKey(family.categoryId);
 
     // The wheel's blue dot while running, a hollow white ring for a tree
     // that could start, the padlock behind an unmet prerequisite.
@@ -1037,7 +1035,7 @@ class _ProgressionsPanel extends StatelessWidget {
         size: 14,
         color: Color(0xFF4A4B52),
       );
-      status = 'Locked · master ${lock.prereqExerciseName} first';
+      status = 'Locked';
     } else {
       marker = Container(
         width: 9,
@@ -1047,8 +1045,7 @@ class _ProgressionsPanel extends StatelessWidget {
           border: Border.all(color: AppColors.textPrimary, width: 1.5),
         ),
       );
-      final cleared = family.flat.where((n) => n.state.isCleared).length;
-      status = 'Not training · $cleared of ${family.flat.length} cleared';
+      status = 'Not training';
     }
 
     return Pressable(

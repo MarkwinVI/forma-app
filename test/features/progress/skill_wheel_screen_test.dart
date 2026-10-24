@@ -101,10 +101,10 @@ void main() {
     );
     expect(find.text('INACTIVE SKILL TREES'), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
-    expect(find.text('Not training · 0 of 3 cleared'), findsOneWidget);
+    expect(find.text('Not training'), findsOneWidget);
   });
 
-  testWidgets('a locked tree in the edit list says what unlocks it',
+  testWidgets('a locked tree in the edit list reads Locked',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
@@ -124,12 +124,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     await tester.scrollUntilVisible(
-      find.text('Locked · master Diamond Pushup first'),
+      find.text('Locked'),
       120,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('Locked · master Diamond Pushup first'), findsOneWidget);
-    expect(find.text('Not training · 0 of 3 cleared'), findsOneWidget);
+    expect(find.text('Locked'), findsOneWidget);
+    expect(find.text('Not training'), findsOneWidget);
   });
 
   testWidgets(
