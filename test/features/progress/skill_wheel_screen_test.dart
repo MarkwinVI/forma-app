@@ -278,7 +278,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Tap the step you want to train.'), findsOneWidget);
-    expect(find.text('Squat'), findsOneWidget);
+    expect(find.text('Edit Squat'), findsOneWidget);
   });
 
   testWidgets(
@@ -296,9 +296,9 @@ void main() {
     )));
     await _flyIn(tester);
 
-    // Edit mode on a running tree: the plain title, the hint with its Stop
+    // Edit mode on a running tree: the Edit title, the hint with its Stop
     // clause, and a radio on every row — filled on the trained step.
-    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Edit Pullups'), findsOneWidget);
     expect(
       find.text('Tap the step you want to train. Tap the current one to stop.'),
       findsOneWidget,
@@ -430,7 +430,7 @@ void main() {
 
     expect(find.text('Now training Pullups step 2'), findsNothing);
     expect(find.text('Done'), findsOneWidget);
-    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Edit Pullups'), findsOneWidget);
     expect(_hint, findsOneWidget);
   });
 
@@ -565,7 +565,7 @@ void main() {
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Edit'), findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
-    expect(find.text('Skill Trees'), findsOneWidget);
+    expect(find.text('Edit Skill Trees'), findsOneWidget);
     expect(_overviewHint, findsOneWidget);
 
     // Done: back to viewing, still here.
@@ -596,12 +596,12 @@ void main() {
     expect(_hint, findsNothing);
     expect(find.byType(WheelStepRadio), findsNothing);
 
-    // Edit: still on Pullups, under its plain name, with the hint, radios
+    // Edit: still on Pullups — the title says so — with the hint, radios
     // on the rows and Done in the header. The list of progressions never
     // appears.
     await tester.tap(find.text('Edit'));
     await _settle(tester);
-    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Edit Pullups'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
     expect(_hint, findsOneWidget);
     expect(find.byType(WheelStepRadio), findsNWidgets(3));

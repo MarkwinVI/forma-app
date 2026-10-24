@@ -22,7 +22,8 @@ import 'skill_wheel_panels.dart';
 /// Editing is a mode of the same screen, not another page: the header's
 /// Edit pill turns into Done, a hint strip under the title says what a tap
 /// does now, the overview's panel becomes the list of
-/// progressions, and a focused tree's rows end in radios. Tapping the step to train asks the question
+/// progressions, the title reads "Edit Skill Trees" or "Edit <tree>", and a
+/// focused tree's rows end in radios. Tapping the step to train asks the question
 /// that fits — start, switch, jump ahead, go back — saves, confirms with a
 /// toast and leaves edit mode; tapping the step already being trained asks
 /// to stop it. The Program tab opens the screen already in edit mode, and
@@ -502,9 +503,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     final lock = family == null || familyActive
         ? null
         : widget.treeLocks[family.categoryId];
-    // The title is the tree's name in both modes: Done and the hint strip
-    // already say the screen is editing.
-    final title = family?.title ?? 'Skill Trees';
+    // Edit mode says so in the title, on the overview and in a tree alike.
+    final name = family?.title ?? 'Skill Trees';
+    final title = _editing ? 'Edit $name' : name;
     // On a running tree the hint also says where Stop lives — on the step
     // being trained.
     final hint = family == null
@@ -563,10 +564,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             onTap: widget.onBack,
                           ),
                         Expanded(
-                          // A title too long for the row — "Handstand
-                          // Pushups" beside the back arrow and Done — scales
-                          // down to fit rather than losing its end to an
-                          // ellipsis.
+                          // A title too long for the row — "Edit Handstand
+                          // Pushups" — scales down to fit rather than
+                          // losing its end to an ellipsis.
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: FittedBox(
