@@ -22,8 +22,7 @@ import 'skill_wheel_panels.dart';
 /// Editing is a mode of the same screen, not another page: the header's
 /// Edit pill turns into Done, a hint strip under the title says what a tap
 /// does now, the overview's panel becomes the list of
-/// progressions, and a focused tree reads "Edit <tree>" over a hint strip,
-/// its rows ending in radios. Tapping the step to train asks the question
+/// progressions, and a focused tree's rows end in radios. Tapping the step to train asks the question
 /// that fits — start, switch, jump ahead, go back — saves, confirms with a
 /// toast and leaves edit mode; tapping the step already being trained asks
 /// to stop it. The Program tab opens the screen already in edit mode, and
@@ -503,13 +502,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     final lock = family == null || familyActive
         ? null
         : widget.treeLocks[family.categoryId];
-    // Editing a tree says so in the title; the overview keeps its name, the
-    // swapped panel already says what mode it is in.
-    final title = family == null
-        ? 'Skill Trees'
-        : _editing
-            ? 'Edit ${family.title}'
-            : family.title;
+    // The title is the tree's name in both modes: Done and the hint strip
+    // already say the screen is editing.
+    final title = family?.title ?? 'Skill Trees';
     // On a running tree the hint also says where Stop lives — on the step
     // being trained.
     final hint = family == null
@@ -568,9 +563,10 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             onTap: widget.onBack,
                           ),
                         Expanded(
-                          // A title too long for the row — "Edit Handstand
-                          // Pushups" — scales down to fit rather than
-                          // losing its end to an ellipsis.
+                          // A title too long for the row — "Handstand
+                          // Pushups" beside the back arrow and Done — scales
+                          // down to fit rather than losing its end to an
+                          // ellipsis.
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: FittedBox(
@@ -655,8 +651,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                   key: const ValueKey('progressions'),
                                   families: widget.families,
                                   activeCategoryIds: widget.activeCategoryIds,
-                                  lockedCategoryIds:
-                                      widget.treeLocks.keys.toSet(),
+                                  treeLocks: widget.treeLocks,
                                   bottomInset: bottomInset,
                                   onOpenFamily: (index) =>
                                       _wheelController.goTo(
@@ -976,13 +971,15 @@ class _ReadOnlyOverviewNote extends StatelessWidget {
   }
 }
 
-/// The overview panel of the editable wheel: every progression running in
-/// the program, one row each — current exercise, its tree, and a tap that
-/// flies into the tree.
+/// The overview panel of the editable wheel: every tree, running ones
+/// first, one row each — a status dot, the tree's name, and a status line
+/// that says what it is doing ("Training · Pistol Squat", "Not training ·
+/// 4 of 19 cleared", "Locked · master Diamond Pushup first"). A tap flies
+/// into the tree.
 class _ProgressionsPanel extends StatelessWidget {
   final List<WheelFamily> families;
   final Set<String> activeCategoryIds;
-  final Set<String> lockedCategoryIds;
+  final Map<String, WheelTreeLock> treeLocks;
   final double bottomInset;
   final void Function(int familyIndex) onOpenFamily;
 
@@ -990,21 +987,21 @@ class _ProgressionsPanel extends StatelessWidget {
     super.key,
     required this.families,
     required this.activeCategoryIds,
-    required this.lockedCategoryIds,
+    required this.treeLocks,
     required this.bottomInset,
     required this.onOpenFamily,
   });
 
-  Widget _sectionLabel(String label, {bool first = false}) {
+  Widget _sectionLabel(String label, {required double top}) {
     return Padding(
-      padding: EdgeInsets.only(top: first ? 0 : 26),
+      padding: EdgeInsets.only(top: top, bottom: 2),
       child: Text(
         label,
         style: const TextStyle(
           fontFamily: 'RobotoMono',
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: FontWeight.w700,
-          letterSpacing: 1.65,
+          letterSpacing: 1.37,
           color: AppColors.textMuted,
         ),
       ),
@@ -1017,73 +1014,100 @@ class _ProgressionsPanel extends StatelessWidget {
     required bool active,
     required bool last,
   }) {
-    // The running marker is the wheel's blue dot; an inactive tree wears a
-    // hollow ring instead, or the padlock while its prerequisite is unmet.
+    final lock = active ? null : treeLocks[family.categoryId];
+    final locked = lock != null;
+
+    // The wheel's blue dot while running, a hollow white ring for a tree
+    // that could start, the padlock behind an unmet prerequisite.
     final Widget marker;
+    final String status;
     if (active) {
       marker = Container(
-        width: 8,
-        height: 8,
+        width: 9,
+        height: 9,
         decoration: const BoxDecoration(
           color: AppColors.accentBright,
           shape: BoxShape.circle,
         ),
       );
-    } else if (lockedCategoryIds.contains(family.categoryId)) {
+      status = 'Training · ${family.flat[family.activeFlatIndex].name}';
+    } else if (locked) {
       marker = const Icon(
         Icons.lock_rounded,
-        size: 13,
-        color: AppColors.textMuted,
+        size: 14,
+        color: Color(0xFF4A4B52),
       );
+      status = 'Locked · master ${lock.prereqExerciseName} first';
     } else {
       marker = Container(
         width: 9,
         height: 9,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 1.6,
-          ),
+          border: Border.all(color: AppColors.textPrimary, width: 1.5),
         ),
       );
+      final cleared = family.flat.where((n) => n.state.isCleared).length;
+      status = 'Not training · $cleared of ${family.flat.length} cleared';
     }
 
     return Pressable(
       onTap: () => onOpenFamily(index),
-      child: Container(
-        padding: const EdgeInsets.only(top: 17, bottom: 19),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
-        child: Row(
-          children: [
-            SizedBox(width: 14, child: Center(child: marker)),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                family.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
-                  height: 1.15,
-                  color:
-                      active ? AppColors.textPrimary : AppColors.textSecondary,
+      child: Opacity(
+        opacity: locked ? 0.7 : 1,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            border: last
+                ? null
+                : const Border(bottom: BorderSide(color: AppColors.divider)),
+          ),
+          child: Row(
+            children: [
+              SizedBox(width: 18, child: Center(child: marker)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      family.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                        letterSpacing: -0.16,
+                        height: 1.25,
+                        color: locked
+                            ? AppColors.textMuted
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      status,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.25,
+                        color: active
+                            ? AppColors.accentBright
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: AppColors.textMuted,
-            ),
-          ],
+              const SizedBox(width: 12),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: Color(0xFF66676E),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1104,12 +1128,12 @@ class _ProgressionsPanel extends StatelessWidget {
         border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: ListView(
-        padding: EdgeInsets.fromLTRB(22, 14, 22, bottomInset),
+        padding: EdgeInsets.fromLTRB(22, 6, 22, bottomInset),
         children: [
-          _sectionLabel('ACTIVE SKILL TREES', first: true),
+          _sectionLabel('ACTIVE SKILL TREES', top: 12),
           if (running.isEmpty)
             const Padding(
-              padding: EdgeInsets.only(top: 12),
+              padding: EdgeInsets.only(top: 10),
               child: Text(
                 'No progression is running yet. Tap a tree below, pick an '
                 'exercise, and start there — your workouts follow.',
@@ -1129,7 +1153,7 @@ class _ProgressionsPanel extends StatelessWidget {
                 last: i == running.length - 1,
               ),
           if (idle.isNotEmpty) ...[
-            _sectionLabel('INACTIVE SKILL TREES'),
+            _sectionLabel('INACTIVE SKILL TREES', top: 20),
             for (final (i, (index, family)) in idle.indexed)
               _treeRow(
                 index,
