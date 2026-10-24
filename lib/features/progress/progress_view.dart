@@ -137,11 +137,12 @@ class _ProgressViewState extends State<ProgressView> {
   }
 
   /// The edits of edit mode, written and then re-read behind the wheel
-  /// that is already up — the tab never leaves for them.
-  Future<void> _trainNode(WheelFamily family, WheelNode node) async {
+  /// that is already up — the tab never leaves for them. True once the
+  /// write landed; the wheel then confirms it and leaves edit mode.
+  Future<bool> _trainNode(WheelFamily family, WheelNode node) async {
     final userId = AuthService().currentUser?.id;
     final bundle = _bundle;
-    if (userId == null || bundle == null) return;
+    if (userId == null || bundle == null) return false;
     final saved = await _actions.trainNode(
       userId: userId,
       bundle: bundle,
@@ -149,30 +150,32 @@ class _ProgressViewState extends State<ProgressView> {
       node: node,
       source: 'progress_tab',
     );
-    if (!mounted) return;
+    if (!mounted) return false;
     if (!saved) {
       _couldNotSave();
-      return;
+      return false;
     }
     await _loadData();
+    return true;
   }
 
-  Future<void> _stopTraining(WheelFamily family) async {
+  Future<bool> _stopTraining(WheelFamily family) async {
     final userId = AuthService().currentUser?.id;
     final bundle = _bundle;
-    if (userId == null || bundle == null) return;
+    if (userId == null || bundle == null) return false;
     final saved = await _actions.stopTraining(
       userId: userId,
       bundle: bundle,
       family: family,
       source: 'progress_tab',
     );
-    if (!mounted) return;
+    if (!mounted) return false;
     if (!saved) {
       _couldNotSave();
-      return;
+      return false;
     }
     await _loadData();
+    return true;
   }
 
   @override

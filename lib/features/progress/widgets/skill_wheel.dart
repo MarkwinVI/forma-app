@@ -155,6 +155,12 @@ class SkillWheel extends StatefulWidget {
   final SkillWheelController? controller;
   final void Function(int? selected, int focus)? onChanged;
 
+  /// A tap on a step of the focused tree, by its flat index — the row list's
+  /// tap, made on the wheel. Fired once the selector has moved to the step,
+  /// and for the step already in focus too; a swipe that walks the selector
+  /// never fires it.
+  final void Function(int flatIndex)? onNodeTap;
+
   /// Goal keys (`<categoryId>:<branchId>`, or `<categoryId>:*` for a family
   /// with no branches) currently chosen as destinations. Each lights an
   /// amber route from the start of its tree and an amber marker on its tip.
@@ -207,6 +213,7 @@ class SkillWheel extends StatefulWidget {
     required this.families,
     this.controller,
     this.onChanged,
+    this.onNodeTap,
     this.pickedGoals = const {},
     this.pickableGoals = const {},
     this.onToggleGoal,
@@ -870,8 +877,9 @@ class _SkillWheelState extends State<SkillWheel> with TickerProviderStateMixin {
         best = node;
       }
     }
-    if (best != null && bestDistance < nodeHit && best.flat != _focus) {
-      _go(sel, best.flat);
+    if (best != null && bestDistance < nodeHit) {
+      if (best.flat != _focus) _go(sel, best.flat);
+      widget.onNodeTap?.call(best.flat);
     }
   }
 
@@ -1746,7 +1754,10 @@ class _WheelPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
         selected: node.flat == state._focus,
         label: '${step.name}, ${_nodeStateLabel(step.state)}',
-        onTap: () => state._go(sel, node.flat),
+        onTap: () {
+          state._go(sel, node.flat);
+          state.widget.onNodeTap?.call(node.flat);
+        },
       ),
     );
   }

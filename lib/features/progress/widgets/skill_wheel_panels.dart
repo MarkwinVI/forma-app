@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -412,10 +414,10 @@ class _DashedRingPainter extends CustomPainter {
   bool shouldRepaint(covariant _DashedRingPainter oldDelegate) => false;
 }
 
-// ── Focused tree: the open row ────────────────────────────────────────
+// ── Focused tree: the step list ───────────────────────────────────────
 
 /// The quiet glyph that carries a step's state, shared by the step list's
-/// rows and the open row's status line: the halo dot for training now, a
+/// status lines and the preview sheet: the halo dot for training now, a
 /// check for mastered, a plain white dot for a step available to start, and
 /// the padlock.
 class WheelStepGlyph extends StatelessWidget {
@@ -471,167 +473,9 @@ class WheelStepGlyph extends StatelessWidget {
   }
 }
 
-/// What a tapped row opens in place: the exercise's demo as a thumbnail,
-/// its status, the best-workout meter, and — in edit mode — [action], the
-/// one button that applies to the step. Every state shares one layout: the
-/// bar is blue while training, green and full once mastered, dim otherwise.
-class WheelStepDetail extends StatelessWidget {
-  final WheelNode node;
-
-  /// The meter's numbers; without them the status stands alone.
-  final WheelStepStats? stats;
-
-  /// Opens the exercise's own page — the thumbnail's tap.
-  final VoidCallback onOpen;
-  final Widget? action;
-
-  const WheelStepDetail({
-    super.key,
-    required this.node,
-    required this.stats,
-    required this.onOpen,
-    this.action,
-  });
-
-  static const double _thumbHeight = 78;
-  static const double _meterHeight = 30;
-  static const double _actionHeight = 44;
-
-  /// The detail's height, fixed so a host can lay rows out without
-  /// measuring: thumbnail, meter and action are all fixed-height.
-  static double heightFor({required bool withAction}) =>
-      2 +
-      _thumbHeight +
-      10 +
-      _meterHeight +
-      12 +
-      (withAction ? 12 + _actionHeight : 0);
-
-  @override
-  Widget build(BuildContext context) {
-    final state = node.state;
-    final mastered = state.isCleared;
-    final stats = this.stats;
-    final target = stats?.targetVolume ?? 0;
-    final best = stats?.bestVolume ?? 0;
-    // Full once mastered whatever was logged — a step mastered by jumping
-    // past it never reached its own target.
-    final fill = mastered
-        ? 1.0
-        : target <= 0
-            ? 0.0
-            : (best / target).clamp(0.0, 1.0);
-    final fillColor = mastered
-        ? AppColors.green
-        : state == WheelNodeState.active
-            ? AppColors.accentBright
-            : Colors.white.withValues(alpha: 0.22);
-    // What the bar counts toward, said only where it still applies.
-    final caption = stats == null || mastered || state == WheelNodeState.locked
-        ? ''
-        : '$target ${stats.unit} in a single workout masters this step.';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: _thumbHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _WheelStepThumb(node: node, onTap: onOpen),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _statusLine(),
-                      if (stats != null) ...[
-                        const SizedBox(height: 6),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              const TextSpan(text: 'Best workout '),
-                              TextSpan(
-                                text: '$best / $target ${stats.unit}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            height: 1.35,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: _meterHeight,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: Container(
-                    height: 6,
-                    color: Colors.white.withValues(alpha: 0.08),
-                    alignment: Alignment.centerLeft,
-                    child: AnimatedFractionallySizedBox(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOut,
-                      widthFactor: fill,
-                      // A Container, not a bare DecoratedBox: with no child
-                      // a DecoratedBox takes the smallest size it is
-                      // offered — zero high — and the fill vanishes.
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: fillColor,
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            SizedBox(height: _actionHeight, child: action),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// The step's state in a word, beside the same glyph its row wears.
-  Widget _statusLine() {
-    final (label, color) = switch (node.state) {
+/// The step's state in a word, with its tint — the preview sheet's status
+/// line. The rows say the same in fewer letters (see the list).
+(String, Color) wheelStepStatus(WheelNodeState state) => switch (state) {
       WheelNodeState.active => ('Training', AppColors.accentBright),
       WheelNodeState.mastered => ('Mastered', AppColors.green),
       WheelNodeState.available => (
@@ -640,103 +484,162 @@ class WheelStepDetail extends StatelessWidget {
         ),
       WheelNodeState.locked => ('Locked', AppColors.textMuted),
     };
-    return Row(
-      children: [
-        SizedBox(
-          width: 16,
-          child: Center(child: WheelStepGlyph(state: node.state, size: 15)),
-        ),
-        const SizedBox(width: 7),
-        Expanded(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
-              color: color,
+
+/// The demo frame for a step: the clip's poster when there is footage, the
+/// exercise's still otherwise. Null when the catalog knows neither.
+String? wheelStepImageUrl(WheelNode node) {
+  final exercise = ExerciseCatalog.findById(node.exerciseId);
+  final coaching =
+      exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
+  final videoId = coaching?.videoId;
+  if (videoId != null) return 'https://img.youtube.com/vi/$videoId/hqdefault.jpg';
+  if (coaching?.imageUrl.isNotEmpty ?? false) return coaching!.imageUrl;
+  final still = exercise?.imageUrl;
+  return still == null || still.isEmpty ? null : still;
+}
+
+/// The demo as a framed thumbnail — in every row, small and quiet; in the
+/// preview sheet, wide, with the play badge, and a tap into the exercise.
+class _StepThumb extends StatelessWidget {
+  final WheelNode node;
+  final double? width;
+  final double? height;
+  final double radius;
+  final bool play;
+  final VoidCallback? onTap;
+
+  const _StepThumb({
+    required this.node,
+    this.width,
+    this.height,
+    required this.radius,
+    this.play = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = wheelStepImageUrl(node);
+    final frame = Container(
+      width: width,
+      height: height,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: const Color(0xFF17171B),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (imageUrl != null)
+            Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              // The poster's subject sits high in the frame.
+              alignment: const Alignment(0, -0.4),
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
-          ),
-        ),
-      ],
+          if (play) const Center(child: _PlayBadge(size: 36, iconSize: 20)),
+        ],
+      ),
+    );
+    if (onTap == null) return frame;
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: 'Open ${node.name}',
+      child: frame,
     );
   }
 }
 
-/// The demo as a 16:9 thumbnail — the clip's poster frame when there is
-/// footage, the exercise's still otherwise — with a play badge over it.
-/// Tapping it opens the exercise's page.
-class _WheelStepThumb extends StatelessWidget {
-  final WheelNode node;
-  final VoidCallback onTap;
+/// The small circular play affordance on a video thumbnail.
+class _PlayBadge extends StatelessWidget {
+  final double size;
+  final double iconSize;
 
-  const _WheelStepThumb({required this.node, required this.onTap});
+  const _PlayBadge({this.size = 28, this.iconSize = 17});
 
   @override
   Widget build(BuildContext context) {
-    final exercise = ExerciseCatalog.findById(node.exerciseId);
-    final coaching =
-        exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
-    final videoId = coaching?.videoId;
-    final imageUrl = videoId != null
-        ? 'https://img.youtube.com/vi/$videoId/hqdefault.jpg'
-        : ((coaching?.imageUrl.isNotEmpty ?? false)
-            ? coaching!.imageUrl
-            : exercise?.imageUrl);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: Icon(
+        Icons.play_arrow_rounded,
+        size: iconSize,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+}
 
-    return Pressable(
-      onTap: onTap,
-      semanticLabel: 'Open ${node.name}',
-      child: Container(
-        width: 136,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: const Color(0xFF17171B),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+/// Edit mode's radio at the end of every row: filled on the step being
+/// trained, an empty ring on the rest — the list reads as the one choice
+/// it is.
+class WheelStepRadio extends StatelessWidget {
+  final bool on;
+
+  const WheelStepRadio({super.key, required this.on});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          width: 2,
+          color: on
+              ? AppColors.accentBright
+              : Colors.white.withValues(alpha: 0.25),
         ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (imageUrl != null)
-              Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                // The poster's subject sits high in the frame.
-                alignment: const Alignment(0, -0.4),
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            const Center(child: _PlayBadge(size: 32, iconSize: 17)),
-          ],
+      ),
+      child: Center(
+        child: AnimatedScale(
+          scale: on ? 1 : 0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: Container(
+            width: 11,
+            height: 11,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.accentBright,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-// ── Focused tree: the step list ───────────────────────────────────────
-
-/// The whole tree as a scrollable list grouped by branch. Tapping a row
-/// moves the selector; moving the selector (swipe or node tap) brings the
-/// step it landed on into view. The focused row opens in place — [detail]
-/// renders under its name — and the rest of the list stays where it was.
+/// The whole tree as a scrollable list grouped by branch: one media row per
+/// step — thumbnail, name, status — with the same glyphs the tree uses.
+/// Tapping a row is the screen's to answer ([onPickStep]); moving the
+/// selector (swipe or node tap) brings the step it landed on into view and
+/// rests a quiet highlight on it. In edit mode every row ends in a radio.
 class WheelExerciseCard extends StatefulWidget {
   final WheelFamily family;
   final int focus;
   final double bottomInset;
 
-  /// What the focused row shows under its name, or null while it is
-  /// closed.
-  final Widget? detail;
+  /// Each step's best-workout numbers, by exercise id — a mastered row says
+  /// what it was mastered with.
+  final Map<String, WheelStepStats> stepStats;
 
-  /// [detail]'s height, so the list can tell whether the whole open row is
-  /// in view without measuring it.
-  final double detailHeight;
+  /// Edit mode: the rows wear radios, filled on the step being trained.
+  final bool editing;
 
-  /// A tap on a row — another step, to move the selector there, or the
-  /// focused step itself, to open or close it.
+  /// A tap on a row, by flat index.
   final void Function(int flatIndex) onPickStep;
 
   const WheelExerciseCard({
@@ -745,8 +648,8 @@ class WheelExerciseCard extends StatefulWidget {
     required this.focus,
     required this.bottomInset,
     required this.onPickStep,
-    this.detail,
-    this.detailHeight = 0,
+    this.stepStats = const {},
+    this.editing = false,
   });
 
   @override
@@ -754,16 +657,14 @@ class WheelExerciseCard extends StatefulWidget {
 }
 
 class _WheelExerciseCardState extends State<WheelExerciseCard> {
-  /// The name row plus the hairline ring around it, which every row wears
-  /// (transparent until selected) so nothing shifts when a row opens.
-  static const double _rowHeight = 48;
+  /// A row: the 40pt thumbnail with 8pt above and below.
+  static const double _rowHeight = 56;
   static const double _groupHeaderHeight = 40;
 
   final _scrollController = ScrollController();
 
   /// Scroll offset of every flat step's row, rebuilt with the list — group
-  /// headers make row positions non-uniform. The open row's detail only
-  /// pushes the rows after it, which the selector never scrolls to.
+  /// headers make row positions non-uniform.
   List<double> _rowOffsets = const [];
 
   /// For the first step of each branch, the top of its header; null for
@@ -783,9 +684,6 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
         oldWidget.family.categoryId != widget.family.categoryId) {
       _scrollToFocus(
           jump: oldWidget.family.categoryId != widget.family.categoryId);
-    } else if (oldWidget.detail == null && widget.detail != null) {
-      // Re-opening a row can push its detail under the list's edge.
-      _scrollToFocus();
     }
   }
 
@@ -795,14 +693,11 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     super.dispose();
   }
 
-  /// Keeps the selector's step in view. An open row that is wholly inside
-  /// the viewport stays where it is — the detail opens next to the name and
-  /// the rest of the list holds still. A scroll, and a scroll only ever
-  /// happens while the list is not being tapped, lands the row just under
-  /// the top of the list so its detail has the room below — except the
-  /// first step of a branch, which brings its branch header with it;
-  /// scrolling that step to the top alone left the header cut off under
-  /// the list's edge.
+  /// Keeps the selector's step in view. A row already wholly inside the
+  /// viewport stays where it is. Otherwise the row lands just under the top
+  /// of the list — except the first step of a branch, which brings its
+  /// branch header with it; scrolling that step to the top alone left the
+  /// header cut off under the list's edge.
   void _scrollToFocus({bool jump = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
@@ -810,7 +705,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
       final rowTop = widget.focus < _rowOffsets.length
           ? _rowOffsets[widget.focus]
           : widget.focus * _rowHeight;
-      final rowBottom = rowTop + _rowHeight + widget.detailHeight;
+      final rowBottom = rowTop + _rowHeight;
       if (rowTop >= position.pixels &&
           rowBottom <= position.pixels + position.viewportDimension) {
         return;
@@ -837,17 +732,14 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     final flat = widget.family.flat;
     final index = widget.focus.clamp(0, flat.length - 1);
 
-    // Rows sit 10pt in from the edge, their text 22pt — the ring around an
-    // open row reaches out past the text column.
+    // Rows sit 10pt in from the edge, their content 22pt — the highlight on
+    // the focused row reaches out past the content column.
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
       child: _groupedList(flat, index),
     );
   }
 
-  /// The whole tree as a scrollable list grouped by branch: the branch's
-  /// name, then its steps with the same glyphs the tree uses. The focused
-  /// step is ringed and open; tapping any row moves the selector to it.
   Widget _groupedList(List<WheelNode> flat, int index) {
     final sections = widget.family.flatSections;
     final groups = <(String, int, int)>[]; // name, start, end
@@ -916,117 +808,423 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     );
   }
 
+  /// One step: thumbnail, name, and a status line in the state's tint —
+  /// "Training", "Mastered · 27 reps", "Unlocked", "Locked". The step being
+  /// trained reads bold and blue; a locked step sits back a little.
   Widget _stepRow(List<WheelNode> flat, int i, int index) {
     final node = flat[i];
     final state = node.state;
-    final selected = i == index && widget.detail != null;
-    // The open row of the step being trained reads blue, name and all;
-    // closed, the training step is told by its halo dot alone.
-    final blue = selected && state == WheelNodeState.active;
+    final training = state == WheelNodeState.active;
+    final focused = i == index;
+    final stats = widget.stepStats[node.exerciseId];
 
-    final nameColor = blue
+    final (status, statusColor) = switch (state) {
+      WheelNodeState.active => ('Training', AppColors.accentBright),
+      WheelNodeState.mastered => (
+          stats != null && stats.bestVolume > 0
+              ? 'Mastered · ${stats.bestVolume} ${stats.unit}'
+              : 'Mastered',
+          AppColors.green,
+        ),
+      WheelNodeState.available => ('Unlocked', AppColors.textMuted),
+      WheelNodeState.locked => ('Locked', AppColors.textMuted),
+    };
+    final nameColor = training
         ? AppColors.accentBright
-        : switch (state) {
-            WheelNodeState.locked => AppColors.textMuted,
-            WheelNodeState.mastered => const Color(0xFFC9CAD0),
-            _ => AppColors.textPrimary,
-          };
+        : state == WheelNodeState.locked
+            ? AppColors.textMuted
+            : AppColors.textPrimary;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return Pressable(
       onTap: () => widget.onPickStep(i),
+      selected: widget.editing ? training : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
+        height: _rowHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: !selected
-              ? Colors.transparent
-              : blue
-                  ? AppColors.accentBright.withValues(alpha: 0.08)
-                  : Colors.white.withValues(alpha: 0.05),
-          border: Border.all(
-            color: !selected
-                ? Colors.transparent
-                : blue
-                    ? AppColors.accentBright.withValues(alpha: 0.35)
-                    : Colors.white.withValues(alpha: 0.12),
-          ),
+          borderRadius: BorderRadius.circular(12),
+          color: focused
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.transparent,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              height: _rowHeight - 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
+        child: Opacity(
+          opacity: state == WheelNodeState.locked ? 0.75 : 1,
+          child: Row(
+            children: [
+              _StepThumb(node: node, width: 64, height: 40, radius: 8),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 18,
-                      child: Center(child: WheelStepGlyph(state: state)),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        node.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 16,
-                          letterSpacing: -0.16,
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
-                          color: nameColor,
-                        ),
+                    Text(
+                      node.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight:
+                            training ? FontWeight.w700 : FontWeight.w500,
+                        letterSpacing: -0.15,
+                        height: 1.2,
+                        color: nameColor,
                       ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          child: Center(
+                            child: WheelStepGlyph(state: state, size: 12),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            status,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              height: 1.2,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ),
-            // The detail fades in under the name; a new step's detail fades
-            // in afresh, the same step's updates (edit mode's button) do
-            // not.
-            if (selected)
-              TweenAnimationBuilder<double>(
-                key: ValueKey(node.exerciseId),
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-                builder: (_, opacity, child) =>
-                    Opacity(opacity: opacity, child: child),
-                child: widget.detail,
-              ),
-          ],
+              if (widget.editing) ...[
+                const SizedBox(width: 12),
+                WheelStepRadio(on: training),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// The small circular play affordance on a video thumbnail.
-class _PlayBadge extends StatelessWidget {
-  final double size;
-  final double iconSize;
+// ── Focused tree: the preview sheet ───────────────────────────────────
 
-  const _PlayBadge({this.size = 28, this.iconSize = 17});
+/// Where a step sits in its branch, for the preview's kicker: the branch's
+/// name and the step's one-based place in it — "WEIGHTED · STEP 2 OF 7".
+class WheelStepPosition {
+  final String section;
+  final int number;
+  final int count;
+
+  const WheelStepPosition({
+    required this.section,
+    required this.number,
+    required this.count,
+  });
+
+  factory WheelStepPosition.of(WheelFamily family, int flatIndex) {
+    final sections = family.flatSections;
+    final i = flatIndex.clamp(0, sections.length - 1);
+    final section = sections[i];
+    var start = i;
+    while (start > 0 && sections[start - 1] == section) {
+      start--;
+    }
+    var end = i;
+    while (end + 1 < sections.length && sections[end + 1] == section) {
+      end++;
+    }
+    return WheelStepPosition(
+      section: section,
+      number: i - start + 1,
+      count: end - start + 1,
+    );
+  }
+
+  String get label => '$section · STEP $number OF $count';
+}
+
+/// Opens a step's preview as a bottom sheet over the wheel: the demo, where
+/// the step sits, its status, the best-workout bar, and Full details into
+/// the exercise's page. Preview only — changing the step lives behind Edit.
+Future<void> showWheelStepPreview(
+  BuildContext context, {
+  required WheelNode node,
+  required WheelStepStats? stats,
+  required WheelStepPosition position,
+  required VoidCallback onOpenExercise,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (sheetContext) {
+      final media = MediaQuery.of(sheetContext);
+      return Container(
+        constraints: BoxConstraints(
+          maxHeight: media.size.height - media.padding.top - 24,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x80000000),
+              offset: Offset(0, -20),
+              blurRadius: 60,
+            ),
+          ],
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            22,
+            10,
+            22,
+            math.max(30, media.padding.bottom + 16),
+          ),
+          child: WheelStepPreview(
+            node: node,
+            stats: stats,
+            position: position,
+            // Full details closes the preview on its way to the page.
+            onOpenExercise: () {
+              Navigator.of(sheetContext).pop();
+              onOpenExercise();
+            },
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// The preview sheet's body. Every state shares one layout: the bar is
+/// blue while training, green and full once mastered, dim otherwise; a
+/// step with no numbers shows its status alone.
+class WheelStepPreview extends StatelessWidget {
+  final WheelNode node;
+
+  /// The bar's numbers; without them the status stands alone.
+  final WheelStepStats? stats;
+  final WheelStepPosition position;
+
+  /// Opens the exercise's own page — the thumbnail's tap and Full details.
+  final VoidCallback onOpenExercise;
+
+  const WheelStepPreview({
+    super.key,
+    required this.node,
+    required this.stats,
+    required this.position,
+    required this.onOpenExercise,
+  });
+
+  static const _kicker = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.9,
+    color: AppColors.textMuted,
+  );
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-      ),
-      child: Icon(
-        Icons.play_arrow_rounded,
-        size: iconSize,
-        color: AppColors.textPrimary,
-      ),
+    final (status, statusColor) = wheelStepStatus(node.state);
+    final stats = this.stats;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: Container(
+            width: 36,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+        ),
+        AspectRatio(
+          aspectRatio: 16 / 9,
+          child: _StepThumb(
+            node: node,
+            radius: 16,
+            play: true,
+            onTap: onOpenExercise,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(position.label, style: _kicker),
+        const SizedBox(height: 4),
+        Text(
+          node.name,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.55,
+            height: 1.15,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            SizedBox(
+              width: 16,
+              child: Center(child: WheelStepGlyph(state: node.state, size: 15)),
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                status,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                  color: statusColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (stats != null) ...[
+          const SizedBox(height: 16),
+          _meter(stats),
+        ],
+        const SizedBox(height: 20),
+        Pressable(
+          onTap: onOpenExercise,
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Full details',
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(width: 2),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.textPrimary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// BEST WORKOUT over the bar: the most volume the movement logged in one
+  /// workout against what masters the step, and what the bar counts toward.
+  Widget _meter(WheelStepStats stats) {
+    final state = node.state;
+    final mastered = state.isCleared;
+    final target = stats.targetVolume;
+    final best = stats.bestVolume;
+    // Full once mastered whatever was logged — a step mastered by jumping
+    // past it never reached its own target.
+    final fill = mastered
+        ? 1.0
+        : target <= 0
+            ? 0.0
+            : (best / target).clamp(0.0, 1.0);
+    final fillColor = mastered
+        ? AppColors.green
+        : state == WheelNodeState.active
+            ? AppColors.accentBright
+            : Colors.white.withValues(alpha: 0.22);
+    final caption = mastered
+        ? 'Mastered. This step is complete.'
+        : '$target ${stats.unit} in a single workout masters this step.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            const Text('BEST WORKOUT', style: _kicker),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$best',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.14,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' / $target ${stats.unit}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: Container(
+            height: 6,
+            color: Colors.white.withValues(alpha: 0.08),
+            alignment: Alignment.centerLeft,
+            child: AnimatedFractionallySizedBox(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+              widthFactor: fill,
+              // A Container, not a bare DecoratedBox: with no child a
+              // DecoratedBox takes the smallest size it is offered — zero
+              // high — and the fill vanishes.
+              child: Container(
+                decoration: BoxDecoration(
+                  color: fillColor,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          caption,
+          style: const TextStyle(
+            fontSize: 12.5,
+            height: 1.4,
+            color: AppColors.textMuted,
+          ),
+        ),
+      ],
     );
   }
 }

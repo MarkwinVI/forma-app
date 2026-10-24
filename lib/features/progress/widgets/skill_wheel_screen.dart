@@ -6,24 +6,33 @@ import '../../../core/widgets/tab_reset.dart';
 import '../../../data/services/analytics_service.dart';
 import '../performance_overview.dart';
 import 'skill_tree_confirm.dart';
+import 'skill_tree_toast.dart';
 import 'skill_wheel.dart';
 import 'skill_wheel_panels.dart';
 
 /// The whole Progress-tab wheel screen: header, the radial wheel, and the
 /// panel below it — MY PERFORMANCE on the overview (draggable up to cover
-/// the wheel), the focused tree's step list otherwise, where the focused
-/// step opens in place.
+/// the wheel), the focused tree's step list otherwise: one media row per
+/// step, with its thumbnail, name and status. Tapping a step — its row, or
+/// its node on the wheel — opens a preview sheet: the demo, where the step
+/// sits, its status, the best-workout bar, and Full details into the
+/// exercise's page. The preview is read only; changing what is trained
+/// lives behind Edit.
 ///
 /// Editing is a mode of the same screen, not another page: the header's
 /// Edit pill turns into Done, the overview's panel becomes the list of
-/// progressions, and a focused tree's open row gains the one action that
-/// applies to its step. The Program tab opens the screen already in that
-/// mode, and its Done leaves the screen.
+/// progressions, and a focused tree reads "Edit <tree>" over a hint strip,
+/// its rows ending in radios. Tapping the step to train asks the question
+/// that fits — start, switch, jump ahead, go back — saves, confirms with a
+/// toast and leaves edit mode; tapping the step already being trained asks
+/// to stop it. The Program tab opens the screen already in edit mode, and
+/// its Done, or a saved edit, leaves the screen.
 class SkillWheelScreen extends StatefulWidget {
   final List<WheelFamily> families;
 
-  /// The open row's meter numbers, by exercise id. A step without an entry
-  /// shows its status alone.
+  /// The best-workout numbers, by exercise id — the preview's bar and the
+  /// mastered rows' "· 27 reps". A step without an entry shows its status
+  /// alone.
   final Map<String, WheelStepStats> stepStats;
   final void Function(WheelNode node) onOpenExercise;
 
@@ -53,15 +62,19 @@ class SkillWheelScreen extends StatefulWidget {
   final bool isActive;
 
   /// What Done does for a host that pushed this screen as a route: leave
-  /// it. Without this, Done just ends edit mode in place.
+  /// it. Without this, Done just ends edit mode in place. A saved edit
+  /// ends edit mode the same way.
   final VoidCallback? onDone;
 
-  /// Makes the focused node the trained exercise of its tree — starting the
-  /// tree's progression when it isn't running. Required when [editable].
-  final Future<void> Function(WheelFamily family, WheelNode node)? onTrainNode;
+  /// Makes the picked node the trained exercise of its tree — starting the
+  /// tree's progression when it isn't running. Resolves true once the
+  /// change is saved; false (the host having said why) keeps the screen in
+  /// edit mode. Required when [editable].
+  final Future<bool> Function(WheelFamily family, WheelNode node)? onTrainNode;
 
-  /// Stops the focused tree's progression. Required when [editable].
-  final Future<void> Function(WheelFamily family)? onStopTraining;
+  /// Stops the focused tree's progression; true once saved. Required when
+  /// [editable].
+  final Future<bool> Function(WheelFamily family)? onStopTraining;
 
   /// Back affordance on the overview header (the wheel view itself), for
   /// hosts that push this screen as its own route.
@@ -115,10 +128,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
 
   /// Edit mode — on from the first frame for hosts that open into it.
   late bool _editing = widget.editable && widget.startEditing;
-
-  /// Whether the focused step's row is open. A tap on the open row closes
-  /// it; the selector landing on a step opens that one.
-  bool _expanded = true;
 
   @override
   void initState() {
@@ -230,14 +239,23 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     });
   }
 
-  Future<void> _act(Future<void> Function() action) async {
-    if (_acting) return;
+  /// Runs one edit at a time; true when the host saved it.
+  Future<bool> _act(Future<bool> Function() action) async {
+    if (_acting) return false;
     setState(() => _acting = true);
     try {
-      await action();
+      return await action();
     } finally {
       if (mounted) setState(() => _acting = false);
     }
+  }
+
+  /// After a saved edit: the toast says what changed, and edit mode ends —
+  /// for a host that pushed the screen, by leaving it. The toast is in the
+  /// root overlay, so it stays up over whatever the user lands on.
+  void _afterEdit(String message) {
+    showSkillTreeToast(context, message);
+    _finishEditing();
   }
 
   /// Nodes after [node] along every route through it — the rest of its own
@@ -286,7 +304,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       confirmLabel: 'Stop training',
     );
     if (!confirmed || !mounted) return;
-    await _act(() => widget.onStopTraining!(family));
+    final saved = await _act(() => widget.onStopTraining!(family));
+    if (!saved || !mounted) return;
+    _afterEdit('${family.title} paused — progress kept');
   }
 
   /// Asks the question that fits what picking [node] would do — start,
@@ -420,7 +440,58 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       confirmLabel: confirmLabel,
     );
     if (!confirmed || !mounted) return;
-    await _act(() => widget.onTrainNode!(family, node));
+    final saved = await _act(() => widget.onTrainNode!(family, node));
+    if (!saved || !mounted) return;
+    _afterEdit('Now training ${node.name}');
+  }
+
+  /// A tap on a step of the focused tree — its row, or its node on the
+  /// wheel. The selector moves there; then, viewing, the step's preview
+  /// opens and, editing, the step is picked: the one being trained asks to
+  /// stop, any other asks to be trained.
+  void _pickStep(int flatIndex) {
+    final sel = _sel;
+    if (sel == null) return;
+    final family = widget.families[sel];
+    final index = flatIndex.clamp(0, family.flat.length - 1);
+    if (index != _focus.clamp(0, family.flat.length - 1)) {
+      _wheelController.goTo(sel, index);
+    }
+    final node = family.flat[index];
+
+    if (!_editing) {
+      _openPreview(family, index);
+      return;
+    }
+    if (_acting) return;
+    final familyActive = widget.activeCategoryIds.contains(family.categoryId);
+    if (node.state == WheelNodeState.active) {
+      if (widget.onStopTraining != null) _stopWithConfirm(family, node);
+    } else if (widget.onTrainNode != null) {
+      _trainWithConfirm(
+        family,
+        node,
+        familyActive: familyActive,
+        lock: familyActive ? null : widget.treeLocks[family.categoryId],
+      );
+    }
+  }
+
+  void _openPreview(WheelFamily family, int index) {
+    final node = family.flat[index];
+    AnalyticsService.capture('skill_tree_step_previewed', properties: {
+      'skill_tree_id': family.categoryId,
+      'exercise_id': node.exerciseId,
+      'node_state': node.state.name,
+      'source': widget.source,
+    });
+    showWheelStepPreview(
+      context,
+      node: node,
+      stats: widget.stepStats[node.exerciseId],
+      position: WheelStepPosition.of(family, index),
+      onOpenExercise: () => widget.onOpenExercise(node),
+    );
   }
 
   @override
@@ -432,52 +503,13 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     final lock = family == null || familyActive
         ? null
         : widget.treeLocks[family.categoryId];
-
-    // The focused step's row opens in place: the exercise's preview (thumb,
-    // status, best-workout meter) in both modes, and in edit mode one
-    // button under it. A node drawn as active is the current step of a
-    // running tree (a paused tree's step reads as available), so the
-    // node's state alone decides the verb: Stop training on it, Start
-    // training on every other node. What the start means — switch, jump
-    // ahead, go back, start a tree — is the confirm sheet's to say.
-    Widget? detail;
-    var detailHeight = 0.0;
-    if (family != null && _expanded) {
-      final flat = family.flat;
-      final node = flat[_focus.clamp(0, flat.length - 1)];
-      final isCurrent = node.state == WheelNodeState.active;
-      Widget? action;
-      if (_editing) {
-        action = isCurrent
-            ? _WheelCta(
-                label: _acting ? 'Saving…' : 'Stop training',
-                color: AppColors.red,
-                onTap: _acting || widget.onStopTraining == null
-                    ? null
-                    : () => _stopWithConfirm(family, node),
-              )
-            : _WheelCta(
-                label: _acting ? 'Saving…' : 'Start training',
-                color: AppColors.accentPrimary,
-                filled: true,
-                onTap: _acting || widget.onTrainNode == null
-                    ? null
-                    : () => _trainWithConfirm(
-                          family,
-                          node,
-                          familyActive: familyActive,
-                          lock: lock,
-                        ),
-              );
-      }
-      detail = WheelStepDetail(
-        node: node,
-        stats: widget.stepStats[node.exerciseId],
-        onOpen: () => widget.onOpenExercise(node),
-        action: action,
-      );
-      detailHeight = WheelStepDetail.heightFor(withAction: action != null);
-    }
+    // Editing a tree says so in the title; the overview keeps its name, the
+    // swapped panel already says what mode it is in.
+    final title = family == null
+        ? 'Skill Trees'
+        : _editing
+            ? 'Edit ${family.title}'
+            : family.title;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -511,11 +543,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     _sel == null ? 3 : 15,
                   ),
                   child: SizedBox(
-                    // Tall enough for the 30px title's full line box — a
-                    // shorter row makes the paragraph overflow its height
-                    // constraint, which turns ellipsis clipping on and chops
-                    // descenders (the g of "Hinge") flat — and for the
-                    // 44pt hit areas of the icons beside it.
+                    // Tall enough for the 30px title's full line box and for
+                    // the 44pt hit areas of the icons beside it.
                     height: 44,
                     child: Row(
                       children: [
@@ -532,15 +561,24 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             onTap: widget.onBack,
                           ),
                         Expanded(
-                          child: Text(
-                            family?.title ?? 'Skill Trees',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.9,
-                              color: AppColors.textPrimary,
+                          // A title too long for the row — "Edit Handstand
+                          // Pushups" — scales down to fit rather than
+                          // losing its end to an ellipsis.
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.9,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -554,6 +592,28 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       ],
                     ),
                   ),
+                ),
+                // Editing a focused tree: the hint strip under the title
+                // says what a tap does now. It unfolds with the mode and
+                // folds away with it.
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SizeTransition(
+                      sizeFactor: animation,
+                      axisAlignment: -1,
+                      child: child,
+                    ),
+                  ),
+                  child: _editing && family != null
+                      ? _EditHint(
+                          key: const ValueKey('hint'),
+                          running: familyActive,
+                        )
+                      : const SizedBox.shrink(key: ValueKey('no-hint')),
                 ),
                 // Natural height where there is room, shrunk to fit where
                 // there is not — the panel below always keeps a share.
@@ -570,9 +630,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       if (sel != null && sel != _sel) _reportTreeOpened(sel);
                       _sel = sel;
                       _focus = focus;
-                      // The selector landing on a step opens its row.
-                      _expanded = true;
                     }),
+                    // A node tapped on the focused tree is a step tapped.
+                    onNodeTap: _pickStep,
                   ),
                 ),
                 Expanded(
@@ -631,23 +691,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                   family: family,
                                   focus: _focus,
                                   bottomInset: bottomInset,
-                                  detail: detail,
-                                  detailHeight: detailHeight,
-                                  // Tapping the open row closes it (and a
-                                  // closed one opens); tapping any other
-                                  // row moves the selector there, which
-                                  // opens that row.
-                                  onPickStep: (flatIndex) {
-                                    final focused = _focus.clamp(
-                                      0,
-                                      family.flat.length - 1,
-                                    );
-                                    if (flatIndex == focused) {
-                                      setState(() => _expanded = !_expanded);
-                                    } else {
-                                      _wheelController.goTo(_sel!, flatIndex);
-                                    }
-                                  },
+                                  stepStats: widget.stepStats,
+                                  editing: _editing,
+                                  onPickStep: _pickStep,
                                 ),
                               ),
                             ],
@@ -713,56 +759,49 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   }
 }
 
-/// The open row's button, in the reference design's two styles: a soft
-/// tinted pill whose tint carries the action — red = stop — or, [filled],
-/// the solid blue button that commits a step.
-class _WheelCta extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool filled;
-  final VoidCallback? onTap;
+/// Edit mode's hint over a focused tree: what a tap does now. On a running
+/// tree it also says where Stop lives — on the step being trained.
+class _EditHint extends StatelessWidget {
+  final bool running;
 
-  const _WheelCta({
-    required this.label,
-    required this.color,
-    this.filled = false,
-    required this.onTap,
-  });
+  const _EditHint({super.key, required this.running});
 
   @override
   Widget build(BuildContext context) {
-    final enabled = onTap != null;
-    // Disabled: the pill drains as well as the text, so the state reads at
-    // a glance and not only by the label's colour.
-    return Pressable(
-      onTap: onTap,
-      semanticLabel: label,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 0, 22, 10),
       child: Container(
-        height: 44,
-        alignment: Alignment.center,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(13),
-          color: filled
-              ? color.withValues(alpha: enabled ? 1 : 0.3)
-              : color.withValues(alpha: enabled ? 0.08 : 0.04),
-          border: filled
-              ? null
-              : Border.all(
-                  color: color.withValues(alpha: enabled ? 0.45 : 0.16),
-                ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.15,
-            color: filled
-                ? Colors.white
-                : enabled
-                    ? color
-                    : AppColors.textMuted,
+          color: AppColors.accentBright.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.accentBright.withValues(alpha: 0.40),
           ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.touch_app_rounded,
+              size: 20,
+              color: AppColors.accentBright,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                running
+                    ? 'Tap the step you want to train. Tap the current one '
+                        'to stop.'
+                    : 'Tap the step you want to train.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

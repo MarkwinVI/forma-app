@@ -45,6 +45,27 @@ Widget _host(Widget child) => MaterialApp(
       home: Scaffold(body: child),
     );
 
+/// Edit mode's hint strip over a focused tree.
+final _hint = find.textContaining('Tap the step you want to train');
+
+/// Lets a confirm sheet open, or a toast fade all the way out.
+Future<void> _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
+/// The fly-in camera, settled.
+Future<void> _flyIn(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump(const Duration(milliseconds: 1200));
+}
+
+/// Outlives the toast: it holds for 2.2s, then fades 200ms.
+Future<void> _outliveToast(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 2500));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 void main() {
   testWidgets('editable overview lists the running progressions',
       (tester) async {
@@ -53,8 +74,8 @@ void main() {
       activeCategoryIds: const {'a', 'b'},
       editable: true,
       startEditing: true,
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
     await tester.pump(const Duration(milliseconds: 800));
@@ -64,6 +85,8 @@ void main() {
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Now: Pullups step 1'), findsNothing);
     expect(find.text('Pushups'), findsOneWidget);
+    // The hint belongs to a focused tree, not the overview.
+    expect(_hint, findsNothing);
 
     // A tree that isn't running lists under its own section below.
     await tester.scrollUntilVisible(
@@ -88,6 +111,7 @@ void main() {
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
     expect(find.text('Stop training'), findsNothing);
     expect(find.text('Start training'), findsNothing);
+    expect(_hint, findsNothing);
   });
 
   testWidgets('pulling the step list down past its top does not leave the tree',
@@ -108,8 +132,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.byType(WheelExerciseCard), findsOneWidget);
 
-    // A long pull down from the first row: the list is already at its top,
-    // so this is all overscroll.
     // A slow pull down from the top of the list, which is already at its
     // top: all overscroll, well past the 60pt that used to mean "back".
     final list = tester.getRect(find.byType(WheelExerciseCard));
@@ -133,7 +155,68 @@ void main() {
     expect(find.byType(WheelExerciseCard), findsOneWidget);
   });
 
-  testWidgets('a locked tree shows the padlock note and the start button',
+  testWidgets('a focused tree lists its steps as media rows with a status',
+      (tester) async {
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      stepStats: const {
+        'a-0': WheelStepStats(bestVolume: 27, targetVolume: 24),
+        'a-1': WheelStepStats(bestVolume: 12, targetVolume: 24),
+      },
+      initialCategoryId: 'a',
+      onOpenExercise: (_) {},
+    )));
+    await _flyIn(tester);
+
+    expect(find.text('Pullups step 0'), findsOneWidget);
+    expect(find.text('Mastered · 27 reps'), findsOneWidget);
+    expect(find.text('Pullups step 1'), findsOneWidget);
+    expect(find.text('Training'), findsOneWidget);
+    expect(find.text('Pullups step 2'), findsOneWidget);
+    expect(find.text('Locked'), findsOneWidget);
+    // Viewing: no radios, and nothing opens in place.
+    expect(find.byType(WheelStepRadio), findsNothing);
+    expect(find.text('Full details'), findsNothing);
+  });
+
+  testWidgets('viewing, a tapped row opens the preview sheet; Full details '
+      'opens the exercise', (tester) async {
+    WheelNode? opened;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      stepStats: const {
+        'a-2': WheelStepStats(bestVolume: 0, targetVolume: 24),
+      },
+      editable: true,
+      initialCategoryId: 'a',
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
+      onOpenExercise: (node) => opened = node,
+    )));
+    await _flyIn(tester);
+
+    await tester.tap(find.text('Pullups step 2'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // The sheet: where the step sits, its status, the bar, Full details —
+    // and no way to change the step from here.
+    expect(find.text('FOUNDATION · STEP 3 OF 3'), findsOneWidget);
+    expect(find.text('Full details'), findsOneWidget);
+    expect(find.text('BEST WORKOUT'), findsOneWidget);
+    expect(find.text('Start training'), findsNothing);
+    expect(find.text('Locked'), findsNWidgets(2)); // the row and the sheet
+
+    await tester.tap(find.text('Full details'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(opened?.exerciseId, 'a-2');
+    expect(find.text('Full details'), findsNothing);
+  });
+
+  testWidgets('a locked tree shows the padlock note and the hint',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
@@ -147,25 +230,24 @@ void main() {
       editable: true,
       startEditing: true,
       initialCategoryId: 'c',
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    // The lock note names the prerequisite; no step of the tree is being
-    // trained, so the footer offers Start training.
+    // The lock note names the prerequisite; the tree is idle, so the hint
+    // says nothing about stopping.
     expect(
       find.textContaining('Locked tree.', findRichText: true),
       findsOneWidget,
     );
-    expect(find.text('Start training'), findsOneWidget);
-    expect(find.text('Stop training'), findsNothing);
+    expect(find.text('Tap the step you want to train.'), findsOneWidget);
+    expect(find.text('Edit Squat'), findsOneWidget);
   });
 
   testWidgets(
-      'the active step offers Stop training, any other Start training',
+      'editing, a tap on the trained step asks to stop, on any other to start',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
@@ -173,26 +255,39 @@ void main() {
       editable: true,
       startEditing: true,
       initialCategoryId: 'a',
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    // Let the fly-in camera settle.
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    // Initial focus is the active step — its CTA is the red stop, under
-    // the same preview view mode shows.
-    expect(find.text('Stop training'), findsOneWidget);
-    expect(find.text('Start training'), findsNothing);
-    expect(find.byType(WheelStepDetail), findsOneWidget);
+    // Edit mode on a running tree: the title, the hint with its Stop
+    // clause, and a radio on every row — filled on the trained step.
+    expect(find.text('Edit Pullups'), findsOneWidget);
+    expect(
+      find.text('Tap the step you want to train. Tap the current one to stop.'),
+      findsOneWidget,
+    );
+    expect(find.byType(WheelStepRadio), findsNWidgets(3));
+    expect(
+      tester
+          .widgetList<WheelStepRadio>(find.byType(WheelStepRadio))
+          .map((radio) => radio.on),
+      [false, true, false],
+    );
 
-    // Walk the selector onto the locked step via its list row — any other
-    // step offers Start training, with no helper text above it.
+    // The trained step: the stop question.
+    await tester.tap(find.text('Pullups step 1'));
+    await _settle(tester);
+    expect(find.text('Stop training Pullups step 1?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await _settle(tester);
+
+    // The locked step: the jump-ahead question, and no preview sheet.
     await tester.tap(find.text('Pullups step 2'));
-    await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Start training'), findsOneWidget);
-    expect(find.text('Stop training'), findsNothing);
+    await _settle(tester);
+    expect(find.text('Start Pullups step 2?'), findsOneWidget);
+    expect(find.text('Full details'), findsNothing);
     expect(find.textContaining('Skips the steps before it'), findsNothing);
   });
 
@@ -205,16 +300,14 @@ void main() {
       editable: true,
       startEditing: true,
       initialCategoryId: 'a',
-      onTrainNode: (_, __) async {},
+      onTrainNode: (_, __) async => true,
       onStopTraining: (_) async => stopped = true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    await tester.tap(find.text('Stop training'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Pullups step 1'));
+    await _settle(tester);
     expect(find.text('Stop training Pullups step 1?'), findsOneWidget);
     expect(
       find.textContaining('Your progress stays saved', findRichText: true),
@@ -222,21 +315,27 @@ void main() {
     );
 
     await tester.tap(find.text('Cancel'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(stopped, isFalse);
+    expect(find.text('Done'), findsOneWidget);
 
-    // Confirming does stop it — the sheet's own button is the last one.
+    // Confirming does stop it: the toast says so, and edit mode ends.
+    await tester.tap(find.text('Pullups step 1'));
+    await _settle(tester);
     await tester.tap(find.text('Stop training'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Stop training').last);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(stopped, isTrue);
+    expect(find.text('Pullups paused — progress kept'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Done'), findsNothing);
+    expect(_hint, findsNothing);
+    expect(find.byType(WheelStepRadio), findsNothing);
+
+    await _outliveToast(tester);
+    expect(find.text('Pullups paused — progress kept'), findsNothing);
   });
 
-  testWidgets('a locked step asks to jump ahead before training',
+  testWidgets('a locked step asks to jump ahead; saved, the edit is done',
       (tester) async {
     var trained = false;
     await tester.pumpWidget(_host(SkillWheelScreen(
@@ -246,17 +345,13 @@ void main() {
       startEditing: true,
       initialCategoryId: 'a',
       onTrainNode: (_, __) async => trained = true,
-      onStopTraining: (_) async {},
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
     await tester.tap(find.text('Pullups step 2'));
-    await tester.pump(const Duration(milliseconds: 1200));
-    await tester.tap(find.text('Start training'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
 
     expect(find.text('Start Pullups step 2?'), findsOneWidget);
     expect(
@@ -267,9 +362,41 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.text('Start exercise'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(trained, isTrue);
+
+    // Saved: the toast confirms, and the screen is back to viewing.
+    expect(find.text('Now training Pullups step 2'), findsOneWidget);
+    expect(find.text('Pullups'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(_hint, findsNothing);
+    await _outliveToast(tester);
+    expect(find.text('Now training Pullups step 2'), findsNothing);
+  });
+
+  testWidgets('a save that fails keeps edit mode, with no toast',
+      (tester) async {
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      editable: true,
+      startEditing: true,
+      initialCategoryId: 'a',
+      onTrainNode: (_, __) async => false,
+      onStopTraining: (_) async => true,
+      onOpenExercise: (_) {},
+    )));
+    await _flyIn(tester);
+
+    await tester.tap(find.text('Pullups step 2'));
+    await _settle(tester);
+    await tester.tap(find.text('Start exercise'));
+    await _settle(tester);
+
+    expect(find.text('Now training Pullups step 2'), findsNothing);
+    expect(find.text('Done'), findsOneWidget);
+    expect(find.text('Edit Pullups'), findsOneWidget);
+    expect(_hint, findsOneWidget);
   });
 
   testWidgets('an idle tree asks to start training its white step',
@@ -290,25 +417,24 @@ void main() {
       startEditing: true,
       initialCategoryId: 'a',
       onTrainNode: (_, __) async => trained = true,
-      onStopTraining: (_) async {},
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    await tester.tap(find.text('Start training'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Unlocked'), findsOneWidget);
+    await tester.tap(find.text('Pullups step 0'));
+    await _settle(tester);
     expect(find.text('Start training Pullups step 0?'), findsOneWidget);
     expect(
       find.textContaining('activate', findRichText: true),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Start training').last);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Start training'));
+    await _settle(tester);
     expect(trained, isTrue);
+    await _outliveToast(tester);
   });
 
   testWidgets('a cleared step of a running tree asks to go back',
@@ -321,31 +447,14 @@ void main() {
       startEditing: true,
       initialCategoryId: 'a',
       onTrainNode: (_, __) async => trained = true,
-      onStopTraining: (_) async {},
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    // Pullups step 0 is mastered — selecting it is a move backward. The
-    // list rests with the focused row at its top, so scroll back up first.
-    await tester.scrollUntilVisible(
-      find.text('Pullups step 0'),
-      -60,
-      scrollable: find.byType(Scrollable).last,
-    );
-    // Let the bounce settle before tapping.
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.tap(find.text('Pullups step 0'), warnIfMissed: false);
-    await tester.pump(const Duration(milliseconds: 1200));
-    // The row opened with its top just under the list's edge, so the list
-    // glides it into view — and a scrolling list takes no taps until the
-    // glide ends: one frame to start the clock, one to run it out.
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Start training'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    // Pullups step 0 is mastered — picking it is a move backward.
+    await tester.tap(find.text('Pullups step 0'));
+    await _settle(tester);
 
     expect(find.text('Go back to Pullups step 0?'), findsOneWidget);
     expect(
@@ -353,9 +462,9 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.text('Go back'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(trained, isTrue);
+    await _outliveToast(tester);
   });
 
   testWidgets('a locked tree asks for the early start', (tester) async {
@@ -371,16 +480,14 @@ void main() {
       editable: true,
       startEditing: true,
       initialCategoryId: 'c',
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    await tester.tap(find.text('Start training'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Squat step 0'));
+    await _settle(tester);
 
     expect(find.text('Start Squat step 0 early?'), findsOneWidget);
     expect(
@@ -396,8 +503,8 @@ void main() {
       families: _families(),
       activeCategoryIds: const {'a'},
       editable: true,
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
     await tester.pump(const Duration(milliseconds: 800));
@@ -410,8 +517,7 @@ void main() {
     // Edit: nothing navigates — the same screen, now with Done and the
     // list of progressions.
     await tester.tap(find.text('Edit'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Edit'), findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
@@ -419,8 +525,7 @@ void main() {
 
     // Done: back to viewing, still here.
     await tester.tap(find.text('Done'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Edit'), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
   });
@@ -432,39 +537,38 @@ void main() {
       activeCategoryIds: const {'a'},
       editable: true,
       initialCategoryId: 'a',
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
-    // Viewing the tree: the preview, no action.
+    // Viewing the tree: plain rows, no hint, no radios.
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
-    expect(find.byType(WheelStepDetail), findsOneWidget);
-    expect(find.text('Stop training'), findsNothing);
+    expect(find.byType(WheelExerciseCard), findsOneWidget);
+    expect(_hint, findsNothing);
+    expect(find.byType(WheelStepRadio), findsNothing);
 
-    // Edit: still on Pullups, the same preview with the step's action
-    // under it and Done in the header. The list of progressions never
+    // Edit: still on Pullups — the title says so — with the hint, radios
+    // on the rows and Done in the header. The list of progressions never
     // appears.
     await tester.tap(find.text('Edit'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Pullups'), findsOneWidget);
+    await _settle(tester);
+    expect(find.text('Edit Pullups'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
-    expect(find.text('Stop training'), findsOneWidget);
-    expect(find.byType(WheelStepDetail), findsOneWidget);
+    expect(_hint, findsOneWidget);
+    expect(find.byType(WheelStepRadio), findsNWidgets(3));
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
 
-    // Done: the tree and its preview stay, the action goes.
+    // Done: the tree stays, the edit chrome goes.
     await tester.tap(find.text('Done'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
-    expect(find.text('Stop training'), findsNothing);
-    expect(find.byType(WheelStepDetail), findsOneWidget);
+    expect(_hint, findsNothing);
+    expect(find.byType(WheelStepRadio), findsNothing);
+    expect(find.byType(WheelExerciseCard), findsOneWidget);
   });
 
   testWidgets('opened in edit mode for a host, Done leaves the screen',
@@ -476,8 +580,8 @@ void main() {
       editable: true,
       startEditing: true,
       onDone: () => done++,
-      onTrainNode: (_, __) async {},
-      onStopTraining: (_) async {},
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
       onOpenExercise: (_) {},
     )));
     await tester.pump(const Duration(milliseconds: 800));
@@ -494,6 +598,32 @@ void main() {
     expect(find.text('Done'), findsOneWidget);
   });
 
+  testWidgets('for a host, a saved pick leaves the screen the way Done does',
+      (tester) async {
+    var done = 0;
+    await tester.pumpWidget(_host(SkillWheelScreen(
+      families: _families(),
+      activeCategoryIds: const {'a'},
+      editable: true,
+      startEditing: true,
+      initialCategoryId: 'a',
+      onDone: () => done++,
+      onTrainNode: (_, __) async => true,
+      onStopTraining: (_) async => true,
+      onOpenExercise: (_) {},
+    )));
+    await _flyIn(tester);
+
+    await tester.tap(find.text('Pullups step 2'));
+    await _settle(tester);
+    await tester.tap(find.text('Start exercise'));
+    await _settle(tester);
+
+    expect(done, 1);
+    expect(find.text('Now training Pullups step 2'), findsOneWidget);
+    await _outliveToast(tester);
+  });
+
   testWidgets('a re-tap on the overview in edit mode ends the edit',
       (tester) async {
     final reset = TabResetNotifier();
@@ -504,8 +634,8 @@ void main() {
         families: _families(),
         activeCategoryIds: const {'a'},
         editable: true,
-        onTrainNode: (_, __) async {},
-        onStopTraining: (_) async {},
+        onTrainNode: (_, __) async => true,
+        onStopTraining: (_) async => true,
         onOpenExercise: (_) {},
       ),
     )));
@@ -515,15 +645,13 @@ void main() {
     expect(reset.fire(), isFalse);
 
     await tester.tap(find.text('Edit'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
 
     // Editing on the overview: the re-tap is the way out of edit mode.
     expect(reset.fire(), isTrue);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Done'), findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
@@ -538,34 +666,32 @@ void main() {
           editable: true,
           isActive: isActive,
           initialCategoryId: 'a',
-          onTrainNode: (_, __) async {},
-          onStopTraining: (_) async {},
+          onTrainNode: (_, __) async => true,
+          onStopTraining: (_) async => true,
           onOpenExercise: (_) {},
         );
     await tester.pumpWidget(_host(screen(isActive: true)));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await _flyIn(tester);
 
     await tester.tap(find.text('Edit'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Done'), findsOneWidget);
-    expect(find.text('Stop training'), findsOneWidget);
+    expect(_hint, findsOneWidget);
 
     // Another tab: the edit ends behind the user's back, the tree stays
     // focused for when they come back.
     await tester.pumpWidget(_host(screen(isActive: false)));
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Done'), findsNothing);
-    expect(find.text('Stop training'), findsNothing);
+    expect(_hint, findsNothing);
 
     // Back on the tab: still viewing.
     await tester.pumpWidget(_host(screen(isActive: true)));
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('Edit'), findsOneWidget);
-    expect(find.byType(WheelStepDetail), findsOneWidget);
+    expect(find.byType(WheelExerciseCard), findsOneWidget);
   });
 
   testWidgets('without an editor, the header carries no pill',
@@ -606,29 +732,27 @@ void main() {
         editable: true,
         startEditing: true,
         initialCategoryId: 'a',
-        onTrainNode: (_, __) async {},
-        onStopTraining: (_) async {},
+        onTrainNode: (_, __) async => true,
+        onStopTraining: (_) async => true,
         onOpenExercise: (_) {},
       ),
     )));
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
-    // Focused on Pullups: the overview's progression list is gone.
-    expect(find.text('Stop training'), findsOneWidget);
+    await _flyIn(tester);
+    // Focused on Pullups, editing: the hint is up, the overview's
+    // progression list is gone.
+    expect(_hint, findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
 
     // The re-tap: the wheel claims it and flies back out.
     expect(reset.fire(), isTrue);
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.text('Stop training'), findsNothing);
+    await _flyIn(tester);
+    expect(_hint, findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
 
     // On the overview, still editing: the next re-tap ends the edit. Then
     // there is nothing left to unwind, so the shell may scroll.
     expect(reset.fire(), isTrue);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await _settle(tester);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
     expect(find.text('Edit'), findsOneWidget);
     expect(reset.fire(), isFalse);

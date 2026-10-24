@@ -3,30 +3,34 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel.dart';
 import 'package:forma_app/features/progress/widgets/skill_wheel_panels.dart';
 
-/// The detail an open row shows draws how far along the step is. The bar's
-/// fill once sized itself to nothing, so a step three-quarters of the way
-/// to its target showed "18 / 24" over an empty bar.
+/// The preview sheet a tapped step opens draws how far along the step is.
+/// The bar's fill once sized itself to nothing, so a step three-quarters of
+/// the way to its target showed "18 / 24" over an empty bar.
 void main() {
   Future<void> pump(
     WidgetTester tester, {
     required WheelNodeState state,
     WheelStepStats? stats,
-    Widget? action,
+    VoidCallback? onOpen,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SizedBox(
             width: 400,
-            child: WheelStepDetail(
+            child: WheelStepPreview(
               node: WheelNode(
                 exerciseId: 'pullups_pull_up',
                 name: 'Pull Up',
                 state: state,
               ),
               stats: stats,
-              onOpen: () {},
-              action: action,
+              position: const WheelStepPosition(
+                section: 'FOUNDATION',
+                number: 3,
+                count: 4,
+              ),
+              onOpenExercise: onOpen ?? () {},
             ),
           ),
         ),
@@ -58,6 +62,8 @@ void main() {
     expect(fill.height, track.height);
     expect(fill.width, closeTo(track.width * 0.75, 0.5));
     expect(find.text('Training'), findsOneWidget);
+    expect(find.text('FOUNDATION · STEP 3 OF 4'), findsOneWidget);
+    expect(find.text('BEST WORKOUT'), findsOneWidget);
     expect(
       find.textContaining('18 / 24 reps', findRichText: true),
       findsOneWidget,
@@ -109,21 +115,53 @@ void main() {
     );
   });
 
-  testWidgets('without numbers the status stands alone, the action inside',
-      (tester) async {
+  testWidgets(
+      'without numbers the status stands alone; the thumbnail and Full '
+      'details both open the exercise', (tester) async {
+    var opened = 0;
     await pump(
       tester,
       state: WheelNodeState.locked,
-      action: const Text('Start training'),
+      onOpen: () => opened++,
     );
 
     expect(find.text('Locked'), findsOneWidget);
-    expect(
-      find.textContaining('Best workout', findRichText: true),
-      findsNothing,
-    );
+    expect(find.text('BEST WORKOUT'), findsNothing);
     expect(find.textContaining('masters this step'), findsNothing);
-    expect(find.text('Start training'), findsOneWidget);
-    expect(find.bySemanticsLabel('Open Pull Up'), findsOneWidget);
+    expect(find.text('Full details'), findsOneWidget);
+
+    await tester.tap(find.text('Full details'));
+    expect(opened, 1);
+    await tester.tap(find.bySemanticsLabel('Open Pull Up'));
+    expect(opened, 2);
+  });
+
+  test('a step knows its place in its branch', () {
+    final family = WheelFamily(
+      categoryId: 'squat',
+      title: 'Squat',
+      trunk: [
+        for (var i = 0; i < 2; i++)
+          WheelNode(
+            exerciseId: 't$i',
+            name: 'Trunk $i',
+            state: WheelNodeState.mastered,
+          ),
+      ],
+      branches: [
+        WheelBranch(id: 'pistol', label: 'Pistol', steps: [
+          for (var i = 0; i < 3; i++)
+            WheelNode(
+              exerciseId: 'p$i',
+              name: 'Pistol $i',
+              state: WheelNodeState.locked,
+            ),
+        ]),
+      ],
+    );
+
+    expect(WheelStepPosition.of(family, 1).label, 'FOUNDATION · STEP 2 OF 2');
+    expect(WheelStepPosition.of(family, 2).label, 'PISTOL · STEP 1 OF 3');
+    expect(WheelStepPosition.of(family, 4).label, 'PISTOL · STEP 3 OF 3');
   });
 }

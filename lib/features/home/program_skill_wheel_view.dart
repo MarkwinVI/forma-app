@@ -94,10 +94,12 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
     );
   }
 
-  Future<void> _trainNode(WheelFamily family, WheelNode node) async {
+  /// True once the write landed — the wheel then confirms it with a toast
+  /// and, this screen being its own route, leaves through Done.
+  Future<bool> _trainNode(WheelFamily family, WheelNode node) async {
     final userId = AuthService().currentUser?.id;
     final bundle = _bundle;
-    if (userId == null || bundle == null) return;
+    if (userId == null || bundle == null) return false;
     final saved = await _actions.trainNode(
       userId: userId,
       bundle: bundle,
@@ -105,30 +107,32 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       node: node,
       source: widget.source,
     );
-    if (!mounted) return;
+    if (!mounted) return false;
     if (!saved) {
       _couldNotSave();
-      return;
+      return false;
     }
     await _load();
+    return true;
   }
 
-  Future<void> _stopTraining(WheelFamily family) async {
+  Future<bool> _stopTraining(WheelFamily family) async {
     final userId = AuthService().currentUser?.id;
     final bundle = _bundle;
-    if (userId == null || bundle == null) return;
+    if (userId == null || bundle == null) return false;
     final saved = await _actions.stopTraining(
       userId: userId,
       bundle: bundle,
       family: family,
       source: widget.source,
     );
-    if (!mounted) return;
+    if (!mounted) return false;
     if (!saved) {
       _couldNotSave();
-      return;
+      return false;
     }
     await _load();
+    return true;
   }
 
   void _openExercise(WheelNode node) {
