@@ -49,7 +49,7 @@ Widget _host(Widget child) => MaterialApp(
 final _hint = find.textContaining('Tap the step you want to train');
 
 /// Edit mode's hint strip over the overview.
-final _overviewHint = find.text('Select the skill tree you wish to update');
+final _overviewHint = find.text('Select the skill tree you wish to edit');
 
 /// Lets a confirm sheet open, or a toast fade all the way out.
 Future<void> _settle(WidgetTester tester) async {
@@ -271,8 +271,7 @@ void main() {
     )));
     await _flyIn(tester);
 
-    // The lock note names the prerequisite; the tree is idle, so the hint
-    // says nothing about stopping.
+    // The lock note names the prerequisite, above the step hint.
     expect(
       find.textContaining('Locked tree.', findRichText: true),
       findsOneWidget,
@@ -296,11 +295,11 @@ void main() {
     )));
     await _flyIn(tester);
 
-    // Edit mode on a running tree: the Edit title, the hint with its Stop
-    // clause, and a radio on every row — filled on the trained step.
+    // Edit mode on a running tree: the Edit title, the step hint, and a
+    // radio on every row — filled on the trained step.
     expect(find.text('Edit Pullups'), findsOneWidget);
     expect(
-      find.text('Tap the step you want to train. Tap the current one to stop.'),
+      find.text('Tap the step you want to train.'),
       findsOneWidget,
     );
     expect(find.byType(WheelStepRadio), findsNWidgets(3));

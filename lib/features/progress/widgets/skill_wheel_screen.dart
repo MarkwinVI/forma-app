@@ -506,13 +506,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     // Edit mode says so in the title, on the overview and in a tree alike.
     final name = family?.title ?? 'Skill Trees';
     final title = _editing ? 'Edit $name' : name;
-    // On a running tree the hint also says where Stop lives — on the step
-    // being trained.
     final hint = family == null
-        ? 'Select the skill tree you wish to update'
-        : familyActive
-            ? 'Tap the step you want to train. Tap the current one to stop.'
-            : 'Tap the step you want to train.';
+        ? 'Select the skill tree you wish to edit'
+        : 'Tap the step you want to train.';
 
     return LayoutBuilder(
       builder: (context, constraints) {
