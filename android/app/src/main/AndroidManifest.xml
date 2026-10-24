@@ -6,6 +6,11 @@
     <!-- Debug builds inherit this from the debug manifest; release builds
          need it stated here for Supabase and PostHog to reach the network. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Phones and tablets. The app is touch-driven and locked to portrait,
+         so Play need not offer it to TVs or landscape-only car screens;
+         without these it only implies fake touch, which those satisfy. -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="true"/>
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="true"/>
     <application
         android:label="Forma"
         android:name="${applicationName}"
