@@ -20,7 +20,8 @@ import 'skill_wheel_panels.dart';
 /// lives behind Edit.
 ///
 /// Editing is a mode of the same screen, not another page: the header's
-/// Edit pill turns into Done, the overview's panel becomes the list of
+/// Edit pill turns into Done, a hint strip under the title says what a tap
+/// does now, the overview's panel becomes the list of
 /// progressions, and a focused tree reads "Edit <tree>" over a hint strip,
 /// its rows ending in radios. Tapping the step to train asks the question
 /// that fits — start, switch, jump ahead, go back — saves, confirms with a
@@ -489,7 +490,6 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
       context,
       node: node,
       stats: widget.stepStats[node.exerciseId],
-      position: WheelStepPosition.of(family, index),
       onOpenExercise: () => widget.onOpenExercise(node),
     );
   }
@@ -510,6 +510,13 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         : _editing
             ? 'Edit ${family.title}'
             : family.title;
+    // On a running tree the hint also says where Stop lives — on the step
+    // being trained.
+    final hint = family == null
+        ? 'Select the skill tree you wish to update'
+        : familyActive
+            ? 'Tap the step you want to train. Tap the current one to stop.'
+            : 'Tap the step you want to train.';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -593,9 +600,10 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     ),
                   ),
                 ),
-                // Editing a focused tree: the hint strip under the title
-                // says what a tap does now. It unfolds with the mode and
-                // folds away with it.
+                // Editing: the hint strip under the title says what a tap
+                // does now — pick a tree on the overview, a step in a
+                // focused tree. It unfolds with the mode and folds away
+                // with it.
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   switchInCurve: Curves.easeOut,
@@ -608,10 +616,10 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                       child: child,
                     ),
                   ),
-                  child: _editing && family != null
+                  child: _editing
                       ? _EditHint(
-                          key: const ValueKey('hint'),
-                          running: familyActive,
+                          key: ValueKey(hint),
+                          message: hint,
                         )
                       : const SizedBox.shrink(key: ValueKey('no-hint')),
                 ),
@@ -759,12 +767,11 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   }
 }
 
-/// Edit mode's hint over a focused tree: what a tap does now. On a running
-/// tree it also says where Stop lives — on the step being trained.
+/// Edit mode's hint under the title: what a tap does now.
 class _EditHint extends StatelessWidget {
-  final bool running;
+  final String message;
 
-  const _EditHint({super.key, required this.running});
+  const _EditHint({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -789,10 +796,7 @@ class _EditHint extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                running
-                    ? 'Tap the step you want to train. Tap the current one '
-                        'to stop.'
-                    : 'Tap the step you want to train.',
+                message,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

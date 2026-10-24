@@ -914,49 +914,13 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
 
 // ── Focused tree: the preview sheet ───────────────────────────────────
 
-/// Where a step sits in its branch, for the preview's kicker: the branch's
-/// name and the step's one-based place in it — "WEIGHTED · STEP 2 OF 7".
-class WheelStepPosition {
-  final String section;
-  final int number;
-  final int count;
-
-  const WheelStepPosition({
-    required this.section,
-    required this.number,
-    required this.count,
-  });
-
-  factory WheelStepPosition.of(WheelFamily family, int flatIndex) {
-    final sections = family.flatSections;
-    final i = flatIndex.clamp(0, sections.length - 1);
-    final section = sections[i];
-    var start = i;
-    while (start > 0 && sections[start - 1] == section) {
-      start--;
-    }
-    var end = i;
-    while (end + 1 < sections.length && sections[end + 1] == section) {
-      end++;
-    }
-    return WheelStepPosition(
-      section: section,
-      number: i - start + 1,
-      count: end - start + 1,
-    );
-  }
-
-  String get label => '$section · STEP $number OF $count';
-}
-
-/// Opens a step's preview as a bottom sheet over the wheel: the demo, where
-/// the step sits, its status, the best-workout bar, and Full details into
+/// Opens a step's preview as a bottom sheet over the wheel: the demo, its
+/// name and status, the best-workout bar, and Full details into
 /// the exercise's page. Preview only — changing the step lives behind Edit.
 Future<void> showWheelStepPreview(
   BuildContext context, {
   required WheelNode node,
   required WheelStepStats? stats,
-  required WheelStepPosition position,
   required VoidCallback onOpenExercise,
 }) {
   return showModalBottomSheet<void>(
@@ -992,7 +956,6 @@ Future<void> showWheelStepPreview(
           child: WheelStepPreview(
             node: node,
             stats: stats,
-            position: position,
             // Full details closes the preview on its way to the page.
             onOpenExercise: () {
               Navigator.of(sheetContext).pop();
@@ -1013,7 +976,6 @@ class WheelStepPreview extends StatelessWidget {
 
   /// The bar's numbers; without them the status stands alone.
   final WheelStepStats? stats;
-  final WheelStepPosition position;
 
   /// Opens the exercise's own page — the thumbnail's tap and Full details.
   final VoidCallback onOpenExercise;
@@ -1022,7 +984,6 @@ class WheelStepPreview extends StatelessWidget {
     super.key,
     required this.node,
     required this.stats,
-    required this.position,
     required this.onOpenExercise,
   });
 
@@ -1063,8 +1024,6 @@ class WheelStepPreview extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(position.label, style: _kicker),
-        const SizedBox(height: 4),
         Text(
           node.name,
           style: const TextStyle(

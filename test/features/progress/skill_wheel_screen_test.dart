@@ -48,6 +48,9 @@ Widget _host(Widget child) => MaterialApp(
 /// Edit mode's hint strip over a focused tree.
 final _hint = find.textContaining('Tap the step you want to train');
 
+/// Edit mode's hint strip over the overview.
+final _overviewHint = find.text('Select the skill tree you wish to update');
+
 /// Lets a confirm sheet open, or a toast fade all the way out.
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
@@ -85,7 +88,8 @@ void main() {
     expect(find.text('Pullups'), findsOneWidget);
     expect(find.text('Now: Pullups step 1'), findsNothing);
     expect(find.text('Pushups'), findsOneWidget);
-    // The hint belongs to a focused tree, not the overview.
+    // The overview's hint asks for a tree, not a step.
+    expect(_overviewHint, findsOneWidget);
     expect(_hint, findsNothing);
 
     // A tree that isn't running lists under its own section below.
@@ -112,6 +116,7 @@ void main() {
     expect(find.text('Stop training'), findsNothing);
     expect(find.text('Start training'), findsNothing);
     expect(_hint, findsNothing);
+    expect(_overviewHint, findsNothing);
   });
 
   testWidgets('pulling the step list down past its top does not leave the tree',
@@ -203,8 +208,8 @@ void main() {
 
     // The sheet: where the step sits, its status, the bar, Full details —
     // and no way to change the step from here.
-    expect(find.text('FOUNDATION · STEP 3 OF 3'), findsOneWidget);
     expect(find.text('Full details'), findsOneWidget);
+    expect(find.textContaining('STEP 3 OF 3'), findsNothing);
     expect(find.text('BEST WORKOUT'), findsOneWidget);
     expect(find.text('Start training'), findsNothing);
     expect(find.text('Locked'), findsNWidgets(2)); // the row and the sheet
@@ -452,7 +457,15 @@ void main() {
     )));
     await _flyIn(tester);
 
-    // Pullups step 0 is mastered — picking it is a move backward.
+    // Pullups step 0 is mastered — picking it is a move backward. On this
+    // short screen the list rests with the trained row at its top, so
+    // scroll back up first, and let the bounce settle.
+    await tester.scrollUntilVisible(
+      find.text('Pullups step 0'),
+      -60,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.text('Pullups step 0'));
     await _settle(tester);
 
@@ -513,21 +526,24 @@ void main() {
     expect(find.text('Edit'), findsOneWidget);
     expect(find.bySemanticsLabel('Edit skill trees'), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
+    expect(_overviewHint, findsNothing);
 
-    // Edit: nothing navigates — the same screen, now with Done and the
-    // list of progressions.
+    // Edit: nothing navigates — the same screen, now with Done, the hint
+    // and the list of progressions.
     await tester.tap(find.text('Edit'));
     await _settle(tester);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Edit'), findsNothing);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
     expect(find.text('Skill Trees'), findsOneWidget);
+    expect(_overviewHint, findsOneWidget);
 
     // Done: back to viewing, still here.
     await tester.tap(find.text('Done'));
     await _settle(tester);
     expect(find.text('Edit'), findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsNothing);
+    expect(_overviewHint, findsNothing);
   });
 
   testWidgets('Edit on a focused tree edits that tree, with Done up',
@@ -747,6 +763,7 @@ void main() {
     expect(reset.fire(), isTrue);
     await _flyIn(tester);
     expect(_hint, findsNothing);
+    expect(_overviewHint, findsOneWidget);
     expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
 
     // On the overview, still editing: the next re-tap ends the edit. Then
