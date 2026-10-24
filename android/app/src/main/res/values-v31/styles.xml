@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <!-- Android 12's system splash: ink with no icon. Its icon slot is a
+             small circle, masked and never wider than 192dp, so it cannot
+             hold the launch mark at the storyboard's size (53% of the
+             screen). MainActivity draws the mark itself the moment the
+             window can draw, and this ink dissolves over it with the
+             system's standard exit. -->
         <item name="android:windowSplashScreenBackground">@color/forma_ink</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/launch_image</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/forma_ink</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>

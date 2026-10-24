@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 /// Forma animated splash — "next node" motion.
 ///
-/// Frame 0 is the FULLY LIT mark, pixel-identical to the native static splash
-/// (the OS draws the same lit mark on #111016), so the takeover is invisible.
-/// The mark keeps the storyboard's size rule (53% of screen width, capped by
-/// 24% of screen height) and its exact centering — the wordmark is overlaid
-/// below without shifting the mark. The sequence per cycle:
+/// Frame 0 is the FULLY LIT mark, pixel-identical to the native launch screen
+/// (iOS's storyboard image, and on Android the LaunchMarkView drawn by
+/// MainActivity.kt, both on #111016), so the takeover is invisible. The mark
+/// keeps the storyboard's size rule (53% of screen width, capped by 24% of
+/// screen height) and its exact centering — the wordmark is overlaid below
+/// without shifting the mark. A change to the mark lands in all three. The
+/// sequence per cycle:
 ///   1. Hold the lit mark.
 ///   2. The constellation slides forward one node (884/1360 of the mark
 ///      width): the old node exits at the mark's edge, a dim track reveals
