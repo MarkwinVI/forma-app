@@ -141,16 +141,19 @@ List<WheelFamily> buildWheelFamilies({
       progressMap: progressMap,
       goalBranchId: goalBranchId,
     );
+    // Only a jumped-over step that would read locked says "Skipped"; one
+    // whose predecessor is mastered stays unlocked.
     final skipped = category.isLockedFor(progressMap)
         ? const <String>{}
-        : skippedStepIds(
-            path: category.pathFor(goalBranchId),
-            progressMap: progressMap,
-          );
+        : {
+            for (final id in skippedStepIds(
+              path: category.pathFor(goalBranchId),
+              progressMap: progressMap,
+            ))
+              if (nodeStates[id] == TreeNodeState.locked) id,
+          };
 
     WheelNodeState stateOf(String exerciseId) {
-      // A jumped-over step keeps the padlock, whatever its predecessor.
-      if (skipped.contains(exerciseId)) return WheelNodeState.locked;
       final tree = nodeStates[exerciseId];
       if (tree == TreeNodeState.done) return WheelNodeState.mastered;
       if (tree == TreeNodeState.cur) {

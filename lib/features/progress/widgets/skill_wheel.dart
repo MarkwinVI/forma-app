@@ -20,10 +20,11 @@ class WheelNode {
   final String name;
   final WheelNodeState state;
 
-  /// A step the progression jumped over: still short of mastered, behind
-  /// the step being trained on its route. It stays [WheelNodeState.locked]
-  /// — padlock and all — and reads "Skipped" wherever its status is spelled
-  /// out. Mastering the jumped-to step masters it, as before.
+  /// A locked step the progression jumped over: still short of mastered,
+  /// behind the step being trained on its route. It keeps the padlock and
+  /// reads "Skipped" wherever its status is spelled out. A jumped-over step
+  /// whose predecessor is mastered is unlocked, not skipped. Mastering the
+  /// jumped-to step masters it, as before.
   final bool skipped;
 
   const WheelNode({
