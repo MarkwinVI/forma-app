@@ -141,8 +141,16 @@ List<WheelFamily> buildWheelFamilies({
       progressMap: progressMap,
       goalBranchId: goalBranchId,
     );
+    final skipped = category.isLockedFor(progressMap)
+        ? const <String>{}
+        : skippedStepIds(
+            path: category.pathFor(goalBranchId),
+            progressMap: progressMap,
+          );
 
     WheelNodeState stateOf(String exerciseId) {
+      // A jumped-over step keeps the padlock, whatever its predecessor.
+      if (skipped.contains(exerciseId)) return WheelNodeState.locked;
       final tree = nodeStates[exerciseId];
       if (tree == TreeNodeState.done) return WheelNodeState.mastered;
       if (tree == TreeNodeState.cur) {
@@ -152,23 +160,44 @@ List<WheelFamily> buildWheelFamilies({
       return WheelNodeState.locked;
     }
 
-    final family = wheelFamilyFor(category, stateOf);
+    final family =
+        wheelFamilyFor(category, stateOf, skippedOf: skipped.contains);
     if (family != null) families.add(family);
   }
   return families;
 }
 
+/// The steps a jump ahead left behind on [path], the route being trained:
+/// everything before the step marked active that is not mastered yet. Empty
+/// when nothing on the route is active — a tree that was never started, or
+/// one placed by setup, which masters the steps behind its start outright.
+Set<String> skippedStepIds({
+  required List<String> path,
+  required Map<String, ExerciseStatus> progressMap,
+}) {
+  final active =
+      path.indexWhere((id) => progressMap[id] == ExerciseStatus.active);
+  if (active <= 0) return const {};
+  return {
+    for (final id in path.sublist(0, active))
+      if (!(progressMap[id]?.isCleared ?? false)) id,
+  };
+}
+
 /// One category as a wheel family — its foundation trunk and every branch
 /// tail in the wheel's display order — with each step's state supplied by
-/// [stateOf]. Null for a category with nothing to draw.
+/// [stateOf], and [skippedOf] marking the steps a jump ahead left behind.
+/// Null for a category with nothing to draw.
 WheelFamily? wheelFamilyFor(
   SkillCategory category,
-  WheelNodeState Function(String exerciseId) stateOf,
-) {
+  WheelNodeState Function(String exerciseId) stateOf, {
+  bool Function(String exerciseId)? skippedOf,
+}) {
   WheelNode node(String exerciseId) => WheelNode(
         exerciseId: exerciseId,
         name: ExerciseCatalog.findById(exerciseId)?.name ?? exerciseId,
         state: stateOf(exerciseId),
+        skipped: skippedOf?.call(exerciseId) ?? false,
       );
 
   final foundationIds = category.pathFor(category.foundationBranchId);
@@ -235,8 +264,7 @@ Map<String, WheelStepStats> buildWheelStepStats({
       if (exercise == null) continue;
       stats[node.exerciseId] = WheelStepStats(
         bestVolume:
-            bestByMovement[ExerciseCatalog.movementIdFor(node.exerciseId)] ??
-                0,
+            bestByMovement[ExerciseCatalog.movementIdFor(node.exerciseId)] ?? 0,
         targetVolume: ExerciseProgressionService.masteryTargetForExercise(
           exercise,
           progress: progressEntries[exercise.id],

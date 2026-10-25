@@ -349,8 +349,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         skillTreeConfirmBold(node.name),
         const TextSpan(text: ' to your workouts.'),
       ];
-    } else if (node.state == WheelNodeState.locked) {
-      // 7 — a step ahead of the current progression. The earlier steps stay
+    } else if (node.state == WheelNodeState.locked && !node.skipped) {
+      // 7 — a step ahead of the current progression. (A skipped step is
+      // locked too, but it lies behind the trained one: going back.) The earlier steps stay
       // locked until this one is mastered, which then masters them too.
       icon = Icons.move_up;
       caution = true;

@@ -251,6 +251,89 @@ void main() {
     expect(find.text('Full details'), findsNothing);
   });
 
+  testWidgets('a jumped-over step reads Skipped, and picking it goes back',
+      (tester) async {
+    final families = [
+      WheelFamily(
+        categoryId: 'a',
+        title: 'Pullups',
+        trunk: const [
+          WheelNode(
+            exerciseId: 'a-0',
+            name: 'Pullups step 0',
+            state: WheelNodeState.mastered,
+          ),
+          WheelNode(
+            exerciseId: 'a-1',
+            name: 'Pullups step 1',
+            state: WheelNodeState.locked,
+            skipped: true,
+          ),
+          WheelNode(
+            exerciseId: 'a-2',
+            name: 'Pullups step 2',
+            state: WheelNodeState.active,
+          ),
+          WheelNode(
+            exerciseId: 'a-3',
+            name: 'Pullups step 3',
+            state: WheelNodeState.locked,
+          ),
+        ],
+        branches: const [],
+      ),
+      ..._families().skip(1),
+    ];
+    var trained = false;
+    Widget screen({required bool editing}) => SkillWheelScreen(
+          families: families,
+          activeCategoryIds: const {'a'},
+          editable: true,
+          startEditing: editing,
+          initialCategoryId: 'a',
+          onTrainNode: (_, __) async => trained = true,
+          onStopTraining: (_) async => true,
+          onOpenExercise: (_) {},
+        );
+
+    // Viewing: the jumped-over step says Skipped, the one ahead Locked, and
+    // the preview says the same.
+    await tester.pumpWidget(_host(screen(editing: false)));
+    await _flyIn(tester);
+    expect(find.text('Skipped'), findsOneWidget);
+    expect(find.text('Locked'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Pullups step 1'),
+      -60,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.text('Pullups step 1'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('Skipped'), findsNWidgets(2));
+    expect(find.text('Full details'), findsOneWidget);
+
+    // Editing: picking it is a step back, not a jump ahead.
+    await tester.pumpWidget(Container());
+    await tester.pumpWidget(_host(screen(editing: true)));
+    await _flyIn(tester);
+    await tester.scrollUntilVisible(
+      find.text('Pullups step 1'),
+      -60,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.text('Pullups step 1'));
+    await _settle(tester);
+    expect(find.text('Go back to Pullups step 1?'), findsOneWidget);
+    expect(find.text('Start Pullups step 1?'), findsNothing);
+    await tester.tap(find.text('Go back'));
+    await _settle(tester);
+    expect(trained, isTrue);
+    await _outliveToast(tester);
+  });
+
   testWidgets('a locked tree shows the padlock note and the hint',
       (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(

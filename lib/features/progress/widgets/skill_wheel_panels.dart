@@ -475,15 +475,17 @@ class WheelStepGlyph extends StatelessWidget {
 
 /// The step's state in a word, with its tint — the preview sheet's status
 /// line. The rows say the same in fewer letters (see the list).
-(String, Color) wheelStepStatus(WheelNodeState state) => switch (state) {
-      WheelNodeState.active => ('Training', AppColors.accentBright),
-      WheelNodeState.mastered => ('Mastered', AppColors.green),
-      WheelNodeState.available => (
-          'Unlocked · not training',
-          AppColors.textPrimary,
-        ),
-      WheelNodeState.locked => ('Locked', AppColors.textMuted),
-    };
+(String, Color) wheelStepStatus(WheelNode node) => node.skipped
+    ? ('Skipped', AppColors.textMuted)
+    : switch (node.state) {
+        WheelNodeState.active => ('Training', AppColors.accentBright),
+        WheelNodeState.mastered => ('Mastered', AppColors.green),
+        WheelNodeState.available => (
+            'Unlocked · not training',
+            AppColors.textPrimary,
+          ),
+        WheelNodeState.locked => ('Locked', AppColors.textMuted),
+      };
 
 /// The demo frame for a step: the clip's poster when there is footage, the
 /// exercise's still otherwise. Null when the catalog knows neither.
@@ -492,7 +494,9 @@ String? wheelStepImageUrl(WheelNode node) {
   final coaching =
       exercise == null ? null : ExerciseCoachingCatalog.forExercise(exercise);
   final videoId = coaching?.videoId;
-  if (videoId != null) return 'https://img.youtube.com/vi/$videoId/hqdefault.jpg';
+  if (videoId != null) {
+    return 'https://img.youtube.com/vi/$videoId/hqdefault.jpg';
+  }
   if (coaching?.imageUrl.isNotEmpty ?? false) return coaching!.imageUrl;
   final still = exercise?.imageUrl;
   return still == null || still.isEmpty ? null : still;
@@ -809,8 +813,9 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
   }
 
   /// One step: thumbnail, name, and a status line in the state's tint —
-  /// "Training", "Mastered · 27 reps", "Unlocked", "Locked". The step being
-  /// trained reads bold and blue; a locked step sits back a little.
+  /// "Training", "Mastered · 27 reps", "Unlocked", "Locked", or "Skipped"
+  /// for a locked step a jump ahead left behind. The step being trained
+  /// reads bold and blue; a locked step sits back a little.
   Widget _stepRow(List<WheelNode> flat, int i, int index) {
     final node = flat[i];
     final state = node.state;
@@ -827,7 +832,10 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
           AppColors.green,
         ),
       WheelNodeState.available => ('Unlocked', AppColors.textMuted),
-      WheelNodeState.locked => ('Locked', AppColors.textMuted),
+      WheelNodeState.locked => (
+          node.skipped ? 'Skipped' : 'Locked',
+          AppColors.textMuted,
+        ),
     };
     final nameColor = training
         ? AppColors.accentBright
@@ -996,7 +1004,7 @@ class WheelStepPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (status, statusColor) = wheelStepStatus(node.state);
+    final (status, statusColor) = wheelStepStatus(node);
     final stats = this.stats;
 
     return Column(

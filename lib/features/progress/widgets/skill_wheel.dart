@@ -20,10 +20,17 @@ class WheelNode {
   final String name;
   final WheelNodeState state;
 
+  /// A step the progression jumped over: still short of mastered, behind
+  /// the step being trained on its route. It stays [WheelNodeState.locked]
+  /// — padlock and all — and reads "Skipped" wherever its status is spelled
+  /// out. Mastering the jumped-to step masters it, as before.
+  final bool skipped;
+
   const WheelNode({
     required this.exerciseId,
     required this.name,
     required this.state,
+    this.skipped = false,
   });
 }
 
@@ -1753,7 +1760,8 @@ class _WheelPainter extends CustomPainter {
         button: true,
         textDirection: TextDirection.ltr,
         selected: node.flat == state._focus,
-        label: '${step.name}, ${_nodeStateLabel(step.state)}',
+        label: '${step.name}, '
+            '${step.skipped ? 'skipped' : _nodeStateLabel(step.state)}',
         onTap: () {
           state._go(sel, node.flat);
           state.widget.onNodeTap?.call(node.flat);
