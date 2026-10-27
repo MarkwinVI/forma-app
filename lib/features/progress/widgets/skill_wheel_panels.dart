@@ -502,6 +502,53 @@ String? wheelStepImageUrl(WheelNode node) {
   return still == null || still.isEmpty ? null : still;
 }
 
+/// Whether [url] is a YouTube poster frame (`img.youtube.com/vi/…`).
+bool isYouTubePoster(String url) => url.contains('img.youtube.com/vi/');
+
+/// A YouTube poster, cropped to the picture. YouTube's `hqdefault.jpg` is a
+/// 4:3 frame with a widescreen clip letterboxed into it — black bars an
+/// eighth of the height above and below — so a plain cover crop of it shows
+/// a black strip wherever the crop is off-centre or the frame is narrower
+/// than 16:9. This sizes the 4:3 image so its 16:9 band covers the frame,
+/// centred, and lets the frame clip the bars away.
+class YouTubePoster extends StatelessWidget {
+  final String url;
+
+  const YouTubePoster({super.key, required this.url});
+
+  static const double _picture = 16 / 9;
+  static const double _image = 4 / 3;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final frameW = constraints.maxWidth;
+        final frameH = constraints.maxHeight;
+        // The 16:9 picture, just covering the frame…
+        final pictureW =
+            frameW / frameH >= _picture ? frameW : frameH * _picture;
+        // …and the whole 4:3 image around it.
+        final imageW = pictureW;
+        final imageH = imageW / _image;
+        return ClipRect(
+          child: OverflowBox(
+            minWidth: imageW,
+            maxWidth: imageW,
+            minHeight: imageH,
+            maxHeight: imageH,
+            child: Image.network(
+              url,
+              fit: BoxFit.fill,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 /// The demo as a framed thumbnail — in every row, small and quiet; in the
 /// preview sheet, wide, with the play badge, and a tap into the exercise.
 class _StepThumb extends StatelessWidget {
@@ -537,13 +584,16 @@ class _StepThumb extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (imageUrl != null)
-            Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              // The poster's subject sits high in the frame.
-              alignment: const Alignment(0, -0.4),
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
+            if (isYouTubePoster(imageUrl))
+              YouTubePoster(url: imageUrl)
+            else
+              Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                // The still's subject sits high in the frame.
+                alignment: const Alignment(0, -0.4),
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
           if (play) const Center(child: _PlayBadge(size: 36, iconSize: 20)),
         ],
       ),
