@@ -37,8 +37,7 @@ PastWorkout _workout(
           exerciseName: entry.key,
           setCount: entry.value.length,
           totalReps: timed ? 0 : entry.value.fold(0, (a, b) => a + b),
-          totalTimedSeconds:
-              timed ? entry.value.fold(0, (a, b) => a + b) : 0,
+          totalTimedSeconds: timed ? entry.value.fold(0, (a, b) => a + b) : 0,
           sets: [
             for (var i = 0; i < entry.value.length; i++)
               PastWorkoutSet(
@@ -113,7 +112,8 @@ void main() {
       expect(row.trend, PerformanceTrend.needsAttention);
     });
 
-    test('the value is the last session, and the delta is against the one '
+    test(
+        'the value is the last session, and the delta is against the one '
         'before it — never a better session further back', () {
       // 10, then a strong 15, then 12: the row reads 12, down 3 on the 15
       // — not up 2 on the 10, and not the 15.
@@ -182,13 +182,21 @@ void main() {
         workouts: [
           _workout(
             '2026-07-20',
-            {'row': [8, 8, 8]},
-            weightsByExercise: {'row': [10, 10, 10]},
+            {
+              'row': [8, 8, 8]
+            },
+            weightsByExercise: {
+              'row': [10, 10, 10]
+            },
           ),
           _workout(
             '2026-08-10',
-            {'row': [8, 8, 8]},
-            weightsByExercise: {'row': [12, 12, 12]},
+            {
+              'row': [8, 8, 8]
+            },
+            weightsByExercise: {
+              'row': [12, 12, 12]
+            },
           ),
         ],
         now: _date(_now),
@@ -203,8 +211,18 @@ void main() {
       final overview = buildPerformanceOverview(
         activeExercises: [_active('hold', isTimed: true)],
         workouts: [
-          _workout('2026-07-20', {'hold': [20, 20, 15]}, timed: true),
-          _workout('2026-08-10', {'hold': [25, 20, 20]}, timed: true),
+          _workout(
+              '2026-07-20',
+              {
+                'hold': [20, 20, 15]
+              },
+              timed: true),
+          _workout(
+              '2026-08-10',
+              {
+                'hold': [25, 20, 20]
+              },
+              timed: true),
         ],
         now: _date(_now),
       );
@@ -320,9 +338,12 @@ void main() {
           ),
         ],
         workouts: [
-          _workout('2026-08-10', {
-            'l_sit_hold': [10, 10],
-          }, timed: true),
+          _workout(
+              '2026-08-10',
+              {
+                'l_sit_hold': [10, 10],
+              },
+              timed: true),
         ],
         now: _date(_now),
       );
@@ -333,8 +354,7 @@ void main() {
       expect(row.bestValue, 20);
     });
 
-    test('an exercise in the list keeps its own logs over an alias claim',
-        () {
+    test('an exercise in the list keeps its own logs over an alias claim', () {
       final overview = buildPerformanceOverview(
         activeExercises: [
           const ActivePerformanceExercise(
@@ -350,19 +370,22 @@ void main() {
           ),
         ],
         workouts: [
-          _workout('2026-08-10', {
-            'l_sit_hold': [10],
-          }, timed: true),
+          _workout(
+              '2026-08-10',
+              {
+                'l_sit_hold': [10],
+              },
+              timed: true),
         ],
         now: _date(_now),
       );
 
       // The library exercise is in the list itself, so its logs are its
       // own — the alias never steals them.
-      final library = overview.rows
-          .singleWhere((row) => row.exerciseId == 'l_sit_hold');
-      final tree = overview.rows
-          .singleWhere((row) => row.exerciseId == 'core_l_sit');
+      final library =
+          overview.rows.singleWhere((row) => row.exerciseId == 'l_sit_hold');
+      final tree =
+          overview.rows.singleWhere((row) => row.exerciseId == 'core_l_sit');
       expect(library.daysTrained, 1);
       expect(tree.daysTrained, 0);
     });

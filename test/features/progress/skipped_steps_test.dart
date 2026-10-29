@@ -21,8 +21,7 @@ void main() {
     expect(skipped, {'b', 'c'});
   });
 
-  test('a route at its first step, or with nothing active, skips nothing',
-      () {
+  test('a route at its first step, or with nothing active, skips nothing', () {
     expect(
       skippedStepIds(path: path, progressMap: {'a': ExerciseStatus.active}),
       isEmpty,
@@ -74,7 +73,8 @@ void main() {
 
     expect(step(1).state, WheelNodeState.available);
     expect(step(1).skipped, isFalse);
-    expect(step(2).state, WheelNodeState.locked);
+    // Drawn as mastered; only the label says Skipped.
+    expect(step(2).state, WheelNodeState.mastered);
     expect(step(2).skipped, isTrue);
     expect(step(3).state, WheelNodeState.active);
     expect(step(3).skipped, isFalse);

@@ -10,6 +10,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     required WheelNodeState state,
+    bool skipped = false,
     WheelStepStats? stats,
     VoidCallback? onOpen,
   }) async {
@@ -23,6 +24,7 @@ void main() {
                 exerciseId: 'pullups_pull_up',
                 name: 'Pull Up',
                 state: state,
+                skipped: skipped,
               ),
               stats: stats,
               onOpenExercise: onOpen ?? () {},
@@ -85,6 +87,22 @@ void main() {
     expect(fill.width, closeTo(track.width, 0.5));
     expect(find.text('Mastered'), findsOneWidget);
     expect(find.textContaining('masters this step'), findsNothing);
+  });
+
+  testWidgets('a skipped step looks mastered and only says Skipped',
+      (tester) async {
+    await pump(
+      tester,
+      state: WheelNodeState.mastered,
+      skipped: true,
+      stats: const WheelStepStats(bestVolume: 0, targetVolume: 24),
+    );
+
+    expect(fillSize(tester).width, closeTo(trackSize(tester).width, 0.5));
+    expect(find.text('Skipped'), findsOneWidget);
+    expect(find.text('Mastered'), findsNothing);
+    expect(
+        find.text('Skipped. You jumped ahead of this step.'), findsOneWidget);
   });
 
   testWidgets('a hold counts seconds, and an untrained step an empty bar',

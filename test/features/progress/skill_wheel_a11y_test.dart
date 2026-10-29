@@ -109,8 +109,7 @@ void main() {
     expect(find.byType(CustomPaint), findsWidgets);
   });
 
-  testWidgets('a focused tree has a labelled 44pt back button',
-      (tester) async {
+  testWidgets('a focused tree has a labelled 44pt back button', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),

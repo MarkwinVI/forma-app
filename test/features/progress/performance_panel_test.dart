@@ -129,7 +129,8 @@ void main() {
     expect(find.text('BUILDING BASELINE'), findsNothing);
   });
 
-  testWidgets('exercises without a baseline sit in a quiet group with day '
+  testWidgets(
+      'exercises without a baseline sit in a quiet group with day '
       'counters', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [
@@ -154,7 +155,8 @@ void main() {
     expect(find.text('Last session:'), findsOneWidget);
   });
 
-  testWidgets('without any baseline the panel shows the building-baseline '
+  testWidgets(
+      'without any baseline the panel shows the building-baseline '
       'group instead of an explainer', (tester) async {
     await tester.pumpWidget(_host(const PerformanceOverview(
       rows: [_RowsFixture.oneDay, _RowsFixture.neverTrained],

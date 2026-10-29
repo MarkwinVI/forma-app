@@ -104,8 +104,7 @@ void main() {
     expect(find.text('Not training'), findsOneWidget);
   });
 
-  testWidgets('a locked tree in the edit list reads Locked',
-      (tester) async {
+  testWidgets('a locked tree in the edit list reads Locked', (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
       activeCategoryIds: const {'a'},
@@ -215,7 +214,8 @@ void main() {
     expect(find.text('Full details'), findsNothing);
   });
 
-  testWidgets('viewing, a tapped row opens the preview sheet; Full details '
+  testWidgets(
+      'viewing, a tapped row opens the preview sheet; Full details '
       'opens the exercise', (tester) async {
     WheelNode? opened;
     await tester.pumpWidget(_host(SkillWheelScreen(
@@ -266,7 +266,7 @@ void main() {
           WheelNode(
             exerciseId: 'a-1',
             name: 'Pullups step 1',
-            state: WheelNodeState.locked,
+            state: WheelNodeState.mastered,
             skipped: true,
           ),
           WheelNode(
@@ -822,8 +822,7 @@ void main() {
     expect(find.byType(WheelExerciseCard), findsOneWidget);
   });
 
-  testWidgets('without an editor, the header carries no pill',
-      (tester) async {
+  testWidgets('without an editor, the header carries no pill', (tester) async {
     await tester.pumpWidget(_host(SkillWheelScreen(
       families: _families(),
       onOpenExercise: (_) {},

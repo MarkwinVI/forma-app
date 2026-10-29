@@ -153,9 +153,12 @@ List<WheelFamily> buildWheelFamilies({
               if (nodeStates[id] == TreeNodeState.locked) id,
           };
 
+    // A skipped step draws as mastered; only its label tells them apart.
     WheelNodeState stateOf(String exerciseId) {
       final tree = nodeStates[exerciseId];
-      if (tree == TreeNodeState.done) return WheelNodeState.mastered;
+      if (tree == TreeNodeState.done || skipped.contains(exerciseId)) {
+        return WheelNodeState.mastered;
+      }
       if (tree == TreeNodeState.cur) {
         return working ? WheelNodeState.active : WheelNodeState.available;
       }

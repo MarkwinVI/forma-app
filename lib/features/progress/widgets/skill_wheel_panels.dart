@@ -476,7 +476,7 @@ class WheelStepGlyph extends StatelessWidget {
 /// The step's state in a word, with its tint — the preview sheet's status
 /// line. The rows say the same in fewer letters (see the list).
 (String, Color) wheelStepStatus(WheelNode node) => node.skipped
-    ? ('Skipped', AppColors.textMuted)
+    ? ('Skipped', AppColors.green)
     : switch (node.state) {
         WheelNodeState.active => ('Training', AppColors.accentBright),
         WheelNodeState.mastered => ('Mastered', AppColors.green),
@@ -864,7 +864,7 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
 
   /// One step: thumbnail, name, and a status line in the state's tint —
   /// "Training", "Mastered · 27 reps", "Unlocked", "Locked", or "Skipped"
-  /// for a locked step a jump ahead left behind. The step being trained
+  /// for a step a jump ahead left behind (drawn as mastered). The step being trained
   /// reads bold and blue; a locked step sits back a little.
   Widget _stepRow(List<WheelNode> flat, int i, int index) {
     final node = flat[i];
@@ -876,16 +876,15 @@ class _WheelExerciseCardState extends State<WheelExerciseCard> {
     final (status, statusColor) = switch (state) {
       WheelNodeState.active => ('Training', AppColors.accentBright),
       WheelNodeState.mastered => (
-          stats != null && stats.bestVolume > 0
-              ? 'Mastered · ${stats.bestVolume} ${stats.unit}'
-              : 'Mastered',
+          node.skipped
+              ? 'Skipped'
+              : stats != null && stats.bestVolume > 0
+                  ? 'Mastered · ${stats.bestVolume} ${stats.unit}'
+                  : 'Mastered',
           AppColors.green,
         ),
       WheelNodeState.available => ('Unlocked', AppColors.textMuted),
-      WheelNodeState.locked => (
-          node.skipped ? 'Skipped' : 'Locked',
-          AppColors.textMuted,
-        ),
+      WheelNodeState.locked => ('Locked', AppColors.textMuted),
     };
     final nameColor = training
         ? AppColors.accentBright
@@ -1171,9 +1170,11 @@ class WheelStepPreview extends StatelessWidget {
         : state == WheelNodeState.active
             ? AppColors.accentBright
             : Colors.white.withValues(alpha: 0.22);
-    final caption = mastered
-        ? 'Mastered. This step is complete.'
-        : '$target ${stats.unit} in a single workout masters this step.';
+    final caption = node.skipped
+        ? 'Skipped. You jumped ahead of this step.'
+        : mastered
+            ? 'Mastered. This step is complete.'
+            : '$target ${stats.unit} in a single workout masters this step.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
