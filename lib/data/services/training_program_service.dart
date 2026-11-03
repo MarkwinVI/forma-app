@@ -247,6 +247,7 @@ class TrainingProgramService {
           component: component,
           rawItem: Map<String, dynamic>.from(rawItem),
           progressMap: progressMap,
+          skillTracks: skillTracks,
         );
         if (configuredItem != null) {
           items.add(configuredItem);
@@ -423,10 +424,11 @@ class TrainingProgramService {
     required String component,
     required Map<String, dynamic> rawItem,
     required Map<String, ExerciseStatus> progressMap,
+    required List<SkillTrack> skillTracks,
   }) {
     final kind = rawItem['kind'] as String? ?? 'exercise';
     final progressionPath = kind == 'progression'
-        ? _pathForConfiguredProgression(rawItem)
+        ? _pathForConfiguredProgression(rawItem, skillTracks)
         : const <String>[];
     final exercise = kind == 'progression'
         ? _exerciseForConfiguredProgression(
@@ -463,10 +465,29 @@ class TrainingProgramService {
     );
   }
 
-  List<String> _pathForConfiguredProgression(Map<String, dynamic> rawItem) {
+  /// The route a saved progression row follows: the tree's running track
+  /// decides the branch, as it does on the wheel and the Program tab. The
+  /// row's own `branch_id` is only the fallback for a tree with no track,
+  /// because it is written when the day is saved and goes stale the moment
+  /// a jump on the wheel moves the tree to another branch — read as is, the
+  /// row kept resolving on the old branch, where nothing is active any
+  /// more, and the Train tab showed that branch's first unfinished step
+  /// instead of the exercise just chosen.
+  List<String> _pathForConfiguredProgression(
+    Map<String, dynamic> rawItem,
+    List<SkillTrack> skillTracks,
+  ) {
     final skillCategoryId = rawItem['skill_category_id'] as String?;
-    final branchId = rawItem['branch_id'] as String?;
-    if (skillCategoryId == null || branchId == null) return const [];
+    if (skillCategoryId == null) return const [];
+    String? branchId;
+    for (final track in skillTracks) {
+      if (track.included && track.skillCategoryId == skillCategoryId) {
+        branchId = track.branchId;
+        break;
+      }
+    }
+    branchId ??= rawItem['branch_id'] as String?;
+    if (branchId == null) return const [];
 
     final category = SkillCategoryCatalog.findById(skillCategoryId);
     return category?.pathFor(branchId) ?? const <String>[];

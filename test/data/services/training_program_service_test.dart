@@ -260,7 +260,8 @@ void main() {
       );
     });
 
-    test('a tree started on the wheel joins the saved plan, before the '
+    test(
+        'a tree started on the wheel joins the saved plan, before the '
         'accessories', () {
       final recommendation = service.buildToday(
         progressMap: const {},
@@ -277,7 +278,8 @@ void main() {
       expect(recommendation.items.last.exercise.id, 'lateral_raise_dumbbell');
     });
 
-    test('a tree another workout still runs does not join a plan it was '
+    test(
+        'a tree another workout still runs does not join a plan it was '
         'taken off', () {
       // The muscle-up is skill work, which push and pull days both
       // schedule. Taken off the saved push day, it still runs on the
@@ -315,7 +317,8 @@ void main() {
       );
     });
 
-    test('saving a plan without a tree pauses it, unless another workout '
+    test(
+        'saving a plan without a tree pauses it, unless another workout '
         'still runs it', () {
       final tracks = [
         track('pushups', 'planche'),
@@ -333,6 +336,46 @@ void main() {
       // Dips were taken off the only day that trains them; the muscle-up
       // carries on with the pull day, and pull-ups never were push work.
       expect(left, ['dips']);
+    });
+
+    test('a jump to another branch on the wheel moves the saved row with it',
+        () {
+      // A pull day saved while the rows tree ran the front lever branch.
+      const pullPlan = {
+        'pull': {
+          'strength': [
+            {
+              'kind': 'progression',
+              'skill_category_id': 'rows',
+              'branch_id': 'front_lever',
+            },
+          ],
+        },
+      };
+      // Then, on the wheel, Front Lever Row (Tuck) → Inverted Row (+20%),
+      // which lives on the weighted branch: the track moved, the saved row
+      // still says front_lever. Resolved on the stale branch, where nothing
+      // is active any more, the Train tab kept showing the tuck row.
+      final recommendation = service.buildToday(
+        progressMap: const {
+          'rows_tuck_front_lever_rows': ExerciseStatus.inactive,
+          'rows_weighted_rows_plus_20': ExerciseStatus.active,
+        },
+        programType: TrainingProgramType.pushPull,
+        sessionType: TrainingSessionType.pull,
+        sessionItemsConfig: pullPlan,
+        skillTracks: [track('rows', 'weighted')],
+      );
+
+      final row = recommendation.items
+          .singleWhere((item) => item.sourceSkillCategoryId == 'rows');
+      expect(row.exercise.id, 'rows_weighted_rows_plus_20');
+      expect(
+          row.progressionExerciseIds, contains('rows_weighted_rows_plus_20'));
+      expect(
+        row.progressionExerciseIds,
+        isNot(contains('rows_tuck_front_lever_rows')),
+      );
     });
   });
 

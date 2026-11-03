@@ -1144,8 +1144,17 @@ class HomeDashboardMetricsCalculator {
     required TrainingProgramType programType,
     required Map<String, dynamic> sessionItemsConfig,
     required Map<String, SkillCategory> categoriesById,
+    required List<SkillTrack> skillTracks,
   }) {
     if (sessionItemsConfig.isEmpty) return const [];
+
+    // The running track decides a tree's branch; a saved row's own
+    // `branch_id` is only the fallback, since it goes stale the moment a
+    // jump on the wheel moves the tree to another branch.
+    final branchByCategory = {
+      for (final track in skillTracks)
+        if (track.included) track.skillCategoryId: track.branchId,
+    };
 
     final optionsByKey = <String, TrainingBranchOption>{};
     for (final sessionType
@@ -1163,8 +1172,10 @@ class HomeDashboardMetricsCalculator {
           if (item['kind'] != 'progression') continue;
 
           final skillCategoryId = item['skill_category_id'] as String?;
-          final branchId = item['branch_id'] as String? ?? 'main';
           if (skillCategoryId == null) continue;
+          final branchId = branchByCategory[skillCategoryId] ??
+              item['branch_id'] as String? ??
+              'main';
 
           final category = categoriesById[skillCategoryId];
           if (category == null) continue;
@@ -1348,6 +1359,7 @@ class HomeDashboardMetricsCalculator {
       programType: programType,
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
+      skillTracks: skillTracks,
     )
         .where((option) => !paused.contains(option.sourceSkillCategoryId))
         .toList();

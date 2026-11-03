@@ -62,6 +62,43 @@ void main() {
       });
     });
 
+    test('active path options follow a track that jumped to another branch',
+        () {
+      final service = TrainingProgramService();
+      final categoriesById = {
+        for (final category in SkillCategoryCatalog.browsable())
+          category.id: category,
+      };
+
+      // A pull day saved while the rows tree ran the front lever branch;
+      // then a jump on the wheel moved the track to the weighted branch.
+      // The saved row still says front_lever and must not win over the
+      // track, or the dashboard's path preview keeps drawing the old route.
+      final options = HomeDashboardMetricsCalculator.resolveActivePathOptions(
+        trainingProgramService: service,
+        programType: TrainingProgramType.pushPull,
+        sessionItemsConfig: const {
+          'pull': {
+            'strength': [
+              {
+                'kind': 'progression',
+                'skill_category_id': 'rows',
+                'branch_id': 'front_lever',
+              },
+            ],
+          },
+        },
+        branchSelections: service.defaultBranchSelections(),
+        categoriesById: categoriesById,
+        skillTracks: [_track(SkillCategoryCatalog.rowsId, 'weighted')],
+      );
+
+      final rows = options
+          .singleWhere((option) => option.sourceSkillCategoryId == 'rows');
+      expect(rows.exerciseIds, contains('rows_weighted_rows_plus_20'));
+      expect(rows.exerciseIds, isNot(contains('rows_tuck_front_lever_rows')));
+    });
+
     test('active path options drop a paused track instead of a lane default',
         () {
       final service = TrainingProgramService();
@@ -262,7 +299,8 @@ void main() {
       expect(snapshot.closestSkills, isNotEmpty);
     });
 
-    test('active skill paths carry only browsable trees — which now includes '
+    test(
+        'active skill paths carry only browsable trees — which now includes '
         'the hinge', () {
       final service = TrainingProgramService();
 
