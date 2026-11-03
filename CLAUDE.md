@@ -37,12 +37,24 @@ Flutter keeps the native-asset frameworks it builds for Dart packages
 cached framework is a simulator binary, and an Xcode archive embeds it as
 is: App Store Connect then rejects the upload with "Invalid executable …
 references an unsupported platform in the x86_64 slice" for
-`Runner.app/Frameworks/objective_c.framework`. Before archiving, run
+`Runner.app/Frameworks/objective_c.framework`. The opposite failure is
+quieter: clearing only that folder leaves Flutter's install-code-assets
+step stamped up to date in `.dart_tool/flutter_build/`, so the next build
+does not write the framework back, the folder stays empty, and an archive
+embeds no `objective_c` at all — which fails at runtime, not at upload.
+Before archiving, run
 
 ```bash
-rm -rf build/native_assets && flutter build ios --release --no-codesign
+rm -rf build/native_assets .dart_tool/flutter_build && flutter build ios --release --no-codesign
 ```
 
-which rebuilds the framework for device (platform iOS, arm64 only); the
-archive then picks that one up. `otool -l build/native_assets/ios/objective_c.framework/objective_c | grep platform`
-should print `platform 2` only.
+which rebuilds the framework for device (platform iOS, arm64 only) and
+puts it back in the folder the archive copies from. Then check
+
+```bash
+otool -l build/native_assets/ios/objective_c.framework/objective_c | grep platform
+```
+
+prints `platform 2` only, and never start an Xcode archive while a
+Flutter build is running: both write the same `build/` folder, and the
+archive fails.
