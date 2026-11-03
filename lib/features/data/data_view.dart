@@ -13,6 +13,7 @@ import '../../data/services/dev_clock_service.dart';
 import '../../data/services/exercise_log_service.dart';
 import '../../data/services/membership_service.dart';
 import '../../data/services/store_review_service.dart';
+import '../../data/services/training_schedule_service.dart';
 import '../../data/services/user_profile_service.dart';
 import '../membership/subscription_rows.dart';
 import '../settings/settings_view.dart';
@@ -666,9 +667,7 @@ String _relativeSessionLabel(
   DateTime dateTime, {
   required DateTime now,
 }) {
-  final today = DateTime(now.year, now.month, now.day);
-  final day = DateTime(dateTime.year, dateTime.month, dateTime.day);
-  final difference = today.difference(day).inDays;
+  final difference = TrainingScheduleService.daysBetween(dateTime, now);
 
   final String dayLabel;
   if (difference == 0) {

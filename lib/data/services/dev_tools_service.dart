@@ -262,13 +262,16 @@ class DevToolsService {
     );
     if (lastTrainingWeekday < 0) return const [];
 
-    final thisWeek = DateTime(today.year, today.month, today.day)
-        .subtract(Duration(days: today.weekday - 1));
+    final thisWeek = TrainingScheduleService.addDays(
+      TrainingScheduleService.dateOnly(today),
+      1 - today.weekday,
+    );
     return [
       for (var week = _sessionRamp.length; week >= 1; week--)
-        thisWeek
-            .subtract(Duration(days: 7 * week))
-            .add(Duration(days: lastTrainingWeekday)),
+        TrainingScheduleService.addDays(
+          thisWeek,
+          lastTrainingWeekday - 7 * week,
+        ),
     ];
   }
 

@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/models/workout_history_model.dart';
+import '../../data/services/training_schedule_service.dart';
 import 'past_workout_detail_view.dart';
 import 'workout_calendar_metrics.dart';
 
@@ -544,7 +545,8 @@ class _ActivityHeatmap extends StatelessWidget {
   Widget build(BuildContext context) {
     final thisWeek = WorkoutCalendarMetrics.weekStartOf(metrics.now);
     final weekStarts = [
-      for (var i = 12; i >= 0; i--) thisWeek.subtract(Duration(days: 7 * i)),
+      for (var i = 12; i >= 0; i--)
+        TrainingScheduleService.addDays(thisWeek, -7 * i),
     ];
 
     return Row(
@@ -556,7 +558,7 @@ class _ActivityHeatmap extends StatelessWidget {
               children: [
                 for (var d = 0; d < 7; d++) ...[
                   if (d > 0) const SizedBox(height: 4),
-                  _cell(weekStarts[w].add(Duration(days: d))),
+                  _cell(TrainingScheduleService.addDays(weekStarts[w], d)),
                 ],
               ],
             ),

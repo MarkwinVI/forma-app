@@ -1,4 +1,5 @@
 import '../../data/models/workout_history_model.dart';
+import '../../data/services/training_schedule_service.dart';
 
 /// Calendar-shaped rollups over saved workouts: per-week streaks, the days a
 /// month was trained, and per-day activity levels.
@@ -19,7 +20,7 @@ class WorkoutCalendarMetrics {
   /// Monday of the week containing [dateTime].
   static DateTime weekStartOf(DateTime dateTime) {
     final day = dayOf(dateTime);
-    return day.subtract(Duration(days: day.weekday - 1));
+    return TrainingScheduleService.addDays(day, 1 - day.weekday);
   }
 
   late final Map<DateTime, int> _sessionsPerWeek = () {
@@ -51,7 +52,7 @@ class WorkoutCalendarMetrics {
   int get currentStreakWeeks {
     var week = weekStartOf(_now);
     if (_trained(week)) return _runEndingAt(week);
-    return _runEndingAt(week.subtract(const Duration(days: 7)));
+    return _runEndingAt(TrainingScheduleService.addDays(week, -7));
   }
 
   /// Longest run of consecutive trained weeks.
@@ -65,7 +66,7 @@ class WorkoutCalendarMetrics {
     while (!cursor.isAfter(last)) {
       run = _trained(cursor) ? run + 1 : 0;
       if (run > best) best = run;
-      cursor = cursor.add(const Duration(days: 7));
+      cursor = TrainingScheduleService.addDays(cursor, 7);
     }
     return best;
   }
@@ -78,7 +79,7 @@ class WorkoutCalendarMetrics {
     var streak = 0;
     while (_trained(week)) {
       streak++;
-      week = week.subtract(const Duration(days: 7));
+      week = TrainingScheduleService.addDays(week, -7);
     }
     return streak;
   }

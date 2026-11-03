@@ -4,6 +4,7 @@ import '../catalog/exercise_catalog.dart';
 import '../models/exercise_log_model.dart';
 import '../models/workout_history_model.dart';
 import 'supabase_service.dart';
+import 'training_schedule_service.dart';
 
 class WorkoutExerciseLogInput {
   final String exerciseId;
@@ -55,7 +56,7 @@ class ExerciseLogService {
   /// Used to advance the program pointer only once per day.
   Future<int> countSessionsOnLocalDate(String userId, DateTime date) async {
     final dayStart = DateTime(date.year, date.month, date.day);
-    final dayEnd = dayStart.add(const Duration(days: 1));
+    final dayEnd = TrainingScheduleService.addDays(dayStart, 1);
 
     final data = await _client
         .from('workout_sessions')
