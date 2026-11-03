@@ -46,8 +46,7 @@ void main() {
     );
   });
 
-  test('on the wheel, a jumped-over step after a mastered one stays unlocked',
-      () {
+  test('on the wheel, every jumped-over step reads skipped', () {
     final squat = SkillCategoryCatalog.findById(SkillCategoryCatalog.squatId)!;
     final path = squat.pathFor(squat.foundationBranchId);
     expect(path.length, greaterThanOrEqualTo(4));
@@ -71,9 +70,11 @@ void main() {
     WheelNode step(int i) =>
         family.flat.firstWhere((node) => node.exerciseId == path[i]);
 
-    expect(step(1).state, WheelNodeState.available);
-    expect(step(1).skipped, isFalse);
-    // Drawn as mastered; only the label says Skipped.
+    // Both jumped-over steps draw as mastered and say Skipped — the one
+    // right after the mastered step too, so the route reads as one green
+    // line up to the step being trained.
+    expect(step(1).state, WheelNodeState.mastered);
+    expect(step(1).skipped, isTrue);
     expect(step(2).state, WheelNodeState.mastered);
     expect(step(2).skipped, isTrue);
     expect(step(3).state, WheelNodeState.active);

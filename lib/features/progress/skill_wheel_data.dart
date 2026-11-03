@@ -141,17 +141,15 @@ List<WheelFamily> buildWheelFamilies({
       progressMap: progressMap,
       goalBranchId: goalBranchId,
     );
-    // Only a jumped-over step that would read locked says "Skipped"; one
-    // whose predecessor is mastered stays unlocked.
+    // Every step a jump ahead left behind says "Skipped", the one right
+    // after a mastered step included: a white "Unlocked" node between
+    // green ones read as a gap in the route, not as a choice.
     final skipped = category.isLockedFor(progressMap)
         ? const <String>{}
-        : {
-            for (final id in skippedStepIds(
-              path: category.pathFor(goalBranchId),
-              progressMap: progressMap,
-            ))
-              if (nodeStates[id] == TreeNodeState.locked) id,
-          };
+        : skippedStepIds(
+            path: category.pathFor(goalBranchId),
+            progressMap: progressMap,
+          );
 
     // A skipped step draws as mastered; only its label tells them apart.
     WheelNodeState stateOf(String exerciseId) {

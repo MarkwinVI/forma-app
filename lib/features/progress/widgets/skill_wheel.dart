@@ -22,9 +22,9 @@ class WheelNode {
 
   /// A step the progression jumped over: still short of mastered, behind
   /// the step being trained on its route. It draws as mastered (its [state])
-  /// and reads "Skipped" wherever its status is spelled out. A jumped-over
-  /// step whose predecessor is mastered is unlocked, not skipped. Mastering
-  /// the jumped-to step masters it, as before.
+  /// and reads "Skipped" wherever its status is spelled out, whether or not
+  /// the step before it is mastered. Mastering the jumped-to step masters
+  /// it, as before.
   final bool skipped;
 
   const WheelNode({
