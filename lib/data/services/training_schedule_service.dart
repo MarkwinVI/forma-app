@@ -191,14 +191,13 @@ class TrainingScheduleService {
   }) {
     final today = dateOnly((now ?? DateTime.now()).toLocal());
     final selected = dateOnly((selectedDate ?? today).toLocal());
-    final defaultStart = today.subtract(Duration(days: today.weekday - 1));
-    final defaultEnd = defaultStart.add(const Duration(days: 6));
+    final defaultStart = addDays(today, 1 - today.weekday);
+    final defaultEnd = addDays(defaultStart, 6);
     final displayStart = daysBeforeToday == null
         ? defaultStart
-        : today.subtract(Duration(days: daysBeforeToday));
-    final displayEnd = daysAfterToday == null
-        ? defaultEnd
-        : today.add(Duration(days: daysAfterToday));
+        : addDays(today, -daysBeforeToday);
+    final displayEnd =
+        daysAfterToday == null ? defaultEnd : addDays(today, daysAfterToday);
     final cycle = cycleFor(
       programType: programType,
       frequencyPerWeek: frequencyPerWeek,
@@ -282,7 +281,7 @@ class TrainingScheduleService {
 
     for (var cursor = simulationStart;
         !cursor.isAfter(simulationEnd);
-        cursor = cursor.add(const Duration(days: 1))) {
+        cursor = addDays(cursor, 1)) {
       final loggedType = logged[cursor];
       final isPatternTraining = cycle[index] != TrainingSessionType.rest;
 
@@ -343,7 +342,7 @@ class TrainingScheduleService {
     final days = [
       for (var cursor = displayStart;
           !cursor.isAfter(displayEnd);
-          cursor = cursor.add(const Duration(days: 1)))
+          cursor = addDays(cursor, 1))
         byDate[cursor]!,
     ];
     final selectedDay = byDate[selected] ?? byDate[today]!;
@@ -364,6 +363,31 @@ class TrainingScheduleService {
 
   static DateTime dateOnly(DateTime dateTime) =>
       DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+  /// [days] calendar days from [dateTime], keeping its time of day.
+  ///
+  /// Not `add(Duration(days: n))`: that adds n × 24 hours, so a walk that
+  /// crosses a daylight-saving change lands at 23:00 or 01:00 instead of
+  /// midnight, and a map keyed by local midnights stops finding its days.
+  /// That is how the Train tab went blank for everyone whose last workout
+  /// sat on the far side of a clock change.
+  static DateTime addDays(DateTime dateTime, int days) => DateTime(
+        dateTime.year,
+        dateTime.month,
+        dateTime.day + days,
+        dateTime.hour,
+        dateTime.minute,
+        dateTime.second,
+        dateTime.millisecond,
+        dateTime.microsecond,
+      );
+
+  /// Whole calendar days from [from] to [to], negative when [to] is the
+  /// earlier date. Counted in UTC so a 23- or 25-hour day is still one day.
+  static int daysBetween(DateTime from, DateTime to) =>
+      DateTime.utc(to.year, to.month, to.day)
+          .difference(DateTime.utc(from.year, from.month, from.day))
+          .inDays;
 
   static int _clampFrequency(int frequencyPerWeek) =>
       frequencyPerWeek.clamp(minFrequencyPerWeek, maxFrequencyPerWeek);
@@ -388,7 +412,7 @@ class TrainingScheduleService {
     var cursor = date;
     while (completedDates.contains(cursor)) {
       run++;
-      cursor = cursor.subtract(const Duration(days: 1));
+      cursor = addDays(cursor, -1);
     }
     return run == 0 ? 1 : run;
   }
@@ -422,7 +446,7 @@ class TrainingScheduleService {
     required DateTime baseDate,
     required DateTime targetDate,
   }) {
-    final daysBefore = baseDate.difference(targetDate).inDays;
+    final daysBefore = daysBetween(targetDate, baseDate);
     if (daysBefore <= 0) return baseIndex;
     return (baseIndex - daysBefore) % cycle.length;
   }

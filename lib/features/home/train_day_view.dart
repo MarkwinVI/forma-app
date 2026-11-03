@@ -67,11 +67,8 @@ class TrainDayViewResolver {
   /// went.
   static const int builtHorizonDays = 7;
 
-  static int daysBetween(DateTime from, DateTime to) {
-    return TrainingScheduleService.dateOnly(to)
-        .difference(TrainingScheduleService.dateOnly(from))
-        .inDays;
-  }
+  static int daysBetween(DateTime from, DateTime to) =>
+      TrainingScheduleService.daysBetween(from, to);
 
   static TrainDayPresentation resolve({
     required DateTime date,

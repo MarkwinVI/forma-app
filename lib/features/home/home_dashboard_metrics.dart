@@ -510,13 +510,13 @@ class HomeDashboardMetricsCalculator {
     DateTime? now,
   }) {
     final today = _dateOnly((now ?? DateTime.now()).toLocal());
-    final thisWeek = today.subtract(Duration(days: today.weekday - 1));
+    final thisWeek = TrainingScheduleService.addDays(today, 1 - today.weekday);
 
     final sessionsPerWeek = <DateTime, int>{};
     var completedThisWeek = 0;
     for (final workout in workouts) {
       final day = _dateOnly(workout.loggedAt.toLocal());
-      final week = day.subtract(Duration(days: day.weekday - 1));
+      final week = TrainingScheduleService.addDays(day, 1 - day.weekday);
       sessionsPerWeek[week] = (sessionsPerWeek[week] ?? 0) + 1;
       if (!day.isBefore(thisWeek) && !day.isAfter(today)) {
         completedThisWeek++;
@@ -525,12 +525,12 @@ class HomeDashboardMetricsCalculator {
 
     var cursor = thisWeek;
     if ((sessionsPerWeek[cursor] ?? 0) < plannedPerWeek) {
-      cursor = cursor.subtract(const Duration(days: 7));
+      cursor = TrainingScheduleService.addDays(cursor, -7);
     }
     var streakWeeks = 0;
     while ((sessionsPerWeek[cursor] ?? 0) >= plannedPerWeek) {
       streakWeeks++;
-      cursor = cursor.subtract(const Duration(days: 7));
+      cursor = TrainingScheduleService.addDays(cursor, -7);
     }
 
     return HomeStreakData(
@@ -666,11 +666,12 @@ class HomeDashboardMetricsCalculator {
 
       // The next step is due the day after the last workout. Rest steps whose
       // day has passed roll forward; training steps wait to be done.
-      var due =
-          completedToday ? today : lastWorkoutDate.add(const Duration(days: 1));
+      var due = completedToday
+          ? today
+          : TrainingScheduleService.addDays(lastWorkoutDate, 1);
       while (cycle[index] == TrainingSessionType.rest && due.isBefore(today)) {
         index = (index + 1) % cycle.length;
-        due = due.add(const Duration(days: 1));
+        due = TrainingScheduleService.addDays(due, 1);
       }
     }
 
@@ -783,7 +784,7 @@ class HomeDashboardMetricsCalculator {
 
     final currentIndex = todayPosition.clamp(0, cycle.length - 1);
     final today = _dateOnly(now ?? DateTime.now());
-    final startDate = today.subtract(Duration(days: currentIndex));
+    final startDate = TrainingScheduleService.addDays(today, -currentIndex);
     final totalSessions =
         cycle.where((session) => session != TrainingSessionType.rest).length;
     final completedSessions = cycle
@@ -798,7 +799,7 @@ class HomeDashboardMetricsCalculator {
       days: List.generate(
         cycle.length,
         (index) => HomeWeekStripDay(
-          date: startDate.add(Duration(days: index)),
+          date: TrainingScheduleService.addDays(startDate, index),
           sessionType: cycle[index],
           isCurrent: index == currentIndex,
           isCompleted: cycle[index] != TrainingSessionType.rest &&
@@ -1347,7 +1348,9 @@ class HomeDashboardMetricsCalculator {
       programType: programType,
       sessionItemsConfig: sessionItemsConfig,
       categoriesById: categoriesById,
-    ).where((option) => !paused.contains(option.sourceSkillCategoryId)).toList();
+    )
+        .where((option) => !paused.contains(option.sourceSkillCategoryId))
+        .toList();
     final trackOptions = trainingProgramService.activeTrackOptions(skillTracks);
     final options = trackOptions.isNotEmpty
         ? [...configuredOptions, ...trackOptions]
@@ -1761,11 +1764,11 @@ class HomeDashboardMetricsCalculator {
     required DateTime now,
   }) {
     final currentWindowStart =
-        _dateOnly(now).subtract(const Duration(days: 13));
+        TrainingScheduleService.addDays(_dateOnly(now), -13);
     final previousWindowEnd =
-        currentWindowStart.subtract(const Duration(days: 1));
+        TrainingScheduleService.addDays(currentWindowStart, -1);
     final previousWindowStart =
-        previousWindowEnd.subtract(const Duration(days: 13));
+        TrainingScheduleService.addDays(previousWindowEnd, -13);
     var personalBest = 0;
     var currentWindowBest = 0;
     var previousWindowBest = 0;

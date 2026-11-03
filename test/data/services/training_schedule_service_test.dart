@@ -361,5 +361,100 @@ void main() {
       expect(window.today.date, DateTime(2026, 6, 15));
       expect(window.days.last.date, DateTime(2026, 6, 22));
     });
+
+    group('across a daylight-saving change', () {
+      // The local zone's first clock change in 2026, found rather than
+      // assumed: on a machine whose zone has none the walk below still runs,
+      // it just has no change to cross.
+      DateTime? transition;
+      for (var day = DateTime(2026, 1, 2);
+          day.year == 2026;
+          day = TrainingScheduleService.addDays(day, 1)) {
+        final before = TrainingScheduleService.addDays(day, -1);
+        if (day.timeZoneOffset != before.timeZoneOffset) {
+          transition = day;
+          break;
+        }
+      }
+      final anchor = TrainingScheduleService.addDays(
+        transition ?? DateTime(2026, 11, 2),
+        -10,
+      );
+      final now = TrainingScheduleService.addDays(anchor, 19)
+          .add(const Duration(hours: 9));
+
+      test('addDays keeps local midnight on every day of the year', () {
+        var day = DateTime(2026, 1, 1);
+        for (var i = 0; i < 365; i++) {
+          final next = TrainingScheduleService.addDays(day, 1);
+          expect(next.hour, 0, reason: 'after $day');
+          expect(next.difference(day).inHours, inInclusiveRange(23, 25));
+          day = next;
+        }
+        expect(day, DateTime(2027, 1, 1));
+        expect(
+          TrainingScheduleService.addDays(DateTime(2026, 10, 30), 4),
+          DateTime(2026, 11, 3),
+        );
+        expect(
+          TrainingScheduleService.addDays(DateTime(2026, 11, 3), -4),
+          DateTime(2026, 10, 30),
+        );
+      });
+
+      test('daysBetween counts calendar days, not 24-hour spans', () {
+        final later = TrainingScheduleService.addDays(anchor, 19);
+        expect(TrainingScheduleService.daysBetween(anchor, later), 19);
+        expect(TrainingScheduleService.daysBetween(later, anchor), -19);
+        expect(
+          TrainingScheduleService.daysBetween(
+            anchor.add(const Duration(hours: 23)),
+            later.add(const Duration(minutes: 1)),
+          ),
+          19,
+        );
+      });
+
+      test('a window anchored on the far side of it still finds today', () {
+        // Used to throw "Null check operator used on a null value": the day
+        // walk drifted an hour past the change, so no key in the map was
+        // today's midnight — and the Train tab became the gray error box for
+        // anyone whose last workout predated the change.
+        final window = service.buildWindow(
+          programType: TrainingProgramType.fullBody,
+          frequencyPerWeek: 3,
+          currentStepIndex: 0,
+          currentSessionType: TrainingSessionType.fullBody,
+          lastPlannedWorkoutAt: anchor.add(const Duration(hours: 18)),
+          lastCompletedSessionType: TrainingSessionType.fullBody,
+          completedSessions: {anchor: TrainingSessionType.fullBody},
+          daysBeforeToday: 0,
+          daysAfterToday: 13,
+          now: now,
+        );
+
+        expect(window.today.date, TrainingScheduleService.dateOnly(now));
+        expect(window.days, hasLength(14));
+        expect(window.days.first.date, window.today.date);
+        for (final day in window.days) {
+          expect(day.date.hour, 0, reason: '${day.date}');
+        }
+
+        // The default window — this week, Monday first — crosses it too.
+        final week = service.buildWindow(
+          programType: TrainingProgramType.fullBody,
+          frequencyPerWeek: 3,
+          currentStepIndex: 0,
+          currentSessionType: TrainingSessionType.fullBody,
+          lastPlannedWorkoutAt: anchor.add(const Duration(hours: 18)),
+          lastCompletedSessionType: TrainingSessionType.fullBody,
+          completedSessions: {anchor: TrainingSessionType.fullBody},
+          now: now,
+        );
+        expect(week.days, hasLength(7));
+        expect(week.days.first.date.weekday, DateTime.monday);
+        expect(week.days.any((day) => day.isToday), isTrue);
+      });
+    });
   });
 }
