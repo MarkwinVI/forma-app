@@ -27,3 +27,22 @@ touches three places, and only the first is the source of truth:
 `flutter build appbundle` regenerates it.
 
 Commit the bump as `Version X.Y.Z+N: <what it ships>`.
+
+## Archiving after a simulator build
+
+Flutter keeps the native-asset frameworks it builds for Dart packages
+(today just `objective_c`, pulled in by `path_provider_foundation`) in
+`build/native_assets/ios/`, and that cache is not keyed by SDK. After any
+`flutter build ios --simulator` or `flutter run` on a simulator, the
+cached framework is a simulator binary, and an Xcode archive embeds it as
+is: App Store Connect then rejects the upload with "Invalid executable …
+references an unsupported platform in the x86_64 slice" for
+`Runner.app/Frameworks/objective_c.framework`. Before archiving, run
+
+```bash
+rm -rf build/native_assets && flutter build ios --release --no-codesign
+```
+
+which rebuilds the framework for device (platform iOS, arm64 only); the
+archive then picks that one up. `otool -l build/native_assets/ios/objective_c.framework/objective_c | grep platform`
+should print `platform 2` only.
