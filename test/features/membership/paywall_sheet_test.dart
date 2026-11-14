@@ -37,7 +37,7 @@ void main() {
     return (s, gateway);
   }
 
-  Future<Future<bool>> open(
+  Future<Future<PaywallResult>> open(
     WidgetTester tester,
     MembershipService service,
   ) async {
@@ -45,7 +45,7 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    late Future<bool> result;
+    late Future<PaywallResult> result;
     await tester.pumpWidget(MaterialApp(
       home: Builder(
         builder: (context) => Scaffold(
@@ -105,7 +105,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.purchased, [MembershipProducts.monthly]);
-    expect(await result, isTrue);
+    expect(await result, PaywallResult.purchased);
     expect(s.current?.entitled, isTrue);
     expect(find.text('Start free trial'), findsNothing);
     // Apple's own sheet has already confirmed; nothing of ours follows.

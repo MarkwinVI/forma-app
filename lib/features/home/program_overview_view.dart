@@ -187,35 +187,28 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
   }
 
   Future<void> _openDaysSheet() async {
-    final picked = await showModalBottomSheet<List<int>>(
+    final days = await showModalBottomSheet<int>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (_) => _DaysSheet(
-        currentMask: _dayMask,
-        weekPlanBuilder: (mask) => _weekPlan(mask, _logic.program.programType),
-      ),
+      builder: (_) => _DaysSheet(current: _trainingDaysPerWeek),
     );
 
-    if (picked == null || !mounted) return;
+    if (days == null || !mounted) return;
 
-    final days = picked.where((day) => day == 1).length;
-    // Both the count and the week itself are stored: the count drives volume
-    // and streak targets, the mask decides which days actually train.
+    // Only the count is the user's to set. Which days it lands on is
+    // theirs week by week, so a layout stored by an older version goes:
+    // the program falls back to the template for the new count.
+    final setup = {..._setupAnswers}..remove('training_days');
     await _saveLogic(
       frequencyPerWeek: days,
-      setupAnswers: {
-        ..._setupAnswers,
-        'days_per_week': days,
-        'training_days': picked,
-      },
-      toast: 'Schedule updated',
+      setupAnswers: {...setup, 'days_per_week': days},
+      toast: 'Sessions per week updated',
     );
     AnalyticsService.capture('program_schedule_changed', properties: {
       'days_per_week': days,
-      'training_days': picked,
     });
   }
 
@@ -578,8 +571,8 @@ class _ProgramOverviewViewState extends State<ProgramOverviewView> {
                       onTap: _openEquipmentSheet,
                     ),
                     _ProgramRow(
-                      label: 'Training days',
-                      value: '$_trainingDaysPerWeek days / week',
+                      label: 'Sessions per week',
+                      value: '$_trainingDaysPerWeek',
                       onTap: _openDaysSheet,
                     ),
                     _ProgramRow(
@@ -1611,11 +1604,10 @@ class _AdjustStepButton extends StatelessWidget {
 }
 
 class _DaysSheet extends StatefulWidget {
-  /// Monday-first 0/1 mask of the week as it stands today.
-  final List<int> currentMask;
-  final List<TrainingSessionType> Function(List<int> mask) weekPlanBuilder;
+  /// Sessions a week as the program stands today.
+  final int current;
 
-  const _DaysSheet({required this.currentMask, required this.weekPlanBuilder});
+  const _DaysSheet({required this.current});
 
   @override
   State<_DaysSheet> createState() => _DaysSheetState();
@@ -1624,51 +1616,18 @@ class _DaysSheet extends StatefulWidget {
 class _DaysSheetState extends State<_DaysSheet> {
   static const _dayOptions = [1, 2, 3, 4, 5, 6, 7];
 
-  late List<int> _mask;
+  late int _picked = widget.current;
 
-  @override
-  void initState() {
-    super.initState();
-    _mask = List.of(widget.currentMask);
-  }
-
-  int get _days => _mask.where((day) => day == 1).length;
-
-  bool get _dirty {
-    for (var i = 0; i < _mask.length; i++) {
-      if (_mask[i] != widget.currentMask[i]) return true;
-    }
-    return false;
-  }
-
-  /// Picking a count lays the week out from the default template, so the two
-  /// controls always agree: the chips read the count back off the week.
-  void _pickCount(int days) {
-    setState(() {
-      _mask = List.of(
-        TrainingScheduleService.weekTemplates[days] ?? widget.currentMask,
-      );
-    });
-  }
-
-  /// Tapping a day flips just that day and lets the chip row follow. The last
-  /// training day can't be turned off — a week with no sessions has nothing
-  /// to schedule.
-  void _toggleDay(int index) {
-    if (_mask[index] == 1 && _days == 1) return;
-    setState(() => _mask[index] = _mask[index] == 1 ? 0 : 1);
-  }
+  bool get _dirty => _picked != widget.current;
 
   @override
   Widget build(BuildContext context) {
-    final plan = widget.weekPlanBuilder(_mask);
-
     return SheetShell(
-      title: 'Weekly schedule',
-      sub: 'Pick a number or tap the days themselves',
+      title: 'Sessions per week',
+      sub: 'How many times you train each week',
       footer: PillButton(
-        label: _dirty ? 'Save schedule' : 'No changes yet',
-        onTap: _dirty ? () => Navigator.of(context).pop(_mask) : null,
+        label: _dirty ? 'Save' : 'No changes yet',
+        onTap: _dirty ? () => Navigator.of(context).pop(_picked) : null,
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(0, 16, 0, 14),
@@ -1686,12 +1645,12 @@ class _DaysSheetState extends State<_DaysSheet> {
                   for (final option in _dayOptions) ...[
                     if (option != _dayOptions.first) const SizedBox(width: 8),
                     Pressable(
-                      onTap: () => _pickCount(option),
+                      onTap: () => setState(() => _picked = option),
                       child: Container(
                         width: 62,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: option == _days
+                          color: option == _picked
                               ? AppColors.accentPrimary
                               : AppColors.surface,
                           borderRadius: BorderRadius.circular(15),
@@ -1704,18 +1663,18 @@ class _DaysSheetState extends State<_DaysSheet> {
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
-                                color: option == _days
+                                color: option == _picked
                                     ? Colors.white
                                     : AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              option == 1 ? 'day' : 'days',
+                              '/ week',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: option == _days
+                                color: option == _picked
                                     ? Colors.white.withValues(alpha: 0.8)
                                     : AppColors.textMuted,
                               ),
@@ -1728,23 +1687,11 @@ class _DaysSheetState extends State<_DaysSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-            // The same week strip the Workouts section shows, made editable:
-            // tapping a day toggles it between training and rest.
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ProgramWeekStrip(
-                weekCycle: plan,
-                onDayTap: _toggleDay,
-                nodeSize: 24,
-                withDivider: false,
-              ),
-            ),
             const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
               child: Text(
-                'Sessions repeat in order. Miss one and it slots into your '
-                'next training day.',
+                'Train on any days you like. Sessions repeat in order, and '
+                'one you don’t get to carries into next week.',
                 style: TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textMuted,

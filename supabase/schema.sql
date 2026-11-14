@@ -320,6 +320,7 @@ create table public.user_training_program_state (
   next_session_type  text not null, -- 'full_body' | 'push' | 'pull' | 'upper' | 'lower' | 'rest'
   last_session_type  text,
   last_completed_at  timestamptz,
+  first_workout_on   date, -- booked in the activation flow; see 2026-11-06_first_workout.sql
   updated_at         timestamptz default now() not null,
   check (next_step_index >= 0)
 );

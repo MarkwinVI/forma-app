@@ -36,11 +36,13 @@ class _MembershipLockDockState extends State<MembershipLockDock> {
     }, onError: (Object _) {});
   }
 
-  Future<void> _open() => showPaywallSheet(
-        context,
-        service: widget.service,
-        source: 'lock_dock',
-      );
+  Future<void> _open() async {
+    await showPaywallSheet(
+      context,
+      service: widget.service,
+      source: 'lock_dock',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

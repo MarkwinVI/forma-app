@@ -14,15 +14,25 @@ import '../../data/services/membership_service.dart';
 import '../../data/services/purchases_gateway.dart';
 import 'membership_copy.dart';
 
-/// Opens the plan sheet over everything. Resolves true once the user is a
-/// member — a purchase or a restore that found one — and false otherwise.
-Future<bool> showPaywallSheet(
+/// How the plan sheet closed. [purchased] and [restored] both leave a
+/// member behind; only a purchase is the first time the app opens up.
+enum PaywallResult {
+  purchased,
+  restored,
+  dismissed;
+
+  bool get entitled => this != PaywallResult.dismissed;
+}
+
+/// Opens the plan sheet over everything. Resolves to how it closed: a
+/// purchase, a restore that found a membership, or neither.
+Future<PaywallResult> showPaywallSheet(
   BuildContext context, {
   required MembershipService service,
   required String source,
 }) async {
   AnalyticsService.screen('paywall', properties: {'source': source});
-  final result = await showModalBottomSheet<bool>(
+  final result = await showModalBottomSheet<PaywallResult>(
     context: context,
     useRootNavigator: true,
     isScrollControlled: true,
@@ -31,7 +41,7 @@ Future<bool> showPaywallSheet(
   );
   // No confirmation of our own: Apple's own "You're all set" sheet has
   // just said it, and the lock lifting says the rest.
-  return result ?? false;
+  return result ?? PaywallResult.dismissed;
 }
 
 /// The plans, priced by the store, with the trial spelled out when one is
@@ -120,7 +130,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
       final membership = await widget.service.purchase(selected);
       if (!mounted) return;
       if (membership.entitled) {
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop(PaywallResult.purchased);
         return;
       }
       setState(() => _message =
@@ -146,7 +156,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
       final membership = await widget.service.restore();
       if (!mounted) return;
       if (membership.entitled) {
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop(PaywallResult.restored);
         return;
       }
       setState(
@@ -203,7 +213,8 @@ class _PaywallSheetState extends State<PaywallSheet> {
                 top: 8,
                 child: Pressable(
                   semanticLabel: 'Close',
-                  onTap: () => Navigator.of(context).pop(false),
+                  onTap: () =>
+                      Navigator.of(context).pop(PaywallResult.dismissed),
                   child: Container(
                     width: 32,
                     height: 32,

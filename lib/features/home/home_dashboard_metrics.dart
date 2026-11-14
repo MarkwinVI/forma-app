@@ -715,7 +715,7 @@ class HomeDashboardMetricsCalculator {
       ctaLabel: recommendation.isRestDay ? 'View plan' : 'Start $sessionTitle',
       isRestDay: recommendation.isRestDay,
       exerciseCount: recommendation.items.length,
-      estimatedDurationMinutes: _estimateWorkoutMinutes(recommendation),
+      estimatedDurationMinutes: estimateWorkoutMinutes(recommendation),
       focusTags: tags.toList(),
       plannedExercises: plannedExercises,
       mixSegments: _buildTodayMixSegments(recommendation),
@@ -1237,7 +1237,8 @@ class HomeDashboardMetricsCalculator {
     }
   }
 
-  static int _estimateWorkoutMinutes(
+  /// A rough length for a session, from what each kind of exercise takes.
+  static int estimateWorkoutMinutes(
       DailyTrainingRecommendation recommendation) {
     if (recommendation.isRestDay) return 0;
 

@@ -36,9 +36,8 @@ void main() {
       StoreEntitlement(
         isActive: active,
         productId: productId,
-        expiresAt: openEnded
-            ? null
-            : expiresAt ?? now.add(const Duration(days: 5)),
+        expiresAt:
+            openEnded ? null : expiresAt ?? now.add(const Duration(days: 5)),
         willRenew: willRenew,
         isTrial: trial,
         isGranted: granted,

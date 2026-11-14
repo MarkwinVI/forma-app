@@ -74,8 +74,7 @@ void main() {
         trialEligible: false,
       );
 
-  testWidgets(
-      'without a membership, the page is inert under the lock dock',
+  testWidgets('without a membership, the page is inert under the lock dock',
       (tester) async {
     final (s, _) = await service();
     final taps = await pump(tester, s);

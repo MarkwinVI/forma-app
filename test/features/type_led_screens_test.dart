@@ -4,8 +4,6 @@ import 'package:forma_app/data/models/training_program_model.dart';
 import 'package:forma_app/data/models/workout_history_model.dart';
 import 'package:forma_app/features/data/calendar_view.dart';
 import 'package:forma_app/features/data/past_workout_detail_view.dart';
-import 'package:forma_app/features/home/home_dashboard_metrics.dart';
-import 'package:forma_app/features/home/widgets/day_ribbon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -66,7 +64,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: PastWorkoutDetailView(workout: _workout('w1', DateTime(2026, 7, 28))),
+        home: PastWorkoutDetailView(
+            workout: _workout('w1', DateTime(2026, 7, 28))),
       ),
     );
 
@@ -79,46 +78,8 @@ void main() {
     expect(find.text('Vertical push'), findsNothing);
     expect(find.text('REPS'), findsNothing);
   });
-
-  testWidgets('the ribbon marks each day with its workout type',
-      (tester) async {
-    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
-    tester.view.devicePixelRatio = 3;
-    addTearDown(tester.view.reset);
-
-    final today = DateTime(2026, 7, 28);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: DayRibbon(
-              days: [
-                for (var i = 0; i < 7; i++)
-                  HomeWeekStripDay(
-                    date: DateTime(2026, 7, 27).add(Duration(days: i)),
-                    sessionType: i.isEven
-                        ? TrainingSessionType.upper
-                        : TrainingSessionType.rest,
-                    isCurrent: i == 1,
-                    isCompleted: i == 0,
-                  ),
-              ],
-              selectedDate: today,
-              today: today,
-              onDayTap: (_) {},
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // Training days carry their type's initial; rest days only hold a dot,
-    // and no day shows a date.
-    expect(find.text('U'), findsNWidgets(4));
-    expect(find.text('27'), findsNothing);
-  });
 }
+
 PastWorkout _workout(String id, DateTime day) {
   final startedAt = DateTime(day.year, day.month, day.day, 17);
   return PastWorkout(

@@ -16,12 +16,23 @@ class RestDayView extends StatefulWidget {
   final String? nextWhen;
   final VoidCallback? onTrainSomethingElse;
 
+  /// Starts the next session today, from the card's "next" row. Null
+  /// leaves the row as words only.
+  final VoidCallback? onStartToday;
+
+  /// Drawn inside the Train tab's program card rather than filling a
+  /// page: the rings take a fixed height instead of whatever is left, and
+  /// "next up" is a ruled line of the card rather than a card of its own.
+  final bool contained;
+
   const RestDayView({
     super.key,
     this.title = 'Nothing to do today',
     this.nextTitle,
     this.nextWhen,
     this.onTrainSomethingElse,
+    this.onStartToday,
+    this.contained = false,
   });
 
   @override
@@ -62,8 +73,159 @@ class _RestDayViewState extends State<RestDayView>
     super.dispose();
   }
 
+  /// The breathing rings, scaled to whatever box they are given.
+  Widget _rings() {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_controller.value);
+        return FittedBox(
+          fit: BoxFit.contain,
+          child: SizedBox(
+            width: 320,
+            height: 320,
+            child: _BreathingRings(progress: t),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Inside the program card: the same rings and words at a fixed size,
+  /// so the card holds the whole rest day and nothing spills past it.
+  Widget _buildContained() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 14),
+        SizedBox(height: 196, child: Center(child: _rings())),
+        const SizedBox(height: 18),
+        const Text(
+          'RECOVERY',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'RobotoMono',
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
+            color: AppColors.accentPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          widget.title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.54,
+          ),
+        ),
+        if (widget.nextTitle != null)
+          Container(
+            margin: const EdgeInsets.only(top: 18),
+            padding: const EdgeInsets.only(top: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.divider)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // When it is, over what it is: "TOMORROW", "IN 2 DAYS".
+                      Text(
+                        (widget.nextWhen ?? 'Next up').toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'RobotoMono',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.nextTitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (widget.onStartToday != null) ...[
+                  const SizedBox(width: 12),
+                  Pressable(
+                    onTap: widget.onStartToday,
+                    semanticLabel: 'Start ${widget.nextTitle} today',
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 18,
+                      ),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Start today',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _nextUpText() {
+    return Text.rich(
+      TextSpan(
+        text: widget.nextTitle,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+        children: [
+          if (widget.nextWhen != null)
+            TextSpan(
+              text: ' · ${widget.nextWhen}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.contained) return _buildContained();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -76,20 +238,7 @@ class _RestDayViewState extends State<RestDayView>
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 320),
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  final t = Curves.easeInOut.transform(_controller.value);
-                  return FittedBox(
-                    fit: BoxFit.contain,
-                    child: SizedBox(
-                      width: 320,
-                      height: 320,
-                      child: _BreathingRings(progress: t),
-                    ),
-                  );
-                },
-              ),
+              child: _rings(),
             ),
           ),
         ),
@@ -133,28 +282,7 @@ class _RestDayViewState extends State<RestDayView>
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: widget.nextTitle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      children: [
-                        if (widget.nextWhen != null)
-                          TextSpan(
-                            text: ' · ${widget.nextWhen}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
+                Expanded(child: _nextUpText()),
               ],
             ),
           ),

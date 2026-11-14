@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../core/format/dates.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/polished.dart';
 import '../../data/models/training_program_model.dart';
 
 /// The workouts-by-type marker language: every workout type is a circled
-/// initial, and the week is seven columns each carrying its type's marker.
-/// Shared between the Program tab's strip and the schedule sheet so the
-/// day ↔ type mapping reads the same everywhere, without a legend.
+/// initial, so a workout reads the same wherever it is named, without a
+/// legend.
 
 /// The type's initial in its marker. Push and Pull collide on P, so they
 /// widen to two-character codes — colour helps but never carries the
@@ -55,11 +52,16 @@ class ProgramTypeNode extends StatelessWidget {
   /// what happened to its day (green for trained, red for missed).
   final Color? color;
 
+  /// Solid rather than outlined: the Train ribbon marks the booked first
+  /// workout this way, the one day on the strip the plan is waiting for.
+  final bool filled;
+
   const ProgramTypeNode({
     super.key,
     required this.sessionType,
     this.size = 20,
     this.color,
+    this.filled = false,
   });
 
   @override
@@ -75,9 +77,9 @@ class ProgramTypeNode extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xB3111114),
+        color: filled ? base : const Color(0xB3111114),
         border: Border.all(
-          color: base.withValues(alpha: 0.55 * dim),
+          color: filled ? base : base.withValues(alpha: 0.55 * dim),
           width: 1.3,
         ),
       ),
@@ -88,127 +90,10 @@ class ProgramTypeNode extends StatelessWidget {
           fontFamily: 'RobotoMono',
           fontSize: size * (letter.length > 1 ? 0.36 : 0.48),
           fontWeight: FontWeight.w700,
-          color: base.withValues(alpha: 0.95 * dim),
+          color: filled ? Colors.white : base.withValues(alpha: 0.95 * dim),
           letterSpacing: -0.2,
           height: 1,
         ),
-      ),
-    );
-  }
-}
-
-/// A rest day's marker: a faint dot holding the column's place.
-class ProgramRestDot extends StatelessWidget {
-  final double size;
-
-  const ProgramRestDot({super.key, this.size = 20});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Center(
-        child: Container(
-          width: 3.5,
-          height: 3.5,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.14),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The week as seven columns, each training day carrying its type's marker.
-/// Read left to right it IS the week.
-///
-/// [onDayTap] makes each column its own target (the schedule sheet's day
-/// toggles); [onTap] makes the whole strip one door (the Program tab, where
-/// any tap opens the schedule).
-class ProgramWeekStrip extends StatelessWidget {
-  /// Monday-first, seven entries, rest days included.
-  final List<TrainingSessionType> weekCycle;
-  final VoidCallback? onTap;
-  final ValueChanged<int>? onDayTap;
-  final double nodeSize;
-  final bool withDivider;
-
-  /// Pins the first and last columns to the strip's edges, so the markers
-  /// line up with the content rows around it instead of sitting centered
-  /// inside their seventh of the width.
-  final bool flush;
-
-  const ProgramWeekStrip({
-    super.key,
-    required this.weekCycle,
-    this.onTap,
-    this.onDayTap,
-    this.nodeSize = 22,
-    this.withDivider = true,
-    this.flush = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final strip = Container(
-      padding: const EdgeInsets.only(top: 14, bottom: 20),
-      decoration: BoxDecoration(
-        border: withDivider
-            ? const Border(bottom: BorderSide(color: AppColors.divider))
-            : null,
-      ),
-      child: Row(
-        mainAxisAlignment:
-            flush ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
-        children: [
-          for (var i = 0; i < weekCycle.length; i++)
-            if (flush)
-              SizedBox(width: nodeSize, child: _column(context, i))
-            else
-              Expanded(child: _column(context, i)),
-        ],
-      ),
-    );
-
-    return onTap == null ? strip : Pressable(onTap: onTap, child: strip);
-  }
-
-  Widget _column(BuildContext context, int index) {
-    final sessionType = weekCycle[index];
-    final trains = sessionType != TrainingSessionType.rest;
-
-    final column = Column(
-      children: [
-        Text(
-          FormaDates.weekdayLetter(context, index),
-          style: TextStyle(
-            fontFamily: 'RobotoMono',
-            fontSize: 10.5,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: trains ? AppColors.textSecondary : AppColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: 8),
-        trains
-            ? ProgramTypeNode(sessionType: sessionType, size: nodeSize)
-            : ProgramRestDot(size: nodeSize),
-      ],
-    );
-
-    if (onDayTap == null) return column;
-    return Pressable(
-      onTap: () => onDayTap!(index),
-      semanticLabel: '${FormaDates.weekdayLongByIndex(context, index)}, '
-          '${trains ? sessionType.label : 'Rest day'}. '
-          'Tap to ${trains ? 'make it a rest day' : 'train this day'}',
-      child: Padding(
-        // Breathing room so a 22px marker still makes a honest tap target.
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: column,
       ),
     );
   }

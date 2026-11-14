@@ -63,6 +63,8 @@ flutter:
   # equipment picker, one per EquipmentItem.
   assets:
     - assets/equipment/
+    # The photos behind the Train tab's quick sessions.
+    - assets/quick_sessions/
 
   # Roboto Mono is bundled (SIL OFL 1.1, assets/fonts/RobotoMono-OFL.txt) so
   # the mono eyebrows render offline and on first launch without a fetch.

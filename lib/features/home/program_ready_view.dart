@@ -124,12 +124,13 @@ class _ProgramReadyViewState extends State<ProgramReadyView>
   }
 
   Future<void> _startTrial() async {
-    final entitled = await showPaywallSheet(
+    final result = await showPaywallSheet(
       context,
       service: widget.service,
       source: 'program_ready',
     );
-    if (entitled && mounted) widget.onDone();
+    if (!result.entitled || !mounted) return;
+    widget.onDone();
   }
 
   void _notNow() {

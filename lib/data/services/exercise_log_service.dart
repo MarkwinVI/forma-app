@@ -116,15 +116,11 @@ class ExerciseLogService {
   ) async {
     if (exerciseIds.isEmpty) return {};
 
-    final data = await _client
-        .from('workout_exercise_logs')
-        .select('''
+    final data = await _client.from('workout_exercise_logs').select('''
           exercise_id,
           sets,
           workout_sessions!inner(finished_at)
-        ''')
-        .eq('user_id', userId)
-        .inFilter('exercise_id', [
+        ''').eq('user_id', userId).inFilter('exercise_id', [
           // Each id's whole movement family, so a session logged under a
           // step's library twin still pre-fills the step's row.
           for (final id in exerciseIds) ...ExerciseCatalog.logIdsFor(id),
@@ -314,10 +310,10 @@ class ExerciseLogService {
         .select('exercise_id, workout_session_id, sets')
         .eq('user_id', userId)
         .inFilter('exercise_id', [
-          // A best set under the movement's other ids is still this
-          // exercise's best — a PB has to beat the whole movement's history.
-          for (final id in exerciseIds) ...ExerciseCatalog.logIdsFor(id),
-        ]);
+      // A best set under the movement's other ids is still this
+      // exercise's best — a PB has to beat the whole movement's history.
+      for (final id in exerciseIds) ...ExerciseCatalog.logIdsFor(id),
+    ]);
 
     final bests = <String, int>{};
     for (final row in data as List) {

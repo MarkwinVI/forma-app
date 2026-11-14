@@ -141,7 +141,8 @@ void main() {
     expect(wheel.center.dx, moreOrLessEquals(393 / 2, epsilon: 1));
     final space = tester.getRect(find.byType(SingleChildScrollView));
     final map = tester.getRect(
-      find.ancestor(of: find.byType(SkillWheel), matching: find.byType(Column))
+      find
+          .ancestor(of: find.byType(SkillWheel), matching: find.byType(Column))
           .first,
     );
     expect(map.center.dy, moreOrLessEquals(space.center.dy, epsilon: 1));

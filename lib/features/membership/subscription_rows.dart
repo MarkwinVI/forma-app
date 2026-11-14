@@ -37,11 +37,13 @@ class _SubscriptionRowsState extends State<SubscriptionRows> {
     }, onError: (Object _) {});
   }
 
-  Future<void> _openPaywall() => showPaywallSheet(
-        context,
-        service: widget.service,
-        source: 'profile',
-      );
+  Future<void> _openPaywall() async {
+    await showPaywallSheet(
+      context,
+      service: widget.service,
+      source: 'profile',
+    );
+  }
 
   Future<void> _restore() async {
     if (_restoring) return;
