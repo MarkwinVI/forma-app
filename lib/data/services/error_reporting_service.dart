@@ -9,24 +9,27 @@ import 'auth_service.dart';
 
 /// Crash and error reporting, wrapped so the rest of the app never talks to
 /// Sentry directly. [run] starts the SDK before anything else in `main`, so
-/// a throw anywhere in startup is reported like any other. With no DSN
-/// configured the SDK stays off and every call here is a silent no-op, so
-/// error reporting can never take the app down with it.
+/// a throw anywhere in startup is reported like any other. Only release
+/// builds report: in debug and profile builds, or with no DSN configured,
+/// the SDK stays off and every call here is a silent no-op, so error
+/// reporting can never take the app down with it.
 class ErrorReportingService {
   /// Starts Sentry, then runs [startApp] inside its error zone. Uncaught
   /// Flutter errors — a build that throws — and uncaught Dart errors are
   /// reported without further wiring. The release is the bundle id at the
   /// version and build (`tryforma.co@1.1.4+17` on iOS, `co.tryforma.app@…`
-  /// on Android) and the environment is `debug`, `profile` or `production`
-  /// by build mode, both set by the SDK.
+  /// on Android) and the environment is `production`, both set by the SDK.
   static Future<void> run(FutureOr<void> Function() startApp) {
     return SentryFlutter.init(
       (options) {
         options
-          ..dsn = AppConfig.sentryDsn
-          // Tracing: app start and screen navigation timing. Every run in a
-          // debug build, one in ten in production so it stays within quota.
-          ..tracesSampleRate = kReleaseMode ? 0.1 : 1.0;
+          // Release builds only: a debug or profile build gets no DSN, which
+          // leaves the SDK off, so errors hit while developing stay out of
+          // the issue list and the quota.
+          ..dsn = kReleaseMode ? AppConfig.sentryDsn : ''
+          // Tracing: app start and screen navigation timing, one run in ten
+          // so it stays within quota.
+          ..tracesSampleRate = 0.1;
         // sendDefaultPii stays off: no IP address on reports. The one
         // personal field attached is the account id, from [bindUser].
       },

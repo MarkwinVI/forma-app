@@ -64,12 +64,13 @@ archive fails.
 Sentry (org `forma-rf`, project `forma`, EU region) receives uncaught
 Flutter and Dart errors through `ErrorReportingService` in
 `lib/data/services/error_reporting_service.dart`, which `main` runs first.
-The DSN is a public key and lives in `AppConfig.sentryDsn`; the release is
-the bundle id at the version and build (`tryforma.co@X.Y.Z+N` on iOS,
-`co.tryforma.app@X.Y.Z+N` on Android) and the environment is `debug`,
-`profile` or `production` by build mode, both set by the SDK. Tracing samples every run
-in debug builds and one in ten in production. Reports carry the Supabase
-user id and nothing else personal.
+Only release builds report: debug and profile builds get no DSN, which
+leaves the SDK off. The DSN is a public key and lives in
+`AppConfig.sentryDsn`; the release is the bundle id at the version and
+build (`tryforma.co@X.Y.Z+N` on iOS, `co.tryforma.app@X.Y.Z+N` on Android)
+and the environment is `production`, both set by the SDK. Tracing samples
+one run in ten. Reports carry the Supabase user id and nothing else
+personal.
 
 Native (Swift/ObjC) frames in a crash from a store build are readable only
 after that build's dSYMs are uploaded. After the release build in the
