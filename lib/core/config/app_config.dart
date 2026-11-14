@@ -30,6 +30,12 @@ class AppConfig {
   static const String revenueCatTestStoreApiKey =
       'test_zIHzhmYIczwnJggkNbZkkPBnkeQ';
 
+  /// Sentry → forma-rf → Settings → Projects → the app's project → Client
+  /// Keys (DSN). Public like the keys above: it only says where error
+  /// reports go. Empty keeps the SDK off.
+  static const String sentryDsn =
+      'https://7a23ad3f4cb431b1fa23bf5a8f50423d@o4512392654946304.ingest.de.sentry.io/4512392695578704';
+
   /// The key the build talks to RevenueCat with — the Test Store in debug
   /// builds, the App Store everywhere else.
   static String get revenueCatApiKey =>

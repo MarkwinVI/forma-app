@@ -33,6 +33,8 @@ lib/generated_plugin_registrant.dart
 
 # Secrets — never commit real keys
 lib/core/config/app_config.local.dart
+# Sentry auth token for debug-symbol uploads (sentry_dart_plugin)
+sentry.properties
 
 # Local tool state
 .claude/

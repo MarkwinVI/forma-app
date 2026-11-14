@@ -36,11 +36,25 @@ dependencies:
   in_app_review: ^2.0.12
   facebook_app_events: ^0.30.5
   app_tracking_transparency: ^2.0.7
+  sentry_flutter: ^9.30.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  sentry_dart_plugin: ^3.4.0
+
+# Debug-symbol upload for readable native stack traces in Sentry, run after a
+# release build with `dart run sentry_dart_plugin`. The auth token it needs
+# comes from SENTRY_AUTH_TOKEN or a gitignored sentry.properties.
+sentry:
+  org: forma-rf
+  project: forma
+  upload_debug_symbols: true
+  upload_source_maps: false
+  upload_sources: false
+  # No repository is linked in Sentry, so commit association would only fail.
+  commits: false
 
 flutter:
   uses-material-design: true

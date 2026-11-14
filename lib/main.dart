@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
@@ -13,6 +14,7 @@ import 'data/models/onboarding_profile_model.dart';
 import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/dev_tools_service.dart';
+import 'data/services/error_reporting_service.dart';
 import 'data/services/membership_service.dart';
 import 'data/services/meta_ads_service.dart';
 import 'data/services/onboarding_service.dart';
@@ -25,9 +27,11 @@ import 'features/onboarding/program_setup_steps.dart';
 import 'features/progress/skill_wheel_bundle.dart';
 import 'features/shell/shell_view.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+/// Error reporting starts first, so a throw anywhere in startup is reported
+/// like any other. Its init also installs the widgets binding.
+Future<void> main() => ErrorReportingService.run(_start);
 
+Future<void> _start() async {
   await Future.wait([
     // Every screen is designed portrait. The platform has to allow landscape
     // so a video can turn sideways for fullscreen, so the lock lives here
@@ -44,8 +48,10 @@ Future<void> main() async {
     WeightUnitService.load(),
   ]);
 
-  // After Supabase: the first two read the restored auth session, and Meta
-  // hands the membership service its anonymous id. None of them throws.
+  // After Supabase: error reports carry the signed-in account from here on,
+  // the first two below read the restored auth session, and Meta hands the
+  // membership service its anonymous id. None of them throws.
+  ErrorReportingService.bindUser();
   await Future.wait([
     AnalyticsService.setup(),
     MembershipService.instance.setup(),
@@ -54,7 +60,7 @@ Future<void> main() async {
 
   _warmStartupData();
 
-  runApp(const FormaApp());
+  runApp(SentryWidget(child: const FormaApp()));
 }
 
 /// Fires a signed-in user's startup queries so they run behind the splash
@@ -82,6 +88,9 @@ class FormaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Forma',
       debugShowCheckedModeBanner: false,
+      // Route changes become breadcrumbs on error reports, and navigation
+      // spans in the runs that tracing samples.
+      navigatorObservers: [SentryNavigatorObserver()],
       // The copy is English; dates, month names and the 12/24-hour clock
       // follow the device. Every Material locale is accepted so the device
       // locale resolves instead of falling back to en_US.
