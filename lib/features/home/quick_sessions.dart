@@ -2,19 +2,45 @@
 /// a wake-up, a stretch, a little core — for the days and moments between
 /// program sessions. They sit beside the program and never replace it.
 ///
-/// This is the catalogue and its copy only. Running a session (timers,
-/// logging) is not built yet: the Train tab lists them and each has an
-/// intro page, and that is where the flow ends for now.
+/// This is the catalogue and its copy. The player that runs a session
+/// reads the same moves (quick_session_player.dart); nothing a quick
+/// session does is logged or feeds the program.
 library;
 
-/// One step of a quick session: what to do, and for how long.
+/// One step of a quick session: what to do, and for how long or how many.
+///
+/// A move is either timed — the player counts it down and moves on by
+/// itself — or counted, where the player waits to be told it is done. A
+/// hold is timed; a push-up is counted, since a clock on a strength move
+/// only hurries the reps.
 class QuickSessionMove {
   final String name;
 
-  /// "45 S", "60 S / SIDE" — printed in the mono voice beside the name.
-  final String amount;
+  /// Seconds of work for a timed move (each side's, when [perSide]); null
+  /// for a counted one.
+  final int? seconds;
 
-  const QuickSessionMove(this.name, this.amount);
+  /// The reps to aim for on a counted move; null for a timed one.
+  final int? reps;
+
+  /// Done once on the left and once on the right.
+  final bool perSide;
+
+  const QuickSessionMove.timed(this.name, int this.seconds,
+      {this.perSide = false})
+      : reps = null;
+
+  const QuickSessionMove.reps(this.name, int this.reps)
+      : seconds = null,
+        perSide = false;
+
+  bool get isTimed => seconds != null;
+
+  /// "45 S", "60 S / SIDE", "10×" — printed in the mono voice beside the
+  /// name.
+  String get amount => isTimed
+      ? '$seconds S${perSide ? ' / SIDE' : ''}'
+      : '$reps×';
 }
 
 /// What a session is for, which is how the Sessions list is grouped.
@@ -61,8 +87,11 @@ class QuickSession {
   /// Two or three sentences on the intro page.
   final String description;
 
-  /// How the moves run on: "NO REST", "20 S REST".
-  final String pacing;
+  /// Seconds of rest between two moves; 0 when they run on.
+  final int restSeconds;
+
+  /// How many times the list of moves is gone through.
+  final int rounds;
 
   /// "None", "Band, optional".
   final String equipment;
@@ -76,12 +105,16 @@ class QuickSession {
     required this.group,
     required this.image,
     required this.description,
-    required this.pacing,
     required this.equipment,
     required this.moves,
     this.kinds = const {},
     this.imageFocusY = 0,
+    this.restSeconds = 0,
+    this.rounds = 1,
   });
+
+  /// How the moves run on: "NO REST", "20 S REST".
+  String get pacing => restSeconds == 0 ? 'NO REST' : '$restSeconds S REST';
 
   /// "10 MIN" — the pill on a tile and a row.
   String get durationLabel => '$minutes MIN';
@@ -113,14 +146,14 @@ class QuickSessions {
     image: _bar,
     description: 'A short full-body wake-up. Light pushing, squatting and '
         'core work to get blood moving — easy enough to do before coffee.',
-    pacing: 'NO REST',
     equipment: 'None',
+    rounds: 2,
     moves: [
-      QuickSessionMove('Jumping Jacks', '45 S'),
-      QuickSessionMove('Push-Up (Incline)', '45 S'),
-      QuickSessionMove('Squat (Bodyweight)', '45 S'),
-      QuickSessionMove('Mountain Climbers', '45 S'),
-      QuickSessionMove('Plank', '45 S'),
+      QuickSessionMove.timed('Jumping Jacks', 45),
+      QuickSessionMove.timed('Push-Up (Incline)', 45),
+      QuickSessionMove.timed('Squat (Bodyweight)', 45),
+      QuickSessionMove.timed('Mountain Climbers', 45),
+      QuickSessionMove.timed('Plank', 45),
     ],
   );
 
@@ -133,13 +166,14 @@ class QuickSessions {
     image: _push,
     description: 'Easy push-up variations to groove the pattern and warm '
         'the shoulders, well short of a hard set.',
-    pacing: '20 S REST',
+    restSeconds: 20,
+    rounds: 2,
     equipment: 'None',
     moves: [
-      QuickSessionMove('Push-Up (Incline)', '40 S'),
-      QuickSessionMove('Push-Up (Knee)', '40 S'),
-      QuickSessionMove('Plank Shoulder Taps', '40 S'),
-      QuickSessionMove('Push-Up (Slow Lowering)', '40 S'),
+      QuickSessionMove.reps('Push-Up (Incline)', 10),
+      QuickSessionMove.reps('Push-Up (Knee)', 8),
+      QuickSessionMove.timed('Plank Shoulder Taps', 40),
+      QuickSessionMove.reps('Push-Up (Slow Lowering)', 5),
     ],
   );
 
@@ -153,14 +187,15 @@ class QuickSessions {
     image: _rail,
     description: 'Holds and slow reps for the trunk: the hollow position, '
         'planks from the front and the side, and control between them.',
-    pacing: '15 S REST',
+    restSeconds: 15,
+    rounds: 2,
     equipment: 'None',
     moves: [
-      QuickSessionMove('Hollow Hold', '30 S'),
-      QuickSessionMove('Plank', '45 S'),
-      QuickSessionMove('Dead Bug', '45 S'),
-      QuickSessionMove('Side Plank', '30 S / SIDE'),
-      QuickSessionMove('Hollow Rocks', '30 S'),
+      QuickSessionMove.timed('Hollow Hold', 30),
+      QuickSessionMove.timed('Plank', 45),
+      QuickSessionMove.timed('Dead Bug', 45),
+      QuickSessionMove.timed('Side Plank', 30, perSide: true),
+      QuickSessionMove.timed('Hollow Rocks', 30),
     ],
   );
 
@@ -174,14 +209,13 @@ class QuickSessions {
     image: _blue,
     description: 'Long, unhurried holds from the hips to the shoulders. '
         'Good at the end of a day, or the day after a hard session.',
-    pacing: 'NO REST',
     equipment: 'None',
     moves: [
-      QuickSessionMove('Child’s Pose', '60 S'),
-      QuickSessionMove('Cat-Cow', '60 S'),
-      QuickSessionMove('World’s Greatest Stretch', '45 S / SIDE'),
-      QuickSessionMove('Forward Fold', '60 S'),
-      QuickSessionMove('Chest Opener', '60 S'),
+      QuickSessionMove.timed('Child’s Pose', 60),
+      QuickSessionMove.timed('Cat-Cow', 60),
+      QuickSessionMove.timed('World’s Greatest Stretch', 45, perSide: true),
+      QuickSessionMove.timed('Forward Fold', 60),
+      QuickSessionMove.timed('Chest Opener', 60),
     ],
   );
 
@@ -196,14 +230,13 @@ class QuickSessions {
     imageFocusY: -0.4,
     description: 'Slow circles, slides and pulls that take the shoulders '
         'through their full range before or between pulling days.',
-    pacing: 'NO REST',
     equipment: 'Band, optional',
     moves: [
-      QuickSessionMove('Arm Circles', '60 S'),
-      QuickSessionMove('Wall Slides', '60 S'),
-      QuickSessionMove('Band Pull-Aparts', '60 S'),
-      QuickSessionMove('Thread the Needle', '45 S / SIDE'),
-      QuickSessionMove('Scapular Push-Up', '60 S'),
+      QuickSessionMove.timed('Arm Circles', 60),
+      QuickSessionMove.timed('Wall Slides', 60),
+      QuickSessionMove.timed('Band Pull-Aparts', 60),
+      QuickSessionMove.timed('Thread the Needle', 45, perSide: true),
+      QuickSessionMove.timed('Scapular Push-Up', 60),
     ],
   );
 
@@ -218,14 +251,13 @@ class QuickSessions {
     imageFocusY: 0.4,
     description: 'Opens the hips and lengthens the back of the legs, for '
         'the day after squats and hinges.',
-    pacing: 'NO REST',
     equipment: 'None',
     moves: [
-      QuickSessionMove('90/90 Hip Switches', '60 S'),
-      QuickSessionMove('Couch Stretch', '45 S / SIDE'),
-      QuickSessionMove('Hamstring Fold', '60 S'),
-      QuickSessionMove('Pigeon Pose', '45 S / SIDE'),
-      QuickSessionMove('Deep Squat Hold', '60 S'),
+      QuickSessionMove.timed('90/90 Hip Switches', 60),
+      QuickSessionMove.timed('Couch Stretch', 45, perSide: true),
+      QuickSessionMove.timed('Hamstring Fold', 60),
+      QuickSessionMove.timed('Pigeon Pose', 45, perSide: true),
+      QuickSessionMove.timed('Deep Squat Hold', 60),
     ],
   );
 

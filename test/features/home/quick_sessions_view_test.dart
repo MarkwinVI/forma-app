@@ -97,10 +97,14 @@ void main() {
       findsOneWidget,
     );
 
-    // Running a session is not built: the button says so.
+    // Start opens the player, on the pause before the first move.
     await tester.tap(find.text('Start session · 10 min'));
     await tester.pump();
-    expect(find.text('Quick sessions are coming soon.'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('GET READY'), findsOneWidget);
+
+    // Unmounts the player, and its timer with it.
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('the Train tab offers a few, and the way to the rest',

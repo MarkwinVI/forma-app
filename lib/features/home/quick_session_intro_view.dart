@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/polished.dart';
 import '../../core/widgets/type_led.dart';
 import '../../data/services/analytics_service.dart';
+import 'quick_session_player_view.dart';
 import 'quick_sessions.dart';
 import 'widgets/session_photo.dart';
 
@@ -33,8 +34,8 @@ Future<void> showQuickSessionIntro(
 /// what it needs, what it does — and a line that says the day's program is
 /// untouched by it.
 ///
-/// Starting one is not built yet; the button says so rather than opening
-/// something that is not there.
+/// Start opens the player; a session gone through to its end closes this
+/// page behind it, back to where the session was picked.
 class QuickSessionIntroView extends StatelessWidget {
   final QuickSession session;
 
@@ -48,15 +49,9 @@ class QuickSessionIntroView extends StatelessWidget {
     this.plannedToday,
   });
 
-  void _start(BuildContext context) {
-    AnalyticsService.capture('quick_session_start_tapped', properties: {
-      'session': session.id,
-    });
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('Quick sessions are coming soon.')),
-      );
+  Future<void> _start(BuildContext context) async {
+    final finished = await showQuickSessionPlayer(context, session: session);
+    if (finished == true && context.mounted) Navigator.of(context).pop();
   }
 
   @override
