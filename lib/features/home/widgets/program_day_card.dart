@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/polished.dart';
 import '../../../core/widgets/type_led.dart';
+import 'rest_day_view.dart';
 import 'today_workout_card.dart';
 
 /// The Train tab's main container: the day of the program being read, as
@@ -29,6 +30,11 @@ class ProgramDayCard extends StatelessWidget {
   final Widget? body;
   final Widget? actions;
 
+  /// Whether [body] takes the height the card is given beyond its own,
+  /// which keeps [actions] on the card's bottom edge. Only for a card
+  /// whose height is set from outside.
+  final bool fillBody;
+
   const ProgramDayCard({
     super.key,
     this.kicker,
@@ -38,6 +44,7 @@ class ProgramDayCard extends StatelessWidget {
     this.meta,
     this.body,
     this.actions,
+    this.fillBody = false,
   });
 
   @override
@@ -107,7 +114,7 @@ class ProgramDayCard extends StatelessWidget {
                 ),
               ),
             ),
-          if (body != null) body!,
+          if (body != null) fillBody ? Expanded(child: body!) : body!,
           if (actions != null)
             Padding(
               padding: const EdgeInsets.only(top: 16),
@@ -281,6 +288,65 @@ class _OutlinePill extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The rest day as the program card says it: the rings, the words, and
+/// the next session still within reach.
+class RestDayCard extends StatelessWidget {
+  final String? nextTitle;
+  final String? nextWhen;
+  final VoidCallback? onStartToday;
+
+  const RestDayCard({
+    super.key,
+    this.nextTitle,
+    this.nextWhen,
+    this.onStartToday,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ProgramDayCard(
+      kicker: 'TODAY',
+      kickerRight: 'REST DAY',
+      body: RestDayView(
+        contained: true,
+        nextTitle: nextTitle,
+        nextWhen: nextWhen,
+        onStartToday: onStartToday,
+      ),
+    );
+  }
+}
+
+/// Gives [child] the height of the rest day's card, so the page under it
+/// sits where it does on a day off. The height is taken from a rest card
+/// laid out unseen behind it rather than from a number, which keeps the
+/// two equal at any text size.
+class RestDayHeight extends StatelessWidget {
+  final Widget child;
+
+  const RestDayHeight({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Visibility(
+          visible: false,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          // Unseen rings have nothing to breathe for.
+          child: TickerMode(
+            enabled: false,
+            child: RestDayCard(nextTitle: '', onStartToday: () {}),
+          ),
+        ),
+        Positioned.fill(child: child),
+      ],
     );
   }
 }

@@ -32,7 +32,6 @@ import 'weekly_quota.dart';
 import 'widgets/program_day_card.dart';
 import 'widgets/program_workout_sheet.dart';
 import 'widgets/quick_sessions_section.dart';
-import 'widgets/rest_day_view.dart';
 import 'widgets/today_workout_card.dart';
 import 'widgets/week_widgets.dart';
 import '../data/past_workout_detail_view.dart';
@@ -578,19 +577,23 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     if (trained != null) {
       final left = quota.remaining;
-      return ProgramDayCard(
-        body: WeekDoneBody(
-          title: 'Done for today',
-          line: quota.isComplete
-              ? '${trained.title} is logged. That’s the week complete.'
-              : '${trained.title} is logged. '
-                  '${left == 1 ? 'One more session' : '$left more sessions'} '
-                  'this week.',
-        ),
-        actions: ProgramCardActions(
-          label: 'View completed workout',
-          quiet: true,
-          onPrimary: () => _openPastWorkout(trained),
+      return RestDayHeight(
+        child: ProgramDayCard(
+          fillBody: true,
+          body: WeekDoneBody(
+            fill: true,
+            title: 'Done for today',
+            line: quota.isComplete
+                ? '${trained.title} is logged. That’s the week complete.'
+                : '${trained.title} is logged. '
+                    '${left == 1 ? 'One more session' : '$left more sessions'} '
+                    'this week.',
+          ),
+          actions: ProgramCardActions(
+            label: 'View completed workout',
+            quiet: true,
+            onPrimary: () => _openPastWorkout(trained),
+          ),
         ),
       );
     }
@@ -599,40 +602,39 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       final all = quota.target == 1
           ? 'Your session is done.'
           : 'All ${quota.target} sessions done.';
-      return ProgramDayCard(
-        body: WeekDoneBody(
-          title: 'Week complete',
-          line: '$all A new week starts Monday.',
-        ),
-        actions: ProgramCardActions(
-          label: 'Start $nextTitle early',
-          quiet: true,
-          onPrimary: () {
-            AnalyticsService.capture('next_week_started_early');
-            _startWorkout(snapshot.recommendation);
-          },
+      return RestDayHeight(
+        child: ProgramDayCard(
+          fillBody: true,
+          body: WeekDoneBody(
+            fill: true,
+            title: 'Week complete',
+            line: '$all A new week starts Monday.',
+          ),
+          actions: ProgramCardActions(
+            label: 'Start $nextTitle early',
+            quiet: true,
+            onPrimary: () {
+              AnalyticsService.capture('next_week_started_early');
+              _startWorkout(snapshot.recommendation);
+            },
+          ),
         ),
       );
     }
 
     if (snapshot.restToday) {
       final days = snapshot.nextInDays;
-      return ProgramDayCard(
-        kicker: 'TODAY',
-        kickerRight: 'REST DAY',
-        body: RestDayView(
-          contained: true,
-          nextTitle: nextTitle,
-          nextWhen: days == null || days < 1
-              ? null
-              : days == 1
-                  ? 'tomorrow'
-                  : 'in $days days',
-          onStartToday: () {
-            AnalyticsService.capture('rest_day_started_next');
-            _startWorkout(snapshot.recommendation);
-          },
-        ),
+      return RestDayCard(
+        nextTitle: nextTitle,
+        nextWhen: days == null || days < 1
+            ? null
+            : days == 1
+                ? 'tomorrow'
+                : 'in $days days',
+        onStartToday: () {
+          AnalyticsService.capture('rest_day_started_next');
+          _startWorkout(snapshot.recommendation);
+        },
       );
     }
 

@@ -103,12 +103,21 @@ class WeekDoneBody extends StatelessWidget {
   final String title;
   final String line;
 
-  const WeekDoneBody({super.key, required this.title, required this.line});
+  /// Whether the words drop to the bottom of the height given, leaving
+  /// the check at the top: for a card taller than these few lines.
+  final bool fill;
+
+  const WeekDoneBody({
+    super.key,
+    required this.title,
+    required this.line,
+    this.fill = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: fill ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
@@ -124,6 +133,7 @@ class WeekDoneBody extends StatelessWidget {
             child: Icon(Icons.check_rounded, size: 28, color: AppColors.green),
           ),
         ),
+        if (fill) const Spacer(),
         const SizedBox(height: 16),
         Text(
           title,
