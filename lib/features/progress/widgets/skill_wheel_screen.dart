@@ -95,6 +95,18 @@ class SkillWheelScreen extends StatefulWidget {
   /// from.
   final bool exitOnTreeBack;
 
+  /// The workout a progression is being added to, by name. Set, the screen
+  /// is the same edit mode turned to one job — picking a tree's exercise
+  /// for that workout: the title and hint say so, the trees not being
+  /// trained are the ones lit and listed first, a search finds an exercise
+  /// without knowing its tree, and there is no Edit pill to leave by.
+  final String? addingTo;
+
+  /// Called, when adding to a workout, with the exercise a tree already
+  /// trains: nothing about the tree changes, so there is nothing to save —
+  /// the host just takes the pick. Required with [addingTo].
+  final void Function(WheelFamily family, WheelNode node)? onAddTrained;
+
   const SkillWheelScreen({
     super.key,
     required this.families,
@@ -113,6 +125,8 @@ class SkillWheelScreen extends StatefulWidget {
     this.source = 'progress_tab',
     this.initialCategoryId,
     this.exitOnTreeBack = false,
+    this.addingTo,
+    this.onAddTrained,
   });
 
   @override
@@ -129,6 +143,13 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
 
   /// Edit mode — on from the first frame for hosts that open into it.
   late bool _editing = widget.editable && widget.startEditing;
+
+  /// The exercise search of the add-to-workout wheel.
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  String _query = '';
+
+  bool get _adding => widget.addingTo != null;
 
   @override
   void initState() {
@@ -166,6 +187,8 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
   @override
   void dispose() {
     _tabReset?.removeListener(_onTabReset);
+    _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -446,6 +469,40 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     _afterEdit('Now training ${node.name}');
   }
 
+  /// Adding to a workout, the exercise the tree already trains: asked
+  /// once, then handed to the host as it is.
+  Future<void> _addTrainedWithConfirm(
+      WheelFamily family, WheelNode node) async {
+    final workout = widget.addingTo!;
+    final confirmed = await showSkillTreeConfirm(
+      context,
+      icon: Icons.add_rounded,
+      caution: false,
+      title: 'Add ${node.name} to $workout?',
+      body: [
+        skillTreeConfirmBold(node.name),
+        const TextSpan(text: ' is the exercise you are training in '),
+        skillTreeConfirmBold('${family.title} progression'),
+        const TextSpan(
+          text: ". Once you master it, you'll automatically progress to "
+              'the next exercise.',
+        ),
+      ],
+      confirmLabel: 'Add exercise',
+    );
+    if (!confirmed || !mounted) return;
+    widget.onAddTrained?.call(family, node);
+  }
+
+  /// A search result: the search closes and the wheel flies to the
+  /// exercise in its tree, where it is picked like any other step.
+  void _openSearchResult(int familyIndex, int flatIndex) {
+    _searchFocus.unfocus();
+    _searchController.clear();
+    setState(() => _query = '');
+    _wheelController.goTo(familyIndex, flatIndex);
+  }
+
   /// A tap on a step of the focused tree — its row, or its node on the
   /// wheel. The selector moves there; then, viewing, the step's preview
   /// opens and, editing, the step is picked: the one being trained asks to
@@ -466,7 +523,9 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
     }
     if (_acting) return;
     final familyActive = widget.activeCategoryIds.contains(family.categoryId);
-    if (node.state == WheelNodeState.active) {
+    if (node.state == WheelNodeState.active && _adding) {
+      _addTrainedWithConfirm(family, node);
+    } else if (node.state == WheelNodeState.active) {
       if (widget.onStopTraining != null) _stopWithConfirm(family, node);
     } else if (widget.onTrainNode != null) {
       _trainWithConfirm(
@@ -505,10 +564,20 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
         : widget.treeLocks[family.categoryId];
     // Edit mode says so in the title, on the overview and in a tree alike.
     final name = family?.title ?? 'Skill Trees';
-    final title = _editing ? 'Edit $name' : name;
-    final hint = family == null
-        ? 'Select the skill tree you wish to edit'
-        : 'Tap the step you want to train.';
+    final adding = _adding;
+    final title = adding
+        ? (family == null ? 'Add progression' : name)
+        : _editing
+            ? 'Edit $name'
+            : name;
+    final hint = adding
+        ? (family == null
+            ? 'Select the skill tree to add an exercise from'
+            : 'Tap the exercise to add to ${widget.addingTo}.')
+        : family == null
+            ? 'Select the skill tree you wish to edit'
+            : 'Tap the step you want to train.';
+    final searching = adding && family == null && _query.trim().isNotEmpty;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -581,7 +650,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                             ),
                           ),
                         ),
-                        if (widget.editable) ...[
+                        if (widget.editable && !adding) ...[
                           const SizedBox(width: 12),
                           _EditPill(
                             editing: _editing,
@@ -592,6 +661,18 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     ),
                   ),
                 ),
+                // Adding to a workout: an exercise can be found by name,
+                // whichever tree it lives in.
+                if (adding && family == null)
+                  _WheelSearchField(
+                    controller: _searchController,
+                    focusNode: _searchFocus,
+                    onChanged: (value) => setState(() => _query = value),
+                    onClear: () {
+                      _searchController.clear();
+                      setState(() => _query = '');
+                    },
+                  ),
                 // Editing: the hint strip under the title says what a tap
                 // does now — pick a tree on the overview, a step in a
                 // focused tree. It unfolds with the mode and folds away
@@ -626,6 +707,17 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                     controller: _wheelController,
                     activeCategoryIds: widget.activeCategoryIds,
                     lockedCategoryIds: widget.treeLocks.keys.toSet(),
+                    // Adding: the trees that are not in any workout yet
+                    // are what the user came for, so they are the ones lit.
+                    highlightedCategoryIds: adding
+                        ? {
+                            for (final f in widget.families)
+                              if (!widget.activeCategoryIds
+                                      .contains(f.categoryId) &&
+                                  !widget.treeLocks.containsKey(f.categoryId))
+                                f.categoryId,
+                          }
+                        : const {},
                     onChanged: (sel, focus) => setState(() {
                       if (sel != null && sel != _sel) _reportTreeOpened(sel);
                       _sel = sel;
@@ -648,6 +740,7 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                                   families: widget.families,
                                   activeCategoryIds: widget.activeCategoryIds,
                                   treeLocks: widget.treeLocks,
+                                  inactiveFirst: adding,
                                   bottomInset: bottomInset,
                                   onOpenFamily: (index) =>
                                       _wheelController.goTo(
@@ -701,6 +794,25 @@ class _SkillWheelScreenState extends State<SkillWheelScreen> {
                 ),
               ],
             ),
+            // Search results cover the wheel and its list while there is a
+            // query; the wheel stays mounted underneath, ready to fly to
+            // the result that is tapped.
+            if (searching)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                top: headerHeight + _WheelSearchField.height,
+                child: ColoredBox(
+                  color: AppColors.bg,
+                  child: _WheelSearchResults(
+                    families: widget.families,
+                    query: _query,
+                    bottomInset: bottomInset,
+                    onOpen: _openSearchResult,
+                  ),
+                ),
+              ),
             // The system-style back swipe: a rightward drag starting at the
             // screen's left edge pulls out of the focused tree. Taps pass
             // through, so the back arrow underneath keeps working.
@@ -972,6 +1084,10 @@ class _ReadOnlyOverviewNote extends StatelessWidget {
 /// that says what it is doing ("Training · Pistol Squat", "Not training",
 /// "Locked"). A tap flies into the tree.
 class _ProgressionsPanel extends StatelessWidget {
+  /// Lists the trees that are not being trained ahead of the ones that
+  /// are — for a host that is here to start one.
+  final bool inactiveFirst;
+
   final List<WheelFamily> families;
   final Set<String> activeCategoryIds;
   final Map<String, WheelTreeLock> treeLocks;
@@ -983,6 +1099,7 @@ class _ProgressionsPanel extends StatelessWidget {
     required this.families,
     required this.activeCategoryIds,
     required this.treeLocks,
+    this.inactiveFirst = false,
     required this.bottomInset,
     required this.onOpenFamily,
   });
@@ -1116,6 +1233,17 @@ class _ProgressionsPanel extends StatelessWidget {
           .add((i, family));
     }
 
+    List<Widget> inactive({required double top}) => [
+          _sectionLabel('INACTIVE SKILL TREES', top: top),
+          for (final (i, (index, family)) in idle.indexed)
+            _treeRow(
+              index,
+              family,
+              active: false,
+              last: i == idle.length - 1,
+            ),
+        ];
+
     return DecoratedBox(
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.divider)),
@@ -1123,7 +1251,11 @@ class _ProgressionsPanel extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.fromLTRB(22, 6, 22, bottomInset),
         children: [
-          _sectionLabel('ACTIVE SKILL TREES', top: 12),
+          if (inactiveFirst && idle.isNotEmpty) ...inactive(top: 12),
+          _sectionLabel(
+            'ACTIVE SKILL TREES',
+            top: inactiveFirst && idle.isNotEmpty ? 20 : 12,
+          ),
           if (running.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 10),
@@ -1145,18 +1277,207 @@ class _ProgressionsPanel extends StatelessWidget {
                 active: true,
                 last: i == running.length - 1,
               ),
-          if (idle.isNotEmpty) ...[
-            _sectionLabel('INACTIVE SKILL TREES', top: 20),
-            for (final (i, (index, family)) in idle.indexed)
-              _treeRow(
-                index,
-                family,
-                active: false,
-                last: i == idle.length - 1,
-              ),
-          ],
+          if (!inactiveFirst && idle.isNotEmpty) ...inactive(top: 20),
         ],
       ),
+    );
+  }
+}
+
+/// The search box of the add-to-workout wheel: exercises by name, across
+/// every tree.
+class _WheelSearchField extends StatelessWidget {
+  /// The field with its insets — what the results layer starts below.
+  static const double height = 4 + 46 + 10;
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _WheelSearchField({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 4, 22, 10),
+      child: Container(
+        height: 46,
+        padding: const EdgeInsets.only(left: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.search_rounded,
+              size: 20,
+              color: AppColors.textMuted,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: onChanged,
+                textInputAction: TextInputAction.search,
+                autocorrect: false,
+                cursorColor: AppColors.accentPrimary,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: const InputDecoration(
+                  isCollapsed: true,
+                  border: InputBorder.none,
+                  hintText: 'Search exercises in your skill trees',
+                  hintStyle: TextStyle(
+                    fontSize: 15,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, _) => value.text.isEmpty
+                  ? const SizedBox(width: 14)
+                  : _HeaderIconButton(
+                      icon: Icons.cancel_rounded,
+                      semanticLabel: 'Clear search',
+                      onTap: onClear,
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// What the search found: every step, in any tree, whose name carries all
+/// the words typed. A row names the exercise first and its tree second — the
+/// user may know the one without the other — and a tap opens the tree at
+/// that exercise.
+class _WheelSearchResults extends StatelessWidget {
+  final List<WheelFamily> families;
+  final String query;
+  final double bottomInset;
+  final void Function(int familyIndex, int flatIndex) onOpen;
+
+  const _WheelSearchResults({
+    required this.families,
+    required this.query,
+    required this.bottomInset,
+    required this.onOpen,
+  });
+
+  static String _fold(String text) =>
+      text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = _fold(query).split(' ').where((t) => t.isNotEmpty).toList();
+    final matches = <(int, int)>[];
+    for (var f = 0; f < families.length; f++) {
+      final flat = families[f].flat;
+      for (var i = 0; i < flat.length; i++) {
+        final name = _fold(flat[i].name);
+        if (tokens.every(name.contains)) matches.add((f, i));
+      }
+    }
+
+    if (matches.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
+        child: Text(
+          'No exercise in your skill trees matches that. Accessory '
+          'exercises are added from Add exercise, under Accessory exercise.',
+          style: TextStyle(
+            fontSize: 13.5,
+            height: 1.55,
+            color: AppColors.textMuted,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(22, 4, 22, bottomInset),
+      itemCount: matches.length,
+      itemBuilder: (context, index) {
+        final (f, i) = matches[index];
+        final family = families[f];
+        final node = family.flat[i];
+        final (status, statusColor) = node.skipped
+            ? ('Skipped', AppColors.textMuted)
+            : switch (node.state) {
+                WheelNodeState.active => ('Training', AppColors.accentBright),
+                WheelNodeState.mastered => ('Mastered', AppColors.textMuted),
+                WheelNodeState.available => ('', AppColors.textMuted),
+                WheelNodeState.locked => ('Locked', AppColors.textMuted),
+              };
+
+        return Pressable(
+          onTap: () => onOpen(f, i),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              border: index == matches.length - 1
+                  ? null
+                  : const Border(bottom: BorderSide(color: AppColors.divider)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        node.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.16,
+                          height: 1.25,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        status.isEmpty
+                            ? '${family.title} progression'
+                            : '${family.title} progression · $status',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.25,
+                          color: statusColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: Color(0xFF66676E),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

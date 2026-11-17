@@ -885,4 +885,106 @@ void main() {
     expect(find.text('Edit'), findsOneWidget);
     expect(reset.fire(), isFalse);
   });
+
+  group('adding a progression to a workout', () {
+    Widget screen({
+      void Function(WheelFamily, WheelNode)? onAddTrained,
+      String? initialCategoryId,
+    }) =>
+        _host(SkillWheelScreen(
+          families: _families(),
+          activeCategoryIds: const {'a', 'b'},
+          editable: true,
+          startEditing: true,
+          addingTo: 'Push Day',
+          initialCategoryId: initialCategoryId,
+          onTrainNode: (_, __) async => true,
+          onStopTraining: (_) async => true,
+          onAddTrained: onAddTrained ?? (_, __) {},
+          onOpenExercise: (_) {},
+          onBack: () {},
+        ));
+
+    testWidgets('the overview says what it is for and lists idle trees first',
+        (tester) async {
+      await tester.pumpWidget(screen());
+      await tester.pump(const Duration(milliseconds: 800));
+
+      expect(find.text('Add progression'), findsOneWidget);
+      expect(
+        find.text('Select the skill tree to add an exercise from'),
+        findsOneWidget,
+      );
+      // There is no edit to finish here, so no pill to finish it with.
+      expect(find.text('Done'), findsNothing);
+      expect(find.text('Edit'), findsNothing);
+
+      // The idle trees lead the list; the running ones are further down,
+      // past what the panel has room to show.
+      expect(find.text('INACTIVE SKILL TREES'), findsOneWidget);
+      expect(find.text('Squat'), findsOneWidget);
+      expect(find.text('ACTIVE SKILL TREES'), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text('ACTIVE SKILL TREES'),
+        120,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('ACTIVE SKILL TREES'), findsOneWidget);
+    });
+
+    testWidgets('search finds an exercise by name and opens its tree',
+        (tester) async {
+      await tester.pumpWidget(screen());
+      await tester.pump(const Duration(milliseconds: 800));
+
+      await tester.enterText(find.byType(TextField), 'squat step 2');
+      await tester.pump();
+
+      // One step matches; it names its tree underneath.
+      expect(find.text('Squat step 2'), findsOneWidget);
+      expect(find.text('Squat progression · Locked'), findsOneWidget);
+      expect(find.text('Squat step 1'), findsNothing);
+
+      await tester.tap(find.text('Squat step 2'));
+      await _flyIn(tester);
+
+      // The search is gone and the tree is open, titled by its name.
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Squat'), findsOneWidget);
+      expect(find.text('Tap the exercise to add to Push Day.'), findsOneWidget);
+    });
+
+    testWidgets('a search with no match says where accessories are added',
+        (tester) async {
+      await tester.pumpWidget(screen());
+      await tester.pump(const Duration(milliseconds: 800));
+
+      await tester.enterText(find.byType(TextField), 'bench press');
+      await tester.pump();
+
+      expect(
+        find.textContaining('No exercise in your skill trees matches'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the exercise a tree already trains is added, not stopped',
+        (tester) async {
+      WheelNode? added;
+      await tester.pumpWidget(screen(
+        initialCategoryId: 'a',
+        onAddTrained: (_, node) => added = node,
+      ));
+      await _flyIn(tester);
+
+      await tester.tap(find.text('Pullups step 1'));
+      await _settle(tester);
+      expect(find.text('Add Pullups step 1 to Push Day?'), findsOneWidget);
+      expect(find.textContaining('Stop training'), findsNothing);
+
+      await tester.tap(find.text('Add exercise'));
+      await _settle(tester);
+      expect(added?.exerciseId, 'a-1');
+    });
+  });
 }

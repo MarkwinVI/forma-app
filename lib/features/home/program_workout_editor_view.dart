@@ -30,8 +30,9 @@ const _dangerRed = Color(0xFFFF6B57);
 
 /// Full-page editor for one workout type: the schedule is stated once at the
 /// top, then it's just the exercise list every scheduled day shares. Each row
-/// opens its own options — reorder, replace, remove — and Add exercise goes
-/// straight to the exercise search.
+/// opens its own options — reorder, remove — and Add exercise asks which
+/// kind first: a skill tree's exercise, picked on the wheel, or an accessory,
+/// picked in the exercise search.
 class ProgramWorkoutEditorView extends StatefulWidget {
   final TrainingSessionType sessionType;
   final TrainingProgramType programType;
@@ -227,8 +228,103 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
         exerciseId: exercise.id,
       );
 
-  /// Add exercise opens the exercise search; picks accumulate and append all
-  /// at once.
+  /// Add exercise asks which kind first: a skill tree's exercise, which
+  /// progresses on its own, or an accessory, which stays what it is. The
+  /// two are picked in different places, and saying so here is what keeps
+  /// a tree's exercise from coming back as an accessory by accident.
+  Future<void> _openAdd() async {
+    final kind = await showModalBottomSheet<_AddKind>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => const _AddKindSheet(),
+    );
+    if (kind == null || !mounted) return;
+
+    AnalyticsService.capture('program_workout_add_opened', properties: {
+      'session_type': widget.sessionType.dbValue,
+      'kind': kind.name,
+    });
+    switch (kind) {
+      case _AddKind.progression:
+        await _openAddProgression();
+      case _AddKind.accessory:
+        await _openAddPicker();
+    }
+  }
+
+  /// A skill tree's exercise is picked on the wheel, the one place trees
+  /// are started and moved. What comes back is the tree and the exercise it
+  /// now trains; its row joins this list, or — for a tree already here —
+  /// takes the place of the row it had.
+  Future<void> _openAddProgression() async {
+    final pick = await Navigator.of(context).push<SkillWheelPick>(
+      MaterialPageRoute(
+        builder: (_) => ProgramSkillWheelView(
+          addingTo: _typeName,
+          source: 'workout_editor_add',
+        ),
+      ),
+    );
+    if (pick == null || !mounted) return;
+
+    // The wheel may have started the tree or moved its step: the tracks and
+    // statuses this list reads against are stale until re-read. A failed
+    // read still adds the row — the pick itself says what it is.
+    final userId = AuthService().currentUser?.id;
+    if (userId != null) {
+      try {
+        final results = await Future.wait([
+          ProgressService().fetchAll(userId),
+          SkillTrackService().fetchAll(userId),
+        ]);
+        if (!mounted) return;
+        final progress = results[0] as List<ExerciseProgress>;
+        _progress = {for (final row in progress) row.exerciseId: row.status};
+        _skillTracks = results[1] as List<SkillTrack>;
+      } catch (error, stackTrace) {
+        debugPrint('Failed to refresh after adding a progression: '
+            '$error\n$stackTrace');
+        if (!mounted) return;
+      }
+    }
+
+    final exercise = ExerciseCatalog.findById(pick.exerciseId);
+    String? branchId;
+    for (final track in _skillTracks) {
+      if (track.skillCategoryId == pick.skillCategoryId) {
+        branchId = track.branchId;
+      }
+    }
+    final item = ProgramDayItem(
+      id: 'track-${pick.skillCategoryId}-${pick.exerciseId}',
+      kind: ProgramDayItemKind.progression,
+      name: exercise?.name ??
+          SkillCategoryCatalog.findById(pick.skillCategoryId)?.title ??
+          'Skill tree',
+      skillCategoryId: pick.skillCategoryId,
+      branchId: branchId ?? exercise?.branchId,
+      exerciseId: pick.exerciseId,
+    );
+
+    setState(() {
+      final existing = _items.indexWhere(
+        (row) =>
+            row.kind == ProgramDayItemKind.progression &&
+            row.skillCategoryId == pick.skillCategoryId,
+      );
+      if (existing >= 0) {
+        _items[existing] = item;
+      } else {
+        _items.add(item);
+      }
+    });
+  }
+
+  /// The accessory side of Add exercise: the exercise search; picks
+  /// accumulate and append all at once.
   Future<void> _openAddPicker() async {
     final picked = await Navigator.of(context).push<List<Exercise>>(
       MaterialPageRoute(
@@ -288,7 +384,6 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
       builder: (_) => _ItemMenuSheet(
         title: item.name,
         subtitle: _itemSubtitle(item),
-        isProgression: item.kind == ProgramDayItemKind.progression,
         canReorder: _items.length > 1,
         autoProgression: _autoProgressionFor(item),
         autoProgressionEditable: switch (_accessoryExercise(item)) {
@@ -303,56 +398,10 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
     if (action == null || !mounted) return;
 
     switch (action) {
-      case _ItemAction.editProgression:
-        await _openProgressionEditor(item);
       case _ItemAction.reorder:
         await _openReorder();
       case _ItemAction.remove:
         _removeItem(item.id);
-    }
-  }
-
-  /// "Edit progression" — the skill wheel flown straight into this item's
-  /// tree, where the current step and branch live. On return the day is
-  /// re-read with fresh progress so a moved progression shows its new step,
-  /// unless unsaved edits here would be thrown away by the re-read.
-  Future<void> _openProgressionEditor(ProgramDayItem item) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProgramSkillWheelView(
-          initialCategoryId: item.skillCategoryId,
-          // Back from the tree returns to this list — the wheel overview
-          // would be a detour the user never asked for.
-          exitOnTreeBack: true,
-          source: 'workout_editor',
-        ),
-      ),
-    );
-    if (!mounted || _dirty) return;
-
-    final userId = AuthService().currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      final results = await Future.wait([
-        ProgressService().fetchAll(userId),
-        SkillTrackService().fetchAll(userId),
-      ]);
-      if (!mounted) return;
-      final progress = results[0] as List<ExerciseProgress>;
-      final tracks = results[1] as List<SkillTrack>;
-      setState(() {
-        _progress = {for (final row in progress) row.exerciseId: row.status};
-        _skillTracks = tracks;
-        _items = _loadDay();
-        // The re-read is the saved day, just resolved against fresh progress
-        // — it must not count as an edit.
-        _initialSerialized = _serialized();
-        _initialExerciseIds = _exerciseIds();
-      });
-    } catch (error, stackTrace) {
-      debugPrint('Failed to refresh after editing a progression: '
-          '$error\n$stackTrace');
     }
   }
 
@@ -552,7 +601,7 @@ class _ProgramWorkoutEditorViewState extends State<ProgramWorkoutEditorView> {
                                     ? null
                                     : () => _openItemDetail(item),
                               ),
-                          _AddExerciseRow(onTap: _openAddPicker),
+                          _AddExerciseRow(onTap: _openAdd),
                         ],
                       ),
                     ),
@@ -771,7 +820,9 @@ class _SourceChip extends StatelessWidget {
   }
 }
 
-enum _ItemAction { editProgression, reorder, remove }
+enum _ItemAction { reorder, remove }
+
+enum _AddKind { progression, accessory }
 
 /// The row's options: what you can do to the workout. What the exercise *is*
 /// belongs to its own page, which the row's name opens. A progression also
@@ -779,7 +830,6 @@ enum _ItemAction { editProgression, reorder, remove }
 class _ItemMenuSheet extends StatefulWidget {
   final String title;
   final String subtitle;
-  final bool isProgression;
   final bool canReorder;
 
   /// Whether Forma manages this exercise's reps and weight. A skill-tree
@@ -795,7 +845,6 @@ class _ItemMenuSheet extends StatefulWidget {
   const _ItemMenuSheet({
     required this.title,
     required this.subtitle,
-    required this.isProgression,
     required this.canReorder,
     required this.autoProgression,
     required this.autoProgressionEditable,
@@ -811,7 +860,6 @@ class _ItemMenuSheetState extends State<_ItemMenuSheet> {
 
   String get title => widget.title;
   String get subtitle => widget.subtitle;
-  bool get isProgression => widget.isProgression;
   bool get canReorder => widget.canReorder;
   bool get autoProgression => _autoProgression;
   bool get autoProgressionEditable => widget.autoProgressionEditable;
@@ -840,15 +888,9 @@ class _ItemMenuSheetState extends State<_ItemMenuSheet> {
               clip: true,
               child: Column(
                 children: [
-                  if (isProgression)
-                    _MenuRow(
-                      label: 'Edit progression',
-                      onTap: () => pick(_ItemAction.editProgression),
-                    ),
                   _MenuRow(
                     label: 'Reorder exercises',
                     enabled: canReorder,
-                    withDivider: isProgression,
                     onTap: () => pick(_ItemAction.reorder),
                   ),
                   _MenuRow(
@@ -1022,7 +1064,7 @@ class _AddExerciseRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             const Text(
-              'Add accessory exercise',
+              'Add exercise',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w700,
@@ -1031,6 +1073,121 @@ class _AddExerciseRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The first question Add exercise asks: which kind. Each option says how
+/// the exercise will behave once it is in the workout, which is the whole
+/// difference between the two.
+class _AddKindSheet extends StatelessWidget {
+  const _AddKindSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    void pick(_AddKind kind) => Navigator.of(context).pop(kind);
+
+    return SheetShell(
+      title: 'Add exercise',
+      showClose: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _AddKindOption(
+              icon: Transform.rotate(
+                angle: -math.pi / 4,
+                child: const Icon(
+                  Icons.link_rounded,
+                  size: 16,
+                  color: Color(0xFF9DB9FF),
+                ),
+              ),
+              title: 'Skill tree progression',
+              body: 'Pick an exercise from a skill tree. It progresses '
+                  'automatically.',
+              onTap: () => pick(_AddKind.progression),
+            ),
+            const SizedBox(height: 10),
+            _AddKindOption(
+              icon: const Icon(
+                Icons.motion_photos_on_rounded,
+                size: 15,
+                color: AppColors.textSecondary,
+              ),
+              title: 'Accessory exercise',
+              body: 'Any exercise from the library. Stays the same exercise.',
+              onTap: () => pick(_AddKind.accessory),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddKindOption extends StatelessWidget {
+  final Widget icon;
+  final String title;
+  final String body;
+  final VoidCallback onTap;
+
+  const _AddKindOption({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    icon,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.25,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    height: 1.45,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: AppColors.textMuted,
+          ),
+        ],
       ),
     );
   }

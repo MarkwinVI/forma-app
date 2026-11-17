@@ -13,6 +13,18 @@ import '../progress/skill_wheel_bundle.dart';
 import '../progress/widgets/skill_wheel.dart';
 import '../progress/widgets/skill_wheel_screen.dart';
 
+/// What the wheel hands back to a workout that opened it to add a
+/// progression: the tree, and the exercise it trains.
+class SkillWheelPick {
+  final String skillCategoryId;
+  final String exerciseId;
+
+  const SkillWheelPick({
+    required this.skillCategoryId,
+    required this.exerciseId,
+  });
+}
+
 /// The Program tab's door into the skill trees: the same radial wheel the
 /// Progress tab shows, opened straight into its edit mode — start a
 /// progression at a node, move it to another node, or stop training a tree
@@ -27,14 +39,20 @@ class ProgramSkillWheelView extends StatefulWidget {
   final bool exitOnTreeBack;
 
   /// Where the user came in from, for analytics — the Program tab's
-  /// overview, a workout row's Edit progression, or the Progress tab's Edit.
+  /// overview, a workout's Add exercise, or the Progress tab's Edit.
   final String source;
+
+  /// The workout a progression is being added to, by name. Set, the wheel
+  /// is a picker for that workout: it pops with a [SkillWheelPick] once an
+  /// exercise is chosen, and with nothing when the user backs out.
+  final String? addingTo;
 
   const ProgramSkillWheelView({
     super.key,
     this.initialCategoryId,
     this.exitOnTreeBack = false,
     this.source = 'program_tab',
+    this.addingTo,
   });
 
   @override
@@ -47,6 +65,9 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
   bool _loading = true;
   bool _loadFailed = false;
   SkillWheelBundle? _bundle;
+
+  /// What a saved edit chose, for a host that is adding a progression.
+  SkillWheelPick? _pick;
 
   @override
   void initState() {
@@ -112,6 +133,10 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
       _couldNotSave();
       return false;
     }
+    _pick = SkillWheelPick(
+      skillCategoryId: family.categoryId,
+      exerciseId: node.exerciseId,
+    );
     await _load();
     return true;
   }
@@ -185,10 +210,19 @@ class _ProgramSkillWheelViewState extends State<ProgramSkillWheelView> {
                     onTrainNode: _trainNode,
                     onStopTraining: _stopTraining,
                     onOpenExercise: _openExercise,
-                    onDone: () => Navigator.of(context).pop(),
-                    onBack: widget.exitOnTreeBack
+                    onDone: () => Navigator.of(context).pop(_pick),
+                    onBack: widget.exitOnTreeBack || widget.addingTo != null
                         ? () => Navigator.of(context).pop()
                         : null,
+                    addingTo: widget.addingTo,
+                    // The exercise a tree already trains needs no write —
+                    // picking it is the whole answer.
+                    onAddTrained: (family, node) => Navigator.of(context).pop(
+                      SkillWheelPick(
+                        skillCategoryId: family.categoryId,
+                        exerciseId: node.exerciseId,
+                      ),
+                    ),
                     initialCategoryId: widget.initialCategoryId,
                     exitOnTreeBack: widget.exitOnTreeBack,
                   ),

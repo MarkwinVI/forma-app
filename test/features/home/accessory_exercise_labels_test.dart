@@ -10,8 +10,7 @@ import 'package:forma_app/features/home/program_workout_editor_view.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-  });
+  setUpAll(() {});
 
   Future<void> pumpEditor(WidgetTester tester) async {
     // Wide surface: the test font is far wider per glyph than the real one,
@@ -60,8 +59,45 @@ void main() {
   testWidgets('the add button says what it adds', (tester) async {
     await pumpEditor(tester);
 
-    await tester.ensureVisible(find.text('Add accessory exercise'));
-    expect(find.text('Add accessory exercise'), findsOneWidget);
+    await tester.ensureVisible(find.text('Add exercise'));
+    expect(find.text('Add exercise'), findsOneWidget);
+    expect(find.text('Add accessory exercise'), findsNothing);
     expect(find.text('Add standalone exercise'), findsNothing);
+  });
+
+  testWidgets('Add exercise asks which kind before anything is picked',
+      (tester) async {
+    await pumpEditor(tester);
+
+    await tester.ensureVisible(find.text('Add exercise'));
+    await tester.tap(find.text('Add exercise'));
+    await tester.pumpAndSettle();
+
+    // Both kinds are offered, each saying how the exercise will behave.
+    expect(find.text('Skill tree progression'), findsOneWidget);
+    expect(
+      find.text(
+        'Pick an exercise from a skill tree. It progresses automatically.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Accessory exercise'), findsOneWidget);
+    expect(
+      find.text('Any exercise from the library. Stays the same exercise.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets("a progression's menu no longer offers Edit progression",
+      (tester) async {
+    await pumpEditor(tester);
+
+    await tester.tap(
+        find.bySemanticsLabel(RegExp('options', caseSensitive: false)).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reorder exercises'), findsOneWidget);
+    expect(find.text('Remove exercise'), findsOneWidget);
+    expect(find.text('Edit progression'), findsNothing);
   });
 }

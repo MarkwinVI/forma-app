@@ -194,6 +194,10 @@ class SkillWheel extends StatefulWidget {
   /// the user started it anyway, so it is running.
   final Set<String> lockedCategoryIds;
 
+  /// Categories to pick out on the overview with a faint blue wedge — the
+  /// trees a picker is offering, when only some of the wheel is on offer.
+  final Set<String> highlightedCategoryIds;
+
   /// Open already focused on this family, at [initialFocus], with no
   /// fly-in — the post-workout celebration shows one tree from the first
   /// frame. Null opens on the whole wheel.
@@ -227,6 +231,7 @@ class SkillWheel extends StatefulWidget {
     this.onToggleGoal,
     this.activeCategoryIds = const {},
     this.lockedCategoryIds = const {},
+    this.highlightedCategoryIds = const {},
     this.initialSelected,
     this.initialFocus = 0,
     this.hideUnfocused = false,
@@ -1197,13 +1202,10 @@ class _WheelPainter extends CustomPainter {
     // ground the trees then grow across; the names come last.
     final opacity = sectorOpacity * state._revealed(0, 0.3);
 
-    // The wedge under a finger: a faint fill from hub to rim, so a sector
-    // reads as pressed before the fly-in starts.
-    final pressed = state._pressedSector.value;
-    if (pressed != null && pressed < state._n) {
-      final start = (state._angDeg(pressed) - stepDeg / 2) * math.pi / 180;
+    Path wedgeOf(int i) {
+      final start = (state._angDeg(i) - stepDeg / 2) * math.pi / 180;
       final sweep = stepDeg * math.pi / 180;
-      final wedge = Path()
+      return Path()
         ..moveTo(_hx + 26 * math.cos(start), _hy + 26 * math.sin(start))
         ..arcTo(
           Rect.fromCircle(center: const Offset(_hx, _hy), radius: rim),
@@ -1218,8 +1220,27 @@ class _WheelPainter extends CustomPainter {
           false,
         )
         ..close();
+    }
+
+    // The trees a picker offers: a faint blue wedge each, under everything
+    // else in the sector.
+    final highlighted = state.widget.highlightedCategoryIds;
+    if (highlighted.isNotEmpty) {
+      final paint = Paint()
+        ..color = _SkillWheelState._accent.withValues(alpha: 0.08 * opacity);
+      for (var i = 0; i < state._n; i++) {
+        if (highlighted.contains(state.widget.families[i].categoryId)) {
+          canvas.drawPath(wedgeOf(i), paint);
+        }
+      }
+    }
+
+    // The wedge under a finger: a faint fill from hub to rim, so a sector
+    // reads as pressed before the fly-in starts.
+    final pressed = state._pressedSector.value;
+    if (pressed != null && pressed < state._n) {
       canvas.drawPath(
-        wedge,
+        wedgeOf(pressed),
         Paint()..color = Colors.white.withValues(alpha: 0.05 * opacity),
       );
     }
